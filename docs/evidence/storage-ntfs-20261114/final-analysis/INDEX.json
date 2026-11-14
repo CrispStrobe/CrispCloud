@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "source_revision": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+  "qualification": "Strict --fatal-infos analysis passed all 25 Dart files changed by NTFS; 8092 source paths verified against this commit before and after; package configuration unchanged.",
+  "artifacts": [
+    {
+      "original_name": "ntfs-corrected-final-analysis.log",
+      "stored_name": "ntfs-corrected-final-analysis.log",
+      "encoding": "identity",
+      "original_bytes": 806,
+      "stored_bytes": 806,
+      "original_sha256": "89ac6cf64a63c1ebc48e812e0251622ff1b4cb2543d21b2fbbea75c6516b27f0",
+      "stored_sha256": "89ac6cf64a63c1ebc48e812e0251622ff1b4cb2543d21b2fbbea75c6516b27f0"
+    },
+    {
+      "original_name": "ntfs-corrected-final-analysis-receipt.json",
+      "stored_name": "ntfs-corrected-final-analysis-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 3343,
+      "stored_bytes": 3343,
+      "original_sha256": "f6be91df5357cafd08a42aec79704c1902ba6ecbca1b797ee1b0c4fd66187a28",
+      "stored_sha256": "f6be91df5357cafd08a42aec79704c1902ba6ecbca1b797ee1b0c4fd66187a28"
+    },
+    {
+      "original_name": "ntfs-corrected-final-analysis-source-binding.json",
+      "stored_name": "ntfs-corrected-final-analysis-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1117043,
+      "stored_bytes": 385016,
+      "original_sha256": "c3beb846582cebed12da64d79424e53c265194c279253cf9ba19be5623ebf478",
+      "stored_sha256": "f4ae0f4b449437a70b3d9ac3c081c10949631c18b17b6449dedf8ac3d988d87b"
+    }
+  ]
+}

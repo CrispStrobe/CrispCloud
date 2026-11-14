@@ -1,0 +1,623 @@
+{
+  "schema": 1,
+  "result": "equivalent",
+  "scope": "Exact portable compiler/runtime input equivalence for a native-test-only correction.",
+  "started_utc": "2026-11-14T13:27:25.351144+00:00",
+  "finished_utc": "2026-11-14T13:27:25.677858+00:00",
+  "actual_portable_execution_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "corrected_native_test_revision": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+  "applications_executed_for_this_receipt": false,
+  "portable_executions_at_corrected_revision_claimed": false,
+  "qualification_reuse": "The recorded dec983b2 portable results apply to the unchanged compiler/runtime inputs present at c2c17f7. Execution attribution remains dec983b2; this is a separate equivalence proof.",
+  "qualification_receipt": {
+    "path": "ntfs-final-portable-receipt.json",
+    "bytes": 25708,
+    "sha256": "68d373c5db3d1d16c84c399cffc8bd57afde3ca3c9037ada484aff20079951cd",
+    "unchanged": true
+  },
+  "original_compiler_input_binding": {
+    "path": "ntfs-final-portable-compiler-inputs.json.gz",
+    "stored": {
+      "bytes": 32705,
+      "sha256": "09a53a94f9c9947fb7110ecea5fdec52d714f24ee361c706c9c3185dd7d08735"
+    },
+    "uncompressed_sha256": "d98b34325ed7a5b5d1fead713fc071375fe089d1ea3bacdfddb71fd11e1320cb",
+    "contains_complete_606_input_list_and_hashes": true,
+    "unchanged": true
+  },
+  "observed_head_before": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+  "observed_head_after": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+  "head_changes_beyond_corrected_revision_are_documentation_only": true,
+  "head_documentation_delta_before": [],
+  "head_documentation_delta_after": [],
+  "revision_changes": [
+    {
+      "status": "M",
+      "path": "docs/archive-disk-image-profile.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/archive-ntfs-profile.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/evidence/storage-ntfs-20261114/PROGRESS.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/INDEX.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/external-channel-index.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/external-text-logs.tar.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/final-commands.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/reproduction-commands.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/reproduction-receipt.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/reproduction.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/reproduction.stdout.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-diagnostic-receipt.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-fresh-format.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-fresh-format.stdout.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-fresh-unpopulated-ntfscat.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-fresh-unpopulated-ntfsinfo.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-fresh-unpopulated-ntfsinfo.stdout.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-qualified-populated-ntfscat.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-qualified-populated-ntfsinfo.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/external-fixtures/sds-qualified-populated-ntfsinfo.stdout.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-integration-preliminary-events.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-integration-preliminary-receipt.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-integration-preliminary-source-binding.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-integration-preliminary-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-integration-preliminary.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-viewer-preliminary-events.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-viewer-preliminary-receipt.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-viewer-preliminary-source-binding.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-viewer-preliminary-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/ntfs-viewer-preliminary.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/intermediate/preliminary-validation-index.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/INDEX.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/compiler-dependency-paths.log.gz"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/dart-version-at-packaging.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/dart-version-at-packaging.stdout.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/node-stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/node-stdout.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/node-version-at-packaging.stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/node-version-at-packaging.stdout.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/vm-stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-ntfs-20261114/preliminary-portable/vm-stdout.json"
+    },
+    {
+      "status": "M",
+      "path": "test/archive_ntfs_reader_test.dart"
+    }
+  ],
+  "only_non_documentation_changed_path": "test/archive_ntfs_reader_test.dart",
+  "all_other_non_documentation_git_tree_entries_equal": true,
+  "corrected_test": {
+    "path": "test/archive_ntfs_reader_test.dart",
+    "executed_revision_blob": "c32a87d919dd9b9eccd127f73aa4d856d6906af0",
+    "corrected_revision_blob": "acd4645bf09f650908a979c0ef15ab54383d7dbf",
+    "live_blob_matches_corrected_revision": true,
+    "absent_from_all_actual_compiler_inputs": true,
+    "change": "Move the ordinary '.' filename control out of the unsafe-component loop and expect corrupt for its earlier duplicate root-index-key refusal. No reader or fixture producer behavior changes.",
+    "patch_sha256": "9e13e7a84396e2f70d402f9a76e10ee03b094db90979187cf4b6e4fdbe1b95fd",
+    "patch": "diff --git a/test/archive_ntfs_reader_test.dart b/test/archive_ntfs_reader_test.dart\nindex c32a87d9..acd4645b 100644\n--- a/test/archive_ntfs_reader_test.dart\n+++ b/test/archive_ntfs_reader_test.dart\n@@ -889,23 +889,27 @@ void main() {\n       await _reject(f);\n     });\n     for (final name in [\n       '../escape',\n       'a/b',\n       'a\\\\b',\n       'a:b',\n       '..',\n-      '.',\n       'nul\\u0000name',\n     ]) {\n       test('unsafe component ${jsonEncode(name)}', () async {\n         await _reject(NtfsFixture(name: name), ArchiveMessageCode.unsupported);\n       });\n     }\n+    test('ordinary dot name collides with the root self-entry', () async {\n+      // The root already indexes its legitimate dot entry. A second dot is\n+      // refused as a duplicate index key before the ordinary FILE name is read.\n+      await _reject(NtfsFixture(name: '.'), ArchiveMessageCode.corrupt);\n+    });\n     test('invalid UTF16 surrogate is rejected', () async {\n       final f = NtfsFixture();\n       _attribute(f, 24, 0x30, (b, at) {\n         ntfsPut16(b, at + ntfsGet16(b, at + 20) + 66, 0xd800);\n       });\n       await _reject(f);\n     });\n     test('INDX update-sequence mismatch', () async {\n"
+  },
+  "actual_compiler_inputs": {
+    "count": 606,
+    "every_input_checked_before_and_after": true,
+    "every_input_matches_original_execution": true,
+    "original_inventory_sha256": "91b47342876df73a3feccf4156b31bd9eeffcd3fe61ced2507d80a2e72b53ca0",
+    "current_inventory_sha256_before": "91b47342876df73a3feccf4156b31bd9eeffcd3fe61ced2507d80a2e72b53ca0",
+    "current_inventory_sha256_after": "91b47342876df73a3feccf4156b31bd9eeffcd3fe61ced2507d80a2e72b53ca0",
+    "tracked_repository_input_count": 13,
+    "tracked_repository_inputs": [
+      {
+        "path": "lib/services/archive_disk_image_reader.dart",
+        "executed_revision_blob": "9913cfeaddbf8ed325639dfcf3312e7cbf32c1af",
+        "corrected_revision_blob": "9913cfeaddbf8ed325639dfcf3312e7cbf32c1af",
+        "live_blob": "9913cfeaddbf8ed325639dfcf3312e7cbf32c1af",
+        "mode": "100644",
+        "bytes": 29008,
+        "sha256": "26f24496c4c62bac6ed710f80ad8224e89dd453b394af103e635f01abbc97d84"
+      },
+      {
+        "path": "lib/services/archive_ext_reader.dart",
+        "executed_revision_blob": "5422e7ba08005b6f18548f2a7444024d2339fe63",
+        "corrected_revision_blob": "5422e7ba08005b6f18548f2a7444024d2339fe63",
+        "live_blob": "5422e7ba08005b6f18548f2a7444024d2339fe63",
+        "mode": "100644",
+        "bytes": 40336,
+        "sha256": "68ebd960ad8460dc0f15d7f3585d34e71a5b0b3c9f31edc2157341ce700b32e1"
+      },
+      {
+        "path": "lib/services/archive_fat_reader.dart",
+        "executed_revision_blob": "433b049fdc4e8ca45d031dc0f6a4ee0eba4ead4d",
+        "corrected_revision_blob": "433b049fdc4e8ca45d031dc0f6a4ee0eba4ead4d",
+        "live_blob": "433b049fdc4e8ca45d031dc0f6a4ee0eba4ead4d",
+        "mode": "100644",
+        "bytes": 35985,
+        "sha256": "31fd77e11e513ad3924153b7cfb72cc8fdb138a89dee6f1655558fc78385bea3"
+      },
+      {
+        "path": "lib/services/archive_ntfs_reader.dart",
+        "executed_revision_blob": "566ec50404077bd98e0a78e86b8e80d1d6435ac3",
+        "corrected_revision_blob": "566ec50404077bd98e0a78e86b8e80d1d6435ac3",
+        "live_blob": "566ec50404077bd98e0a78e86b8e80d1d6435ac3",
+        "mode": "100644",
+        "bytes": 50977,
+        "sha256": "164bc7cca8779c70ebb1787efc356f96e00c5863c258d9a6f224713eaf701c69"
+      },
+      {
+        "path": "lib/services/archive_slice_source.dart",
+        "executed_revision_blob": "3a141157f79adfeffb2e45380708a22edf7ec052",
+        "corrected_revision_blob": "3a141157f79adfeffb2e45380708a22edf7ec052",
+        "live_blob": "3a141157f79adfeffb2e45380708a22edf7ec052",
+        "mode": "100644",
+        "bytes": 1536,
+        "sha256": "52b5d7a3e31bf31be7067c6c8648676d114913044c2d07e5c97c7cd7d23110c0"
+      },
+      {
+        "path": "lib/services/archive_types.dart",
+        "executed_revision_blob": "aa76eb084a99c81fef172fca842d0e31cc534807",
+        "corrected_revision_blob": "aa76eb084a99c81fef172fca842d0e31cc534807",
+        "live_blob": "aa76eb084a99c81fef172fca842d0e31cc534807",
+        "mode": "100644",
+        "bytes": 8630,
+        "sha256": "08072e27d01fdd4794ddebab21ca943e650c0e9a09a004a651b2da984a4f8e86"
+      },
+      {
+        "path": "lib/services/binary_structure_service.dart",
+        "executed_revision_blob": "f4310d2a622f6584a39ad211d3a28ed815f5e484",
+        "corrected_revision_blob": "f4310d2a622f6584a39ad211d3a28ed815f5e484",
+        "live_blob": "f4310d2a622f6584a39ad211d3a28ed815f5e484",
+        "mode": "100644",
+        "bytes": 17353,
+        "sha256": "d78af3f2decd07e42370e4e5054d10ff79d9b620518d8dd8b4fb8f316e7c17ad"
+      },
+      {
+        "path": "lib/services/disk_partition_inspector.dart",
+        "executed_revision_blob": "f0c41a487bbc798cd1fdc0e41f903bacd8b877de",
+        "corrected_revision_blob": "f0c41a487bbc798cd1fdc0e41f903bacd8b877de",
+        "live_blob": "f0c41a487bbc798cd1fdc0e41f903bacd8b877de",
+        "mode": "100644",
+        "bytes": 37695,
+        "sha256": "46f5e40daa9818f6bf05b2cfe67bf0e03617deb58a6b5b719d51453391090ebf"
+      },
+      {
+        "path": "test/support/archive_disk_image_fixture.dart",
+        "executed_revision_blob": "0c0096a2155d1fa0fe1c0495e7b7744b4d1eedbc",
+        "corrected_revision_blob": "0c0096a2155d1fa0fe1c0495e7b7744b4d1eedbc",
+        "live_blob": "0c0096a2155d1fa0fe1c0495e7b7744b4d1eedbc",
+        "mode": "100644",
+        "bytes": 4480,
+        "sha256": "7dd8d5031c22777a56cd5ccbececa3a87eaa1400b71b1af96b2bccf421b402e2"
+      },
+      {
+        "path": "test/support/archive_ntfs_disk_fixture.dart",
+        "executed_revision_blob": "562b386fde2c04f85d21636223249487e92e0a80",
+        "corrected_revision_blob": "562b386fde2c04f85d21636223249487e92e0a80",
+        "live_blob": "562b386fde2c04f85d21636223249487e92e0a80",
+        "mode": "100644",
+        "bytes": 1237,
+        "sha256": "6c864d94ba3234067ee206b4c9baaa3d2111890fccd72f4bd33b904f2968d947"
+      },
+      {
+        "path": "test/support/archive_ntfs_reference_data.dart",
+        "executed_revision_blob": "f224a7c081f0bcdab79c3ab142dd72b20c7b6d66",
+        "corrected_revision_blob": "f224a7c081f0bcdab79c3ab142dd72b20c7b6d66",
+        "live_blob": "f224a7c081f0bcdab79c3ab142dd72b20c7b6d66",
+        "mode": "100644",
+        "bytes": 879954,
+        "sha256": "f5e11bcc43f9a3ad0e6b41f4e5eb0836d5be8635ad35ca30bf809fee57b77a91"
+      },
+      {
+        "path": "test/support/archive_ntfs_web_acceptance.dart",
+        "executed_revision_blob": "8b81c44e71f88a1387e4c3280690bb5aa7f2df9a",
+        "corrected_revision_blob": "8b81c44e71f88a1387e4c3280690bb5aa7f2df9a",
+        "live_blob": "8b81c44e71f88a1387e4c3280690bb5aa7f2df9a",
+        "mode": "100644",
+        "bytes": 25914,
+        "sha256": "2758ee3d3220da52250a5eafde5e9b66af0f31980a2368bf2e9b26994334f6ea"
+      },
+      {
+        "path": "test/support/disk_partition_fixture.dart",
+        "executed_revision_blob": "4d95b665d05aa7b36d55cd494fe7bdeabb2e0a0a",
+        "corrected_revision_blob": "4d95b665d05aa7b36d55cd494fe7bdeabb2e0a0a",
+        "live_blob": "4d95b665d05aa7b36d55cd494fe7bdeabb2e0a0a",
+        "mode": "100644",
+        "bytes": 6331,
+        "sha256": "98131f8233d6a3d7169e78f6ffd04ac0d7289417528b899dd499e4391c0ec82a"
+      }
+    ],
+    "all_tracked_compiler_input_git_blobs_equal_at_both_revisions": true,
+    "untracked_repository_inputs": [
+      ".dart_tool/package_config.json"
+    ],
+    "external_sdk_or_package_input_count": 592,
+    "full_input_list_reference": "ntfs-final-portable-compiler-inputs.json.gz"
+  },
+  "package_config": {
+    "path": "/workspace/scratch/4f6714f1660a/crispcloud/.dart_tool/package_config.json",
+    "before": {
+      "bytes": 60164,
+      "sha256": "87c3272b582b225a29657fbafdbfdbfdfa8ebd06be7eceab7a1f78a409a3839b"
+    },
+    "after": {
+      "bytes": 60164,
+      "sha256": "87c3272b582b225a29657fbafdbfdbfdfa8ebd06be7eceab7a1f78a409a3839b"
+    },
+    "matches_actual_execution": true
+  },
+  "production_manifests": {
+    "pubspec.yaml": {
+      "git_blob_at_both_revisions": "1dac078e30f6aa9ce7d76f684fc41966c06675b7",
+      "bytes": 11393,
+      "sha256": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7"
+    },
+    "pubspec.lock": {
+      "git_blob_at_both_revisions": "304499d38203c7888a21264410e8c947bc65a405",
+      "bytes": 63283,
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+    }
+  },
+  "executables": {
+    "dart": {
+      "path": "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+      "before": {
+        "bytes": 4835712,
+        "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+      },
+      "after": {
+        "bytes": 4835712,
+        "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+      },
+      "matches_actual_execution": true
+    },
+    "node": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "before": {
+        "bytes": 126939688,
+        "sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d"
+      },
+      "after": {
+        "bytes": 126939688,
+        "sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d"
+      },
+      "matches_actual_execution": true
+    }
+  },
+  "retained_compiled_javascript": {
+    "path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final-portable/archive_ntfs_acceptance.js",
+    "bytes": 717111,
+    "sha256": "b7361a26f619640bc3d15bbd1040bfcb4c121c157c4af43ec4ed7b56af8555d7",
+    "matches_executed_program": true
+  },
+  "git_read_commands": [
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.355277+00:00",
+      "finished_utc": "2026-11-14T13:27:25.356722+00:00",
+      "elapsed_seconds": 0.001,
+      "exit_code": 0,
+      "stdout_bytes": 41,
+      "stdout_sha256": "304a105bb33bfff6097862c25cd4f12f6ca05de6e8a472cd037019c11d8d1566",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.356736+00:00",
+      "finished_utc": "2026-11-14T13:27:25.358213+00:00",
+      "elapsed_seconds": 0.001,
+      "exit_code": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.358223+00:00",
+      "finished_utc": "2026-11-14T13:27:25.360328+00:00",
+      "elapsed_seconds": 0.002,
+      "exit_code": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--name-only",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.360334+00:00",
+      "finished_utc": "2026-11-14T13:27:25.362250+00:00",
+      "elapsed_seconds": 0.002,
+      "exit_code": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--name-status",
+        "--no-renames",
+        "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.362257+00:00",
+      "finished_utc": "2026-11-14T13:27:25.363907+00:00",
+      "elapsed_seconds": 0.002,
+      "exit_code": 0,
+      "stdout_bytes": 3614,
+      "stdout_sha256": "bd48bc59fabdc03217f6d07873fcb76c9ddc967fb846b84cf5919d8d1cfed109",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--no-ext-diff",
+        "--unified=8",
+        "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+        "--",
+        "test/archive_ntfs_reader_test.dart"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.363996+00:00",
+      "finished_utc": "2026-11-14T13:27:25.366699+00:00",
+      "elapsed_seconds": 0.003,
+      "exit_code": 0,
+      "stdout_bytes": 1193,
+      "stdout_sha256": "9e13e7a84396e2f70d402f9a76e10ee03b094db90979187cf4b6e4fdbe1b95fd",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "-z",
+        "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.366707+00:00",
+      "finished_utc": "2026-11-14T13:27:25.380557+00:00",
+      "elapsed_seconds": 0.014,
+      "exit_code": 0,
+      "stdout_bytes": 1056768,
+      "stdout_sha256": "ae0ec36383bb1fa5596d388edd4dd730a37376b8690182af5ef9ae878aeb5dad",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "ls-tree",
+        "-r",
+        "-z",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.396042+00:00",
+      "finished_utc": "2026-11-14T13:27:25.406885+00:00",
+      "elapsed_seconds": 0.011,
+      "exit_code": 0,
+      "stdout_bytes": 1062267,
+      "stdout_sha256": "a3277c151c6c26378e6585cf996cebe21ba55eb2d6e0edb1985b47737e27136c",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.673058+00:00",
+      "finished_utc": "2026-11-14T13:27:25.674726+00:00",
+      "elapsed_seconds": 0.002,
+      "exit_code": 0,
+      "stdout_bytes": 41,
+      "stdout_sha256": "304a105bb33bfff6097862c25cd4f12f6ca05de6e8a472cd037019c11d8d1566",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.674751+00:00",
+      "finished_utc": "2026-11-14T13:27:25.676451+00:00",
+      "elapsed_seconds": 0.002,
+      "exit_code": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--name-only",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+        "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_utc": "2026-11-14T13:27:25.676512+00:00",
+      "finished_utc": "2026-11-14T13:27:25.677838+00:00",
+      "elapsed_seconds": 0.001,
+      "exit_code": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limits": [
+    "No application, compiler, or native test suite was rerun for this receipt.",
+    "The corrected native test suite needs its own c2c17f7 execution receipt.",
+    "This proof does not reattribute the prior portable or web-build executions to c2c17f7."
+  ],
+  "verification_harness": {
+    "scratch_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/record_runtime_equivalence.py",
+    "sha256": "9c7f28fe076f28ed5f9a63c6607ec74fe567087afcf94a2aa28ee1d56aab4ac9",
+    "source": "#!/usr/bin/env python3\n\"\"\"Read-only input-equivalence proof; no application execution or source edit.\"\"\"\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nimport gzip\nimport hashlib\nimport json\nimport subprocess\nimport time\n\nROOT = Path(\"/workspace/scratch/4f6714f1660a/crispcloud\")\nOUT = ROOT / \"docs/evidence/storage-ntfs-20261114/final-portable\"\nEXECUTED = \"dec983b2fcb71dea7f90e1020c5d73e3f926a3f6\"\nCORRECTED = \"c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b\"\nTEST = \"test/archive_ntfs_reader_test.dart\"\nNAME = \"runtime-equivalence-dec983b2-to-c2c17f7.json\"\nCOMMANDS = []\nSTARTED = datetime.now(timezone.utc).isoformat()\n\n\ndef digest(raw):\n    return hashlib.sha256(raw).hexdigest()\n\n\ndef file_record(path):\n    hasher = hashlib.sha256()\n    count = 0\n    with path.open(\"rb\") as stream:\n        for block in iter(lambda: stream.read(1024 * 1024), b\"\"):\n            count += len(block)\n            hasher.update(block)\n    return {\"bytes\": count, \"sha256\": hasher.hexdigest()}\n\n\ndef git(*args):\n    started = datetime.now(timezone.utc).isoformat()\n    before = time.monotonic()\n    command = [\"git\", *args]\n    result = subprocess.run(command, cwd=ROOT, capture_output=True, check=False)\n    COMMANDS.append({\n        \"argv\": command, \"cwd\": str(ROOT), \"started_utc\": started,\n        \"finished_utc\": datetime.now(timezone.utc).isoformat(),\n        \"elapsed_seconds\": round(time.monotonic() - before, 3),\n        \"exit_code\": result.returncode,\n        \"stdout_bytes\": len(result.stdout), \"stdout_sha256\": digest(result.stdout),\n        \"stderr\": result.stderr.decode(), \"stderr_sha256\": digest(result.stderr),\n    })\n    result.check_returncode()\n    return result.stdout\n\n\ndef tree(revision):\n    result = {}\n    for item in git(\"ls-tree\", \"-r\", \"-z\", revision).split(b\"\\0\"):\n        if not item:\n            continue\n        metadata, name = item.split(b\"\\t\", 1)\n        mode, kind, blob = metadata.decode().split()\n        result[name.decode()] = {\"mode\": mode, \"kind\": kind, \"git_blob\": blob}\n    return result\n\n\ndef inventory_digest(rows):\n    return digest(json.dumps(rows, sort_keys=True, separators=(\",\", \":\")).encode())\n\n\nreceipt_path = OUT / \"ntfs-final-portable-receipt.json\"\nreceipt_bytes = receipt_path.read_bytes()\nqualification = json.loads(receipt_bytes)\nassert qualification[\"source_revision\"] == EXECUTED\nassert qualification[\"result\"] == \"passed\"\nbinding_path = OUT / qualification[\"compiler_input_binding\"][\"path\"]\nbinding_bytes = binding_path.read_bytes()\nassert digest(binding_bytes) == qualification[\"compiler_input_binding\"][\"sha256\"]\nbinding = json.loads(gzip.decompress(binding_bytes))\nassert binding[\"qualification_source_revision\"] == EXECUTED\nassert binding[\"inputs\"] == 606 and len(binding[\"files\"]) == 606\nexpected = {\n    path: {\"bytes\": row[\"bytes\"], \"sha256\": row[\"sha256\"]}\n    for path, row in binding[\"files\"].items()\n}\nassert inventory_digest(expected) == binding[\"inventory_sha256_before\"] == binding[\"inventory_sha256_after\"]\nassert str(ROOT / TEST) not in expected\n\nhead_before = git(\"rev-parse\", \"HEAD\").decode().strip()\ngit(\"merge-base\", \"--is-ancestor\", EXECUTED, CORRECTED)\ngit(\"merge-base\", \"--is-ancestor\", CORRECTED, head_before)\nhead_delta_before = git(\"diff\", \"--name-only\", CORRECTED, head_before).decode().splitlines()\nassert all(path.startswith(\"docs/\") for path in head_delta_before)\nchanged = git(\"diff\", \"--name-status\", \"--no-renames\", EXECUTED, CORRECTED).decode()\nchanges = [{\"status\": line.split(\"\\t\", 1)[0], \"path\": line.split(\"\\t\", 1)[1]}\n           for line in changed.splitlines()]\nnon_docs = [row for row in changes if not row[\"path\"].startswith(\"docs/\")]\nassert non_docs == [{\"status\": \"M\", \"path\": TEST}], non_docs\npatch = git(\"diff\", \"--no-ext-diff\", \"--unified=8\", EXECUTED, CORRECTED, \"--\", TEST).decode()\nold_tree, new_tree = tree(EXECUTED), tree(CORRECTED)\nassert set(old_tree).symmetric_difference(new_tree).issubset(\n    {path for path in set(old_tree) | set(new_tree) if path.startswith(\"docs/\")}\n)\nfor path in set(old_tree) & set(new_tree):\n    if not path.startswith(\"docs/\") and path != TEST:\n        assert old_tree[path] == new_tree[path], path\n\ninputs_before = {path: file_record(Path(path)) for path in sorted(expected)}\nassert inputs_before == expected\ntracked_inputs = []\nuntracked_repository_inputs = []\nexternal_inputs = []\nfor path in sorted(expected):\n    resolved = Path(path)\n    if resolved.is_relative_to(ROOT):\n        relative = resolved.relative_to(ROOT).as_posix()\n        if relative not in old_tree or relative not in new_tree:\n            untracked_repository_inputs.append(relative)\n            continue\n        old, new = old_tree[relative], new_tree[relative]\n        assert old == new and old[\"kind\"] == \"blob\", relative\n        raw = resolved.read_bytes()\n        live_blob = hashlib.sha1(b\"blob \" + str(len(raw)).encode() + b\"\\0\" + raw).hexdigest()\n        assert live_blob == old[\"git_blob\"]\n        tracked_inputs.append({\n            \"path\": relative, \"executed_revision_blob\": old[\"git_blob\"],\n            \"corrected_revision_blob\": new[\"git_blob\"], \"live_blob\": live_blob,\n            \"mode\": old[\"mode\"], **expected[path],\n        })\n    else:\n        external_inputs.append(path)\nassert untracked_repository_inputs == [\".dart_tool/package_config.json\"]\n\npackage_path = ROOT / qualification[\"package_config\"][\"path\"]\npackage_before = file_record(package_path)\nassert package_before == {key: qualification[\"package_config\"][key] for key in [\"bytes\", \"sha256\"]}\nexecutables_before = {\n    name: file_record(Path(row[\"path\"])) for name, row in qualification[\"executables\"].items()\n}\nassert executables_before == {\n    name: {key: row[key] for key in [\"bytes\", \"sha256\"]}\n    for name, row in qualification[\"executables\"].items()\n}\nmanifests = {}\nfor name in [\"pubspec.yaml\", \"pubspec.lock\"]:\n    assert old_tree[name] == new_tree[name]\n    current = file_record(ROOT / name)\n    assert current[\"sha256\"] == qualification[\"production_manifest_hashes\"][name]\n    manifests[name] = {\"git_blob_at_both_revisions\": old_tree[name][\"git_blob\"], **current}\n\ncorrected_test = (ROOT / TEST).read_bytes()\ncorrected_test_blob = hashlib.sha1(b\"blob \" + str(len(corrected_test)).encode() + b\"\\0\" + corrected_test).hexdigest()\nassert corrected_test_blob == new_tree[TEST][\"git_blob\"]\ncompiled_path = Path(qualification[\"compiled_output\"][\"path\"])\ncompiled = file_record(compiled_path)\nassert compiled == {key: qualification[\"compiled_output\"][key] for key in [\"bytes\", \"sha256\"]}\n\ninputs_after = {path: file_record(Path(path)) for path in sorted(expected)}\npackage_after = file_record(package_path)\nexecutables_after = {\n    name: file_record(Path(row[\"path\"])) for name, row in qualification[\"executables\"].items()\n}\nassert inputs_before == inputs_after == expected\nassert package_before == package_after\nassert executables_before == executables_after\nassert receipt_path.read_bytes() == receipt_bytes\nassert binding_path.read_bytes() == binding_bytes\nhead_after = git(\"rev-parse\", \"HEAD\").decode().strip()\ngit(\"merge-base\", \"--is-ancestor\", CORRECTED, head_after)\nhead_delta_after = git(\"diff\", \"--name-only\", CORRECTED, head_after).decode().splitlines()\nassert all(path.startswith(\"docs/\") for path in head_delta_after)\n\nresult = {\n    \"schema\": 1, \"result\": \"equivalent\",\n    \"scope\": \"Exact portable compiler/runtime input equivalence for a native-test-only correction.\",\n    \"started_utc\": STARTED, \"finished_utc\": datetime.now(timezone.utc).isoformat(),\n    \"actual_portable_execution_revision\": EXECUTED,\n    \"corrected_native_test_revision\": CORRECTED,\n    \"applications_executed_for_this_receipt\": False,\n    \"portable_executions_at_corrected_revision_claimed\": False,\n    \"qualification_reuse\": \"The recorded dec983b2 portable results apply to the unchanged compiler/runtime inputs present at c2c17f7. Execution attribution remains dec983b2; this is a separate equivalence proof.\",\n    \"qualification_receipt\": {\"path\": receipt_path.name, \"bytes\": len(receipt_bytes), \"sha256\": digest(receipt_bytes), \"unchanged\": True},\n    \"original_compiler_input_binding\": {\n        \"path\": binding_path.name, \"stored\": file_record(binding_path),\n        \"uncompressed_sha256\": digest(gzip.decompress(binding_bytes)),\n        \"contains_complete_606_input_list_and_hashes\": True, \"unchanged\": True,\n    },\n    \"observed_head_before\": head_before, \"observed_head_after\": head_after,\n    \"head_changes_beyond_corrected_revision_are_documentation_only\": True,\n    \"head_documentation_delta_before\": head_delta_before,\n    \"head_documentation_delta_after\": head_delta_after,\n    \"revision_changes\": changes, \"only_non_documentation_changed_path\": TEST,\n    \"all_other_non_documentation_git_tree_entries_equal\": True,\n    \"corrected_test\": {\n        \"path\": TEST, \"executed_revision_blob\": old_tree[TEST][\"git_blob\"],\n        \"corrected_revision_blob\": new_tree[TEST][\"git_blob\"],\n        \"live_blob_matches_corrected_revision\": True,\n        \"absent_from_all_actual_compiler_inputs\": True,\n        \"change\": \"Move the ordinary '.' filename control out of the unsafe-component loop and expect corrupt for its earlier duplicate root-index-key refusal. No reader or fixture producer behavior changes.\",\n        \"patch_sha256\": digest(patch.encode()), \"patch\": patch,\n    },\n    \"actual_compiler_inputs\": {\n        \"count\": 606, \"every_input_checked_before_and_after\": True,\n        \"every_input_matches_original_execution\": True,\n        \"original_inventory_sha256\": binding[\"inventory_sha256_before\"],\n        \"current_inventory_sha256_before\": inventory_digest(inputs_before),\n        \"current_inventory_sha256_after\": inventory_digest(inputs_after),\n        \"tracked_repository_input_count\": len(tracked_inputs),\n        \"tracked_repository_inputs\": tracked_inputs,\n        \"all_tracked_compiler_input_git_blobs_equal_at_both_revisions\": True,\n        \"untracked_repository_inputs\": untracked_repository_inputs,\n        \"external_sdk_or_package_input_count\": len(external_inputs),\n        \"full_input_list_reference\": binding_path.name,\n    },\n    \"package_config\": {\"path\": str(package_path), \"before\": package_before, \"after\": package_after,\n                       \"matches_actual_execution\": True},\n    \"production_manifests\": manifests,\n    \"executables\": {\n        name: {\"path\": qualification[\"executables\"][name][\"path\"], \"before\": row,\n               \"after\": executables_after[name], \"matches_actual_execution\": True}\n        for name, row in executables_before.items()\n    },\n    \"retained_compiled_javascript\": {\"path\": str(compiled_path), **compiled, \"matches_executed_program\": True},\n    \"git_read_commands\": COMMANDS,\n    \"limits\": [\n        \"No application, compiler, or native test suite was rerun for this receipt.\",\n        \"The corrected native test suite needs its own c2c17f7 execution receipt.\",\n        \"This proof does not reattribute the prior portable or web-build executions to c2c17f7.\",\n    ],\n    \"verification_harness\": {\"scratch_path\": str(Path(__file__)), \"sha256\": digest(Path(__file__).read_bytes()),\n                             \"source\": Path(__file__).read_text()},\n}\nresult_bytes = (json.dumps(result, ensure_ascii=False, indent=2) + \"\\n\").encode()\n(OUT / NAME).write_bytes(result_bytes)\nindex_path = OUT / \"INDEX.json\"\nindex = json.loads(index_path.read_text())\nassert index[\"qualification_source_revision\"] == EXECUTED\nindex[\"native_test_correction_equivalence\"] = {\n    \"path\": NAME, \"bytes\": len(result_bytes), \"sha256\": digest(result_bytes),\n    \"actual_portable_execution_revision\": EXECUTED,\n    \"equivalent_compiler_runtime_revision\": CORRECTED,\n    \"all_606_actual_inputs_unchanged\": True,\n    \"portable_execution_at_later_revision_claimed\": False,\n}\nindex[\"files\"] = [item for item in index[\"files\"] if item[\"path\"] != NAME]\nindex[\"files\"].append({\"path\": NAME, \"stored\": {\"bytes\": len(result_bytes), \"sha256\": digest(result_bytes)}, \"encoding\": \"identity\"})\nindex_path.write_text(json.dumps(index, ensure_ascii=False, indent=2) + \"\\n\")\nreadme_path = OUT / \"README.md\"\nreadme = readme_path.read_text()\nheader = \"\\n## Native-test correction equivalence\\n\"\nassert header not in readme\nreadme += header + \"\"\"\nThe separate [runtime/compiler equivalence receipt](runtime-equivalence-dec983b2-to-c2c17f7.json)\ncompares the executed revision above with corrected native-test revision\n**c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b**. Their only non-documentation change\nis the ordinary-dot control in test/archive_ntfs_reader_test.dart, which is\nabsent from all 606 actual portable compiler inputs.\n\nEvery actual compiler input, the primary package map, production manifests, and\nDart/Node executable bytes still match the original qualification. Every tracked\ncompiler input also has the same Git blob at both revisions. This supports reuse\nof the portable results for the unchanged inputs at the corrected test revision.\nNo application or compiler was rerun for this proof: the portable executions\nremain attributed to **dec983b2fcb71dea7f90e1020c5d73e3f926a3f6**. The native\nsuite's execution at the corrected revision is recorded separately.\n\"\"\"\nreadme_path.write_text(readme)\nassert receipt_path.read_bytes() == receipt_bytes\nassert json.loads((OUT / NAME).read_text())[\"actual_compiler_inputs\"][\"count\"] == 606\nassert digest((OUT / NAME).read_bytes()) == index[\"native_test_correction_equivalence\"][\"sha256\"]\nprint(json.dumps({\n    \"result\": \"equivalent\", \"actual_execution_revision\": EXECUTED,\n    \"corrected_test_revision\": CORRECTED, \"actual_inputs_unchanged\": 606,\n    \"tracked_compiler_inputs_with_equal_git_blobs\": len(tracked_inputs),\n    \"only_non_doc_change\": TEST, \"receipt\": str(OUT / NAME),\n    \"receipt_bytes\": len(result_bytes), \"no_application_rerun\": True,\n}))\n"
+  }
+}

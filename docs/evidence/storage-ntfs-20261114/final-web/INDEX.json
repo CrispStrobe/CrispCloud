@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "source_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "qualification": "Successful original-manifest production JavaScript build at the actual stated runtime revision. A later native-test-only expectation correction must be separately proven runtime-equivalent; no later execution is claimed.",
+  "artifacts": [
+    {
+      "original_name": "ntfs-final-web-0.log",
+      "stored_name": "ntfs-final-web-0.log",
+      "encoding": "identity",
+      "original_bytes": 1661,
+      "stored_bytes": 1661,
+      "original_sha256": "7ea6420080612359408d030ddc1bf7e73bc45b9b20046d4293f6015c61d6fa55",
+      "stored_sha256": "7ea6420080612359408d030ddc1bf7e73bc45b9b20046d4293f6015c61d6fa55"
+    },
+    {
+      "original_name": "ntfs-final-web-1.log",
+      "stored_name": "ntfs-final-web-1.log",
+      "encoding": "identity",
+      "original_bytes": 779,
+      "stored_bytes": 779,
+      "original_sha256": "f13ba257a07e5083fcac0c008be19adbd513fce2d60a693a754efea49b37f21d",
+      "stored_sha256": "f13ba257a07e5083fcac0c008be19adbd513fce2d60a693a754efea49b37f21d"
+    },
+    {
+      "original_name": "ntfs-final-web-receipt.json",
+      "stored_name": "ntfs-final-web-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 2210,
+      "stored_bytes": 2210,
+      "original_sha256": "48f701b4d0392cf270ae57ac41c012b6387f741621ce0be85e0d4519cb7682a6",
+      "stored_sha256": "48f701b4d0392cf270ae57ac41c012b6387f741621ce0be85e0d4519cb7682a6"
+    },
+    {
+      "original_name": "ntfs-final-web-source-binding.json",
+      "stored_name": "ntfs-final-web-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1115729,
+      "stored_bytes": 384705,
+      "original_sha256": "2add0a9c6f0157c7475020cefc39c9b8ff0155394048a0528a11df4f4ab67330",
+      "stored_sha256": "0ab54bec6ec0df063582d4822a0e53e726c3727796121f9886b4f5e4d4d366e2"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "source_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "qualification": "Initial 46-suite native candidate: 1186 passed, 1 failed (root-dot refusal classification expectation), 1 expected opt-in large TGZ skip. Failed gate retained; not final native acceptance. Strict analysis of 25 changed Dart files passed at the same revision.",
+  "artifacts": [
+    {
+      "original_name": "ntfs-final-native.log",
+      "stored_name": "ntfs-final-native.log.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 245794,
+      "stored_bytes": 9765,
+      "original_sha256": "317e635aba27d922c8926cb881c54fe32adc9980d6ad9a0e73a4c724f5837be5",
+      "stored_sha256": "24f6de4fd0e2cc6e940507a6f0784d91c37a135663fbd0d8d927e5f1504c6862"
+    },
+    {
+      "original_name": "ntfs-final-native-events.json",
+      "stored_name": "ntfs-final-native-events.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 615845,
+      "stored_bytes": 51848,
+      "original_sha256": "7b0ca3d86d4dbc6702c8be3f446be25a46003ef41b0e741c274bb6b6b8e3a682",
+      "stored_sha256": "20ecb1f9545542343abbd2a7104c4b5ba8f7ccdcb822a7c4bfd73e340c4c5341"
+    },
+    {
+      "original_name": "ntfs-final-native-receipt.json",
+      "stored_name": "ntfs-final-native-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 3275,
+      "stored_bytes": 3275,
+      "original_sha256": "5d1159aae559401070f9cc015e11dc41d0ea8fa6cf91c85fae796d8365efa834",
+      "stored_sha256": "5d1159aae559401070f9cc015e11dc41d0ea8fa6cf91c85fae796d8365efa834"
+    },
+    {
+      "original_name": "ntfs-final-native-source-binding.json",
+      "stored_name": "ntfs-final-native-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1115929,
+      "stored_bytes": 384789,
+      "original_sha256": "c7f8a8bc266730124619d60817b85fe57b3a249b7a9256dd8e0295618617c010",
+      "stored_sha256": "e67dcc9fb5843b31583bfcaa355d36f2823695ed13e4561b799ea49df10f888c"
+    },
+    {
+      "original_name": "ntfs-final-native-summary.json",
+      "stored_name": "ntfs-final-native-summary.json",
+      "encoding": "identity",
+      "original_bytes": 5434,
+      "stored_bytes": 5434,
+      "original_sha256": "eb880479cc7870e13c493ac31ea668a8d68869d64eac045b05be287737ff7570",
+      "stored_sha256": "eb880479cc7870e13c493ac31ea668a8d68869d64eac045b05be287737ff7570"
+    },
+    {
+      "original_name": "ntfs-final-native-invocation.json",
+      "stored_name": "ntfs-final-native-invocation.json",
+      "encoding": "identity",
+      "original_bytes": 4767,
+      "stored_bytes": 4767,
+      "original_sha256": "5ce1c9b3ea01d9650898cccc987af1fdddd9b3cd06b511ff340ac357f33e9bff",
+      "stored_sha256": "5ce1c9b3ea01d9650898cccc987af1fdddd9b3cd06b511ff340ac357f33e9bff"
+    },
+    {
+      "original_name": "ntfs-final-analysis.log",
+      "stored_name": "ntfs-final-analysis.log",
+      "encoding": "identity",
+      "original_bytes": 806,
+      "stored_bytes": 806,
+      "original_sha256": "89ac6cf64a63c1ebc48e812e0251622ff1b4cb2543d21b2fbbea75c6516b27f0",
+      "stored_sha256": "89ac6cf64a63c1ebc48e812e0251622ff1b4cb2543d21b2fbbea75c6516b27f0"
+    },
+    {
+      "original_name": "ntfs-final-analysis-receipt.json",
+      "stored_name": "ntfs-final-analysis-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 3343,
+      "stored_bytes": 3343,
+      "original_sha256": "98cfba4052d73e0621ef51ed8975b54a305b95959a4ccf34fee222e36a0fee66",
+      "stored_sha256": "98cfba4052d73e0621ef51ed8975b54a305b95959a4ccf34fee222e36a0fee66"
+    },
+    {
+      "original_name": "ntfs-final-analysis-source-binding.json",
+      "stored_name": "ntfs-final-analysis-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1117043,
+      "stored_bytes": 385016,
+      "original_sha256": "0539d6f0235cef1e473153ab64d59a72bbbcc4e3964062e89f90438b07ccd265",
+      "stored_sha256": "982cb6c4c1928764baa00685ababc580e813d79a516da201c377467f1b0e759c"
+    }
+  ]
+}

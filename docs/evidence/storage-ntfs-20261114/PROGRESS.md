@@ -150,3 +150,23 @@ checks retain their own results.
   with the full revision and app version embedded. These executions retain
   their actual source attribution; the final native gate will use the saved
   corrected test revision.
+
+## Final local qualification
+
+`c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b` saved the exact native-test correction
+and documentation clarifications. The complete 46-suite native gate then passed
+1,187 tests with zero failures and the one existing opt-in >2 GiB TGZ skip.
+Strict analysis passed all 25 changed Dart files. Both runs bind 8,092 source
+paths to that revision, with no drift and the original manifests preserved.
+
+The production web and portable executions remain attributed to the unchanged
+runtime revision `dec983b2`. A separate exact compiler/runtime equivalence
+receipt proves that the only intervening non-documentation change is the native
+test expectation and is absent from the actual portable compiler inputs. Full
+receipts, preserved attempts, supported-profile limits and independent fixture
+provenance are indexed in [README.md](README.md) and `final-validation.json`.
+
+Main advanced separately to `70524c81` with CSV imports and BASIC/XML highlighting.
+The read-only merge preview is clean, but the merged tree is not qualified by
+these results. PR #103 remains stacked on ext PR #102. Hosted checks are recorded
+separately and are not reported as a pass while queued or cancelled.

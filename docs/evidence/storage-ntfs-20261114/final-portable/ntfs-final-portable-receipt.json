@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "result": "passed",
+  "started_at_utc": "2026-11-14T13:18:31.048413+00:00",
+  "completed_at_utc": "2026-11-14T13:18:41.949140+00:00",
+  "source_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "head_before": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "head_after": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "head_is_descendant_with_documentation_only_changes": true,
+  "scope": "Read-only NTFS filesystem and Microsoft Basic Data/MBR partition-image portable acceptance. Fresh VM, dart2js -O2 compilation, and actual Node execution from the original primary checkout package map.",
+  "targets": [
+    "Dart VM",
+    "dart2js JavaScript executed by Node"
+  ],
+  "groups_per_target": 18,
+  "checks_per_target": 2037,
+  "independently_mastered_images": 4,
+  "supported_reference_images": 3,
+  "unsupported_reference_images": 1,
+  "supported_regular_file_instances": 143,
+  "external_oracle_total_regular_file_instances": 204,
+  "external_oracle_named_stream_instances": 8,
+  "derived_partition_wrappers": 3,
+  "counts_are_not_additive_with_native_gate": true,
+  "full_json_equal": true,
+  "serialized_stdout_equal": true,
+  "excluded_comparison_fields": [],
+  "all_commands_succeeded": true,
+  "commands": [
+    {
+      "label": "dart-version",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T13:18:31.627752+00:00",
+      "completed_at_utc": "2026-11-14T13:18:31.631865+00:00",
+      "elapsed_seconds": 0.004,
+      "exit_code": 0,
+      "stdout": "ntfs-final-portable-dart-version.log",
+      "stderr": "ntfs-final-portable-dart-version-stderr.log",
+      "stdout_file": {
+        "bytes": 82,
+        "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-version",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T13:18:31.632163+00:00",
+      "completed_at_utc": "2026-11-14T13:18:31.639939+00:00",
+      "elapsed_seconds": 0.008,
+      "exit_code": 0,
+      "stdout": "ntfs-final-portable-node-version.log",
+      "stderr": "ntfs-final-portable-node-version-stderr.log",
+      "stdout_file": {
+        "bytes": 9,
+        "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "vm",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "test/support/archive_ntfs_web_acceptance.dart"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T13:18:31.640269+00:00",
+      "completed_at_utc": "2026-11-14T13:18:35.598719+00:00",
+      "elapsed_seconds": 3.958,
+      "exit_code": 0,
+      "stdout": "ntfs-final-portable-vm.log",
+      "stderr": "ntfs-final-portable-vm-stderr.log",
+      "stdout_file": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "compile",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "--packages=.dart_tool/package_config.json",
+        "-O2",
+        "test/support/archive_ntfs_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final-portable/archive_ntfs_acceptance.js"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T13:18:35.599612+00:00",
+      "completed_at_utc": "2026-11-14T13:18:38.551157+00:00",
+      "elapsed_seconds": 2.952,
+      "exit_code": 0,
+      "stdout": "ntfs-final-portable-compile.log",
+      "stderr": "ntfs-final-portable-compile-stderr.log",
+      "stdout_file": {
+        "bytes": 111,
+        "sha256": "2c9dbdbc7e578754db9c862690a60f964aad30b77be0c941f990c383ebaddf08"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "js",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "-e",
+        "global.self=global; require(\"/workspace/scratch/4f6714f1660a/ntfs-reference-work/final-portable/archive_ntfs_acceptance.js\")"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T13:18:38.579456+00:00",
+      "completed_at_utc": "2026-11-14T13:18:41.511389+00:00",
+      "elapsed_seconds": 2.932,
+      "exit_code": 0,
+      "stdout": "ntfs-final-portable-js.log",
+      "stderr": "ntfs-final-portable-js-stderr.log",
+      "stdout_file": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "tool_versions": {
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "node": "v24.22.1",
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41"
+  },
+  "executables": {
+    "dart": {
+      "path": "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "unchanged_after": true
+    },
+    "node": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "bytes": 126939688,
+      "sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d",
+      "unchanged_after": true
+    }
+  },
+  "source_binding": {
+    "path": "ntfs-final-portable-source-binding.json.gz",
+    "count": 5048,
+    "all_matched_before_and_after": true,
+    "sha256": "32392068b0e30ced0225047c07882e88f2032f344f2cf18981cd77e7eec30dcd"
+  },
+  "compiler_input_binding": {
+    "path": "ntfs-final-portable-compiler-inputs.json.gz",
+    "count": 606,
+    "all_unchanged": true,
+    "sha256": "09a53a94f9c9947fb7110ecea5fdec52d714f24ee361c706c9c3185dd7d08735"
+  },
+  "production_manifests_unchanged_since_pre_ntfs_revision": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+  "evidence_compression": "Large JSON bindings and compiler dependency paths use deterministic gzip with empty filename, mtime0, level9; receipt file hashes bind the stored compressed bytes.",
+  "preflight_binding": {
+    "path": "ntfs-final-portable-preflight-inputs.json.gz",
+    "bytes": 431435,
+    "sha256": "75e7f90322d3056c5a974ffe9a73e8e17b89603f7e008f002ce7578cf6dc543c"
+  },
+  "production_manifest_hashes": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "package_config": {
+    "path": ".dart_tool/package_config.json",
+    "bytes": 60164,
+    "sha256": "87c3272b582b225a29657fbafdbfdbfdfa8ebd06be7eceab7a1f78a409a3839b",
+    "unchanged_after": true
+  },
+  "compiled_output": {
+    "path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final-portable/archive_ntfs_acceptance.js",
+    "bytes": 717111,
+    "sha256": "b7361a26f619640bc3d15bbd1040bfcb4c121c157c4af43ec4ed7b56af8555d7"
+  },
+  "compiled_source_map": {
+    "bytes": 252882,
+    "sha256": "501b0b740c9c45623f5aa843cb5573bbd8fcacd905bffa6d288f4b3575ce85ec"
+  },
+  "compiler_dependency_output": {
+    "path": "ntfs-final-portable-dependency-paths.log.gz",
+    "bytes": 4212,
+    "sha256": "aaf3258ed80e4e1caf441c8659166debba51d2a32673b1a2e81efa012bc746fe",
+    "uncompressed_sha256": "515aa7ed61e79098121e04673ce9387fa171756a934c0ce65d82d0e2337773f2"
+  },
+  "outputs": {
+    "vm": {
+      "path": "ntfs-final-portable-vm.json",
+      "bytes": 2595,
+      "sha256": "baccf1e0eb86c57f276085fba97d66999c046e268777097662318cdabc77c77d"
+    },
+    "js": {
+      "path": "ntfs-final-portable-js.json",
+      "bytes": 2595,
+      "sha256": "baccf1e0eb86c57f276085fba97d66999c046e268777097662318cdabc77c77d"
+    }
+  },
+  "harness": {
+    "scratch_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/run_final_portable.py",
+    "sha256": "193962894878f20b643435b44c2e11ad548e93f70322e6ca164db37885d00d19",
+    "source": "from __future__ import annotations\n\nfrom datetime import datetime, timezone\nimport hashlib\nimport gzip\nimport io\nimport json\nfrom pathlib import Path\nimport platform\nimport shutil\nimport subprocess\nimport time\nimport traceback\nfrom urllib.parse import unquote, urlparse\n\nROOT = Path('/workspace/scratch/4f6714f1660a/crispcloud')\nSOURCE = 'dec983b2fcb71dea7f90e1020c5d73e3f926a3f6'\nOUT = ROOT / 'docs/evidence/storage-ntfs-20261114/final-portable'\nWORK = Path('/workspace/scratch/4f6714f1660a/ntfs-reference-work/final-portable')\nDART = Path('/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart')\nNODE = Path(shutil.which('node'))\nSEED_DEPS = Path('/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke.js.deps')\nOUT.mkdir(parents=True, exist_ok=True)\nWORK.mkdir(parents=True, exist_ok=True)\nCOMMANDS = []\nSTART = datetime.now(timezone.utc).isoformat()\n\n\ndef now():\n    return datetime.now(timezone.utc).isoformat()\n\n\ndef digest(data):\n    return hashlib.sha256(data).hexdigest()\n\n\ndef file_record(path):\n    data = path.read_bytes()\n    return {'bytes': len(data), 'sha256': digest(data)}\n\n\ndef deterministic_gzip(raw):\n    output = io.BytesIO()\n    with gzip.GzipFile(filename='', mode='wb', compresslevel=9, fileobj=output, mtime=0) as stream:\n        stream.write(raw)\n    return output.getvalue()\n\n\ndef json_write(name, value):\n    raw = (json.dumps(value, ensure_ascii=False, indent=2) + '\\n').encode()\n    if name.endswith('.gz'):\n        raw = deterministic_gzip(raw)\n    (OUT / name).write_bytes(raw)\n\n\ndef git(*args):\n    return subprocess.check_output(['git', *args], cwd=ROOT)\n\n\ndef tree_entries():\n    selected = {}\n    for record in git('ls-tree', '-r', '-z', SOURCE).split(b'\\0'):\n        if not record:\n            continue\n        metadata, encoded_path = record.split(b'\\t', 1)\n        mode, kind, blob = metadata.decode().split()\n        path = encoded_path.decode()\n        if path.endswith('.dart') or Path(path).name in {'pubspec.yaml', 'pubspec.lock', 'analysis_options.yaml'} or path in {'test/fixtures/archives/ntfs-reference-manifest.json', 'test/support/generate_ntfs_reference.py', 'test/support/ntfs_reference_tool.c', 'test/support/ntfs_reference_fixed_time.c'}:\n            assert mode in ('100644', '100755'), (path, mode)\n            assert kind == 'blob'\n            selected[path] = blob\n    return selected\n\n\ndef source_snapshot(entries):\n    rows = {}\n    for name, expected_blob in sorted(entries.items()):\n        raw = (ROOT / name).read_bytes()\n        blob = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\\0' + raw).hexdigest()\n        if blob != expected_blob:\n            raise AssertionError('Source bytes do not match qualification commit: ' + name)\n        rows[name] = {'bytes': len(raw), 'sha256': digest(raw), 'git_blob': blob}\n    return rows\n\n\ndef dependency_paths(path):\n    results = []\n    for line in path.read_text().splitlines():\n        uri = urlparse(line.strip())\n        if not line.strip():\n            continue\n        if uri.scheme == 'org-dartlang-sdk' and not uri.netloc:\n            results.append((DART.parents[1] / unquote(uri.path).lstrip('/')).resolve())\n        else:\n            assert uri.scheme == 'file' and uri.netloc in ('', 'localhost'), line\n            results.append(Path(unquote(uri.path)).resolve())\n    return sorted(set(results))\n\n\ndef snapshot_dependencies(paths):\n    return {str(path): file_record(path) for path in paths}\n\n\ndef inventory_digest(values):\n    return digest(json.dumps(values, sort_keys=True, separators=(',', ':')).encode())\n\n\ndef run(label, args):\n    stdout_path = OUT / f'ntfs-final-portable-{label}.log'\n    stderr_path = OUT / f'ntfs-final-portable-{label}-stderr.log'\n    started = now()\n    begin = time.monotonic()\n    with stdout_path.open('wb') as stdout, stderr_path.open('wb') as stderr:\n        result = subprocess.run(args, cwd=ROOT, stdout=stdout, stderr=stderr, timeout=180, check=False)\n    record = {'label': label, 'argv': [str(x) for x in args], 'cwd': str(ROOT), 'started_at_utc': started,\n              'completed_at_utc': now(), 'elapsed_seconds': round(time.monotonic() - begin, 3),\n              'exit_code': result.returncode, 'stdout': stdout_path.name, 'stderr': stderr_path.name,\n              'stdout_file': file_record(stdout_path), 'stderr_file': file_record(stderr_path)}\n    COMMANDS.append(record)\n    json_write('ntfs-final-portable-commands.json', {'source_revision': SOURCE, 'commands': COMMANDS})\n    if result.returncode:\n        raise RuntimeError(f'{label} failed with exit {result.returncode}; see {stderr_path.name}')\n    return stdout_path.read_text(), stderr_path.read_text()\n\n\ntry:\n    head_before = git('rev-parse', 'HEAD').decode().strip()\n    git('merge-base', '--is-ancestor', SOURCE, head_before)\n    advanced_paths_before = git('diff', '--name-only', SOURCE, head_before).decode().splitlines()\n    assert all(path.startswith('docs/') for path in advanced_paths_before), 'Non-documentation HEAD change'\n    entries = tree_entries()\n    source_before = source_snapshot(entries)\n    predicted_paths = dependency_paths(SEED_DEPS)\n    dependencies_before = snapshot_dependencies(predicted_paths)\n    package_config = ROOT / '.dart_tool/package_config.json'\n    package_before = file_record(package_config)\n    executable_before = {'dart': file_record(DART), 'node': file_record(NODE.resolve())}\n    baseline_manifests = {name: digest(git('show', 'ffdd6a86820b0d58cf8b93b4e626d0439beefab9:' + name)) for name in ['pubspec.yaml', 'pubspec.lock']}\n    assert baseline_manifests == {name: source_before[name]['sha256'] for name in baseline_manifests}\n    json_write('ntfs-final-portable-preflight-inputs.json.gz', {'source_revision': SOURCE, 'head_before': head_before, 'source_before': source_before, 'dependencies_before': dependencies_before, 'package_config_before': package_before, 'executables_before': executable_before, 'pre_ntfs_revision': 'ffdd6a86820b0d58cf8b93b4e626d0439beefab9', 'production_manifests_unchanged_since_pre_ntfs': True})\n    dart_stdout, dart_stderr = run('dart-version', [str(DART), '--version'])\n    node_stdout, node_stderr = run('node-version', [str(NODE), '--version'])\n    vm_stdout, vm_stderr = run('vm', [str(DART), '--packages=.dart_tool/package_config.json', 'test/support/archive_ntfs_web_acceptance.dart'])\n    compiled = WORK / 'archive_ntfs_acceptance.js'\n    run('compile', [str(DART), 'compile', 'js', '--packages=.dart_tool/package_config.json', '-O2', 'test/support/archive_ntfs_web_acceptance.dart', '-o', str(compiled)])\n    actual_paths = dependency_paths(Path(str(compiled) + '.deps'))\n    assert actual_paths == predicted_paths, 'Compiler dependency inventory changed; rerun with complete preflight inputs'\n    js_stdout, js_stderr = run('js', [str(NODE), '-e', 'global.self=global; require(' + json.dumps(str(compiled)) + ')'])\n    vm = json.loads(vm_stdout)\n    js = json.loads(js_stdout)\n    assert not vm_stderr.strip() and not js_stderr.strip(), 'Unexpected runtime stderr'\n    for label, result in [('vm', vm), ('js', js)]:\n        assert len(result['groups']) == 18 and result['checks'] == 2037, (label, result)\n        assert len(result['independent_reference_images']) == 3\n        assert len(result['derived_partition_wrappers']) == 3\n        assert result['all_payload_and_complete_image_hashes_match'] is True\n        assert result['named_streams_are_metadata_only'] is True\n        assert result['independent_unsupported_reference_image']['name'] == 'ntfs31-4k-attrlist'\n    assert vm == js, 'Full VM/JavaScript result JSON differs'\n    assert vm_stdout == js_stdout, 'Serialized JSON stdout differs'\n    source_after = source_snapshot(entries)\n    dependencies_after = snapshot_dependencies(actual_paths)\n    package_after = file_record(package_config)\n    executable_after = {'dart': file_record(DART), 'node': file_record(NODE.resolve())}\n    assert source_before == source_after\n    assert dependencies_before == dependencies_after\n    assert package_before == package_after\n    assert executable_before == executable_after\n    head_after = git('rev-parse', 'HEAD').decode().strip()\n    git('merge-base', '--is-ancestor', SOURCE, head_after)\n    advanced_paths_after = git('diff', '--name-only', SOURCE, head_after).decode().splitlines()\n    assert all(path.startswith('docs/') for path in advanced_paths_after), 'Non-documentation HEAD change'\n    source_records = {path: {**value, 'matched_commit_before': True, 'matched_commit_after': True} for path, value in source_before.items()}\n    source_digest_before = inventory_digest(source_before)\n    source_digest_after = inventory_digest(source_after)\n    binding = {\n        'schema': 1, 'qualification_source_revision': SOURCE,\n        'head_before': head_before, 'head_after': head_after,\n        'head_changes_are_documentation_only': True,\n        'documentation_paths_changed_since_source': advanced_paths_after,\n        'selection': \"Every tracked .dart file, every pubspec.yaml/pubspec.lock/analysis_options.yaml, the NTFS corpus manifest, and original NTFS generator/C helper sources.\",\n        'path_count': len(source_records), 'dart_paths': sum(path.endswith('.dart') for path in source_records),\n        'all_paths_match_commit_before_and_after': True, 'inventory_unchanged': True,\n        'inventory_sha256_before': source_digest_before, 'inventory_sha256_after': source_digest_after,\n        'manifest_bytes_are_original': True,\n        'files': source_records,\n    }\n    json_write('ntfs-final-portable-source-binding.json.gz', binding)\n    dependency_binding = {\n        'schema': 1, 'qualification_source_revision': SOURCE,\n        'scope': 'Every source/config input listed by the actual dart2js dependency output, including SDK and resolved external package sources.',\n        'preflight_inventory': 'Path inventory from the earlier local compiler dependency output only; contents were freshly hashed before this qualification. The final compiler path inventory must match exactly.',\n        'inputs': len(actual_paths), 'actual_compiler_inventory_matched_preflight': True,\n        'inventory_sha256_before': inventory_digest(dependencies_before),\n        'inventory_sha256_after': inventory_digest(dependencies_after),\n        'all_input_bytes_unchanged': True,\n        'files': {path: {**row, 'checked_before_and_after': True} for path, row in dependencies_before.items()},\n        'package_config_before': package_before, 'package_config_after': package_after,\n    }\n    json_write('ntfs-final-portable-compiler-inputs.json.gz', dependency_binding)\n    json_write('ntfs-final-portable-vm.json', vm)\n    json_write('ntfs-final-portable-js.json', js)\n    (OUT / 'ntfs-final-portable-dependency-paths.log.gz').write_bytes(deterministic_gzip(Path(str(compiled) + '.deps').read_bytes()))\n    receipts = {\n        'schema': 1, 'result': 'passed', 'started_at_utc': START, 'completed_at_utc': now(),\n        'source_revision': SOURCE, 'head_before': head_before, 'head_after': head_after,\n        'head_is_descendant_with_documentation_only_changes': True,\n        'scope': 'Read-only NTFS filesystem and Microsoft Basic Data/MBR partition-image portable acceptance. Fresh VM, dart2js -O2 compilation, and actual Node execution from the original primary checkout package map.',\n        'targets': ['Dart VM', 'dart2js JavaScript executed by Node'],\n        'groups_per_target': 18, 'checks_per_target': 2037,\n        'independently_mastered_images': 4, 'supported_reference_images': 3, 'unsupported_reference_images': 1, 'supported_regular_file_instances': 143, 'external_oracle_total_regular_file_instances': 204, 'external_oracle_named_stream_instances': 8,\n        'derived_partition_wrappers': 3, 'counts_are_not_additive_with_native_gate': True,\n        'full_json_equal': vm == js, 'serialized_stdout_equal': vm_stdout == js_stdout,\n        'excluded_comparison_fields': [], 'all_commands_succeeded': all(row['exit_code'] == 0 for row in COMMANDS),\n        'commands': COMMANDS,\n        'tool_versions': {'dart': (dart_stdout + dart_stderr).strip(), 'node': (node_stdout + node_stderr).strip(), 'python': platform.python_version(), 'platform': platform.platform()},\n        'executables': {'dart': {'path': str(DART), **executable_before['dart'], 'unchanged_after': True}, 'node': {'path': str(NODE.resolve()), **executable_before['node'], 'unchanged_after': True}},\n        'source_binding': {'path': 'ntfs-final-portable-source-binding.json.gz', 'count': len(entries), 'all_matched_before_and_after': True, 'sha256': digest((OUT/'ntfs-final-portable-source-binding.json.gz').read_bytes())},\n        'compiler_input_binding': {'path': 'ntfs-final-portable-compiler-inputs.json.gz', 'count': len(actual_paths), 'all_unchanged': True, 'sha256': digest((OUT/'ntfs-final-portable-compiler-inputs.json.gz').read_bytes())},\n        'production_manifests_unchanged_since_pre_ntfs_revision': 'ffdd6a86820b0d58cf8b93b4e626d0439beefab9',\n        'evidence_compression': 'Large JSON bindings and compiler dependency paths use deterministic gzip with empty filename, mtime0, level9; receipt file hashes bind the stored compressed bytes.',\n        'preflight_binding': {'path': 'ntfs-final-portable-preflight-inputs.json.gz', **file_record(OUT/'ntfs-final-portable-preflight-inputs.json.gz')},\n        'production_manifest_hashes': {name: source_before[name]['sha256'] for name in ['pubspec.yaml','pubspec.lock']},\n        'package_config': {'path': '.dart_tool/package_config.json', **package_before, 'unchanged_after': True},\n        'compiled_output': {'path': str(compiled), **file_record(compiled)},\n        'compiled_source_map': file_record(Path(str(compiled) + '.map')),\n        'compiler_dependency_output': {'path': 'ntfs-final-portable-dependency-paths.log.gz', **file_record(OUT/'ntfs-final-portable-dependency-paths.log.gz'), 'uncompressed_sha256': digest(Path(str(compiled) + '.deps').read_bytes())},\n        'outputs': {'vm': {'path': 'ntfs-final-portable-vm.json', **file_record(OUT/'ntfs-final-portable-vm.json')}, 'js': {'path': 'ntfs-final-portable-js.json', **file_record(OUT/'ntfs-final-portable-js.json')}},\n        'harness': {'scratch_path': str(Path(__file__)), 'sha256': digest(Path(__file__).read_bytes()), 'source': Path(__file__).read_text()},\n        'limits': ['JavaScript executed in Node, not a browser engine or WebAssembly.', 'The >2 TiB partition case uses sparse positional ranges around a small original external volume, not a complete physical multi-terabyte extraction.', 'Corruption cases and partition wrappers are derived/synthetic and are not additional externally mastered filesystems.', 'Named DATA streams remain metadata-only; this application acceptance does not extract them.', 'The external ntfsinfo security-descriptor inspection is incomplete; see external-fixtures/sds-diagnostic-receipt.json. This does not claim security-descriptor validation or Windows chkdsk qualification.', 'This receipt does not claim native-device packaging or release deployment.'],\n    }\n    json_write('ntfs-final-portable-receipt.json', receipts)\n    print(json.dumps({'result': 'passed', 'source_revision': SOURCE, 'source_paths': len(entries), 'dart_paths': binding['dart_paths'], 'compiler_inputs': len(actual_paths), 'groups_per_target': 18, 'checks_per_target': 2037, 'exact_json_equal': True, 'receipt': str(OUT/'ntfs-final-portable-receipt.json')}), flush=True)\nexcept BaseException as error:\n    json_write('ntfs-final-portable-failure.json', {'schema':1,'source_revision':SOURCE,'started_at_utc':START,'failed_at_utc':now(),'error':repr(error),'traceback':traceback.format_exc(),'commands':COMMANDS})\n    raise\n"
+  },
+  "limits": [
+    "JavaScript executed in Node, not a browser engine or WebAssembly.",
+    "The >2 TiB partition case uses sparse positional ranges around a small original external volume, not a complete physical multi-terabyte extraction.",
+    "Corruption cases and partition wrappers are derived/synthetic and are not additional externally mastered filesystems.",
+    "Named DATA streams remain metadata-only; this application acceptance does not extract them.",
+    "The external ntfsinfo security-descriptor inspection is incomplete; see external-fixtures/sds-diagnostic-receipt.json. This does not claim security-descriptor validation or Windows chkdsk qualification.",
+    "This receipt does not claim native-device packaging or release deployment."
+  ]
+}
