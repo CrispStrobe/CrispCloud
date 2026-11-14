@@ -1,0 +1,35 @@
+{
+  "source_revision": "22bd67b887c81a11ea22664defc3474a07eef50a",
+  "run_id": 43623536386,
+  "job_id": 132534268438,
+  "run_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43623536386",
+  "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43623536386/job/132534268438",
+  "artifact_id": 14126413276,
+  "artifact_sha256": "4a39622892b512d768cd425e4021c76b60fa3ea3f95706198b9e97e21d7c7fcd",
+  "overall_workflow_conclusion": "failure",
+  "failure_step": "Reproduce pinned external FAT reference images",
+  "failure_reason": "The official elm-chan.org HTTPS and HTTP archive downloads each exceeded the 15-second connect timeout; no cached archive was available.",
+  "production_manifest_check": "passed",
+  "chrome_comparison": {
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "done": {
+      "success": true,
+      "type": "done",
+      "time": 19252
+    },
+    "events_file": "binary-browser-events.json.gz"
+  },
+  "native_storage": {
+    "passed": 1373,
+    "failed": 0,
+    "skipped": 0,
+    "done": {
+      "success": true,
+      "type": "done",
+      "time": 223603
+    },
+    "events_file": "native-events.json.gz"
+  }
+}
