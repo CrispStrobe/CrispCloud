@@ -88,6 +88,7 @@ void main() {
     WidgetTester tester,
     FutureOr<bool> Function() complete, {
     required String reason,
+    bool settle = true,
   }) async {
     final elapsed = Stopwatch()..start();
     do {
@@ -97,9 +98,8 @@ void main() {
         throw TimeoutException(reason);
       }
     } while (!await complete());
-    // Stalled-source cases intentionally keep an indeterminate progress
-    // indicator alive. Only settle finite route transitions here.
-    await tester.pump(const Duration(milliseconds: 400));
+    // Stalled-source cases deliberately keep an animated progress indicator.
+    if (settle) await tester.pumpAndSettle();
   }
 
   Future<void> finishComparison(WidgetTester tester) => pumpUntil(
@@ -325,6 +325,7 @@ void main() {
             tester,
             () => entered.isCompleted,
             reason: 'The comparison did not request metadata.',
+            settle: false,
           );
           expect(
             find.text('Preparing and comparing captured copies…'),
@@ -345,6 +346,68 @@ void main() {
           expect(find.byKey(const ValueKey('diff-left-auto')), findsOneWidget);
           await tester.tap(find.byTooltip('Close'));
           await tester.pumpAndSettle();
+        } finally {
+          cloud.beforeList = null;
+          if (!release.isCompleted) release.complete();
+        }
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Stop during navigation retires the published result and releases its copies',
+    (tester) async {
+      await tester.runAsync(() async {
+        final marker =
+            'comparison-navigation-stop-${DateTime.now().microsecondsSinceEpoch}';
+        cloud.put('/left.txt', utf8.encode('$marker alpha middle omega'));
+        cloud.put('/right.txt', utf8.encode('$marker Alpha middle Omega'));
+        await open(tester);
+        await toggleBinary(tester);
+        await finishComparison(tester);
+        expect(find.text('2 differing bytes in 2 ranges'), findsOneWidget);
+        final copies = await capturedCopies(marker);
+        expect(copies, hasLength(2));
+
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        cloud.beforeList = (_) async {
+          if (!entered.isCompleted) entered.complete();
+          await release.future;
+        };
+        try {
+          await tester.ensureVisible(find.byTooltip('Next difference'));
+          await tester.tap(find.byTooltip('Next difference'));
+          await pumpUntil(
+            tester,
+            () => entered.isCompleted,
+            reason: 'Navigation did not validate its captured source.',
+            settle: false,
+          );
+          await tester.tap(find.byTooltip('Stop comparison'));
+          await finishComparison(tester);
+          expect(find.text('No comparison result.'), findsOneWidget);
+          expect(find.textContaining('differing bytes in'), findsNothing);
+          await expectReleased(tester, copies);
+
+          cloud.beforeList = null;
+          await toggleBinary(tester);
+          await finishComparison(tester);
+          await toggleBinary(tester);
+          await finishComparison(tester);
+          final replacementCopies = await capturedCopies(marker);
+          expect(replacementCopies, hasLength(2));
+          expect(find.text('2 differing bytes in 2 ranges'), findsOneWidget);
+          release.complete();
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          await tester.pumpAndSettle();
+          expect(find.text('2 differing bytes in 2 ranges'), findsOneWidget);
+          expect(await capturedCopies(marker), replacementCopies);
+          await tester.tap(find.byTooltip('Close'));
+          await tester.pumpAndSettle();
+          await expectReleased(tester, replacementCopies);
+          expect(cloud.writes, isEmpty);
         } finally {
           cloud.beforeList = null;
           if (!release.isCompleted) release.complete();
@@ -376,6 +439,7 @@ void main() {
             tester,
             () => entered.isCompleted,
             reason: 'The comparison did not start its second capture.',
+            settle: false,
           );
           final completedCopies = await capturedCopies(marker);
           expect(completedCopies, hasLength(1));
