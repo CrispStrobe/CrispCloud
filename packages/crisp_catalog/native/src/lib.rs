@@ -227,8 +227,8 @@ fn scan(v: &Value) -> Result<Value> {
     let depth_cap = number(v, "maxDepth", 0)?;
     staging(destination, v["replace"] == true, v, |db| {
         create(db, utf8(&root)?, "native_scan")?;
-        // SQLite may remove Windows' extended-length prefix from its filename.
-        // Match the canonical paths emitted by jwalk, including journal siblings.
+        // SQLite's filename can use a different Windows path prefix from jwalk.
+        // Normalize it before matching the staging file and journal siblings.
         let staging_path =
             PathBuf::from(db.path().ok_or("Missing staging database path")?).canonicalize()?;
         let mut excluded =
@@ -947,6 +947,21 @@ mod tests {
         assert!(self_report["catalogueFilesSkipped"].as_i64().unwrap() > 0);
         let refreshed =
             execute(&json!({"op":"scan","path":root,"output":self_index,"replace":true})).unwrap();
+        assert_eq!(refreshed["bytes"], 70);
+    }
+    #[cfg(unix)]
+    #[test]
+    fn self_index_under_an_alias_excludes_its_database_and_journal() {
+        use std::os::unix::fs::symlink;
+        let (temp, root, _) = scan_fixture();
+        let alias = temp.path().join("alias");
+        symlink(&root, &alias).unwrap();
+        let output = alias.join("inside.crispindex");
+        let report = execute(&json!({"op":"scan","path":root,"output":output})).unwrap();
+        assert_eq!(report["bytes"], 70);
+        assert!(report["catalogueFilesSkipped"].as_i64().unwrap() > 0);
+        let refreshed =
+            execute(&json!({"op":"scan","path":root,"output":output,"replace":true})).unwrap();
         assert_eq!(refreshed["bytes"], 70);
     }
     #[cfg(unix)]
