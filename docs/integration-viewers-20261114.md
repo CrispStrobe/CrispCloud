@@ -1,13 +1,13 @@
 # Integrated Office, path menus and portable 3D viewers
 
-Runtime checkpoint: `0972abd0` (CrispCloud 1.3.2+25). Later test, workflow,
-policy-evidence and documentation changes preserve application bytes. Branch audit cutoff:
-2026-11-14 19:47 UTC.
+Latest runtime checkpoint: `5e0cb337` (CrispCloud 1.3.2+25). Later test, workflow,
+policy-evidence and documentation changes preserve application bytes. Initial branch audit cutoff: 2026-11-14 19:47 UTC; the follow-up audit at
+20:11 UTC and its fully validated Office additions are recorded below.
 
 ## Office source
 
-CrispCloud vendors all 2,182 managed files from Quds fork main
-`4bdb70c9d86fd1ee09ed99d3114b178e965cfa01`. This includes the requested source
+CrispCloud vendors all 2,187 managed files from Quds fork main
+`c1678ade3b5b9fd13088e94d752fd17fd14eb3e8`. This includes the requested source
 checkpoint `2d2a7be4`, schema-valid comments, cache-preserving no-edit saves,
 frozen/frozenSplit anchors, undoable sorting, retained cell locks/PDF borders,
 and speaker-note history. Host checkpoint `a3897dfb` and the notes/sorting
@@ -95,8 +95,42 @@ Installed and launched `CrispCloud 1.3.2 (0972abd0).app` after deep/strict
 signature verification, a 45-second startup check with credential policy ready,
 and offline verification of its packaged Apple artifact. The runner and Dart
 framework contain both Intel and Apple Silicon code. Exact binary hashes and
-scope are in [the acceptance receipt](evidence/integration-viewers-20261114/acceptance.json).
+scope are in [the earlier receipt](evidence/integration-viewers-20261114/acceptance-0972abd0.json).
 
 A fresh 20:11 UTC branch audit found additional worksheet-history and Word
 bookmark work published during this build. Those additions enter a subsequent
 integration wave; they are not claimed by this checkpoint's binary or tests.
+
+## Final Office follow-up and Mac build
+
+The additional worksheet-history and Word-import branches found at 20:11 UTC
+are now integrated. Canonical grid history retains original cell objects and
+empty rows, including across sorting. Ribbon formatting uses shared reversible
+commands. Word imports preserve supported block bookmarks and existing duplicate
+control IDs; malformed measurement overflow receives finite defaults.
+
+- Complete Quds engine suite: **1,751 passed**, three existing conditional skips.
+- Combined new and earlier editor-history regressions: **70 passed**.
+- Latest Office host regression: **61 passed**; evidence-validator tests: **23 passed**.
+- Complete mandatory Office gate: **passed**. Engine cohort: **1,265 passed**;
+  host cohort: **269 passed**, two existing Linux/Windows-only device-export
+  cases skipped on macOS. These overlap the other counts and must not be added.
+- Coverage controls: **41 passed**. Receipt sealed against 4,774 inputs;
+  2,933/4,380 instrumented lines covered (67.0%), no native sources absent,
+  and one browser source reported separately. Inventory: **176/176 verified**.
+- Final `5e0cb337` Mac bundle: universal Intel/Apple Silicon runner and Dart
+  framework, development-signed, deep/strict signature check passed, and healthy
+  for 45 seconds with credential policy ready. Packaged artifact verification
+  passed offline; this is not an App Store submission or distribution approval.
+
+[Current receipt](evidence/integration-viewers-20261114/acceptance.json) ·
+[Earlier 3D checkpoint](evidence/integration-viewers-20261114/acceptance-0972abd0.json).
+The earlier 48-test native/Chrome model cohorts and 314-test transfer cohort
+apply to unchanged model/ZIP and transfer sources; those paths were compared
+explicitly. The entire app and editor suites were not repeated in this follow-up.
+
+Four old, fully merged remote branches were retired using exact-SHA leases after
+checking their live heads and ages: the host binary, bandwidth and notes/sorting
+branches, and the source notes/sorting branch. Each was older than one hour and
+retained in local audit refs. The recent worksheet and Word branches remain.
+PR #106 closed automatically as merged; no additional PR was created.
