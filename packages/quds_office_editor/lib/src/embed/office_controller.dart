@@ -11621,8 +11621,17 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    slide.notes = value;
-    notifyListeners();
+    final PmlSlide target = slide;
+    final String before = target.notes;
+    if (before == value) {
+      return;
+    }
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => target.notes = value,
+        undoFn: () => target.notes = before,
+      ),
+    );
   }
 
   /// addSlideSection API.
@@ -11815,6 +11824,9 @@ class _SheetGridSnap {
             hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
             fontBold: cell.fontBold,
             fontSize: cell.fontSize,
+            borderRgb: cell.borderRgb,
+            borderWidth: cell.borderWidth,
+            locked: cell.locked,
           ),
       ],
       widths: sheet.captureColumns(),
@@ -11854,7 +11866,10 @@ class _SheetGridSnap {
         ..fontRgb = cell.fontRgb
         ..hasExplicitFontColorEdit = cell.hasExplicitFontColorEdit
         ..fontBold = cell.fontBold
-        ..fontSize = cell.fontSize;
+        ..fontSize = cell.fontSize
+        ..borderRgb = cell.borderRgb
+        ..borderWidth = cell.borderWidth
+        ..locked = cell.locked;
     }
     sheet.restoreColumns(widths);
     sheet.rowHeights

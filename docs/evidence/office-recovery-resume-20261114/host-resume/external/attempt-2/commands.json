@@ -1,0 +1,25 @@
+[
+  {
+    "label": "validator-self-test",
+    "command": [
+      "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+      "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+      "--self-test"
+    ],
+    "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+    "exit_code": 0,
+    "log": "validator-self-test.log"
+  },
+  {
+    "label": "schema-validation",
+    "command": [
+      "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+      "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+      "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance",
+      "/workspace/scratch/f035141943c7/external-fill-validation/attempt-2/schema-report.json"
+    ],
+    "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+    "exit_code": 0,
+    "log": "schema-validation.log"
+  }
+]

@@ -275,6 +275,87 @@ void _assertOutput(Uint8List bytes, _NativeCase scenario) {
   }
 }
 
+(Uint8List, Map<String, String>) _nativeFillSource() {
+  // The container is independently authored with openpyxl. Replace its sheet
+  // and styles with authored XML; neither input nor expectations use Quds.
+  final container = _archive(
+    _cases()
+        .singleWhere((scenario) => scenario.id == 'native-sheet')
+        .load('source'),
+  );
+  final nativeStyles = File(
+    'packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml',
+  ).readAsStringSync();
+  final fills = xml.XmlDocument.parse(nativeStyles).rootElement
+      .getElement('fills', namespace: _s)!
+      .findElements('fill', namespace: _s)
+      .toList();
+  final expected = {'A1': fills[5].toXmlString(), 'B1': fills[4].toXmlString()};
+  final replacements = {
+    'xl/styles.xml': nativeStyles,
+    'xl/worksheets/sheet1.xml':
+        '''<?xml version="1.0" encoding="UTF-8"?>
+<s:worksheet xmlns:s="$_s"><s:sheetData><s:row r="1">
+<s:c r="A1" s="2" t="inlineStr"><s:is><s:t>Native gradient</s:t></s:is></s:c>
+<s:c r="B1" s="1" t="inlineStr"><s:is><s:t>Native pattern</s:t></s:is></s:c>
+</s:row></s:sheetData></s:worksheet>''',
+  };
+  final archive = Archive();
+  for (final file in container.files) {
+    final replacement = replacements[file.name];
+    archive.addFile(
+      replacement == null
+          ? file
+          : ArchiveFile.bytes(file.name, utf8.encode(replacement)),
+    );
+  }
+  return (Uint8List.fromList(ZipEncoder().encode(archive)), expected);
+}
+
+void _assertNativeFills(
+  Uint8List bytes,
+  Map<String, String> expected, {
+  required bool edited,
+}) {
+  final archive = _archive(bytes);
+  final sheet = _part(archive, 'xl/worksheets/sheet1.xml');
+  final styles = _part(archive, 'xl/styles.xml').rootElement;
+  final xfs = styles
+      .getElement('cellXfs', namespace: _s)!
+      .findElements('xf', namespace: _s)
+      .toList();
+  final fills = styles
+      .getElement('fills', namespace: _s)!
+      .findElements('fill', namespace: _s)
+      .toList();
+  xml.XmlElement styleOf(String address) =>
+      xfs[int.parse(_cell(sheet, address).getAttribute('s') ?? '0')];
+  for (final entry in expected.entries) {
+    final fillId = int.parse(styleOf(entry.key).getAttribute('fillId')!);
+    expect(
+      fills[fillId].toXmlString(),
+      entry.value,
+      reason:
+          '${entry.key} must retain the exact independently authored fill, '
+          'including native pattern colors and gradient stops.',
+    );
+  }
+  expect(_cellValue(archive, _cell(sheet, 'A1')), 'Native gradient');
+  expect(_cellValue(archive, _cell(sheet, 'B1')), 'Native pattern');
+  final font = styles
+      .getElement('fonts', namespace: _s)!
+      .findElements('font', namespace: _s)
+      .elementAt(int.parse(styleOf('A1').getAttribute('fontId')!));
+  final bold = font.getElement('b', namespace: _s);
+  expect(bold != null && _on(bold.getAttribute('val')), edited);
+  expect(
+    styleOf('B1')
+        .getElement('alignment', namespace: _s)
+        ?.getAttribute('horizontal'),
+    edited ? 'center' : null,
+  );
+}
+
 Future<void> _tap(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
   await tester.tap(finder);
@@ -375,6 +456,56 @@ Future<void> _editSlide(
 }
 
 void main() {
+  testWidgets(
+    'native fills survive unrelated formatting through three host uploads',
+    (tester) async {
+      tester.view.physicalSize = const Size(2000, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.runAsync(() async {
+        final (source, expected) = _nativeFillSource();
+        const output = 'build/office-fill-host-acceptance';
+        File('$output/source.xlsx')
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(source);
+        _assertNativeFills(source, expected, edited: false);
+        var bytes = source;
+        for (var cycle = 1; cycle <= 3; cycle++) {
+          const name = 'native-fill-preservation.xlsx';
+          final host = await OfficeTestHarness.open(
+            tester,
+            name: name,
+            initialBytes: bytes,
+          );
+          expect(host.cloud.downloads, contains('/$name'));
+          final sheet = host.controller as SheetEditorController;
+          if (cycle == 1) {
+            sheet.selection.selectCell(SmlCellRef.parse('A1'));
+            sheet.refresh();
+            await tester.pump();
+            await _tap(tester, find.byTooltip('Bold'));
+            sheet.selection.selectCell(SmlCellRef.parse('B1'));
+            sheet.refresh();
+            await tester.pump();
+            await _tap(tester, find.byTooltip('Align center'));
+            expect(sheet.isDirty, isTrue);
+          }
+          await host.save();
+          expect(host.cloud.writes, ['/$name']);
+          expect(sheet.isDirty, isFalse);
+          bytes = Uint8List.fromList(host.savedBytes);
+          File('$output/saved-$cycle.xlsx').writeAsBytesSync(bytes);
+          // Compare every actual upload to the authored source definitions,
+          // including the first save, so a lossy first export cannot pass.
+          _assertNativeFills(bytes, expected, edited: true);
+          await host.dispose();
+        }
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final scenario in _cases()) {
     test('${scenario.id} rejects a substituted valid expected package', () {
       final source = scenario.load('source');
