@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/office-recovery-20261114",
-  "source_commit": "ac4889dc7139cd38a7dded9c53eb338708368cd3",
+  "source_commit": "c85c9f0a81a75a4afb5103d397c1816f0140eb00",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -2019,7 +2019,7 @@
     "packages/quds_office_engine/test/sheet_rename_adversarial_test.dart": "62aa60cf7ccefd124f71c17fcc40478478111a2a8e962eec057668b6c0b2b10b",
     "packages/quds_office_engine/test/sheet_rename_fidelity_test.dart": "a46c2efbf4a813a0ae8efa9d04edb2f9085beb2c584c8e09800cc304820f9828",
     "packages/quds_office_engine/test/sheet_schema_fidelity_test.dart": "36115b3cca8384e798f96b8da6204da0ab9e1c3719585135743a3a704a67cf54",
-    "packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart": "851a63c95c64311fc80bdd6dcd2e0fe04413454e940e4b806f79202f1b8c2cb2",
+    "packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart": "56c25d5e174c2bfc6089e0db2236c9ce97475e1f75ced91ba1d9793250de4c16",
     "packages/quds_office_engine/test/slide_arrange_fidelity_test.dart": "be83f895df9ee9e6435791ed12c874379172aad9d1546b1ca18e8e7e11db42f6",
     "packages/quds_office_engine/test/slide_section_fidelity_test.dart": "205c65b324cf406daddea223e1dddc2a8b675c9dd1468848dbf1249f3ff55e53",
     "packages/quds_office_engine/test/slide_text_fidelity_test.dart": "a140043cd85d2b0d0b2a0112f7d97c8d671b83a6c3bbf2e1976c49e3050e3466",
