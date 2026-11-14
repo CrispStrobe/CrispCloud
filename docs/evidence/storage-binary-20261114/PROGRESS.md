@@ -89,3 +89,28 @@ the existing SMB hook requests a public, hash-pinned build dependency through a
 bodyless GET. A normal test-command retry uses that evidence; it does not alter
 the hook, dependency graph or approval policy. No native pass is claimed from
 the interrupted attempt.
+
+## Reviewed candidate before final gates
+
+The normal unchanged build completed after preparing scratch-local Cargo and
+Clang for the app's existing native hooks. The first native comparison run
+passed **52 tests**, with no failures or skips. The initial widget run found
+three test-helper timeouts: `pumpAndSettle` was waiting for intentionally
+blocked progress animations. A targeted helper correction preserved those
+busy states, and the next widget run passed **9 tests**, including Stop during
+navigation after a result is published and rejection of late completion.
+These are intermediate working-tree results, not results for an untested later
+revision.
+
+Review also preserved canonical backend-equivalent paths and account-scoped
+panel selections when ordinary backend stat records omit UI-owned scope.
+Explicitly mismatched accounts remain refused. Browser close now drops the
+owned memory buffer even if a closed session remains referenced, and the
+profile describes transient chunk-consolidation allocations honestly.
+
+The following saved candidate will be qualified with the combined native
+comparison/UI suites, actual Chrome execution of the portable capture and
+scanner suites, and strict scoped analysis. `run_gate.py` records the exact
+commit, all tracked non-document source blobs, the package map, commands and
+unedited output before/after each final gate. The production manifests remain
+unchanged; earlier blocked/failed setup and test-helper attempts stay separate.

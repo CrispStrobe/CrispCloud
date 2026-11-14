@@ -63,7 +63,7 @@ that original content stays unchanged after the capture was verified.
 | Resource | Default bound |
 | --- | --- |
 | Native captured input | 8 GiB per file, up to two private disk copies |
-| Browser captured input | 32 MiB per file, up to two memory copies plus bounded working buffers |
+| Browser captured input | 32 MiB per file, up to two retained copies; construction has additional transient allocations |
 | Declared length | Exact; both early EOF and overrun are errors |
 | Unknown length | Measured during the first read and enforced exactly on the second |
 | Provider chunks | 1,048,576 per input per complete read/scan |
@@ -75,6 +75,12 @@ that original content stays unchanged after the capture was verified.
 | Overall opening work | 30 minutes across capture, verification, scan and final checks |
 | Individual source inactivity | 30 seconds; empty chunks do not count as progress |
 | Cooperative scheduling | Yield after at most 64 input chunks or 1 MiB of byte work |
+
+The browser byte ceilings bound retained input payloads, not the process heap.
+Consolidating accumulated chunks can temporarily require an additional
+input-sized contiguous allocation, alongside provider chunks and runtime
+overhead. Closing a browser capture drops its retained buffer even if the
+closed session object remains referenced.
 
 Callers may lower input ceilings; they may not enlarge the platform ceiling.
 Chunk/time options are explicit finite budgets, not promises that every file

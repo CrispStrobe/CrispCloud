@@ -108,6 +108,13 @@ class BinaryComparisonSnapshot {
         'Binary comparison requires a regular file with a path.',
       );
     }
+    if (file.storageId != null &&
+        backend.persistentStorageId != null &&
+        file.storageId != backend.persistentStorageId) {
+      throw BinaryComparisonSourceChanged(
+        'The selected file belongs to a different storage account.',
+      );
+    }
     final identity = backend.identity;
     void checkSource() {
       if (!backend.isCurrent || backend.identity != identity) {
@@ -127,6 +134,7 @@ class BinaryComparisonSnapshot {
         selected,
         await guard.wait(() => backend.stat(path)),
         path,
+        backend,
       );
       if (before.size != null &&
           (before.size! < 0 || before.size! > limits.maxBytes)) {
@@ -184,6 +192,7 @@ class BinaryComparisonSnapshot {
         before,
         await guard.wait(() => backend.stat(path)),
         path,
+        backend,
       );
       _requireLength(afterCopy, received);
       final secondDigest = _DigestSink();
@@ -204,6 +213,7 @@ class BinaryComparisonSnapshot {
         afterCopy,
         await guard.wait(() => backend.stat(path)),
         path,
+        backend,
       );
       _requireLength(afterVerify, received);
       guard.check();
@@ -250,6 +260,7 @@ class BinaryComparisonSnapshot {
         file,
         await guard.wait(() => backend.stat(file.path!)),
         file.path!,
+        backend,
       );
       _requireLength(current, length);
       guard.check();
@@ -329,7 +340,12 @@ class BinaryComparisonSnapshot {
     _closed = true;
     return _closing = () async {
       try {
-        await closeHexFileSource(_source);
+        final source = _source;
+        if (source is _MemoryCaptureSource) {
+          source.close();
+        } else {
+          await closeHexFileSource(source);
+        }
       } finally {
         await _spool?.dispose();
       }
@@ -340,19 +356,24 @@ class BinaryComparisonSnapshot {
 /// Takes ownership of the builder's private contiguous bytes without a second
 /// full-size browser copy. All public snapshot reads make their own small copy.
 class _MemoryCaptureSource implements HexByteSource {
-  _MemoryCaptureSource(this._bytes);
-  final Uint8List _bytes;
+  _MemoryCaptureSource(Uint8List bytes) : _bytes = bytes, length = bytes.length;
+  Uint8List? _bytes;
 
   @override
-  int get length => _bytes.length;
+  final int length;
 
   @override
   Future<Uint8List> read(int offset, int count) async {
+    final bytes = _bytes;
+    if (bytes == null)
+      throw StateError('The captured memory source is closed.');
     if (offset < 0 || count < 0 || offset > length || count > length - offset) {
       throw RangeError('Invalid captured memory byte range.');
     }
-    return Uint8List.sublistView(_bytes, offset, offset + count);
+    return Uint8List.sublistView(bytes, offset, offset + count);
   }
+
+  void close() => _bytes = null;
 }
 
 FileItem _freeze(FileItem item) {
@@ -375,18 +396,37 @@ void _requireLength(FileItem file, int expected) {
   }
 }
 
-FileItem _requireVersion(FileItem before, FileItem? after, String path) {
+FileItem _requireVersion(
+  FileItem before,
+  FileItem? after,
+  String path,
+  FileOperationBackend backend,
+) {
   if (after == null ||
       after.isFolder ||
       after.isSymlink == true ||
-      (after.path != null && after.path != path) ||
-      (before.storageId != null && before.storageId != after.storageId) ||
+      (after.path != null && !backend.samePath(after.path!, path)) ||
+      (before.storageId != null &&
+          after.storageId != null &&
+          before.storageId != after.storageId) ||
+      (after.storageId != null &&
+          backend.persistentStorageId != null &&
+          after.storageId != backend.persistentStorageId) ||
       !sameTransferVersion(before, after)) {
     throw BinaryComparisonSourceChanged(
       'A compared file changed. Compare again before navigating.',
     );
   }
-  return _freeze(after.copyWith(path: path));
+  // Panel/collection rows carry account scope while ordinary backend stat
+  // records may omit it. Keep the captured scope rather than requiring a
+  // provider to repeat UI-owned metadata on every stat response.
+  return _freeze(
+    after.copyWith(
+      path: after.path ?? path,
+      storageId:
+          after.storageId ?? before.storageId ?? backend.persistentStorageId,
+    ),
+  );
 }
 
 Stream<List<int>> _boundedInput(

@@ -12,6 +12,7 @@ import 'package:crisp_cloud/services/file_operation_service.dart';
 class _Source extends FileOperationBackend {
   List<int> bytes = [1, 2, 3, 4];
   Object sourceIdentity = Object();
+  String? backendStorageId;
   bool current = true, knownSize = true, folder = false, symlink = false;
   int? sizeOverride;
   int reads = 0, stats = 0, writes = 0;
@@ -21,6 +22,8 @@ class _Source extends FileOperationBackend {
 
   @override
   Object get identity => sourceIdentity;
+  @override
+  String? get persistentStorageId => backendStorageId;
   @override
   bool get isCurrent => current;
   @override
@@ -128,6 +131,51 @@ void main() {
         expect(backend.reads, 2);
         expect(temporary.listSync(), isEmpty);
         expect(backend.writes, 0);
+      });
+    },
+  );
+
+  test('backend-equivalent paths retain the canonical stat path', () async {
+    await captured(() async {
+      final backend = _Source();
+      final selected = backend.item.copyWith(path: '/folder/../input.bin');
+      final snapshot = await BinaryComparisonSnapshot.capture(
+        backend,
+        selected,
+      );
+      expect(snapshot.file.path, '/input.bin');
+      await snapshot.validate();
+      expect(await snapshot.read(0, 4), [1, 2, 3, 4]);
+      await snapshot.close();
+      expect(temporary.listSync(), isEmpty);
+    });
+  });
+
+  test(
+    'panel account scope survives ordinary unscoped backend stat results',
+    () async {
+      await captured(() async {
+        final backend = _Source()..backendStorageId = 'account-a';
+        final selected = backend.item.copyWith(storageId: 'account-a');
+        final snapshot = await BinaryComparisonSnapshot.capture(
+          backend,
+          selected,
+        );
+        expect(snapshot.file.storageId, 'account-a');
+        await snapshot.validate();
+        expect(await snapshot.read(0, 4), [1, 2, 3, 4]);
+        await snapshot.close();
+        expect(temporary.listSync(), isEmpty);
+        backend.reads = 0;
+        await expectLater(
+          BinaryComparisonSnapshot.capture(
+            backend,
+            backend.item.copyWith(storageId: 'account-b'),
+          ),
+          throwsA(isA<BinaryComparisonSourceChanged>()),
+        );
+        expect(backend.reads, 0);
+        expect(temporary.listSync(), isEmpty);
       });
     },
   );
