@@ -227,7 +227,10 @@ fn scan(v: &Value) -> Result<Value> {
     let depth_cap = number(v, "maxDepth", 0)?;
     staging(destination, v["replace"] == true, v, |db| {
         create(db, utf8(&root)?, "native_scan")?;
-        let staging_path = PathBuf::from(db.path().ok_or("Missing staging database path")?);
+        // SQLite may remove Windows' extended-length prefix from its filename.
+        // Match the canonical paths emitted by jwalk, including journal siblings.
+        let staging_path =
+            PathBuf::from(db.path().ok_or("Missing staging database path")?).canonicalize()?;
         let mut excluded =
             std::collections::HashSet::from([absolute_output.clone(), staging_path.clone()]);
         for base in [&absolute_output, &staging_path] {
@@ -527,7 +530,7 @@ fn query(v: &Value) -> Result<Value> {
         "(?7='' OR (kind=0 AND lower(substr(path,-length(?7)))=lower(?7)))",
         "(?8=0 OR mtime>=?8) AND (?9=9223372036854775807 OR mtime<=?9)",
     ]);
-    let exact=relative(Path::new(v["exactPath"].as_str().unwrap_or("")))?;
+    let exact = relative(Path::new(v["exactPath"].as_str().unwrap_or("")))?;
     conditions.push("(?10='' OR path=?10)");
     let predicate = conditions.join(" AND ");
     let total: Option<i64> = if v["countMatches"] == true {
@@ -542,7 +545,8 @@ fn query(v: &Value) -> Result<Value> {
                 maximum as i64,
                 extension,
                 after as i64,
-                before as i64, exact
+                before as i64,
+                exact
             ],
             |r| r.get(0),
         )?)
@@ -660,7 +664,13 @@ fn export_caf(v: &Value) -> Result<Value> {
             .filter(|p| !p.as_os_str().is_empty())
             .unwrap_or(Path::new(".")),
     )?;
-    let captured=if report["origin"]=="caf_import" {report["sourceCapturedAtUnix"].as_u64().unwrap_or(0)}else{report["indexedAtUnix"].as_u64().ok_or("Missing source capture date")?};
+    let captured = if report["origin"] == "caf_import" {
+        report["sourceCapturedAtUnix"].as_u64().unwrap_or(0)
+    } else {
+        report["indexedAtUnix"]
+            .as_u64()
+            .ok_or("Missing source capture date")?
+    };
     caf::write_file_cancellable(temp.path(), &idx, u32::try_from(captured)?, &|| {
         jobs::cancelled(v)
     })?;
