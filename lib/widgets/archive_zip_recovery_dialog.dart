@@ -227,6 +227,8 @@ class _ArchiveZipRecoveryDialogState extends State<ArchiveZipRecoveryDialog> {
     final enabled = !_busy && _job == null && _result == null;
     final progress = _progress;
     final result = _result;
+    final publicationWarning =
+        _job?.publicationWarning ?? result?.publicationWarning;
     return PopScope(
       canPop: !_admitting && (!_busy || _job != null),
       onPopInvokedWithResult: (didPop, _) {
@@ -311,8 +313,8 @@ class _ArchiveZipRecoveryDialogState extends State<ArchiveZipRecoveryDialog> {
                         tr('Saved {0}', [result.path]),
                         key: const ValueKey('zip-recovery-result'),
                       ),
-                      if (result.publicationWarning != null)
-                        Text('${result.publicationWarning}'),
+                      if (publicationWarning != null)
+                        Text('$publicationWarning'),
                     ],
                     if (report != null) ...[
                       const SizedBox(height: 12),

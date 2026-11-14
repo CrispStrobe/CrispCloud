@@ -291,10 +291,85 @@ Future<void> main() async {
     'Large logical file allowed an unbounded buffered read',
   );
   await sparseArchive.close();
+
+  final pathFixture = UdfFixture();
+  final pathPrefix = '雪' * 48;
+  udfPut16(pathFixture.fileEntry, 48, 3);
+  udfRetag(pathFixture.fileEntry);
+  final childIdentifiers = Uint8List.fromList([
+    ...udfFid(directoryBlock: 11, childBlock: 1),
+    for (final name in ['a', 'b', 'c'])
+      ...udfFid(directoryBlock: 11, childBlock: 2, name: name),
+  ]);
+  pathFixture.makeFile(
+    3,
+    type: 4,
+    size: childIdentifiers.length,
+    data: childIdentifiers,
+    dataBlock: 11,
+  );
+  final rootIdentifiers = Uint8List.fromList([
+    ...udfFid(directoryBlock: 10, childBlock: 1),
+    ...udfFid(
+      directoryBlock: 10,
+      childBlock: 3,
+      name: pathPrefix,
+      isDirectory: true,
+    ),
+  ]);
+  pathFixture.makeFile(
+    1,
+    type: 4,
+    size: rootIdentifiers.length,
+    data: rootIdentifiers,
+    dataBlock: 10,
+  );
+  // 48 code units for the directory, plus three 50-unit hard-link paths.
+  const exactPathBudget = 396;
+  final acceptedPaths = pathFixture.source();
+  final pathArchive = await openUdfArchive(
+    acceptedPaths,
+    maxMemberBytes: 65536,
+    maxRetainedPathBytes: exactPathBudget,
+  );
+  check(
+    pathArchive.members.map((member) => member.name).join('|') ==
+        '$pathPrefix|$pathPrefix/a|$pathPrefix/b|$pathPrefix/c',
+    'Exact aggregate full-path budget lost hard-link paths',
+  );
+  for (final entry in pathArchive.members.where((member) => member.isFile)) {
+    check(
+      sha256.convert(await pathArchive.readMember(entry)) ==
+          sha256.convert(pathFixture.payload),
+      'Path-limited hard-link payload differs',
+    );
+  }
+  await pathArchive.close();
+  check(acceptedPaths.closed, 'Exact-budget success leaked its source');
+  final rejectedPaths = pathFixture.source();
+  var pathBudgetRejected = false;
+  try {
+    final unexpected = await openUdfArchive(
+      rejectedPaths,
+      maxMemberBytes: 65536,
+      maxRetainedPathBytes: exactPathBudget - 1,
+    );
+    await unexpected.close();
+  } on ArchiveViewException catch (error) {
+    pathBudgetRejected = error.message.contains(
+      'Retained full-path text limit exceeded',
+    );
+  }
+  check(
+    pathBudgetRejected,
+    'Aggregate path budget did not charge repeated ancestor prefixes',
+  );
+  check(rejectedPaths.closed, 'Path-budget rejection leaked its source');
+
   // ignore: avoid_print
   print(
     jsonEncode({
-      'groups': 25,
+      'groups': 26,
       'checks': _checks,
       'independentImages': results,
       'malformedIndependentImagesRejected': 5,
@@ -305,6 +380,8 @@ Future<void> main() async {
       'syntheticPhysicalOffset': 6144000040960,
       'syntheticLogicalSize': logical,
       'syntheticSparsePrefixBytes': 17,
+      'aggregateFullPathBudgetBytes': exactPathBudget,
+      'aggregateFullPathBudgetRejectsOneByteShort': true,
     }),
   );
 }

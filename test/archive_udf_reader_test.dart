@@ -762,5 +762,97 @@ void main() {
         expect(source.reads.contains((400 * 2048, 3)), isTrue);
       },
     );
+
+    test(
+      'full-path budget charges repeated Unicode prefixes of hard links',
+      () async {
+        final fixture = UdfFixture();
+        final prefix = '雪' * 48;
+        udfPut16(fixture.fileEntry, 48, 3);
+        udfRetag(fixture.fileEntry);
+        final childData = Uint8List.fromList([
+          ...udfFid(directoryBlock: 11, childBlock: 1),
+          for (final name in ['a', 'b', 'c'])
+            ...udfFid(directoryBlock: 11, childBlock: 2, name: name),
+        ]);
+        fixture.makeFile(
+          3,
+          type: 4,
+          size: childData.length,
+          data: childData,
+          dataBlock: 11,
+        );
+        _rootContents(fixture, [
+          udfFid(directoryBlock: 10, childBlock: 1),
+          udfFid(
+            directoryBlock: 10,
+            childBlock: 3,
+            name: prefix,
+            isDirectory: true,
+          ),
+        ]);
+        // One 48-code-unit directory and three 50-code-unit child paths:
+        // 2 * (48 + 3 * 50) = 396 bytes, despite just 102 component bytes.
+        const exactBudget = 396;
+        final acceptedSource = fixture.source();
+        final archive = await openUdfArchive(
+          acceptedSource,
+          maxMemberBytes: 65536,
+          maxRetainedPathBytes: exactBudget,
+        );
+        addTearDown(archive.close);
+        expect(archive.members.map((member) => member.name), [
+          prefix,
+          '$prefix/a',
+          '$prefix/b',
+          '$prefix/c',
+        ]);
+        for (final member in archive.members.where((member) => member.isFile)) {
+          expect(await archive.readMember(member), fixture.payload);
+        }
+        expect(
+          acceptedSource.reads.where(
+            (read) => read == ((fixture.partitionStart + 2) * 2048, 2048),
+          ),
+          hasLength(1),
+          reason: 'Hard links share one ICB but retain three complete paths.',
+        );
+
+        final rejectedSource = fixture.source();
+        await expectLater(
+          openUdfArchive(
+            rejectedSource,
+            maxMemberBytes: 65536,
+            maxRetainedPathBytes: exactBudget - 1,
+          ),
+          throwsA(
+            isA<ArchiveViewException>().having(
+              (error) => error.message,
+              'message',
+              contains('Retained full-path text limit exceeded'),
+            ),
+          ),
+        );
+        expect(rejectedSource.closed, isTrue);
+        expect(rejectedSource.closeCount, 1);
+      },
+    );
+
+    test('full-path budget can only be lowered to a positive value', () async {
+      for (final budget in [0, -1, 16 * 1024 * 1024 + 1]) {
+        final source = UdfFixture().source();
+        await expectLater(
+          openUdfArchive(
+            source,
+            maxMemberBytes: 65536,
+            maxRetainedPathBytes: budget,
+          ),
+          throwsArgumentError,
+        );
+        expect(source.reads, isEmpty);
+        expect(source.closed, isTrue);
+        expect(source.closeCount, 1);
+      }
+    });
   });
 }

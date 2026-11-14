@@ -13,9 +13,10 @@ No native runtime, mount operation or new Pub dependency is required.
 - The anchor at sector 256, its main volume descriptor sequence, one primary
   volume, one logical volume, and up to 32 nonoverlapping physical partitions
   referenced through Type 1 maps on the same volume.
-- A bounded logical-volume integrity sequence. Open volumes are identified in
-  the listing notice; no repair, journal replay or consistency guarantee follows
-  from successful listing.
+- A bounded logical-volume integrity sequence. Direct UDF and ISO/UDF listings
+  identify open volumes in a notice; the current DMG partition wrapper does not
+  forward child filesystem notices. No repair, journal replay or consistency
+  guarantee follows from successful listing.
 - One file set, optionally followed by its terminating descriptor. Ordinary
   file entries (FE) and UDF 2.00/2.01 extended file entries (EFE), ICB strategy 4.
 - Regular files and directories with embedded contents, short allocation
@@ -62,7 +63,7 @@ continue to reject UDF-bearing layouts.
 | Resource | Default / fixed boundary |
 | --- | --- |
 | Recognition headers | At most 128, seven bytes each, from sector 16; stop on unrelated descriptor |
-| Physical source read | At most 64 KiB per request |
+| UDF reader source request | At most 64 KiB per request |
 | Main, integrity or file-set sequence extent | At most 1 MiB each |
 | Partition maps | 32 |
 | Metadata bytes read | 64 MiB, configurable downward or upward by a trusted caller |
@@ -72,10 +73,22 @@ continue to reject UDF-bearing layouts.
 | Allocation descriptors | 100,000 total, configurable; 4,096 data extents per file |
 | Allocation continuation depth | 256 |
 | One ICB, FID or allocation-continuation extent | 2048 bytes |
-| Retained filename code units | 16 MiB measured as two bytes per code unit |
+| Decoded filename components | 16 MiB measured as two bytes per UTF-16 code unit |
+| Retained full member paths | 16 MiB total measured as two bytes per UTF-16 code unit; callers may only lower this limit |
 | Full member path | 4,096 code units |
 | Logical file size | 8 GiB; each operation retains its smaller caller allowance |
 | Buffered file reads | At most 64 MiB, including callers with a larger streaming allowance |
+
+The separate full-path budget includes every retained member path, including
+repeated ancestor prefixes and distinct hard-link names. It is checked before
+the path enters the retained listing. Sharing a file entry does not share or
+discount its different directory-entry paths. This is a text accounting bound,
+not a bound on all parser objects or allocator overhead.
+
+The request ceiling applies at the UDF reader's `ByteSource` boundary. Existing
+F3 caches may fill a larger bounded window, and a DMG source may decode its
+bounded compressed chunk; it is not a claim that every underlying physical I/O
+or decompression allocation is at most 64 KiB.
 
 Unsigned 64-bit information lengths are checked as separate 32-bit halves
 before conversion into a bounded exact Dart integer. Physical positions use

@@ -526,7 +526,11 @@ recorded in [evidence-validation.json](evidence/storage-capabilities-20261114/ev
 The [ancestry receipt](evidence/storage-capabilities-20261114/ancestry.json)
 preserves every original remote branch and PR head from this pass.
 
-The new branch is an evaluated roadmap and supporting evidence. Application
-source, dependency manifests and runtime capability declarations are unchanged.
-Consequently this pass has no new app, native, browser or device test results;
-the previous session's receipts remain attached to their original source.
+The initial assessment checkpoint contained the evaluated roadmap and supporting
+evidence only; it did not change application source, dependency manifests or
+runtime capability declarations, and had no new runtime test results. Subsequent
+implementation checkpoints added the four scoped capabilities described above.
+Their completed qualification is recorded separately in the
+[first runtime evidence](evidence/storage-runtime-20261114) and
+[UDF/ZIP evidence](evidence/storage-udf-zip-20261114), each bound to its tested
+source revision. Earlier receipts retain their original scope and source pins.

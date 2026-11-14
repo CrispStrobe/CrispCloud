@@ -33,6 +33,7 @@ import 'archive_types.dart';
 
 const _blockBytes = 2048;
 const _readChunkBytes = 64 * 1024;
+const _maxRetainedPathBytes = 16 * 1024 * 1024;
 
 /// Non-owning, bounded recognition of NSR02/NSR03 after BEA01. ISO descriptors
 /// may precede the extended area in a bridge image. This does not authorize
@@ -60,6 +61,8 @@ Future<bool> hasUdfVolumeRecognition(koni.ByteSource source) async {
 
 /// Read-only physical-partition UDF with lazy, bounded member reads.
 /// The returned archive owns [source], including when opening fails.
+/// [maxRetainedPathBytes] may lower the fixed 16 MiB aggregate full-path budget;
+/// accounting charges two bytes per UTF-16 code unit, including repeated prefixes.
 Future<ViewerArchive> openUdfArchive(
   koni.ByteSource source, {
   required int maxMemberBytes,
@@ -68,6 +71,7 @@ Future<ViewerArchive> openUdfArchive(
   int maxDepth = 64,
   int maxExtents = 100000,
   int maxMetadataBytes = 64 * 1024 * 1024,
+  int maxRetainedPathBytes = _maxRetainedPathBytes,
 }) async {
   try {
     if ([
@@ -77,8 +81,16 @@ Future<ViewerArchive> openUdfArchive(
       maxDepth,
       maxExtents,
       maxMetadataBytes,
+      maxRetainedPathBytes,
     ].any((limit) => limit <= 0)) {
       throw ArgumentError('UDF reader limits must be positive.');
+    }
+    if (maxRetainedPathBytes > _maxRetainedPathBytes) {
+      throw ArgumentError.value(
+        maxRetainedPathBytes,
+        'maxRetainedPathBytes',
+        'The aggregate full-path budget cannot exceed 16 MiB.',
+      );
     }
     return await _UdfReader(
       source,
@@ -88,6 +100,7 @@ Future<ViewerArchive> openUdfArchive(
       maxDepth,
       maxExtents,
       maxMetadataBytes,
+      maxRetainedPathBytes,
     ).open();
   } catch (error) {
     await source.close();
@@ -105,15 +118,18 @@ class _UdfReader {
     this.maxDepth,
     this.maxExtents,
     this.maxMetadataBytes,
+    this.maxRetainedPathBytes,
   );
 
   final koni.ByteSource source;
   final int maxMemberBytes, maxEntries, maxDirectoryBytes, maxDepth;
   final int maxExtents, maxMetadataBytes;
+  final int maxRetainedPathBytes;
   var _metadataBytes = 0;
   var _directoryBytes = 0;
   var _extentCount = 0;
   var _nameBytes = 0;
+  var _retainedPathBytes = 0;
   var _readCount = 0;
   var _identifierCount = 0;
   var _revision = 0;
@@ -840,9 +856,17 @@ class _UdfReader {
           _bad('Filename byte limit exceeded.');
         }
         final path = prefix.isEmpty ? name : '$prefix/$name';
-        if (path.length > 4096 || !_paths.add(path)) {
+        if (path.length > 4096) {
           _bad('Duplicate or oversized member path.');
         }
+        final pathBytes = path.length * 2;
+        if (pathBytes > maxRetainedPathBytes - _retainedPathBytes) {
+          _bad('Retained full-path text limit exceeded.');
+        }
+        if (!_paths.add(path)) {
+          _bad('Duplicate or oversized member path.');
+        }
+        _retainedPathBytes += pathBytes;
         if (_members.length >= maxEntries) _bad('Entry limit exceeded.');
         final file = await _file(_longAddress(descriptor, 20));
         if ((flags & 2 != 0) != (file.type == 4)) {

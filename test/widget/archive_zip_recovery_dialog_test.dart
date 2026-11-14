@@ -358,6 +358,43 @@ void main() {
   );
 
   testWidgets(
+    'queue completion warning remains visible with the saved result',
+    (tester) async {
+      final handle = ArchiveOperationHandle<ArchiveCreationResult>(
+        id: 'completion-warning',
+        operation: OperationProgress(
+          id: 'completion-warning',
+          type: OperationType.archive,
+          sourcePath: '/input/broken.zip',
+          targetPath: '/output/recovered.zip',
+          fileName: 'recovered.zip',
+        ),
+        control: FileOperationControl(),
+      );
+      addTearDown(handle.dispose);
+      await _open(
+        tester,
+        source,
+        destination,
+        enqueue: (_, _, _) async => handle,
+      );
+      await tester.tap(find.byKey(const ValueKey('zip-recovery-save')));
+      await _until(tester, () => find.text('Pause').evaluate().isNotEmpty);
+      final warning = StateError('Recovered ZIP saved; refresh failed');
+      handle.settle(
+        result: const ArchiveCreationResult('/output/recovered.zip', 2, 100),
+        publicationWarning: warning,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('zip-recovery-result')), findsOneWidget);
+      expect(find.text(warning.toString()), findsOneWidget);
+      expect(find.byKey(const ValueKey('zip-recovery-error')), findsNothing);
+      expect(handle.error, isNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'disposal during queue admission leaves the admitted job owned by its queue',
     (tester) async {
       final admission =

@@ -464,10 +464,11 @@ optional reference checks are:
 These reference tools are test dependencies only. Native macOS mounting and
 platform-specific release acceptance are not established by Linux readback.
 
-UDF, APFS, ARJ/LZH/ACE/UC2, CAB Quantum/LZX/spanning, RPM v6/stripped
+APFS, ARJ/LZH/ACE/UC2, CAB Quantum/LZX/spanning, RPM v6/stripped
 payloads, Apple Archive/YAA and additional ZIPX methods are not enabled by these
 increments. G22 remains partial; additional profiles require their own
-implementation and independent fixtures.
+implementation and independent fixtures. The later read-only
+[UDF increment](archive-udf-profile.md) has its own bounded profile and evidence.
 
 The workflow/codec continuation adds original liblz4, liblzma and libarchive
 fixtures, public-domain ncompress validation, binary CPIO in both byte orders,
