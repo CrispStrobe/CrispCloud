@@ -22,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/archive_iso_fixtures.dart';
+import '../support/archive_udf_reference_data.dart';
 import '../support/archive_package_fixtures.dart';
 import '../support/archive_rpm_fixtures.dart';
 import '../support/archive_sfx_fixtures.dart';
@@ -446,6 +447,80 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final (name, reference) in [
+    ('udf-bridge.iso', 'mastered-bridge'),
+    ('udf-only.udf', 'derived-udf-only'),
+  ]) {
+    testWidgets(
+      'native F3 $name keeps UDF Unicode namespace and previews from a bounded source',
+      (tester) async {
+        final bytes = udfReferenceBytes(reference);
+        const paddedLength = 80 * 1024 * 1024;
+        final native = await _NativeIso.create(
+          tester,
+          name: name,
+          writeArchive: (file) async {
+            await file.writeAsBytes(bytes);
+            final handle = await file.open(mode: FileMode.append);
+            try {
+              await handle.truncate(paddedLength);
+            } finally {
+              await handle.close();
+            }
+          },
+        );
+        try {
+          await native.mount(tester);
+          await _waitFor(
+            tester,
+            () => find.text('café-雪.txt').evaluate().isNotEmpty,
+          );
+          expect(find.textContaining('   ·   UDF'), findsOneWidget);
+          expect(find.text('nested/payload.bin'), findsOneWidget);
+          expect(native.file.size, paddedLength);
+          expect(native.local.fullReads, 0);
+          expect(native.local.acquisitions, 1);
+          expect(native.local.releases, 0);
+          _chip(tester, 'Hex').onSelected!(true);
+          await tester.pumpAndSettle();
+          expect(find.byType(HexViewer), findsOneWidget);
+          _chip(tester, 'Archive').onSelected!(true);
+          await _waitFor(
+            tester,
+            () => find.text('café-雪.txt').evaluate().isNotEmpty,
+          );
+          expect(find.textContaining('   ·   UDF'), findsOneWidget);
+          await tester.tap(find.text('café-雪.txt'));
+          await _waitFor(
+            tester,
+            () => find
+                .textContaining('Café, 雪 and UDF!', findRichText: true)
+                .evaluate()
+                .isNotEmpty,
+          );
+          expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+          expect(native.local.acquisitions, 1);
+          expect(native.local.releases, 0);
+          expect(native.local.fullReads, 0);
+          await tester.runAsync(() async {
+            final handle = await File(native.file.path!).open();
+            try {
+              expect(await handle.length(), paddedLength);
+              expect(await handle.read(bytes.length), bytes);
+            } finally {
+              await handle.close();
+            }
+          });
+          expect(tester.takeException(), isNull);
+        } finally {
+          await native.dispose(tester);
+        }
+        expect(native.local.releases, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'an SFX payload is browsed explicitly without replacing the executable binary view',

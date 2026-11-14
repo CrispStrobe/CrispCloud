@@ -87,3 +87,12 @@ node -e 'globalThis.self=globalThis; require(process.argv[1]);' /path/to/check.j
 dart --packages=.dart_tool/package_config.json test/support/emit_archive_iso_multiextent.dart /path/to/fixtures
 python3 test/support/check_archive_iso_multiextent.py --input /path/to/fixtures --sevenzip /path/to/7zz
 ```
+
+
+## Separate UDF reader
+
+UDF-only and ISO/UDF bridge images now use the [bounded UDF reader](archive-udf-profile.md)
+when their recognition sequence is present. The unsupported UDF boundary above
+belongs to this ISO parser/writer profile. Supported bridge images expose the
+UDF namespace and remain read-only; a failed recognized UDF profile does not
+silently become an ISO rewrite candidate.

@@ -50,8 +50,9 @@ bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
   // Their readers validate the actual signature before accepting the source.
   if (lower.endsWith('.iso') ||
       lower.endsWith('.udf') ||
-      lower.endsWith('.dmg'))
+      lower.endsWith('.dmg')) {
     return true;
+  }
   // Historic TARs have several valid header variants. Let the reader decide;
   // an explicit decoded-format mismatch can still use the sniffing fallback.
   return lower.endsWith('.tar') || lower.endsWith('.cbt');

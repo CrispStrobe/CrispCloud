@@ -6,14 +6,18 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
-import '../../lib/services/archive_types.dart';
-import '../../lib/services/archive_udf_reader.dart';
+import 'package:crisp_cloud/services/archive_types.dart';
+import 'package:crisp_cloud/services/archive_udf_reader.dart';
+
+import 'archive_udf_fixture.dart';
 import 'archive_udf_reference_data.dart';
 
 var _checks = 0;
 void check(bool condition, String message) {
   _checks++;
-  if (!condition) throw StateError(message);
+  if (!condition) {
+    throw StateError(message);
+  }
 }
 
 class UdfReferenceSource implements koni.ByteSource {
@@ -32,15 +36,21 @@ class UdfReferenceSource implements koni.ByteSource {
   String get name => 'independent.udf';
   @override
   Future<Uint8List> read(int offset, int length) async {
-    if (closed) throw StateError('Read after close');
+    if (closed) {
+      throw StateError('Read after close');
+    }
     if (failAt != null && offset >= failAt!) {
       throw StateError('Controlled source failure');
     }
-    check(offset >= 0 && length >= 0 && offset <= bytes.length - length,
-        'Reader requested bytes outside the image');
+    check(
+      offset >= 0 && length >= 0 && offset <= bytes.length - length,
+      'Reader requested bytes outside the image',
+    );
     reads++;
     requested += length;
-    if (length > largestRequest) largestRequest = length;
+    if (length > largestRequest) {
+      largestRequest = length;
+    }
     ranges.add((offset, length));
     return Uint8List.fromList(bytes.sublist(offset, offset + length));
   }
@@ -73,23 +83,34 @@ Future<void> main() async {
     final archive = await openUdfArchive(source, maxMemberBytes: 1024 * 1024);
     check(archive.formatName == 'udf', 'Incorrect detected format');
     check(archive.members.length == 5, 'Expected four files and a directory');
-    check(source.largestRequest <= 64 * 1024, 'Metadata request exceeded bound');
-    check(source.ranges.every((r) => r.$1 + r.$2 <= 279 * 2048 || r.$1 >= 286 * 2048),
-        'Open eagerly fetched original file contents');
+    check(
+      source.largestRequest <= 64 * 1024,
+      'Metadata request exceeded bound',
+    );
+    check(
+      source.ranges.every(
+        (r) => r.$1 + r.$2 <= 279 * 2048 || r.$1 >= 286 * 2048,
+      ),
+      'Open eagerly fetched original file contents',
+    );
     final hashes = <String, String>{};
     for (final member in archive.members.where((entry) => entry.isFile)) {
       final expected = udfReferencePayloads[member.name];
       check(expected != null, 'Unexpected file ${member.name}');
       final bytes = await archive.readMember(member);
-      check(sha256.convert(bytes).toString() == expected,
-          'Buffered payload mismatch $name/${member.name}');
+      check(
+        sha256.convert(bytes).toString() == expected,
+        'Buffered payload mismatch $name/${member.name}',
+      );
       final streamed = <int>[];
       await for (final chunk in archive.openMember(member, chunkSize: 257)) {
         check(chunk.length <= 257, 'Stream did not preserve requested bound');
         streamed.addAll(chunk);
       }
-      check(sha256.convert(streamed).toString() == expected,
-          'Streamed payload mismatch $name/${member.name}');
+      check(
+        sha256.convert(streamed).toString() == expected,
+        'Streamed payload mismatch $name/${member.name}',
+      );
       check(bytes.length == member.size, 'Incorrect member size');
       hashes[member.name] = expected!;
     }
@@ -98,16 +119,37 @@ Future<void> main() async {
     results[name] = hashes;
   }
 
-  final offsetBacking = Uint8List(udfReferenceBytes('derived-fragmented').length + 17);
-  offsetBacking.setRange(9, offsetBacking.length - 8, udfReferenceBytes('derived-fragmented'));
-  final view = Uint8List.sublistView(offsetBacking, 9, offsetBacking.length - 8);
+  final offsetBacking = Uint8List(
+    udfReferenceBytes('derived-fragmented').length + 17,
+  );
+  offsetBacking.setRange(
+    9,
+    offsetBacking.length - 8,
+    udfReferenceBytes('derived-fragmented'),
+  );
+  final view = Uint8List.sublistView(
+    offsetBacking,
+    9,
+    offsetBacking.length - 8,
+  );
   final before = sha256.convert(offsetBacking).toString();
-  final viewArchive = await openUdfArchive(koni.MemoryByteSource(view), maxMemberBytes: 1024 * 1024);
-  final payload = viewArchive.members.singleWhere((m) => m.name == 'nested/payload.bin');
-  check(sha256.convert(await viewArchive.readMember(payload)).toString() == udfReferencePayloads[payload.name],
-      'Offset typed-data view lost data');
+  final viewArchive = await openUdfArchive(
+    koni.MemoryByteSource(view),
+    maxMemberBytes: 1024 * 1024,
+  );
+  final payload = viewArchive.members.singleWhere(
+    (m) => m.name == 'nested/payload.bin',
+  );
+  check(
+    sha256.convert(await viewArchive.readMember(payload)).toString() ==
+        udfReferencePayloads[payload.name],
+    'Offset typed-data view lost data',
+  );
   await viewArchive.close();
-  check(sha256.convert(offsetBacking).toString() == before, 'Reader changed its input');
+  check(
+    sha256.convert(offsetBacking).toString() == before,
+    'Reader changed its input',
+  );
 
   for (final (at, label) in <(int, String)>[
     (256 * 2048 + 4, 'anchor tag checksum'),
@@ -119,19 +161,36 @@ Future<void> main() async {
     bytes[at] ^= 1;
     await rejects(bytes, label);
   }
-  await rejects(Uint8List.sublistView(udfReferenceBytes('mastered-bridge'), 0, 256 * 2048), 'truncated anchor');
+  await rejects(
+    Uint8List.sublistView(udfReferenceBytes('mastered-bridge'), 0, 256 * 2048),
+    'truncated anchor',
+  );
 
   final source = UdfReferenceSource(udfReferenceBytes('derived-fragmented'));
   final archive = await openUdfArchive(source, maxMemberBytes: 1024 * 1024);
-  final member = archive.members.singleWhere((m) => m.name == 'nested/payload.bin');
+  final member = archive.members.singleWhere(
+    (m) => m.name == 'nested/payload.bin',
+  );
   final readsBefore = source.reads;
-  final prefix = await archive.openMember(member, chunkSize: 128).take(1).toList();
-  check(prefix.length == 1 && prefix.single.length == 128, 'Cancelled prefix length');
-  check(source.reads == readsBefore + 1, 'Cancellation read beyond first chunk');
+  final prefix = await archive
+      .openMember(member, chunkSize: 128)
+      .take(1)
+      .toList();
+  check(
+    prefix.length == 1 && prefix.single.length == 128,
+    'Cancelled prefix length',
+  );
+  check(
+    source.reads == readsBefore + 1,
+    'Cancellation read beyond first chunk',
+  );
   check(!source.closed, 'Cancelling one stream should retain archive source');
   await archive.close();
 
-  final failing = UdfReferenceSource(udfReferenceBytes('mastered-bridge'), failAt: 32 * 2048);
+  final failing = UdfReferenceSource(
+    udfReferenceBytes('mastered-bridge'),
+    failAt: 32 * 2048,
+  );
   var failed = false;
   try {
     await openUdfArchive(failing, maxMemberBytes: 1024 * 1024);
@@ -139,8 +198,113 @@ Future<void> main() async {
     failed = true;
   }
   check(failed && failing.closed, 'Source failure must close and report');
+
+  for (final revision in [0x102, 0x150, 0x200, 0x201]) {
+    for (final allocation in ['short', 'long', 'embedded']) {
+      final fixture = UdfFixture(
+        revision: revision,
+        allocation: allocation,
+        extended: revision >= 0x200,
+        fileName: 'caf\u00e9-\u96ea.txt',
+      );
+      final archive = await openUdfArchive(
+        fixture.source(),
+        maxMemberBytes: 65536,
+      );
+      check(
+        archive.members.single.name == fixture.fileName,
+        'Synthetic CS0 name differs',
+      );
+      check(
+        sha256.convert(await archive.readMember(archive.members.single)) ==
+            sha256.convert(fixture.payload),
+        'Synthetic revision/allocation payload differs',
+      );
+      await archive.close();
+    }
+  }
+  final distant = UdfFixture(partitionStart: 3000000000);
+  final distantSource = distant.source();
+  final distantArchive = await openUdfArchive(
+    distantSource,
+    maxMemberBytes: 65536,
+  );
+  check(
+    sha256.convert(
+          await distantArchive.readMember(distantArchive.members.single),
+        ) ==
+        sha256.convert(distant.payload),
+    'Large physical offset lost payload bytes',
+  );
+  check(
+    distantSource.reads.contains((6144000040960, distant.payload.length)),
+    'Large physical offset was not exact',
+  );
+  await distantArchive.close();
+
+  const logical = 8 * 1024 * 1024 * 1024;
+  final sparse = UdfFixture();
+  final entry = sparse.fileEntry;
+  entry.fillRange(176, entry.length, 0);
+  udfPut64(entry, 56, logical);
+  udfPut32(entry, 172, 9 * 8);
+  for (var index = 0; index < 9; index++) {
+    udfShort(
+      entry,
+      176 + index * 8,
+      index == 8 ? 16384 : 1073739776,
+      0,
+      kind: 2,
+    );
+  }
+  udfRetag(entry, length: 176 + 9 * 8);
+  final sparseSource = sparse.source();
+  final sparseArchive = await openUdfArchive(
+    sparseSource,
+    maxMemberBytes: logical,
+  );
+  final sparseMember = sparseArchive.members.single;
+  check(
+    sparseMember.size == logical,
+    'Eight GiB logical length lost high bits',
+  );
+  sparseSource.reads.clear();
+  final sparsePrefix = await sparseArchive
+      .openMember(sparseMember, maxBytes: logical, chunkSize: 17)
+      .first;
+  check(
+    sparsePrefix.length == 17 && sparsePrefix.every((byte) => byte == 0),
+    'Sparse prefix does not contain expected zeros',
+  );
+  check(
+    sparseSource.reads.isEmpty,
+    'Unallocated sparse extent accessed physical data',
+  );
+  var bufferRejected = false;
+  try {
+    await sparseArchive.readMember(sparseMember, maxBytes: logical);
+  } on ArchiveViewException {
+    bufferRejected = true;
+  }
+  check(
+    bufferRejected,
+    'Large logical file allowed an unbounded buffered read',
+  );
+  await sparseArchive.close();
   // ignore: avoid_print
-  print(jsonEncode({'groups': 11, 'checks': _checks, 'independentImages': results,
-    'malformedIndependentImagesRejected': 5, 'sourceOwnership': true,
-    'offsetViewsAndInputPreservation': true, 'cancelledStreamPrefixBytes': 128}));
+  print(
+    jsonEncode({
+      'groups': 25,
+      'checks': _checks,
+      'independentImages': results,
+      'malformedIndependentImagesRejected': 5,
+      'sourceOwnership': true,
+      'offsetViewsAndInputPreservation': true,
+      'cancelledStreamPrefixBytes': 128,
+      'syntheticRevisionAllocationProfiles': 12,
+      'syntheticPhysicalOffset': 6144000040960,
+      'syntheticLogicalSize': logical,
+      'syntheticSparsePrefixBytes': 17,
+    }),
+  );
 }

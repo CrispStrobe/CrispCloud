@@ -1,12 +1,14 @@
 # Storage capability expansion: archive, container and filesystem workbench
 
 Status: source-backed architecture and library assessment, followed by runtime
-implementation. **LZFSE DMG reading** and **read-only GPT/MBR inspection linked
-to Hex** are the first implemented increments. See the [DMG codec profiles](archive-dmg-codecs.md),
-[partition inspector](disk-partition-inspection.md) and
-[runtime evidence](evidence/storage-runtime-20261114). The remaining stages below
-are proposals; the initial assessment's documentation-only receipt remains
-preserved with its original source revision.
+implementation. **LZFSE DMG reading**, **read-only GPT/MBR inspection linked
+to Hex**, **bounded UDF reading**, and **ZIP recovery to a new file** are now
+implemented on the integration branch. See the [DMG codec profiles](archive-dmg-codecs.md),
+[partition inspector](disk-partition-inspection.md), [UDF profile](archive-udf-profile.md)
+and [ZIP recovery profile](archive-zip-recovery.md). The [first runtime evidence](evidence/storage-runtime-20261114)
+and [UDF/ZIP evidence](evidence/storage-udf-zip-20261114) retain their separate
+qualified revisions. Later stages remain proposals; the initial assessment's
+documentation-only receipt stays preserved with its original source revision.
 
 Review: [draft PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
 
@@ -32,6 +34,12 @@ During implementation, main advanced to `b84f450cbf8519e9c0107928d99e0372468b85c
 with the CLI disk-usage feature. That change was merged into this branch at
 `26540f65fd63713ca1b543f793aa2e5d4a75c650` before the first runtime checkpoint.
 
+Before UDF/ZIP work, main's native metadata catalogue and shared Rust CAF
+interchange (`14e022eb51c417803a1913131e78912a8a19b3be`) were brought in through
+`e49c874653f38becf0018d868c6767c264306e3f`. No fetched branch or PR head was
+discarded. Subsequent checkpoints preserve the UDF reader, recovery workflow,
+independent fixtures and qualification evidence incrementally.
+
 ## Scope and license filter
 
 Evaluate additions for archive inspection/recovery, filesystem and partition
@@ -56,8 +64,10 @@ to the current hex view**. Follow with read-only filesystem adapters and
 recovery tools. These close identifiable gaps without replacing working archive
 or transfer engines.
 
-Use a small C/Rust bridge where it has a concrete advantage. Evaluate a
-DiscUtils helper or a deliberate UDF port for optical/VM coverage. Avoid
+The UDF increment uses an original MIT Dart implementation of a documented
+physical-partition profile, so it adds no .NET or native dependency. Use a small
+C/Rust bridge or selected DiscUtils modules where a later format has a concrete
+advantage. Avoid
 automatically introducing C, Rust, Go and .NET runtimes together: several
 candidates are alternatives, and many of their headline features already ship.
 OCI image browsing can start with existing TAR and JSON facilities; a Go
@@ -342,9 +352,10 @@ general safe APFS repair, arbitrary filesystem resizing or a universal fsck.
 ## Delivery sequence and acceptance
 
 These are scoped implementation stages, not estimated delivery dates. Stages
-1 (GPT/MBR tables only) and 2 are implemented on the integration branch; the
-linked profiles and runtime receipts define their qualified scope. The broader filesystem and
-container structure drill-down described in stage 1 remains future work.
+1 (GPT/MBR tables only), 2, 3 (physical UDF profiles) and 4 (bounded ZIP
+recovery) are implemented on the integration branch. The linked profiles and
+receipts define their qualified scope. Broader filesystem metadata and
+container structure inspection in stage 1 remain future work.
 
 ### 1. Disk structures in the current viewer
 
@@ -386,36 +397,54 @@ encrypted DMGs, APFS and DMG writer support outside this increment.
 
 ### 3. UDF reading
 
-Define supported UDF revisions, descriptor types, allocation forms and partition
-maps before implementation. A first profile can deliberately omit virtual,
-sparable and metadata partition forms until qualified. Recognize UDF-only and
-bridge images without assuming that an ISO writer may rebuild them.
+Implemented: an [original MIT positional Dart reader](archive-udf-profile.md)
+for UDF 1.02/1.50/2.00/2.01 physical Type 1 partitions, FE/EFE, embedded and
+short/long allocation forms, bounded continuations, ordered multiple extents
+and sparse regular files. UDF-only and ISO/UDF bridge images use the UDF
+namespace in pane/F3/extraction and stay read-only. Supported UDF partitions
+inside DMGs also expose their files and preserve the raw partition entry.
 
-Evaluate a selected DiscUtils reader module against real UDF-only media, then
-choose a native helper or a separately attributed Dart port according to browser
-needs. Verify multi-extent files, large logical offsets, descriptor checks,
-loops, invalid allocation ranges and explicit unsupported cases. Reuse the
-existing safe-member and extraction policies.
+The native and browser paths share the same positional reader. Independently
+mastered UDF 1.02 media and synthetic structures exercise extraction, ordered
+multiple extents, exact large offsets, descriptor checks, loops, invalid ranges
+and explicit unsupported cases. Native F3 keeps its bounded source windows.
+
+Later extensions need separately specified and qualified partition maps,
+revisions and recovery behavior. VAT, sparable and metadata partitions are
+outside this increment. Selected DiscUtils modules remain an option for broader
+filesystem/VM formats if their integration cost is justified.
 
 ### 4. ZIP salvage
 
-Give recovery its own scan/recover/verify/publish queue phases and a reviewable
-entry report. Work from captured input; write a new archive. Reopen the candidate
-with the existing independent ZIP reader and verify recovered members before
-publication.
+Implemented: **Recover ZIP to new file…** for a selected native local ZIP/CBZ.
+The [documented recovery profile](archive-zip-recovery.md) captures a 64 MiB
+bounded snapshot, reviews verifiable local records, rebuilds selected entries
+and verifies them with the separate Koni reader before exclusive new-file
+publication. Deflate data descriptors are accepted only from measured codec
+completion and matching CRC/sizes. The shared Operations queue owns recovery,
+verification and publication after admission; closing the review does not stop
+an admitted job. Source hashes, selection offsets and output receipts are
+journaled without source bytes or credentials. After restart, a fresh source
+scan and selection review are required.
 
-Fixtures should cover a missing directory, truncated members, incorrect sizes,
-duplicate names, overlapping regions, data descriptors, encrypted entries and
-incomplete split sets. Recovery may report partial results, but ambiguous
-boundaries cannot be silently guessed. Passwords stay outside ordinary durable
-job records. Preserve the input even if the candidate fails to reopen.
+Qualification covers missing directories, truncation, incorrect sizes/CRC,
+name conflicts, nested signatures, measured deflate descriptors and explicit
+refusal of encryption, ZIP64 and recognized split sets. Python's separate ZIP
+reader verifies the rebuilt outputs. Publication rehashes the original and
+staged candidate, repeats proofs after pauses, and uses the existing exclusive
+new-file boundary. A completed install remains successful if Stop or a
+completion observer arrives afterward.
+
+Future work can extend resource limits or add separately proven record forms.
+This profile does not guess unknown boundaries or claim complete recovery from
+a verified prefix; source contents and credentials are not durable job data.
 
 ### 5. Filesystems and containers
 
 Add FAT, ext and NTFS reading through a selected adapter stack. Connect each
 partition to the existing virtual-entry route. Preserve alternate-stream names,
 sparse semantics, timestamps and unsupported metadata notices where available.
-Then add UDF/VM families or offline OCI semantics according to actual demand.
+Then extend the UDF profile, add VM families or add offline OCI semantics according to actual demand.
 
 Cross-check representative extraction hashes with independent tools. Exercise
 fragmented files, extent loops, sparse/unallocated ranges, huge declared sizes,

@@ -185,7 +185,7 @@ const udfReferenceImages = <String, String>{
 };
 
 Uint8List udfReferenceBytes(String name) => Uint8List.fromList(
-  archive.GZipDecoder().decodeBytes(base64Decode(udfReferenceImages[name]!)),
+  const archive.GZipDecoder().decodeBytes(base64Decode(udfReferenceImages[name]!)),
 );
 
 const udfReferencePayloads = <String, String>{

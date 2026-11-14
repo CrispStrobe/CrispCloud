@@ -83,7 +83,7 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       _ => ArchiveEndpointFormat.readOnly,
     };
     if ((format == ArchiveEndpointFormat.iso || descriptor?.id == 'udf') &&
-        (descriptor?.id == 'udf' || await hasUdfVolumeRecognition(input))) {
+        await hasUdfVolumeRecognition(input)) {
       inner = await openUdfArchive(input, maxMemberBytes: maxBytes);
       const policy = ArchiveEndpointPolicy(
         ArchiveEndpointFormat.readOnly,
@@ -96,6 +96,11 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       inner = null;
       opening = false;
       return StreamedArchiveOpen(archive: ownedArchive, policy: policy);
+    }
+    if (descriptor?.id == 'udf') {
+      throw const ArchiveViewException(
+        'The archive does not match its filename.',
+      );
     }
     if (format == ArchiveEndpointFormat.readOnly) {
       throw const ArchiveViewException(

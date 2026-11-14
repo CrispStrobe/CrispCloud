@@ -115,6 +115,7 @@ class _UdfReader {
   var _extentCount = 0;
   var _nameBytes = 0;
   var _readCount = 0;
+  var _identifierCount = 0;
   var _revision = 0;
   final _partitions = <_Partition>[];
   final _members = <ViewerArchiveMember>[];
@@ -156,11 +157,13 @@ class _UdfReader {
     if (offset < 0 ||
         length < 0 ||
         offset > source.length ||
-        length > source.length - offset)
+        length > source.length - offset) {
       _bad('An extent leaves the image.');
+    }
     if (metadata) {
-      if (length > maxMetadataBytes - _metadataBytes)
+      if (length > maxMetadataBytes - _metadataBytes) {
         _bad('Metadata read limit exceeded.');
+      }
       _metadataBytes += length;
     }
     final output = Uint8List(length);
@@ -198,22 +201,26 @@ class _UdfReader {
     if (length < 16 || length > bytes.length || _u16(bytes, 0) != id) {
       _bad('A descriptor has the wrong type or length.');
     }
-    if (!const [2, 3].contains(_u16(bytes, 2)))
+    if (!const [2, 3].contains(_u16(bytes, 2))) {
       _unsupported('Unknown descriptor version.');
+    }
     var sum = 0;
     for (var i = 0; i < 16; i++) {
       if (i != 4) sum += bytes[i];
     }
-    if ((sum & 255) != bytes[4] || bytes[5] != 0)
+    if ((sum & 255) != bytes[4] || bytes[5] != 0) {
       _bad('Descriptor tag checksum or reserved byte.');
-    if (_u32(bytes, 12) != location)
+    }
+    if (_u32(bytes, 12) != location) {
       _bad('Descriptor tag location disagrees with its address.');
+    }
     final crcLength = _u16(bytes, 10);
     if (crcLength != length - 16 && !(allocationExtent && crcLength == 8)) {
       _bad('Descriptor CRC does not cover its required fields.');
     }
-    if (_crc(bytes, 16, 16 + crcLength) != _u16(bytes, 8))
+    if (_crc(bytes, 16, 16 + crcLength) != _u16(bytes, 8)) {
       _bad('Descriptor CRC mismatch.');
+    }
   }
 
   String _identifier(Uint8List bytes, int at, int count) {
@@ -251,8 +258,9 @@ class _UdfReader {
       final bytes = await _read(sector * _blockBytes, 7);
       final id = ascii.decode(bytes.sublist(1, 6), allowInvalid: true);
       if (!extended && id == 'CD001') continue;
-      if (bytes[0] != 0 || bytes[6] != 1)
+      if (bytes[0] != 0 || bytes[6] != 1) {
         _bad('Invalid volume recognition descriptor.');
+      }
       if (id == 'BEA01' && !extended) {
         extended = true;
       } else if ((id == 'NSR02' || id == 'NSR03') && extended && !nsr) {
@@ -299,13 +307,15 @@ class _UdfReader {
       var size = 512;
       if (id == 6) {
         final mapBytes = _u32(bytes, 264);
-        if (mapBytes > _blockBytes - 440)
+        if (mapBytes > _blockBytes - 440) {
           _unsupported('Oversized partition map table.');
+        }
         size = 440 + mapBytes;
       } else if (id == 7) {
         final count = _u32(bytes, 20);
-        if (count > (_blockBytes - 24) ~/ 8)
+        if (count > (_blockBytes - 24) ~/ 8) {
           _unsupported('Oversized unallocated-space descriptor.');
+        }
         size = 24 + count * 8;
       } else if (!const [1, 4, 5, 8].contains(id)) {
         _unsupported('Unknown volume descriptor $id.');
@@ -316,15 +326,18 @@ class _UdfReader {
         break;
       }
       if (id == 1) {
-        if (primary != null)
+        if (primary != null) {
           _unsupported('Multiple primary volume descriptors.');
-        if (_u16(bytes, 56) != 1 || _u16(bytes, 58) != 1)
+        }
+        if (_u16(bytes, 56) != 1 || _u16(bytes, 58) != 1) {
           _unsupported('Multi-volume images.');
+        }
         primary = bytes;
       } else if (id == 5) {
         final number = _u16(bytes, 22);
-        if (partitions.containsKey(number) || partitions.length >= 32)
+        if (partitions.containsKey(number) || partitions.length >= 32) {
           _unsupported('Repeated or too many physical partitions.');
+        }
         if (_u16(bytes, 20) != 1 ||
             !const ['+NSR02', '+NSR03'].contains(_identifier(bytes, 25, 23))) {
           _unsupported('Unallocated or non-UDF physical partition.');
@@ -333,50 +346,61 @@ class _UdfReader {
         final blocks = _u32(bytes, 192);
         if (start < 16 ||
             blocks == 0 ||
-            (start + blocks) * _blockBytes > source.length)
+            (start + blocks) * _blockBytes > source.length) {
           _bad('Partition leaves the image.');
+        }
         partitions[number] = _Partition(start, blocks);
       } else if (id == 6) {
-        if (logical != null)
+        if (logical != null) {
           _unsupported('Multiple logical volume descriptors.');
+        }
         logical = bytes;
       }
     }
-    if (!terminated || primary == null || logical == null)
+    if (!terminated || primary == null || logical == null) {
       _bad('Incomplete main volume descriptor sequence.');
-    if (_u32(logical, 212) != _blockBytes)
+    }
+    if (_u32(logical, 212) != _blockBytes) {
       _unsupported('Only 2048-byte logical blocks are supported.');
+    }
     _charset(logical, 20);
     _revision = _domain(logical, 216);
     final mapCount = _u32(logical, 268);
     final mapLength = _u32(logical, 264);
-    if (mapCount < 1 || mapCount > 32)
+    if (mapCount < 1 || mapCount > 32) {
       _unsupported('Partition map count outside 1–32.');
+    }
     var at = 440;
     final used = <int>{};
     for (var i = 0; i < mapCount; i++) {
       if (at > 440 + mapLength - 2) _bad('Truncated partition map.');
-      if (logical[at] != 1)
+      if (logical[at] != 1) {
         _unsupported(
           'Virtual, sparable, metadata and other Type 2 partition maps.',
         );
-      if (logical[at + 1] != 6 || at + 6 > 440 + mapLength)
+      }
+      if (logical[at + 1] != 6 || at + 6 > 440 + mapLength) {
         _bad('Invalid Type 1 partition map.');
-      if (_u16(logical, at + 2) != 1)
+      }
+      if (_u16(logical, at + 2) != 1) {
         _unsupported('Partition map references another volume.');
+      }
       final number = _u16(logical, at + 4);
       final partition = partitions[number];
-      if (partition == null || !used.add(number))
+      if (partition == null || !used.add(number)) {
         _bad('Missing or repeated mapped physical partition.');
+      }
       _partitions.add(partition);
       at += 6;
     }
-    if (logical.sublist(at, 440 + mapLength).any((byte) => byte != 0))
+    if (logical.sublist(at, 440 + mapLength).any((byte) => byte != 0)) {
       _bad('Unexpected partition-map bytes.');
+    }
     final sorted = [..._partitions]..sort((a, b) => a.start.compareTo(b.start));
     for (var i = 1; i < sorted.length; i++) {
-      if (sorted[i - 1].start + sorted[i - 1].blocks > sorted[i].start)
+      if (sorted[i - 1].start + sorted[i - 1].blocks > sorted[i].start) {
         _bad('Physical partitions overlap.');
+      }
     }
     await _integrity(logical);
     final fileSetAddress = _longAddress(logical, 248);
@@ -439,10 +463,11 @@ class _UdfReader {
         final limit = requestedLimit < kArchiveReadLimit
             ? requestedLimit
             : kArchiveReadLimit;
-        if (member.size > limit)
+        if (member.size > limit) {
           throw ArchiveViewException(
             'UDF entry exceeds the $limit-byte read limit.',
           );
+        }
         return _contents(_files[member.index], metadata: false);
       },
       streamReader: (member, chunkSize) =>
@@ -469,39 +494,48 @@ class _UdfReader {
       final implementationLength = _u32(bytes, 76);
       if (count != _partitions.length ||
           implementationLength < 46 ||
-          implementationLength > _blockBytes - 80 - count * 8)
+          implementationLength > _blockBytes - 80 - count * 8) {
         _bad('Invalid integrity descriptor dimensions.');
+      }
       _tag(bytes, 9, location + i, 80 + count * 8 + implementationLength);
       if (_u32(bytes, 32) != 0) _unsupported('Chained integrity sequences.');
       final minRead = _u16(bytes, 80 + count * 8 + 40);
-      if (!const [0x102, 0x150, 0x200, 0x201].contains(minRead))
+      if (!const [0x102, 0x150, 0x200, 0x201].contains(minRead)) {
         _unsupported('Unsupported minimum UDF read revision.');
+      }
       if (_u32(bytes, 28) > 1) _bad('Unknown integrity state.');
       last = bytes;
     }
     if (last == null) _bad('Missing logical volume integrity descriptor.');
-    if (_u32(last, 28) == 0)
+    if (_u32(last, 28) == 0) {
       _notices.add(
         'The UDF volume is marked open. Its metadata may be inconsistent; no repair or replay is performed.',
       );
+    }
   }
 
   _Address _longAddress(Uint8List bytes, int at) {
     final rawLength = _u32(bytes, at);
-    if (rawLength ~/ 1073741824 != 0 || rawLength == 0)
+    if (rawLength ~/ 1073741824 != 0 || rawLength == 0) {
       _bad('Expected a recorded ICB extent.');
+    }
+    if (_u16(bytes, at + 10) != 0) {
+      _bad('Recorded ICB extent flags must be zero.');
+    }
     return _Address(_u16(bytes, at + 8), _u32(bytes, at + 4), rawLength);
   }
 
   int _physical(int partition, int block, int length) {
-    if (partition < 0 || partition >= _partitions.length)
+    if (partition < 0 || partition >= _partitions.length) {
       _bad('Unknown partition reference.');
+    }
     final value = _partitions[partition];
     if (block < 0 ||
         block >= value.blocks ||
         length < 0 ||
-        length > (value.blocks - block) * _blockBytes)
+        length > (value.blocks - block) * _blockBytes) {
       _bad('Allocation leaves its physical partition.');
+    }
     return (value.start + block) * _blockBytes;
   }
 
@@ -509,48 +543,61 @@ class _UdfReader {
       _read(_physical(address.partition, address.block, length), length);
 
   Future<_File> _file(_Address address) async {
-    if (address.length < 176 || address.length > _blockBytes)
+    if (address.length < 176 || address.length > _blockBytes) {
       _unsupported('ICBs must fit one logical block.');
+    }
     final cached = _cache[address.key];
     if (cached != null) {
-      if (cached.address.length != address.length)
+      if (cached.address.length != address.length) {
         _bad('Conflicting references to one ICB.');
+      }
       return cached;
     }
     final bytes = await _readAddress(address, address.length);
     final id = _u16(bytes, 0);
-    if (id != 261 && id != 266)
+    if (id != 261 && id != 266) {
       _unsupported('Indirect, terminal or unknown ICB entries.');
+    }
     final extended = id == 266;
-    if (extended && _revision < 0x200)
+    if (extended && _revision < 0x200) {
       _unsupported('Extended file entries before UDF 2.00.');
+    }
     final fixed = extended ? 216 : 176;
     if (bytes.length < fixed) _bad('Truncated file entry.');
     final eaLength = _u32(bytes, fixed - 8);
     final adLength = _u32(bytes, fixed - 4);
     if (eaLength > bytes.length - fixed ||
-        adLength > bytes.length - fixed - eaLength)
+        adLength > bytes.length - fixed - eaLength) {
       _bad('File entry variable fields leave the ICB.');
+    }
     _tag(bytes, id, address.block, fixed + eaLength + adLength);
-    if (_u16(bytes, 20) != 4 || _u16(bytes, 24) != 1)
+    if (_u16(bytes, 20) != 4 || _u16(bytes, 24) != 1) {
       _unsupported('Only ICB strategy 4 is supported.');
+    }
+    if (_u32(bytes, 16) != 0 || _u16(bytes, 22) != 0 || bytes[26] != 0) {
+      _bad('Invalid strategy-4 ICB parameters or reserved byte.');
+    }
     final flags = _u16(bytes, 34);
     final type = bytes[27];
     if ((flags & 0xf800) != 0 ||
-        !const [4, 5, 6, 7, 8, 9, 10, 12].contains(type))
+        !const [4, 5, 6, 7, 8, 9, 10, 12].contains(type)) {
       _unsupported('Transformed, versioned, stream or unknown file entry.');
-    if (bytes[50] != 0 || bytes[51] != 0 || _u32(bytes, 52) != 0)
+    }
+    if (bytes[50] != 0 || bytes[51] != 0 || _u32(bytes, 52) != 0) {
       _unsupported('Record-oriented files.');
+    }
     final size = _size64(bytes, 56);
-    if (extended && (_u32(bytes, 152) != 0 || _size64(bytes, 64) != size))
+    if (extended && (_u32(bytes, 152) != 0 || _size64(bytes, 64) != size)) {
       _unsupported('Named streams.');
+    }
     final adType = flags & 7;
     final dataAt = fixed + eaLength;
     final extents = <_Extent>[];
     Uint8List? embedded;
     if (adType == 3) {
-      if (adLength != size)
+      if (adLength != size) {
         _bad('Embedded contents do not match the information length.');
+      }
       embedded = Uint8List.fromList(bytes.sublist(dataAt, dataAt + adLength));
     } else if (adType == 0 || adType == 1) {
       await _allocations(
@@ -564,14 +611,16 @@ class _UdfReader {
       var total = 0;
       for (var i = 0; i < extents.length; i++) {
         final extent = extents[i];
-        if (i + 1 != extents.length && extent.length % _blockBytes != 0)
+        if (i + 1 != extents.length && extent.length % _blockBytes != 0) {
           _bad('A nonfinal allocation is not block aligned.');
+        }
         total += extent.length;
       }
       if (total < size ||
           total - size >= _blockBytes ||
-          (size == 0 && total != 0))
+          (size == 0 && total != 0)) {
         _bad('Allocation lengths disagree with the information length.');
+      }
       if (total > size && extents.isNotEmpty) {
         final last = extents.removeLast();
         final keep = last.length - (total - size);
@@ -581,8 +630,9 @@ class _UdfReader {
     } else {
       _unsupported('Extended or unknown allocation descriptors.');
     }
-    if (type == 4 && extents.any((extent) => !extent.recorded))
+    if (type == 4 && extents.any((extent) => !extent.recorded)) {
       _unsupported('Sparse directories.');
+    }
     final file = _File(
       address,
       type,
@@ -608,29 +658,40 @@ class _UdfReader {
     if (bytes.length % width != 0) _bad('Partial allocation descriptor.');
     if (depth > 256) _bad('Allocation continuation depth exceeded.');
     for (var at = 0; at < bytes.length; at += width) {
-      if (++_extentCount > maxExtents || extents.length >= 4096)
+      if (++_extentCount > maxExtents || extents.length >= 4096) {
         _bad('Allocation descriptor limit exceeded.');
+      }
       final rawLength = _u32(bytes, at);
       final kind = rawLength ~/ 1073741824;
       final length = rawLength % 1073741824;
       final block = _u32(bytes, at + 4);
       final part = type == 0 ? partition : _u16(bytes, at + 8);
+      if (type == 1) {
+        final flags = _u16(bytes, at + 10);
+        if (flags > 1 || (flags == 1 && kind != 1)) {
+          _bad('Invalid long allocation reserved or erased flags.');
+        }
+      }
       if (length == 0) {
-        if (kind != 0 || block != 0 || (type == 1 && part != 0))
+        if (kind != 0 || block != 0 || (type == 1 && part != 0)) {
           _bad('Invalid empty allocation.');
-        if (bytes.sublist(at).any((byte) => byte != 0))
+        }
+        if (bytes.sublist(at).any((byte) => byte != 0)) {
           _bad('Nonempty data after an empty allocation.');
+        }
         return;
       }
       if (kind == 3) {
-        if (at + width != bytes.length || length < 24 || length > _blockBytes)
+        if (at + width != bytes.length || length < 24 || length > _blockBytes) {
           _bad('Invalid allocation continuation.');
+        }
         final address = _Address(part, block, length);
         if (!seen.add(address.key)) _bad('Allocation continuation loop.');
         final continuation = await _readAddress(address, length);
         final adLength = _u32(continuation, 20);
-        if (adLength > length - 24)
+        if (adLength > length - 24) {
           _bad('Allocation continuation length leaves its extent.');
+        }
         _tag(continuation, 258, block, 24 + adLength, allocationExtent: true);
         await _allocations(
           continuation.sublist(24, 24 + adLength),
@@ -642,10 +703,12 @@ class _UdfReader {
         );
       } else {
         if (kind == 2) {
-          if (block != 0)
+          if (block != 0) {
             _bad('An unallocated sparse extent has a physical address.');
-          if (part >= _partitions.length)
+          }
+          if (part >= _partitions.length) {
             _bad('Unknown sparse partition reference.');
+          }
         } else {
           _physical(part, block, length);
         }
@@ -659,7 +722,7 @@ class _UdfReader {
     final bytes = Uint8List(file.size);
     var at = 0;
     for (final extent in file.extents) {
-      if (extent.recorded)
+      if (extent.recorded) {
         bytes.setRange(
           at,
           at + extent.length,
@@ -669,16 +732,18 @@ class _UdfReader {
             metadata: metadata,
           ),
         );
+      }
       at += extent.length;
     }
     return bytes;
   }
 
   Stream<List<int>> _stream(_File file, int requestedChunk) async* {
-    if (file.size > maxMemberBytes)
+    if (file.size > maxMemberBytes) {
       throw ArchiveViewException(
         'UDF entry exceeds the $maxMemberBytes-byte read limit.',
       );
+    }
     final chunk = requestedChunk < _readChunkBytes
         ? requestedChunk
         : _readChunkBytes;
@@ -707,8 +772,9 @@ class _UdfReader {
     if (file.embedded != null) return file.address.block;
     var remaining = offset;
     for (final extent in file.extents) {
-      if (remaining < extent.length)
+      if (remaining < extent.length) {
         return extent.block + remaining ~/ _blockBytes;
+      }
       remaining -= extent.length;
     }
     _bad('Directory descriptor leaves its allocations.');
@@ -720,39 +786,49 @@ class _UdfReader {
     _Address parent,
     int depth,
   ) async {
-    if (depth > maxDepth || !_directories.add(directory.address.key))
+    if (depth > maxDepth || !_directories.add(directory.address.key)) {
       _bad('Directory depth or cycle limit exceeded.');
-    if (directory.size > maxDirectoryBytes - _directoryBytes)
+    }
+    if (directory.size > maxDirectoryBytes - _directoryBytes) {
       _bad('Directory byte limit exceeded.');
+    }
     _directoryBytes += directory.size;
     final bytes = await _contents(directory, metadata: true);
     var at = 0;
     var parentSeen = false;
     final pending = <(_File, String)>[];
     while (at < bytes.length) {
+      if (++_identifierCount % 256 == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
       if (bytes.length - at < 38) _bad('Truncated file identifier descriptor.');
       final nameLength = bytes[at + 19];
       final implementationLength = _u16(bytes, at + 36);
       final unpadded = 38 + implementationLength + nameLength;
       final length = (unpadded + 3) ~/ 4 * 4;
-      if (implementationLength % 4 != 0 ||
+      if ((implementationLength != 0 && implementationLength < 32) ||
+          implementationLength % 4 != 0 ||
           length > _blockBytes ||
-          length > bytes.length - at)
+          length > bytes.length - at) {
         _bad('Invalid file identifier dimensions.');
+      }
       final descriptor = Uint8List.sublistView(bytes, at, at + length);
       _tag(descriptor, 257, _directoryLocation(directory, at), length);
       if (_u16(descriptor, 16) != 1 ||
           descriptor[18] & 0xe0 != 0 ||
-          descriptor.sublist(unpadded).any((byte) => byte != 0))
+          descriptor.sublist(unpadded).any((byte) => byte != 0)) {
         _bad('Invalid file identifier version, flags or padding.');
+      }
       final flags = descriptor[18];
       if (flags & 0x10 != 0) _unsupported('Metadata stream identifiers.');
       if (flags & 8 != 0) {
-        if (at != 0 || parentSeen || nameLength != 0 || flags & 6 != 2)
+        if (at != 0 || parentSeen || nameLength != 0 || flags & 6 != 2) {
           _bad('Invalid parent directory identifier.');
+        }
         final address = _longAddress(descriptor, 20);
-        if (address.key != parent.key)
+        if (address.key != parent.key) {
           _bad('Parent directory identifier points elsewhere.');
+        }
         parentSeen = true;
       } else if (flags & 4 == 0) {
         if (!parentSeen) _bad('Directory lacks its initial parent identifier.');
@@ -760,20 +836,24 @@ class _UdfReader {
           descriptor.sublist(38 + implementationLength, unpadded),
         );
         _nameBytes += name.length * 2;
-        if (_nameBytes > 16 * 1024 * 1024)
+        if (_nameBytes > 16 * 1024 * 1024) {
           _bad('Filename byte limit exceeded.');
+        }
         final path = prefix.isEmpty ? name : '$prefix/$name';
-        if (path.length > 4096 || !_paths.add(path))
+        if (path.length > 4096 || !_paths.add(path)) {
           _bad('Duplicate or oversized member path.');
+        }
         if (_members.length >= maxEntries) _bad('Entry limit exceeded.');
         final file = await _file(_longAddress(descriptor, 20));
-        if ((flags & 2 != 0) != (file.type == 4))
+        if ((flags & 2 != 0) != (file.type == 4)) {
           _bad('Directory and ICB file types disagree.');
+        }
         final special = file.type != 4 && file.type != 5;
-        if (special)
+        if (special) {
           _notices.add(
             'Symbolic links and special entries are listed but cannot be extracted as files.',
           );
+        }
         _members.add(
           ViewerArchiveMember(
             name: path,
@@ -799,8 +879,9 @@ class _UdfReader {
   }
 
   String _name(Uint8List bytes) {
-    if (bytes.length < 2 || !const [8, 16].contains(bytes[0]))
+    if (bytes.length < 2 || !const [8, 16].contains(bytes[0])) {
       _unsupported('Unknown OSTA filename compression ID.');
+    }
     final units = <int>[];
     if (bytes[0] == 8) {
       units.addAll(bytes.sublist(1));
@@ -808,8 +889,9 @@ class _UdfReader {
       if (bytes.length.isEven) _bad('Partial 16-bit filename code unit.');
       for (var at = 1; at < bytes.length; at += 2) {
         final unit = bytes[at] * 256 + bytes[at + 1];
-        if (unit >= 0xd800 && unit <= 0xdfff)
+        if (unit >= 0xd800 && unit <= 0xdfff) {
           _unsupported('Surrogate filename code units.');
+        }
         units.add(unit);
       }
     }
@@ -821,10 +903,12 @@ class _UdfReader {
               unit == 0 ||
               unit == 47 ||
               unit == 92 ||
+              unit == 0xfeff ||
               unit == 0xfffe ||
               unit == 0xffff,
-        ))
+        )) {
       _bad('Unsafe or invalid filename component.');
+    }
     return name;
   }
 
@@ -870,8 +954,9 @@ class _UdfReader {
         second > 59 ||
         bytes[at + 9] > 99 ||
         bytes[at + 10] > 99 ||
-        bytes[at + 11] > 99)
+        bytes[at + 11] > 99) {
       return null;
+    }
     final microseconds =
         bytes[at + 9] * 10000 + bytes[at + 10] * 100 + bytes[at + 11];
     final value = DateTime.utc(

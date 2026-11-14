@@ -33,6 +33,7 @@ metadata, protection or filesystem structures cannot be preserved.
 | XAR | XAR v1, stored/zlib/bzip2/XZ members | Unsigned XAR | Inspected unsigned profiles | Preserves known IDs, ownership, permissions, times, checksums and compression policy. Unknown XML/heap data, signatures, ACLs and xattrs block rewriting. |
 | DEB / UDEB | AR wrapper and nested TAR members | No package builder | Coordinated prebuilt payload replacement | Exact original three-member wrapper/order; required control fields and present md5sums are checked. Replace prepared control/data payloads together. Nested in-app package edits are disabled. |
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge, including bounded regular-file multi-extent chains | Data ISO | Inspected data-only, single-extent profiles | Native creation/editing uses an 8 GiB image budget; each written member must be smaller than 4 GiB. Reader chains can represent logical members up to 8 GiB within existing operation limits. Retains inspected volume/root/Rock Ridge/Joliet metadata. Multi-extent files, boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
+| UDF / ISO-UDF bridge | UDF 1.02/1.50/2.00/2.01 physical Type 1 partitions, FE/EFE, bounded embedded/short/long allocations, ordered multi-extent and sparse regular files | No | No | 2048-byte blocks; metadata CRC/tag/location checks. Virtual, sparable and metadata partitions, chained volume/file-set sequences and filesystem repair remain unsupported. Bridge images expose the UDF namespace and never acquire ISO writer eligibility. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
 | DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/LZFSE/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
 | RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
@@ -86,6 +87,21 @@ DEB/UDEB editing accepts externally prepared control and data archives together;
 it does not regenerate dependency metadata, Installed-Size or missing checksum
 coverage. The structural and present-md5sums checks establish the supported
 wrapper profile, not full package-build validity or publisher trust.
+
+## Recovering ZIP records
+
+Select one native local ZIP or CBZ and choose **Recover ZIP to new file…** from
+the context menu, Tools menu or command palette. The report lists verified
+stored/deflated local records and explains exclusions or an early scan stop.
+Review the selected entries and new ZIP filename, then recover through the
+Operations queue. The candidate is rebuilt, reopened by a separate ZIP reader,
+and verified before staged exclusive publication. Existing files are never
+replaced. Input, expanded contents and output each have a 64 MiB bound.
+
+Measured deflate data descriptors are supported; stored descriptors, encrypted
+entries, ZIP64, self-extractors and recognized split sets are outside this
+recovery profile. A verified prefix does not establish completeness of a
+truncated archive. See the [complete recovery and restart contract](archive-zip-recovery.md).
 
 ## Copying between archives
 

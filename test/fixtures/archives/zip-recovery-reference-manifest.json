@@ -17,6 +17,10 @@
     "safe.txt": {
       "bytes": 4,
       "sha256": "8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860"
+    },
+    "rollover.bin": {
+      "bytes": 26003,
+      "sha256": "c502520ea7243755a4935fc8824cd810b2a6ed734c68c443fec6914f1d559d26"
     }
   },
   "cases": {
@@ -93,6 +97,14 @@
       "bytes": 443,
       "sha256": "023fd5dade17137fb57412e2ac8028a639ff85194b4956e41a90d5513f5ad571",
       "expected_recoverable_names": []
+    },
+    "deflate-input-rollover": {
+      "bytes": 26145,
+      "sha256": "ded07666e32686e426da79d9556f638c6ca698a44ae6a8956fa5e83dae77fe93",
+      "expected_recoverable_names": [
+        "rollover.bin",
+        "stored.txt"
+      ]
     }
   }
 }

@@ -53,6 +53,7 @@ jobs:
           git -C "$RUNNER_TEMP/storage-lzfse-reference" checkout --detach e634ca58b4821d9f3d560cdc6df5dec02ffc93fd
           python3 test/support/generate_lzfse_fixtures.py --source "$RUNNER_TEMP/storage-lzfse-reference" --check | tee build/storage-ci/apple-reference.log
           python3 test/support/verify_disk_partition_fixtures.py --dart "$(command -v dart)" | tee build/storage-ci/partition-reference.json
+          python3 test/support/verify_archive_udf_fixtures.py --report build/storage-ci/udf-descriptor-reference.json | tee build/storage-ci/udf-descriptor-reference.log
       - name: Run the real decoder and partition inspector on VM and JavaScript
         shell: bash
         run: |
@@ -70,7 +71,7 @@ jobs:
           retention-days: 14
 
   native:
-    name: Archive and partition viewer regression gate
+    name: Archive, partition, UDF and ZIP recovery regression gate
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -108,11 +109,28 @@ jobs:
             test/archive_hfs_reader_test.dart test/archive_iso_reader_test.dart \
             test/archive_iso_multiextent_test.dart test/archive_format_registry_test.dart \
             test/archive_container_dispatch_test.dart \
+            test/archive_udf_*_test.dart test/archive_zip_recovery_*_test.dart \
+            test/archive_job_queue_test.dart test/archive_job_recovery_test.dart \
+            test/browser_menu_layout_test.dart \
+            test/widget/archive_zip_recovery_dialog_test.dart \
+            test/widget/archive_container_viewer_test.dart \
+            test/widget/archive_job_recovery_dialog_test.dart \
             test/binary_structure_service_test.dart test/binary_structure_source_test.dart \
             test/disk_partition_*_test.dart \
             test/widget/binary_structure_viewer_test.dart \
             test/widget/disk_partition_viewer_test.dart \
             2>&1 | tee build/storage-ci/native.log
+      - name: Run portable UDF and ZIP recovery on VM and JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          for driver in archive_udf archive_zip_recovery; do
+            dart --packages=.dart_tool/package_config.json "test/support/${driver}_web_acceptance.dart" | tee "build/storage-ci/${driver}-vm.log"
+            dart compile js --packages=.dart_tool/package_config.json -O2 "test/support/${driver}_web_acceptance.dart" -o "build/storage-ci/${driver}.js" | tee "build/storage-ci/${driver}-compile.log"
+            node -e "global.self=global; require('./build/storage-ci/${driver}.js')" | tee "build/storage-ci/${driver}-js.log"
+          done
+          dart --packages=.dart_tool/package_config.json test/support/archive_zip_recovery_web_acceptance.dart --emit-candidates > build/storage-ci/zip-recovery-candidates.json
+          python3 test/support/check_archive_zip_recovery.py --candidates build/storage-ci/zip-recovery-candidates.json --report build/storage-ci/zip-recovery-python.json | tee build/storage-ci/zip-recovery-python.log
       - name: Verify production manifests were restored
         if: always()
         shell: bash
