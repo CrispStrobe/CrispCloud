@@ -1262,6 +1262,10 @@ void main() {
       expect(cloud.files.containsKey('/target/two.bin'), isFalse);
       expect(cloud.uploads, isEmpty);
       expect(tester.takeException(), isNull);
+      // Cancel the externally owned bandwidth timer before widget invariants.
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      await tester.pump();
     },
   );
 

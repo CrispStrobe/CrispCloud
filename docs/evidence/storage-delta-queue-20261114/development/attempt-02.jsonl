@@ -1,0 +1,762 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":5,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":2}
+{"count":7,"time":13,"type":"allSuites"}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":3787}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":17,"line":null,"column":null,"url":null},"type":"group","time":3790}
+{"test":{"id":3,"name":"queued first copy learns once; replacement reuses local blocks with full progress and journal SHA","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":162,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":3791}
+{"testID":3,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-OYEQEC/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":4954}
+{"testID":3,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-OYEQEC/image.bin size=4259840 blocks=2 blockSize=4194304","type":"print","time":5603}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7202}
+{"test":{"id":4,"name":"ordinary streaming remains a full GET and does not enter the strategy","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":250,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7203}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7273}
+{"test":{"id":5,"name":"missing reviewed ETag is rejected without a fallback source download","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":264,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7273}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7311}
+{"test":{"id":6,"name":"keep-both builds a new copy without treating the old filename as its baseline","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":278,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7311}
+{"testID":6,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-MPSNYL/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":7393}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7424}
+{"test":{"id":7,"name":"Ask cannot bypass verified method bounds with append","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":300,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7425}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7451}
+{"test":{"id":8,"name":"Ask cannot bypass verified method bounds with resumeVerified","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":300,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7452}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7476}
+{"test":{"id":9,"name":"baseline change after the durable committing write prevents publication","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":328,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7476}
+{"testID":9,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-TLKNXL/image.bin size=14 blocks=1 blockSize=4194304","type":"print","time":7505}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7558}
+{"test":{"id":10,"name":"candidate change after the durable committing write prevents publication","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":328,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7558}
+{"testID":10,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-RGRXKT/image.bin size=14 blocks=1 blockSize=4194304","type":"print","time":7601}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7656}
+{"test":{"id":11,"name":"new destination change after the durable committing write prevents publication","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":328,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7657}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7732}
+{"test":{"id":12,"name":"remote revision change after the durable committing write prevents publication","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":328,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7732}
+{"testID":12,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-JVKZNM/image.bin size=14 blocks=1 blockSize=4194304","type":"print","time":7765}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7811}
+{"test":{"id":13,"name":"captured source change after the durable committing write prevents publication","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":328,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7812}
+{"testID":13,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-XPHZNI/image.bin size=14 blocks=1 blockSize=4194304","type":"print","time":7839}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7885}
+{"test":{"id":14,"name":"pause after durable commit intent holds the original; changed baseline is rejected on resume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":379,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7886}
+{"testID":14,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-ZJQNLN/image.bin size=14 blocks=1 blockSize=4194304","type":"print","time":7923}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":7974}
+{"test":{"id":15,"name":"cancel after durable commit intent is recorded as cancellation and keeps a recoverable private stage","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":407,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":7975}
+{"testID":15,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-ZFSIEI/image.bin size=14 blocks=1 blockSize=4194304","type":"print","time":8009}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8102}
+{"test":{"id":16,"name":"lost committed acknowledgement is reconciled using the full logical SHA without another transfer","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":439,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":8103}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8209}
+{"test":{"id":17,"name":"late cancellation preserves acknowledged contents and recovery evidence","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":480,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":8210}
+{"testID":17,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-GNAGVZ/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":8291}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8329}
+{"test":{"id":18,"name":"per-job limiter consumes the entire reused logical stream","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":511,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":8329}
+{"testID":18,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-GGOEWD/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":8408}
+{"testID":18,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-GGOEWD/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":8464}
+{"testID":18,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8521}
+{"test":{"id":19,"name":"destination claims stay reserved through asynchronous queue finalization","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":548,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/verified_block_copy_test.dart"},"type":"testStart","time":8521}
+{"testID":19,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/verified-copy-JPVXYT/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":8584}
+{"testID":19,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8609}
+{"suite":{"id":20,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"suite","time":8629}
+{"test":{"id":21,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart","suiteID":20,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":8629}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":21,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":9641}
+{"group":{"id":22,"suiteID":20,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":27,"line":null,"column":null,"url":null},"type":"group","time":9641}
+{"test":{"id":23,"name":"native capability does not activate the legacy global toggle","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":134,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":9642}
+{"testID":23,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":9719}
+{"test":{"id":24,"name":"first copy transfers each source byte once and seeds after publication","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":156,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":9720}
+{"testID":24,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-XNKARH/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":10411}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":10979}
+{"test":{"id":25,"name":"warm copy reuses proven blocks while logical progress stays complete","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":185,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":10980}
+{"testID":25,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-DEGJHT/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":11466}
+{"testID":25,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-DEGJHT/image.bin size=4259840 blocks=2 blockSize=4194304","type":"print","time":11490}
+{"testID":25,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":12788}
+{"test":{"id":26,"name":"a new adapter reads the complete version despite a persisted map","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":209,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":12790}
+{"testID":26,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-DXMTFI/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":12838}
+{"testID":26,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-DXMTFI/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":12843}
+{"testID":26,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-DXMTFI/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":12896}
+{"testID":26,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-DXMTFI/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":12904}
+{"testID":26,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":12975}
+{"test":{"id":27,"name":"a freshly reviewed revision uses one complete transfer and replaces cache","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":227,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":12975}
+{"testID":27,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-TBKZYZ/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13019}
+{"testID":27,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-TBKZYZ/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":13030}
+{"testID":27,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-TBKZYZ/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13072}
+{"testID":27,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13082}
+{"test":{"id":28,"name":"reviewed version mismatch rejects before reading data or consuming","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":246,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13082}
+{"testID":28,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13093}
+{"test":{"id":29,"name":"reviewed length mismatch rejects before reading data or consuming","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":246,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13093}
+{"testID":29,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13104}
+{"test":{"id":30,"name":"source path alias /folder/../image.bin rejects before HEAD","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":281,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13105}
+{"testID":30,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13112}
+{"test":{"id":31,"name":"source path alias /image%2Ebin rejects before HEAD","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":281,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13112}
+{"testID":31,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13118}
+{"test":{"id":32,"name":"source path alias //image.bin rejects before HEAD","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":281,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13119}
+{"testID":32,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13126}
+{"test":{"id":33,"name":"source path alias image.bin rejects before HEAD","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":281,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13126}
+{"testID":33,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13132}
+{"test":{"id":34,"name":"destination path alias rejects before HEAD","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":295,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13132}
+{"testID":34,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13142}
+{"test":{"id":35,"name":"well-formed cache tampering cannot authorize local block reuse","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":314,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13142}
+{"testID":35,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-GXKJJB/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13190}
+{"testID":35,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-GXKJJB/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13200}
+{"testID":35,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-GXKJJB/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":13206}
+{"testID":35,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-GXKJJB/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13270}
+{"testID":35,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13295}
+{"test":{"id":36,"name":"failed publication does not issue a first-copy cache receipt","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":348,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13295}
+{"testID":36,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-SQYRFJ/image.bin size=23 blocks=1 blockSize=4194304","type":"print","time":13308}
+{"testID":36,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-SQYRFJ/image.bin size=23 blocks=1 blockSize=4194304","type":"print","time":13339}
+{"testID":36,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-SQYRFJ/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13384}
+{"testID":36,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13407}
+{"test":{"id":37,"name":"short first-copy ranges fail without changing original or seeding","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":366,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13407}
+{"testID":37,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-QBRGSE/image.bin size=17 blocks=1 blockSize=4194304","type":"print","time":13420}
+{"testID":37,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13438}
+{"test":{"id":38,"name":"changed source after range reads fails final proof without seeding","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":378,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13438}
+{"testID":38,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-JOBMMY/image.bin size=17 blocks=1 blockSize=4194304","type":"print","time":13450}
+{"testID":38,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13482}
+{"test":{"id":39,"name":"cache write failure after acknowledgement remains a successful copy","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":390,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13483}
+{"testID":39,"messageType":"print","message":"⚠️ [DeltaSyncService] Verified delta cache bookkeeping failed.\n  Error: FileSystemException: Creation failed, path = '/workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-RETHTY/not-a-cache-directory' (OS Error: Not a directory, errno = 20)","type":"print","time":13524}
+{"testID":39,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-RETHTY/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":13544}
+{"testID":39,"messageType":"print","message":"⚠️ [DeltaSyncService] Verified delta cache bookkeeping failed.\n  Error: FileSystemException: Creation failed, path = '/workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-RETHTY/not-a-cache-directory' (OS Error: Not a directory, errno = 20)","type":"print","time":13588}
+{"testID":39,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13588}
+{"test":{"id":40,"name":"transport accounting stays bound to the original consumer scope","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":405,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13589}
+{"testID":40,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-VTYJSU/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13656}
+{"testID":40,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13659}
+{"test":{"id":41,"name":"pause inside an admitted range prevents publication until resumed","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":430,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13660}
+{"testID":41,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-RHWZVA/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13702}
+{"testID":41,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13718}
+{"test":{"id":42,"name":"cancellation aborts a pending HEAD without entering the writer","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":454,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13719}
+{"testID":42,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13730}
+{"test":{"id":43,"name":"cancellation aborts a pending range body and keeps the original","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":481,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13731}
+{"testID":43,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-LPGKOP/image.bin size=17 blocks=1 blockSize=4194304","type":"print","time":13750}
+{"testID":43,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13767}
+{"test":{"id":44,"name":"transport errors racing cancellation keep the cancelled classification","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":508,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13768}
+{"testID":44,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13786}
+{"test":{"id":45,"name":"owned source chunks remain correct when the transport reuses its buffer","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":525,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13786}
+{"testID":45,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-QZWMNT/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13841}
+{"testID":45,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-QZWMNT/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":13862}
+{"testID":45,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13916}
+{"test":{"id":46,"name":"acknowledged copy stays successful after late cancellation","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":544,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13916}
+{"testID":46,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-GVQVXR/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":13962}
+{"testID":46,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13983}
+{"test":{"id":47,"name":"authentication transition after acknowledgement cannot resurrect a receipt","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":560,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":13983}
+{"testID":47,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-FCHTHP/image.bin size=131072 blocks=1 blockSize=4194304","type":"print","time":14031}
+{"testID":47,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-FCHTHP/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":14082}
+{"testID":47,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":14083}
+{"test":{"id":48,"name":"empty source still verifies and publishes the exact zero length","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":579,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":14084}
+{"testID":48,"messageType":"print","message":"🐛 [DeltaSyncService] computeBlockMap: /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-UWKGQN/image.bin size=17 blocks=1 blockSize=4194304","type":"print","time":14093}
+{"testID":48,"messageType":"print","message":"🐛 [DeltaSyncService] saveBlockMap → /workspace/scratch/209f165653d7/toolchain/tmp/s3-verified-contents-UWKGQN/maps/block_maps/993562c41ac2cc6e272d49e81c31a642802e7a107ff90b2c39dee66786f9ddff.json","type":"print","time":14119}
+{"testID":48,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":14123}
+{"test":{"id":49,"name":"prepared capability cannot escape its scoped consumer","suiteID":20,"groupIDs":[22],"metadata":{"skip":false,"skipReason":null},"line":594,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/s3_verified_block_contents_test.dart"},"type":"testStart","time":14124}
+{"testID":49,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":14135}
+{"suite":{"id":50,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"suite","time":14147}
+{"test":{"id":51,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart","suiteID":50,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":14150}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":51,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":15174}
+{"group":{"id":52,"suiteID":50,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":18,"line":null,"column":null,"url":null},"type":"group","time":15175}
+{"test":{"id":53,"name":"destination mask *.* transforms photo.jpg","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15175}
+{"testID":53,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15196}
+{"test":{"id":54,"name":"destination mask *.bak transforms photo.jpg","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15196}
+{"testID":54,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15201}
+{"test":{"id":55,"name":"destination mask *.*.bak transforms photo.jpg","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15201}
+{"testID":55,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15203}
+{"test":{"id":56,"name":"destination mask ????.txt transforms abcdef.dat","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15203}
+{"testID":56,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15205}
+{"test":{"id":57,"name":"destination mask [N]_[C:000].[E] transforms photo.jpg","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15205}
+{"testID":57,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15207}
+{"test":{"id":58,"name":"destination mask *.* transforms .gitignore","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15208}
+{"testID":58,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15209}
+{"test":{"id":59,"name":"destination mask [N]_[C] transforms README","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":22,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15209}
+{"testID":59,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15211}
+{"test":{"id":60,"name":"masks reject directory traversal, nulls and unknown tokens","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":29,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15212}
+{"testID":60,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15215}
+{"test":{"id":61,"name":"all transfer option semantics survive JSON serialization","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":35,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15215}
+{"testID":61,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15228}
+{"test":{"id":62,"name":"verified S3 block reuse is an explicit serializable copy method","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":71,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15229}
+{"testID":62,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15231}
+{"test":{"id":63,"name":"verified block reuse rejects move","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":128,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15232}
+{"testID":63,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15234}
+{"test":{"id":64,"name":"verified block reuse rejects append","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":128,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15234}
+{"testID":64,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15236}
+{"test":{"id":65,"name":"verified block reuse rejects partial resume","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":128,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15237}
+{"testID":65,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15239}
+{"test":{"id":66,"name":"verified block reuse rejects disk preallocation","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":128,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15239}
+{"testID":66,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15242}
+{"test":{"id":67,"name":"profiles save defaults without previous paths or exact target names","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":137,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15242}
+{"testID":67,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15249}
+{"test":{"id":68,"name":"old saved options retain the original numbered duplicate names","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":165,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15250}
+{"testID":68,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15252}
+{"test":{"id":69,"name":"invalid streaming rates cannot be restored or saved","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":181,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15252}
+{"testID":69,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15259}
+{"test":{"id":70,"name":"invalid saved templates cannot enter profiles or restored jobs","suiteID":50,"groupIDs":[52],"metadata":{"skip":false,"skipReason":null},"line":201,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/file_operation_options_test.dart"},"type":"testStart","time":15260}
+{"testID":70,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15263}
+{"suite":{"id":71,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"suite","time":15273}
+{"test":{"id":72,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart","suiteID":71,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":15273}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":72,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":21778}
+{"group":{"id":73,"suiteID":71,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":21,"line":null,"column":null,"url":null},"type":"group","time":21779}
+{"test":{"id":74,"name":"queued work is saved before execution; cancellation and order survive restart","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":248,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":21779}
+{"testID":74,"messageType":"print","message":"🐛 [OperationProgress] Operation cancelled: 1 files","type":"print","time":21968}
+{"testID":74,"messageType":"print","message":"🐛 [OperationProgress] Operation cancelled: 1 files","type":"print","time":21972}
+{"testID":74,"messageType":"print","message":"🐛 [OperationProgress] Operation cancelled: 1 files","type":"print","time":21972}
+{"testID":74,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22017}
+{"test":{"id":75,"name":"queue exposes waiting conflicts and resumes the same saved job","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":306,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22018}
+{"testID":75,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22127}
+{"test":{"id":76,"name":"waiting conflicts release the only worker and survive restart without failure","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":348,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22128}
+{"testID":76,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22247}
+{"test":{"id":77,"name":"cancelling a waiting conflict persists without touching its files","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":420,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22248}
+{"testID":77,"messageType":"print","message":"🐛 [OperationProgress] Operation cancelled: 1 files","type":"print","time":22262}
+{"testID":77,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22269}
+{"test":{"id":78,"name":"restart retains custom duplicate names and original collision base","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":446,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22269}
+{"testID":78,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22303}
+{"test":{"id":79,"name":"read-only reconciliation completes without re-running a lost-ack move","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":488,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22304}
+{"testID":79,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22322}
+{"test":{"id":80,"name":"backup restoration checkpoints and reconciles a lost native reply","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":527,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22322}
+{"testID":80,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22342}
+{"test":{"id":81,"name":"all rows survive restart beyond the old 50-item history limit","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":575,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":22344}
+{"testID":81,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23236}
+{"test":{"id":82,"name":"selected destination sources remain protected after restart","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":611,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23237}
+{"testID":82,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23244}
+{"test":{"id":83,"name":"failure to persist write intent prevents the filesystem mutation","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":645,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23245}
+{"testID":83,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23254}
+{"test":{"id":84,"name":"lost native move reply reconciles by contents even with path-based UUIDs","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":661,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23255}
+{"testID":84,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23264}
+{"test":{"id":85,"name":"lost source-delete reply reconciles the verified copy without a second copy","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":689,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23265}
+{"testID":85,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23279}
+{"test":{"id":86,"name":"metadata failure retains both data copies and recovery finishes cleanup only","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":714,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23279}
+{"testID":86,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23299}
+{"test":{"id":87,"name":"partial staged bytes resume only after source-prefix verification","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":750,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23300}
+{"testID":87,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23323}
+{"test":{"id":88,"name":"same-size same-time external edits and wrong accounts cannot resume","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":777,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23324}
+{"testID":88,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23332}
+{"test":{"id":89,"name":"verified-block TransferRecoveryMode.retryRemaining recovery becomes streaming and preserves review options","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":809,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23333}
+{"testID":89,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23339}
+{"test":{"id":90,"name":"verified-block TransferRecoveryMode.restartIncomplete recovery becomes streaming and preserves review options","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":809,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23339}
+{"testID":90,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23343}
+{"test":{"id":91,"name":"background conflicts persist waiting state instead of successful completion","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":896,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23343}
+{"testID":91,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23352}
+{"test":{"id":92,"name":"native log salvages only the incomplete tail and retains the old file","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":922,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23352}
+{"testID":92,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23413}
+{"test":{"id":93,"name":"a truncated compacted plan cannot retain a ready header","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":952,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23415}
+{"testID":93,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23421}
+{"test":{"id":94,"name":"a corrupt middle checkpoint blocks recovery instead of skipping an intent","suiteID":71,"groupIDs":[73],"metadata":{"skip":false,"skipReason":null},"line":974,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/transfer_recovery_test.dart"},"type":"testStart","time":23421}
+{"testID":94,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23427}
+{"suite":{"id":95,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"suite","time":23453}
+{"test":{"id":96,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart","suiteID":95,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":23453}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":96,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":29858}
+{"group":{"id":97,"suiteID":95,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":39,"line":null,"column":null,"url":null},"type":"group","time":29860}
+{"test":{"id":98,"name":"verified block copy explains first-copy traffic and gates incompatible controls","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":319,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":29861}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":29957}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":30025}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":30027}
+{"testID":98,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":30042}
+{"testID":98,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":30045}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":30046}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":30046}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":30048}
+{"testID":98,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":30049}
+{"testID":98,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":32899}
+{"test":{"id":99,"name":"verified block copy is unavailable for provider","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":32900}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":32983}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":32986}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":32987}
+{"testID":99,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":32990}
+{"testID":99,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":32990}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":32990}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":32991}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":32991}
+{"testID":99,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":32992}
+{"testID":99,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":33481}
+{"test":{"id":100,"name":"verified block copy is unavailable for move","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":33483}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":33488}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":33491}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":33491}
+{"testID":100,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":33492}
+{"testID":100,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":33493}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":33494}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":33494}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":33494}
+{"testID":100,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":33494}
+{"testID":100,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":33845}
+{"test":{"id":101,"name":"verified block copy is unavailable for folder","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":33846}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":33850}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":33853}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":33854}
+{"testID":101,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":33857}
+{"testID":101,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":33857}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":33857}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":33857}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":33858}
+{"testID":101,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":33858}
+{"testID":101,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":34161}
+{"test":{"id":102,"name":"verified block copy is unavailable for symlink","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":34162}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34166}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":34168}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":34168}
+{"testID":102,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":34173}
+{"testID":102,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":34173}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":34173}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":34174}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":34174}
+{"testID":102,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":34174}
+{"testID":102,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":34604}
+{"test":{"id":103,"name":"verified block copy is unavailable for unknown size","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":34605}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34614}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":34618}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":34618}
+{"testID":103,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":34619}
+{"testID":103,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":34623}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":34623}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":34623}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":34623}
+{"testID":103,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":34623}
+{"testID":103,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":35110}
+{"test":{"id":104,"name":"verified block copy is unavailable for remote destination","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":35111}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35116}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":35119}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":35119}
+{"testID":104,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":35120}
+{"testID":104,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":35120}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":35120}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":35121}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":35121}
+{"testID":104,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":35122}
+{"testID":104,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":35507}
+{"test":{"id":105,"name":"verified block copy is unavailable for append","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":35508}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35515}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":35518}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":35519}
+{"testID":105,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":35520}
+{"testID":105,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":35520}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":35521}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":35521}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":35522}
+{"testID":105,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":35523}
+{"testID":105,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":35843}
+{"test":{"id":106,"name":"verified block copy is unavailable for resume","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":35844}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35847}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":35849}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":35850}
+{"testID":106,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":35851}
+{"testID":106,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":35851}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":35851}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":35851}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":35851}
+{"testID":106,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":35852}
+{"testID":106,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":36226}
+{"test":{"id":107,"name":"verified block copy is unavailable for preallocate","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":389,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":36227}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":36231}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":36233}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":36233}
+{"testID":107,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":36234}
+{"testID":107,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":36235}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":36235}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":36235}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":36235}
+{"testID":107,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":36236}
+{"testID":107,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":36558}
+{"test":{"id":108,"name":"a saved verified-block method cannot authorize an unsupported storage","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":446,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":36558}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":36564}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":36567}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":36567}
+{"testID":108,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":36568}
+{"testID":108,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":36569}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":36569}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":36569}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":36569}
+{"testID":108,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":36570}
+{"testID":108,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":36882}
+{"test":{"id":109,"name":"a paste review returns focus to its invoking destination pane","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":525,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":36883}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":36889}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":36891}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":36891}
+{"testID":109,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":36892}
+{"testID":109,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":36893}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":36893}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":36893}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":36893}
+{"testID":109,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":36894}
+{"testID":109,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":37258}
+{"test":{"id":110,"name":"a closing review does not reclaim changed input ownership","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":554,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":37258}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":37266}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":37267}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":37268}
+{"testID":110,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":37269}
+{"testID":110,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":37269}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":37269}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":37269}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":37270}
+{"testID":110,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":37270}
+{"testID":110,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":37717}
+{"test":{"id":111,"name":"translated transfer controls remain scrollable with large RTL text","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":585,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":37718}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":37723}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":37726}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":37726}
+{"testID":111,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":37727}
+{"testID":111,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":37727}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":37728}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":37728}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":37728}
+{"testID":111,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":37729}
+{"testID":111,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":38241}
+{"test":{"id":112,"name":"copy method options explain capabilities and survive profile saving","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":612,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":38241}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":38245}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":38247}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":38247}
+{"testID":112,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":38249}
+{"testID":112,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":38249}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":38249}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":38250}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":38250}
+{"testID":112,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":38250}
+{"testID":112,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":40002}
+{"test":{"id":113,"name":"planning reports progress and supports pause and cancellation before writes","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":661,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":40003}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":40006}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":40008}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":40008}
+{"testID":113,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":40010}
+{"testID":113,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":40010}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":40010}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":40010}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":40011}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":40011}
+{"testID":113,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":40016}
+{"testID":113,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":41429}
+{"test":{"id":114,"name":"a captured gathering destination stays locked and reports its settled foreground plan","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":745,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":41433}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":41440}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":41446}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":41446}
+{"testID":114,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":41448}
+{"testID":114,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":41448}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":41448}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":41449}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":41449}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":41449}
+{"testID":114,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":42688}
+{"testID":114,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":42789}
+{"test":{"id":115,"name":"an original-evidence validator can reject a preview before writes or completion cleanup","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":789,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":42791}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":42808}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":42811}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":42811}
+{"testID":115,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":42813}
+{"testID":115,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":42814}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":42814}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":42814}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":42815}
+{"testID":115,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":42815}
+{"testID":115,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":43637}
+{"test":{"id":116,"name":"failed foreground outcome persistence stops before another source group","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":814,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":43637}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":43642}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":43645}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":43646}
+{"testID":116,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":43646}
+{"testID":116,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":43647}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":43647}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":43647}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":43647}
+{"testID":116,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":43647}
+{"testID":116,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":44942}
+{"test":{"id":117,"name":"a cancelled transfer preview preserves the preceding selection memory","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":862,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":44943}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":44947}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":44949}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":44949}
+{"testID":117,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":44950}
+{"testID":117,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":44950}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":44951}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":44951}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":44951}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":44952}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] toggleSelection: one.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote","type":"print","time":44956}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 1)","type":"print","time":44958}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] toggleSelection: two.bin shift=false ctrl=false lastSelected=null side=PanelSide.remote","type":"print","time":44958}
+{"testID":117,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 1)","type":"print","time":45494}
+{"testID":117,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":45501}
+{"test":{"id":118,"name":"an accepted transfer remembers the marks captured before its review","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":888,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":45501}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":45506}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":45508}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":45508}
+{"testID":118,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":45509}
+{"testID":118,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":45510}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":45510}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":45510}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":45510}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":45510}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] toggleSelection: one.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote","type":"print","time":45513}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 1)","type":"print","time":45513}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] toggleSelection: two.bin shift=false ctrl=false lastSelected=null side=PanelSide.remote","type":"print","time":45514}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 1)","type":"print","time":46075}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":46095}
+{"testID":118,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 0)","type":"print","time":46911}
+{"testID":118,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":46924}
+{"test":{"id":119,"name":"snapshot source copies through the captured read backend","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":916,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":46925}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":46934}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":46934}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":46935}
+{"testID":119,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":47495}
+{"testID":119,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":47708}
+{"test":{"id":120,"name":"saved search metadata criteria filter the reviewed transfer","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":949,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":47708}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":47714}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":47716}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":47716}
+{"testID":120,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":47717}
+{"testID":120,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":47717}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":47717}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":47718}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":47718}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":47718}
+{"testID":120,"messageType":"print","message":"ℹ️ [SavedSearchService] Saved search \"Small text files\"","type":"print","time":47725}
+{"testID":120,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":48429}
+{"testID":120,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":48663}
+{"test":{"id":121,"name":"content criteria remain explicit instead of being silently omitted","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":979,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":48664}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":48706}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":48830}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":48834}
+{"testID":121,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":49357}
+{"testID":121,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":49358}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":49358}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":49358}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":49358}
+{"testID":121,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":49358}
+{"testID":121,"messageType":"print","message":"ℹ️ [SavedSearchService] Saved search \"Search file contents\"","type":"print","time":49372}
+{"testID":121,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":49727}
+{"test":{"id":122,"name":"snapshot override cannot authorize a move or omit its account","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1006,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":49728}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":49736}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":49738}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":49738}
+{"testID":122,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":49740}
+{"testID":122,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":49740}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":49740}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":49740}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":49741}
+{"testID":122,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":49741}
+{"testID":122,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":49940}
+{"test":{"id":123,"name":"default destination is the verified opposite storage and path","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1028,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":49941}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":49948}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":49950}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":49951}
+{"testID":123,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":49952}
+{"testID":123,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":49952}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":49952}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":49952}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":49953}
+{"testID":123,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":49953}
+{"testID":123,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":50234}
+{"test":{"id":124,"name":"unsupported preservation settings from defaults can be cleared","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1055,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":50235}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":50240}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":50246}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":50246}
+{"testID":124,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":50246}
+{"testID":124,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":50246}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":50247}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":50247}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":50247}
+{"testID":124,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":50247}
+{"testID":124,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":52013}
+{"test":{"id":125,"name":"an unanswered background conflict is reported as incomplete","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":1119,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":52015}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":52019}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":52021}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":52021}
+{"testID":125,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":52023}
+{"testID":125,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":52023}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":52023}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":52024}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":52024}
+{"testID":125,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":52025}
+{"testID":125,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":52035}
+{"test":{"id":126,"name":"preview shows original paths and changing options invalidates it","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1155,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":52036}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":52037}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":52040}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":52040}
+{"testID":126,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":52040}
+{"testID":126,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":52040}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":52040}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":52040}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":52041}
+{"testID":126,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":52041}
+{"testID":126,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":52664}
+{"test":{"id":127,"name":"an invalid regular expression cannot produce an executable plan","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1183,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":52665}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":52673}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":52674}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":52675}
+{"testID":127,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":52676}
+{"testID":127,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":52676}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":52676}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":52676}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":52677}
+{"testID":127,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":52677}
+{"testID":127,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":53226}
+{"test":{"id":128,"name":"copy combines keep-both, file filters and SHA-256 verification","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1202,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":53226}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":53234}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":53236}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":53237}
+{"testID":128,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":53238}
+{"testID":128,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":53238}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":53238}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":53238}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":53239}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":53246}
+{"testID":128,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":54466}
+{"testID":128,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":54771}
+{"test":{"id":129,"name":"Ask can queue in background and waits without failing or copying later rows","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1237,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":54772}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":54782}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":54783}
+{"testID":129,"messageType":"print","message":"Pending timers:","type":"print","time":55732}
+{"testID":129,"messageType":"print","message":"Timer (duration: 0:00:00.250000, periodic: true), created:","type":"print","time":55732}
+{"testID":129,"messageType":"print","message":"#0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)\n#1      FakeAsync._createTimer (package:fake_async/fake_async.dart:260:29)\n#2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:187:15)\n#5      TransferBandwidthController._changed (package:crisp_cloud/providers/transfer_bandwidth_provider.dart:175:24)\n#6      new TransferBandwidthController.<anonymous closure> (package:crisp_cloud/providers/transfer_bandwidth_provider.dart:41:58)\n#17     TransferBandwidthAllocator._notify.<anonymous closure> (package:crisp_storage/src/transfer_bandwidth.dart:185:32)\n#27     FakeAsync.run.<anonymous closure>.<anonymous closure> (package:fake_async/fake_async.dart:189:18)\n#28     FakeAsync.flushMicrotasks (package:fake_async/fake_async.dart:200:32)\n#29     FakeAsync._fireTimersWhile (package:fake_async/fake_async.dart:241:5)\n#30     FakeAsync.elapse (package:fake_async/fake_async.dart:141:5)\n#31     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2254:28)\n#34     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)\n#35     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)\n#36     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:719:23)\n#39     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)\n#40     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:712:27)\n#41     main.<anonymous closure> (file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart:1248:20)\n<asynchronous suspension>\n#42     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)\n<asynchronous suspension>\n#43     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)\n<asynchronous suspension>\n<asynchronous suspension>\n(elided 26 frames from dart:async and package:stack_trace)","type":"print","time":55739}
+{"testID":129,"messageType":"print","message":"","type":"print","time":55739}
+{"testID":129,"messageType":"print","message":"══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════\nThe following assertion was thrown running a test:\nA Timer is still pending even after the widget tree was disposed.\n'package:flutter_test/src/binding.dart':\nFailed assertion: line 2543 pos 12: '!timersPending'\n\nWhen the exception was thrown, this was the stack:\n#2      AutomatedTestWidgetsFlutterBinding._verifyInvariants (package:flutter_test/src/binding.dart:2543:12)\n#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1974:7)\n<asynchronous suspension>\n<asynchronous suspension>\n(elided 3 frames from class _AssertionError and package:stack_trace)\n\nThe test description was:\n  Ask can queue in background and waits without failing or copying later rows\n════════════════════════════════════════════════════════════════════════════════════════════════════","type":"print","time":55758}
+{"testID":129,"error":"Test failed. See exception logs above.\nThe test description was: Ask can queue in background and waits without failing or copying later rows","stackTrace":"","isFailure":false,"type":"error","time":55763}
+{"testID":129,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":55763}
+{"test":{"id":130,"name":"background dialog stays open if saving the queued plan fails","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1268,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":55763}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":55767}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":55769}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":55769}
+{"testID":130,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":55770}
+{"testID":130,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":55770}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":55770}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":55770}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":55770}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":55771}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] toggleSelection: one.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote","type":"print","time":55775}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 1)","type":"print","time":55776}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] toggleSelection: two.bin shift=false ctrl=false lastSelected=null side=PanelSide.remote","type":"print","time":55776}
+{"testID":130,"messageType":"print","message":"🐛 [PanelNotifier] clearSelection (was 1)","type":"print","time":56826}
+{"testID":130,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":56870}
+{"test":{"id":131,"name":"duplicate templates load, save and reject invalid defaults","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1297,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":56872}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":56879}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":56888}
+{"testID":131,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":56888}
+{"testID":131,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":57389}
+{"test":{"id":132,"name":"client streaming rate loads and saves exact fractional KiB values","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1337,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":57390}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":57395}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":57397}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":57397}
+{"testID":132,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":57398}
+{"testID":132,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":57399}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":57399}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":57399}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":57399}
+{"testID":132,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":57400}
+{"testID":132,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":57927}
+{"test":{"id":133,"name":"move deletes only files that pass the configured filter","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1392,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":57927}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":57934}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":57936}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":57937}
+{"testID":133,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":57938}
+{"testID":133,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":57938}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":57938}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":57938}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":57939}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":57939}
+{"testID":133,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":58429}
+{"testID":133,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":59100}
+{"test":{"id":134,"name":"move completion updates its saved list and preserves another storage same-path row","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1411,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":59101}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":59104}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":59106}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":59106}
+{"testID":134,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":59107}
+{"testID":134,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":59107}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":59107}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":59108}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":59108}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":59108}
+{"testID":134,"messageType":"print","message":"ℹ️ [PanelNotifier] Showing 2 items in Search results","type":"print","time":59114}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] addTab: path=/","type":"print","time":59583}
+{"testID":134,"messageType":"print","message":"ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)","type":"print","time":59592}
+{"testID":134,"messageType":"print","message":"🐛 [PanelSource] setSource: Fixture cloud path=/ side=PanelSide.remote","type":"print","time":59593}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":59594}
+{"testID":134,"messageType":"print","message":"ℹ️ [PanelNotifier] Showing 1 items in Search results","type":"print","time":59596}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] selectAll (1 visible files)","type":"print","time":59597}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":59600}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] selectTab: tab_0","type":"print","time":59721}
+{"testID":134,"messageType":"print","message":"🐛 [PanelNotifier] selectTab: tab_1","type":"print","time":59721}
+{"testID":134,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":59741}
+{"test":{"id":135,"name":"a single-panel plan is blocked after its account changes","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1462,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":59742}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":59748}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":59750}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":59750}
+{"testID":135,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":59751}
+{"testID":135,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":59752}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":59752}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":59752}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":59754}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":59754}
+{"testID":135,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":60161}
+{"testID":135,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":60375}
+{"test":{"id":136,"name":"options and preview fit a narrow window without layout errors","suiteID":95,"groupIDs":[97],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":1480,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_dialog_test.dart"},"type":"testStart","time":60375}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":60380}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/landing side=PanelSide.local","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/landing)","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /landing (web=false)","type":"print","time":60389}
+{"testID":136,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/landing\") returned 0 entities","type":"print","time":60390}
+{"testID":136,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":60770}
+{"suite":{"id":137,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"suite","time":60818}
+{"test":{"id":138,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart","suiteID":137,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":60818}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":138,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":63167}
+{"group":{"id":139,"suiteID":137,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":10,"line":null,"column":null,"url":null},"type":"group","time":63168}
+{"test":{"id":140,"name":"FileCopyMethod.automatic conflict decisions preserve the copy profile","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":163,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":63168}
+{"testID":140,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":65030}
+{"test":{"id":141,"name":"FileCopyMethod.verifiedDelta conflict decisions preserve the copy profile","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":163,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":65031}
+{"testID":141,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":65293}
+{"test":{"id":142,"name":"paired previews retain the original sources and allowlisted details","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":193,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":65295}
+{"testID":142,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":65662}
+{"test":{"id":143,"name":"oversize previews remain explicit and never choose a decision","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":234,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":65663}
+{"testID":143,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":66298}
+{"test":{"id":144,"name":"a source-session change clears previews and blocks stale decisions","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":251,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":66300}
+{"testID":144,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":66635}
+{"test":{"id":145,"name":"choice cancels pending reads and ignores a late completed preview","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":279,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":66635}
+{"testID":145,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":66823}
+{"test":{"id":146,"name":"a late callback from a replaced session never displays old image data","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":297,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":66823}
+{"testID":146,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":67063}
+{"test":{"id":147,"name":"changed file versions invalidate the review instead of enabling replacement","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":320,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":67064}
+{"testID":147,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":67342}
+{"test":{"id":148,"name":"de cards stack and controls fit a narrow enlarged layout","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":344,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":67342}
+{"testID":148,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":67560}
+{"test":{"id":149,"name":"ar cards stack and controls fit a narrow enlarged layout","suiteID":137,"groupIDs":[139],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":344,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/file_operation_conflict_dialog_test.dart"},"type":"testStart","time":67560}
+{"testID":149,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":67754}
+{"suite":{"id":150,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"suite","time":67797}
+{"test":{"id":151,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart","suiteID":150,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":67797}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":151,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":69556}
+{"group":{"id":152,"suiteID":150,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":7,"line":null,"column":null,"url":null},"type":"group","time":69556}
+{"test":{"id":153,"name":"operation and recovery states never expose untranslated enum identifiers","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":16,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69556}
+{"testID":153,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69643}
+{"test":{"id":154,"name":"Commander catalog covers every application language and parameter","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":40,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69643}
+{"testID":154,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69743}
+{"test":{"id":155,"name":"common controls keep app wording and one shortcut","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":74,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69744}
+{"testID":155,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69768}
+{"test":{"id":156,"name":"verified block copy has translated method, cost and eligibility text","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":94,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69768}
+{"testID":156,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69772}
+{"test":{"id":157,"name":"formatting preserves literal filenames, placeholders and mask syntax","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":116,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69772}
+{"testID":157,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69776}
+{"test":{"id":158,"name":"Commander workflow captions have explicit translations","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":142,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69776}
+{"testID":158,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69816}
+{"test":{"id":159,"name":"viewer modes and sync choices have explicit translations","suiteID":150,"groupIDs":[152],"metadata":{"skip":false,"skipReason":null},"line":225,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/commander_strings_test.dart"},"type":"testStart","time":69817}
+{"testID":159,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":69819}
+{"success":false,"type":"done","time":69844}

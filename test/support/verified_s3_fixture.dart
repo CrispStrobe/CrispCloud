@@ -110,6 +110,7 @@ ${includeETag ? '<ETag>${const HtmlEscape().convert(listingVersion ?? version)}<
 Future<S3ClientAdapter> verifiedS3Adapter({
   required String cacheDirectory,
   String account = 'verified-copy-access',
+  String endpoint = 'https://s3.amazonaws.com',
 }) async {
   final config = S3ConfigService(
     configPath: '',
@@ -118,7 +119,7 @@ Future<S3ClientAdapter> verifiedS3Adapter({
   await config.saveCredentials({
     'accessKey': account,
     'secretKey': 'fixture-secret',
-    'endpoint': 'https://s3.amazonaws.com',
+    'endpoint': endpoint,
     'bucket': 'bucket',
     'region': 'us-east-1',
   });

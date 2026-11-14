@@ -909,7 +909,7 @@ class _AdvancedSection extends StatelessWidget {
           title: Text(s.text('Delta Sync')),
           subtitle: Text(
             s.text(
-              'Automatic delta transfers are unavailable. Files use standard transfers.',
+              'Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.',
             ),
           ),
           secondary: const Icon(Icons.compare_arrows_outlined),

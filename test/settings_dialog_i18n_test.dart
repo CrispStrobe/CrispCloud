@@ -68,7 +68,7 @@ void main() {
       expect(delta.value, isFalse);
       expect(delta.onChanged, isNull);
       const unavailable =
-          'Automatic delta transfers are unavailable. Files use standard transfers.';
+          'Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.';
       expect(
         find.text(
           SettingsStrings.translations[entry.key]?[unavailable] ?? unavailable,
@@ -76,6 +76,10 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('settings_delta_block_size')), findsNothing);
+      expect(
+        (await SharedPreferences.getInstance()).getBool('delta_sync_enabled'),
+        isTrue,
+      );
       if (entry.key == 'de') {
         expect(find.text('Schnellsuche'), findsOneWidget);
         expect(find.text('Groß-/Kleinschreibung beachten'), findsOneWidget);

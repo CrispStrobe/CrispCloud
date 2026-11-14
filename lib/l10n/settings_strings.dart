@@ -135,7 +135,7 @@ const _translations = <String, Map<String, String>>{
     "Data is stored locally and summarised before any transmission. You can disable this at any time.": "Daten werden lokal gespeichert und vor der Übertragung zusammengefasst. Dies kann jederzeit deaktiviert werden.",
     "Advanced": "Erweitert",
     "Delta Sync": "Delta-Synchronisierung",
-    "Automatic delta transfers are unavailable. Files use standard transfers.": "Automatische Delta-Übertragungen sind nicht verfügbar. Dateien werden regulär übertragen.",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.": "Automatische Delta-Auswahl ist nicht verfügbar. Unterstützte S3-Kopien können im Kopierdialog „Verifizierte S3-Blöcke wiederverwenden“ nutzen.",
     "Block Size": "Blockgröße",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.": "Kleinere Blöcke sparen mehr Bandbreite; größere verringern den Aufwand für Hash-Berechnungen.",
     "4 MB (default)": "4 MB (Standard)",
@@ -264,7 +264,7 @@ const _translations = <String, Map<String, String>>{
     "Data is stored locally and summarised before any transmission. You can disable this at any time.": "Les données sont stockées localement et résumées avant transmission. Vous pouvez désactiver cette option à tout moment.",
     "Advanced": "Avancé",
     "Delta Sync": "Synchronisation delta",
-    "Automatic delta transfers are unavailable. Files use standard transfers.": "Les transferts delta automatiques ne sont pas disponibles. Les fichiers sont transférés normalement.",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.": "La sélection automatique du mode delta n’est pas disponible. Pour les copies S3 prises en charge, choisissez « Réutiliser les blocs S3 vérifiés » dans la boîte de dialogue de copie.",
     "Block Size": "Taille des blocs",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.": "Les petits blocs économisent la bande passante ; les grands réduisent les calculs de hachage.",
     "4 MB (default)": "4 Mo (par défaut)",
@@ -391,7 +391,7 @@ const _translations = <String, Map<String, String>>{
     "Data is stored locally and summarised before any transmission. You can disable this at any time.": "Los datos se guardan localmente y se resumen antes de transmitirlos. Puede desactivarlo en cualquier momento.",
     "Advanced": "Avanzado",
     "Delta Sync": "Sincronización delta",
-    "Automatic delta transfers are unavailable. Files use standard transfers.": "Las transferencias delta automáticas no están disponibles. Los archivos usan transferencias normales.",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.": "La selección automática de delta no está disponible. Las copias S3 compatibles pueden usar «Reutilizar bloques S3 verificados» en el diálogo de copia.",
     "Block Size": "Tamaño de bloque",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.": "Los bloques pequeños ahorran ancho de banda; los grandes reducen los cálculos de hash.",
     "4 MB (default)": "4 MB (predeterminado)",
@@ -520,7 +520,7 @@ const _translations = <String, Map<String, String>>{
     "Data is stored locally and summarised before any transmission. You can disable this at any time.": "Os dados são guardados localmente e resumidos antes da transmissão. Pode desativar esta opção a qualquer momento.",
     "Advanced": "Avançado",
     "Delta Sync": "Sincronização delta",
-    "Automatic delta transfers are unavailable. Files use standard transfers.": "As transferências delta automáticas não estão disponíveis. Os ficheiros usam transferências normais.",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.": "A seleção automática de delta não está disponível. As cópias S3 compatíveis podem usar «Reutilizar blocos S3 verificados» no diálogo de cópia.",
     "Block Size": "Tamanho do bloco",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.": "Blocos menores poupam largura de banda; blocos maiores reduzem o cálculo de hashes.",
     "4 MB (default)": "4 MB (predefinição)",
@@ -649,8 +649,8 @@ const _translations = <String, Map<String, String>>{
         "数据存储在本地，并在传输前汇总。您可以随时关闭此功能。",
     "Advanced": "高级",
     "Delta Sync": "增量同步",
-    "Automatic delta transfers are unavailable. Files use standard transfers.":
-        "暂不支持自动增量传输。文件使用常规传输方式。",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.":
+        "暂不支持自动选择增量传输。符合条件的 S3 复制可在复制对话框中选择“重用已验证的 S3 块”。",
     "Block Size": "块大小",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.":
         "较小的块更节省带宽；较大的块可减少哈希计算开销。",
@@ -784,8 +784,8 @@ const _translations = <String, Map<String, String>>{
         "データはローカルに保存され、送信前に集計されます。いつでも無効にできます。",
     "Advanced": "詳細",
     "Delta Sync": "差分同期",
-    "Automatic delta transfers are unavailable. Files use standard transfers.":
-        "自動差分転送は利用できません。ファイルは通常の方法で転送されます。",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.":
+        "差分転送の自動選択は利用できません。対応する S3 のコピーでは、コピーダイアログで「検証済みの S3 ブロックを再利用」を選択できます。",
     "Block Size": "ブロックサイズ",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.":
         "小さいブロックは帯域幅を節約し、大きいブロックはハッシュ計算の負荷を減らします。",
@@ -920,8 +920,7 @@ const _translations = <String, Map<String, String>>{
         "데이터는 로컬에 저장되고 전송 전에 요약됩니다. 언제든지 끌 수 있습니다.",
     "Advanced": "고급",
     "Delta Sync": "델타 동기화",
-    "Automatic delta transfers are unavailable. Files use standard transfers.":
-        "자동 델타 전송을 사용할 수 없습니다. 파일은 일반 방식으로 전송됩니다.",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.": "자동 델타 선택을 사용할 수 없습니다. 지원되는 S3 복사에서는 복사 대화상자의 ‘검증된 S3 블록 재사용’을 선택할 수 있습니다.",
     "Block Size": "블록 크기",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.":
         "작은 블록은 대역폭을 절약하고 큰 블록은 해시 계산 부하를 줄입니다.",
@@ -1051,8 +1050,7 @@ const _translations = <String, Map<String, String>>{
     "Data is stored locally and summarised before any transmission. You can disable this at any time.": "تُخزّن البيانات محليًا وتُلخّص قبل الإرسال. يمكنك تعطيل ذلك في أي وقت.",
     "Advanced": "متقدم",
     "Delta Sync": "المزامنة التفاضلية",
-    "Automatic delta transfers are unavailable. Files use standard transfers.":
-        "النقل التفاضلي التلقائي غير متاح. تُنقل الملفات بالطريقة المعتادة.",
+    "Automatic delta selection is unavailable. Supported S3 copies can use “Reuse verified S3 blocks” in the copy dialog.": "الاختيار التلقائي للنقل التفاضلي غير متاح. يمكن لعمليات نسخ S3 المدعومة استخدام «إعادة استخدام كتل S3 المتحقق منها» في نافذة النسخ.",
     "Block Size": "حجم الكتلة",
     "Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.": "توفر الكتل الأصغر النطاق الترددي؛ وتقلل الكتل الأكبر عبء حساب التجزئة.",
     "4 MB (default)": "4 MB (افتراضي)",

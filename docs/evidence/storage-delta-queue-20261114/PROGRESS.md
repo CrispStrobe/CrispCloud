@@ -25,3 +25,11 @@ This checkpoint preserves the audit and plan. Implementation and qualification a
 The explicit method, scoped core/provider contents, ordinary queue/journal integration, UI eligibility, recovery downgrade and focused regressions are implemented. Independent source reviews addressed final captured-backend authority after provider proof, missing-ETag admission before source bytes, and cancellation/transport exception ordering.
 
 A first native development cohort exercised the new queue integration and existing delta core/provider suites. The core/provider regressions passed. Three new recovery cases revealed that the fixture had not initialized the durable local installation identity; that setup was corrected so the tests exercise actual persistent recovery rather than a session-only destination. Combined qualification is still pending; this is a preservation checkpoint, not a passing release claim.
+
+## Reconciled source cutoff before qualification
+
+The final remote audit found and integrated main `e58da70149182301efbbe85807edb6298ff37ff1` (the four-commit catalogue self-exclusion / version 1.3.3 continuation) and Office recovery `764cb5184c93ac89dc57638fc0e88d42aa82154b` (worksheet-navigation scope documentation). All five new primary commits are retained as ancestors. No merge conflict or managed Office source change was required. The qualified canonical pin stays `a379ecc455890032906098b6cf58e17504581ed0`.
+
+The [final audit](final-audit/receipt.json) records 3 current branches, 97 PR heads and 24 tag objects, including v1.3.3. All source work outstanding at that finite cutoff is incorporated; the archived alternate MadEdit2 API remains preserved under its documented disposition. PR checks were queued, without completed CI results.
+
+The next fixed-source cohort covers 52 native Flutter suites, including the explicit queue path, provider/core fault cases, reviewed copy/recovery UI, ordinary transfers, bandwidth and the newly merged catalogue surfaces. Catalogue Rust tests will run separately. Dependencies were resolved offline using the committed manifest/lock and its existing declared overrides; no task-specific override was introduced. Development receipts remain separate from qualification.

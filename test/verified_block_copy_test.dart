@@ -160,6 +160,73 @@ void main() {
       http.runWithClient(action, fixture.server.client);
 
   test(
+    'real signed HTTP copy learns its map and a journaled repeat reuses it',
+    () async {
+      final previousOverrides = HttpOverrides.current;
+      HttpOverrides.global = null;
+      addTearDown(() => HttpOverrides.global = previousOverrides);
+      final listener = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final endpoint = 'http://127.0.0.1:${listener.port}';
+      final transport = fixture.server.client();
+      Object? handlerError;
+      final subscription = listener.listen((request) async {
+        try {
+          if (!(request.headers.value(HttpHeaders.authorizationHeader) ?? '')
+              .startsWith('AWS4-HMAC-SHA256 ')) {
+            throw StateError('The loopback request was not signed.');
+          }
+        // Exercise real native HTTP framing and signed requests with the
+          // same deterministic server semantics used by fault-injection tests.
+          final forwarded = http.Request(
+            request.method,
+            Uri.parse(endpoint).resolveUri(request.uri),
+          );
+          request.headers.forEach((name, values) {
+            forwarded.headers[name] = values.join(',');
+          });
+          final response = await transport.send(forwarded);
+          request.response.statusCode = response.statusCode;
+          response.headers.forEach(request.response.headers.set);
+          await request.response.addStream(response.stream);
+          await request.response.close();
+        } catch (error) {
+          handlerError = error;
+          request.response.statusCode = HttpStatus.internalServerError;
+          await request.response.close();
+        }
+      });
+      try {
+        fixture = _Fixture(
+          fixture.directory,
+          fixture.server,
+          await verifiedS3Adapter(
+            cacheDirectory: p.join(fixture.directory.path, 'maps'),
+            endpoint: endpoint,
+          ),
+        );
+        final first = await fixture.prepare(id: 'native-first');
+        await fixture.run(first, id: 'native-first');
+        await fixture.expectSuccess(first, id: 'native-first');
+        expect(handlerError, isNull);
+        expect(fixture.server.fullReads, 0);
+        expect(fixture.server.requestedBytes, fixture.server.bytes.length);
+        fixture.server.resetRequests();
+        final second = await fixture.prepare(id: 'native-reuse');
+        await fixture.run(second, id: 'native-reuse');
+        await fixture.expectSuccess(second, id: 'native-reuse');
+        expect(handlerError, isNull);
+        expect(fixture.server.heads, greaterThan(0));
+        expect(fixture.server.ranges, isEmpty);
+        expect(fixture.server.requestedBytes, 0);
+      } finally {
+        await listener.close(force: true);
+        await subscription.cancel();
+        transport.close();
+      }
+    },
+  );
+
+  test(
     'queued first copy learns once; replacement reuses local blocks with full progress and journal SHA',
     () => inServer(() async {
       fixture.server.bytes = _payload(_block + 65536);

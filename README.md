@@ -58,33 +58,44 @@ favorite, open it in the other pane, or swap pane locations.
 
 ## Block-Level Delta Sync
 
-Automatic delta transfers are unavailable in the queue. Files use standard
-transfers; Settings → Advanced → Delta Sync displays a disabled, localized
-status while retaining previously saved preferences.
+The Copy dialog offers **Copy method → Reuse verified S3 blocks** for supported
+native S3-to-local copies. The first copy downloads the complete file once while
+building a verified block map. Later copies through the same connection can
+reuse verified local blocks for the same S3 revision. A missing trusted map or
+changed revision uses another conditional full copy that learns its map during
+that transfer; it does not perform a separate seed followed by a download.
 
-The current implementation provides validated block maps and an explicit
-native S3 delta-download API. A deliberate seed first reads and hashes the
-whole remote object. The same adapter can then reconstruct a local file from
-that still-current remote revision, fetching differing blocks and reusing
-verified local blocks through private staging. A changed remote revision,
-restart, recreated adapter or absent seed receipt requires a fresh seed;
-persisted cache JSON alone cannot authorize reuse. ETags identify revisions;
-SHA-256 and Adler-32 check block contents.
+The explicit method uses the existing reviewed queue, journal, staged
+publication, path reservations, pause/cancel controls and byte limits.
+Automatic delta selection remains unavailable. Settings → Advanced → Delta
+Sync stays disabled; saved experimental preferences do not activate this copy
+method. Restarted or recovered jobs require review and use ordinary streaming,
+including the existing prefix/hash checks. Persisted map JSON cannot restore
+authority to reuse blocks.
+
+The separate `seedDeltaBlockMap` / `deltaDownload` adapter APIs remain available
+within their own explicit admission rules. ETags identify remote revisions;
+SHA-256 and Adler-32 check block contents. The local publication boundary does
+not provide atomic compare-and-swap against external writers. A late queue
+cancellation can stop remaining metadata work after data has been installed;
+the journal retains that progress for review.
 
 Blocks range from 64 KiB to 64 MiB (4 MiB by default), within an 8 GiB file
 profile. Upload execution and the legacy pCloud/Nextcloud delta orchestration
 decline until they have separately qualified staging and publication contracts.
 Normal transfers continue through their existing paths.
 
-The combined Linux native cohort passed 790 tests across 43 suites, including
-real loopback HTTP reconstruction and the delta failure cases. A later
-canonical Word refresh passed 60 focused host tests and 232 canonical tests;
-each run retains its own exact source pin. See the
-[delta profile](docs/storage-delta-profile.md)
-for exact API, identity, publication and platform boundaries, and the
-[continuation receipt](docs/evidence/storage-delta-20261114/PROGRESS.md) for
-saved source checkpoints and validation results. Changed-block estimates do
-not include the initial full seed or verification work.
+Qualification of this queued-copy increment is **pending**; its
+[continuation receipt](docs/evidence/storage-delta-queue-20261114/PROGRESS.md)
+will bind the results to the tested source. The earlier standalone delta
+implementation passed 790 tests across 43 Linux native suites at its own source
+pin, including loopback HTTP reconstruction and failure cases. Its subsequent
+Word-only refresh passed 60 host cases and 232 canonical cases. Those
+[earlier receipts](docs/evidence/storage-delta-20261114/PROGRESS.md) retain their
+original scope and do not qualify this new integration. See the
+[delta profile](docs/storage-delta-profile.md) for exact boundaries.
+Changed-block estimates exclude the initial full transfer and verification
+work; they are not end-to-end bandwidth measurements.
 
 ### Desktop Client Forks
 

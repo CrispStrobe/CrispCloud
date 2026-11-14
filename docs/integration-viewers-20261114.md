@@ -1,6 +1,6 @@
 # Integrated Office, path menus and portable 3D viewers
 
-Latest runtime checkpoint: `5e0cb337` (CrispCloud 1.3.2+25). Later test, workflow,
+Latest runtime checkpoint: `8556c11d` (CrispCloud 1.3.3+26). Later test, workflow,
 policy-evidence and documentation changes preserve application bytes. Initial branch audit cutoff: 2026-11-14 19:47 UTC; the follow-up audit at
 20:11 UTC and its fully validated Office additions are recorded below.
 
@@ -134,3 +134,33 @@ checking their live heads and ages: the host binary, bandwidth and notes/sorting
 branches, and the source notes/sorting branch. Each was older than one hour and
 retained in local audit refs. The recent worksheet and Word branches remain.
 PR #106 closed automatically as merged; no additional PR was created.
+
+## Patched release 1.3.3
+
+The completed v1.3.1 run produced its GUI binaries but failed the Windows CLI
+catalogue test: a self-index scan reported 582 bytes instead of the fixture's
+70. The scanner compared canonical traversal paths with SQLite's staging path
+without normalizing the latter; its own journal could enter the file totals.
+The bridge now canonicalizes its existing staging database path before building
+its database/journal/WAL/SHM exclusion set. No catalogue schema changed.
+
+Rust tests on this Mac: **14 passed**, one existing stress test ignored; strict
+Clippy and formatting checks passed. A Unix output-directory-alias case protects
+portable behavior. Its old-code control also passes on macOS, so it is not
+claimed as a reproduction of the native Windows failure. Windows confirmation
+remains a GitHub CI obligation.
+
+Version 1.3.3+26 is built, signed and installed at
+`~/Applications/CrispCloud 1.3.3 (8556c11d).app`. Deep/strict signature checks,
+45-second startup with credential policy ready, and offline packaged-artifact
+verification all passed. Office and model-viewer Dart sources are unchanged
+from their qualified checkpoints. Later Rust changes are test-only alias
+coverage and comments; production code was compared with the compiled revision.
+
+The v1.3.2 tag was created before that completed Windows failure was audited.
+It remains immutable; 1.3.3 carries the correction. Existing queued release jobs
+were not cancelled. Release publication still requires the complete nonempty
+binary inventory; the source archives alone do not satisfy readiness.
+
+[Current receipt](evidence/integration-viewers-20261114/acceptance.json) ·
+[Office build receipt](evidence/integration-viewers-20261114/acceptance-5e0cb337.json).

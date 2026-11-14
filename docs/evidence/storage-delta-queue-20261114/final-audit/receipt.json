@@ -1,0 +1,1135 @@
+{
+  "schema_version": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "audited_head": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+  "audited_tree": "65899fa387695f73de93e61e317b64796610b9f3",
+  "audit_started_at": "2026-11-14T21:37:51.136414+00:00",
+  "remote_refs_observed_at": "2026-11-14T21:38:01.280101+00:00",
+  "audit_completed_at": "2026-11-14T21:40:44.402937+00:00",
+  "comparison_receipt": "validation/continuation-audit/receipt.json",
+  "counts": {
+    "branches": 3,
+    "pr_heads": 97,
+    "tag_objects": 24,
+    "peeled_tags": 15
+  },
+  "current_refs": [
+    {
+      "sha": "764cb5184c93ac89dc57638fc0e88d42aa82154b",
+      "ref": "refs/heads/codex/office-recovery-20261114",
+      "ancestor_of_audited_head": false
+    },
+    {
+      "sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+      "ref": "refs/heads/integration/storage-delta-20261114",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "ref": "refs/heads/main",
+      "ancestor_of_audited_head": false
+    },
+    {
+      "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "ref": "refs/pull/10/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "ref": "refs/pull/100/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "ref": "refs/pull/101/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "ref": "refs/pull/102/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "ref": "refs/pull/103/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "ref": "refs/pull/104/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "ref": "refs/pull/105/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "ref": "refs/pull/106/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+      "ref": "refs/pull/107/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "ref": "refs/pull/11/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "ref": "refs/pull/12/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "ref": "refs/pull/13/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "ref": "refs/pull/14/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "ref": "refs/pull/15/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "ref": "refs/pull/16/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "ref": "refs/pull/17/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "ref": "refs/pull/18/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "ref": "refs/pull/19/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "ref": "refs/pull/20/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "ref": "refs/pull/21/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "ref": "refs/pull/22/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "ref": "refs/pull/23/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "ref": "refs/pull/24/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "ref": "refs/pull/25/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "ref": "refs/pull/26/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "ref": "refs/pull/27/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "ref": "refs/pull/28/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "ref": "refs/pull/29/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "ref": "refs/pull/30/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "ref": "refs/pull/31/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "ref": "refs/pull/32/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "ref": "refs/pull/33/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "ref": "refs/pull/34/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "ref": "refs/pull/35/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "ref": "refs/pull/36/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "ref": "refs/pull/37/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "ref": "refs/pull/38/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "ref": "refs/pull/39/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "ref": "refs/pull/40/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "ref": "refs/pull/41/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "ref": "refs/pull/42/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "ref": "refs/pull/43/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "ref": "refs/pull/45/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+      "ref": "refs/pull/47/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "ref": "refs/pull/49/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "ref": "refs/pull/5/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "ref": "refs/pull/50/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "ref": "refs/pull/51/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "ref": "refs/pull/52/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "ref": "refs/pull/53/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "ref": "refs/pull/54/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "ref": "refs/pull/55/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "ref": "refs/pull/56/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "ref": "refs/pull/57/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "ref": "refs/pull/58/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "ref": "refs/pull/59/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "ref": "refs/pull/6/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "ref": "refs/pull/60/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "ref": "refs/pull/61/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "ref": "refs/pull/62/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "ref": "refs/pull/63/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "ref": "refs/pull/64/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "ref": "refs/pull/65/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "ref": "refs/pull/66/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "ref": "refs/pull/67/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "ref": "refs/pull/68/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "ref": "refs/pull/69/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "ref": "refs/pull/7/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "ref": "refs/pull/70/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "ref": "refs/pull/71/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "ref": "refs/pull/72/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "ref": "refs/pull/73/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "ref": "refs/pull/74/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "ref": "refs/pull/75/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "ref": "refs/pull/76/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "ref": "refs/pull/77/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "ref": "refs/pull/78/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "ref": "refs/pull/79/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "ref": "refs/pull/8/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "ref": "refs/pull/80/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "ref": "refs/pull/81/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "ref": "refs/pull/82/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "ref": "refs/pull/83/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "ref": "refs/pull/84/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "ref": "refs/pull/85/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "ref": "refs/pull/86/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "ref": "refs/pull/87/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b100cd751688f13609a8829180b487b381588d14",
+      "ref": "refs/pull/88/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "ref": "refs/pull/89/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "ref": "refs/pull/9/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "ref": "refs/pull/90/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "ref": "refs/pull/91/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "ref": "refs/pull/92/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "ref": "refs/pull/93/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "ref": "refs/pull/94/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "ref": "refs/pull/95/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "ref": "refs/pull/97/head",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "a5103bb5bfd044540f68bfb786761222abccd98f",
+      "ref": "refs/tags/archive/feature/commander-review-20261105",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "ref": "refs/tags/archive/feature/commander-review-20261105^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "bf6a2bc06f663d2733d4283cac7cd39261e25c48",
+      "ref": "refs/tags/archive/feature/madedit2-hex-editor-session-checkpoint",
+      "ancestor_of_audited_head": false
+    },
+    {
+      "sha": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+      "ref": "refs/tags/archive/feature/madedit2-hex-editor-session-checkpoint^{}",
+      "ancestor_of_audited_head": false
+    },
+    {
+      "sha": "e392d53f15c714c53c02ce08fc30df5093dec5ef",
+      "ref": "refs/tags/audit/archive-v129-f1a03e80",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+      "ref": "refs/tags/audit/archive-v129-f1a03e80^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "e8b36e59c111facb1113b776c4e0ac866a82470a",
+      "ref": "refs/tags/ci-native-assets-20261109",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
+      "ref": "refs/tags/dart-smb2-libsmb2-r9",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d32191c3af8d74c9ec59be20d3183e323dea532f",
+      "ref": "refs/tags/nightly",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "259085c2381271c48e6c6353afeb00777675479d",
+      "ref": "refs/tags/v0.1.0",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "c3ef2129bcf1d5b0620434785e1973ae7a913888",
+      "ref": "refs/tags/v0.2.0",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "5f9838426d3e07b61d5b3f005dbabbf0fee166f7",
+      "ref": "refs/tags/v0.2.1",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "faef68b08e053f709c130d465746deaadac44b80",
+      "ref": "refs/tags/v0.2.2",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "f5f12886db8f9119f2e2976363ab8566ebb3777e",
+      "ref": "refs/tags/v1.0.0",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "472064914ec00f5da289de94e166fa6c6d82b87a",
+      "ref": "refs/tags/v1.1.0",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "70d43862fdbd04317e001c8788cb1ca4d63da2ee",
+      "ref": "refs/tags/v1.2.0",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "9a81d68c7cb27f35e4707267206ef6ea8e3de33d",
+      "ref": "refs/tags/v1.2.0^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "9701ceadf0ea0d519e9553bbd41ea4e0a2710712",
+      "ref": "refs/tags/v1.2.1",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "ref": "refs/tags/v1.2.1^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b092db8126058f33879d526243d67aec8273fa09",
+      "ref": "refs/tags/v1.2.3",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "6274c9cb23bdf4999957d5bc5dc77c295d1f50eb",
+      "ref": "refs/tags/v1.2.3^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4",
+      "ref": "refs/tags/v1.2.4",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9",
+      "ref": "refs/tags/v1.2.4^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "cbaf25847c106a115eb45469ba7c4edea02fada5",
+      "ref": "refs/tags/v1.2.5",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "48ad97b4010e25ffd186c33bd50b041f79e2e7db",
+      "ref": "refs/tags/v1.2.5^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "355371e3332184dbb780eb3e78a90d90baeab6dc",
+      "ref": "refs/tags/v1.2.6",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+      "ref": "refs/tags/v1.2.6^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ea85caeeb1414f586508d45acc6a48409513398c",
+      "ref": "refs/tags/v1.2.7",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "07a1ce776ffd08aa37c5dc789746276556bbd225",
+      "ref": "refs/tags/v1.2.7^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862",
+      "ref": "refs/tags/v1.2.8",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "d56dfe9f7bc1d3e764af0f3ee383ccc235f039bc",
+      "ref": "refs/tags/v1.2.8^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "efb77b43a3003215c4bcf32bee881968681f5ca6",
+      "ref": "refs/tags/v1.3.0",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+      "ref": "refs/tags/v1.3.0^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "231c435557c4d9b11f24cb9011b2311cd5ef3983",
+      "ref": "refs/tags/v1.3.1",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "70524c8141c7880c854ca7e58489f207ecf2085d",
+      "ref": "refs/tags/v1.3.1^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "f01b2162b473ab965fc888244dc202278faf1ef1",
+      "ref": "refs/tags/v1.3.2",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "ref": "refs/tags/v1.3.2^{}",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "sha": "bde3399242c647ef13e27dfad1cfeee24061a3e1",
+      "ref": "refs/tags/v1.3.3",
+      "ancestor_of_audited_head": false
+    },
+    {
+      "sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "ref": "refs/tags/v1.3.3^{}",
+      "ancestor_of_audited_head": false
+    }
+  ],
+  "ref_changes_since_previous_receipt": [
+    {
+      "ref": "refs/heads/codex/office-recovery-20261114",
+      "before": "f974b9911b1547c806279279a87f2b21a1ac4357",
+      "after": "764cb5184c93ac89dc57638fc0e88d42aa82154b"
+    },
+    {
+      "ref": "refs/heads/integration/storage-delta-20261114",
+      "before": "781458d765100ae3556906ff8ca923e70c956afa",
+      "after": "59704919d5af3e256e7279ae94965f7d4c5fb279"
+    },
+    {
+      "ref": "refs/heads/main",
+      "before": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "after": "e58da70149182301efbbe85807edb6298ff37ff1"
+    },
+    {
+      "ref": "refs/pull/107/head",
+      "before": "781458d765100ae3556906ff8ca923e70c956afa",
+      "after": "59704919d5af3e256e7279ae94965f7d4c5fb279"
+    },
+    {
+      "ref": "refs/tags/v1.3.3",
+      "before": null,
+      "after": "bde3399242c647ef13e27dfad1cfeee24061a3e1"
+    },
+    {
+      "ref": "refs/tags/v1.3.3^{}",
+      "before": null,
+      "after": "e58da70149182301efbbe85807edb6298ff37ff1"
+    }
+  ],
+  "incoming_primary_commits": [
+    {
+      "sha": "7a52e60694413258328c940dd6e366b5b22c53a0",
+      "branch_head": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "parents": [
+        "2c373371973b2506fc4fc03e599ef093d14a4be1"
+      ],
+      "subject": "Fix Windows catalogue self-exclusion and prepare version 1.3.3",
+      "touched_paths": [
+        "M\tcli/pubspec.yaml",
+        "M\tdocs/apple-export-policy.json",
+        "M\tpackages/crisp_catalog/native/src/lib.rs",
+        "M\tpubspec.yaml"
+      ]
+    },
+    {
+      "sha": "8556c11d7c5aa6b24a1349ed3294caa56734954b",
+      "branch_head": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "parents": [
+        "7a52e60694413258328c940dd6e366b5b22c53a0"
+      ],
+      "subject": "Document catalogue FFI ownership and keep Rust contracts clean",
+      "touched_paths": [
+        "M\tdocs/apple-export-policy.json",
+        "M\tpackages/crisp_catalog/native/src/lib.rs"
+      ]
+    },
+    {
+      "sha": "5e2bead667035f8c71a60850bcb7d1ed9e25fad7",
+      "branch_head": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "parents": [
+        "8556c11d7c5aa6b24a1349ed3294caa56734954b"
+      ],
+      "subject": "Cover catalogue output aliases and clarify Windows path matching",
+      "touched_paths": [
+        "M\tdocs/apple-export-policy.json",
+        "M\tpackages/crisp_catalog/native/src/lib.rs"
+      ]
+    },
+    {
+      "sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "branch_head": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "parents": [
+        "5e2bead667035f8c71a60850bcb7d1ed9e25fad7"
+      ],
+      "subject": "Record signed 1.3.3 app and Windows catalogue release fix",
+      "touched_paths": [
+        "A\tdocs/evidence/integration-viewers-20261114/acceptance-5e0cb337.json",
+        "M\tdocs/evidence/integration-viewers-20261114/acceptance.json",
+        "M\tdocs/integration-viewers-20261114.md"
+      ]
+    },
+    {
+      "sha": "764cb5184c93ac89dc57638fc0e88d42aa82154b",
+      "branch_head": "764cb5184c93ac89dc57638fc0e88d42aa82154b",
+      "parents": [
+        "f974b9911b1547c806279279a87f2b21a1ac4357"
+      ],
+      "subject": "docs(office): checkpoint worksheet navigation scope",
+      "touched_paths": [
+        "A\tdocs/office-worksheet-navigation-20261114.md"
+      ]
+    }
+  ],
+  "source_conclusion": "Five primary commits need integration: four linear main commits including a Rust catalogue runtime fix, plus one documentation-only Office branch commit. No changed-path overlap with the audited integration changes since previous main 2c373 was found. No merge was performed.",
+  "changed_path_overlap_with_integration": {
+    "new_main": [],
+    "office": []
+  },
+  "source_pin_summary": {
+    "integration": {
+      "blob": "32b8a355b2cde10db50d8c680d94c24cce84d674",
+      "source_commit": "a379ecc455890032906098b6cf58e17504581ed0",
+      "source_branch": "integration/crispcloud-storage-reconcile-20261114"
+    },
+    "previous_main": {
+      "blob": "492d25eb7939c31eb60bcf411e1147ceb0e99a49",
+      "source_commit": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+      "source_branch": "main"
+    },
+    "new_main": {
+      "blob": "492d25eb7939c31eb60bcf411e1147ceb0e99a49",
+      "source_commit": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+      "source_branch": "main"
+    }
+  },
+  "version_delta": "diff --git a/cli/pubspec.yaml b/cli/pubspec.yaml\nindex a9d14d72..092d82ca 100644\n--- a/cli/pubspec.yaml\n+++ b/cli/pubspec.yaml\n@@ -1,7 +1,7 @@\n name: crisp\n description: CrispCloud CLI companion \u2014 manage cloud storage from the terminal.\n publish_to: 'none'\n-version: 1.3.2\n+version: 1.3.3\n \n executables:\n   crispcloud:\ndiff --git a/pubspec.yaml b/pubspec.yaml\nindex 6295609f..7dc35b59 100644\n--- a/pubspec.yaml\n+++ b/pubspec.yaml\n@@ -1,7 +1,7 @@\n name: crisp_cloud\n description: Flutter/Dart Cloud storage client\n publish_to: 'none'\n-version: 1.3.2+25\n+version: 1.3.3+26\n \n environment:\n   # Keep the application and CI toolchain compatible with dart_pdf_editor.",
+  "recommended_qualification": {
+    "primary": "Merge exact main e58da701 and Office branch 764cb518 into the integration branch before freezing the formal qualification source. Preserve the existing qualified Office source pin a379ecc; main did not change its Office pin.",
+    "focused_native": "Run catalogue Rust unit tests, including self_index_under_an_alias_excludes_its_database_and_journal, from the merged revision. No test was run by this audit.",
+    "platform_limit": "The regression exercises path aliases on Unix; a Linux qualification does not establish the actual Windows path-prefix behavior. Current GitHub CI remains queued.",
+    "dependency_change": "The app and CLI pubspec files change only version declarations; no dependency or lockfile changes in the incoming main range."
+  },
+  "primary_pr": {
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/107",
+    "number": 107,
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "mergeable": true,
+    "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+    "base_sha": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+    "merge_commit_sha": "7cfc9d1b0ec9a3bf5423241c812513b438dad04b",
+    "updated_at": "2026-11-14T21:36:32Z"
+  },
+  "primary_pr_review_counts": {
+    "comments": 0,
+    "reviews": 0,
+    "review_threads": 0
+  },
+  "primary_pr_check_counts": {
+    "queued": 37
+  },
+  "primary_pr_combined_status": {
+    "sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+    "state": "pending",
+    "total_count": 0,
+    "statuses": []
+  },
+  "primary_pr_mergeability_caveat": "GitHub returned mergeable=true with reported base SHA 2c373371; that response is not a conflict proof against newly fetched main e58da701. Changed-path comparison found no overlap.",
+  "primary_open_prs": [
+    {
+      "number": 107,
+      "title": "feat(storage): validate and stage native delta downloads",
+      "state": "open",
+      "draft": true,
+      "head": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+      "head_ref": "integration/storage-delta-20261114",
+      "base": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": "7cfc9d1b0ec9a3bf5423241c812513b438dad04b",
+      "updated_at": "2026-11-14T21:36:32Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/107"
+    }
+  ],
+  "canonical": {
+    "branches": [
+      {
+        "name": "codex/office-recovery-20261114",
+        "sha": "d7284d5a3fc8e185f8603a22787848dc175453c5"
+      },
+      {
+        "name": "fix/word-block-bookmarks",
+        "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7"
+      },
+      {
+        "name": "fix/word-media-dedupe",
+        "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5"
+      },
+      {
+        "name": "fix/word-sym-chars",
+        "sha": "58de54567d45e38c05dd77064b7607c577374b9d"
+      },
+      {
+        "name": "fix/word-textbox-nesting",
+        "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a"
+      },
+      {
+        "name": "integration/crispcloud-storage-reconcile-20261114",
+        "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5"
+      },
+      {
+        "name": "main",
+        "sha": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8"
+      }
+    ],
+    "open_prs": [
+      {
+        "number": 12,
+        "title": "test(office): preserve combined sorting and worksheet history regression",
+        "state": "open",
+        "draft": true,
+        "head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+        "head_ref": "integration/crispcloud-storage-reconcile-20261114",
+        "base": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+        "base_ref": "main",
+        "merged_at": null,
+        "merge_commit_sha": "a97200c3441f587101cbab8dfd05a2e0cfc0389a",
+        "updated_at": "2026-11-14T21:04:44Z",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/pull/12"
+      },
+      {
+        "number": 11,
+        "title": "Reuse identical media payloads instead of storing a copy on every save",
+        "state": "open",
+        "draft": false,
+        "head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+        "head_ref": "fix/word-media-dedupe",
+        "base": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+        "base_ref": "main",
+        "merged_at": null,
+        "merge_commit_sha": "109730d08f4d59810a1a5fd5aedf28a6a37df629",
+        "updated_at": "2026-11-14T20:42:56Z",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/pull/11"
+      },
+      {
+        "number": 10,
+        "title": "Stop text boxes anchored in one paragraph from nesting exponentially",
+        "state": "open",
+        "draft": false,
+        "head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+        "head_ref": "fix/word-textbox-nesting",
+        "base": "4bdb70c9d86fd1ee09ed99d3114b178e965cfa01",
+        "base_ref": "main",
+        "merged_at": null,
+        "merge_commit_sha": null,
+        "updated_at": "2026-11-14T20:19:39Z",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/pull/10"
+      },
+      {
+        "number": 9,
+        "title": "Keep symbol-font characters (w:sym) through import and save",
+        "state": "open",
+        "draft": false,
+        "head": "58de54567d45e38c05dd77064b7607c577374b9d",
+        "head_ref": "fix/word-sym-chars",
+        "base": "4bdb70c9d86fd1ee09ed99d3114b178e965cfa01",
+        "base_ref": "main",
+        "merged_at": null,
+        "merge_commit_sha": "a7d84460053e8540807a2faf90ee8ba8fe3fd7b2",
+        "updated_at": "2026-11-14T20:14:09Z",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/pull/9"
+      }
+    ],
+    "companion_pr": {
+      "url": "https://github.com/CrispStrobe/quds_office_suite/pull/12",
+      "number": 12,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "mergeable": true,
+      "head_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+      "base_sha": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+      "updated_at": "2026-11-14T21:04:44Z"
+    },
+    "companion_review_counts": {
+      "comments": 0,
+      "reviews": 0
+    },
+    "companion_check_counts": {
+      "queued": 4
+    },
+    "recovery_change": {
+      "status": "ahead",
+      "ahead_by": 1,
+      "behind_by": 0,
+      "merge_base": "a85a977a8ab95bcf42214eb6dd05c73e2fcb5243",
+      "url": "https://github.com/CrispStrobe/quds_office_suite/compare/a85a977a8ab95bcf42214eb6dd05c73e2fcb5243...d7284d5a3fc8e185f8603a22787848dc175453c5",
+      "commits": [
+        {
+          "sha": "d7284d5a3fc8e185f8603a22787848dc175453c5",
+          "parents": [
+            "a85a977a8ab95bcf42214eb6dd05c73e2fcb5243"
+          ],
+          "message": "docs(office): checkpoint draft-safe worksheet navigation scope",
+          "committed_at": "2026-11-14T21:19:01Z"
+        }
+      ],
+      "files": [
+        {
+          "path": "docs/office-worksheet-navigation-20261114.md",
+          "status": "added",
+          "sha": "2dd407089caba209f6dd063c898dccf34f5d8f42",
+          "additions": 34,
+          "deletions": 0
+        }
+      ]
+    },
+    "disposition": "Canonical main c1678ade and companion PR12 head 579f2105 are unchanged. Canonical recovery d7284d5a adds only docs/office-worksheet-navigation-20261114.md on top of a85a977. No managed source or primary pin change requires a canonical sync. Open canonical PRs #9/#10/#11 heads are unchanged and remain outside the qualified source."
+  },
+  "release_tag": {
+    "name": "v1.3.3",
+    "object": "bde3399242c647ef13e27dfad1cfeee24061a3e1",
+    "commit": "e58da70149182301efbbe85807edb6298ff37ff1",
+    "raw": "object e58da70149182301efbbe85807edb6298ff37ff1\ntype commit\ntag v1.3.3\ntagger CrispStrobe <cze+github@mailbox.org> 1794691377 +0100\n\nCrispCloud 1.3.3: current Office integration, STL and 3MF viewers, path menus and Windows catalogue self-exclusion fix"
+  },
+  "archive_disposition": {
+    "name": "archive/feature/madedit2-hex-editor-session-checkpoint",
+    "tag_object": "bf6a2bc06f663d2733d4283cac7cd39261e25c48",
+    "target": "f2534d892fbffca9a7e1e95ccaf7faeb02769ea1",
+    "disposition": "Unchanged preserved alternative API; do not merge wholesale, as documented in docs/hex-editor-validation.md."
+  },
+  "retired_initial_branch_provenance": [
+    {
+      "original_remote_ref": "refs/heads/codex/office-recovery-20261114-notes-sorting",
+      "initial_sha": "4019d46918986fefd15b09f95eb738e4c2cf1d97",
+      "retained_local_ref": "refs/remotes/origin/codex/office-recovery-20261114-notes-sorting",
+      "retained_sha": "4019d46918986fefd15b09f95eb738e4c2cf1d97",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "original_remote_ref": "refs/heads/integration/storage-bandwidth-20261114",
+      "initial_sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "retained_local_ref": "refs/remotes/origin/integration/storage-bandwidth-20261114",
+      "retained_sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "ancestor_of_audited_head": true
+    },
+    {
+      "original_remote_ref": "refs/heads/integration/storage-binary-20261114",
+      "initial_sha": "f69427d59273f651e10c33fe811e59c98880e7fe",
+      "retained_local_ref": "refs/remotes/origin/integration/storage-binary-20261114",
+      "retained_sha": "f69427d59273f651e10c33fe811e59c98880e7fe",
+      "ancestor_of_audited_head": true
+    }
+  ],
+  "local_before": {
+    "observed_at": "2026-11-14T21:37:51.136414+00:00",
+    "head": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+    "tree": "65899fa387695f73de93e61e317b64796610b9f3",
+    "git_status": " M README.md\n M docs/adr/007-block-level-delta-sync.md\n M docs/storage-capabilities-20261114.md\n M docs/storage-delta-profile.md\n M lib/l10n/settings_strings.dart\n M lib/widgets/settings_dialog.dart\n M test/settings_dialog_i18n_test.dart\n"
+  },
+  "local_after": {
+    "observed_at": "2026-11-14T21:40:44.402937+00:00",
+    "head": "0bb7bb91dffdd30be74f2800e343210f7307cc40",
+    "tree": "c53c04b8070f85a071099f52b15f4f2bb02344f2",
+    "git_status": " M test/widget/file_operation_dialog_test.dart\n"
+  },
+  "head_unchanged_during_audit": false,
+  "status_text_unchanged_during_audit": false,
+  "worktree_note": "The root agent already had tracked edits when this audit began. This agent did not modify, merge, stage, prune or check out repository paths. Matching status text is not a claim that concurrent root-owned file contents stayed unchanged.",
+  "operations": [
+    "GitHub read-only branch/PR/comment/review/check/compare requests.",
+    "git ls-remote and git fetch --no-write-fetch-head --no-tags with branch/PR/tag refspecs; no prune.",
+    "git show/diff/rev-list/merge-base/cat-file read-only graph/content inspection.",
+    "Scratch audit receipt writes only."
+  ],
+  "supporting_files": [
+    {
+      "path": "local-before.json",
+      "bytes": 429,
+      "sha256": "0f172a9b9de3b533060aee9ea00889808792593db837c74b18da8ef1cf720a67"
+    },
+    {
+      "path": "remote-refs.json",
+      "bytes": 14690,
+      "sha256": "0d8097c734afe4e9a6dcb9eb7a2c63bd7df6aee67f9ccfa89e6be59e9822aa9a"
+    },
+    {
+      "path": "fetch.log",
+      "bytes": 305,
+      "sha256": "03007249839fc958a58437f7ae861964240c8bad347fd23230b2b7951b2ad7cb"
+    },
+    {
+      "path": "incoming-source.json",
+      "bytes": 4402,
+      "sha256": "36b699cb6e9b40f2756c2236b7323af9951b80d858a6294c37fcfc34de5744ec"
+    },
+    {
+      "path": "catalogue.patch",
+      "bytes": 5969,
+      "sha256": "79ada3352226bb599b4b3438e3839910ba60667c7426f5123bd66b09873b9b0b"
+    },
+    {
+      "path": "github-snapshot.json",
+      "bytes": 60293,
+      "sha256": "1fd6a2723a6d48431f21a72c58f77aa924c773879edf83e3b0ba1489274365a9"
+    }
+  ],
+  "concurrent_root_checkpoint": {
+    "head": "0bb7bb91dffdd30be74f2800e343210f7307cc40",
+    "parents": [
+      "2ded3fa2a928e3ccf9bb171b28a391faa024b905",
+      "764cb5184c93ac89dc57638fc0e88d42aa82154b"
+    ],
+    "subject": "merge: retain latest worksheet navigation scope checkpoint",
+    "incoming_ancestry_at_end": [
+      {
+        "sha": "7a52e60694413258328c940dd6e366b5b22c53a0",
+        "ancestor_of_end_head": true
+      },
+      {
+        "sha": "8556c11d7c5aa6b24a1349ed3294caa56734954b",
+        "ancestor_of_end_head": true
+      },
+      {
+        "sha": "5e2bead667035f8c71a60850bcb7d1ed9e25fad7",
+        "ancestor_of_end_head": true
+      },
+      {
+        "sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+        "ancestor_of_end_head": true
+      },
+      {
+        "sha": "764cb5184c93ac89dc57638fc0e88d42aa82154b",
+        "ancestor_of_end_head": true
+      }
+    ],
+    "note": "This checkpoint was created by the root agent concurrently; the remote audit and incoming-source comparison remain bound to the requested 59704919 cutoff."
+  }
+}
