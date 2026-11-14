@@ -500,7 +500,17 @@ compression or encryption.
 
 ### 6. Recovery and binary comparison
 
-Add bounded same-offset byte comparison and changed-range navigation first.
+Implemented comparison continuation: [bounded comparison of verified captured
+files](binary-comparison-profile.md) uses the existing same-offset scanner,
+sparse changed-range index and Hex navigation. Native inputs retain the 8 GiB
+per-file private-copy ceiling; browser inputs retain the 32 MiB per-file memory
+ceiling. Two matching bounded SHA-256 reads bind each owned capture. Available
+metadata/account checks, finite byte/chunk/time budgets and cancellation remain
+separate safeguards. Navigation reads captured bytes; it does not reread live
+source ranges. This is not a simultaneous or universally atomic provider
+snapshot. The [separate evidence](evidence/storage-binary-20261114/) records the
+actual tested revisions and the remaining platform qualifications.
+
 Xdelta patch files are a later export format; bind their expected base and
 result identities, limit work, apply to a private candidate and verify before
 publication. Retain the original if a patch fails.
