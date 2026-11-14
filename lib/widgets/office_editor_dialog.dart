@@ -30,8 +30,8 @@ import '../services/captured_file_target.dart';
 import '../services/office_device_export.dart';
 import '../services/log_service.dart';
 import '../l10n/file_bytes_error_strings.dart';
-import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_recovery_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
@@ -290,7 +290,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _loading = false;
         _error =
             '${context.tr('Could not open this document')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedFileBytesError(context, e)}';
+            '${_localizedError(e)}';
       });
     }
   }
@@ -300,6 +300,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     final dirty = _controller?.isDirty ?? false;
     if (dirty == _dirty) return;
     setState(() => _dirty = dirty);
+  }
+
+  String _localizedError(Object error) {
+    final locale = Localizations.localeOf(context);
+    return OfficeRecoveryStrings.error(locale.languageCode, error) ??
+        WordFormatStrings(locale).translate(error.toString()) ??
+        localizedFileBytesError(context, error);
   }
 
   Future<void> _save({bool popAfter = false}) async {
@@ -350,7 +357,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         SnackBar(
           content: Text(
             '${context.tr('Save failed')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
+            '${_localizedError(e)}',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
           action: SnackBarAction(
@@ -366,41 +373,41 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (_saving || _exporting || _closing) return;
     _closing = true;
     try {
-    // Pending inline drafts participate in the controller's dirty state. Keep
-    // them pending until Save so Cancel and Discard also work for invalid input.
-    if (!(_controller?.isDirty ?? _dirty)) {
-      Navigator.of(context).pop();
-      return;
-    }
-    final action = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.tr('Unsaved changes')),
-        content: Text(
-          '${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}',
+      // Pending inline drafts participate in the controller's dirty state. Keep
+      // them pending until Save so Cancel and Discard also work for invalid input.
+      if (!(_controller?.isDirty ?? _dirty)) {
+        Navigator.of(context).pop();
+        return;
+      }
+      final action = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.tr('Unsaved changes')),
+          content: Text(
+            '${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'cancel'),
+              child: Text(context.tr('Cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'discard'),
+              child: Text(context.tr('Discard')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, 'save'),
+              child: Text(context.tr('Save')),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'cancel'),
-            child: Text(context.tr('Cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'discard'),
-            child: Text(context.tr('Discard')),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, 'save'),
-            child: Text(context.tr('Save')),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) return;
-    if (action == 'save') {
-      await _save(popAfter: true);
-    } else if (action == 'discard') {
-      Navigator.of(context).pop();
-    }
+      );
+      if (!mounted) return;
+      if (action == 'save') {
+        await _save(popAfter: true);
+      } else if (action == 'discard') {
+        Navigator.of(context).pop();
+      }
     } finally {
       _closing = false;
     }
@@ -435,11 +442,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted || outcome == null) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.tr(
-            outcome == OfficeCopyOutcome.savedCopy
-                ? 'Copy saved. The original is unchanged.'
-                : 'Copy download started. The original is unchanged.',
-          )),
+          content: Text(
+            context.tr(
+              outcome == OfficeCopyOutcome.savedCopy
+                  ? 'Copy saved. The original is unchanged.'
+                  : 'Copy download started. The original is unchanged.',
+            ),
+          ),
         ),
       );
       // Exporting a copy does not mark the original clean, replace its loaded
@@ -451,7 +460,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         SnackBar(
           content: Text(
             '${context.tr('Could not save a copy')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
+            '${_localizedError(e)}',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
@@ -522,48 +531,50 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         if (!didPop) unawaited(_close());
       },
       child: CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () =>
-            unawaited(_save()),
-        const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
-            unawaited(_save()),
-        const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true):
-            _requestFind,
-        const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
-            _requestFind,
-        const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
-            _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
-        const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () =>
-            _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
-        const SingleActivator(LogicalKeyboardKey.keyI, control: true): () =>
-            _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
-        const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () =>
-            _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
-        const SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
-            _wordShortcut(
-              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
-                  ? WmlUnderline.single
-                  : WmlUnderline.none,
-            ),
-        const SingleActivator(LogicalKeyboardKey.keyU, meta: true): () =>
-            _wordShortcut(
-              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
-                  ? WmlUnderline.single
-                  : WmlUnderline.none,
-            ),
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
-            _controller?.undo(),
-        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () =>
-            _controller?.undo(),
-        const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
-            _controller?.redo(),
-        const SingleActivator(LogicalKeyboardKey.keyY, meta: true): () =>
-            _controller?.redo(),
-      },
-      child: Scaffold(
-        body: SafeArea(top: true, bottom: false, child: _buildBody(theme)),
-      ),
+        bindings: <ShortcutActivator, VoidCallback>{
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () =>
+              unawaited(_save()),
+          const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
+              unawaited(_save()),
+          const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true):
+              _requestFind,
+          const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
+              _requestFind,
+          const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
+              _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
+          const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () =>
+              _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
+          const SingleActivator(LogicalKeyboardKey.keyI, control: true): () =>
+              _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
+          const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () =>
+              _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
+          const SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
+              _wordShortcut(
+                (WmlRunProps p) =>
+                    p.underline = p.underline == WmlUnderline.none
+                    ? WmlUnderline.single
+                    : WmlUnderline.none,
+              ),
+          const SingleActivator(LogicalKeyboardKey.keyU, meta: true): () =>
+              _wordShortcut(
+                (WmlRunProps p) =>
+                    p.underline = p.underline == WmlUnderline.none
+                    ? WmlUnderline.single
+                    : WmlUnderline.none,
+              ),
+          const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
+              _controller?.undo(),
+          const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () =>
+              _controller?.undo(),
+          const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
+              _controller?.redo(),
+          const SingleActivator(LogicalKeyboardKey.keyY, meta: true): () =>
+              _controller?.redo(),
+        },
+        child: Scaffold(
+          body: SafeArea(top: true, bottom: false, child: _buildBody(theme)),
+        ),
       ),
     );
   }
