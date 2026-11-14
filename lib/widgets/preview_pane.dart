@@ -214,13 +214,6 @@ PreviewType _classifyFile(String name) {
   }
 }
 
-/// Map file extension to highlight.js language name.
-String? _highlightLang(String filename) {
-  final lang = highlightLanguageFor(filename);
-  if (lang != null && lang != 'plaintext') return lang;
-  return null;
-}
-
 /// Extract readable text from Office documents (DOCX, XLSX, PPTX, ODT, EPUB).
 /// Shared implementation lives in preview_media.dart.
 Future<String> _extractOfficeText(
@@ -980,7 +973,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
     // Text/code preview with syntax highlighting
     if (_textContent != null) {
-      final lang = _highlightLang(file.name);
+      final lang = highlightLanguageForDocument(file.name, _textContent!);
       final isDark = theme.brightness == Brightness.dark;
       if (lang != null) {
         return Container(

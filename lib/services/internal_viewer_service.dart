@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'legacy_text_encoding.dart';
+import '../widgets/code_highlighting.dart' show highlightLanguageForContent;
 import 'archive_format_registry.dart';
 
 // ---------------------------------------------------------------------------
@@ -33,6 +34,9 @@ enum ViewerMode {
 
   /// Raster or vector image (.png, .jpg, .gif, .webp, .bmp, .svg).
   image,
+
+  /// Read-only STL / core 3MF triangle preview.
+  model3d,
 
   /// Markdown document (.md, .markdown).
   markdown,
@@ -180,6 +184,7 @@ class InternalViewerService {
   /// Returns a map from [ViewerMode] to the list of file extensions handled by
   /// that mode (lower-case, including the leading dot).
   Map<ViewerMode, List<String>> getSupportedExtensions() => {
+    ViewerMode.model3d: ['stl', '3mf'],
     ..._standardExtensions,
     ViewerMode.archive: [
       for (final format in archiveFormatCapabilities) ...format.suffixes,
@@ -472,6 +477,10 @@ class InternalViewerService {
   ViewerMode detectMode(String filename, {Uint8List? header}) {
     final lower = filename.toLowerCase();
 
+    if (lower.endsWith('.stl') || lower.endsWith('.3mf')) {
+      return ViewerMode.model3d;
+    }
+
     // Compound archive suffixes must win over content-based text guessing.
     final archiveFormat = archiveFormatForName(filename);
     // Ordinary executables keep their binary view. The explicit archive mode
@@ -488,6 +497,17 @@ class InternalViewerService {
       if (magic != null) {
         // A text BOM selects a decoder, not the document's presentation.
         if (magic == ViewerMode.text) {
+          final prefix = decodeTextForView(
+            Uint8List.sublistView(header, 0, header.length.clamp(0, 32768)),
+          ).text;
+          final markup = prefix.trimLeft().toLowerCase();
+          if (markup.startsWith('<!doctype html') ||
+              markup.startsWith('<html')) {
+            return ViewerMode.html;
+          }
+          if (highlightLanguageForContent(prefix) == 'xml') {
+            return ViewerMode.xml;
+          }
           final named = _modeForName(lower, header);
           if (const {
             ViewerMode.lyrics,
@@ -512,12 +532,14 @@ class InternalViewerService {
     if (header != null &&
         header.isNotEmpty &&
         (mode == ViewerMode.text || mode == ViewerMode.binary)) {
-      final snippet = latin1
-          .decode(header.length > 512 ? header.sublist(0, 512) : header)
-          .replaceFirst('\uFEFF', '')
-          .trimLeft()
-          .toLowerCase();
-      if (snippet.startsWith('<?xml')) return ViewerMode.xml;
+      final snippet = decodeTextForView(
+        Uint8List.sublistView(header, 0, header.length.clamp(0, 32768)),
+      ).text.replaceFirst('\uFEFF', '').trimLeft().toLowerCase();
+      if (highlightLanguageForContent(snippet) == 'xml' &&
+          !snippet.startsWith('<!doctype html') &&
+          !snippet.startsWith('<html')) {
+        return ViewerMode.xml;
+      }
       if (snippet.startsWith('<!doctype html') || snippet.startsWith('<html')) {
         return ViewerMode.html;
       }
@@ -664,6 +686,11 @@ class InternalViewerService {
           ViewerMode.xml => 'application/xml',
           _ => 'text/plain',
         };
+
+      case ViewerMode.model3d:
+        mimeType = filename.toLowerCase().endsWith('.3mf')
+            ? 'model/3mf'
+            : 'model/stl';
 
       case ViewerMode.image:
         mimeType = _mimeForImage(filename.toLowerCase());

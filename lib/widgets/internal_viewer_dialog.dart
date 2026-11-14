@@ -19,6 +19,9 @@
 // Hex, ASCII, Binary and Text always work, even for files too large to load
 // fully, thanks to ViewBytesSource streaming on native platforms.
 
+import 'mesh_preview.dart';
+import '../services/mesh_preview.dart' show meshPreviewByteLimit;
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:convert';
@@ -1056,6 +1059,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           if (_searchOpen && _searchController.text.isNotEmpty) {
             unawaited(_runSearch(_searchController.text));
           }
+          return;
+        case ViewerMode.model3d:
+          if (_dataSize > meshPreviewByteLimit) {
+            throw const FormatException('3D preview is limited to 16 MiB.');
+          }
+          setState(() => _preparing = true);
+          await _ensureFullData();
+          if (!mounted || token != _prepareToken) return;
+          setState(() => _preparing = false);
           return;
         case ViewerMode.image:
         case ViewerMode.font:
@@ -3249,6 +3261,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           ViewerMode.media,
           ViewerMode.lyrics,
           ViewerMode.font,
+          ViewerMode.model3d,
           ViewerMode.csv,
           ViewerMode.office,
           ViewerMode.email,
@@ -3720,6 +3733,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             _structureHighlightEnd = null;
           }),
         );
+      case ViewerMode.model3d:
+        final data = _fullData;
+        if (data == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return MeshPreview(bytes: data, filename: _viewName);
       case ViewerMode.image:
         return _buildImageBody();
       case ViewerMode.markdown:
@@ -4799,12 +4818,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   String? get _hlLanguage {
-    final language = highlightLanguageFor(_viewName);
-    if (language != null && language != 'plaintext') return language;
-    final text = _decodedText;
-    if (text == null) return null;
-    final shebang = highlightLanguageForShebang(text);
-    return (shebang == null || shebang == 'plaintext') ? null : shebang;
+    final language = highlightLanguageForDocument(
+      _viewName,
+      _decodedText ?? '',
+    );
+    return language == 'plaintext' ? null : language;
   }
 
   String _modeLabelOf(ViewerMode mode) {
@@ -4817,6 +4835,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return InternalViewerStrings(context).text('binary');
       case ViewerMode.hex:
         return 'Hex';
+      case ViewerMode.model3d:
+        return '3D';
       case ViewerMode.image:
         return InternalViewerStrings(context).text('image');
       case ViewerMode.markdown:

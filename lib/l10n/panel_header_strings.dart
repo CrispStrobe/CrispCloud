@@ -14,6 +14,10 @@ class PanelHeaderStrings {
 
 const _translations = <String, Map<String, String>>{
   "de": {
+    "Copy full path": "Vollständigen Pfad kopieren",
+    "Add to favorites": "Zu Favoriten hinzufügen",
+    "Remove from favorites": "Aus Favoriten entfernen",
+    "Open in other pane": "Im anderen Bereich öffnen",
     "Enter a valid path.": "Geben Sie einen gültigen Pfad ein.",
     "Choose a path within {0}.": "Wählen Sie einen Pfad innerhalb von {0}.",
     "Volumes": "Laufwerke",
@@ -37,6 +41,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Pfad öffnen…",
   },
   "fr": {
+    "Copy full path": "Copier le chemin complet",
+    "Add to favorites": "Ajouter aux favoris",
+    "Remove from favorites": "Retirer des favoris",
+    "Open in other pane": "Ouvrir dans l’autre panneau",
     "Enter a valid path.": "Saisissez un chemin valide.",
     "Choose a path within {0}.": "Choisissez un chemin dans {0}.",
     "Volumes": "Volumes",
@@ -60,6 +68,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Aller au chemin…",
   },
   "es": {
+    "Copy full path": "Copiar ruta completa",
+    "Add to favorites": "Añadir a favoritos",
+    "Remove from favorites": "Quitar de favoritos",
+    "Open in other pane": "Abrir en el otro panel",
     "Enter a valid path.": "Introduce una ruta válida.",
     "Choose a path within {0}.": "Elige una ruta dentro de {0}.",
     "Volumes": "Volúmenes",
@@ -83,6 +95,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Ir a la ruta…",
   },
   "pt": {
+    "Copy full path": "Copiar caminho completo",
+    "Add to favorites": "Adicionar aos favoritos",
+    "Remove from favorites": "Remover dos favoritos",
+    "Open in other pane": "Abrir no outro painel",
     "Enter a valid path.": "Introduza um caminho válido.",
     "Choose a path within {0}.": "Escolha um caminho dentro de {0}.",
     "Volumes": "Volumes",
@@ -106,6 +122,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Ir para o caminho…",
   },
   "zh": {
+    "Copy full path": "复制完整路径",
+    "Add to favorites": "添加到收藏夹",
+    "Remove from favorites": "从收藏夹移除",
+    "Open in other pane": "在另一窗格中打开",
     "Enter a valid path.": "请输入有效路径。",
     "Choose a path within {0}.": "请选择 {0} 内的路径。",
     "Volumes": "宗卷",
@@ -128,6 +148,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "转到路径…",
   },
   "ja": {
+    "Copy full path": "フルパスをコピー",
+    "Add to favorites": "お気に入りに追加",
+    "Remove from favorites": "お気に入りから削除",
+    "Open in other pane": "反対側のペインで開く",
     "Enter a valid path.": "有効なパスを入力してください。",
     "Choose a path within {0}.": "{0} 内のパスを選択してください。",
     "Volumes": "ボリューム",
@@ -150,6 +174,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "パスへ移動…",
   },
   "ko": {
+    "Copy full path": "전체 경로 복사",
+    "Add to favorites": "즐겨찾기에 추가",
+    "Remove from favorites": "즐겨찾기에서 제거",
+    "Open in other pane": "다른 창에서 열기",
     "Enter a valid path.": "유효한 경로를 입력하세요.",
     "Choose a path within {0}.": "{0} 안의 경로를 선택하세요.",
     "Volumes": "볼륨",
@@ -172,6 +200,10 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "경로로 이동…",
   },
   "ar": {
+    "Copy full path": "نسخ المسار الكامل",
+    "Add to favorites": "إضافة إلى المفضلة",
+    "Remove from favorites": "إزالة من المفضلة",
+    "Open in other pane": "فتح في اللوحة الأخرى",
     "Enter a valid path.": "أدخل مسارًا صالحًا.",
     "Choose a path within {0}.": "اختر مسارًا داخل {0}.",
     "Volumes": "وحدات التخزين",

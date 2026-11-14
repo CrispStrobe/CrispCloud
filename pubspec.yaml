@@ -274,6 +274,7 @@ flutter:
   
   # App Icons
   assets:
+    - assets/licenses/brickwright/LICENSE.txt
     - assets/images/app_icon.png # Add your new icon path
     - assets/images/app_icon_master.png
     - assets/fonts/MaterialIcons_LICENSE.txt

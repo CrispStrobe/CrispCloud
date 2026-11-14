@@ -17,6 +17,19 @@ connecting another account of the same provider. Additional accounts are current
 session-only. Nextcloud web connections provide endpoint and browser diagnostics;
 server CORS still needs configuration. See the [live verification and limits](docs/cloud-issues-96-98-verification.md).
 
+
+F3 now previews binary/ASCII STL and core 3MF geometry with rotate, zoom, fit and
+wireframe controls. The portable Flutter preview handles 3MF units, build items
+and component transforms; materials, textures and required format extensions
+remain unsupported. Models are limited to 16 MiB and 50,000 expanded triangles.
+See [the supported 3D subset](docs/third-party/brickwright-cad/README.md).
+
+Text viewers, the editor and the preview pane share bounded content detection
+for shebangs, JSON, XML, INI and Apple/OpenStep localization strings, including
+UTF-16 `.strings` files with unknown extensions. Ambiguous prose stays plain
+text. Right-click or long-press the current pane path to copy it, manage its
+favorite, open it in the other pane, or swap pane locations.
+
 ## Providers
 
 | Provider | Features |

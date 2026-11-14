@@ -657,12 +657,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     _saveState.markLoaded();
     _autoSaveTimer?.cancel();
 
-    if (_language == null) {
-      final detected = editorLanguageForContent(document.text);
-      if (detected != null) {
-        _language = detected;
-      }
-    }
+    _language =
+        editorLanguageForContent(document.text) ??
+        editorLanguageForFile(widget.file.name);
   }
 
   /// Save a local snapshot before overwriting (version backup).
