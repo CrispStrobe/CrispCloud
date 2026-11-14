@@ -80,3 +80,14 @@ lossless gzip). See `intermediate-evidence-index.json`.
 - The expanded portable smoke run passed 19 groups / 3,360 checks on both VM
   and actual compiled JavaScript with exact output equality. The authoritative
   final gates will run again against the next saved complete source checkpoint.
+
+## Saved qualification source
+
+The complete implementation and test source is saved at
+`8bbdc25c7eca7598215bdc1053e8558ef3f5d643`.
+Strict analysis passed all 30 changed Dart files with no issues; all 8,075
+tracked non-document source/asset paths matched that commit before and after.
+The refreshed remote check retains 12 branch heads, 92 PR heads and 21 tags;
+all branch and PR heads are ancestors of this source. Main remains `a34f7fca`.
+The final native gate and production build are running from separate copies
+of this exact revision. Hosted checks are queued, not qualified results.
