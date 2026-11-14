@@ -147,3 +147,25 @@ at 20:54:46 UTC found another main advance to
 `2c373371973b2506fc4fc03e599ef093d14a4be1` and one additional tag. All 96 PR
 heads remain incorporated. The completed qualification is saved before that
 new input is inspected and reconciled; its source pin above is unchanged.
+
+## Latest main and canonical Word refresh
+
+The completed 790-test evidence was saved remotely at
+`0aea0b346012df17b51f5e8d8ec416bb38b380b2`. The newly observed main and annotated
+`v1.3.2` tag at `2c373371973b2506fc4fc03e599ef093d14a4be1` are now incorporated.
+Their new runtime scope is four canonical Word import/model files; all
+application `lib/` and `test/` files remain byte-identical to the 790-test source.
+The [exact scope and ancestry proof](office-refresh/source-refresh.json) records
+all observed branch and PR heads as incorporated.
+
+Canonical main was merged into the companion branch without losing the extra
+sort/history regression. The guarded import now pins
+`a379ecc455890032906098b6cf58e17504581ed0`; all **2,187** managed Office files
+verify, including two newly added canonical Word suites. The canonical source
+passed 117 Word and 115 editor cases, with no failures/skips, and clean strict
+analysis. Its separate source-bound receipt remains on the companion branch.
+
+The [six-suite host follow-up](office-refresh/native-suites.txt) checks affected
+Word parsing, templates, round trips, layout and actual host save/recovery paths
+on this refreshed app source. Its runtime result will be recorded after the
+fixed-source run; the earlier 790-case qualification retains its exact pin.

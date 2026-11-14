@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "checked_at": "2026-11-14T20:11:08.557839+00:00",
-  "runtime_commit": "0972abd00703277b64d46d8e9ec2715a416a8894",
+  "checked_at": "2026-11-14T20:42:49.032298+00:00",
+  "runtime_commit": "5e0cb337c8f9323b8383242f2e58882b700ce4f6",
   "app_version": "1.3.2",
   "app_build": "25",
-  "application_path": "/Users/christianstrobele/Applications/CrispCloud 1.3.2 (0972abd0).app",
+  "application_path": "/Users/christianstrobele/Applications/CrispCloud 1.3.2 (5e0cb337).app",
   "signature_verified_deep_strict": true,
   "startup_seconds": 45,
   "credential_policy_ready": true,
   "impeller_enabled": false,
-  "runner_sha256": "420f066f9b069cdbb3582ee0cb9bbff5893a7fde774dd8271962cc9976d21028",
-  "aot_sha256": "e52e874da310e70d3fcd7aa50ac1d9b515e3e8eca5e31a47ef29f41054ff3561",
+  "runner_sha256": "4812cb6a2b81984a7921ee14e899e7386733cfd88dd5f884830801276eaaf00a",
+  "aot_sha256": "e4dc05ef457183ff56eabdc70fec95fc08871a688d3b98373ea580a5df50288e",
   "runner_architectures": [
     "x86_64",
     "arm64"
@@ -20,8 +20,8 @@
     "arm64"
   ],
   "office": {
-    "source_commit": "4bdb70c9d86fd1ee09ed99d3114b178e965cfa01",
-    "managed_files_verified": 2182,
+    "source_commit": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+    "managed_files_verified": 2187,
     "requested_quds_checkpoint_included": "2d2a7be4",
     "requested_host_checkpoint_included": "a3897dfb",
     "standalone_parser": {
@@ -40,7 +40,16 @@
     "host_office_path_earlier_cohort": 108,
     "path_navigation": 22,
     "quds_engine_focused": 13,
-    "quds_editor_focused": 16
+    "quds_editor_focused": 16,
+    "quds_engine_complete": 1751,
+    "quds_engine_conditional_skips": 3,
+    "quds_editor_history": 70,
+    "host_office_latest": 61,
+    "host_evidence_validator": 23,
+    "mandatory_office_engine": 1265,
+    "mandatory_office_host": 269,
+    "mandatory_office_host_platform_skips": 2,
+    "coverage_control_tests": 41
   },
   "test_counts_overlap": true,
   "complete_office_suite_rerun": false,
@@ -62,16 +71,78 @@
   "offline_apple_artifact": {
     "build": "25",
     "bundle_id": "com.CrispStrobe.cloud",
-    "bytes": 104268939,
+    "bytes": 104311659,
     "compliance_code": null,
-    "info_plist_member": "CrispCloud 1.3.2 (0972abd0).app/Contents/Info.plist",
+    "info_plist_member": "CrispCloud 1.3.2 (5e0cb337).app/Contents/Info.plist",
     "info_plist_sha256": "8e21d2a74eae993512245773b7a1442cd46a29eeea2bd63d9b55d5bad88f2b97",
-    "name": "CrispCloud-1.3.2-0972abd0-macos-local.zip",
+    "name": "CrispCloud-1.3.2-5e0cb337-macos-local.zip",
     "platform": "macos",
-    "sha256": "60bec453a8ae7a9b0bba84bf999dde14e5adc3e862ef0538ab2b6da71751d653",
+    "sha256": "0065e113576dd548e9f77833474bc26692743765994ac1dec9fc2b1ea72cc47e",
     "uses_non_exempt_encryption": false,
     "version": "1.3.2"
   },
   "live_store_submission_checked": false,
-  "existing_github_release_jobs_untouched": true
+  "existing_github_release_jobs_untouched": true,
+  "office_fidelity_gate": {
+    "passed": true,
+    "native_inventory_verified": 176,
+    "native_inventory_failures": 0,
+    "instrumented_lines_covered": 2933,
+    "instrumented_lines_total": 4380,
+    "native_files_absent_from_instrumentation": 0,
+    "browser_sources_reported_separately": 1,
+    "coverage_receipt": "build/fidelity-host/coverage/run-20261114T203033Z-8373/collection-receipt.json",
+    "host_skip_scope": "Two device-export tests restricted to Linux/Windows; skipped on macOS."
+  },
+  "qualification_inheritance": {
+    "previous_runtime": "0972abd0",
+    "model_viewer_and_zip_sources_unchanged": true,
+    "transfer_sources_unchanged": true,
+    "model_native_and_chrome_counts": 48,
+    "transfer_regression_count": 314
+  },
+  "branch_retirements": [
+    {
+      "repository": "/tmp/crisp-basic-csv-20261114",
+      "branch": "integration/storage-binary-20261114",
+      "sha": "f69427d59273f651e10c33fe811e59c98880e7fe",
+      "age_seconds": 9661,
+      "committed_at": "2026-11-14T18:56:25+01:00",
+      "main": "2e5eced96a05e13be09144091454f55fca327e35",
+      "archive_ref": "refs/integration-audit/20261114/final/integration/storage-binary-20261114/f69427d59273",
+      "retired": true
+    },
+    {
+      "repository": "/tmp/crisp-basic-csv-20261114",
+      "branch": "integration/storage-bandwidth-20261114",
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "age_seconds": 4127,
+      "committed_at": "2026-11-14T20:28:43+01:00",
+      "main": "2e5eced96a05e13be09144091454f55fca327e35",
+      "archive_ref": "refs/integration-audit/20261114/final/integration/storage-bandwidth-20261114/2e683c9de9e8",
+      "retired": true
+    },
+    {
+      "repository": "/tmp/crisp-basic-csv-20261114",
+      "branch": "codex/office-recovery-20261114-notes-sorting",
+      "sha": "4019d46918986fefd15b09f95eb738e4c2cf1d97",
+      "age_seconds": 6021,
+      "committed_at": "2026-11-14T19:57:12+01:00",
+      "main": "2e5eced96a05e13be09144091454f55fca327e35",
+      "archive_ref": "refs/integration-audit/20261114/final/codex/office-recovery-20261114-notes-sorting/4019d4691898",
+      "retired": true
+    },
+    {
+      "repository": "/tmp/quds-release-20261114",
+      "branch": "codex/office-recovery-20261114-notes-sorting",
+      "sha": "cc8ff1ed4dfbf170012c43704d5730490275a2c4",
+      "age_seconds": 5658,
+      "committed_at": "2026-11-14T20:03:18+01:00",
+      "main": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+      "archive_ref": "refs/integration-audit/20261114/final/codex/office-recovery-20261114-notes-sorting/cc8ff1ed4dfb",
+      "retired": true
+    }
+  ],
+  "complete_editor_suite_rerun": false,
+  "whole_application_suite_rerun": false
 }

@@ -12,6 +12,8 @@ import '../../xml/xml_reader.dart';
 import '../math/omml_document.dart';
 import '../math/omml_io.dart';
 import '../model/wml_document.dart';
+import '../model/word_bookmarks.dart';
+import '../model/word_content_controls.dart';
 import '../model/word_link.dart';
 import '../model/word_notes.dart';
 import '../model/word_revision.dart';
@@ -43,6 +45,17 @@ class WordDeserializer {
   OpcPackage? _package;
   String? _docUri;
   WmlSection? _pendingParagraphSectPr;
+
+  /// Bookmark endpoints found between blocks (directly in the body, a
+  /// table, row or cell). OOXML allows them there and Word writes them
+  /// routinely, but the model keeps bookmarks inside paragraphs. A start is
+  /// moved to the beginning of the next paragraph and an end to the close of
+  /// the previous one, so the bookmark still covers the same text; markers
+  /// stay queued in document order while anything is pending, which keeps
+  /// empty bookmarks (start immediately followed by end) well ordered.
+  final List<WmlBookmarkBoundary> _blockMarkers = <WmlBookmarkBoundary>[];
+  WmlParagraph? _lastBlockParagraph;
+  int _drawingDepth = 0;
   WmlDocument? _document;
   WmlNote? _readingNote;
   bool _noteMarkCaptured = false;
@@ -65,6 +78,9 @@ class WordDeserializer {
     _notBold.clear();
     _notItalic.clear();
     _pendingParagraphSectPr = null;
+    _blockMarkers.clear();
+    _lastBlockParagraph = null;
+    _drawingDepth = 0;
     _document = null;
     _package = null;
     _docUri = null;
@@ -98,9 +114,7 @@ class WordDeserializer {
         continue;
       }
       if (WordBookmarkIo.isMarker(reader)) {
-        throw UnsupportedError(
-          'Bookmark endpoints outside paragraphs cannot be imported safely',
-        );
+        _blockMarker(reader);
       } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         _addParagraph(section.blocks, _readParagraph(reader, package, docUri));
@@ -132,6 +146,7 @@ class WordDeserializer {
         section.blocks.add(WordOpaqueIo.read(reader, package, docUri));
       }
     }
+    _endBlockStory();
     if (section.blocks.isNotEmpty || document.sections.isEmpty) {
       document.sections.add(section);
     }
@@ -155,6 +170,8 @@ class WordDeserializer {
     for (final WmlRevision revision in document.revisions) {
       revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
     }
+    WordBookmarks.repairUnpaired(document);
+    WordContentControls.recordImported(document);
     return document;
   }
 
@@ -309,9 +326,7 @@ class WordDeserializer {
         continue;
       }
       if (WordBookmarkIo.isMarker(reader)) {
-        throw UnsupportedError(
-          'Bookmark endpoints outside paragraphs cannot be imported safely',
-        );
+        _blockMarker(reader);
       } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         _addParagraph(blocks, _readParagraph(reader, package, docUri));
@@ -424,6 +439,13 @@ class WordDeserializer {
   }
 
   void _addParagraph(List<WmlBlock> blocks, WmlParagraph paragraph) {
+    if (_drawingDepth == 0) {
+      if (_blockMarkers.isNotEmpty) {
+        paragraph.inlines.insertAll(0, _blockMarkers);
+        _blockMarkers.clear();
+      }
+      _lastBlockParagraph = paragraph;
+    }
     final bool mathOnly =
         paragraph.inlines.isEmpty && _pendingEquations.isNotEmpty;
     final bool drawingHost =
@@ -439,6 +461,26 @@ class WordDeserializer {
       blocks.add(paragraph);
     }
     _flushPending(blocks);
+  }
+
+  void _blockMarker(XmlPullReader reader) {
+    final WmlBookmarkBoundary marker = WordBookmarkIo.read(reader);
+    final WmlParagraph? previous = _lastBlockParagraph;
+    if (!marker.isStart && _blockMarkers.isEmpty && previous != null) {
+      previous.inlines.add(marker);
+    } else {
+      _blockMarkers.add(marker);
+    }
+  }
+
+  /// Close a block story: markers still queued (nothing followed them)
+  /// close the last paragraph; a story without paragraphs drops them.
+  void _endBlockStory() {
+    if (_blockMarkers.isNotEmpty) {
+      _lastBlockParagraph?.inlines.addAll(_blockMarkers);
+      _blockMarkers.clear();
+    }
+    _lastBlockParagraph = null;
   }
 
   void _flushPending(List<WmlBlock> blocks) {
@@ -460,15 +502,21 @@ class WordDeserializer {
     if (reader.localName != 'drawing') {
       return false;
     }
-    final WmlBlock? block = WordDrawingIo.readBlock(
-      reader,
-      package,
-      docUri,
-      readParagraph: (XmlPullReader inner) =>
-          _readParagraph(inner, package, docUri),
-      readBlockContent: (XmlPullReader inner) =>
-          _readBlockContent(inner, package, docUri),
-    );
+    final WmlBlock? block;
+    _drawingDepth++;
+    try {
+      block = WordDrawingIo.readBlock(
+        reader,
+        package,
+        docUri,
+        readParagraph: (XmlPullReader inner) =>
+            _readParagraph(inner, package, docUri),
+        readBlockContent: (XmlPullReader inner) =>
+            _readBlockContent(inner, package, docUri),
+      );
+    } finally {
+      _drawingDepth--;
+    }
     if (block is WmlVisual) {
       _pendingVisuals.add(block);
     } else if (block is WmlFrame) {
@@ -908,22 +956,22 @@ class WordDeserializer {
             namespaceUri: OfficeNamespaces.w,
           );
           if (before != null) {
-            props.spacingBefore = twipsToPoints(int.parse(before));
+            props.spacingBefore = _measurePoints(before);
             props.explicitSpacingBefore = true;
           }
           if (after != null) {
-            props.spacingAfter = twipsToPoints(int.parse(after));
+            props.spacingAfter = _measurePoints(after);
             props.explicitSpacingAfter = true;
           }
           if (line != null) {
             props.explicitLineSpacing = true;
             if (rule == 'exact' || rule == 'atLeast') {
-              props.lineSpacing = twipsToPoints(int.parse(line));
+              props.lineSpacing = _measurePoints(line);
               props.lineSpacingRule = rule == 'exact'
                   ? WmlLineSpacingRule.exact
                   : WmlLineSpacingRule.atLeast;
             } else {
-              props.lineSpacing = int.parse(line) / 240.0;
+              props.lineSpacing = _measureTwips(line) / 240.0;
               props.lineSpacingRule = WmlLineSpacingRule.auto;
             }
           }
@@ -1255,7 +1303,7 @@ class WordDeserializer {
         );
         props.tabs.add(
           WmlTabStop(
-            position: pos == null ? 0 : twipsToPoints(int.parse(pos)),
+            position: pos == null ? 0 : _measurePoints(pos),
             alignment: switch (val) {
               'center' => WmlTabAlignment.center,
               'right' => WmlTabAlignment.right,
@@ -1334,7 +1382,7 @@ class WordDeserializer {
             namespaceUri: OfficeNamespaces.w,
           );
           if (sz != null) {
-            props.fontSizeHalfPoints = int.parse(sz);
+            props.fontSizeHalfPoints = _measureHalfPoints(sz);
           }
         case 'u':
           props.underline = switch (reader.getAttribute(
@@ -1391,7 +1439,9 @@ class WordDeserializer {
           'w',
           namespaceUri: OfficeNamespaces.w,
         );
-        table.grid.add(w == null ? 100 : twipsToPoints(int.parse(w)));
+        table.grid.add(w == null ? 100 : _measurePoints(w));
+      } else if (WordBookmarkIo.isMarker(reader)) {
+        _blockMarker(reader);
       } else if (reader.localName == 'tr') {
         table.rows.add(_readRow(reader, package, docUri, table));
       } else if (reader.localName == 'sdt' &&
@@ -1637,8 +1687,10 @@ class WordDeserializer {
           namespaceUri: OfficeNamespaces.w,
         );
         if (raw != null) {
-          row.height = twipsToPoints(int.parse(raw));
+          row.height = _measurePoints(raw);
         }
+      } else if (WordBookmarkIo.isMarker(reader)) {
+        _blockMarker(reader);
       } else if (reader.localName == 'tc') {
         row.cells.add(_readCell(reader, package, docUri));
       } else if (reader.localName == 'sdt' &&
@@ -1686,8 +1738,8 @@ class WordDeserializer {
         }
         cell.sourceWidthPoints = cell.width;
       } else if (reader.localName == 'gridSpan') {
-        cell.gridSpan = int.parse(
-          reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? '1',
+        cell.gridSpan = _count(
+          reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
         );
       } else if (reader.localName == 'vMerge') {
         final String? val = reader.getAttribute(
@@ -1708,6 +1760,8 @@ class WordDeserializer {
             fill.toUpperCase() != 'FFFFFF') {
           cell.fillColor = fill;
         }
+      } else if (WordBookmarkIo.isMarker(reader)) {
+        _blockMarker(reader);
       } else if (reader.localName == 'p') {
         _addParagraph(cell.blocks, _readParagraph(reader, package, docUri));
       } else if (reader.localName == 'oMathPara' ||
@@ -1800,15 +1854,15 @@ class WordDeserializer {
             footer: _twipAttr(reader, 'footer', fallback: 36),
           );
         } else if (reader.localName == 'cols') {
-          section.columnCount = int.parse(
-            reader.getAttribute('num', namespaceUri: OfficeNamespaces.w) ?? '1',
+          section.columnCount = _count(
+            reader.getAttribute('num', namespaceUri: OfficeNamespaces.w),
           );
           final String? space = reader.getAttribute(
             'space',
             namespaceUri: OfficeNamespaces.w,
           );
           if (space != null) {
-            section.columnSpace = twipsToPoints(int.parse(space));
+            section.columnSpace = _measurePoints(space);
           }
           section.columnSep =
               reader.getAttribute('sep', namespaceUri: OfficeNamespaces.w) ==
@@ -2336,6 +2390,7 @@ class WordDeserializer {
       );
       _readingNote = note;
       _noteMarkCaptured = false;
+      _endBlockStory();
       note.blocks.clear();
       if (!reader.isEmptyElement) {
         final int depth = reader.depth;
@@ -2356,6 +2411,7 @@ class WordDeserializer {
           }
         }
       }
+      _endBlockStory();
       _readingNote = null;
       if (note.blocks.isEmpty) {
         note.text = '';
@@ -2481,10 +2537,10 @@ class WordDeserializer {
           namespaceUri: OfficeNamespaces.w,
         );
         if (before != null) {
-          spacingBefore = twipsToPoints(int.parse(before));
+          spacingBefore = _measurePoints(before);
         }
         if (after != null) {
-          spacingAfter = twipsToPoints(int.parse(after));
+          spacingAfter = _measurePoints(after);
         }
       } else if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'outlineLvl') {
@@ -2635,7 +2691,8 @@ class WordDeserializer {
       ..restrictEditing = settings.protection
       ..restrictMode = settings.restrictMode
       ..protectionHasPassword = settings.protectionHasPassword
-      ..protectionFormattingRestricted = settings.protectionFormattingRestricted;
+      ..protectionFormattingRestricted =
+          settings.protectionFormattingRestricted;
     for (final section in document.sections) {
       section.differentOddEven = settings.oddEven;
     }
@@ -2719,6 +2776,50 @@ class WordDeserializer {
     }
   }
 
+  static final RegExp _universalMeasure = RegExp(
+    r'^\s*(-?[0-9]*\.?[0-9]+)\s*(mm|cm|in|pt|pc|pi)?\s*$',
+  );
+
+  /// ST_TwipsMeasure / ST_SignedTwipsMeasure: an integer, but producers
+  /// also write decimals ("276.5") and ISO 29500 allows universal measures
+  /// ("12pt", "0.5in"). Word accepts all of them; refusing the document
+  /// over one spacing value is worse than reading it. Malformed values
+  /// count as 0 (Word's behaviour) instead of aborting the import.
+  static double _measureTwips(String raw) {
+    final Match? m = _universalMeasure.firstMatch(raw);
+    if (m == null) return 0;
+    final double value = double.parse(m.group(1)!);
+    if (!value.isFinite) return 0;
+    final double result = switch (m.group(2)) {
+      'mm' => value * 1440 / 25.4,
+      'cm' => value * 1440 / 2.54,
+      'in' => value * 1440,
+      'pt' => value * 20,
+      'pc' || 'pi' => value * 240,
+      _ => value,
+    };
+    return result.isFinite ? result : 0;
+  }
+
+  static double _measurePoints(String raw) => _measureTwips(raw) / 20.0;
+
+  /// ST_HpsMeasure: half-points, or a universal measure.
+  static int _measureHalfPoints(String raw) {
+    final Match? m = _universalMeasure.firstMatch(raw);
+    if (m == null) return 24;
+    final double value = m.group(2) == null
+        ? double.parse(m.group(1)!)
+        : _measureTwips(raw) / 10; // twips -> half-points
+    if (!value.isFinite) return 24;
+    return value.clamp(1, 3276).round();
+  }
+
+  /// Integer counts (grid spans, column counts); invalid -> 1.
+  static int _count(String? raw) {
+    final int? value = int.tryParse(raw?.trim() ?? '');
+    return value == null || value < 1 ? 1 : value;
+  }
+
   static double _twipAttr(
     XmlPullReader reader,
     String name, {
@@ -2731,7 +2832,7 @@ class WordDeserializer {
     if (raw == null) {
       return fallback;
     }
-    return twipsToPoints(int.parse(raw));
+    return _measurePoints(raw);
   }
 
   void _readComments(WmlDocument document, OpcPackage package, String docUri) {

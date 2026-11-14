@@ -265,7 +265,7 @@ void main() {
     },
   );
 
-  test('unmodeled block-level bookmark endpoints fail import explicitly', () {
+  test('block-level bookmark endpoints are relocated into paragraphs', () {
     final package = _source().package!;
     final part = package.getPart('/word/document.xml')!;
     part.writeText(
@@ -274,7 +274,13 @@ void main() {
         '<w:body><b:bookmarkStart b:id="999" b:name="Outside"/><b:bookmarkEnd b:id="999"/>',
       ),
     );
-    expect(() => WordDeserializer().read(package), throwsUnsupportedError);
+    // An empty bookmark before the first paragraph now attaches to its start
+    // (it used to refuse the whole document).
+    final doc = WordDeserializer().read(package);
+    final outside = WordBookmarks.byName(doc, 'Outside');
+    expect(outside, isNotNull);
+    expect(outside!.text, isEmpty);
+    expect(outside.startParagraph, same(doc.paragraphs.first));
   });
 
   test(

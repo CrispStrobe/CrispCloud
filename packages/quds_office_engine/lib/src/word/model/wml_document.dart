@@ -1170,6 +1170,12 @@ class WmlDocument {
   /// Original package size in bytes for FILESIZE fields (host-supplied).
   int? sourceByteLength;
 
+  /// Content-control IDs that the *source* package already used more than
+  /// once, with their counts (set by the importer). Saving tolerates these
+  /// pre-existing duplicates — Word does — while edits may not add more.
+  /// A field rather than side storage so it survives isolate transfer.
+  Map<String, int> sourceDuplicateControlIds = <String, int>{};
+
   /// empty API.
   factory WmlDocument.empty({String text = '', bool? rtl}) {
     final bool useRtl = rtl ?? OfficeTypeface.isRtlText(text);

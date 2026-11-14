@@ -143,8 +143,35 @@ abstract final class WordContentControls {
 
   /// Validates balanced inline boundaries and unique native control IDs before
   /// a serializer mutates its package. Imported IDs are never rewritten.
-  static void validate(WmlDocument document) =>
-      _validateIds(_documentControls(document), insertion: false);
+  static void validate(WmlDocument document) => _validateIds(
+    _documentControls(document),
+    insertion: false,
+    preexisting: document.sourceDuplicateControlIds,
+  );
+
+  /// Native IDs as found in the source package, counted. Real documents
+  /// sometimes already contain duplicate control IDs (Word tolerates them);
+  /// those must not make an otherwise unchanged document unsavable. Only
+  /// duplicates beyond what the source contained are rejected. Called once
+  /// by the importer after the document is built.
+  static void recordImported(WmlDocument document) {
+    final counts = <String, int>{};
+    for (final control in _documentControls(document)) {
+      final key = _idKey(control);
+      if (key != null) counts[key] = (counts[key] ?? 0) + 1;
+    }
+    counts.removeWhere((_, n) => n < 2);
+    document.sourceDuplicateControlIds = counts;
+  }
+
+  static String? _idKey(WmlContentControlData control) {
+    final id = template(control)
+        .firstChild('sdtPr', namespaceUri: OfficeNamespaces.w)
+        ?.firstChild('id', namespaceUri: OfficeNamespaces.w)
+        ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
+    if (id == null || id.isEmpty) return null;
+    return BigInt.tryParse(id.trim())?.toString() ?? id;
+  }
 
   /// Rejects a rich insertion that would duplicate an existing native ID.
   ///
@@ -152,28 +179,28 @@ abstract final class WordContentControls {
   /// its original requires document-aware ID allocation, which is deliberately
   /// guarded until it is implemented; ordinary text edits remain supported.
   static void assertCanInsert(WmlDocument document, Iterable<WmlBlock> blocks) {
-    _validateIds([
-      ..._documentControls(document),
-      ..._blockControls(blocks),
-    ], insertion: true);
+    _validateIds(
+      [..._documentControls(document), ..._blockControls(blocks)],
+      insertion: true,
+      preexisting: document.sourceDuplicateControlIds,
+    );
   }
 
   static void _validateIds(
     Iterable<WmlContentControlData> controls, {
     required bool insertion,
+    Map<String, int>? preexisting,
   }) {
-    final seen = <String>{};
+    final seen = <String, int>{};
     for (final control in controls) {
       // Check the native shell, not optional convenience metadata supplied by
       // a model caller. A stale/null cached ID must not bypass the guard.
-      final native = template(control);
-      final id = native
-          .firstChild('sdtPr', namespaceUri: OfficeNamespaces.w)
-          ?.firstChild('id', namespaceUri: OfficeNamespaces.w)
-          ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
-      if (id == null || id.isEmpty) continue;
-      final key = BigInt.tryParse(id.trim())?.toString() ?? id;
-      if (!seen.add(key)) {
+      final key = _idKey(control);
+      if (key == null) continue;
+      final count = (seen[key] ?? 0) + 1;
+      seen[key] = count;
+      if (count > (preexisting?[key] ?? 1)) {
+        final id = key;
         final message =
             'Duplicate native content-control ID $id. Copying a content '
             'control into the same document requires a new native ID and is '
