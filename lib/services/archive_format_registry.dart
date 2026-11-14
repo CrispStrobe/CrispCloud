@@ -298,11 +298,18 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     notes: 'Read-only FAT12/16/32 filesystem images with validated allocation chains, long names and bounded positional reads. The on-disk geometry selects the FAT variant. exFAT, repairs and writes are outside this profile.',
   ),
   ArchiveFormatCapability(
+    id: 'ext',
+    label: 'Linux ext filesystem image',
+    suffixes: ['.ext', '.ext2', '.ext3', '.ext4'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read-only ext filesystem images within an explicitly checked feature profile. Regular files and directories use validated, bounded positional reads; sparse data is preserved as zero bytes. Unsupported layouts, journal recovery and filesystem writes are outside this profile.',
+  ),
+  ArchiveFormatCapability(
     id: 'disk-image',
     label: 'Raw disk image',
     suffixes: ['.img', '.ima', '.dd', '.raw'],
     mimeType: 'application/octet-stream',
-    notes: 'Read supported FAT volumes or unambiguous primary MBR/GPT images. Raw partition slices remain available; supported FAT partitions expose files. Other filesystem and virtual-disk formats are not implied by the filename. Read-only; no mounting, repair or partition writes.',
+    notes: 'Read supported FAT/ext volumes or unambiguous primary MBR/GPT images. Raw partition slices remain available; supported FAT and Linux ext partitions expose files. Other filesystem and virtual-disk formats are not implied by the filename. Read-only; no mounting, repair or partition writes.',
   ),
   ArchiveFormatCapability(
     id: 'dmg',

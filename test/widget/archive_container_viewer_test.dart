@@ -24,6 +24,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../support/archive_iso_fixtures.dart';
 import '../support/archive_disk_image_fixture.dart';
 import '../support/archive_fat_reference_data.dart';
+import '../support/archive_ext_reference_data.dart';
+import '../support/archive_ext_disk_fixture.dart';
 import '../support/archive_udf_reference_data.dart';
 import '../support/archive_package_fixtures.dart';
 import '../support/archive_rpm_fixtures.dart';
@@ -551,6 +553,104 @@ void main() {
                   'Unicode FAT payload: café and 雪.',
                   findRichText: true,
                 )
+                .evaluate()
+                .isNotEmpty,
+          );
+          expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+          expect(native.local.fullReads, 0);
+          expect(native.local.releases, 0);
+          await tester.runAsync(() async {
+            final handle = await File(native.file.path!).open();
+            try {
+              expect(await handle.length(), paddedLength);
+              for (final (offset, data) in blocks) {
+                await handle.setPosition(offset);
+                expect(await handle.read(data.length), data);
+              }
+            } finally {
+              await handle.close();
+            }
+          });
+          expect(tester.takeException(), isNull);
+        } finally {
+          await native.dispose(tester);
+        }
+        expect(native.local.releases, 1);
+      },
+    );
+  }
+
+  for (final partitioned in [false, true]) {
+    testWidgets(
+      'native F3 ${partitioned ? 'Linux GPT' : 'ext'} browses and previews without a full image read',
+      (tester) async {
+        final bytes = extReferenceBytes('ext2');
+        const paddedLength = 80 * 1024 * 1024;
+        final blocks = <(int, Uint8List)>[];
+        if (partitioned) {
+          final fixture = extGptFixture(
+            volumes: [ExtReferenceSource('ext2')],
+            totalBytes: paddedLength,
+          );
+          final gpt = fixture.gpt!;
+          blocks.addAll([
+            (0, gpt.mbr),
+            (gpt.sectorBytes, gpt.primaryHeader),
+            (gpt.primaryTableOffset, gpt.primaryTable),
+            (fixture.volumes.single.$1, bytes),
+            (gpt.backupTableOffset, gpt.backupTable),
+            (paddedLength - gpt.sectorBytes, gpt.backupHeader),
+          ]);
+        } else {
+          blocks.add((0, bytes));
+        }
+        final native = await _NativeIso.create(
+          tester,
+          name: partitioned ? 'large.img' : 'large.ext2',
+          writeArchive: (file) async {
+            final handle = await file.open(mode: FileMode.write);
+            try {
+              for (final (offset, data) in blocks) {
+                await handle.setPosition(offset);
+                await handle.writeFrom(data);
+              }
+              await handle.truncate(paddedLength);
+            } finally {
+              await handle.close();
+            }
+          },
+        );
+        final path = '${partitioned ? 'partition-001/files/' : ''}hello.txt';
+        try {
+          await native.mount(tester);
+          await _revealNativeImageMember(
+            tester,
+            path,
+            partitioned ? 'DISK-IMAGE' : 'EXT',
+          );
+          expect(
+            find.textContaining('   ·   ${partitioned ? 'DISK-IMAGE' : 'EXT'}'),
+            findsOneWidget,
+          );
+          expect(native.file.size, paddedLength);
+          expect(native.local.fullReads, 0);
+          expect(native.local.acquisitions, 1);
+          expect(native.local.releases, 0);
+          _chip(tester, 'Hex').onSelected!(true);
+          await tester.pumpAndSettle();
+          expect(find.byType(HexViewer), findsOneWidget);
+          _chip(tester, 'Archive').onSelected!(true);
+          await _revealNativeImageMember(
+            tester,
+            path,
+            partitioned ? 'DISK-IMAGE' : 'EXT',
+          );
+          await tester.ensureVisible(find.text(path));
+          await tester.tap(find.text(path));
+          await _waitFor(
+            tester,
+            () => find
+                .textContaining('Hello from ext filesystem', findRichText: true)
                 .evaluate()
                 .isNotEmpty,
           );

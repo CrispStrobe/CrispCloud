@@ -20,6 +20,10 @@ bool isStreamedArchiveViewerName(String name) {
     '.fat12',
     '.fat16',
     '.fat32',
+    '.ext',
+    '.ext2',
+    '.ext3',
+    '.ext4',
     '.img',
     '.ima',
     '.dd',
@@ -62,6 +66,10 @@ bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
       lower.endsWith('.fat12') ||
       lower.endsWith('.fat16') ||
       lower.endsWith('.fat32') ||
+      lower.endsWith('.ext') ||
+      lower.endsWith('.ext2') ||
+      lower.endsWith('.ext3') ||
+      lower.endsWith('.ext4') ||
       lower.endsWith('.img') ||
       lower.endsWith('.ima') ||
       lower.endsWith('.dd') ||

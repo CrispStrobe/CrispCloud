@@ -72,12 +72,14 @@ class ArchiveEndpointPolicy {
     ViewerArchive archive,
     String? password,
   ) async {
-    if (archive.formatName == 'fat' || archive.formatName == 'disk-image') {
+    if (archive.formatName == 'fat' ||
+        archive.formatName == 'ext' ||
+        archive.formatName == 'disk-image') {
       return const ArchiveEndpointPolicy(
         ArchiveEndpointFormat.readOnly,
         encrypted: false,
         encryptNames: false,
-        reason: 'FAT filesystems and partitioned disk images support browsing and extraction only.',
+        reason: 'FAT/ext filesystems and partitioned disk images support browsing and extraction only.',
       );
     }
     if (archive.formatName == 'udf') {

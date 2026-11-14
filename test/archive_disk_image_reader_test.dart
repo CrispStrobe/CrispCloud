@@ -69,7 +69,7 @@ void main() {
           expect(source.closeCount, 0);
           expect(
             source.reads.fold<int>(0, (sum, read) => sum + read.$2),
-            lessThanOrEqualTo(1056),
+            lessThanOrEqualTo(1058),
           );
           expect(
             source.reads.any((read) => _readTouchesVolume(source, read)),
@@ -295,7 +295,7 @@ void main() {
   });
 
   group('raw-only filesystem boundaries', () {
-    for (final type in [0x05, 0x0f, 0x42, 0x83, 0xab]) {
+    for (final type in [0x05, 0x0f, 0x42, 0xab]) {
       test(
         'MBR type 0x${type.toRadixString(16)} never probes a FAT-looking payload',
         () async {
