@@ -1,0 +1,228 @@
+{
+  "schema": 1,
+  "scope": "Complete physical extraction of four externally mastered reference volumes.",
+  "oracle": {
+    "name": "7-Zip",
+    "binary_sha256": "f94066e93f9a807547a3bff1021b3ec79d5ea4f57dfead018e9698182ad283b5",
+    "version": "7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06",
+    "runtime_dependency": false
+  },
+  "script_sha256": "a5e5f74c61a39fa9f7dbbb18ce886ee49240d200ad2782a8b99f3d2701255e5a",
+  "fixture_source_sha256": "3ffec9c03d345d71db5c2de21bc8ff0b29ac779cb43ba7d91258bbacdd981e67",
+  "fixture_manifest_sha256": "913ef71dd1c057b774166fb46c798468e11bb70eb31456a8cd0fe18503b27a8b",
+  "cases": [
+    {
+      "name": "fat12",
+      "image_bytes": 1474560,
+      "image_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 1474560 bytes (1440 KiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat12.img\n--\nPath = /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat12.img\nType = FAT\nPhysical Size = 1474560\nFile System = FAT12\nCluster Size = 512\nFree Space = 1427456\nHeaders Size = 27136\nLabel = CRISP_FAT\nSector Size = 512\n\nEverything is Ok\n\nFolders: 2\nFiles: 9\nSize:       16559\nCompressed: 1474560\n",
+      "stderr": "",
+      "files": {
+        "HELLO.TXT": {
+          "bytes": 38,
+          "sha256": "7af8acca208990d25bc8de1ca0159502a0486a63e63cd5b227f8be4b66f8944e"
+        },
+        "abcdefghijklm": {
+          "bytes": 36,
+          "sha256": "a645c38f274a0fe8310a91abca6feb513bc962298e258e6fae956fe98c545f56"
+        },
+        "blocker.bin": {
+          "bytes": 4096,
+          "sha256": "3ec86f0ba2daa5b34103971a22a85f153bbca9f23933add49d83ebc19160d880"
+        },
+        "café-雪.txt": {
+          "bytes": 36,
+          "sha256": "9fcca22f1031ba931d9d6e955c30d3c9885f7de6b08c1fea2db1aa94daaf27d2"
+        },
+        "emoji-😀.txt": {
+          "bytes": 33,
+          "sha256": "2948fa854e91736b692378f9d90b52e965d8c453851ef253d595b87952fb8679"
+        },
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fragmented.bin": {
+          "bytes": 4099,
+          "sha256": "cdff14dd288adbb00c320ab43694c4655a03d836eb78ba048aa7ee016a6dd4eb"
+        },
+        "nested/Long Unicode name 雪 beyond thirteen.txt": {
+          "bytes": 28,
+          "sha256": "e7565e949c1a37422c761253b30ca2ab7b906945055e987c1dcb941ee6c3a66f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "d37426b71db09954cacd4d2be0059f5dbd7ad5d32fc42ab0eeda4ed1a4e1bebc"
+        }
+      },
+      "directories": [
+        "empty-dir",
+        "nested"
+      ],
+      "image_sha256_after_extraction": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+      "exact_payloads_match": true,
+      "exact_directories_match": true
+    },
+    {
+      "name": "fat16",
+      "image_bytes": 8388608,
+      "image_sha256": "fe00a83cac68257aca7eb2bc6195cbb29819add45304408e6d6e3f5649c2d894",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 8388608 bytes (8192 KiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat16.img\n--\nPath = /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat16.img\nType = FAT\nPhysical Size = 8388608\nFile System = FAT16\nCluster Size = 512\nFree Space = 8284160\nHeaders Size = 84480\nLabel = CRISP_FAT\nSector Size = 512\n\nEverything is Ok\n\nFolders: 2\nFiles: 9\nSize:       16559\nCompressed: 8388608\n",
+      "stderr": "",
+      "files": {
+        "HELLO.TXT": {
+          "bytes": 38,
+          "sha256": "7af8acca208990d25bc8de1ca0159502a0486a63e63cd5b227f8be4b66f8944e"
+        },
+        "abcdefghijklm": {
+          "bytes": 36,
+          "sha256": "a645c38f274a0fe8310a91abca6feb513bc962298e258e6fae956fe98c545f56"
+        },
+        "blocker.bin": {
+          "bytes": 4096,
+          "sha256": "3ec86f0ba2daa5b34103971a22a85f153bbca9f23933add49d83ebc19160d880"
+        },
+        "café-雪.txt": {
+          "bytes": 36,
+          "sha256": "9fcca22f1031ba931d9d6e955c30d3c9885f7de6b08c1fea2db1aa94daaf27d2"
+        },
+        "emoji-😀.txt": {
+          "bytes": 33,
+          "sha256": "2948fa854e91736b692378f9d90b52e965d8c453851ef253d595b87952fb8679"
+        },
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fragmented.bin": {
+          "bytes": 4099,
+          "sha256": "cdff14dd288adbb00c320ab43694c4655a03d836eb78ba048aa7ee016a6dd4eb"
+        },
+        "nested/Long Unicode name 雪 beyond thirteen.txt": {
+          "bytes": 28,
+          "sha256": "e7565e949c1a37422c761253b30ca2ab7b906945055e987c1dcb941ee6c3a66f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "d37426b71db09954cacd4d2be0059f5dbd7ad5d32fc42ab0eeda4ed1a4e1bebc"
+        }
+      },
+      "directories": [
+        "empty-dir",
+        "nested"
+      ],
+      "image_sha256_after_extraction": "fe00a83cac68257aca7eb2bc6195cbb29819add45304408e6d6e3f5649c2d894",
+      "exact_payloads_match": true,
+      "exact_directories_match": true
+    },
+    {
+      "name": "fat32",
+      "image_bytes": 67108864,
+      "image_sha256": "9727d6c9fdc621d3fc58637182970fd31d8d4ba0921f98641e807e95de250a19",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 67108864 bytes (64 MiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat32.img\n--\nPath = /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat32.img\nType = FAT\nPhysical Size = 67108864\nFile System = FAT32\nCluster Size = 512\nFree Space = 66021376\nHeaders Size = 1067520\nLabel = CRISP_FAT\nSector Size = 512\n\nEverything is Ok\n\nFolders: 2\nFiles: 9\nSize:       16559\nCompressed: 67108864\n",
+      "stderr": "",
+      "files": {
+        "HELLO.TXT": {
+          "bytes": 38,
+          "sha256": "7af8acca208990d25bc8de1ca0159502a0486a63e63cd5b227f8be4b66f8944e"
+        },
+        "abcdefghijklm": {
+          "bytes": 36,
+          "sha256": "a645c38f274a0fe8310a91abca6feb513bc962298e258e6fae956fe98c545f56"
+        },
+        "blocker.bin": {
+          "bytes": 4096,
+          "sha256": "3ec86f0ba2daa5b34103971a22a85f153bbca9f23933add49d83ebc19160d880"
+        },
+        "café-雪.txt": {
+          "bytes": 36,
+          "sha256": "9fcca22f1031ba931d9d6e955c30d3c9885f7de6b08c1fea2db1aa94daaf27d2"
+        },
+        "emoji-😀.txt": {
+          "bytes": 33,
+          "sha256": "2948fa854e91736b692378f9d90b52e965d8c453851ef253d595b87952fb8679"
+        },
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fragmented.bin": {
+          "bytes": 4099,
+          "sha256": "cdff14dd288adbb00c320ab43694c4655a03d836eb78ba048aa7ee016a6dd4eb"
+        },
+        "nested/Long Unicode name 雪 beyond thirteen.txt": {
+          "bytes": 28,
+          "sha256": "e7565e949c1a37422c761253b30ca2ab7b906945055e987c1dcb941ee6c3a66f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "d37426b71db09954cacd4d2be0059f5dbd7ad5d32fc42ab0eeda4ed1a4e1bebc"
+        }
+      },
+      "directories": [
+        "empty-dir",
+        "nested"
+      ],
+      "image_sha256_after_extraction": "9727d6c9fdc621d3fc58637182970fd31d8d4ba0921f98641e807e95de250a19",
+      "exact_payloads_match": true,
+      "exact_directories_match": true
+    },
+    {
+      "name": "fat16-sector4096",
+      "image_bytes": 33554432,
+      "image_sha256": "dddb42265f1f92bfbafe63d43b9f2dad297b018279eb76819ec37f587cf2c708",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 33554432 bytes (32 MiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat16-sector4096.img\n--\nPath = /workspace/scratch/52be1abfc881/fat-oracles/verification/crisp-fat-oracle-72o3fgza/fat16-sector4096.img\nType = FAT\nPhysical Size = 33554432\nFile System = FAT16\nCluster Size = 4096\nFree Space = 33439744\nHeaders Size = 69632\nLabel = CRISP_FAT\nSector Size = 4096\n\nEverything is Ok\n\nFolders: 2\nFiles: 9\nSize:       16559\nCompressed: 33554432\n",
+      "stderr": "",
+      "files": {
+        "HELLO.TXT": {
+          "bytes": 38,
+          "sha256": "7af8acca208990d25bc8de1ca0159502a0486a63e63cd5b227f8be4b66f8944e"
+        },
+        "abcdefghijklm": {
+          "bytes": 36,
+          "sha256": "a645c38f274a0fe8310a91abca6feb513bc962298e258e6fae956fe98c545f56"
+        },
+        "blocker.bin": {
+          "bytes": 4096,
+          "sha256": "3ec86f0ba2daa5b34103971a22a85f153bbca9f23933add49d83ebc19160d880"
+        },
+        "café-雪.txt": {
+          "bytes": 36,
+          "sha256": "9fcca22f1031ba931d9d6e955c30d3c9885f7de6b08c1fea2db1aa94daaf27d2"
+        },
+        "emoji-😀.txt": {
+          "bytes": 33,
+          "sha256": "2948fa854e91736b692378f9d90b52e965d8c453851ef253d595b87952fb8679"
+        },
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fragmented.bin": {
+          "bytes": 4099,
+          "sha256": "cdff14dd288adbb00c320ab43694c4655a03d836eb78ba048aa7ee016a6dd4eb"
+        },
+        "nested/Long Unicode name 雪 beyond thirteen.txt": {
+          "bytes": 28,
+          "sha256": "e7565e949c1a37422c761253b30ca2ab7b906945055e987c1dcb941ee6c3a66f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "d37426b71db09954cacd4d2be0059f5dbd7ad5d32fc42ab0eeda4ed1a4e1bebc"
+        }
+      },
+      "directories": [
+        "empty-dir",
+        "nested"
+      ],
+      "image_sha256_after_extraction": "dddb42265f1f92bfbafe63d43b9f2dad297b018279eb76819ec37f587cf2c708",
+      "exact_payloads_match": true,
+      "exact_directories_match": true
+    }
+  ],
+  "passed": 4
+}
