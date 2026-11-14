@@ -1,0 +1,22 @@
+{
+  "runtime_source_commit": "022ac6c91ccaa86f1d36a4d8cc1b20733037a67d",
+  "version": "1.3.2",
+  "build": "25",
+  "runner_architectures": [
+    "x86_64",
+    "arm64"
+  ],
+  "aot_architectures": [
+    "x86_64",
+    "arm64"
+  ],
+  "runner_sha256": "d325800dcc79f5eab152ae38d4b2c25d38418204fd2bbd8986300b382f1d5aa0",
+  "aot_sha256": "04faa02bd65d5855a955b12cb1e1428dfe93a605889474fdbb68cde47b531e54",
+  "codesign_verify": "passed",
+  "renderer": "Skia Metal",
+  "FLTEnableImpeller": false,
+  "startup_probe_seconds": 45,
+  "credential_preflight": "ready",
+  "launch_services_process_running": true,
+  "signing_chain_repair": "Verified the existing Apple WWDR G3 public intermediate and imported it into the selected build keychain; trust settings were not changed."
+}

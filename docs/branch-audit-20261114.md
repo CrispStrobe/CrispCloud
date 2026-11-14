@@ -66,3 +66,17 @@ The final remote-head check at **17:49 UTC** also found and incorporated Office
 corrections and source-bound validation records. The expanded comparison cohort
 passes **29 tests in installed Chrome**. All other audited repositories still
 have the main checkpoints listed above; no additional branches were deleted.
+
+The later Office heads `45e75b52` / `9219189e` and binary evidence head
+`f69427d5`, found in the 18:27 UTC recheck, are integrated. Quds main is now
+`6ed4ebe0`, and CrispCloud's runtime build checkpoint is `022ac6c9`. The native
+fill preservation rerun passes 1,736 engine tests (three conditional skips),
+19 editor/history tests and 23 host tests. All 2,171 managed Office files match
+the pin. The latest 12-package LibreOffice comparison and real Chrome copy
+download pass; the read-error follow-up passes 156 native and 31 Chrome tests.
+
+Local startup acceptance also exposed an intermittent Flutter Impeller crash.
+The macOS build now selects Skia Metal; see the
+[renderer qualification](macos-renderer-20261114.md). Its signed prototype
+passed two 30-second starts, and rebuilt checkpoint `2316efe6` passed 45 seconds
+with credential preflight ready. The native-fill rebuild retains that setting.
