@@ -17,11 +17,50 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'support/archive_disk_image_fixture.dart';
+import 'support/archive_fat_fixture.dart';
 import 'support/archive_fat_reference_data.dart';
 import 'support/archive_udf_reference_data.dart';
 import 'support/dmg_fixture.dart';
 
 void main() {
+  test(
+    'a minimum 2048-byte FAT12 volume still receives a DMG file view',
+    () async {
+      final image = Uint8List(2048)
+        ..setRange(
+          0,
+          512,
+          FatFixture(bits: 12, clusterCount: 1, includeFile: false).boot,
+        );
+      image[16] = 1;
+      fatPut16(image, 17, 16);
+      fatPut16(image, 19, 4);
+      fatPut16(image, 22, 1);
+      image.setRange(512, 517, [0xf8, 0xff, 0xff, 0xff, 0x0f]);
+      image.setRange(
+        1024,
+        1056,
+        fatShortEntry('A.TXT', firstCluster: 2, size: 1),
+      );
+      image[1536] = 65;
+      final fixture = DmgFixture(image, method: 0x80000005, chunkBytes: 2048);
+      final archive = await openViewerArchive(
+        fixture.bytes,
+        name: 'minimum.dmg',
+      );
+      final raw = archive.members.singleWhere(
+        (member) => member.name.startsWith('partitions/'),
+      );
+      expect(raw.name, endsWith('.fat'));
+      expect(await archive.readMember(raw), image);
+      final file = archive.members.singleWhere(
+        (member) => member.name.endsWith('/A.TXT'),
+      );
+      expect(await archive.readMember(file), [65]);
+      await archive.close();
+    },
+  );
+
   test(
     'FAT and raw-image names expose only browse and extraction capabilities',
     () {

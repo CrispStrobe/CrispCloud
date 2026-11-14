@@ -631,17 +631,18 @@ Future<ViewerArchive> openDmgArchive(
       var skipFilesystemProbes = false;
       if (fatMetadata.canProbe) {
         try {
-          if (await hasFatVolumeRecognition(fatSource)) extension = 'fat';
-        } on ArchiveViewException catch (error) {
-          // A malformed encoded block can prevent filesystem recognition
-          // without invalidating the already checked raw partition table.
-          // Recorded provider, short-read and cancellation failures are fatal.
-          input.rethrowFailure();
+          // The smallest admitted FAT12 needs a reserved sector, one FAT,
+          // a fixed-root sector and a data cluster; FAT16/32 need more space.
+          // Tiny raw partitions retain deferred decoding/extraction behavior.
+          if (partition.length >= 4 * _sectorBytes &&
+              await hasFatVolumeRecognition(fatSource)) {
+            extension = 'fat';
+          }
+        } on _DmgFatBudgetException catch (error) {
           skipFilesystemProbes = true;
           notices.add(
             '$stem: filesystem recognition unavailable: $error '
-            'The raw partition entry remains listed; extraction still '
-            'checks its encoded blocks.',
+            'The raw partition image remains available.',
           );
         }
       } else {
