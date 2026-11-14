@@ -2,7 +2,7 @@ name: Storage capabilities
 
 on:
   push:
-    branches: [main, integration/storage-capabilities-20261114, integration/storage-ext-20261114, integration/storage-ntfs-20261114]
+    branches: [main, integration/storage-capabilities-20261114, integration/storage-ext-20261114, integration/storage-ntfs-20261114, integration/storage-binary-20261114]
     paths: &storage_paths
       - '.github/workflows/storage-capabilities.yml'
       - '.github/actions/**'
@@ -121,10 +121,22 @@ jobs:
             test/widget/archive_ntfs_viewer_test.dart \
             test/widget/archive_job_recovery_dialog_test.dart \
             test/binary_structure_service_test.dart test/binary_structure_source_test.dart \
+            test/binary_comparison_source_test.dart test/binary_comparison_limits_test.dart \
+            test/binary_comparison_navigation_test.dart test/binary_comparison_portable_test.dart \
+            test/file_comparison_service_test.dart test/comparison_encoding_test.dart \
+            test/widget/comparison_navigation_test.dart test/widget/diff_viewer_localization_test.dart \
             test/disk_partition_*_test.dart \
             test/widget/binary_structure_viewer_test.dart \
             test/widget/disk_partition_viewer_test.dart \
             2>&1 | tee build/storage-ci/native.log
+      - name: Run captured binary comparison in Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter test --no-pub --platform chrome --concurrency=1 --reporter expanded \
+            --file-reporter json:build/storage-ci/binary-browser-events.json \
+            test/binary_comparison_portable_test.dart test/binary_comparison_limits_test.dart \
+            2>&1 | tee build/storage-ci/binary-browser.log
       - name: Run portable FAT, ext, NTFS, UDF and ZIP recovery on VM and JavaScript
         shell: bash
         run: |

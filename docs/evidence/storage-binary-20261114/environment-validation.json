@@ -1,0 +1,125 @@
+{
+  "sdk": {
+    "source": "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json",
+    "release": {
+      "hash": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "channel": "stable",
+      "version": "3.47.8",
+      "dart_sdk_version": "3.13.7",
+      "dart_sdk_arch": "x64",
+      "release_date": "2026-10-23T19:02:25.384067Z",
+      "archive": "stable/linux/flutter_linux_3.47.8-stable.tar.xz",
+      "sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2"
+    },
+    "verifiedSha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+    "dartVersion": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "chromiumVersion": "Chromium 156.0.8078.79 built on Debian GNU/Linux 13 (trixie)"
+  },
+  "rust": {
+    "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)"
+  },
+  "manifestsAfterPubGet": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "manifestsUnchanged": true,
+  "dependenciesLogSha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a",
+  "toolchainWrapperSha256": "7c20e18350417e827a701482255db8b7aff8f3d0a25a25c5d65a4ec4788367e4",
+  "cargoLauncherSha256": "fbfc2721a06108e2a4b1c77c49de739bd414113d760d2f712f2dd2ff8d38f130",
+  "originalManifestPubGetExitCode": 0,
+  "clang": {
+    "version": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/0140f384d23a/toolchain/debian/root/usr/lib/llvm-19/bin",
+    "packageIndex": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz",
+    "packageIndexSha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498",
+    "packages": {
+      "clang-19": {
+        "Package": "clang-19",
+        "Source": "llvm-toolchain-19 (1:19.1.7-3)",
+        "Version": "1:19.1.7-3+b1",
+        "Installed-Size": "375",
+        "Maintainer": "LLVM Packaging Team <pkg-llvm-team@lists.alioth.debian.org>",
+        "Architecture": "amd64",
+        "Provides": "c++-compiler, c-compiler, objc++-compiler, objc-compiler",
+        "Depends": "libc6 (>= 2.34), libclang-cpp19 (>= 1:19.1.7), libgcc-s1 (>= 3.0), libllvm19 (= 1:19.1.7-3+b1), libstdc++6 (>= 11), libstdc++-14-dev, libgcc-14-dev, libobjc-14-dev, libclang-common-19-dev (= 1:19.1.7-3+b1), llvm-19-linker-tools (= 1:19.1.7-3+b1), libclang1-19 (= 1:19.1.7-3+b1), libc6-dev, binutils",
+        "Recommends": "llvm-19-dev, python3, clang-tools-19",
+        "Suggests": "clang-19-doc, wasi-libc",
+        "Description": "C, C++ and Objective-C compiler",
+        "Homepage": "https://www.llvm.org/",
+        "Description-md5": "c364160e44345420df0f2e97b3082b69",
+        "Section": "devel",
+        "Priority": "optional",
+        "Filename": "pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+        "Size": "116584",
+        "MD5sum": "6d740b5602fc3c82d834fdbba9c0983c",
+        "SHA256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4"
+      },
+      "libclang-common-19-dev": {
+        "Package": "libclang-common-19-dev",
+        "Source": "llvm-toolchain-19 (1:19.1.7-3)",
+        "Version": "1:19.1.7-3+b1",
+        "Installed-Size": "13457",
+        "Maintainer": "LLVM Packaging Team <pkg-llvm-team@lists.alioth.debian.org>",
+        "Architecture": "amd64",
+        "Recommends": "libclang-rt-19-dev",
+        "Description": "Clang library - Common development package",
+        "Multi-Arch": "same",
+        "Homepage": "https://www.llvm.org/",
+        "Description-md5": "c70051d53e23270c29353f55183e81aa",
+        "Section": "libdevel",
+        "Priority": "optional",
+        "Filename": "pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+        "Size": "739932",
+        "MD5sum": "b1f7f1ccffbf0ace6fae3f0e1ca74e97",
+        "SHA256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc"
+      },
+      "libclang-cpp19": {
+        "Package": "libclang-cpp19",
+        "Source": "llvm-toolchain-19 (1:19.1.7-3)",
+        "Version": "1:19.1.7-3+b1",
+        "Installed-Size": "69440",
+        "Maintainer": "LLVM Packaging Team <pkg-llvm-team@lists.alioth.debian.org>",
+        "Architecture": "amd64",
+        "Depends": "libc6 (>= 2.38), libgcc-s1 (>= 3.0), libllvm19 (= 1:19.1.7-3+b1), libstdc++6 (>= 12)",
+        "Description": "C++ interface to the Clang library",
+        "Homepage": "https://www.llvm.org/",
+        "Description-md5": "8acc7c5b41666c14f1ef5e79310225e6",
+        "Section": "libs",
+        "Priority": "optional",
+        "Filename": "pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+        "Size": "13191148",
+        "MD5sum": "65fb898fa55d239c507672f56c9402f3",
+        "SHA256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47"
+      },
+      "libllvm19": {
+        "Package": "libllvm19",
+        "Source": "llvm-toolchain-19 (1:19.1.7-3)",
+        "Version": "1:19.1.7-3+b1",
+        "Installed-Size": "126696",
+        "Maintainer": "LLVM Packaging Team <pkg-llvm-team@lists.alioth.debian.org>",
+        "Architecture": "amd64",
+        "Replaces": "llvm-19-dev (<< 1:19.1.0~++rc3-1~exp2)",
+        "Depends": "libc6 (>= 2.38), libedit2 (>= 2.11-20080614-0), libffi8 (>= 3.4), libgcc-s1 (>= 4.3), libstdc++6 (>= 12), libxml2 (>= 2.7.4), libz3-4 (>= 4.13.3), libzstd1 (>= 1.5.5), zlib1g (>= 1:1.2.0)",
+        "Breaks": "llvm-19-dev (<< 1:19.1.0~++rc3-1~exp2)",
+        "Description": "Modular compiler and toolchain technologies, runtime library",
+        "Multi-Arch": "same",
+        "Homepage": "https://www.llvm.org/",
+        "Description-md5": "a8854f4edf76a8c14ce34dc209bd1d11",
+        "Section": "libs",
+        "Priority": "optional",
+        "Filename": "pool/main/l/llvm-toolchain-19/libllvm19_19.1.7-3+b1_amd64.deb",
+        "Size": "25978316",
+        "MD5sum": "46d9b011e2daeb518da6dd49e8d81170",
+        "SHA256": "db0d614d61345ca710fb73e75105f1ec6e38898fa7b3aa99fa7eb7d8b0a11d57"
+      }
+    },
+    "launcherSha256": "6508f0fc0420d0eab8bfc042f8428a7df014a39fa022a47adfa8388d62273fb8"
+  },
+  "nativeSetup": {
+    "appManifestsChanged": false,
+    "appHooksChanged": false,
+    "cargoLauncherReason": "Dart filters RUSTUP_HOME from native hooks; launcher uses explicit scratch toolchain/cache paths.",
+    "clangLauncherReason": "Existing native_toolchain_c resolver selects Clang; GCC alone did not satisfy its configured toolchain.",
+    "verifiedSmbSha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577"
+  }
+}

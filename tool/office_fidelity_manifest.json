@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/office-recovery-20261114",
-  "source_commit": "c85c9f0a81a75a4afb5103d397c1816f0140eb00",
+  "source_commit": "6e8ee9476c99676886f9d424abdb399cffe37882",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1744,7 +1744,7 @@
     "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "09a6554b609871ba9b530f7722ae83e5d47c0babce68a7f45e5892b28f9bf1e1",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
     "packages/quds_office_editor/lib/src/embed/office_context_menu.dart": "6eefbfa5ef5cc9db6ad109c43271357797f22903bcd86351cc3e8e9a9ad55915",
-    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "bbde27176a52beb7e7cd6269bb63b60a705c0c200fe23b8a4c80c3e9325c70e0",
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "873ef4311fedc1aa70d9a89750252bdecdbf8b5e7e679f0e31f3c93df937d14d",
     "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart": "0f983d3bd127f986ff06c2e9ef0d836062e99262c72a3fa48d62b01061818a55",
     "packages/quds_office_editor/lib/src/embed/word_notes_pane.dart": "8311a405ec1bf8082284c4a79337d16abc96033bb78e7a789065805d0504b5b8",
     "packages/quds_office_editor/lib/src/embed/word_tab_stops_editor.dart": "7af38384bd4abec5163b257506a87fa889313acb911d1bcf0e2622710e7d05d5",

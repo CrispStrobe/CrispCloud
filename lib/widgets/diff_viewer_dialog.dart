@@ -3,6 +3,8 @@
 // Side-by-side file comparison viewer.
 // Compares two text files (local vs remote, or two selected files).
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,6 +79,7 @@ class _DiffViewerDialog extends ConsumerStatefulWidget {
 
 class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   static const _log = Log('DiffViewer');
+  static const _binaryLimits = BinaryComparisonLimits();
   final _scroll = ScrollController();
   final _merged = TextEditingController();
   final _binaryAddress = TextEditingController(text: '0');
@@ -109,6 +112,9 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   bool _ignoreCase = false;
   bool _dirty = false;
   bool _cancel = false;
+  bool _capturing = false;
+  int _loadGeneration = 0;
+  int _navigationGeneration = 0;
   String? _error;
   int _comparedBytes = 0;
 
@@ -131,9 +137,17 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   }
 
   Future<void> _loadFiles() async {
+    final generation = ++_loadGeneration;
+    ++_navigationGeneration;
+    final previousSession = _binarySession;
+    BinaryComparisonSession? openingSession;
+    bool ownsLoad() => mounted && generation == _loadGeneration;
+    bool cancelled() => !ownsLoad() || _cancel;
     setState(() {
       _loading = true;
+      _binaryBusy = false;
       _cancel = false;
+      _capturing = _binary;
       _error = null;
       _comparedBytes = 0;
       _binaryResult = null;
@@ -142,8 +156,14 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       _binaryRange = null;
       _rows = [];
       _hunks = [];
+      _leftDocument = null;
+      _rightDocument = null;
     });
     try {
+      // Retire the previous immutable copies before allocating replacements.
+      // An older load owns its unpublished session and closes it in finally.
+      await _releaseBinarySession(previousSession);
+      if (cancelled()) return;
       _leftOrigin ??= ref
           .read(panelProvider(_leftSide))
           .originForOperation(_leftFile);
@@ -152,67 +172,112 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       _writeOrigin ??= ref
           .read(panelProvider(_rightSide))
           .originForOperation(_rightFile);
+      final leftSource = _leftSource!;
+      final rightSource = _rightSource!;
+      final leftFile = _leftVersion ?? _leftFile;
+      final rightFile = _rightVersion ?? _rightFile;
+      bool sourceCancelled() =>
+          cancelled() || !leftSource.isCurrent || !rightSource.isCurrent;
       if (_binary) {
         var lastProgress = 0;
-        _binarySession = await BinaryComparisonSession.open(
-          _leftSource!,
-          _leftVersion ?? _leftFile,
-          _rightSource!,
-          _rightVersion ?? _rightFile,
-          isCancelled: () =>
-              _cancel || !_leftSource!.isCurrent || !_rightSource!.isCurrent,
+        final session = await BinaryComparisonSession.open(
+          leftSource,
+          leftFile,
+          rightSource,
+          rightFile,
+          limits: _binaryLimits,
+          isCancelled: sourceCancelled,
           onProgress: (bytes) {
-            if (mounted && bytes - lastProgress >= 256 * 1024) {
+            if (!sourceCancelled() &&
+                (_capturing || bytes - lastProgress >= 256 * 1024)) {
               lastProgress = bytes;
-              setState(() => _comparedBytes = bytes);
+              setState(() {
+                _capturing = false;
+                _comparedBytes = bytes;
+              });
             }
           },
         );
-        _binaryResult = _binarySession!.result;
-        _binaryRangeIndex = 0;
-        if (_binaryResult!.rangeCount > 0) {
-          _binaryRange = await _binarySession!.difference(
-            0,
-            isCancelled: () => _cancel || !mounted,
-          );
+        openingSession = session;
+        if (sourceCancelled()) return;
+        final result = session.result;
+        BinaryDifferenceRange? range;
+        if (result.rangeCount > 0) {
+          range = await session.difference(0, isCancelled: sourceCancelled);
         }
-        _binaryWindow = await _binarySession!.window(
-          ((_binaryRange?.start ?? 0) ~/ 16) * 16,
-          isCancelled: () => _cancel || !mounted,
+        if (sourceCancelled()) return;
+        final window = await session.window(
+          ((range?.start ?? 0) ~/ 16) * 16,
+          isCancelled: sourceCancelled,
         );
-        _binaryAddress.text = _binaryWindow!.offset.toString();
+        if (sourceCancelled()) return;
+        // Publish one complete generation. Stale futures never own UI state.
+        setState(() {
+          _binarySession = session;
+          _binaryResult = result;
+          _binaryRangeIndex = 0;
+          _binaryRange = range;
+          _binaryWindow = window;
+          _binaryAddress.text = window.offset.toString();
+        });
+        openingSession = null;
       } else {
-        _leftDocument = null;
-        _rightDocument = null;
-        _leftDocument = await MergeDocumentSession.open(
-          _leftSource!,
-          _leftVersion ?? _leftFile,
+        final leftDocument = await MergeDocumentSession.open(
+          leftSource,
+          leftFile,
           encodingOverride: _leftEncoding,
-          isCancelled: () => _cancel || !mounted,
+          isCancelled: sourceCancelled,
         );
-        _rightDocument = await MergeDocumentSession.open(
-          _rightSource!,
-          _rightVersion ?? _rightFile,
+        if (sourceCancelled()) return;
+        final rightDocument = await MergeDocumentSession.open(
+          rightSource,
+          rightFile,
           encodingOverride: _rightEncoding,
-          isCancelled: () => _cancel || !mounted,
+          isCancelled: sourceCancelled,
         );
-        _leftVersion = _leftDocument!.file;
-        _rightVersion = _rightDocument!.file;
-        _merged.text = _rightDocument!.document.text;
-        _dirty = false;
-        _recompute();
+        if (sourceCancelled()) return;
+        setState(() {
+          _leftDocument = leftDocument;
+          _rightDocument = rightDocument;
+          _leftVersion = leftDocument.file;
+          _rightVersion = rightDocument.file;
+          _merged.text = rightDocument.document.text;
+          _dirty = false;
+          _recompute();
+        });
       }
     } catch (error) {
-      _log.warn('Comparison failed', error);
-      if (mounted) setState(() => _error = error.toString());
+      if (ownsLoad()) {
+        _log.warn('Comparison failed', error);
+        setState(() => _error = error.toString());
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      await _releaseBinarySession(openingSession);
+      if (ownsLoad()) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _releaseBinarySession(BinaryComparisonSession? session) async {
+    if (session == null) return;
+    try {
+      await session.close();
+    } catch (error) {
+      _log.warn('Could not close comparison copies', error);
     }
   }
 
   Future<void> _navigateBinary({int? difference, int? offset}) async {
     final session = _binarySession;
     if (session == null || _loading || _binaryBusy) return;
+    final load = _loadGeneration;
+    final navigation = ++_navigationGeneration;
+    bool ownsOperation() =>
+        mounted &&
+        load == _loadGeneration &&
+        navigation == _navigationGeneration;
+    bool ownsNavigation() =>
+        ownsOperation() && identical(session, _binarySession);
+    bool cancelled() => !ownsNavigation() || _cancel;
     setState(() {
       _binaryBusy = true;
       _cancel = false;
@@ -222,18 +287,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       var range = _binaryRange;
       var rangeIndex = _binaryRangeIndex;
       if (difference != null) {
-        range = await session.difference(
-          difference,
-          isCancelled: () => _cancel || !mounted,
-        );
+        range = await session.difference(difference, isCancelled: cancelled);
         rangeIndex = difference;
         offset = (range.start ~/ 16) * 16;
       }
-      final window = await session.window(
-        offset ?? 0,
-        isCancelled: () => _cancel || !mounted,
-      );
-      if (!mounted) return;
+      final window = await session.window(offset ?? 0, isCancelled: cancelled);
+      if (cancelled()) return;
       setState(() {
         _binaryRange = range;
         _binaryRangeIndex = rangeIndex;
@@ -241,9 +300,20 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
         _binaryAddress.text = window.offset.toString();
       });
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (ownsNavigation()) {
+        // The service invalidates a failed or cancelled operation. Retire its
+        // view as well so navigation cannot reuse a closed captured source.
+        setState(() {
+          _error = error.toString();
+          _binarySession = null;
+          _binaryResult = null;
+          _binaryWindow = null;
+          _binaryRange = null;
+        });
+        await _releaseBinarySession(session);
+      }
     } finally {
-      if (mounted) setState(() => _binaryBusy = false);
+      if (ownsOperation()) setState(() => _binaryBusy = false);
     }
   }
 
@@ -578,7 +648,13 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
               const LinearProgressIndicator(),
               if (_binary)
                 Text(
-                  context.commanderTr("Compared {0} bytes", [_comparedBytes]),
+                  _capturing
+                      ? context.commanderTr(
+                          'Preparing and comparing captured copies…',
+                        )
+                      : context.commanderTr("Compared {0} bytes", [
+                          _comparedBytes,
+                        ]),
                 ),
             ],
             Expanded(
@@ -615,6 +691,17 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
               padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
+                  Text(
+                    context.commanderTr(
+                      'Verified captured copies • up to {0} per file',
+                      [
+                        _binaryLimits.maxBytes >= 1024 * 1024 * 1024
+                            ? '${_binaryLimits.maxBytes ~/ (1024 * 1024 * 1024)} GiB'
+                            : '${_binaryLimits.maxBytes ~/ (1024 * 1024)} MiB',
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                   SelectableText(
                     result.equal
                         ? context.commanderTr(
@@ -926,6 +1013,11 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   @override
   void dispose() {
     _cancel = true;
+    ++_loadGeneration;
+    ++_navigationGeneration;
+    final session = _binarySession;
+    _binarySession = null;
+    unawaited(_releaseBinarySession(session));
     _scroll.dispose();
     _merged.dispose();
     _binaryAddress.dispose();

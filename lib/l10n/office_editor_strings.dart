@@ -29,20 +29,21 @@ class OfficeEditorStrings {
       if (entry.key.toLowerCase() == lower) return entry.value;
     }
     return OfficeRibbonCommonStrings.lookup(code, english) ??
-        OfficeFallbackStrings.lookup(code, english) ?? english;
+        OfficeFallbackStrings.lookup(code, english) ??
+        english;
   }
 
   static const Map<String, Map<String, String>> _translations =
       <String, Map<String, String>>{
-    'de': _de,
-    'fr': _fr,
-    'es': _es,
-    'pt': _pt,
-    'ja': _ja,
-    'ko': _ko,
-    'zh': _zh,
-    'ar': _ar,
-  };
+        'de': _de,
+        'fr': _fr,
+        'es': _es,
+        'pt': _pt,
+        'ja': _ja,
+        'ko': _ko,
+        'zh': _zh,
+        'ar': _ar,
+      };
 
   static const Map<String, String> _de = <String, String>{
     'File': 'Datei',
@@ -55,12 +56,15 @@ class OfficeEditorStrings {
     'Insert text box': 'Textfeld einfügen',
     'Password (optional)': 'Kennwort (optional)',
     'Password': 'Kennwort',
-    'Prevent further edits to this document?': 'Weitere Bearbeitungen dieses Dokuments verhindern?',
+    'Prevent further edits to this document?':
+        'Weitere Bearbeitungen dieses Dokuments verhindern?',
     'Page setup': 'Seite einrichten',
     'Page setup...': 'Seite einrichten …',
     'Page Setup...': 'Seite einrichten …',
-    'Could not open this document': 'Dieses Dokument konnte nicht geöffnet werden',
-    'The document could not be loaded.': 'Das Dokument konnte nicht geladen werden.',
+    'Could not open this document':
+        'Dieses Dokument konnte nicht geöffnet werden',
+    'The document could not be loaded.':
+        'Das Dokument konnte nicht geladen werden.',
     'Save': 'Speichern',
     'Close Editor': 'Editor schließen',
     'Undo': 'Rückgängig',
@@ -354,7 +358,8 @@ class OfficeEditorStrings {
     'Insert table': 'Tabelle einfügen',
     'Insert hyperlink': 'Hyperlink einfügen',
     'Address': 'Adresse',
-    'Leave empty to use the selected text': 'Leer lassen, um den ausgewählten Text zu verwenden',
+    'Leave empty to use the selected text':
+        'Leer lassen, um den ausgewählten Text zu verwenden',
     'Page margins': 'Seitenränder',
     'Top (in)': 'Oben (Zoll)',
     'Bottom (in)': 'Unten (Zoll)',
@@ -378,9 +383,12 @@ class OfficeEditorStrings {
     'Saved': 'Gespeichert',
     'Save failed': 'Speichern fehlgeschlagen',
     'Image': 'Bild',
-    'Images larger than 32 MB are not supported.': 'Bilder über 32 MB werden nicht unterstützt.',
-    'Could not read the selected image.': 'Das ausgewählte Bild konnte nicht gelesen werden.',
-    'A presentation needs at least one slide.': 'Eine Präsentation benötigt mindestens eine Folie.',
+    'Images larger than 32 MB are not supported.':
+        'Bilder über 32 MB werden nicht unterstützt.',
+    'Could not read the selected image.':
+        'Das ausgewählte Bild konnte nicht gelesen werden.',
+    'A presentation needs at least one slide.':
+        'Eine Präsentation benötigt mindestens eine Folie.',
     'Select a shape first.': 'Bitte zuerst eine Form auswählen.',
     'Select an animation first.': 'Bitte zuerst eine Animation auswählen.',
     'Delete slide': 'Folie löschen',
@@ -390,7 +398,8 @@ class OfficeEditorStrings {
     'Unprotect sheet': 'Blattschutz aufheben',
     'Sheet protection': 'Blattschutz',
     'Document protection': 'Dokumentschutz',
-    'This is a paragraph that can be formatted.': 'Dies ist ein Absatz, der formatiert werden kann.',
+    'This is a paragraph that can be formatted.':
+        'Dies ist ein Absatz, der formatiert werden kann.',
     'Office editor': 'Office-Editor',
     'About the editor…': 'Über den Editor …',
     'Align bottom': 'Unten ausrichten',
@@ -428,7 +437,8 @@ class OfficeEditorStrings {
     'Insert rows above': 'Zeilen darüber einfügen',
     'Insert rows below': 'Zeilen darunter einfügen',
     'Keyboard shortcuts…': 'Tastenkürzel …',
-    'Leave empty to remove the watermark': 'Leer lassen, um das Wasserzeichen zu entfernen',
+    'Leave empty to remove the watermark':
+        'Leer lassen, um das Wasserzeichen zu entfernen',
     'Letter': 'Brief',
     'Legal': 'Legal',
     'Merge & center': 'Zusammenführen & zentrieren',
@@ -477,8 +487,10 @@ class OfficeEditorStrings {
     'Find (Ctrl+F)': 'Suchen (Strg+F)',
     'Close find bar, then the editor': 'Suchleiste schließen, dann den Editor',
     'Enter a 6-digit hex color.': 'Geben Sie eine 6-stellige Hex-Farbe ein.',
-    'The editor supports OOXML documents (.docx, .xlsx, .pptx).': 'Der Editor unterstützt OOXML-Dokumente (.docx, .xlsx, .pptx).',
-    'Save writes back to the original file.': 'Speichern schreibt in die Originaldatei zurück.',
+    'The editor supports OOXML documents (.docx, .xlsx, .pptx).':
+        'Der Editor unterstützt OOXML-Dokumente (.docx, .xlsx, .pptx).',
+    'Save writes back to the original file.':
+        'Speichern schreibt in die Originaldatei zurück.',
     'Spell checking uses the host integration. No spell-check provider is configured in this build.': 'Die Rechtschreibprüfung benötigt die Host-Integration. In diesem Build ist kein Anbieter konfiguriert.',
     'Word, spreadsheet and presentation editing is powered by the open-source Quds Office engine (MIT).\n\nThe editor supports OOXML documents (.docx, .xlsx, .pptx). Save writes back to the original file.': 'Das Bearbeiten von Text, Tabellen und Präsentationen basiert auf der Open-Source-Engine Quds Office (MIT).\n\nDer Editor unterstützt OOXML-Dokumente (.docx, .xlsx, .pptx). Speichern schreibt in die Originaldatei zurück.',
     'Word': 'Word',

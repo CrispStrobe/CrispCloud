@@ -1,0 +1,133 @@
+{
+  "classification": "Preserved setup and intermediate working-tree evidence; not final qualification",
+  "compressionPolicy": "gzip compression level 9, zero timestamp, no filename header; original bytes retained after decompression",
+  "files": [
+    {
+      "file": "dependencies.log.gz",
+      "source": "dependencies.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 2016,
+      "sha256": "310f56d6f376cb807b78600ff4a6528de1934e5983899a438c23f9a645eb2c9a",
+      "uncompressedBytes": 6480,
+      "uncompressedSha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a"
+    },
+    {
+      "file": "catalog-cargo-fetch.log.gz",
+      "source": "catalog-cargo-fetch.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 636,
+      "sha256": "3e6d8e76edfdfc09760d59bc5a1319d171bd838d962dcbb0c46e9f86414f989b",
+      "uncompressedBytes": 1906,
+      "uncompressedSha256": "a6ef519671eae9f8a6fc3c50b34d5631855baf2467715d760a8539ab98af96fc"
+    },
+    {
+      "file": "ebook-cargo-fetch.log.gz",
+      "source": "ebook-cargo-fetch.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 234,
+      "sha256": "49148eb9853a5b125075f0cc4d778c95e3e6c78e59791dabbba3e3548e04e784",
+      "uncompressedBytes": 520,
+      "uncompressedSha256": "d2aada8f5662e5ae134a5816afe0c2ed2880926cf65b6cf6aaa3a81f59b46d2d"
+    },
+    {
+      "file": "initial-native.log.gz",
+      "source": "initial-native.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 20,
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "uncompressedBytes": 0,
+      "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "initial-native-retry.log.gz",
+      "source": "initial-native-retry.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 611,
+      "sha256": "c90e6b2f472f7261933f0fade8495eb5cad7369cfa19aa720499f79da9cdb5fa",
+      "uncompressedBytes": 2096,
+      "uncompressedSha256": "311a426b8e91c26b1802b733d833ab86c7cae16a4916133bbd95cd9673110479"
+    },
+    {
+      "file": "initial-native-cargo.log.gz",
+      "source": "initial-native-cargo.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 711,
+      "sha256": "92d052b97b0bb44d617e456d47061a0faa9ca8aa469b54e9ba2493cf5abf3112",
+      "uncompressedBytes": 3083,
+      "uncompressedSha256": "28ed1b4f678df4017c0276152811daebfbec65c1fd880ad3eeae6e42becfd17b"
+    },
+    {
+      "file": "initial-native-clang.log.gz",
+      "source": "initial-native-clang.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 1532,
+      "sha256": "1a922693f34981891d7a0908610be407967eb8f53531f5369e0db68ce68cb45b",
+      "uncompressedBytes": 8598,
+      "uncompressedSha256": "04485e9e4e900895414ef9cd006a2d448cd5c9082d729240af54217699849526"
+    },
+    {
+      "file": "initial-native-clang-events.json.gz",
+      "source": "initial-native-clang-events.json",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 3121,
+      "sha256": "8c6300a4e2cb275cb0c1ec482b22be747e2e26b8cadaf1f79cdc5c0f05148aac",
+      "uncompressedBytes": 24163,
+      "uncompressedSha256": "c6425fa5c86bb50b8dac8643192f94bdf62704ea9f4be9794a77334f180e029f"
+    },
+    {
+      "file": "widget-initial.log.gz",
+      "source": "widget-initial.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 1134,
+      "sha256": "26d0f1409e68a3039370a7f3db350a76035f7204649deaf3fcd3ef5ed9938289",
+      "uncompressedBytes": 8166,
+      "uncompressedSha256": "e69db82b97e699375e3dd8ffd4fe0ea5f7094ebaf2d2e665ea15b1caf4bdc9bb"
+    },
+    {
+      "file": "widget-retry.log.gz",
+      "source": "widget-retry.log",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 647,
+      "sha256": "2d4d19c9057f46fa77362f133fcafac961762ee3922e3cca31dcca7cc56cd47d",
+      "uncompressedBytes": 2434,
+      "uncompressedSha256": "98d39411ce621457240190a6bd8c7bb596eecaf5f15d29d403ab10ac03c471d3"
+    },
+    {
+      "file": "initial-native-source.json",
+      "source": "initial-native-source.json",
+      "compression": null,
+      "bytes": 973,
+      "sha256": "98c257321d45596b29087ceeb9ed44cfa2f3f981e574285805cab4b7b85e302a"
+    },
+    {
+      "file": "initial-native-retry-source.json",
+      "source": "initial-native-retry-source.json",
+      "compression": null,
+      "bytes": 867,
+      "sha256": "9c1a4d13e25ac1695cd03984ce23bcf6d4fd8d36e9ad21863761afa29378e860"
+    },
+    {
+      "file": "initial-native-summary.json",
+      "source": "initial-native-summary.json",
+      "compression": null,
+      "bytes": 433,
+      "sha256": "98f046b53546d62ee7c756c709c914c964e8d04b6f119fa1d53decd318dd6e84"
+    },
+    {
+      "file": "manifest-before.json",
+      "source": "manifest-before.json",
+      "compression": null,
+      "bytes": 175,
+      "sha256": "5ed97f784aa89f43c71d6360fd2ece030d9ba044f216ca33cefcdaa9da635ff7"
+    },
+    {
+      "file": "prefetch-results.json.gz",
+      "source": "prefetch/results.json",
+      "compression": "gzip; mtime=0; no filename header",
+      "bytes": 2251,
+      "sha256": "e1a7fe8c6ec2ef89371c94e47c57d59896531aa830df3962ec6e278c1abf6927",
+      "uncompressedBytes": 18906,
+      "uncompressedSha256": "41b91591671e2da0d4435bd5125c8706b987d35af620449c7480e27481945b71"
+    }
+  ]
+}

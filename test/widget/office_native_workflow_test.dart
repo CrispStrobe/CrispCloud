@@ -52,7 +52,9 @@ List<_NativeCase> _cases() {
     File('$_fixtures/manifest.json').readAsStringSync(),
   ) as Map<String, Object?>;
   if (manifest['version'] != 1) {
-    throw const FormatException('Unsupported native workflow fixture manifest');
+    throw const FormatException(
+      'Unsupported independent Office fixture manifest',
+    );
   }
   return [
     for (final entry in manifest['cases']! as List<Object?>)

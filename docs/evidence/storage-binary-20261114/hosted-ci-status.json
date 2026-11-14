@@ -1,0 +1,30 @@
+{
+  "observed_at_utc": "2026-11-14T17:44:57.819Z",
+  "source_revision": "e52ea1f9399c2547978bb497073adcee5022cc81",
+  "query": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs?branch=integration%2Fstorage-binary-20261114&head_sha=e52ea1f9399c2547978bb497073adcee5022cc81&per_page=30",
+  "total_count": 2,
+  "workflow_runs": [
+    {
+      "id": 43622203583,
+      "name": "Storage capabilities",
+      "head_sha": "e52ea1f9399c2547978bb497073adcee5022cc81",
+      "event": "push",
+      "status": "queued",
+      "conclusion": null,
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43622203583",
+      "created_at": "2026-11-14T17:38:27Z",
+      "updated_at": "2026-11-14T17:38:29Z"
+    },
+    {
+      "id": 43622203616,
+      "name": "Shared encrypted providers",
+      "head_sha": "e52ea1f9399c2547978bb497073adcee5022cc81",
+      "event": "push",
+      "status": "queued",
+      "conclusion": null,
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43622203616",
+      "created_at": "2026-11-14T17:38:27Z",
+      "updated_at": "2026-11-14T17:38:27Z"
+    }
+  ]
+}

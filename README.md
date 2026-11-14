@@ -99,6 +99,8 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 
 ## Shared components and validation
 
+Office editors guard unsaved Back navigation and offer independent recovery copies. The shared engine preserves unsupported dependent formula caches, native spreadsheet style properties and Word protection settings. Signed XLSX/PPTX packages are refused for editing, with original-byte export available. See the [Office recovery record](docs/office-recovery-20261114.md) for acceptance and remaining limits. Binary comparison uses verified captured copies with bounded storage and navigation; see the [comparison profile](docs/binary-comparison-profile.md).
+
 Office editing consumes the [Quds fork](https://github.com/CrispStrobe/quds_office_suite), while legacy binary Word parsing is maintained in [legacy-doc-parser](https://github.com/CrispStrobe/legacy-doc-parser). `tool/office_fidelity_manifest.json` and `packages/legacy_doc_parser/UPSTREAM.json` bind the managed files and parser source. The integrated source includes both November Office follow-up checkpoints and the completed worksheet-local-name, bookmark-copy and slide-arrangement expansion. Historical native rendering reports identify their original source snapshots; they do not automatically certify later edits.
 
 Use the Flutter version in `.fvmrc`. Run `flutter analyze --no-fatal-warnings --no-fatal-infos`, `flutter test`, and `bash tool/check_office_fidelity.sh` after shared-source changes. The Office gate includes package inventories, independent validators and coverage collection receipts. See [Office fidelity](docs/office-fidelity.md) for scope and limits, [external editing](docs/external-remote-editing.md) for retained drafts and conditional publication, and [archive endpoints](docs/archive-endpoints.md) for supported archive operations.
@@ -237,13 +239,15 @@ to trash. Existing files and personal-account credentials are unused. On
 
 ## Local and hosted release checks
 
+The macOS app selects Skia Metal with the pinned Flutter SDK. Local acceptance caught an intermittent Impeller raster-thread crash with texture-size/resolve errors; two 30-second Skia Metal startup probes passed. The startup smoke check rejects those renderer errors even if the process remains alive. Requalify Impeller before enabling it again.
+
 For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the current source revision. `bash tool/sign_macos_local.sh` uses the installed development profile, and `bash tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 10` checks startup. The desktop integration harness exercises real temporary ext/NTFS images, CSV-to-XLSX publication and collision recovery, and offline CAF import/search/folder navigation through the native Rust-backed GUI:
 
 ```sh
 flutter test integration_test/native_storage_viewer_test.dart -d macos
 ```
 
-GitHub `v*` release tags trigger macOS, Windows, Linux, Android, iOS and Web artifacts plus standalone CLI bundles. The generic iOS archive is unsigned. Signed store uploads use the separate `ios-release.yml` and `macos-release.yml` workflows. `testflight-external.yml` selects an explicit platform and reviewed build number after processing. Local acceptance, hosted builds and TestFlight are separate gates; a tag or queued workflow does not mean downloadable binaries exist. Pages and Vercel expose the deployed source in `deployment.json`.
+GitHub `v*` release tags trigger macOS, Windows, Linux, Android, iOS and Web artifacts plus standalone CLI bundles. New releases remain drafts until every platform build succeeds and all eleven required binary assets are uploaded and nonempty. Reruns preserve existing releases and their assets. The generic iOS archive is unsigned. Signed store uploads use the separate `ios-release.yml` and `macos-release.yml` workflows. `testflight-external.yml` selects an explicit platform and reviewed build number after processing. Local acceptance, hosted builds and TestFlight are separate gates; a tag or queued workflow does not mean downloadable binaries exist. Pages and Vercel expose the deployed source in `deployment.json`.
 
 The Android release build regenerates plugin registration for release mode. The manual Android repair workflow requires successful application CI for the exact source and preserves the release's other assets. Source fingerprints verify the current Quds engine/editor/reports, standalone legacy DOC parser and pinned CrisperBooks packages; historical validation records keep their original revisions and are not certification of later trees.
 

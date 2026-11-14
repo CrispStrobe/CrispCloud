@@ -1,0 +1,31 @@
+{
+  "status": "browser_not_executed_environment_blocked",
+  "files": [
+    {
+      "original_file": "final-browser.log",
+      "file": "final-browser.log.gz",
+      "storage": "gzip compression level 9; mtime=0; no filename header",
+      "bytes": 1241,
+      "sha256": "76bba3c2f00e2802a232c6835617cf60fdd50ed05d35c9cd6f822d87f60719f8",
+      "original_bytes": 3183,
+      "original_sha256": "bc7db5868263daef45bd3d605556eb9164511538138438e2b3330f343f8f063a"
+    },
+    {
+      "original_file": "final-browser-events.json",
+      "file": "final-browser-events.json.gz",
+      "storage": "gzip compression level 9; mtime=0; no filename header",
+      "bytes": 821,
+      "sha256": "92d5a36002977a3219c0a40a81289768d163b6bcfacff9580897f1ed50ee2221",
+      "original_bytes": 2637,
+      "original_sha256": "6189a8f55095c7a36460e6d6ffd8b78a08e6f1bed9ebcb87608727025ffdade4"
+    },
+    {
+      "original_file": "final-browser-source.json.gz",
+      "file": "../../final-native-source.json.gz",
+      "storage": "Shared byte-identical pre-run source inventory for the same revision; no browser after-inventory exists",
+      "bytes": 630044,
+      "sha256": "6e96f7f066ecbf5c0fc563f6de113f852a20a07af5f088080f17c742c6934919",
+      "uncompressed_sha256": "41651296d2b037df56a26e3dccadc5acc9e090be55982eaabc8d8a2bcb64d438"
+    }
+  ]
+}

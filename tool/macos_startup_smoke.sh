@@ -54,7 +54,7 @@ for ((second = 0; second < WATCH_SECONDS; second++)); do
 done
 
 if grep -Eqi \
-  'loading libcrypto in an unsafe way|unrecognized selector|SIGABRT|Abort trap|Critical error creating config service|Credential storage startup failed|Credential policy check failed|Credential vault inspection failed' \
+  'loading libcrypto in an unsafe way|unrecognized selector|SIGABRT|Abort trap|Critical error creating config service|Credential storage startup failed|Credential policy check failed|Credential vault inspection failed|texture and its descriptor disagree|Store action needs resolve but no valid resolve texture' \
   "$LOG_FILE"; then
   echo "error: fatal startup signature found in app log" >&2
   print_failure_diagnostics

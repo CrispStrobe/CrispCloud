@@ -13,8 +13,12 @@ The [first runtime evidence](evidence/storage-runtime-20261114)
 and [UDF/ZIP evidence](evidence/storage-udf-zip-20261114) retain their separate
 qualified revisions. The [FAT and partition-image qualification](evidence/storage-fat-20261114)
 records this continuation, including external fixtures and native/JavaScript
-source bindings. Later stages remain proposals; the initial assessment's
-documentation-only receipt stays preserved with its original source revision.
+source bindings. The [binary comparison continuation](binary-comparison-profile.md)
+now binds the existing same-offset comparison and Hex navigation to verified,
+bounded captures; its [qualification record](evidence/storage-binary-20261114/)
+distinguishes native results from pending browser execution. Other unimplemented
+profiles remain proposals. The initial assessment's documentation-only receipt
+stays preserved with its original source revision.
 
 Completed prior increment: [merged PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
 The [ext continuation record](evidence/storage-ext-20261114/PROGRESS.md) starts from
@@ -500,7 +504,17 @@ compression or encryption.
 
 ### 6. Recovery and binary comparison
 
-Add bounded same-offset byte comparison and changed-range navigation first.
+Implemented comparison continuation: [bounded comparison of verified captured
+files](binary-comparison-profile.md) uses the existing same-offset scanner,
+sparse changed-range index and Hex navigation. Native inputs retain the 8 GiB
+per-file private-copy ceiling; browser inputs retain the 32 MiB per-file memory
+ceiling. Two matching bounded SHA-256 reads bind each owned capture. Available
+metadata/account checks, finite byte/chunk/time budgets and cancellation remain
+separate safeguards. Navigation reads captured bytes; it does not reread live
+source ranges. This is not a simultaneous or universally atomic provider
+snapshot. The [separate evidence](evidence/storage-binary-20261114/) records the
+actual tested revisions and the remaining platform qualifications.
+
 Xdelta patch files are a later export format; bind their expected base and
 result identities, limit work, apply to a private candidate and verify before
 publication. Retain the original if a patch fails.
