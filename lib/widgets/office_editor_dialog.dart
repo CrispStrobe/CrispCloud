@@ -30,8 +30,8 @@ import '../services/captured_file_target.dart';
 import '../services/office_device_export.dart';
 import '../services/log_service.dart';
 import '../l10n/file_bytes_error_strings.dart';
-import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_recovery_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
@@ -290,7 +290,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _loading = false;
         _error =
             '${context.tr('Could not open this document')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedFileBytesError(context, e)}';
+            '${_localizedError(e)}';
       });
     }
   }
@@ -300,6 +300,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     final dirty = _controller?.isDirty ?? false;
     if (dirty == _dirty) return;
     setState(() => _dirty = dirty);
+  }
+
+  String _localizedError(Object error) {
+    final locale = Localizations.localeOf(context);
+    return OfficeRecoveryStrings.error(locale.languageCode, error) ??
+        WordFormatStrings(locale).translate(error.toString()) ??
+        localizedFileBytesError(context, error);
   }
 
   Future<void> _save({bool popAfter = false}) async {
@@ -350,7 +357,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         SnackBar(
           content: Text(
             '${context.tr('Save failed')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
+            '${_localizedError(e)}',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
           action: SnackBarAction(
@@ -453,7 +460,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         SnackBar(
           content: Text(
             '${context.tr('Could not save a copy')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
+            '${_localizedError(e)}',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),

@@ -3223,6 +3223,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           !mounted ||
           !identical(widget.controller, controller) ||
           controller.contentRevision != revision ||
+          !controller.canChangeProtection ||
           !controller.config.allowsMutation) {
         return;
       }
