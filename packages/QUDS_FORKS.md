@@ -24,7 +24,7 @@ content.
 
 ## State (14 November 2026, spreadsheet fidelity)
 
-- Pinned fork revision: `5d57de3bff3fd8946936220b8983addc2ce0c638` (fork
+- Pinned fork revision: `fad26db2d5054c48705d27b0fb4808ed63aada2f` (fork
   `main`), also containing the recovery checkpoint `2d2a7be4`.
 - Four spreadsheet defects found by the Excel fidelity audit are fixed and
   regression-tested:
