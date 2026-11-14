@@ -161,6 +161,10 @@ Future<OfficeController> _openFixture(
   final file = panel.files!.single;
   expect(panel.originForOperation(file), isNotNull);
 
+  // Each reopened fixture owns a fresh navigator. Dispose the preceding route
+  // and its in-flight Hero transitions before mounting the next host app.
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump();
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
