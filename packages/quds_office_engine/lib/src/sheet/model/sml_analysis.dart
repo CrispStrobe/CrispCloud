@@ -326,7 +326,10 @@ abstract final class SmlAnalysis {
           ..hasExplicitFontColorEdit = src.hasExplicitFontColorEdit
           ..fontBold = src.fontBold
           ..fontSize = src.fontSize
-          ..horizontalAlign = src.horizontalAlign;
+          ..horizontalAlign = src.horizontalAlign
+          ..borderRgb = src.borderRgb
+          ..borderWidth = src.borderWidth
+          ..locked = src.locked;
       }
     }
   }
@@ -385,6 +388,9 @@ abstract final class SmlAnalysis {
       hasExplicitFontColorEdit: src.hasExplicitFontColorEdit,
       fontBold: src.fontBold,
       fontSize: src.fontSize,
+      borderRgb: src.borderRgb,
+      borderWidth: src.borderWidth,
+      locked: src.locked,
     );
   }
 
