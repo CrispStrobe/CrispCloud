@@ -4,7 +4,8 @@ Status: source-backed architecture and library assessment, followed by runtime
 implementation. **LZFSE DMG reading**, **read-only GPT/MBR inspection linked
 to Hex**, **bounded UDF reading**, **ZIP recovery to a new file**, and
 **read-only FAT12/16/32 plus MBR/GPT image browsing** are now
-implemented on the integration branch. See the [DMG codec profiles](archive-dmg-codecs.md),
+implemented and merged through PR #101. The [ext reader continuation](archive-ext-profile.md)
+adds a bounded Linux filesystem profile on `integration/storage-ext-20261114`. See the [DMG codec profiles](archive-dmg-codecs.md),
 [partition inspector](disk-partition-inspection.md), [UDF profile](archive-udf-profile.md)
 and [ZIP recovery profile](archive-zip-recovery.md), plus the
 [FAT profile](archive-fat-profile.md) and [partition-image profile](archive-disk-image-profile.md).
@@ -15,7 +16,9 @@ records this continuation, including external fixtures and native/JavaScript
 source bindings. Later stages remain proposals; the initial assessment's
 documentation-only receipt stays preserved with its original source revision.
 
-Review: [draft PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
+Completed prior increment: [merged PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
+The [ext continuation record](evidence/storage-ext-20261114/PROGRESS.md) starts from
+main at `a34f7fca`, preserving subsequent catalogue, release and DOC fixes.
 
 ## Reconciled baseline
 
@@ -366,7 +369,8 @@ general safe APFS repair, arbitrary filesystem resizing or a universal fsck.
 
 These are scoped implementation stages, not estimated delivery dates. Stages
 1 (GPT/MBR tables only), 2, 3 (physical UDF profiles) and 4 (bounded ZIP
-recovery) are implemented on the integration branch. The linked profiles and
+recovery) are implemented and merged through PR #101. The [ext reader continuation](archive-ext-profile.md)
+adds a bounded Linux filesystem profile on `integration/storage-ext-20261114`. The linked profiles and
 receipts define their qualified scope. Stage 5 now has its first read-only FAT
 and partition-image increment. Broader filesystem metadata and
 container structure inspection in stage 1 remain future work.
@@ -473,7 +477,11 @@ qualified revisions and distinguishes physical fixtures from synthetic large
 offsets. Native F3/workspace inputs retain the 8 GiB host ceiling; buffered,
 remote, nested and operation-total limits remain separate.
 
-Next, add ext and NTFS reading through a separately reviewed adapter profile.
+The next implemented adapter is [read-only ext](archive-ext-profile.md):
+standalone and Linux MBR/GPT images, classic/extent allocation, sparse files,
+selected checksum features and explicit refusal of unsupported layouts. Its
+[evidence](evidence/storage-ext-20261114) remains separate from FAT qualification.
+NTFS reading remains a later, separately reviewed adapter profile.
 Preserve alternate-stream names, sparse semantics, timestamps and unsupported
 metadata notices where available. Broader UDF profiles, VM container families
 and offline OCI semantics remain later increments. exFAT, deleted-file recovery,

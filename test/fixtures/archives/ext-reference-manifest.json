@@ -516,6 +516,125 @@
       "read_only_fsck_exit": 0,
       "external_extraction_matches": true,
       "source_unchanged_after_checks": true
+    },
+    {
+      "name": "ext4-gdt",
+      "filesystem": "ext4",
+      "bytes": 16777216,
+      "sha256": "9b99279b5275dcce45f0db5dfd09acdc20afb3a258ce93d5b3099a08ac38bca2",
+      "uuid": "10203040-5060-7080-90a0-b0c0d0e0f005",
+      "geometry": {
+        "block_bytes": 2048,
+        "blocks": 8192,
+        "blocks_per_group": 1024,
+        "inodes": 128,
+        "inodes_per_group": 16,
+        "inode_bytes": 256,
+        "features_compat": 60,
+        "features_incompat": 706,
+        "features_ro_compat": 123,
+        "state": 1
+      },
+      "mke2fs_arguments": [
+        "-q",
+        "-F",
+        "-t",
+        "ext4",
+        "-b",
+        "2048",
+        "-I",
+        "256",
+        "-g",
+        "1024",
+        "-N",
+        "128",
+        "-m",
+        "0",
+        "-U",
+        "10203040-5060-7080-90a0-b0c0d0e0f005",
+        "-L",
+        "CRISP_EXT_REF",
+        "-O",
+        "filetype,sparse_super,large_file,resize_inode,dir_index,ext_attr,has_journal,extent,64bit,flex_bg,huge_file,dir_nlink,extra_isize,uninit_bg",
+        "-E",
+        "lazy_itable_init=0,lazy_journal_init=0,hash_seed=11223344-5566-7788-99aa-bbccddeeff00,root_owner=0:0,nodiscard",
+        "<image>"
+      ],
+      "files": {
+        "hello.txt": {
+          "bytes": 26,
+          "sha256": "1844067c361bebd5faed2f1f75f83514b299434579d9c5f7f28f173cab352aff",
+          "inode": 14,
+          "stat": "Inode: 14   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 26\nFile ACL: 0\nLinks: 2   Blockcount: 4\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0):301\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "nested/café-雪.txt": {
+          "bytes": 36,
+          "sha256": "20d5d3455003f872bebead67fab3a537ca294c91235cbf4856a2209cee14d12d",
+          "inode": 15,
+          "stat": "Inode: 15   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 36\nFile ACL: 0\nLinks: 1   Blockcount: 4\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0):302\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "emoji-😀.txt": {
+          "bytes": 36,
+          "sha256": "545860dd0ec8a02937ba7275f1a9a0b865e8fdb77836dcf7e73c24afc88d7627",
+          "inode": 16,
+          "stat": "Inode: 16   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 36\nFile ACL: 0\nLinks: 1   Blockcount: 4\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0):303\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "inode": 17,
+          "stat": "Inode: 17   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 0\nFile ACL: 0\nLinks: 1   Blockcount: 0\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "d37426b71db09954cacd4d2be0059f5dbd7ad5d32fc42ab0eeda4ed1a4e1bebc",
+          "inode": 18,
+          "stat": "Inode: 18   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 8193\nFile ACL: 0\nLinks: 1   Blockcount: 20\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0-4):304-308\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "nested/long-name-beyond-a-single-directory-word.txt": {
+          "bytes": 35,
+          "sha256": "865e50afb43130521e221dca2a9fa20249fde470633df5abd4111250b22c68ef",
+          "inode": 19,
+          "stat": "Inode: 19   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 35\nFile ACL: 0\nLinks: 1   Blockcount: 4\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0):309\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "indirect.bin": {
+          "bytes": 1100003,
+          "sha256": "a9c236ab7e709940cdca46c4d81e35976965747884a3d1032e9a020ab5a9ce69",
+          "inode": 20,
+          "stat": "Inode: 20   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 1100003\nFile ACL: 0\nLinks: 1   Blockcount: 2152\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0-537):310-847\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "sparse.bin": {
+          "bytes": 65593,
+          "sha256": "f7c23c63a166f47d7c18eb3f70e4e74d957b4858fd38da688df6608b5eabb738",
+          "inode": 21,
+          "stat": "Inode: 21   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 65593\nFile ACL: 0\nLinks: 1   Blockcount: 72\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(ETB0):857, (0-1):848-849, (4-5):850-851, (8-9):852-853, (12-13):854-855, (16):856, (17):858, (20-21):859-860, (24-25):861-862, (28-29):863-864, (32):865\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "hello-hardlink.txt": {
+          "bytes": 26,
+          "sha256": "1844067c361bebd5faed2f1f75f83514b299434579d9c5f7f28f173cab352aff",
+          "inode": 14,
+          "stat": "Inode: 14   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 26\nFile ACL: 0\nLinks: 2   Blockcount: 4\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0):301\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        },
+        "unwritten.bin": {
+          "bytes": 24593,
+          "sha256": "78ac9899ac068c7d16dea777d0a42f9797a78bd44f04044fcb1e4c2d27e6f647",
+          "inode": 25,
+          "stat": "Inode: 25   Type: regular    Mode:  0644   Flags: 0x80000\nGeneration: 0    Version: 0x00000000:00000000\nUser:     0   Group:     0   Project:     0   Size: 24593\nFile ACL: 0\nLinks: 1   Blockcount: 24\nFragment:  Address: 0    Number: 0    Size: 0\n ctime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n atime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\n mtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\ncrtime: 0x14a4a600:00000003 -- Thu Apr 13 07:30:08 2389\nSize of extra inode fields: 32\nEXTENTS:\n(0-5[u]):867-872\ndebugfs 1.47.2 (1-Jan-2025)\n"
+        }
+      },
+      "directories": [
+        "lost+found",
+        "nested",
+        "empty-dir"
+      ],
+      "special_entries": [
+        "hello-link",
+        "long-link",
+        "named-pipe"
+      ],
+      "read_only_fsck_exit": 0,
+      "external_extraction_matches": true,
+      "source_unchanged_after_checks": true
     }
   ]
 }

@@ -177,9 +177,10 @@ class _ExtReader {
     this.maxRetainedPathBytes,
     this.budget,
     this.isCancelled,
-  );
+  ) : _sourceLength = source.length;
 
   final koni.ByteSource source;
+  final int _sourceLength;
   final int maxMemberBytes, maxEntries, maxDirectoryBytes, maxDepth;
   final int maxExtents, maxBlocks, maxMetadataBytes, maxRetainedPathBytes;
   final ArchiveExtTraversalBudget budget;
@@ -194,6 +195,7 @@ class _ExtReader {
   late Uint8List _uuid;
   final _groups = <_Group>[];
   final _fixed = <_Range>[];
+  final _reservedGdt = <_Range>[];
   final _claimed = <int>{};
   final _bitmaps = <int, Uint8List>{};
   final _inodeCache = <int, _Inode>{};
@@ -213,6 +215,9 @@ class _ExtReader {
   void _cancel() {
     if (_closed || (isCancelled?.call() ?? false)) {
       throw const ArchiveExtCancelledException();
+    }
+    if (source.length != _sourceLength) {
+      _bad('The source length changed while reading the image.');
     }
   }
 
@@ -234,19 +239,20 @@ class _ExtReader {
     if (offset < 0 ||
         length < 0 ||
         length > _readBytes ||
-        offset > source.length ||
-        length > source.length - offset) {
+        offset > _sourceLength ||
+        length > _sourceLength - offset) {
       _bad('A read leaves the bounded image.');
     }
     if (metadata) {
-      if (length > maxMetadataBytes - _metadataBytes)
+      if (length > maxMetadataBytes - _metadataBytes) {
         _limit('Metadata read bytes.');
+      }
       _metadataBytes += length;
     }
     final bytes = await source.read(offset, length);
     _cancel();
     if (bytes.length != length) _bad('Truncated image read.');
-    return bytes;
+    return Uint8List.fromList(bytes);
   }
 
   Future<void> close() async {
@@ -259,7 +265,7 @@ class _ExtReader {
   }
 
   Future<ViewerArchive> open() async {
-    if (source.length < 2048 || source.length > _maxExact) {
+    if (_sourceLength < 2048 || _sourceLength > _maxExact) {
       _bad('The source cannot contain an exact ext superblock.');
     }
     final sb = await _read(1024, 1024);
@@ -286,8 +292,9 @@ class _ExtReader {
     _metadataCsum = _roCompat & 0x400 != 0;
     _gdtCsum = _roCompat & 0x10 != 0;
     _is64 = _incompat & 0x80 != 0;
-    if (_metadataCsum && _gdtCsum)
+    if (_metadataCsum && _gdtCsum) {
       _bad('Conflicting metadata checksum features.');
+    }
     if (_incompat & 0x2000 != 0 && !_metadataCsum) {
       _bad('A checksum seed is declared without metadata checksums.');
     }
@@ -296,15 +303,17 @@ class _ExtReader {
         ? _u32(sb, 624)
         : _crc32c(0xffffffff, _uuid);
     if (_metadataCsum) {
-      if (sb[373] != 1)
+      if (sb[373] != 1) {
         _unsupported('Only CRC32c metadata checksums are admitted.');
+      }
       if (_crc32c(0xffffffff, sb, end: 1020) != _u32(sb, 1020)) {
         _bad('Superblock checksum mismatch.');
       }
     }
     final logBlock = _u32(sb, 24);
-    if (logBlock > 2)
+    if (logBlock > 2) {
       _unsupported('Only 1024, 2048 and 4096-byte blocks are admitted.');
+    }
     _blockBytes = 1024 * (1 << logBlock);
     if (_u32(sb, 28) != logBlock || _u32(sb, 36) != _u32(sb, 32)) {
       _unsupported('Fragment or cluster geometry differs from block geometry.');
@@ -318,9 +327,10 @@ class _ExtReader {
       _is64 ? _u32(sb, 336) : 0,
       ceiling: _maxExact ~/ _blockBytes,
     );
-    if (!_is64 && _u32(sb, 336) != 0)
+    if (!_is64 && _u32(sb, 336) != 0) {
       _bad('High block count without 64bit feature.');
-    if (_blocks <= _firstData || _blocks > source.length ~/ _blockBytes) {
+    }
+    if (_blocks <= _firstData || _blocks > _sourceLength ~/ _blockBytes) {
       _bad('Declared filesystem leaves the image.');
     }
     _blocksPerGroup = _u32(sb, 32);
@@ -353,8 +363,9 @@ class _ExtReader {
     if (_descSize != (_is64 ? 64 : 32)) {
       _unsupported('Only 32-byte and 64-byte group descriptors are admitted.');
     }
-    if (_u16(sb, 90) != 0)
+    if (_u16(sb, 90) != 0) {
       _bad('The primary superblock has a nonzero group number.');
+    }
     if (_u32(sb, 228) != 0) _unsupported('External journals are not admitted.');
     final tableBlocks =
         (_groupCount * _descSize + _blockBytes - 1) ~/ _blockBytes;
@@ -370,6 +381,10 @@ class _ExtReader {
           _firstData + group * _blocksPerGroup,
           1 + tableBlocks + reservedGdt,
         );
+        if (reservedGdt > 0) {
+          final first = _firstData + group * _blocksPerGroup + 1 + tableBlocks;
+          _reservedGdt.add(_Range(first, first + reservedGdt));
+        }
       }
       final descriptor = await _read(
         (_firstData + 1) * _blockBytes + group * _descSize,
@@ -426,9 +441,11 @@ class _ExtReader {
     }
     _fixed.sort((a, b) => a.start.compareTo(b.start));
     for (var i = 1; i < _fixed.length; i++) {
-      if (_fixed[i].start < _fixed[i - 1].end)
+      if (_fixed[i].start < _fixed[i - 1].end) {
         _bad('Overlapping filesystem metadata regions.');
+      }
     }
+    if (_compat & 0x10 != 0) await _resizeMetadata();
     // Reserve the internal journal allocation before any namespace allocation.
     // A clean state does not permit exposing journal blocks as an ordinary file.
     if (_compat & 4 != 0) {
@@ -439,8 +456,9 @@ class _ExtReader {
         _bad('Invalid internal journal inode.');
       }
       final journal = await _inode(journalNumber);
-      if (!journal.regular)
+      if (!journal.regular) {
         _bad('The internal journal is not a regular inode.');
+      }
       await _map(journal);
     } else if (_u32(sb, 224) != 0) {
       _bad('Journal inode without the journal feature.');
@@ -472,6 +490,44 @@ class _ExtReader {
       streamReader: (member, chunkSize) =>
           _stream(_files[member.index], chunkSize),
     );
+  }
+
+  Future<void> _resizeMetadata() async {
+    final inode = await _inode(7);
+    if (!inode.regular || inode.flags & 0x80000 != 0) {
+      _unsupported('Unknown resize-inode allocation layout.');
+    }
+    for (var i = 0; i < 15; i++) {
+      if (i != 13 && _u32(inode.blockMap, i * 4) != 0) {
+        _unsupported('Unknown resize-inode allocation layout.');
+      }
+    }
+    final index = _u32(inode.blockMap, 13 * 4);
+    if (index == 0) {
+      if (_reservedGdt.isNotEmpty) _bad('Missing resize-inode index.');
+      return;
+    }
+    await _claim(index);
+    final bytes = await _read(index * _blockBytes, _blockBytes);
+    final seen = <int>{};
+    bool reserved(int block) =>
+        _reservedGdt.any((r) => block >= r.start && block < r.end);
+    for (var i = 0; i < _blockBytes; i += 4) {
+      await _checkpoint();
+      final indirect = _u32(bytes, i);
+      if (indirect == 0) continue;
+      if (!reserved(indirect) || !seen.add(indirect)) {
+        _bad('Resize-inode index leaves reserved descriptor blocks.');
+      }
+      final pointers = await _read(indirect * _blockBytes, _blockBytes);
+      for (var j = 0; j < _blockBytes; j += 4) {
+        await _checkpoint();
+        final block = _u32(pointers, j);
+        if (block != 0 && (!reserved(block) || !seen.add(block))) {
+          _bad('Resize-inode allocation leaves reserved descriptor blocks.');
+        }
+      }
+    }
   }
 
   bool _hasSuper(int group) {
@@ -552,8 +608,9 @@ class _ExtReader {
       final expected = inode
           ? group.inodeBitmapChecksum
           : group.blockBitmapChecksum;
-      if ((_is64 ? checksum : checksum & 65535) != expected)
+      if ((_is64 ? checksum : checksum & 65535) != expected) {
         _bad('Allocation bitmap checksum mismatch.');
+      }
     }
     if (_bitmaps.length == 128) _bitmaps.remove(_bitmaps.keys.first);
     _bitmaps[key] = bytes;
@@ -587,15 +644,17 @@ class _ExtReader {
     final groupNumber = (number - 1) ~/ _inodesPerGroup;
     final index = (number - 1) % _inodesPerGroup;
     final map = await _bitmap(groupNumber, true);
-    if (map[index ~/ 8] & (1 << (index % 8)) == 0)
+    if (map[index ~/ 8] & (1 << (index % 8)) == 0) {
       _bad('A referenced inode is marked free.');
+    }
     final bytes = await _read(
       _groups[groupNumber].inodeTable * _blockBytes + index * _inodeSize,
       _inodeSize,
     );
     final extra = _inodeSize > 128 ? _u16(bytes, 128) : 0;
-    if (extra > _inodeSize - 128 || extra % 4 != 0)
+    if (extra > _inodeSize - 128 || extra % 4 != 0) {
       _bad('Invalid extra inode size.');
+    }
     final generation = _u32(bytes, 100);
     final seed = _crc32c(
       _crc32c(_seed, _little32(number)),
@@ -612,8 +671,9 @@ class _ExtReader {
         copy[131] = 0;
       }
       final actual = _crc32c(seed, copy);
-      if ((high ? actual : actual & 65535) != expected)
+      if ((high ? actual : actual & 65535) != expected) {
         _bad('Inode checksum mismatch.');
+      }
     }
     final mode = _u16(bytes, 0), type = mode & 0xf000;
     if (!const [
@@ -635,20 +695,25 @@ class _ExtReader {
     if (flags & ~allowedFlags != 0) {
       _unsupported('Indexed directories or excluded inode data features.');
     }
-    if (flags & 0x80000 != 0 && _incompat & 0x40 == 0)
+    if (flags & 0x80000 != 0 && _incompat & 0x40 == 0) {
       _bad('Extent inode without filesystem extent feature.');
-    if (flags & 0x40000 != 0 && _roCompat & 8 == 0)
+    }
+    if (flags & 0x40000 != 0 && _roCompat & 8 == 0) {
       _bad('Huge inode without huge-file feature.');
+    }
     if (_u32(bytes, 104) != 0 || _u16(bytes, 118) != 0) {
       _unsupported('External extended-attribute blocks are not admitted.');
     }
-    if (_u32(bytes, 112) != 0)
+    if (_u32(bytes, 112) != 0) {
       _unsupported('Fragment-addressed inodes are not admitted.');
+    }
     final highSize = _u32(bytes, 108);
-    if (highSize != 0 && type != 0x8000)
+    if (highSize != 0 && type != 0x8000) {
       _unsupported('Large non-regular inode size.');
-    if (highSize != 0 && _roCompat & 2 == 0)
+    }
+    if (highSize != 0 && _roCompat & 2 == 0) {
       _bad('Large inode lacks the large-file feature.');
+    }
     final size = _wide(
       _u32(bytes, 4),
       highSize,
@@ -660,6 +725,7 @@ class _ExtReader {
       flags,
       size,
       _u16(bytes, 26),
+      _u32(bytes, 28) != 0 || _u16(bytes, 116) != 0,
       seed,
       Uint8List.fromList(bytes.sublist(40, 100)),
       _modified(bytes, extra),
@@ -681,8 +747,8 @@ class _ExtReader {
         return null;
       }
     }
-    return DateTime.fromMicrosecondsSinceEpoch(
-      seconds * 1000000 + nanos ~/ 1000,
+    return DateTime.fromMillisecondsSinceEpoch(
+      seconds * 1000 + nanos ~/ 1000000,
       isUtc: true,
     );
   }
@@ -717,8 +783,9 @@ class _ExtReader {
         );
         logical += coverage;
       }
-      if (inode.size > logical * _blockBytes)
+      if (inode.size > logical * _blockBytes) {
         _bad('Inode size exceeds classic addressing.');
+      }
     }
     final complete = <_Span>[];
     var cursor = 0;
@@ -821,7 +888,8 @@ class _ExtReader {
     for (var i = 0; i < count; i++) {
       final at = 12 + i * 12;
       final logical = _u32(bytes, at);
-      if (logical < lower ||
+      if ((!root && i == 0 && logical != lower) ||
+          logical < lower ||
           logical < previous ||
           logical >= upper ||
           (i > 0 && logical == previous && depth > 0)) {
@@ -871,12 +939,15 @@ class _ExtReader {
     int depth,
   ) async {
     if (depth > maxDepth) _limit('Directory depth.');
-    if (!_directories.add(inode.number))
+    if (!_directories.add(inode.number)) {
       _bad('Directory cycle or repeated directory inode.');
-    if (inode.size <= 0 || inode.size % _blockBytes != 0)
+    }
+    if (inode.size <= 0 || inode.size % _blockBytes != 0) {
       _bad('Invalid directory size.');
-    if (inode.size > maxDirectoryBytes - _directoryBytes)
+    }
+    if (inode.size > maxDirectoryBytes - _directoryBytes) {
       _limit('Directory bytes.');
+    }
     _directoryBytes += inode.size;
     await _map(inode);
     final names = <String>{};
@@ -937,8 +1008,9 @@ class _ExtReader {
           }
           _component(name);
           if (!names.add(name)) _bad('Duplicate directory name.');
-          if (number < _firstInode)
+          if (number < _firstInode) {
             _bad('A directory exposes a reserved inode.');
+          }
           if (_members.length >= maxEntries) _limit('Directory entry count.');
           final path = prefix.isEmpty ? name : '$prefix/$name';
           if (path.length > 4096 ||
@@ -948,13 +1020,19 @@ class _ExtReader {
           _pathBytes += path.length * 2;
           if (!_paths.add(path)) _bad('Duplicate complete path.');
           final child = await _inode(number);
-          if (type != 0 && type != child.directoryType)
+          if (type != 0 && type != child.directoryType) {
             _bad('Directory and inode file types disagree.');
+          }
           final references = (_references[number] ?? 0) + 1;
           _references[number] = references;
-          if (!child.directory && references > child.links)
+          if (!child.directory && references > child.links) {
             _bad('Observed links exceed inode link count.');
-          if (child.regular) await _map(child);
+          }
+          if (child.regular || (child.directoryType == 7 && child.allocated)) {
+            await _map(child);
+          } else if (child.directoryType == 7 && child.size > 60) {
+            _bad('A long symbolic link has no allocated blocks.');
+          }
           _members.add(
             ViewerArchiveMember(
               name: path,
@@ -969,8 +1047,9 @@ class _ExtReader {
             ),
           );
           _files.add(child);
-          if (child.directory)
+          if (child.directory) {
             await _directory(child, path, inode.number, depth + 1);
+          }
         }
       }
     }
@@ -979,8 +1058,9 @@ class _ExtReader {
 
   Stream<List<int>> _stream(_Inode inode, int requestedChunk) async* {
     _cancel();
-    if (!inode.regular || inode.spans == null)
+    if (!inode.regular || inode.spans == null) {
       _bad('Only mapped regular files can be read.');
+    }
     if (inode.size > maxMemberBytes) _limit('Member streaming allowance.');
     final chunk = requestedChunk < _readBytes ? requestedChunk : _readBytes;
     for (final span in inode.spans!) {
@@ -1042,11 +1122,13 @@ class _Inode {
     this.flags,
     this.size,
     this.links,
+    this.allocated,
     this.seed,
     this.blockMap,
     this.modified,
   );
   final int number, mode, flags, size, links, seed;
+  final bool allocated;
   final Uint8List blockMap;
   final DateTime? modified;
   List<_Span>? spans;

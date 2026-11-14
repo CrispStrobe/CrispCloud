@@ -3,7 +3,7 @@
 CrispCloud can expose a validated MBR or GPT disk image through the existing
 Archive listing, preview and streamed extraction interfaces. The adapter is
 original MIT-licensed Dart code. It reuses the app's partition inspector,
-bounded byte-source slices and FAT reader; it introduces no runtime dependency.
+bounded byte-source slices and FAT/ext readers; it introduces no runtime dependency.
 
 This is a browsing profile for an image file already supplied to the app. It
 does not open physical devices, mount a filesystem, alter partition tables,
@@ -18,8 +18,8 @@ one-based table index:
 | --- | --- |
 | `partition-001/` | First populated table entry's directory. Gaps in table indices remain gaps in these identifiers. |
 | `partition-001/raw.img` | Exact bounded bytes of that partition, including its filesystem metadata and unused space. |
-| `partition-001/files/` | Added only after a supported FAT filesystem has been validated completely. |
-| `partition-001/files/HELLO.TXT` | A FAT member, read lazily from its verified allocation extents. |
+| `partition-001/files/` | Added only after a supported FAT/ext filesystem has been validated completely. |
+| `partition-001/files/HELLO.TXT` | A filesystem member, read lazily from its verified allocation extents. |
 
 Names from the GPT table and filesystem volume labels never determine these
 synthetic directory names. Child paths must be relative, contain no backslash,
@@ -34,7 +34,7 @@ listed even when the selected preview or extraction operation cannot read it.
 ## Partition-table admission
 
 Recognition and admission are separate. Recognition performs bounded probes at
-the MBR prefix and fixed primary/physical-tail GPT positions. A standalone FAT
+the MBR prefix and fixed primary/physical-tail GPT positions. A standalone FAT/ext
 volume takes precedence over plausible partition records in its boot code. A
 `55 AA` trailer with no plausible nonempty MBR record is not sufficient for
 disk-image recognition. Recognition does not confer table authority.
@@ -84,22 +84,27 @@ Payload recognition occurs only for these table types:
 
 | Table | Eligible types |
 | --- | --- |
-| MBR | `01`, `04`, `06`, `0B`, `0C`, `0E`, and `EF` (FAT variants or EFI system). |
-| GPT | EFI system `C12A7328-F81F-11D2-BA4B-00A0C93EC93B` and Microsoft basic data `EBD0A0A2-B9E5-4433-87C0-68B6B72699C7`. |
+| MBR FAT | `01`, `04`, `06`, `0B`, `0C`, `0E`, and `EF` (FAT variants or EFI system). |
+| MBR ext | `83` (Linux filesystem); only the supported ext profile is attempted. |
+| GPT FAT | EFI system `C12A7328-F81F-11D2-BA4B-00A0C93EC93B` and Microsoft basic data `EBD0A0A2-B9E5-4433-87C0-68B6B72699C7`. |
+| GPT ext | Linux filesystem-data `0FC63DAF-8483-4772-8E79-3D69D8477DE4`. |
 
-An eligible type does not establish that its bytes are FAT. The FAT boot probe
-and complete bounded reader must also succeed. FAT12, FAT16 and FAT32 have the
+An eligible type does not establish its filesystem. The type-specific FAT/ext
+probe and complete bounded reader must also succeed. FAT12, FAT16 and FAT32 have the
 separate [FAT reader profile](archive-fat-profile.md), including mirror and chain
-validation and supported name encodings.
+validation and supported name encodings. Linux ext partitions use the separate
+[ext reader profile](archive-ext-profile.md), including allocation and metadata
+checksum validation. A Linux type never authorizes interpretation as FAT, and
+a FAT type never authorizes interpretation as ext.
 
-Unknown, Linux, recovery, extended, dynamic-disk and other non-allowlisted types
+Unknown, recovery, extended, dynamic-disk and other non-allowlisted types
 are exposed as raw partitions with an explicit notice. Their payloads are not
 searched for embedded filesystem signatures. Extended/EBR traversal, Windows
 dynamic disks, APFS, NTFS, exFAT and encrypted volumes have no filesystem
 interpretation in this adapter. An eligible basic-data partition containing
 such a format also remains raw when the FAT probe does not recognize it.
 
-A FAT format error, unsupported profile, or child traversal/entry limit
+A FAT/ext format error, unsupported profile, or child traversal/entry limit
 produces a raw-only partition and a refusal notice. A child is published only
 after its complete listing has succeeded. Source errors, revocation, incomplete
 reads, changed source identity or length, and cancellation propagate out of
@@ -115,8 +120,8 @@ All optional ceilings are positive and can only lower these defaults:
 | Composite listing entries | 100,000, including synthetic directories and raw entries. |
 | Metadata source bytes requested during open | 64 MiB, shared across inspection, probes and every child volume; each requested read is charged before awaiting I/O. Failed attempts retain their debit. |
 | Retained path text | 16 MiB measured as UTF-16 code units × 2, counting both child-relative paths and composite prefixed paths across all children. Each composite path is at most 4096 code units. |
-| FAT cluster visits | 1,048,576 shared across all attempted child listings. Failed child work consumes the shared allowance. |
-| FAT extents created | 100,000 shared across all attempted child listings, including fixed FAT12/16 root extents. Failed child work consumes the shared allowance. |
+| FAT cluster/ext block visits | 1,048,576 combined across both kinds of attempted child listings. Failed child work consumes the shared allowance. |
+| FAT/ext extents created | 100,000 combined across both kinds of attempted child listings, including fixed FAT12/16 root extents. Failed child work consumes the shared allowance. |
 | Individual underlying read | At most 64 KiB. There is no full-image materialization. |
 | Buffered member read | At most 64 MiB and the caller's smaller allowance, checked before allocation. |
 | Streamed member read | At most the supplied allowance, itself no greater than the existing 8 GiB archive streaming ceiling. Returned chunks are at most 64 KiB. |

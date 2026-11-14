@@ -22,7 +22,8 @@ be explicit; there is no filesystem write or repair authority.
 
 Work is divided into the core reader, archive/image integration, independent
 fixtures and validation. Checkpoints are saved remotely as each part becomes
-concrete. No qualification of the new reader is claimed at this initial point.
+concrete. Final qualification is still in progress; intermediate checks are preserved
+with their exact source hashes and are not presented as later source runs.
 
 ## Prior hosted CI follow-up
 
@@ -37,3 +38,23 @@ recorded local qualification and will be assessed during this continuation.
 2. Read this file and the eventual ext profile and validation receipts.
 3. Preserve existing evidence and bind every new test result to its source.
 4. Push incremental commits; do not rewrite existing branch history.
+
+## Incremental checkpoints
+
+- `71fa70c8`: recovered prior completed FAT qualification and refreshed all refs.
+- `3c868b26`: saved fail-closed ext API skeleton, bounded hash-verified external
+  FatFs retrieval, and stable generated/UI formatting.
+- `eeefe937`: saved functional ext reader, standalone/MBR/GPT integration,
+  read-only workspace/F3 tests and first independent reference corpus.
+
+Current follow-up adds the CRC16 external reference, malformed-image tests,
+combined-disk budgets, source-length checks, resize/symlink allocation checks,
+and VM/JavaScript-stable timestamps. Five complete external images reproduce
+exactly and contain 48 regular file instances. Preliminary portable checks pass;
+final pinned native, JavaScript, analysis and production build remain in progress.
+
+The first native core/reference run passed 68 tests and failed one assertion:
+the extended timestamp test incorrectly selected a 128-byte inode specimen.
+The test now selects the 256-byte inode specimen it requires. Its full original
+logs, summary, receipt and source hashes are preserved here (larger records use
+lossless gzip). See `intermediate-evidence-index.json`.

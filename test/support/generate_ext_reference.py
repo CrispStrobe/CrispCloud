@@ -34,6 +34,7 @@ CASES = [
     ("ext3", "ext3", 16 * 1024 * 1024, 2048, 256, COMMON_FEATURES + ",has_journal"),
     ("ext4", "ext4", 32 * 1024 * 1024, 4096, 256, EXT4_FEATURES + ",metadata_csum_seed"),
     ("ext4-uuid", "ext4", 16 * 1024 * 1024, 1024, 256, EXT4_FEATURES),
+    ("ext4-gdt", "ext4", 16 * 1024 * 1024, 2048, 256, EXT4_FEATURES.replace(",metadata_csum", "") + ",uninit_bg"),
 ]
 DIRECTORIES = ["lost+found", "nested", "empty-dir"]
 SPECIALS = ["hello-link", "long-link", "named-pipe"]
@@ -271,7 +272,9 @@ def dart_file(images: list[dict]) -> str:
         "    for (final (at, data) in blocks) {",
         "      final start = offset > at ? offset : at;",
         "      final end = offset + count < at + data.length ? offset + count : at + data.length;",
-        "      if (end > start) out.setRange(start - offset, end - offset, data, start - at);",
+        "      if (end > start) {",
+        "        out.setRange(start - offset, end - offset, data, start - at);",
+        "      }",
         "    }",
         "    return out;",
         "  }",

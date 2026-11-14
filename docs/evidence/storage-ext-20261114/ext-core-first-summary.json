@@ -1,0 +1,19 @@
+{
+  "label": "ext-core-first",
+  "passed": 68,
+  "failed": 1,
+  "skipped": 0,
+  "total": 69,
+  "files": [
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart"
+  ],
+  "failures": [
+    {
+      "test": "bounded ext reader adversarial and boundary controls future ext timestamps use exact UTC millisecond precision",
+      "result": "failure"
+    }
+  ],
+  "run_success": false,
+  "events_sha256": "0af9e7bec00ff41555eb706394f8d974aad7bc304246d0992bddea344b1503b6"
+}

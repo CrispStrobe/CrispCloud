@@ -1,0 +1,42 @@
+{
+  "phase": "first native core/reference run, before timestamp test-fixture correction",
+  "qualified_commit": null,
+  "source_binding": "ext-core-first-source-binding.json.gz",
+  "artifacts": [
+    {
+      "file": "ext-core-first.log",
+      "encoding": "utf-8",
+      "original_file": "ext-core-first.log",
+      "original_bytes": 14851,
+      "original_sha256": "ee836ce4ab015f3bc27d98a5d5bb93e36eda2532fd7db187b3ad360b05f94c7e"
+    },
+    {
+      "file": "ext-core-first-events.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-core-first-events.json",
+      "original_bytes": 33415,
+      "original_sha256": "0af9e7bec00ff41555eb706394f8d974aad7bc304246d0992bddea344b1503b6"
+    },
+    {
+      "file": "ext-core-first-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-core-first-source-binding.json",
+      "original_bytes": 1114046,
+      "original_sha256": "ba8c89e2d7483cba04211f0628a41c2f4fed5bde98e1cff3c724be2f78ed37a6"
+    },
+    {
+      "file": "ext-core-first-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-core-first-receipt.json",
+      "original_bytes": 1203,
+      "original_sha256": "5c83ad66dca9d740b7dd794cc69b552a3186721b05e98ba21e9cba01219b257e"
+    },
+    {
+      "file": "ext-core-first-summary.json",
+      "encoding": "utf-8",
+      "original_file": "ext-core-first-summary.json",
+      "original_bytes": 616,
+      "original_sha256": "1902bc1b9dd1815549bcdd39ba375de518c701fb8b20d2ab1975a5b56e438483"
+    }
+  ]
+}
