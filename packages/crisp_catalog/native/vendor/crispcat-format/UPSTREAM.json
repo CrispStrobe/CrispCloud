@@ -1,21 +1,20 @@
 {
   "repository": "https://github.com/CrispStrobe/CrispSorter",
-  "revision": "3b0b7cc3216d54bf410184acf1f233bfa29c2284",
+  "revision": "c1881142b0d4ffecb10f26d51fab2cda2f53588e",
   "license": "MIT, explicitly declared by crates/crispcat/Cargo.toml; the repository root is AGPL and is not imported",
   "sha256": {
-    "crates/crispcat/src/caf.rs": "fed268490874250ddcf85b9b47aff0a68039122293fb8b5dcb556f26ed1911e3",
-    "crates/crispcat/src/index.rs": "1886c3e00b060ff8fc502be3f8ae9f79de089b6201e5a2d5c751b0e9b8063cb5"
+    "crates/crispcat/src/caf.rs": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
+    "crates/crispcat/src/index.rs": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072"
   },
   "modifications": [
-    "Retain explicit directory paths and mtimes, including empty directories",
-    "Expose legacy zero-size provenance without changing compatibility read_file values",
-    "Validate explicit directory paths and file/directory collisions on export"
+    "Implementation files match the maintained CrispSorter crate exactly; Cargo packaging remains a format-only slice without scanning, Tauri, LanceDB or content hashing."
   ],
   "reviewed_sha256": {
-    "src/caf.rs": "6350999e53c2c5e9c891b957b43c54172d39c5906f4de94290f05524869c826b",
-    "src/index.rs": "f54659ba53409245ea80c7f4a0fee84bbe5576820c1d7fedbd3e991875efc1e6",
+    "src/caf.rs": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
+    "src/index.rs": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072",
     "src/lib.rs": "12f8b9fb7243b8068ed74d832d81cde84dfdc84861075d1b2650591e3c1197ed",
     "Cargo.toml": "536e091f5189a0f527a316094ece108f5eed8c1a81a82ac4d41c575bd51ab855",
     "LICENSE": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215"
-  }
+  },
+  "previous_revision": "3b0b7cc3216d54bf410184acf1f233bfa29c2284"
 }

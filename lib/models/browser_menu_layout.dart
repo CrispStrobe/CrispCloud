@@ -371,6 +371,7 @@ class BrowserMenuLayout {
           'sync',
           'duplicates',
           'storageAnalyzer',
+          'catalogues',
           'batchAnalyzer',
           'multiCloud',
           'mount',

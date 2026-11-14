@@ -24,11 +24,14 @@ import 'config/cli_config.dart';
 /// Build and return a configured [CommandRunner] for the crisp CLI.
 ///
 /// [configPath] overrides the default config file location (useful in tests).
-CommandRunner<int> buildRunner({String? configPath}) {
+CommandRunner<int> buildRunner({
+  String? configPath,
+  String executableName = 'crisp',
+}) {
   final config = CliConfig(path: configPath);
 
   final runner = PdfAwareCommandRunner(
-    'crisp',
+    executableName,
     'CrispCloud CLI — manage cloud storage from the terminal.',
   );
 
@@ -37,7 +40,7 @@ CommandRunner<int> buildRunner({String? configPath}) {
     'version',
     abbr: 'V',
     negatable: false,
-    help: 'Print the crisp version.',
+    help: 'Print the CrispCloud CLI version.',
   );
 
   // Register commands
@@ -71,7 +74,8 @@ class CompletionCommand extends Command<int> {
   final String description = 'Print shell completion script.';
 
   @override
-  String get invocation => 'crisp completion <bash|zsh|fish>';
+  String get invocation =>
+      '${runner?.executableName ?? 'crispcloud'} completion <bash|zsh|fish>';
 
   @override
   Future<int> run() async {
@@ -79,11 +83,11 @@ class CompletionCommand extends Command<int> {
 
     switch (shell.toLowerCase()) {
       case 'bash':
-        stdout.writeln(_bashCompletion);
+        stdout.writeln(_render(_bashCompletion));
       case 'zsh':
-        stdout.writeln(_zshCompletion);
+        stdout.writeln(_render(_zshCompletion));
       case 'fish':
-        stdout.writeln(_fishCompletion);
+        stdout.writeln(_render(_fishCompletion));
       default:
         stderr.writeln('Usage: crisp completion <bash|zsh|fish>');
         stderr.writeln('');
@@ -95,6 +99,11 @@ class CompletionCommand extends Command<int> {
     }
     return 0;
   }
+
+  String _render(String value) => value.replaceAll(
+    RegExp(r'\bcrisp\b'),
+    runner?.executableName ?? 'crispcloud',
+  );
 
   static const _bashCompletion = r'''
 # crisp bash completion

@@ -9,6 +9,8 @@ environment:
   flutter: '>=3.47.0'
 
 dependencies:
+  crisp_catalog:
+    path: packages/crisp_catalog
   crisperbooks:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
@@ -279,6 +281,7 @@ flutter:
     - assets/fonts/RobotoMono_LICENSE.txt
     - assets/licenses/pdf_fonts/
     - assets/licenses/terminal/
+    - packages/crisp_catalog/THIRD_PARTY_NOTICES.txt
     - packages/file_viewer_binary/LICENSE
     - packages/file_viewer_lrc/LICENSE
     - packages/legacy_doc_parser/UPSTREAM.json

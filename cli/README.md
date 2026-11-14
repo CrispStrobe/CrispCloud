@@ -1,28 +1,32 @@
 # CrispCloud CLI
 
-The `crisp` companion runs on the Dart VM without Flutter. Use the repository's
+The `crispcloud` companion runs on the Dart VM without Flutter. Use the repository's
 pinned Dart SDK, resolve dependencies in `cli/`, then run:
 
 ```bash
 cd cli
 dart pub get
-dart run bin/crisp.dart --help
+dart run bin/crispcloud.dart --help
 dart test
 ```
 
-For a distributable native bundle, use `dart build cli -o build/cli` and keep its
+For a distributable native bundle, use `python3 ../tool/build_cli_bundle.py --dart dart` and keep its
 native transport libraries alongside the executable. The existing storage
 commands are `connect`, `providers`, `ls`, `upload`, `download`, `search`, `share`,
-`sync`, `du`, `catalog`, and `config`. `crisp completion bash`, `zsh`, or `fish` includes PDF
+`sync`, `du`, `catalog`, and `config`. `crispcloud completion bash`, `zsh`, or `fish` includes PDF
 operations.
+
+The primary command is `crispcloud`, matching the full-product naming of
+`crispsorter`. `crisp` remains a compatibility alias with identical commands and
+JSON/exit-code behavior. Both executables are included in the native bundle.
 
 ## Largest local files and folders
 
 ```bash
-crisp du ~/Downloads                    # largest immediate children, folder totals
-crisp du /some/path --files-only -n 30   # largest individual files at any depth
-crisp du /some/path --dirs-only -r       # folder totals at every depth
-crisp du /some/path --json --bytes       # structured report; JSON always uses bytes
+crispcloud du ~/Downloads                    # largest immediate children, folder totals
+crispcloud du /some/path --files-only -n 30   # largest individual files at any depth
+crispcloud du /some/path --dirs-only -r       # folder totals at every depth
+crispcloud du /some/path --json --bytes       # structured report; JSON always uses bytes
 ```
 
 The path defaults to the current directory. This metadata-only command works
@@ -51,18 +55,18 @@ arguments, `130` interrupted by Ctrl+C. No file contents are read or modified.
 
 ```bash
 # No entry/depth cap by default; storing outside the scanned tree is convenient.
-crisp catalog scan /mnt/volume1 -o /var/tmp/volume1.crispindex
-crisp du --index /var/tmp/volume1.crispindex --files-only -n 50 --json
-crisp du --index /var/tmp/volume1.crispindex some/subfolder --dirs-only
-crisp catalog search /var/tmp/volume1.crispindex invoice
-crisp catalog info /var/tmp/volume1.crispindex
+crispcloud catalog scan /mnt/volume1 -o /var/tmp/volume1.crispindex
+crispcloud du --index /var/tmp/volume1.crispindex --files-only -n 50 --json
+crispcloud du --index /var/tmp/volume1.crispindex some/subfolder --dirs-only
+crispcloud catalog search /var/tmp/volume1.crispindex invoice
+crispcloud catalog info /var/tmp/volume1.crispindex
 
 # Refresh by staged replacement; the previous catalogue survives failed builds.
-crisp catalog scan /mnt/volume1 -o /var/tmp/volume1.crispindex --replace
+crispcloud catalog scan /mnt/volume1 -o /var/tmp/volume1.crispindex --replace
 
 # CAF import/export. Imported CAF source coverage remains explicitly unknown.
-crisp catalog import archive.caf -o /var/tmp/archive.crispindex
-crisp catalog export /var/tmp/volume1.crispindex -o volume1.caf
+crispcloud catalog import archive.caf -o /var/tmp/archive.crispindex
+crispcloud catalog export /var/tmp/volume1.crispindex -o volume1.caf
 ```
 
 The native Rust backend reuses CrispSorter's MIT-licensed CAF codec, adapted to
@@ -97,7 +101,7 @@ exports currently materialize the format model in Rust memory, whereas native
 scans stream rows to SQLite.
 
 Builds require Cargo and a C compiler for bundled SQLite. The Dart native-assets
-hook packages the library with `dart build cli`; users of the finished bundle
+hook packages the library with the bundle builder; users of the finished bundle
 need neither Rust nor Python. Desktop target mappings cover macOS, Linux and
 Windows (arm64/x64); only macOS was locally executed. Hosted CI covers all three.
 The package is independent of Flutter and ready for future GUI consumption.
@@ -130,7 +134,7 @@ capabilities, session/resume compatibility, web limits and acceptance tests.
 
 ## PDF operations
 
-`crisp pdf` uses the same `pdf_operations` package as the graphical application.
+`crispcloud pdf` uses the same `pdf_operations` package as the graphical application.
 There is no Flutter or platform PDF viewer dependency. Every mutating operation
 requires an explicit, separate output path; the input PDF is never a permitted
 output, even with `--overwrite`.
@@ -163,10 +167,10 @@ Ordinary relative or absolute paths always refer to local files. Prefix a cloud
 file with `cloud://PROFILE/` to select a configured S3, SFTP or WebDAV profile:
 
 ```bash
-crisp pdf merge cover.pdf cloud://my-s3/reports/report.pdf \
+crispcloud pdf merge cover.pdf cloud://my-s3/reports/report.pdf \
   --output cloud://my-dav/reviews/combined.pdf --json
 
-crisp pdf rotate cloud://my-sftp/inbox/report.pdf \
+crispcloud pdf rotate cloud://my-sftp/inbox/report.pdf \
   --pages 2,4-6 --degrees 90 --output rotated.pdf
 ```
 
@@ -208,13 +212,13 @@ rejected. Extraction and merge selections retain the requested order. Reordering
 requires every page exactly once; deleting every page is invalid.
 
 ```bash
-crisp pdf info report.pdf --json
-crisp pdf text report.pdf --pages 2-4 > report.txt
-crisp pdf search report.pdf 'invoice|receipt' --regex --json
-crisp pdf extract report.pdf --pages 1-3,7 --output excerpt.pdf
-crisp pdf reorder report.pdf --pages 3,1,2 --output reordered.pdf
-crisp pdf delete-pages report.pdf --pages 4-6 --output shorter.pdf
-crisp pdf rotate report.pdf --pages 2 --degrees=-90 --output rotated.pdf
+crispcloud pdf info report.pdf --json
+crispcloud pdf text report.pdf --pages 2-4 > report.txt
+crispcloud pdf search report.pdf 'invoice|receipt' --regex --json
+crispcloud pdf extract report.pdf --pages 1-3,7 --output excerpt.pdf
+crispcloud pdf reorder report.pdf --pages 3,1,2 --output reordered.pdf
+crispcloud pdf delete-pages report.pdf --pages 4-6 --output shorter.pdf
+crispcloud pdf rotate report.pdf --pages 2 --degrees=-90 --output rotated.pdf
 ```
 
 Plain text output separates pages with a form-feed character. Search JSON reports
@@ -228,7 +232,7 @@ The positional input order is the merge order. To select pages independently,
 repeat `--source-pages` **once per input**; commas stay within that expression:
 
 ```bash
-crisp pdf merge cover.pdf report.pdf appendix.pdf \
+crispcloud pdf merge cover.pdf report.pdf appendix.pdf \
   --source-pages all --source-pages 1-5,9 --source-pages 3-1 \
   --output combined.pdf
 ```
@@ -247,10 +251,10 @@ diagnostics and result JSON; malformed password JSON is reported without echoing
 its contents.
 
 ```bash
-crisp pdf rotate protected.pdf --password-file password.txt \
+crispcloud pdf rotate protected.pdf --password-file password.txt \
   --pages all --output protected-rotated.pdf
 
-crisp pdf merge a.pdf protected.pdf --passwords-file passwords.json \
+crispcloud pdf merge a.pdf protected.pdf --passwords-file passwords.json \
   --allow-decryption --output combined.pdf
 ```
 
@@ -270,14 +274,14 @@ crop box, with the origin at its top-left. Omitting image height preserves the
 aspect ratio. The operations account for page rotation and different page sizes.
 
 ```bash
-crisp pdf watermark report.pdf --text 'DRAFT' --pages all \
+crispcloud pdf watermark report.pdf --text 'DRAFT' --pages all \
   --font-size 40 --opacity .15 --angle=-35 --anchor center \
   --output draft.pdf
 
-crisp pdf watermark report.pdf --image logo.png --anchor bottomRight \
+crispcloud pdf watermark report.pdf --image logo.png --anchor bottomRight \
   --width .2 --margin 24 --opacity .4 --angle 0 --output branded.pdf
 
-crisp pdf insert-image report.pdf --image photo.jpg --pages 2 \
+crispcloud pdf insert-image report.pdf --image photo.jpg --pages 2 \
   --x .1 --y .2 --width .5 --output illustrated.pdf
 ```
 
@@ -309,8 +313,8 @@ errors and no partially filled output. Calculated fields must be filled through
 their supported source fields.
 
 ```bash
-crisp pdf fill form.pdf --data fields.json --output completed.pdf --json
-crisp pdf fill form.pdf --data fields.json --font fonts/Roboto-Regular.ttf \
+crispcloud pdf fill form.pdf --data fields.json --output completed.pdf --json
+crispcloud pdf fill form.pdf --data fields.json --font fonts/Roboto-Regular.ttf \
   --output completed-unicode.pdf
 ```
 
@@ -345,7 +349,7 @@ coordinates, including the source page crop and rotation.
 ```
 
 ```bash
-crisp pdf ocr scan.pdf --data recognized.json --min-confidence .8 \
+crispcloud pdf ocr scan.pdf --data recognized.json --min-confidence .8 \
   --font fonts/Roboto-Regular.ttf --output searchable.pdf
 ```
 

@@ -7,7 +7,7 @@ license = "MIT"
 crate-type = ["cdylib", "rlib"]
 [dependencies]
 crispcat-format = { path = "vendor/crispcat-format" }
-rusqlite = { version = "0.38", features = ["bundled"] }
+rusqlite = { version = "0.38", features = ["bundled", "backup", "hooks"] }
 jwalk = "0.8"
 serde_json = "1"
 tempfile = "3"

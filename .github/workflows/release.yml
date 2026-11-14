@@ -855,3 +855,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-ios-nosign.zip --clobber
+
+  build-cli:
+    name: Standalone CLI bundles
+    needs: [test, create-release]
+    uses: ./.github/workflows/catalog-cli.yml
+    with:
+      release_tag: ${{ needs.create-release.outputs.tag }}
+    secrets: inherit

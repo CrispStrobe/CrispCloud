@@ -1,4 +1,5 @@
 import '../widgets/file_delete_dialog.dart';
+import '../widgets/catalogue_file_action.dart';
 // lib/screens/screen_dialogs.dart
 //
 // Dialog helpers for the file browser screen.
@@ -487,6 +488,15 @@ Future<void> _editFile(
   PanelSide side,
   FileItem target,
 ) async {
+  if (await tryShowCatalogueFile(
+    context,
+    file: target,
+    side: side,
+    origin: panel.originForOperation(target),
+  ))
+    return;
+  if (!context.mounted) return;
+
   try {
     if (panel.isInArchive) {
       await showCurrentArchiveWorkspaceDialog(

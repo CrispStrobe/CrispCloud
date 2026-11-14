@@ -280,8 +280,9 @@ void main() {
       final output = await store.prepareOutput(target, overwrite: false);
       await store.writeOutput(output, Uint8List.fromList([1, 2, 3]));
       expect(File(target).readAsBytesSync(), [1, 2, 3]);
-      if (!Platform.isWindows)
+      if (!Platform.isWindows) {
         expect(File(target).statSync().mode & 0x1ff, 0x180);
+      }
     },
   );
 
@@ -318,8 +319,9 @@ void main() {
     'CLI PDF mutation uses remote source and output through the shared engine',
     () async {
       var fixture = File('../test/fixtures/pdf_editor/form_rotated.pdf');
-      if (!fixture.existsSync())
+      if (!fixture.existsSync()) {
         fixture = File('test/fixtures/pdf_editor/form_rotated.pdf');
+      }
       final sourceBytes = fixture.readAsBytesSync();
       client.files['/source.pdf'] = sourceBytes;
       final output = StringBuffer();

@@ -86,7 +86,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **PDF editor:** annotate, fill standard PDF forms, edit page content, and organize pages from F4, the file menu, or the preview pane. Includes conflict checks, save-copy/export recovery, and password-protected input; see [PDF editing](docs/pdf-editor.md) for supported behavior and limits.
 - **Ebooks:** EPUB editing that preserves inline formatting, enhanced Kindle/FictionBook/comic reading and EPUB import, portable Linux search and bookmarks, offline browser Kindle metadata updates, native Kindle export, validated separate FictionBook FB2/FBZ export, and a retained text fallback. See [ebook reading and editing](docs/ebooks.md) for controls, platform differences and limits.
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
-- **CLI companion** (`crisp`): headless S3/SFTP/SMB/WebDAV operations, largest-file/folder scans (`crisp du PATH`), persistent Rust/SQLite catalogues and Cathy/Catfish CAF interchange, PDF tools and shell completions; see [CLI capabilities](cli/README.md). Filen/Internxt CLI adapters are planned.
+- **CLI companion** (`crispcloud`, with `crisp` compatibility alias): headless S3/SFTP/SMB/WebDAV operations, largest-file/folder scans (`crispcloud du PATH`), persistent Rust/SQLite catalogues and Cathy/Catfish CAF interchange, PDF tools and shell completions; see [CLI capabilities](cli/README.md). Filen/Internxt CLI adapters are planned.
 - **Plugin system** with local REST API and automation rules
 - **Experimental macOS mounts:** read-only macFUSE FSKit, explicitly selected FUSE-T, or a separately configured rclone NFS remote. Runtime installation, limitations and current test status are described in the [mount guide](docs/USER_GUIDE.md#fuse-mounted-drives). Linux and Windows mounting is not yet implemented.
 - **Unified Settings:** one surface for language, theme/accent, file-list fonts, quick search, cache, proxy/provider networking, accessibility, privacy and advanced options
@@ -297,3 +297,7 @@ Cloud connections can stay open simultaneously in the two panes. See
 [provider setup](docs/PROVIDER_SETUP.md#multiple-simultaneous-cloud-connections)
 for session behavior and [Nextcloud browser requirements](docs/PROVIDER_SETUP.md#browser-access-webpwa)
 for CORS, HTTPS and server configuration limits.
+
+### Offline catalogues and CLI
+
+Tools → Catalogues provides offline SQLite catalogue browsing, Cathy/Catfish CAF import/export, paged search and size rankings, cancellation and safe refresh. See [catalogue usage and limits](docs/catalogues.md). The primary CLI command is `crispcloud`; `crisp` remains an alias. CrispSorter uses `crispsorter` (and `crispcat` for its lightweight catalogue companion).

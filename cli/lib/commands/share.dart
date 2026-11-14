@@ -22,7 +22,7 @@ class ShareCommand extends Command<int> {
       'Generate a time-limited share link for a remote file.';
 
   @override
-  String get invocation => 'crisp share <remote-path> [--expires <duration>]';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} share <remote-path> [--expires <duration>]';
 
   final CliConfig config;
 

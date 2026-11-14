@@ -13,7 +13,8 @@ use std::{
 };
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 const MAX_BYTES: u64 = 9_007_199_254_740_991;
-const VERSION: i64 = 1;
+const VERSION: i64 = 2;
+mod jobs;
 fn text<'a>(v: &'a Value, key: &str) -> Result<&'a str> {
     v[key]
         .as_str()
@@ -66,7 +67,7 @@ fn create(db: &Connection, root: &str, origin: &str) -> Result<()> {
     db.execute_batch("CREATE TABLE meta(id INTEGER PRIMARY KEY CHECK(id=1), version INTEGER NOT NULL, root TEXT NOT NULL,
         created INTEGER NOT NULL, origin TEXT NOT NULL, issues INTEGER NOT NULL DEFAULT 0,
         skipped_links INTEGER NOT NULL DEFAULT 0, skipped_special INTEGER NOT NULL DEFAULT 0,
-        visited INTEGER NOT NULL DEFAULT 0, excluded_catalogue INTEGER NOT NULL DEFAULT 0, complete INTEGER NOT NULL DEFAULT 1, header TEXT);
+        visited INTEGER NOT NULL DEFAULT 0, excluded_catalogue INTEGER NOT NULL DEFAULT 0, complete INTEGER NOT NULL DEFAULT 1, header TEXT, catalogue_id TEXT NOT NULL DEFAULT (lower(hex(randomblob(16)))));
       CREATE TABLE entries(path TEXT PRIMARY KEY, parent TEXT, kind INTEGER NOT NULL, depth INTEGER NOT NULL,
         bytes INTEGER NOT NULL DEFAULT 0, files INTEGER NOT NULL DEFAULT 0, dirs INTEGER NOT NULL DEFAULT 0,
         complete INTEGER NOT NULL DEFAULT 1, mtime INTEGER);
@@ -81,7 +82,7 @@ fn create(db: &Connection, root: &str, origin: &str) -> Result<()> {
     )?;
     Ok(())
 }
-fn aggregate(db: &Connection) -> Result<()> {
+fn aggregate(db: &Connection, request: &Value) -> Result<()> {
     // Depth-ordered updates touch each edge once. Do not build the whole tree
     // in the Dart heap or run one subtree query per directory.
     db.execute_batch("CREATE INDEX by_parent ON entries(parent,bytes DESC,path);")?;
@@ -89,7 +90,13 @@ fn aggregate(db: &Connection) -> Result<()> {
         "SELECT path,parent,bytes,files,dirs,complete,kind FROM entries ORDER BY depth DESC",
     )?;
     let mut rows = stmt.query([])?;
+    let mut processed = 0u64;
     while let Some(row) = rows.next()? {
+        if processed % 256 == 0 {
+            jobs::check(request)?;
+            jobs::update(request, json!({"phase":"aggregating","entries":processed}));
+        }
+        processed += 1;
         let path: String = row.get(0)?;
         if path.is_empty() {
             continue;
@@ -120,25 +127,50 @@ fn aggregate(db: &Connection) -> Result<()> {
 fn open(path: &str) -> Result<Connection> {
     let db = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
     db.pragma_update(None, "query_only", true)?;
+    db.execute_batch("BEGIN")?;
     let version: i64 = db.query_row("SELECT version FROM meta WHERE id=1", [], |r| r.get(0))?;
-    if version != VERSION {
+    if version != 1 && version != VERSION {
         return Err("Unsupported catalogue version".into());
     }
     Ok(db)
 }
 fn info(db: &Connection) -> Result<Value> {
-    Ok(db.query_row("SELECT m.root,m.created,m.origin,m.complete,m.issues,m.skipped_links,m.skipped_special,m.visited,e.bytes,e.files,e.dirs,m.excluded_catalogue
+    let mut value=db.query_row("SELECT m.root,m.created,m.origin,m.complete,m.issues,m.skipped_links,m.skipped_special,m.visited,e.bytes,e.files,e.dirs,m.excluded_catalogue
       FROM meta m JOIN entries e ON e.path='' WHERE m.id=1", [], |r| Ok(json!({
         "root":r.get::<_,String>(0)?,"indexedAtUnix":r.get::<_,i64>(1)?,"origin":r.get::<_,String>(2)?,
         "complete":r.get::<_,bool>(3)?,"issueCount":r.get::<_,i64>(4)?,"linksSkipped":r.get::<_,i64>(5)?,
         "specialEntriesSkipped":r.get::<_,i64>(6)?,"entriesVisited":r.get::<_,i64>(7)?,
         "bytes":r.get::<_,i64>(8)?,"files":r.get::<_,i64>(9)?,"directories":r.get::<_,i64>(10)?,
         "measurement":"logical_file_bytes","historical":true,"schemaVersion":VERSION,"catalogueFilesSkipped":r.get::<_,i64>(11)?
-    })))?)
+    })))?;
+    let version: i64 = db.query_row("SELECT version FROM meta WHERE id=1", [], |r| r.get(0))?;
+    let id: String = if version >= 2 {
+        db.query_row("SELECT catalogue_id FROM meta WHERE id=1", [], |r| r.get(0))?
+    } else {
+        let path = Path::new(db.path().ok_or("Missing catalogue path")?);
+        let stat = std::fs::metadata(path)?;
+        format!(
+            "legacy-{}-{}-{:?}-{}",
+            value["indexedAtUnix"],
+            stat.len(),
+            stat.modified()?,
+            value["bytes"]
+        )
+    };
+    value["catalogueId"] = json!(id);
+    value["schemaVersion"] = json!(version);
+    let header: Option<String> =
+        db.query_row("SELECT header FROM meta WHERE id=1", [], |r| r.get(0))?;
+    value["sourceCapturedAtUnix"] = header
+        .and_then(|s| serde_json::from_str::<Value>(&s).ok())
+        .map(|v| v["date"].clone())
+        .unwrap_or(Value::Null);
+    Ok(value)
 }
 fn staging(
     destination: &Path,
     replace: bool,
+    request: &Value,
     build: impl FnOnce(&mut Connection) -> Result<()>,
 ) -> Result<Value> {
     if destination.exists() && !replace {
@@ -152,13 +184,18 @@ fn staging(
         .prefix(".crisp-catalog-")
         .tempfile_in(dir)?;
     let mut db = Connection::open(temp.path())?;
+    install_interrupt(&db, request)?;
+    verify_output_receipt(destination, request)?;
     db.execute_batch("PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; BEGIN IMMEDIATE")?;
     build(&mut db)?;
-    aggregate(&db)?;
+    aggregate(&db, request)?;
     db.execute_batch("COMMIT; PRAGMA optimize;")?;
     let result = info(&db)?;
     db.close().map_err(|(_, e)| e)?;
     temp.as_file().sync_all()?;
+    jobs::check(request)?;
+    jobs::update(request, json!({"phase":"publishing"}));
+    verify_output_receipt(destination, request)?;
     if replace {
         temp.persist(destination).map_err(|e| e.error)?;
     } else {
@@ -171,6 +208,14 @@ fn scan(v: &Value) -> Result<Value> {
     if !root.is_dir() {
         return Err("Choose a directory to index".into());
     }
+    if let Some(expected) = v["expectedRoot"].as_str() {
+        if utf8(&root)? != expected {
+            return Err(
+                "Choose the original root folder; create a new catalogue for a different source"
+                    .into(),
+            );
+        }
+    }
     let destination = Path::new(text(v, "output")?);
     let absolute_output = destination
         .parent()
@@ -180,7 +225,7 @@ fn scan(v: &Value) -> Result<Value> {
         .join(destination.file_name().ok_or("Missing output name")?);
     let cap = number(v, "maxEntries", 0)?;
     let depth_cap = number(v, "maxDepth", 0)?;
-    staging(destination, v["replace"] == true, |db| {
+    staging(destination, v["replace"] == true, v, |db| {
         create(db, utf8(&root)?, "native_scan")?;
         let staging_path = PathBuf::from(db.path().ok_or("Missing staging database path")?);
         let mut excluded =
@@ -200,7 +245,15 @@ fn scan(v: &Value) -> Result<Value> {
         if depth_cap > 0 {
             walker = walker.max_depth(depth_cap as usize);
         }
+        let (mut files, mut directories, mut bytes) = (0u64, 0u64, 0u64);
         for result in walker {
+            jobs::check(v)?;
+            if visited % 256 == 0 {
+                jobs::update(
+                    v,
+                    json!({"phase":"scanning","entries":visited,"files":files,"directories":directories,"bytes":bytes}),
+                );
+            }
             if cap > 0 && visited >= cap {
                 add_issue(db, "", "entry_limit", "Explicit entry budget reached")?;
                 break;
@@ -270,6 +323,12 @@ fn scan(v: &Value) -> Result<Value> {
                 }
             };
             let is_dir = metadata.is_dir();
+            if is_dir {
+                directories += 1;
+            } else {
+                files += 1;
+                bytes = bytes.saturating_add(metadata.len());
+            }
             if metadata.len() > MAX_BYTES && !is_dir {
                 return Err("File exceeds exact byte-reporting bound".into());
             }
@@ -301,73 +360,99 @@ fn import_caf(v: &Value) -> Result<Value> {
     if output.exists() && output.canonicalize()? == path.canonicalize()? {
         return Err("CAF input and catalogue output must differ".into());
     }
-    let idx = caf::read_file(path)?;
+    jobs::update(v, json!({"phase":"reading_caf"}));
+    let idx = caf::read_file_cancellable(path, &|| jobs::cancelled(v))?;
     let root = idx.root_path.to_string_lossy().replace('\\', "/");
-    staging(Path::new(text(v, "output")?), v["replace"] == true, |db| {
-        create(db, &idx.root_path.to_string_lossy(), "caf_import")?;
-        db.execute(
-            "UPDATE meta SET header=?1",
-            [serde_json::to_string(&idx.header)?],
-        )?;
-        let mut dirs = std::collections::HashSet::from([String::new()]);
-        for (directory, mtime) in &idx.directories {
-            let full = directory.to_string_lossy().replace('\\', "/");
-            let prefix = format!("{}/", root.trim_end_matches('/'));
-            let rel = if root.is_empty() {
-                full.as_str()
-            } else {
-                full.strip_prefix(&prefix)
-                    .ok_or("CAF directory outside root")?
-            };
-            let rel = relative(Path::new(rel))?;
-            dirs.insert(rel.clone());
+    staging(
+        Path::new(text(v, "output")?),
+        v["replace"] == true,
+        v,
+        |db| {
+            create(db, &idx.root_path.to_string_lossy(), "caf_import")?;
             db.execute(
-                "INSERT INTO entries(path,parent,kind,depth,mtime) VALUES(?1,?2,1,?3,?4)",
-                params![rel, parent(&rel), rel.split('/').count() as i64, *mtime],
+                "UPDATE meta SET header=?1",
+                [serde_json::to_string(&idx.header)?],
             )?;
-        }
-        let unknown: std::collections::HashSet<_> = idx.unknown_size_paths.iter().collect();
-        for entry in &idx.all_files {
-            let full = entry.path.to_string_lossy().replace('\\', "/");
-            let prefix = format!("{}/", root.trim_end_matches('/'));
-            let rel = if root.is_empty() {
-                full.as_str()
-            } else {
-                full.strip_prefix(&prefix)
-                    .ok_or("CAF file is outside its root")?
-            };
-            let rel = relative(Path::new(rel))?;
-            let parts: Vec<_> = rel.split('/').collect();
-            for depth in 1..parts.len() {
-                let dir = parts[..depth].join("/");
-                if dirs.insert(dir.clone()) {
-                    db.execute(
-                        "INSERT INTO entries(path,parent,kind,depth) VALUES(?1,?2,1,?3)",
-                        params![dir, parent(&dir), depth as i64],
-                    )?;
+            let mut dirs = std::collections::HashSet::from([String::new()]);
+            for (directory, mtime) in &idx.directories {
+                jobs::check(v)?;
+                let full = directory.to_string_lossy().replace('\\', "/");
+                let prefix = format!("{}/", root.trim_end_matches('/'));
+                let rel = if root.is_empty() {
+                    full.as_str()
+                } else {
+                    full.strip_prefix(&prefix)
+                        .ok_or("CAF directory outside root")?
+                };
+                let rel = relative(Path::new(rel))?;
+                dirs.insert(rel.clone());
+                db.execute(
+                    "INSERT INTO entries(path,parent,kind,depth,mtime) VALUES(?1,?2,1,?3,?4)",
+                    params![rel, parent(&rel), rel.split('/').count() as i64, *mtime],
+                )?;
+            }
+            let unknown: std::collections::HashSet<_> = idx.unknown_size_paths.iter().collect();
+            for (position, entry) in idx.all_files.iter().enumerate() {
+                if position % 256 == 0 {
+                    jobs::check(v)?;
+                    jobs::update(
+                        v,
+                        json!({"phase":"importing","entries":position,"total":idx.all_files.len()}),
+                    );
                 }
+                let full = entry.path.to_string_lossy().replace('\\', "/");
+                let prefix = format!("{}/", root.trim_end_matches('/'));
+                let rel = if root.is_empty() {
+                    full.as_str()
+                } else {
+                    full.strip_prefix(&prefix)
+                        .ok_or("CAF file is outside its root")?
+                };
+                let rel = relative(Path::new(rel))?;
+                let parts: Vec<_> = rel.split('/').collect();
+                for depth in 1..parts.len() {
+                    let dir = parts[..depth].join("/");
+                    if dirs.insert(dir.clone()) {
+                        db.execute(
+                            "INSERT INTO entries(path,parent,kind,depth) VALUES(?1,?2,1,?3)",
+                            params![dir, parent(&dir), depth as i64],
+                        )?;
+                    }
+                }
+                if entry.size > MAX_BYTES {
+                    return Err("CAF file exceeds exact byte-reporting bound".into());
+                }
+                db.execute("INSERT INTO entries(path,parent,kind,depth,bytes,files,mtime) VALUES(?1,?2,0,?3,?4,1,?5)",params![rel,parent(&rel),parts.len() as i64,if unknown.contains(&entry.path){0}else{entry.size as i64},entry.mtime])?;
             }
-            if entry.size > MAX_BYTES {
-                return Err("CAF file exceeds exact byte-reporting bound".into());
+            for path in &idx.unknown_size_paths {
+                let full = path.to_string_lossy().replace('\\', "/");
+                let prefix = format!("{}/", root.trim_end_matches('/'));
+                let rel = full.strip_prefix(&prefix).unwrap_or(&full);
+                add_issue(db,rel,"legacy_unknown_size","Legacy CAF zero-size record does not establish exact size; excluded from known byte totals")?;
             }
-            db.execute("INSERT INTO entries(path,parent,kind,depth,bytes,files,mtime) VALUES(?1,?2,0,?3,?4,1,?5)",params![rel,parent(&rel),parts.len() as i64,if unknown.contains(&entry.path){0}else{entry.size as i64},entry.mtime])?;
-        }
-        for path in &idx.unknown_size_paths {
-            let full = path.to_string_lossy().replace('\\', "/");
-            let prefix = format!("{}/", root.trim_end_matches('/'));
-            let rel = full.strip_prefix(&prefix).unwrap_or(&full);
-            add_issue(db,rel,"legacy_unknown_size","Legacy CAF zero-size record does not establish exact size; excluded from known byte totals")?;
-        }
-        // CAF cannot establish source coverage or preserve our error history.
-        add_issue(db,"","caf_coverage_unknown","CAF import is historical; source coverage, skipped links and scan errors are not encoded. Legacy v1-v6 zero-size file values are reported as unknown, not invented bytes.")?;
-        db.execute("UPDATE meta SET visited=(SELECT count(*) FROM entries)", [])?;
-        Ok(())
-    })
+            // CAF cannot establish source coverage or preserve our error history.
+            add_issue(db,"","caf_coverage_unknown","CAF import is historical; source coverage, skipped links and scan errors are not encoded. Legacy v1-v6 zero-size file values are reported as unknown, not invented bytes.")?;
+            db.execute("UPDATE meta SET visited=(SELECT count(*) FROM entries)", [])?;
+            Ok(())
+        },
+    )
 }
 fn query(v: &Value) -> Result<Value> {
     let db = open(text(v, "index")?)?;
+    verify_receipt(v, &db)?;
+    install_interrupt(&db, v)?;
     let sub = relative(Path::new(v["path"].as_str().unwrap_or("")))?;
     let top = number(v, "top", 20)?;
+    let offset = number(v, "offset", 0)?;
+    if offset > i64::MAX as u64 {
+        return Err("Offset exceeds the query range".into());
+    }
+    let order = match v["order"].as_str().unwrap_or("size") {
+        "size" => "bytes DESC,path",
+        "name" => "kind DESC,path COLLATE NOCASE,path",
+        "date" => "mtime DESC,path",
+        _ => return Err("Unknown catalogue sort order".into()),
+    };
     if !(1..=10000).contains(&top) {
         return Err("top must be 1..10000".into());
     }
@@ -423,9 +508,51 @@ fn query(v: &Value) -> Result<Value> {
         conditions.push("kind=1");
     }
     conditions.push("(?4='' OR instr(lower(path),lower(?4))>0)");
-    let sql=format!("SELECT path,kind,bytes,files,dirs,complete,mtime FROM entries WHERE {} ORDER BY bytes DESC,path LIMIT ?5",conditions.join(" AND "));
+    let minimum = number(v, "minBytes", 0)?;
+    let maximum = number(v, "maxBytes", MAX_BYTES)?;
+    if minimum > maximum || maximum > MAX_BYTES {
+        return Err("Invalid size filter".into());
+    }
+    let extension = v["extension"].as_str().unwrap_or("");
+    if extension.contains(['/', '\\']) {
+        return Err("Invalid extension filter".into());
+    }
+    let after = number(v, "modifiedAfter", 0)?;
+    let before = number(v, "modifiedBefore", i64::MAX as u64)?;
+    if after > before || before > i64::MAX as u64 {
+        return Err("Invalid date filter".into());
+    }
+    conditions.extend([
+        "bytes>=?5 AND bytes<=?6",
+        "(?7='' OR (kind=0 AND lower(substr(path,-length(?7)))=lower(?7)))",
+        "(?8=0 OR mtime>=?8) AND (?9=9223372036854775807 OR mtime<=?9)",
+    ]);
+    let exact=relative(Path::new(v["exactPath"].as_str().unwrap_or("")))?;
+    conditions.push("(?10='' OR path=?10)");
+    let predicate = conditions.join(" AND ");
+    let total: Option<i64> = if v["countMatches"] == true {
+        Some(db.query_row(
+            &format!("SELECT count(*) FROM entries WHERE {predicate}"),
+            params![
+                sub,
+                prefix,
+                upper,
+                search,
+                minimum as i64,
+                maximum as i64,
+                extension,
+                after as i64,
+                before as i64, exact
+            ],
+            |r| r.get(0),
+        )?)
+    } else {
+        None
+    };
+    jobs::check(v)?;
+    let sql=format!("SELECT path,kind,bytes,files,dirs,complete,mtime FROM entries WHERE {predicate} ORDER BY {order} LIMIT ?11 OFFSET ?12");
     let mut stmt = db.prepare(&sql)?;
-    let rows=stmt.query_map(params![sub,prefix,upper,search,top as i64],|r|{
+    let rows=stmt.query_map(params![sub,prefix,upper,search,minimum as i64,maximum as i64,extension,after as i64,before as i64,exact,top as i64,offset as i64],|r|{
       let path:String=r.get(0)?;
       Ok(json!({"path":display(&path),"relativePath":path,"type":if r.get::<_,i64>(1)?==1{"directory"}else{"file"},
         "bytes":r.get::<_,i64>(2)?,"files":r.get::<_,i64>(3)?,"directories":r.get::<_,i64>(4)?,"complete":r.get::<_,bool>(5)?,"mtimeUnix":r.get::<_,Option<i64>>(6)?}))
@@ -437,12 +564,18 @@ fn query(v: &Value) -> Result<Value> {
         report[key] = node[key].clone();
     }
     report["root"] = node;
+    report["totalMatches"] = json!(total);
+    report["offset"] = json!(offset);
+    report["hasMore"] = json!(total
+        .map(|n| (offset + rows.len() as u64) < n as u64)
+        .unwrap_or(rows.len() as u64 == top));
     report["entries"] = json!(rows);
     report["issues"] = json!(issues);
     Ok(report)
 }
 fn export_caf(v: &Value) -> Result<Value> {
     let db = open(text(v, "index")?)?;
+    verify_receipt(v, &db)?;
     let report = info(&db)?;
     let allow_loss = v["allowLossy"] == true;
     if !allow_loss && report["complete"] != true {
@@ -475,6 +608,7 @@ fn export_caf(v: &Value) -> Result<Value> {
         db.prepare("SELECT path,mtime FROM entries WHERE kind=1 AND path<>'' ORDER BY path")?;
     let mut directory_rows = directories.query([])?;
     while let Some(row) = directory_rows.next()? {
+        jobs::check(v)?;
         let path: String = row.get(0)?;
         let mtime: Option<i64> = row.get(1)?;
         let time = mtime
@@ -485,6 +619,13 @@ fn export_caf(v: &Value) -> Result<Value> {
     let mut stmt = db.prepare("SELECT path,bytes,mtime FROM entries WHERE kind=0 ORDER BY path")?;
     let mut rows = stmt.query([])?;
     while let Some(row) = rows.next()? {
+        jobs::check(v)?;
+        if idx.all_files.len() % 256 == 0 {
+            jobs::update(
+                v,
+                json!({"phase":"exporting","entries":idx.all_files.len()}),
+            );
+        }
         let path: String = row.get(0)?;
         let mtime: Option<i64> = row.get(2)?;
         let time = mtime
@@ -519,26 +660,137 @@ fn export_caf(v: &Value) -> Result<Value> {
             .filter(|p| !p.as_os_str().is_empty())
             .unwrap_or(Path::new(".")),
     )?;
-    caf::write_file(temp.path(), &idx, u32::try_from(now())?)?;
+    let captured=if report["origin"]=="caf_import" {report["sourceCapturedAtUnix"].as_u64().unwrap_or(0)}else{report["indexedAtUnix"].as_u64().ok_or("Missing source capture date")?};
+    caf::write_file_cancellable(temp.path(), &idx, u32::try_from(captured)?, &|| {
+        jobs::cancelled(v)
+    })?;
+    jobs::check(v)?;
     if v["replace"] == true {
         temp.persist(output).map_err(|e| e.error)?;
     } else {
         temp.persist_noclobber(output).map_err(|e| e.error)?;
     }
     Ok(
-        json!({"output":text(v,"output")?,"version":8,"files":idx.len(),"lossy":report["complete"]!=true,
+        json!({"output":text(v,"output")?,"version":8,"files":idx.len(),"lossy":report["complete"]!=true,"sourceCapturedAtUnix":captured,"exportedAtUnix":now(),
       "limitations":["Latin-1 names only","No completeness diagnostics","Second-resolution unsigned 32-bit timestamps"]}),
     )
 }
-pub fn execute(v: &Value) -> Result<Value> {
-    match text(v, "op")? {
-        "scan" => scan(v),
-        "import" => import_caf(v),
-        "query" => query(v),
-        "info" => info(&open(text(v, "index")?)?),
-        "export" => export_caf(v),
-        _ => Err("Unknown catalogue operation".into()),
+fn install_interrupt(db: &Connection, v: &Value) -> Result<()> {
+    let request = v.clone();
+    db.progress_handler(10000, Some(move || jobs::cancelled(&request)))?;
+    Ok(())
+}
+fn verify_output_receipt(path: &Path, v: &Value) -> Result<()> {
+    if v["expectedCatalogueId"].is_string() {
+        verify_receipt(v, &open(utf8(path)?)?)?;
     }
+    Ok(())
+}
+fn copy_catalogue(v: &Value) -> Result<Value> {
+    let source = open(text(v, "index")?)?;
+    install_interrupt(&source, v)?;
+    verify_receipt(v, &source)?;
+    let output = Path::new(text(v, "output")?);
+    if output.exists() {
+        if output.canonicalize()? == Path::new(text(v, "index")?).canonicalize()? {
+            return Err("Choose a separate catalogue copy".into());
+        }
+        if v["replace"] != true {
+            return Err("Output exists".into());
+        }
+    }
+    let temp = tempfile::Builder::new()
+        .prefix(".crisp-catalog-copy-")
+        .tempfile_in(
+            output
+                .parent()
+                .filter(|p| !p.as_os_str().is_empty())
+                .unwrap_or(Path::new(".")),
+        )?;
+    let mut target = Connection::open(temp.path())?;
+    {
+        let backup = rusqlite::backup::Backup::new(&source, &mut target)?;
+        loop {
+            jobs::check(v)?;
+            match backup.step(256)? {
+                rusqlite::backup::StepResult::Done => break,
+                rusqlite::backup::StepResult::More => (),
+                _ => return Err("Catalogue is busy; try again when its writer finishes".into()),
+            }
+            jobs::update(
+                v,
+                json!({"phase":"copying","remaining":backup.progress().remaining}),
+            );
+        }
+    }
+    target.close().map_err(|(_, e)| e)?;
+    temp.as_file().sync_all()?;
+    jobs::check(v)?;
+    if v["replace"] == true {
+        temp.persist(output).map_err(|e| e.error)?;
+    } else {
+        temp.persist_noclobber(output).map_err(|e| e.error)?;
+    }
+    Ok(json!({"output":text(v,"output")?,"catalogueId":info(&source)?["catalogueId"]}))
+}
+fn validate_catalogue(v: &Value) -> Result<Value> {
+    let db = open(text(v, "index")?)?;
+    install_interrupt(&db, v)?;
+    verify_receipt(v, &db)?;
+    jobs::update(v, json!({"phase":"validating"}));
+    let check: String = db.query_row("PRAGMA quick_check", [], |r| r.get(0))?;
+    if check != "ok" {
+        return Err(format!("Catalogue integrity check failed: {check}").into());
+    }
+    info(&db)
+}
+fn verify_receipt(v: &Value, db: &Connection) -> Result<()> {
+    if let Some(expected) = v["expectedCatalogueId"].as_str() {
+        if info(db)?["catalogueId"] != expected {
+            return Err(
+                "Catalogue changed since it was opened; reopen it before continuing".into(),
+            );
+        }
+    }
+    Ok(())
+}
+pub fn execute(v: &Value) -> Result<Value> {
+    let op = text(v, "op")?;
+    if op == "cancel" {
+        return jobs::cancel(v);
+    }
+    if op == "status" {
+        return jobs::status(v);
+    }
+    if op == "forget_job" {
+        jobs::finish(v);
+        return Ok(json!({"forgotten":true}));
+    }
+    jobs::begin(v)?;
+    let result = (|| {
+        jobs::check(v)?;
+        match op {
+            "scan" => scan(v),
+            "import" => import_caf(v),
+            "query" => query(v),
+            "info" => info(&open(text(v, "index")?)?),
+            "export" => export_caf(v),
+            "copy" => copy_catalogue(v),
+            "validate" => validate_catalogue(v),
+            _ => Err("Unknown catalogue operation".into()),
+        }
+    })();
+    let result = if result.is_err() && jobs::cancelled(v) {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Interrupted,
+            "Catalogue operation stopped; previous output preserved",
+        )
+        .into())
+    } else {
+        result
+    };
+    jobs::finish(v);
+    result
 }
 /// C API owns the returned string until `crisp_catalog_free`. Requests are
 /// bounded JSON; metadata rows stay in SQLite/Rust instead of crossing FFI.
@@ -557,7 +809,11 @@ pub unsafe extern "C" fn crisp_catalog_call(request: *const c_char) -> *mut c_ch
             .and_then(|v| execute(&v))
         {
             Ok(value) => json!({"result":value}),
-            Err(e) => json!({"error":e.to_string()}),
+            Err(e) => {
+                let cancelled=e.downcast_ref::<std::io::Error>().is_some_and(|e|e.kind()==std::io::ErrorKind::Interrupted)
+                    || e.downcast_ref::<caf::CafError>().is_some_and(|e| matches!(e,caf::CafError::Io(e) if e.kind()==std::io::ErrorKind::Interrupted));
+                json!({"error":e.to_string(),"code":if cancelled {"cancelled"}else{"catalogue_failed"}})
+            },
         }
     })
     .unwrap_or_else(|_| json!({"error":"Native catalogue operation failed"}));
@@ -697,7 +953,7 @@ mod volume_scale_test {
         let output = temp.path().join("million.crispindex");
         let started = std::time::Instant::now();
         let count = 1_000_005i64;
-        staging(&output,false,|db| {
+        staging(&output,false,&json!({}),|db| {
             create(db,"/synthetic-volume","scale_test")?;
             let mut insert=db.prepare("INSERT INTO entries(path,parent,kind,depth,bytes,files,mtime) VALUES(?1,'',0,1,?2,1,1700000000)")?;
             for n in 0..count {insert.execute(params![format!("file-{n:07}"),n])?;}
@@ -764,5 +1020,98 @@ mod caf_adaptation_tests {
         let mut loaded = caf::read_file(&path).unwrap().directories;
         loaded.sort();
         assert_eq!(loaded, idx.directories);
+    }
+}
+
+#[cfg(test)]
+mod gui_contract_tests {
+    use super::*;
+    fn seed() -> (tempfile::TempDir, PathBuf, PathBuf, Value) {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("root");
+        std::fs::create_dir(&root).unwrap();
+        std::fs::create_dir(root.join("empty")).unwrap();
+        for (name, size) in [("a.txt", 1), ("b.txt", 2), ("c.bin", 3), ("d.bin", 4)] {
+            std::fs::write(root.join(name), vec![0; size]).unwrap();
+        }
+        let output = tmp.path().join("index.crispindex");
+        let info = execute(&json!({"op":"scan","path":root,"output":output})).unwrap();
+        (tmp, root, output, info)
+    }
+    #[test]
+    fn paged_browsing_filters_and_snapshot_copy_are_complete() {
+        let (tmp, _root, path, info) = seed();
+        let first =
+            execute(&json!({"op":"query","index":path,"order":"name","top":2,"countMatches":true}))
+                .unwrap();
+        assert_eq!(first["totalMatches"], 5);
+        assert_eq!(first["hasMore"], true);
+        assert_eq!(first["entries"][0]["relativePath"], "empty");
+        let second=execute(&json!({"op":"query","index":path,"order":"name","top":2,"offset":2,"countMatches":true})).unwrap();
+        assert_eq!(second["entries"][0]["relativePath"], "b.txt");
+        let filter=execute(&json!({"op":"query","index":path,"filesOnly":true,"extension":".txt","minBytes":2,"countMatches":true})).unwrap();
+        assert_eq!(filter["totalMatches"], 1);
+        assert_eq!(filter["entries"][0]["relativePath"], "b.txt");
+        let exact = execute(&json!({"op":"query","index":path,"recursive":true,"exactPath":"c.bin","countMatches":true})).unwrap();
+        assert_eq!(exact["totalMatches"], 1);
+        assert_eq!(exact["entries"][0]["relativePath"], "c.bin");
+        let copy = tmp.path().join("copy.crispindex");
+        execute(&json!({"op":"copy","index":path,"output":copy,"expectedCatalogueId":info["catalogueId"]})).unwrap();
+        let copied = execute(&json!({"op":"validate","index":copy})).unwrap();
+        assert_eq!(copied["bytes"], 10);
+        assert_eq!(copied["catalogueId"], info["catalogueId"]);
+    }
+    #[test]
+    fn changed_catalogue_and_wrong_refresh_root_are_refused() {
+        let (tmp, root, path, info) = seed();
+        assert!(execute(
+            &json!({"op":"scan","path":root,"output":path,"replace":true,"expectedRoot":"/other"})
+        )
+        .is_err());
+        execute(&json!({"op":"scan","path":root,"output":path,"replace":true})).unwrap();
+        assert!(execute(
+            &json!({"op":"query","index":path,"expectedCatalogueId":info["catalogueId"]})
+        )
+        .is_err());
+        assert!(execute(&json!({"op":"export","index":path,"output":tmp.path().join("bad.caf"),"expectedCatalogueId":info["catalogueId"]})).is_err());
+    }
+    #[test]
+    fn cancellation_before_start_and_during_aggregation_preserves_output() {
+        let (_tmp, root, path, _info) = seed();
+        let old = std::fs::read(&path).unwrap();
+        execute(&json!({"op":"cancel","jobId":"cancel-before-start"})).unwrap();
+        assert!(execute(&json!({"op":"scan","path":root,"output":path,"replace":true,"jobId":"cancel-before-start"})).is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), old);
+        let request = json!({"jobId":"cancel-aggregate"});
+        jobs::begin(&request).unwrap();
+        let result = staging(&path, true, &request, |db| {
+            create(db, "/example", "test")?;
+            jobs::cancel(&request)?;
+            Ok(())
+        });
+        assert!(result.is_err());
+        jobs::finish(&request);
+        assert_eq!(std::fs::read(&path).unwrap(), old);
+    }
+    #[test]
+    fn version_one_catalogues_remain_readable() {
+        let (_tmp, _root, path, _info) = seed();
+        let db = Connection::open(&path).unwrap();
+        db.execute("UPDATE meta SET version=1", []).unwrap();
+        drop(db);
+        let info = execute(&json!({"op":"validate","index":path})).unwrap();
+        assert_eq!(info["schemaVersion"], 1);
+        assert!(info["catalogueId"].as_str().unwrap().starts_with("legacy-"));
+    }
+    #[test]
+    fn caf_read_and_write_are_cooperatively_cancellable() {
+        let (tmp, _root, path, _) = seed();
+        let output = tmp.path().join("format.caf");
+        execute(&json!({"op":"export","index":path,"output":output})).unwrap();
+        assert!(caf::read_file_cancellable(&output, &|| true).is_err());
+        let index = caf::read_file(&output).unwrap();
+        let old = std::fs::read(&output).unwrap();
+        assert!(caf::write_file_cancellable(&output, &index, 1700000000, &|| true).is_err());
+        assert_eq!(std::fs::read(&output).unwrap(), old);
     }
 }

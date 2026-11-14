@@ -30,7 +30,7 @@ class ConnectCommand extends Command<int> {
       'Connect a cloud storage provider and save its credentials.';
 
   @override
-  String get invocation => 'crisp connect <type> <identity>';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} connect <type> <identity>';
 
   final CliConfig config;
 

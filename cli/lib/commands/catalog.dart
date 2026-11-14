@@ -83,7 +83,7 @@ class _CatalogOperation extends Command<int> {
   };
   @override
   String get invocation =>
-      'crisp catalog $name ${name == 'search' ? '<index> <text>' : '<path>'} [options]';
+      '${runner?.executableName ?? 'crispcloud'} catalog $name ${name == 'search' ? '<index> <text>' : '<path>'} [options]';
   int _number(String key, int max) {
     final n = int.tryParse(argResults![key] as String);
     if (n == null || n < 0 || n > max || (key == 'top' && n == 0)) {

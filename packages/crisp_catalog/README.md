@@ -34,3 +34,5 @@ cargo test --locked --release --manifest-path native/Cargo.toml -- --ignored --n
 The last command checks 1,000,005 synthetic SQLite rows. It measures catalogue
 processing, not disk-enumeration performance. Actual Dart/native-boundary and
 CLI tests live in `../../cli/test/catalog_command_test.dart`.
+
+The app now uses this engine for the catalogue library; see [GUI and CLI usage](../../docs/catalogues.md). Native calls run off the UI isolate, support job progress/cancellation, and validate catalogue identity before dependent actions. Schema 2 adds a persistent identity; schema 1 is still readable. Platform hooks include desktop/iOS/Android; the browser facade reports unsupported. Bundled third-party notices cover the locked supported-target graph.

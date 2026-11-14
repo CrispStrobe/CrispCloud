@@ -66,7 +66,8 @@ class DuCommand extends Command<int> {
   String get description =>
       'Find the largest local files and folders (logical file sizes).';
   @override
-  String get invocation => 'crisp du [local-path] [options]';
+  String get invocation =>
+      '${runner?.executableName ?? 'crispcloud'} du [local-path] [options]';
 
   int _number(String name, int min, int max) {
     final value = int.tryParse(argResults![name] as String);

@@ -19,7 +19,7 @@ class LsCommand extends Command<int> {
   final String description = 'List files and folders at a remote path.';
 
   @override
-  String get invocation => 'crisp ls [<path>] [options]';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} ls [<path>] [options]';
 
   final CliConfig config;
 

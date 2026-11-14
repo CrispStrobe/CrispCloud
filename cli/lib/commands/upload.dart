@@ -20,7 +20,7 @@ class UploadCommand extends Command<int> {
   final String description = 'Upload a local file to a remote path.';
 
   @override
-  String get invocation => 'crisp upload <local-file> <remote-dir> [options]';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} upload <local-file> <remote-dir> [options]';
 
   final CliConfig config;
 

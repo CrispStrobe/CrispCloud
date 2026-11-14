@@ -282,8 +282,9 @@ class WebDavCliAdapter implements CliStorageClient, CliBoundedDownload {
           'modified': properties['getlastmodified']?.innerText,
         });
       }
-      if (!sawSelf)
+      if (!sawSelf) {
         throw const FormatException('Missing requested DAV resource.');
+      }
       return results;
     } catch (_) {
       // A successful HTTP response with unparseable/incomplete XML must never

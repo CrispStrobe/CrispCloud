@@ -8,7 +8,7 @@ root = Path(__file__).resolve().parents[1]
 vendor = root / "packages/crisp_catalog/native/vendor/crispcat-format"
 manifest = json.loads((vendor / "UPSTREAM.json").read_text())
 assert manifest["repository"] == "https://github.com/CrispStrobe/CrispSorter"
-assert manifest["revision"] == "3b0b7cc3216d54bf410184acf1f233bfa29c2284"
+assert manifest["revision"] == "c1881142b0d4ffecb10f26d51fab2cda2f53588e"
 for name, digest in manifest["reviewed_sha256"].items():
     path = vendor / name
     assert path.is_file() and not path.is_symlink(), name

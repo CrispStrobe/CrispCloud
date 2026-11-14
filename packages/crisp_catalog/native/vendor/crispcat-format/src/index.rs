@@ -1,4 +1,4 @@
-// Modified for CrispCloud: retain directories and legacy unknown-size provenance.
+// Shared catalogue adaptation: retain directories and legacy unknown-size provenance.
 //! In-memory file index with O(1) size-bucket duplicate lookups.
 //!
 //! Mirrors Catfish's `FileIndex` data layout so the .caf round-trip
@@ -27,7 +27,12 @@ pub struct FileEntry {
 
 impl FileEntry {
     pub fn new(path: PathBuf, size: u64, mtime: u32) -> Self {
-        Self { path, size, mtime, hash: None }
+        Self {
+            path,
+            size,
+            mtime,
+            hash: None,
+        }
     }
 
     pub fn with_hash(mut self, hash: String) -> Self {
@@ -90,7 +95,7 @@ pub struct FileIndex {
 
     /// All files in insertion order.
     pub all_files: Vec<FileEntry>,
-    /// CrispCloud adaptation: retain explicit directories (including empty
+    /// Shared adaptation: retain explicit directories (including empty
     /// ones) and their CAF second-resolution timestamps.
     #[serde(default)]
     pub directories: Vec<(PathBuf, u32)>,
@@ -227,7 +232,11 @@ mod tests {
         deser.rebuild_indexes();
         assert_eq!(deser.size_index.get(&100).unwrap().len(), 2);
         assert_eq!(
-            deser.hash_index.get(&(100, "deadbeef".to_string())).unwrap().len(),
+            deser
+                .hash_index
+                .get(&(100, "deadbeef".to_string()))
+                .unwrap()
+                .len(),
             1
         );
     }

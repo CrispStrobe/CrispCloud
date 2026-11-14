@@ -19,7 +19,7 @@ class DownloadCommand extends Command<int> {
   final String description = 'Download a remote file to a local path.';
 
   @override
-  String get invocation => 'crisp download <remote-path> <local-path> [options]';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} download <remote-path> <local-path> [options]';
 
   final CliConfig config;
 

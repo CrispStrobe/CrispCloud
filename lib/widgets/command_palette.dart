@@ -38,6 +38,8 @@ import 'integrity_recovery_dialog.dart';
 import 'directory_comparison_dialog.dart';
 import 'directory_selection_actions.dart';
 import 'storage_analyzer_dialog.dart';
+import 'catalogue_actions.dart';
+import '../l10n/catalogue_strings.dart';
 import 'storage_scan_batch_dialog.dart';
 import '../l10n/storage_analyzer_strings.dart';
 import 'file_clipboard_actions.dart';
@@ -70,6 +72,7 @@ import 'archive_jobs_dialog.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/archive_job_strings.dart';
+
 import 'package:flutter/foundation.dart';
 
 class _Command {
@@ -447,18 +450,28 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         icon: Icons.fact_check_outlined,
         keywords: 'archive integrity test zip rar 7z check verify',
         enabled: canTestArchiveSelection(ref),
-        action: () => showArchiveBatchIntegrityForSelection(widget.parentContext, ref),
+        action: () =>
+            showArchiveBatchIntegrityForSelection(widget.parentContext, ref),
       ),
       if (!kIsWeb)
         _Command(
           id: 'archive-extract-selected',
-          name: archiveBatchExtractionText(context, 'Extract selected archives'),
+          name: archiveBatchExtractionText(
+            context,
+            'Extract selected archives',
+          ),
           icon: Icons.drive_folder_upload_outlined,
           keywords: 'archive extract unpack zip rar 7z mask flatten batch',
           enabled: canExtractArchiveSelection(ref),
-          action: () => showArchiveBatchExtractionForSelection(widget.parentContext, ref),
+          action: () =>
+              showArchiveBatchExtractionForSelection(widget.parentContext, ref),
         ),
-      if (!kIsWeb && const {TargetPlatform.linux, TargetPlatform.macOS, TargetPlatform.windows}.contains(defaultTargetPlatform))
+      if (!kIsWeb &&
+          const {
+            TargetPlatform.linux,
+            TargetPlatform.macOS,
+            TargetPlatform.windows,
+          }.contains(defaultTargetPlatform))
         _Command(
           id: 'archive-jobs',
           name: archiveJobText(context, 'Archive jobs'),
@@ -576,6 +589,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       ),
 
       // Operations
+      _Command(
+        name: CatalogueStrings(context).text('Catalogues'),
+        icon: Icons.inventory_2_outlined,
+        action: () => showCatalogues(widget.parentContext, ref),
+      ),
       _Command(
         name: StorageAnalyzerStrings(context).text('title'),
         icon: Icons.space_dashboard_outlined,

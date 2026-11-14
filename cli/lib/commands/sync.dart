@@ -26,7 +26,7 @@ class SyncCommand extends Command<int> {
 
   @override
   String get invocation =>
-      'crisp sync <local-dir> <remote-path> [--delete] [options]';
+      '${runner?.executableName ?? 'crispcloud'} sync <local-dir> <remote-path> [--delete] [options]';
 
   final CliConfig config;
 

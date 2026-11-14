@@ -62,6 +62,7 @@ import '../services/binary_structure_source.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'ebook_editor_dialog.dart';
+import 'catalogue_file_action.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/viewer_spool.dart';
@@ -152,6 +153,15 @@ Future<InternalViewerAction> showInternalViewer(
   PanelFileOrigin? origin,
   ValueChanged<FileItem>? onFileChanged,
 }) async {
+  if (await tryShowCatalogueFile(
+    context,
+    file: file,
+    side: side,
+    origin: origin,
+    bytesOverride: bytesOverride,
+  ))
+    return InternalViewerAction.close;
+  if (!context.mounted) return InternalViewerAction.close;
   final result = await showDialog<InternalViewerAction>(
     context: context,
     barrierDismissible: false,

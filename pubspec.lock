@@ -208,6 +208,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  crisp_catalog:
+    dependency: "direct main"
+    description:
+      path: "packages/crisp_catalog"
+      relative: true
+    source: path
+    version: "0.1.0"
   crisp_ebook:
     dependency: "direct main"
     description:

@@ -1100,7 +1100,19 @@
     "windows/runner/CMakeLists.txt",
     "windows/runner/file_drag_data.h",
     "windows/runner/file_operations.cpp",
-    "windows/runner/tests/file_drag_data_test.cpp"
+    "windows/runner/tests/file_drag_data_test.cpp",
+    "packages/crisp_catalog/native/src/jobs.rs",
+    "packages/crisp_catalog/lib/src/catalog_native.dart",
+    "packages/crisp_catalog/lib/src/catalog_types.dart",
+    "packages/crisp_catalog/lib/src/catalog_stub.dart",
+    "cli/lib/entrypoint.dart",
+    "cli/bin/crispcloud.dart",
+    "tool/build_cli_bundle.py",
+    "packages/crisp_catalog/native/src/lib.rs",
+    "packages/crisp_catalog/native/Cargo.toml",
+    "packages/crisp_catalog/native/Cargo.lock",
+    "packages/crisp_catalog/hook/build.dart",
+    "packages/crisp_catalog/lib/crisp_catalog.dart"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",

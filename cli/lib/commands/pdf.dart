@@ -46,8 +46,8 @@ class PdfAwareCommandRunner extends CommandRunner<int> {
           // Parser errors may quote argument values. Do not include their source
           // in machine-readable logs (a mistaken argument could be a secret).
           'message':
-              'Invalid PDF command arguments. Run crisp pdf --help or '
-              'crisp pdf <command> --help for usage.',
+              'Invalid PDF command arguments. Run $executableName pdf --help or '
+              '$executableName pdf <command> --help for usage.',
         }),
       );
       return 2;
@@ -372,10 +372,10 @@ class _PdfOperationCommand extends Command<int> {
   @override
   String get invocation => switch (operation) {
     _PdfOperation.merge =>
-      'crisp pdf merge <input.pdf> <input.pdf>... --output <file> [options]',
-    _PdfOperation.search => 'crisp pdf search <input.pdf> <query> [options]',
+      '${runner?.executableName ?? 'crispcloud'} pdf merge <input.pdf> <input.pdf>... --output <file> [options]',
+    _PdfOperation.search => '${runner?.executableName ?? 'crispcloud'} pdf search <input.pdf> <query> [options]',
     _ =>
-      'crisp pdf $name <input.pdf> ${_writes ? '--output <file> ' : ''}[options]',
+      '${runner?.executableName ?? 'crispcloud'} pdf $name <input.pdf> ${_writes ? '--output <file> ' : ''}[options]',
   };
 
   @override
@@ -557,8 +557,9 @@ class _PdfOperationCommand extends Command<int> {
               '${match.pageIndex + 1}:${match.start}-${match.end}: ${_terminalSafe(match.text)}',
             );
           }
-          if (matches.isEmpty)
+          if (matches.isEmpty) {
             host.output.writeln('No matching text. Image-only scans need OCR.');
+          }
         }
         return 0;
       default:
@@ -595,10 +596,12 @@ class _PdfOperationCommand extends Command<int> {
       secret: true,
       maxBytes: 64 * 1024,
     );
-    if (password.endsWith('\n'))
+    if (password.endsWith('\n')) {
       password = password.substring(0, password.length - 1);
-    if (password.endsWith('\r'))
+    }
+    if (password.endsWith('\r')) {
       password = password.substring(0, password.length - 1);
+    }
     if (password.contains('\n') || password.contains('\r')) {
       throw const PdfCliException(
         'invalidPasswordFile',
@@ -633,8 +636,9 @@ class _PdfOperationCommand extends Command<int> {
     if (operation == _PdfOperation.watermark ||
         operation == _PdfOperation.insertImage) {
       final path = args['image'] as String?;
-      if (path != null)
+      if (path != null) {
         image = await store.readBytes(path, maxBytes: 16 * 1024 * 1024);
+      }
     }
     String? text;
     if (operation == _PdfOperation.watermark) {
@@ -781,8 +785,9 @@ class _PdfOperationCommand extends Command<int> {
 
   double _number(String name) {
     final parsed = double.tryParse(argResults![name] as String);
-    if (parsed == null || !parsed.isFinite)
+    if (parsed == null || !parsed.isFinite) {
       usageException('--$name must be a finite number.');
+    }
     return parsed;
   }
 

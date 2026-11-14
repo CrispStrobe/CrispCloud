@@ -74,6 +74,8 @@ import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
 import '../widgets/duplicate_finder_dialog.dart';
 import '../widgets/storage_analyzer_dialog.dart';
+import '../widgets/catalogue_actions.dart';
+import '../l10n/catalogue_strings.dart';
 import '../widgets/storage_scan_batch_dialog.dart';
 import '../l10n/storage_analyzer_strings.dart';
 import '../widgets/key_management_dialog.dart';
@@ -604,8 +606,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       'archiveJobs',
       archiveJobText(context, 'Archive jobs'),
       () => showArchiveJobsDialog(context, ref),
-      available: () => !kIsWeb && const {TargetPlatform.linux,
-        TargetPlatform.windows, TargetPlatform.macOS}.contains(defaultTargetPlatform),
+      available: () =>
+          !kIsWeb &&
+          const {
+            TargetPlatform.linux,
+            TargetPlatform.windows,
+            TargetPlatform.macOS,
+          }.contains(defaultTargetPlatform),
     );
     add(
       'archiveTest',
@@ -651,6 +658,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     route('sync', context.commanderTr('Sync Manager'), 'sync');
     route('duplicates', context.commanderTr('Find Duplicates'), 'duplicates');
+    add(
+      'catalogues',
+      CatalogueStrings(context).text('Catalogues'),
+      () => showCatalogues(context, ref),
+    );
     route(
       'storageAnalyzer',
       StorageAnalyzerStrings(context).text('title'),
@@ -1094,6 +1106,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PlatformMenuItem(
             label: context.commanderTr("Find Duplicates"),
             onSelected: () => showDuplicateFinderDialog(context, ref),
+          ),
+          PlatformMenuItem(
+            label: CatalogueStrings(context).text('Catalogues'),
+            onSelected: () => showCatalogues(context, ref),
           ),
           PlatformMenuItem(
             label: StorageAnalyzerStrings(context).text('title'),
@@ -2359,6 +2375,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showMountDialog(context);
       case 'duplicates':
         showDuplicateFinderDialog(context, ref);
+      case 'catalogues':
+        showCatalogues(context, ref);
       case 'storage_analyzer':
         showStorageAnalyzerDialog(context, ref);
       case 'audit':
@@ -2557,12 +2575,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             archiveEndpointText(context, 'recoveryTitle'),
           ),
         ),
-        if (!kIsWeb && const {TargetPlatform.linux, TargetPlatform.windows,
-            TargetPlatform.macOS}.contains(defaultTargetPlatform))
+        if (!kIsWeb &&
+            const {
+              TargetPlatform.linux,
+              TargetPlatform.windows,
+              TargetPlatform.macOS,
+            }.contains(defaultTargetPlatform))
           PopupMenuItem(
             value: 'archive_jobs',
-            child: _overflowItem(Icons.inventory_2_outlined,
-              archiveJobText(context, 'Archive jobs')),
+            child: _overflowItem(
+              Icons.inventory_2_outlined,
+              archiveJobText(context, 'Archive jobs'),
+            ),
           ),
         PopupMenuItem(
           value: 'combine_parts',
@@ -2727,6 +2751,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'duplicates',
           child: _overflowItem(Icons.find_replace, l.findDuplicates),
+        ),
+        PopupMenuItem(
+          value: 'catalogues',
+          child: _overflowItem(
+            Icons.inventory_2_outlined,
+            CatalogueStrings(context).text('Catalogues'),
+          ),
         ),
         PopupMenuItem(
           value: 'storage_analyzer',

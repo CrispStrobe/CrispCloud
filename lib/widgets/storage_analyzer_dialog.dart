@@ -16,6 +16,8 @@ import '../services/storage_scan_service.dart';
 import '../services/storage_scan_snapshot_store.dart';
 import '../utils/formatters.dart';
 import 'storage_analysis_view.dart';
+import 'catalogue_dialog.dart';
+import '../l10n/catalogue_strings.dart';
 
 /// Analyze the exact folder chosen in a context menu, including remote folders.
 /// The report owns its original endpoint and exposes cancellation/partial data.
@@ -500,6 +502,19 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                             overflow: TextOverflow.ellipsis,
                           ),
                       ],
+                    ),
+                  ),
+                  Builder(
+                    builder: (context) => IconButton(
+                      tooltip: CatalogueStrings(context).text('Catalogues'),
+                      icon: const Icon(Icons.inventory_2_outlined),
+                      onPressed: () => showCatalogueLibrary(
+                        context,
+                        local: ProviderScope.containerOf(
+                          context,
+                          listen: false,
+                        ).read(localFileServiceProvider),
+                      ),
                     ),
                   ),
                   IconButton(

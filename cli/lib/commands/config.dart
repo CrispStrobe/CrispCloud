@@ -108,7 +108,7 @@ class _ConfigSetDefaultCommand extends Command<int> {
   _ConfigSetDefaultCommand(this.config);
 
   @override
-  String get invocation => 'crisp config set-default <provider-name>';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} config set-default <provider-name>';
 
   @override
   Future<int> run() async {
@@ -142,7 +142,7 @@ class _ConfigRemoveCommand extends Command<int> {
   _ConfigRemoveCommand(this.config);
 
   @override
-  String get invocation => 'crisp config remove <provider-name>';
+  String get invocation => '${runner?.executableName ?? 'crispcloud'} config remove <provider-name>';
 
   @override
   Future<int> run() async {
@@ -174,7 +174,7 @@ class _ConfigSmbBackendCommand extends Command<int> {
   Future<int> run() async {
     final args = argResults!.rest;
     if (args.isEmpty || args.length > 2) {
-      usageException('crisp config smb-backend <provider> [libsmb2|rust|auto]');
+      usageException('${runner?.executableName ?? 'crispcloud'} config smb-backend <provider> [libsmb2|rust|auto]');
     }
     final provider = config.providerConfig(args.first, strict: true);
     if (provider == null || provider['type'] != 'smb') {

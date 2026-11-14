@@ -172,7 +172,7 @@ jobs:
       - name: Build CLI bundle with native libraries
         working-directory: cli
         run: |
-          dart build cli -o build/cli
+          python3 ../tool/build_cli_bundle.py --dart dart
           cp ../packages/crisp_storage/NOTICE-LIBSMB2.txt build/cli/bundle/
           python3 ../tool/collect_catalog_licenses.py --output build/cli/bundle/catalog-licenses
 

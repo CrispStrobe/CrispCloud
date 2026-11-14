@@ -25,7 +25,7 @@ class SearchCommand extends Command<int> {
 
   @override
   String get invocation =>
-      'crisp search <pattern> [--path <remote-path>] [--recursive] [options]';
+      '${runner?.executableName ?? 'crispcloud'} search <pattern> [--path <remote-path>] [--recursive] [options]';
 
   final CliConfig config;
 

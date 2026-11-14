@@ -3,6 +3,10 @@ description: CrispCloud CLI companion — manage cloud storage from the terminal
 publish_to: 'none'
 version: 0.1.0
 
+executables:
+  crispcloud:
+  crisp:
+
 environment:
   sdk: '>=3.10.0 <4.0.0'
 
