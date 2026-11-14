@@ -1,0 +1,26 @@
+{
+  "scope": "Independent review regressions on actual compiled JavaScript/Node; native canonical tests separately recorded",
+  "result": "20 passed, 0 failed, 0 skipped",
+  "command": [
+    "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+    "test",
+    "--platform",
+    "node",
+    "--reporter",
+    "expanded",
+    "test/disk_partition_inspector_review_test.dart"
+  ],
+  "working_directory": "/workspace/scratch/52be1abfc881/runtime-setup/dart-test-harness",
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "node": "v24.22.1",
+  "adaptation": "Only package:flutter_test/flutter_test.dart import replaced by package:test/test.dart in a temporary copied test; fixture bytes and actual live lib sources unchanged",
+  "harness_test_sha256": "bda7055176b40f38501604ccc6d66861fa3cf10aaa0b560696b52f7c24491e12",
+  "source_files_sha256": {
+    "lib/services/disk_partition_inspector.dart": "46f5e40daa9818f6bf05b2cfe67bf0e03617deb58a6b5b719d51453391090ebf",
+    "lib/services/binary_structure_service.dart": "d78af3f2decd07e42370e4e5054d10ff79d9b620518d8dd8b4fb8f316e7c17ad",
+    "test/support/disk_partition_fixture.dart": "98131f8233d6a3d7169e78f6ffd04ac0d7289417528b899dd499e4391c0ec82a",
+    "test/disk_partition_inspector_review_test.dart": "6fa9c56f06ba95136b74985b80d994988f86526dff1bfdd0da3d0887070d5fb9"
+  },
+  "source_hashes_checked_before_and_after": true,
+  "log_sha256": "307e2407236371dd503015712702ac616fe69bf4378113a128e8b8a9918739b9"
+}

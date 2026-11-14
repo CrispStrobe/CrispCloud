@@ -1,0 +1,67 @@
+{
+  "fixtures_verified": 3,
+  "crc_checks": 12,
+  "oracle": "Python standard-library zlib.crc32",
+  "fixtures": [
+    {
+      "sector_bytes": 512,
+      "total_bytes": 1048576,
+      "mirrors": [
+        {
+          "role": "primary",
+          "header_crc32": "7298b1a1",
+          "table_crc32": "2e2ce701",
+          "header_sha256": "3dd5c7e31967ebb8f122b3eb70d0fd22fa3b4cb5639358a624451a73aa19aba2",
+          "table_sha256": "54825cec8e43a65336d85bdf2bd65fe30ffaea663ff12f0384c5895e563e3ef8"
+        },
+        {
+          "role": "backup",
+          "header_crc32": "c1ea9faa",
+          "table_crc32": "2e2ce701",
+          "header_sha256": "b0191dd6520ac006f58e8da0d06258f72dff0520152fb616a5c46631ccd4479f",
+          "table_sha256": "54825cec8e43a65336d85bdf2bd65fe30ffaea663ff12f0384c5895e563e3ef8"
+        }
+      ]
+    },
+    {
+      "sector_bytes": 4096,
+      "total_bytes": 1048576,
+      "mirrors": [
+        {
+          "role": "primary",
+          "header_crc32": "864ed834",
+          "table_crc32": "7b658642",
+          "header_sha256": "7b8197e0c425503cb6d3ce427368f77b6e0c17ef33288d922de81af833b7fbd8",
+          "table_sha256": "4a285faff553275fc0dc08af4c4ac042abd5b5f2a67c1e16fb65d4c82ba4f507"
+        },
+        {
+          "role": "backup",
+          "header_crc32": "faa168ba",
+          "table_crc32": "7b658642",
+          "header_sha256": "ade45ff0405d62d15ac19725b41c830c83094562d365ab592da8338e7c4a2121",
+          "table_sha256": "4a285faff553275fc0dc08af4c4ac042abd5b5f2a67c1e16fb65d4c82ba4f507"
+        }
+      ]
+    },
+    {
+      "sector_bytes": 512,
+      "total_bytes": 5497558138880,
+      "mirrors": [
+        {
+          "role": "primary",
+          "header_crc32": "2ac78348",
+          "table_crc32": "2e2ce701",
+          "header_sha256": "16c540cbd2e47c2c2286ec0c819f72a3711304918f279c8879fdb6e48cbe2302",
+          "table_sha256": "54825cec8e43a65336d85bdf2bd65fe30ffaea663ff12f0384c5895e563e3ef8"
+        },
+        {
+          "role": "backup",
+          "header_crc32": "3bb9bbda",
+          "table_crc32": "2e2ce701",
+          "header_sha256": "99c7fe3aab8fb06bdf688fc57461d6b409023688f2f54754f02ded20530a6378",
+          "table_sha256": "54825cec8e43a65336d85bdf2bd65fe30ffaea663ff12f0384c5895e563e3ef8"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "partition-js-acceptance.log": {
+    "bytes": 58,
+    "sha256": "b8c41f6bded7f70dff518d93134f5bbeef6dab3a6b158ed86c490118bc0d51ed"
+  },
+  "partition-js-compile.log": {
+    "bytes": 111,
+    "sha256": "d91daf0c837ff02e2a516b4b576aa9d7c6d6986e8d70e85f93b1b8dd42e56238"
+  },
+  "partition-native-gate-receipt.json": {
+    "bytes": 14345,
+    "sha256": "d462a42d577d529c00bec6978e7b1b46050b1c4954393dcc41cd6296778f001a"
+  },
+  "partition-native-gate-summary.json": {
+    "bytes": 360,
+    "sha256": "5f7f3649ae6a892addbe3aa2719154717cf648cbfaec902f4aec758898a6e516"
+  },
+  "partition-native-gate.jsonl": {
+    "bytes": 29233,
+    "sha256": "c01e9dee0918d6583736931c50cf88aa19b0fc0eb6964fee5e7404d0b896ad23"
+  },
+  "partition-native-gate.stderr.log": {
+    "bytes": 117,
+    "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322"
+  },
+  "partition-python-fixture-oracle.json": {
+    "bytes": 2289,
+    "sha256": "224dfe40d58dad868cea68633c74418d66e16e91b4d8b6c8939c243ce91f7c40"
+  },
+  "partition-python-fixture-oracle.md": {
+    "bytes": 2081,
+    "sha256": "e7f9ffd0572fa9f81eab8489e40b5b6f1b5d539123daa7f7c8c663d69011eda0"
+  },
+  "partition-review-node.log": {
+    "bytes": 1878,
+    "sha256": "307e2407236371dd503015712702ac616fe69bf4378113a128e8b8a9918739b9"
+  },
+  "partition-review-receipt.json": {
+    "bytes": 1537,
+    "sha256": "5a00027d660e1f6cff94bb3c7ae5fbaa99c063e06eb6939c672b10932a42f039"
+  },
+  "partition-review.md": {
+    "bytes": 3787,
+    "sha256": "782785c44b5ca6f72cd0b379e77e971791ed6a348b6bb318f616bf1ade43c8d8"
+  },
+  "partition-scoped-analysis-receipt.json": {
+    "bytes": 2450,
+    "sha256": "328b2ca5d17ecbc381c22468f630a6ec5ceebab10d4e4ee8fb6e420207ad8563"
+  },
+  "partition-scoped-analysis.log": {
+    "bytes": 97,
+    "sha256": "b7987f4e5f39c00b53891780791bfa907418a1bcf872054c703c95fa60b5bd9e"
+  },
+  "partition-sdk-acceptance-receipt.json": {
+    "bytes": 2304,
+    "sha256": "a4d9658e62206d3649100e9bdb891ecd003fd4e91e441928320b9281c6af265b"
+  },
+  "partition-validation.md": {
+    "bytes": 4405,
+    "sha256": "330637cbf73266524ff026fc757a0b5657810eedb09382cdf9a738f3625c8481"
+  },
+  "partition-vm-acceptance.log": {
+    "bytes": 58,
+    "sha256": "b8c41f6bded7f70dff518d93134f5bbeef6dab3a6b158ed86c490118bc0d51ed"
+  }
+}

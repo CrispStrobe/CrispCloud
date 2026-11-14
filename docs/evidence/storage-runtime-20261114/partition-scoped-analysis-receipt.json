@@ -1,0 +1,48 @@
+{
+  "command": [
+    "flutter",
+    "analyze",
+    "--no-pub",
+    "--fatal-infos",
+    "--fatal-warnings",
+    "lib/services/disk_partition_inspector.dart",
+    "lib/l10n/disk_partition_strings.dart",
+    "lib/widgets/disk_partition_dialog.dart",
+    "lib/widgets/internal_viewer_dialog.dart",
+    "test/disk_partition_inspector_test.dart",
+    "test/disk_partition_inspector_review_test.dart",
+    "test/widget/disk_partition_viewer_test.dart",
+    "test/support/disk_partition_fixture.dart",
+    "test/support/disk_partition_web_acceptance.dart"
+  ],
+  "exit_code": 0,
+  "result": "No issues found",
+  "items": 9,
+  "errors": 0,
+  "warnings": 0,
+  "infos": 0,
+  "published_source_commit": "fb57e8abb22e1a2fe588c1a22d9ac0326e7358ee",
+  "tested_file_sha256": {
+    "lib/services/disk_partition_inspector.dart": "46f5e40daa9818f6bf05b2cfe67bf0e03617deb58a6b5b719d51453391090ebf",
+    "lib/l10n/disk_partition_strings.dart": "2e915da7e6dab56be13bd21f71898d4a38e4dd1e772a6f0108efd7779d3294f8",
+    "lib/widgets/disk_partition_dialog.dart": "903bea63ceeb16b9792af043d28c4da7362fdbaa5b4acc9c0288b697bf84ff70",
+    "lib/widgets/internal_viewer_dialog.dart": "98d66cc48d1e2c09b63355b0c64149070073ee02a685ac9c1cf68105063ba9a3",
+    "test/disk_partition_inspector_test.dart": "db9784e805907faabf31457e36cbd37427b3cd67dd7e9b46562fa623942f03a4",
+    "test/disk_partition_inspector_review_test.dart": "6fa9c56f06ba95136b74985b80d994988f86526dff1bfdd0da3d0887070d5fb9",
+    "test/widget/disk_partition_viewer_test.dart": "f994b236c89cec6db7adf2f6b6f04fe1098a3aa60838d2b809f6690df8c46f66",
+    "test/support/disk_partition_fixture.dart": "98131f8233d6a3d7169e78f6ffd04ac0d7289417528b899dd499e4391c0ec82a",
+    "test/support/disk_partition_web_acceptance.dart": "7eea895265bc909c198b198c1d92e7bf7c6478702022c1139108bb2a84def6f7"
+  },
+  "published_source_matches_tested_files": {
+    "lib/services/disk_partition_inspector.dart": true,
+    "lib/l10n/disk_partition_strings.dart": true,
+    "lib/widgets/disk_partition_dialog.dart": true,
+    "lib/widgets/internal_viewer_dialog.dart": true,
+    "test/disk_partition_inspector_test.dart": true,
+    "test/disk_partition_inspector_review_test.dart": true,
+    "test/widget/disk_partition_viewer_test.dart": true,
+    "test/support/disk_partition_fixture.dart": true,
+    "test/support/disk_partition_web_acceptance.dart": true
+  },
+  "log_sha256": "b7987f4e5f39c00b53891780791bfa907418a1bcf872054c703c95fa60b5bd9e"
+}

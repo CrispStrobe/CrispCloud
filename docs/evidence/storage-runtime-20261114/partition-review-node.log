@@ -1,0 +1,25 @@
+$ /workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart test --platform node --reporter expanded test/disk_partition_inspector_review_test.dart
+00:00 +0: loading test/disk_partition_inspector_review_test.dart
+00:00 +0: review: 512-byte primary header reserved tail cannot produce a clean report
+00:00 +1: review: 512-byte backup header reserved tail cannot produce a clean report
+00:00 +2: review: 4096-byte primary header reserved tail cannot produce a clean report
+00:00 +3: review: 4096-byte backup header reserved tail cannot produce a clean report
+00:00 +4: review: protective MBR boot indicator is checked
+00:00 +5: review: protective MBR disk signature is checked
+00:00 +6: review: protective MBR unknown reserved word is checked
+00:00 +7: review: protective MBR starting CHS is checked
+00:00 +8: review: protective MBR otherwise unused partition record is checked
+00:00 +9: review: 4 KiB protective MBR reserved tail is inspected
+00:00 +10: review: protective-only restrictions are not applied to legacy MBR
+00:00 +11: review: primary signature disagreement between probe and full read is an IO consistency failure
+00:00 +12: review: backup signature disagreement between probe and full read is an IO consistency failure
+00:00 +13: review: primary array is not followed inside the peer header usable range
+00:00 +14: review: backup array is not followed inside the peer header usable range
+00:00 +15: review: short late metadata read never publishes an analysis
+00:00 +16: review: oversized late metadata read never publishes an analysis
+00:00 +17: review: cancellation during final snapshot validation prevents publication
+00:00 +18: review: two maximum-sized arrays stay inside the declared global budget
+00:01 +19: review: the last complete sector below the JS exact-integer ceiling remains exact
+00:01 +20: All tests passed!
+
+exit_code=0

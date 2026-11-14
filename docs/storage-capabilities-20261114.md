@@ -342,11 +342,15 @@ general safe APFS repair, arbitrary filesystem resizing or a universal fsck.
 ## Delivery sequence and acceptance
 
 These are scoped implementation stages, not estimated delivery dates. Stages
-1 (GPT/MBR tables only) and 2 have entered implementation; the linked profile
-and runtime receipts define their current scope. The broader filesystem and
+1 (GPT/MBR tables only) and 2 are implemented on the integration branch; the
+linked profiles and runtime receipts define their qualified scope. The broader filesystem and
 container structure drill-down described in stage 1 remains future work.
 
 ### 1. Disk structures in the current viewer
+
+Implemented first profile: [bounded GPT/MBR inspection](disk-partition-inspection.md)
+with exact Hex selections, separate primary/backup CRC checks and source
+cancellation. Filesystem superblocks and container maps below remain future work.
 
 Add lazy GPT/MBR headers and entries, boot sectors, filesystem superblocks and
 container block maps to the current structure view. Selecting a field should
@@ -361,6 +365,11 @@ source replacement and cancel during expansion. Findings must distinguish a
 damaged table from a recognized but unsupported structure.
 
 ### 2. LZFSE DMGs
+
+Implemented profile: [bounded Dart LZFSE DMG decoding](archive-dmg-codecs.md),
+including v1/v2, LZVN, raw blocks, mixed streams and validated table reuse.
+[Runtime receipts](evidence/storage-runtime-20261114) record native, compiled-JS
+and independent oracle qualification.
 
 Extend the current DMG block-decoder boundary and retain its HFS+/HFSX/ISO/raw
 partition views. Apple's public lzfse_decode_buffer can return the output-buffer
