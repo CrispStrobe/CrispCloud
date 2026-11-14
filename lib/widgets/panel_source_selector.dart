@@ -292,47 +292,84 @@ class _SourceDropdownState extends State<_SourceDropdown> {
       );
     }
 
-    return DropdownButton<String>(
-      value: selected.key,
-      underline: const SizedBox.shrink(),
-      icon: const Icon(Icons.arrow_drop_down, size: 18),
-      style: theme.textTheme.bodySmall,
-      isDense: true,
-      isExpanded: false,
-      menuWidth: MediaQuery.sizeOf(context).width.clamp(0, 360).toDouble(),
-      items: entries.map((entry) {
-        return DropdownMenuItem<String>(
-          value: entry.key,
-          enabled: entry.enabled,
-          child: label(entry),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final caption = currentEntry.label.characters.length > 15
+            ? '${currentEntry.label.characters.take(14)}…'
+            : currentEntry.label;
+        final painter = TextPainter(
+          text: TextSpan(
+            text: caption,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: 1,
+        )..layout();
+        final width = (painter.width + 42)
+            .clamp(
+              0.0,
+              constraints.hasBoundedWidth ? constraints.maxWidth : 132.0,
+            )
+            .toDouble();
+        painter.dispose();
+        return Align(
+          alignment: AlignmentDirectional.centerStart,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: SizedBox(
+            width: width,
+            child: DropdownButton<String>(
+              value: currentEntry.key,
+              underline: const SizedBox.shrink(),
+              icon: const Icon(Icons.arrow_drop_down, size: 18),
+              style: theme.textTheme.bodySmall,
+              isDense: true,
+              isExpanded: true,
+              menuWidth: MediaQuery.sizeOf(context).width
+                  .clamp(0, 360)
+                  .toDouble(),
+              items: entries.map((entry) {
+                return DropdownMenuItem<String>(
+                  value: entry.key,
+                  enabled: entry.enabled,
+                  child: label(entry),
+                );
+              }).toList(),
+              onTap: () {
+                // DropdownButton returns only a key through its latest callback when
+                // the route closes. Preserve the choices and owning callback that the
+                // user actually opened, even if accounts or the panel rebuild meanwhile.
+                _menuEntries = List<_SourceOption>.unmodifiable(entries);
+                _menuSelect = widget.onSelect;
+              },
+              onChanged: (key) {
+                final openedEntries = _menuEntries;
+                final select = _menuSelect;
+                _menuEntries = null;
+                _menuSelect = null;
+                if (key == null || openedEntries == null || select == null) {
+                  return;
+                }
+                for (final entry in openedEntries) {
+                  if (entry.key == key &&
+                      entry.enabled &&
+                      (entry.source != null || entry.location != null)) {
+                    select(entry);
+                    return;
+                  }
+                }
+              },
+              selectedItemBuilder: (context) => [
+                for (var i = 0; i < entries.length; i++)
+                  label(currentEntry, selected: true),
+              ],
+            ),
+          ),
         );
-      }).toList(),
-      onTap: () {
-        // DropdownButton returns only a key through its latest callback when
-        // the route closes. Preserve the choices and owning callback that the
-        // user actually opened, even if accounts or the panel rebuild meanwhile.
-        _menuEntries = List<_SourceOption>.unmodifiable(entries);
-        _menuSelect = widget.onSelect;
       },
-      onChanged: (key) {
-        final openedEntries = _menuEntries;
-        final select = _menuSelect;
-        _menuEntries = null;
-        _menuSelect = null;
-        if (key == null || openedEntries == null || select == null) return;
-        for (final entry in openedEntries) {
-          if (entry.key == key &&
-              entry.enabled &&
-              (entry.source != null || entry.location != null)) {
-            select(entry);
-            return;
-          }
-        }
-      },
-      selectedItemBuilder: (context) => [
-        for (var i = 0; i < entries.length; i++)
-          label(currentEntry, selected: true),
-      ],
     );
   }
 

@@ -171,7 +171,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester.getSize(find.byType(DropdownButton<String>)).width,
-      lessThan(100),
+      lessThan(132),
     );
     await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
@@ -728,10 +728,7 @@ void main() {
           (item) => item.value == dropdown.value,
         );
         expect(selected.enabled, isFalse);
-        expect(
-          find.text('Original account with a long label · Not connected'),
-          findsOneWidget,
-        );
+        expect(find.text('Original accou…'), findsOneWidget);
         dropdown.onChanged!(selected.value);
         dropdown.onChanged!('removed-key');
         expect(
@@ -780,10 +777,7 @@ void main() {
             .enabled,
         isFalse,
       );
-      expect(
-        find.text('Restored account with a long label · Not connected'),
-        findsOneWidget,
-      );
+      expect(find.text('Restored accou…'), findsOneWidget);
       expect(
         container.read(panelSourceProvider(PanelSide.remote)),
         same(previous),

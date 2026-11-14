@@ -498,6 +498,7 @@ void main() {
         await Scrollable.ensureVisible(
           tester.element(find.text('Show Terminal')),
         );
+        await tester.pump(const Duration(milliseconds: 300));
         await tester.tap(find.text('Show Terminal'));
         await tester.pump(const Duration(milliseconds: 300));
         expect(find.byTooltip('Hide Terminal'), findsNothing);
