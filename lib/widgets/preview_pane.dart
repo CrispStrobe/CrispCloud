@@ -122,6 +122,16 @@ PreviewType _classifyFile(String name) {
     case 'yaml':
     case 'yml':
     case 'xml':
+    case 'acsm':
+    case 'opf':
+    case 'ncx':
+    case 'gpx':
+    case 'kml':
+    case 'xspf':
+    case 'xsd':
+    case 'xslt':
+    case 'rss':
+    case 'atom':
     case 'kbdx':
     case 'ini':
     case 'cfg':
@@ -131,6 +141,10 @@ PreviewType _classifyFile(String name) {
     case 'gitignore':
     case 'dockerfile':
     // Code files
+    case 'bas':
+    case 'vba':
+    case 'vb':
+    case 'vbs':
     case 'dart':
     case 'js':
     case 'ts':

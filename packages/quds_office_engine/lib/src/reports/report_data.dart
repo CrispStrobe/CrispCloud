@@ -502,7 +502,11 @@ abstract final class ReportCsv {
   /// Cells of [text]. [delimiter] defaults to the most frequent of `,` `;`
   /// tab in the first line. Quoted cells may contain delimiters, `""`, and
   /// line breaks; a UTF-8 BOM is skipped.
-  static List<List<String>> parse(String text, {String? delimiter}) {
+  static List<List<String>> parse(
+    String text, {
+    String? delimiter,
+    bool keepEmptyRows = false,
+  }) {
     var s = text;
     if (s.startsWith('\uFEFF')) {
       s = s.substring(1);
@@ -537,7 +541,7 @@ abstract final class ReportCsv {
       } else if (c == '\n' || c == '\r') {
         row.add(cell.toString());
         cell.clear();
-        if (row.length > 1 || row.first.isNotEmpty) {
+        if (keepEmptyRows || row.length > 1 || row.first.isNotEmpty) {
           out.add(row);
         }
         row = <String>[];
@@ -552,7 +556,12 @@ abstract final class ReportCsv {
     if (quoted) {
       throw const ReportDataException('Unterminated quoted CSV cell');
     }
-    if (cell.isNotEmpty || row.isNotEmpty) {
+    if (cell.isNotEmpty ||
+        row.isNotEmpty ||
+        (keepEmptyRows &&
+            s.isNotEmpty &&
+            !s.endsWith('\n') &&
+            !s.endsWith('\r'))) {
       row.add(cell.toString());
       out.add(row);
     }

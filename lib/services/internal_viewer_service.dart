@@ -188,6 +188,10 @@ class InternalViewerService {
 
   static const _standardExtensions = <ViewerMode, List<String>>{
     ViewerMode.text: [
+      '.bas',
+      '.vba',
+      '.vb',
+      '.vbs',
       '.txt',
       '.text',
       '.log',
@@ -314,6 +318,12 @@ class InternalViewerService {
     ViewerMode.html: ['.html', '.htm', '.xhtml'],
     ViewerMode.xml: [
       '.xml',
+      '.acsm',
+      '.opf',
+      '.ncx',
+      '.gpx',
+      '.kml',
+      '.xspf',
       '.xsl',
       '.xslt',
       '.xsd',
@@ -467,7 +477,9 @@ class InternalViewerService {
     // Ordinary executables keep their binary view. The explicit archive mode
     // and pane Browse Archive action can inspect supported SFX overlays.
     final executableHint = archiveFormat?.id == 'sfx' && lower.endsWith('.exe');
-    if (archiveFormat != null && !archiveFormat.singleFileCompression && !executableHint) {
+    if (archiveFormat != null &&
+        !archiveFormat.singleFileCompression &&
+        !executableHint) {
       return ViewerMode.archive;
     }
 

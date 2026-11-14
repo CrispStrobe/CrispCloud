@@ -15,6 +15,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../l10n/csv_spreadsheet_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 
 import 'package:flutter/services.dart';
@@ -36,6 +37,8 @@ import '../services/editor_document.dart';
 import '../services/editor_document_history.dart';
 import '../services/editor_kind.dart';
 import 'hex_editor_dialog.dart';
+import 'csv_spreadsheet_import_action.dart';
+import '../services/csv_spreadsheet_import.dart';
 import '../services/editor_highlighting.dart';
 import '../services/syntax_highlight_theme.dart';
 import '../services/file_operation_backend.dart';
@@ -205,7 +208,22 @@ Future<void> showTextHexEditorSession(
           fullscreenDialog: true,
           builder: (_) => openedEditor == EditorKind.hex
               ? HexFileEditorPage(file: openedFile, backend: backend)
-              : _FileEditorPage(file: openedFile, side: side, target: target),
+              : _FileEditorPage(
+                  file: openedFile,
+                  side: side,
+                  target: target,
+                  onImportSpreadsheet:
+                      supportsSpreadsheetTextImport(openedFile.name)
+                      ? (text) => showCsvSpreadsheetImportForFile(
+                          context,
+                          ref,
+                          openedFile,
+                          side,
+                          origin: origin,
+                          textOverride: text,
+                        )
+                      : null,
+                ),
         ),
       );
       if (next == null || next == EditorKind.system || !context.mounted) break;
@@ -235,11 +253,13 @@ class _FileEditorPage extends ConsumerStatefulWidget {
   final FileItem file;
   final PanelSide side;
   final CapturedFileTarget target;
+  final Future<void> Function(String)? onImportSpreadsheet;
 
   const _FileEditorPage({
     required this.file,
     required this.side,
     required this.target,
+    this.onImportSpreadsheet,
   });
 
   @override
@@ -417,6 +437,28 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   Future<void> _closeEditor() => _leaveEditor();
 
   Future<void> _switchToHexEditor() => _leaveEditor(EditorKind.hex);
+
+  Future<void> _importSpreadsheet() async {
+    final action = widget.onImportSpreadsheet;
+    if (action == null || _loading || _isSaving || _closing) return;
+    _autoSaveTimer?.cancel();
+    _focusNode.canRequestFocus = false;
+    _focusNode.unfocus();
+    setState(() => _closing = true);
+    _publishMenu();
+    try {
+      await _saveState.idle;
+      if (mounted) await action(_controller.text);
+    } finally {
+      if (mounted) {
+        _focusNode.canRequestFocus = true;
+        setState(() => _closing = false);
+        _publishMenu();
+        _focusNode.requestFocus();
+        if (_isModified) _scheduleAutoSave();
+      }
+    }
+  }
 
   Future<void> _leaveEditor([EditorKind? next]) async {
     if (_closing || (next != null && _loading)) return;
@@ -1020,6 +1062,15 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     .text(_highlightEnabled ? 'disable' : 'enable'),
                 onPressed: _toggleHighlighting,
               ),
+            if (widget.onImportSpreadsheet != null)
+              IconButton(
+                key: const ValueKey('editor-import-spreadsheet'),
+                icon: const Icon(Icons.table_chart_outlined, size: 20),
+                tooltip: CsvSpreadsheetStrings(context).text('action'),
+                onPressed: _loading || _isSaving || _closing
+                    ? null
+                    : () => unawaited(_importSpreadsheet()),
+              ),
             IconButton(
               icon: const Icon(Icons.hexagon_outlined, size: 20),
               tooltip: 'Open in Hex Editor',
@@ -1072,6 +1123,11 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   value: _EditorMenuAction.highlight,
                   child: Text(CodeDocumentUiStrings(context).text('highlight')),
                 ),
+                if (widget.onImportSpreadsheet != null)
+                  PopupMenuItem(
+                    value: _EditorMenuAction.spreadsheet,
+                    child: Text(CsvSpreadsheetStrings(context).text('action')),
+                  ),
                 const PopupMenuItem(
                   value: _EditorMenuAction.hex,
                   child: Text('Open in Hex Editor'),
@@ -1145,6 +1201,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         break;
       case _EditorMenuAction.highlight:
         _toggleHighlighting();
+        break;
+      case _EditorMenuAction.spreadsheet:
+        await _importSpreadsheet();
         break;
       case _EditorMenuAction.hex:
         await _switchToHexEditor();
@@ -1275,6 +1334,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 }
 
 enum _EditorMenuAction {
+  spreadsheet,
   find,
   replace,
   goToLine,

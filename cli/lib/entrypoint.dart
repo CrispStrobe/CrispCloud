@@ -12,7 +12,7 @@ Future<void> runCrispCloudCli(
   // Handle --version before routing to CommandRunner
   if (arguments.isNotEmpty &&
       (arguments.first == '--version' || arguments.first == '-V')) {
-    stdout.writeln('$executableName 1.3.0');
+    stdout.writeln('$executableName 1.3.1');
     exit(0);
   }
 

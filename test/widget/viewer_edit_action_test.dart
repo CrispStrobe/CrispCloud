@@ -1,5 +1,9 @@
 import 'dart:io';
 
+import 'package:crisp_cloud/widgets/csv_spreadsheet_import_dialog.dart';
+import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,7 +69,8 @@ void main() {
       ..put('/a.txt', 'first file\n'.codeUnits)
       ..put('/b.txt', 'unselected\n'.codeUnits)
       ..put('/c.txt', 'third file\n'.codeUnits)
-      ..put('/blob.bin', [0, 1, 2]);
+      ..put('/blob.bin', [0, 1, 2])
+      ..put('/table.csv', 'id,name\n001,test'.codeUnits);
     auth = _Auth(cloud);
     container = ProviderContainer(
       overrides: [
@@ -80,6 +85,61 @@ void main() {
 
   FileItem item(String name) =>
       panel.files!.firstWhere((file) => file.name == name);
+
+  testWidgets(
+    'CSV viewer creates a verified copy and opens the Quds spreadsheet editor',
+    (tester) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: InternalViewerDialog(
+              file: item('table.csv'),
+              side: PanelSide.remote,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final action = find.byKey(const ValueKey('viewer-import-spreadsheet'));
+      expect(action, findsOneWidget);
+      await tester.ensureVisible(action);
+      await tester.tap(action);
+      for (var i = 0; i < 100; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+        if (find.text('2 rows · 2 columns').evaluate().isNotEmpty) break;
+      }
+      expect(find.byType(CsvSpreadsheetImportDialog), findsOneWidget);
+      expect(find.text('2 rows · 2 columns'), findsOneWidget);
+      expect(cloud.writes, isEmpty);
+      await tester.tap(find.text('Create XLSX copy and edit'));
+      for (var i = 0; i < 200; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump(const Duration(milliseconds: 20));
+        if (find.byType(OfficeEditorDialog).evaluate().isNotEmpty) break;
+      }
+      expect(find.byType(OfficeEditorDialog), findsOneWidget);
+      await tester.pumpAndSettle();
+      final original = cloud.files['/table.csv']!;
+      expect(String.fromCharCodes(original), 'id,name\n001,test');
+      final sheet = SheetDeserializer()
+          .readBytes(cloud.files['/table-imported.xlsx']!)
+          .sheets
+          .single;
+      expect(sheet.cell(const SmlCellRef(0, 1)).value, '001');
+      expect(find.textContaining('table-imported.xlsx'), findsWidgets);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 150));
+    },
+  );
 
   testWidgets(
     'navigation keeps only selected files and edits the displayed file',

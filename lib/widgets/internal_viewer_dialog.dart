@@ -31,6 +31,7 @@ import 'package:flutter/services.dart'
     show Clipboard, ClipboardData, LogicalKeyboardKey;
 import 'package:flutter_highlight/flutter_highlight.dart';
 
+import '../l10n/csv_spreadsheet_strings.dart';
 import '../services/syntax_highlight_theme.dart';
 import '../l10n/code_document_ui_strings.dart';
 
@@ -120,6 +121,8 @@ import '../l10n/installed_office_preview_strings.dart';
 import '../l10n/office_pdf_font_notice_strings.dart';
 import 'installed_office_preview_dialog.dart';
 import 'office_pdf_font_notice.dart';
+import 'csv_spreadsheet_import_action.dart';
+import '../services/csv_spreadsheet_import.dart';
 
 const _log = Log('InternalViewer');
 
@@ -163,8 +166,9 @@ Future<InternalViewerAction> showInternalViewer(
     side: side,
     origin: origin,
     bytesOverride: bytesOverride,
-  ))
+  )) {
     return InternalViewerAction.close;
+  }
   if (!context.mounted) return InternalViewerAction.close;
   final result = await showDialog<InternalViewerAction>(
     context: context,
@@ -3312,6 +3316,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     ),
                   for (final mode in extraModes)
                     _modeChip(_modeLabelOf(mode), mode),
+                  if (supportsSpreadsheetTextImport(_viewName) &&
+                      widget.bytesOverride == null)
+                    ActionChip(
+                      key: const ValueKey('viewer-import-spreadsheet'),
+                      avatar: const Icon(Icons.table_chart_outlined, size: 18),
+                      label: Text(
+                        CsvSpreadsheetStrings(context).text('action'),
+                      ),
+                      onPressed: () => unawaited(
+                        showCsvSpreadsheetImportForFile(
+                          context,
+                          ref,
+                          widget.file,
+                          widget.side,
+                          origin: _origin,
+                        ),
+                      ),
+                    ),
+
                   if (_mode == ViewerMode.pdf) _pdfViewToggle(),
                   if (_mode == ViewerMode.html) _htmlViewToggle(),
                   if (_mode == ViewerMode.xml) _xmlViewToggle(),

@@ -8,6 +8,7 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/csv_spreadsheet_import_dialog.dart';
 import 'package:crisp_cloud/widgets/hex_editor_dialog.dart';
 import 'package:flutter/foundation.dart' show debugPrintSynchronously, kIsWeb;
 import 'package:flutter/material.dart';
@@ -159,11 +160,12 @@ Future<T> _pumpUntilComplete<T>(WidgetTester tester, Future<T> future) async {
 Future<_Fixture> _open(
   WidgetTester tester, {
   bool hex = false,
+  String filename = 'note.txt',
   bool waitForReady = true,
   _Cloud? cloud,
 }) async {
   SharedPreferences.setMockInitialValues({});
-  final client = cloud ?? (_Cloud()..put('/note.txt', utf8.encode('one')));
+  final client = cloud ?? (_Cloud()..put('/$filename', utf8.encode('one')));
   final container = ProviderContainer(
     overrides: [
       authProvider.overrideWith((_) => WorkspaceTestAuth(client)),
@@ -180,7 +182,7 @@ Future<_Fixture> _open(
     settle: false,
   );
   await panel.refresh();
-  final file = panel.files!.singleWhere((file) => file.name == 'note.txt');
+  final file = panel.files!.singleWhere((file) => file.name == filename);
   final closed = Completer<void>();
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -251,6 +253,31 @@ void main() {
       originalReporter(details, description);
     };
   }
+
+  testWidgets(
+    'CSV editor imports current unsaved text and cancel preserves edits',
+    (tester) async {
+      final fixture = await _open(tester, filename: 'table.csv');
+      const current = 'id,name\n001,current';
+      _textController(tester).text = current;
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('editor-import-spreadsheet')));
+      await _pumpUntil(
+        tester,
+        () => find.text('2 rows · 2 columns').evaluate().isNotEmpty,
+      );
+      expect(find.byType(CsvSpreadsheetImportDialog), findsOneWidget);
+      expect(find.text('current'), findsOneWidget);
+      expect(utf8.decode(fixture.cloud.files['/table.csv']!), 'one');
+      expect(fixture.cloud.writes, isEmpty);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(_textController(tester).text, current);
+      // Remove the route without committing the still-unsaved CSV buffer.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 150));
+    },
+  );
 
   testWidgets(
     'text and hex handoffs retain storage after saves replace IDs and rows refresh',
