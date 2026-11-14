@@ -628,32 +628,39 @@ Future<ViewerArchive> openDmgArchive(
         input,
         fatMetadata,
       );
-      var fatProbeLimited = false;
+      var skipFilesystemProbes = false;
       if (fatMetadata.canProbe) {
         try {
           if (await hasFatVolumeRecognition(fatSource)) extension = 'fat';
-        } on _DmgFatBudgetException catch (error) {
-          fatProbeLimited = true;
+        } on ArchiveViewException catch (error) {
+          // A malformed encoded block can prevent filesystem recognition
+          // without invalidating the already checked raw partition table.
+          // Recorded provider, short-read and cancellation failures are fatal.
+          input.rethrowFailure();
+          skipFilesystemProbes = true;
           notices.add(
             '$stem: filesystem recognition unavailable: $error '
-            'The raw partition image remains available.',
+            'The raw partition entry remains listed; extraction still '
+            'checks its encoded blocks.',
           );
         }
       } else {
-        fatProbeLimited = true;
+        skipFilesystemProbes = true;
         const limited =
             'A combined FAT listing allowance is exhausted. '
             'Further partitions remain available as raw images without '
             'additional filesystem probing.';
         if (!notices.contains(limited)) notices.add(limited);
       }
-      if (!fatProbeLimited && extension == 'img' && partition.length >= 1536) {
+      if (!skipFilesystemProbes &&
+          extension == 'img' &&
+          partition.length >= 1536) {
         final signature = await partition.read(1024, 2);
         if (_magic(signature, 0, 'H+') || _magic(signature, 0, 'HX')) {
           extension = 'hfs';
         }
       }
-      if (!fatProbeLimited &&
+      if (!skipFilesystemProbes &&
           extension == 'img' &&
           partition.length >= 17 * 2048) {
         if (await hasUdfVolumeRecognition(partition)) {
@@ -896,6 +903,15 @@ class _DmgOpenSource implements koni.ByteSource {
     late Uint8List bytes;
     try {
       bytes = await source.read(offset, length);
+      if (bytes.length != length) {
+        throw const ArchiveViewException(
+          'The disk image source returned a different byte count than requested.',
+          code: ArchiveMessageCode.readEntry,
+          arguments: {
+            'detail': 'The disk image source returned a different byte count than requested.',
+          },
+        );
+      }
     } catch (error, stack) {
       _record(error, stack);
       rethrow;

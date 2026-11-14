@@ -63,6 +63,25 @@ void main() {
     group(route.$1, () {
       for (final archiveShaped in [false, true]) {
         final kind = archiveShaped ? 'ArchiveViewException' : 'StateError';
+        test(
+          '$kind during the first FAT boot probe remains a fatal provider error',
+          () async {
+            final error = _failure(archiveShaped);
+            var trailerRead = false;
+            final source = _CountedSource(validDmg)..readFailure = error;
+            source.failRead = (offset, count) =>
+                trailerRead && offset == 0 && count == 512;
+            source.afterRead = (offset, count) {
+              if (offset == validDmg.length - 512 && count == 512) {
+                trailerRead = true;
+              }
+            };
+            await expectLater(route.$2(source), throwsA(same(error)));
+            expect(trailerRead, isTrue);
+            expect(source.failedReads, 1);
+            expect(source.closeAttempts, 1);
+          },
+        );
         for (final throwingClose in [false, true]) {
           final cleanup = throwingClose ? 'throwing cleanup' : 'normal cleanup';
 
@@ -148,6 +167,37 @@ void main() {
         );
       }
 
+      for (final duringProbe in [true, false]) {
+        test(
+          'a short ${duringProbe ? 'recognition probe' : 'FAT table read'} cannot become raw-only success',
+          () async {
+            var trailerRead = false;
+            final source = _CountedSource(validDmg);
+            source.shortRead = (offset, count) => duringProbe
+                ? trailerRead && offset == 0 && count == 512
+                : _fatTableRequest(offset, count);
+            source.afterRead = (offset, count) {
+              if (offset == validDmg.length - 512 && count == 512) {
+                trailerRead = true;
+              }
+            };
+            await expectLater(
+              route.$2(source),
+              throwsA(
+                isA<ArchiveViewException>().having(
+                  (error) => error.code,
+                  'source read failure',
+                  ArchiveMessageCode.readEntry,
+                ),
+              ),
+            );
+            expect(source.shortReads, 1);
+            expect(source.closeAttempts, 1);
+            expect(source.closed, isTrue);
+          },
+        );
+      }
+
       test(
         'an original UDIF parse error survives throwing source cleanup',
         () async {
@@ -217,8 +267,10 @@ class _CountedSource implements koni.ByteSource {
   Object? readFailure;
   Object? closeFailure;
   bool Function(int offset, int count)? failRead;
+  bool Function(int offset, int count)? shortRead;
   void Function(int offset, int count)? afterRead;
   int failedReads = 0;
+  int shortReads = 0;
   int closeAttempts = 0;
   bool closed = false;
 
@@ -240,6 +292,10 @@ class _CountedSource implements koni.ByteSource {
     }
     final result = Uint8List.fromList(bytes.sublist(offset, offset + count));
     afterRead?.call(offset, count);
+    if (count > 0 && (shortRead?.call(offset, count) ?? false)) {
+      shortReads++;
+      return result.sublist(0, result.length - 1);
+    }
     return result;
   }
 
