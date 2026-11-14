@@ -1,0 +1,39 @@
+{
+  "classification": "Passing native gate bound to the merged saved source revision below",
+  "source_revision": "254842f99844574bdf82e61cfc2115489fc035ec",
+  "source_tree": "912dcb1b3427870bd080c759b78a06c7c2dffc8b",
+  "source_paths": 8124,
+  "source_unchanged": true,
+  "package_map_unchanged": true,
+  "exit_code": 0,
+  "passed": 94,
+  "failed": 0,
+  "skipped": 0,
+  "done": {
+    "success": true,
+    "type": "done",
+    "time": 13602
+  },
+  "count_basis": "Completed testDone events matched to testStart records; eight synthetic suite-loading records excluded",
+  "suites": 8,
+  "suite_loading_successes_excluded": 8,
+  "receipt_file": "integration-native-receipt.json",
+  "receipt_sha256": "e1ef558b72a3e3f3651ed9205617c94e3edb9ec30984f2e7eb203027f582dff9",
+  "log_file": "integration-native.log",
+  "log_sha256": "71e8defd0c61aa52fe89702ab6a70d1e66090d4807f3a41f3cdc5956dd98f75e",
+  "source_inventory_file": "integration-native-source.json.gz",
+  "source_inventory_compressed_sha256": "0cc810fe036b34f34744d2a4031ba674c362a2257bb451eb340171f4330be507",
+  "source_inventory_sha256": "128d84e9d0c020c199ba8e5dd18312fa836ba8743dc38078e6a2cadec86cf079",
+  "events_original_file": "integration-native-events.json",
+  "events_original_bytes": 46249,
+  "events_original_sha256": "6b92a5fe75d803e46c69b60697ed20e334b848bbf12e72b96400e055e7d0aadb",
+  "events_stored_file": "integration-native-events.json.gz",
+  "events_stored_bytes": 5396,
+  "events_stored_sha256": "4b215c69cfbde4507a549e82b67211c143f28679a52d9792c9a393be33f56187",
+  "events_compression": "gzip compression level 9; mtime=0; no filename header; decompression restores original JSON event bytes",
+  "dependency_manifest_sha256": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "dependency_manifests_unchanged": true
+}
