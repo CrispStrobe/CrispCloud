@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/archive_integrity_service.dart';
 import 'package:crisp_cloud/services/archive_service.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/archive_ext_disk_fixture.dart';
@@ -29,6 +30,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory temp;
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     temp = await Directory.systemTemp.createTemp('ext-extract-');
   });
   tearDown(() => temp.delete(recursive: true));

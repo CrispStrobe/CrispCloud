@@ -235,77 +235,24 @@ checks renamed downloads and SDK path aliases, then moves only its owned folder
 to trash. Existing files and personal-account credentials are unused. On
 19 October 2026, all eleven isolated checks and the live account check passed.
 
-For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the current source revision; `bash tool/sign_macos_local.sh` uses the installed development profile and `bash tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 10` checks startup. The alternate Linux reader parity/canary branches remain separate pending native focus/selection acceptance; this integration retains the guarded isolated host and its runtime assertions.
+## Local and hosted release checks
 
-Release `v1.2.0` (`1.2.0+13`) uses the multi-platform GitHub Release workflow for macOS, Windows, Linux, Android, iOS and Web archives. Store uploads use explicit `ios-v*` or `macos-v*` tags and their separate release workflows; the GitHub iOS archive is unsigned.
+For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the current source revision. `bash tool/sign_macos_local.sh` uses the installed development profile, and `bash tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 10` checks startup. The desktop integration harness exercises real temporary ext/NTFS images and CSV-to-XLSX publication:
 
-The `1.2.1` integration uses the pinned [CrisperBooks](https://github.com/CrispStrobe/crisperbooks) facade for edit transactions, portable reading, structured prose, appearance and reading data, with its matching reader/converter packages. That historical snapshot used vendored provenance; the current consumer is verified as described below. File/account persistence stays in CrispCloud. F4 audio editing accepts ID3-prefixed FLAC without changing the original and exports edited PCM WAV copies.
+```sh
+flutter test integration_test/native_storage_viewer_test.dart -d macos
+```
 
-The `1.2.2` release also vendors the matching Quds reports facade. Standalone editor resolution uses the same engine/reports source as the app, avoiding the hosted-package conflict exposed by the release gate.
+GitHub `v*` release tags trigger macOS, Windows, Linux, Android, iOS and Web artifacts plus standalone CLI bundles. The generic iOS archive is unsigned. Signed store uploads use the separate `ios-release.yml` and `macos-release.yml` workflows. `testflight-external.yml` selects an explicit platform and reviewed build number after processing. Local acceptance, hosted builds and TestFlight are separate gates; a tag or queued workflow does not mean downloadable binaries exist. Pages and Vercel expose the deployed source in `deployment.json`.
 
-On macOS the browser uses a unified native title-bar toolbar beside the window controls and app title. The Find/Filter indicator reserves its own row below the file viewport. Defaults now show F8 for Delete (the Delete key remains an alias) and F9 for Terminal, including the function-key bar. NXC/NQC source uses C-family highlighting. Viewer and editor highlighting uses bounded, state-preserving chunks for large source, including generated Dart files; syntax coloring is painted only for visible viewer rows.
+The Android release build regenerates plugin registration for release mode. The manual Android repair workflow requires successful application CI for the exact source and preserves the release's other assets. Source fingerprints verify the current Quds engine/editor/reports, standalone legacy DOC parser and pinned CrisperBooks packages; historical validation records keep their original revisions and are not certification of later trees.
 
-The final `1.2.2` integration includes lazy ISO/HFS+/DMG and package-container reading, bounded streamed archive writers, the current canonical DOC parser and CrisperBooks foreground read-aloud controls. The standalone parser mirror is verified separately from Quds, with obsolete mirror files removed. The canonical Word picture gate uses its controller-default fixture and strict 94.45-point native layout; historical 12-point workflow reports keep their original source scope.
+Current container support includes reviewed native archive moves/recovery, directory-to-archive synchronization and supported ISO/RAR/DMG editing. Unsupported, encrypted, bootable or hybrid image profiles remain read-only. See [container profiles](docs/archive-iso-rar-dmg.md), the [format matrix](docs/archive-format-coverage.md), and the bounded [ext](docs/archive-ext-profile.md) and [NTFS](docs/archive-ntfs-profile.md) reader contracts.
 
-The `1.2.3` integration consumes CrisperBooks directly at one immutable Git revision, including the complete browser Kindle export engine, worker lifecycle guards, local read-aloud controls and qualified Linux input behavior. Duplicate local packages are removed. `docs/ebook-source-manifest.json` binds the complete upstream tree; `python3 tool/verify_ebook_sources.py` checks the exact bytes Pub resolves for all four packages. GitHub release binaries and the separate iOS/macOS TestFlight uploads use this same source snapshot.
+Cloud connections can remain open simultaneously in both panes. See [provider setup](docs/PROVIDER_SETUP.md#multiple-simultaneous-cloud-connections) and [Nextcloud browser requirements](docs/PROVIDER_SETUP.md#browser-access-webpwa) for session behavior, CORS, HTTPS and server configuration.
 
-TestFlight uses the separate `ios-release.yml` and `macos-release.yml` signing/upload workflows. `testflight-external.yml` accepts an explicit `MAC_OS` or `IOS` platform and the exact reviewed build number for beta review after processing. The older app-local Linux candidate PR is superseded by the canonical CrisperBooks reader; its recovery branch is retained.
+## Offline catalogues and CLI
 
-The `1.2.4` integration includes portable ASCII CPIO, classic RPM payloads, stored/MSZIP CAB archives and bounded PBZX/XAR payload handling. It also consumes the current canonical DOC shape/textbox/metafile/schema fixes, strengthens attached-content checks before clearing Word conversion warnings, preserves executable bits when refreshing the parser mirror, and backports complete Internxt trash names without replacing existing host transport guards. The previous TestFlight upload requests were cancelled so this newer snapshot can be validated first.
+Tools → Catalogues provides SQLite catalogue browsing, Cathy/Catfish CAF import/export, paged search and size rankings, cancellation and safe refresh. See [catalogue usage and limits](docs/catalogues.md). The primary CLI command is `crispcloud`; `crisp` remains an alias. CrispSorter uses `crispsorter` and its lightweight `crispcat` companion.
 
-The previous 1.2.3 full GitHub suite completed with 10,066 passing tests and two integration failures: a missing container caption translation and a shortcut test that assumed F9 was unused. Both are corrected in 1.2.4; the 45 related caption/command-entry tests pass. The new archive cohort passes 271 tests and the combined Office host cohort passes 126 tests. The final release gate still runs the complete suite.
-
-The `1.2.5` integration adds portable LZ4, LZMA-alone, Lzip and UNIX compress handling, cancellable archive integrity reports, and staged copies between archives. Current standalone legacy Word parser acceptance covers 773 Dart tests, 156 Python controls and 217 independently validated DOCX exports. Quds and the app consume the same canonical parser source; CrisperBooks remains pinned to its reviewed complete Git tree. Internxt receipt mutations gain the canonical one-shot API while preserving host transport patches.
-
-The `1.2.6` follow-up includes the subsequently published native-backed parser corrections: corroborated shared header shapes and retraction of the experimental textbox table-depth reset. Canonical acceptance covers 809 Dart tests, 162 Python controls and 218 independent SDK-validated DOCX outputs. Word conversion inspection now ignores comment references nested inside attached objects.
-
-The `1.2.7` integration includes the completed moves within an archive workspace, 33 creation choices including UNIX compress/TAR.Z and preserved legacy CPIO profiles. It consumes the final bounded native header/footer recovery and all retained continuation receipts. The new archive cohort passes 244 tests; canonical parser acceptance covers 826 Dart tests, 162 Python controls and 222 SDK-validated DOCX outputs. CrisperBooks is pinned to the corrected workspace and native-platform acceptance harnesses; its reader/converter production code remains the reviewed implementation.
-
-The `1.2.8` integration restores selection and visibility of the containing archive when leaving it with `..`. It includes reviewed native archive-to-archive moves, destination-verified recovery, UNIX compress/TAR.Z creation, reviewed one-way directory-to-archive synchronization and qualified streamed native TAR creation. The canonical DOC parser includes floating-table anchors and padding, exact note endings, independent shared header/footer textbox instances, bounded internal hyperlinks, separate script font slots and stored drawing wrap clearances. Its README describes supported behavior and remaining fidelity limits.
-
-File marks survive ordinary cursor clicks. Shift-click marks a visible range; Ctrl/Cmd-click toggles individual marks, and Shift-arrows toggle the rows being left. Find arrows navigate matching entries without discarding the query. Local selections can be handed to other desktop apps through native macOS file URLs, Windows Unicode file-drop data and Linux GTK URI lists; cancellation preserves the sources. Pane-to-pane drags retain the existing captured-source review workflow. Cloud/archive drag-out and native mobile/browser handoff still require separate export support.
-
-The integrated archive regression runs 1,769 tests across 75 files, with five
-conditional large-test skips. Four separate opt-in application cases passed:
-creation/publication of ZIP, 7z and TAR.GZ beyond 2 GiB, plus TAR.GZ edit, review,
-publication and reopen beyond 2 GiB. Desktop drag-out offers the complete local
-selection through native macOS, Windows and Linux formats; cloud/archive members
-still require a local copy. Hosted platform builds and TestFlight remain separate
-release gates.
-
-Android release packaging regenerates Flutter plugin registration for release
-mode, matching the Android CI build. The manual `Rebuild Android release asset`
-workflow can repair an APK for an existing tag only after verifying successful
-application CI for that exact source commit; it retains release signing and
-artifact evidence and does not recreate the release or replace other assets.
-
-
-Development version `1.2.9+22` consumes the qualified canonical parser's
-section/gutter direction, manual-break justification compatibility and bounded
-explicit textbox-border frame conversion. Shared Office sources match Quds
-`6d6e77d` and parser `cd9ab85` exactly across 1,219 managed files. The source
-parser passes 931 Dart tests; the synchronized app Office gate passes 1,165
-mandatory engine tests and 202 host tests, with complete host instrumentation.
-These counts overlap the larger suites.
-
-The integration also adds native streamed editing for eligible data ISO,
-RAR5 Store/CBR and canonical HFSX data-volume DMG profiles, with reviewed
-folder changes and preservation checks. Creation offers 35 choices. These
-formats retain their documented size, metadata and profile limits; bootable,
-hybrid, encrypted and other unsupported disk images remain read-only.
-See [container profiles and verification](docs/archive-iso-rar-dmg.md). Apple's
-`hdiutil` independently verified a generated data-image fixture on this Mac;
-large hosted acceptance uses a fixed source checkpoint before release.
-
-Cloud connections can stay open simultaneously in the two panes. See
-[provider setup](docs/PROVIDER_SETUP.md#multiple-simultaneous-cloud-connections)
-for session behavior and [Nextcloud browser requirements](docs/PROVIDER_SETUP.md#browser-access-webpwa)
-for CORS, HTTPS and server configuration limits.
-
-### Offline catalogues and CLI
-
-Tools → Catalogues provides offline SQLite catalogue browsing, Cathy/Catfish CAF import/export, paged search and size rankings, cancellation and safe refresh. See [catalogue usage and limits](docs/catalogues.md). The primary CLI command is `crispcloud`; `crisp` remains an alias. CrispSorter uses `crispsorter` (and `crispcat` for its lightweight catalogue companion).
-
-### 1.3 release scope
-
-This release combines the offline catalogue library and `crispcloud` CLI with read-only FAT/UDF and partition-image browsing, supported LZFSE/DMG decoding, reviewed ZIP recovery, and the current shared legacy DOC parser. Format limitations and recovery boundaries remain explicit; see the format matrix and catalogue guide. Standalone CLI bundles accompany the desktop/mobile release artifacts. Pages and Vercel deployments publish their exact source in `deployment.json`.
+The shared CAF codec is the standalone MIT-licensed [`crispcat-format` Rust crate](https://github.com/CrispStrobe/CrispSorter/tree/main/crates/crispcat-format), consumed from an exact reviewed source snapshot. SQLite remains the queryable working index; CAF files are portable interchange/snapshot exports and are optional beside a database. No Python runtime or full CrispSorter application stack is required by the codec.

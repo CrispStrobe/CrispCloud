@@ -1,7 +1,7 @@
 name: crisp_cloud
 description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.3.1+24
+version: 1.3.2+25
 
 environment:
   # Keep the application and CI toolchain compatible with dart_pdf_editor.

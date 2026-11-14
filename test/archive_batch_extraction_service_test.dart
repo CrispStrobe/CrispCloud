@@ -12,6 +12,7 @@ import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/archive_creation_backend.dart';
@@ -119,6 +120,7 @@ void main() {
   late Directory temp;
   late String output;
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     temp = await Directory.systemTemp.createTemp('batch-extraction-');
     output = p.join(temp.path, 'out');
   });

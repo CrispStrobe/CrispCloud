@@ -1,20 +1,27 @@
 {
   "repository": "https://github.com/CrispStrobe/CrispSorter",
-  "revision": "c1881142b0d4ffecb10f26d51fab2cda2f53588e",
-  "license": "MIT, explicitly declared by crates/crispcat/Cargo.toml; the repository root is AGPL and is not imported",
+  "revision": "ee165094caeb4fd8eff91de26959124d06a3ba06",
+  "license": "MIT; standalone crates/crispcat-format retains the original MIT notices. No AGPL application code is imported.",
   "sha256": {
-    "crates/crispcat/src/caf.rs": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
-    "crates/crispcat/src/index.rs": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072"
+    "crates/crispcat-format/Cargo.lock": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90",
+    "crates/crispcat-format/Cargo.toml": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f",
+    "crates/crispcat-format/LICENSE": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+    "crates/crispcat-format/README.md": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8",
+    "crates/crispcat-format/VALIDATION.md": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564",
+    "crates/crispcat-format/src/caf.rs": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
+    "crates/crispcat-format/src/index.rs": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072",
+    "crates/crispcat-format/src/lib.rs": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00"
   },
-  "modifications": [
-    "Implementation files match the maintained CrispSorter crate exactly; Cargo packaging remains a format-only slice without scanning, Tauri, LanceDB or content hashing."
-  ],
+  "modifications": [],
   "reviewed_sha256": {
+    "Cargo.lock": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90",
+    "Cargo.toml": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f",
+    "LICENSE": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+    "README.md": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8",
+    "VALIDATION.md": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564",
     "src/caf.rs": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
     "src/index.rs": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072",
-    "src/lib.rs": "12f8b9fb7243b8068ed74d832d81cde84dfdc84861075d1b2650591e3c1197ed",
-    "Cargo.toml": "536e091f5189a0f527a316094ece108f5eed8c1a81a82ac4d41c575bd51ab855",
-    "LICENSE": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215"
+    "src/lib.rs": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00"
   },
-  "previous_revision": "3b0b7cc3216d54bf410184acf1f233bfa29c2284"
+  "previous_revision": "c1881142b0d4ffecb10f26d51fab2cda2f53588e"
 }

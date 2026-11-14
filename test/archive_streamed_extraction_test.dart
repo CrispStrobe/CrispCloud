@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/archive_streaming_writer.dart';
 import 'package:crisp_cloud/services/archive_types.dart';
 import 'package:crisp_cloud/services/archive_write_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -16,6 +17,7 @@ void main() {
 
   late Directory temp;
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     temp = await Directory.systemTemp.createTemp('streamed-extraction-');
   });
   tearDown(() async {

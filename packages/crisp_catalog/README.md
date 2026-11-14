@@ -6,14 +6,14 @@ bounded JSON summaries through FFI on a worker isolate. No file contents,
 credentials, network connections or GUI grants are read. Existing databases
 are replaced only after scan/import, aggregation, commit and flush succeed.
 Use `CrispCatalog.execute` with `scan`, `query`, `info`, `import` or `export`.
-The CLI is the first consumer; the GUI analyzer is not migrated yet.
+The CLI and GUI catalogue library use the same engine and database schema.
 
-The explicitly MIT-licensed `crates/crispcat` format slice from CrispSorter is
+The independent MIT-licensed `crates/crispcat-format` crate from CrispSorter is
 vendored under `native/vendor/crispcat-format`. The parent repository's AGPL
 application, Tauri, LanceDB, duplicate hashing and Python runtimes are not
 imported. See its `UPSTREAM.json`, modification notices and MIT licence.
-Adaptations retain empty directory entries and timestamps and expose legacy
-unknown-size provenance. Classic compatibility export deliberately rejects
+The canonical codec retains empty directory entries and timestamps and exposes legacy
+unknown-size provenance. Its source and manifest now match the standalone upstream crate exactly. Classic compatibility export deliberately rejects
 non-Latin-1 names even though the upstream codec supports a UTF-8 extension.
 
 Current limits: metadata is an observation, not an atomic filesystem snapshot;
@@ -22,7 +22,8 @@ path; byte totals are logical and must fit 2^53−1. Scan budgets are opt-in.
 SQLite scan rows and queries avoid loading the full tree into Dart. CAF
 import/export still materialize Rust's format model; they are not constant-memory
 streaming. Refresh rebuilds the catalogue. Desktop macOS/Linux/Windows target
-mappings exist; mobile/browser/WASM support and incremental watchers are pending.
+mappings exist. Native mobile hooks are also supplied; this integration was qualified on macOS.
+The browser facade reports unsupported, and incremental watchers remain pending.
 Do not treat an imported catalogue as an access grant or source identity.
 
 ```sh
