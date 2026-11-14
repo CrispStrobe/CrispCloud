@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "main",
-  "source_commit": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+  "source_commit": "fad26db2d5054c48705d27b0fb4808ed63aada2f",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1851,7 +1851,7 @@
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_drawing_io.dart": "12bdcd3963ce4acb83bc6465f7d4343d9c4a0303d17d124ea76dbe5e83ac9f77",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_package_fidelity.dart": "f8984392e9f886bdbc121880643f05d22a28d451cc79a7a85f74962f9ad81864",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "64720ad3a3cba392c4edfea2bb8ff5112b2f0cf310672d2f7d0bbd6f1f9e3992",
-    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": "ea4f06de86718b6a9d39367c30bf7181ebed8a3b7a84a5e9e4bdd522d246855a",
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": "9063230d9b5dc7e4f578035392c648a971f3bc6b79a07d7010b4852acd409669",
     "packages/quds_office_engine/lib/src/slide/anim/pml_motion_io.dart": "c651ee0235ed5c96b47398ac86fa5ba8f414aad1bc2ae8066752de01af42e88c",
     "packages/quds_office_engine/lib/src/slide/model/pml_arrange.dart": "55b511cf38d76de917fcbde0d80990a2e5eb99f7caf80d5c9c51da48a05948b7",
     "packages/quds_office_engine/lib/src/slide/model/pml_presentation.dart": "c18bfea9cc8db55de0e9c823d82539a1e9738a7b6c16e8a2eb26d361a05a5de0",
@@ -2022,6 +2022,7 @@
     "packages/quds_office_engine/test/rich_note_test.dart": "7dd2feac8af9a3c532ba5a005a463e21c568052bd1cf17169bedf5d068c726bf",
     "packages/quds_office_engine/test/scripted_transitions_test.dart": "222826de215576595033348ab5cfdf7d1985a459e27aca68592b92a8683c4751",
     "packages/quds_office_engine/test/scripted_workflows_test.dart": "4800f9a87a7ef9c2c8bf1852ad244ec9ea8dd16107ca6e30d2c9f25064dcf365",
+    "packages/quds_office_engine/test/sheet_authored_number_format_test.dart": "23f7ee04af67c1b2b4175c41afc381a68feeec8070d123de578247e55aee5ea7",
     "packages/quds_office_engine/test/sheet_cell_state_preservation_test.dart": "909fe1c9002a08d68851b724c13d095dd5ea2c0e2dd48da50b036825999a7892",
     "packages/quds_office_engine/test/sheet_comments_schema_test.dart": "99bba982b784390d43b2a1bbe84acd7003ead20f1ca6e60226f5813b9ba54271",
     "packages/quds_office_engine/test/sheet_explicit_style_fidelity_test.dart": "f9e383c54eb3c17d210335064ec8c252fa38dd2faed77c2369fcae95e7ecf3b9",

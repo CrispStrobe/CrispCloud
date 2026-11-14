@@ -684,6 +684,28 @@ class SmlStyleSheet {
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
       '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
     );
+    // Only formats a cell xf actually selects need authoring. Built-in and
+    // unused source formats stay exactly as the native stylesheet left them.
+    final referenced = cellXfsNumFmt.toSet();
+    final customFormats = numFmts.entries
+        .where(
+          (entry) =>
+              entry.key >= 164 &&
+              entry.value.trim().isNotEmpty &&
+              referenced.contains(entry.key),
+        )
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    if (customFormats.isNotEmpty) {
+      buf.write('<numFmts count="${customFormats.length}">');
+      for (final entry in customFormats) {
+        buf.write(
+          '<numFmt numFmtId="${entry.key}" '
+          'formatCode="${_escapeFormatCode(entry.value)}"/>',
+        );
+      }
+      buf.write('</numFmts>');
+    }
     buf.write('<fonts count="${fontRgbs.length}">');
     for (int i = 0; i < fontRgbs.length; i++) {
       final String font = fontRgbs[i];
@@ -756,6 +778,36 @@ class SmlStyleSheet {
     final result = XmlDocument.parse(_source!.toXmlString());
     final root = result.root!;
     final namespace = root.namespaceUri;
+    // Authored custom formats must be added to the native collection: the
+    // generated xf may reference an id the source stylesheet has never seen.
+    if (customFormats.isNotEmpty) {
+      XmlElement? formats = root.firstChild('numFmts', namespaceUri: namespace);
+      if (formats == null) {
+        formats = XmlElement(
+          localName: 'numFmts',
+          namespaceUri: namespace,
+        );
+        _insertStyleCollection(root, formats);
+      }
+      final existing = <int>{
+        for (final entry in formats.childrenNamed(
+          'numFmt',
+          namespaceUri: namespace,
+        ))
+          int.tryParse(_attribute(entry, 'numFmtId') ?? '') ?? -1,
+      };
+      for (final entry in customFormats) {
+        if (existing.contains(entry.key)) continue;
+        final element = XmlElement(
+          localName: 'numFmt',
+          namespaceUri: namespace,
+        );
+        _setAttribute(element, 'numFmtId', '${entry.key}');
+        _setAttribute(element, 'formatCode', entry.value);
+        formats.addChild(element);
+      }
+      _setAttribute(formats, 'count', '${formats.childElements.length}');
+    }
     for (final (name, entryName) in [
       ('fonts', 'font'),
       ('fills', 'fill'),
@@ -942,6 +994,12 @@ class SmlStyleSheet {
     _setAttribute(copy, 'xmlns', namespace);
     return copy;
   }
+
+  static String _escapeFormatCode(String value) => value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;');
 
   static void _insertStyleCollection(XmlElement root, XmlElement collection) {
     const order = [
