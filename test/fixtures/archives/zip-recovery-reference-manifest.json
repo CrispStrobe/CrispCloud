@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "generator": "Python standard library zipfile; ZIP_STORED and ZIP_DEFLATED, fixed metadata. No library code bundled.",
+  "payloads": {
+    "stored.txt": {
+      "bytes": 34,
+      "sha256": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+    },
+    "deflated.bin": {
+      "bytes": 7168,
+      "sha256": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+    },
+    "café-雪.txt": {
+      "bytes": 24,
+      "sha256": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+    },
+    "safe.txt": {
+      "bytes": 4,
+      "sha256": "8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860"
+    }
+  },
+  "cases": {
+    "complete": {
+      "bytes": 765,
+      "sha256": "39698f79f0fae3870c970cb1d0b2979d8395f0cc97b21f8f2d88e3709daf751b",
+      "expected_recoverable_names": [
+        "stored.txt",
+        "deflated.bin",
+        "café-雪.txt"
+      ]
+    },
+    "missing-directory": {
+      "bytes": 570,
+      "sha256": "5fe536cf8e9c4635c5f694c2c3791f54c6952c152df037650e3f2e8418709d25",
+      "expected_recoverable_names": [
+        "stored.txt",
+        "deflated.bin",
+        "café-雪.txt"
+      ]
+    },
+    "deflate-signed-descriptor": {
+      "bytes": 443,
+      "sha256": "4989f712bc1058c9d4bc2cc5fc4456f77a816ce8a925c3404d7ff31e942d757a",
+      "expected_recoverable_names": [
+        "deflated.bin"
+      ]
+    },
+    "deflate-unsigned-descriptor": {
+      "bytes": 439,
+      "sha256": "eda8b5948821f5a6d03afdfa98df0f7631b71e988ec20fcfa5f91744df0f4f0e",
+      "expected_recoverable_names": [
+        "deflated.bin"
+      ]
+    },
+    "stored-descriptor-unsupported": {
+      "bytes": 90,
+      "sha256": "5c5aebe04e344ee33617b30680d1208ad462c1d4024618f72201813ae8c24e2d",
+      "expected_recoverable_names": []
+    },
+    "truncated-final-member": {
+      "bytes": 563,
+      "sha256": "1eb2c7262c1d056ff55fa0e10e9760e21d7edd8515b051b42ed86234f7db7788",
+      "expected_recoverable_names": [
+        "stored.txt",
+        "deflated.bin"
+      ]
+    },
+    "bad-crc-after-good": {
+      "bytes": 501,
+      "sha256": "a9f956db42d2655f4025d0f9efe211889f7b0aee28f4dfc6f493f83370443302",
+      "expected_recoverable_names": [
+        "stored.txt"
+      ]
+    },
+    "duplicate-names": {
+      "bytes": 87,
+      "sha256": "92070c210525137414dc691fb9e7c386556ac58b75dc703cf0809af63062f843",
+      "expected_recoverable_names": []
+    },
+    "unsafe-then-safe": {
+      "bytes": 92,
+      "sha256": "82b021779332b304fc15a9c337274e93eb1b5a096db3e0d91cc632716e35f831",
+      "expected_recoverable_names": [
+        "safe.txt"
+      ]
+    },
+    "zip64-unsupported": {
+      "bytes": 94,
+      "sha256": "9ac6c445655060d3e63866cab42ed26c572ae02d81a3cf714effa384a653cdf2",
+      "expected_recoverable_names": []
+    },
+    "descriptor-size-mismatch": {
+      "bytes": 443,
+      "sha256": "023fd5dade17137fb57412e2ac8028a639ff85194b4956e41a90d5513f5ad571",
+      "expected_recoverable_names": []
+    }
+  }
+}
