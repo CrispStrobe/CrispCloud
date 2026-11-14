@@ -16,6 +16,8 @@ on:
       - 'lib/services/pdf_file_store.dart'
       - 'lib/providers/panel_provider.dart'
       - 'test/office_*'
+      - 'test/support/office_device_export_web_acceptance.dart'
+      - 'test/support/verify_office_device_export_web.py'
       - 'test/recursive_search_service_test.dart'
       - 'test/widget/office_*'
       - 'tool/*office*'
@@ -33,6 +35,46 @@ concurrency:
   group: office-host-fidelity-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  browser-copy:
+    name: Office recovery copy in Chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: flutter pub get
+      - name: Install pinned browser driver and Chromium
+        run: |
+          python3 -m pip install 'playwright==1.65.2'
+          python3 -m playwright install --with-deps chromium
+      - name: Verify the real recovery download and URL cleanup
+        run: |
+          python3 - <<'PYTHON'
+          import subprocess
+          from playwright.sync_api import sync_playwright
+
+          with sync_playwright() as playwright:
+              chromium = playwright.chromium.executable_path
+          subprocess.run([
+              'python3', 'test/support/verify_office_device_export_web.py',
+              '--chromium', chromium,
+              '--output', 'build/office-web-copy',
+          ], check=True)
+          PYTHON
+      - name: Preserve compile and browser receipts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: office-browser-copy-evidence
+          path: build/office-web-copy/
+          if-no-files-found: error
   host-roundtrip:
     runs-on: ubuntu-latest
     timeout-minutes: 25
