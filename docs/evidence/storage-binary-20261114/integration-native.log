@@ -1,0 +1,108 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart
+00:00 +0: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: verified copies retain exact hashes, owned windows and read-only input
+00:00 +1: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: same-size same-metadata rewrite between passes is rejected and removed
+00:00 +2: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: backend-equivalent paths retain the canonical stat path
+00:00 +3: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: panel account scope survives ordinary unscoped backend stat results
+00:00 +4: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: mutable provider version maps do not rewrite the captured identity
+00:00 +5: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: metadata token mutation during capture cannot hide source replacement
+00:00 +6: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: known oversize input is rejected before any read or spool
+00:00 +7: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: unknown-size streams are bounded while capturing
+00:00 +8: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: unknown sizes are measured and second reads require that exact length
+00:00 +9: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: declared length 3 cannot admit a four-byte source
+00:00 +10: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: declared length 5 cannot admit a four-byte source
+00:00 +11: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: newly available metadata length must equal measured bytes
+00:00 +12: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: empty files preserve their exact identity and release storage
+00:00 +13: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: empty and tiny chunk work has a finite allowance
+00:00 +14: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: provider bytes outside 0..255 are not silently normalized
+00:00 +15: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: cancellation bounds an initial metadata future and observes late errors
+00:00 +16: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: cancellation detaches a stalled read in capture pass 1
+00:00 +17: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: cancellation detaches a stalled read in capture pass 2
+00:00 +18: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: source error in pass 1 retains its identity and releases storage
+00:00 +19: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: source error in pass 2 retains its identity and releases storage
+00:00 +20: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: same-current backend identity changes cancel a pending metadata read
+00:00 +21: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: inactivity timeout bounds metadata even without cancellation callbacks
+00:00 +22: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: a cancelled snapshot validation does not wait for provider metadata
+00:00 +23: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: closing during a queued native read never recreates deleted storage
+00:00 +24: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_source_test.dart: invalid inputs and ceilings are rejected before any source access
+00:00 +25: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: pull backpressure protects reusable buffers on either input
+00:00 +26: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: unknown-length streams enforce the byte cap on each side
+00:00 +27: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: expected lengths reject truncation and extra bytes after the end
+00:00 +28: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: chunk and empty-chunk work budgets are independent of byte limits
+00:00 +29: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: empty and tiny chunk streams yield to cancellation
+00:00 +30: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: inactivity times out a provider even when cancellation cleanup stalls
+00:00 +31: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: overall time is bounded even while chunks keep making progress
+00:00 +32: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: invalid budgets and expected lengths fail before subscribing
+00:00 +33: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: non-byte values are not silently normalized
+00:00 +34: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_limits_test.dart: deterministic fragmented streams agree with an independent byte oracle
+00:01 +35: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: cloud navigation bounds a fallback range stream and closes at EOF
+00:01 +36: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: contiguous binary ranges survive chunk boundaries and unmatched tails
+00:01 +37: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: a sparse index navigates every range without retaining every difference
+00:01 +38: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +39: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +40: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +41: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +42: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +43: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +44: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +45: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +46: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +47: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +48: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +49: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +50: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +51: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +52: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +53: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +54: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +55: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +56: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +57: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +58: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:01 +59: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: large sparse files expose differences beyond the editable text limit
+00:02 +60: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: navigation refuses a source that changed after comparison
+00:02 +61: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: same-size unversioned edits cannot mix captured ranges and live bytes
+00:02 +62: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: closing invalidates both cached and uncached navigation
+00:02 +63: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: source revocation invalidates captured navigation permanently
+00:02 +64: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: empty captures and asymmetric tails keep exact lengths
+00:02 +65: /workspace/scratch/0140f384d23a/CrispCloud/test/binary_comparison_navigation_test.dart: cancellation interrupts a binary source stalled before its first chunk
+00:02 +66: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: an external edit during merge staging cannot be overwritten
+00:02 +67: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: binary file comparison rejects files changed while reading
+00:02 +68: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: diff output reconstructs both input sequences for varied edits
+00:02 +69: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: large unique and repeated inputs avoid a whole-document quadratic matrix
+00:02 +70: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: ignore options retain the actual right text
+00:02 +71: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: accepting a hunk merges only that region and preserves trailing newline
+00:02 +72: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: binary comparison handles unequal chunk boundaries, empty chunks and length differences
+00:02 +73: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: binary cancellation closes both streams
+00:02 +74: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: merge saves preserve UTF-16 and CRLF, and reject later external edits
+00:02 +75: /workspace/scratch/0140f384d23a/CrispCloud/test/file_comparison_service_test.dart: merge rejects changed account without saving
+00:02 +76: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: explicit UTF-16 LE preserves BOM-less bytes and newlines
+00:02 +77: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: explicit UTF-16 BE preserves BOM-less bytes and newlines
+00:02 +78: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: explicit UTF-32 LE preserves BOM-less bytes and newlines
+00:02 +79: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: explicit UTF-32 BE preserves BOM-less bytes and newlines
+00:02 +80: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: explicit UTF-8 rejects malformed input rather than choosing another encoding
+00:02 +81: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: malformed Unicode units cannot be silently dropped by editable comparison
+00:02 +82: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: an explicit right encoding is retained across repeated verified merge saves
+00:02 +83: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: DOS (CP437) comparison saves retain encoding and reject unrepresentable merges
+00:02 +84: /workspace/scratch/0140f384d23a/CrispCloud/test/comparison_encoding_test.dart: Windows-1252 comparison saves retain encoding and reject unrepresentable merges
+00:03 +85: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: right encoding selection controls verified merge bytes and follows file swapping
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:05 +86: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: right encoding selection controls verified merge bytes and follows file swapping
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:05 +87: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: binary ranges and hex jumps work
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:06 +88: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: binary ranges and hex jumps work with large narrow text
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:06 +89: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: captured copies are released on mode switch, swap, and dialog close
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:08 +90: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: Stop cancels stalled metadata and late completion cannot replace text mode
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [DiffViewer] Comparison failed
+  Error: Bad state: Comparison cancelled.
+00:08 +91: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: Stop during navigation retires the published result and releases its copies
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:09 +92: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: disposing during the second source capture releases the first copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:10 +93: /workspace/scratch/0140f384d23a/CrispCloud/test/widget/comparison_navigation_test.dart: captured comparison notices translate every locale and retain limits
+00:10 +94: All tests passed!

@@ -1,15 +1,15 @@
 {
-  "description": "All evidence files except this self-index and Python cache. Intermediate attempts retain separate classifications and original/stored mappings.",
+  "description": "All evidence files except this self-index and Python cache. Each receipt binds its own saved source revision; overlapping test cohorts are not additive.",
   "files": [
     {
       "path": "PROGRESS.md",
-      "bytes": 11498,
-      "sha256": "f241d25853321d15127ca08ea0aff1c149d405aca16b731f6d437c22ec766ef1"
+      "bytes": 13175,
+      "sha256": "6d2c3fa2dc51323cce4dc4d472eaba0e30f104c07cc76372f257a84dc4683cfe"
     },
     {
       "path": "README.md",
-      "bytes": 6794,
-      "sha256": "6e7f6eeb94cbd253936f48e92b97314f69dd5f557a4c88bb4e86fec601009c60"
+      "bytes": 8029,
+      "sha256": "d8fdfd52c302f6302cbdbb23366fed183cf9678fd61ea2f2fa815867642a584a"
     },
     {
       "path": "environment-validation.json",
@@ -61,9 +61,63 @@
       "sha256": "eba4da755072fe56c8af63ffa10c428f1c6d0db5d9db679f75f94124fb0c05fe"
     },
     {
+      "path": "final-validation.json",
+      "bytes": 2387,
+      "sha256": "0bd6eeaf7be74fcd241c94b595a5897f14318740ac7a9f619276d3912fb2ccc4"
+    },
+    {
       "path": "hosted-ci-status.json",
       "bytes": 1130,
       "sha256": "e289762fccf74507fccf2f485f47cb574dccbca43f8235c824e50dc30b8fc111"
+    },
+    {
+      "path": "integration-analysis-receipt.json",
+      "bytes": 1750,
+      "sha256": "a08138bacdb0bbf92bc9602d1e689418c9da7fd8dfe3892e7fa91c9ab66c7403"
+    },
+    {
+      "path": "integration-analysis-source.json.gz",
+      "bytes": 631040,
+      "sha256": "0cc810fe036b34f34744d2a4031ba674c362a2257bb451eb340171f4330be507",
+      "compression": "gzip",
+      "uncompressed_bytes": 1990766,
+      "uncompressed_sha256": "128d84e9d0c020c199ba8e5dd18312fa836ba8743dc38078e6a2cadec86cf079"
+    },
+    {
+      "path": "integration-analysis.log",
+      "bytes": 367,
+      "sha256": "e6136b36f87e657a2a375bfb77739e323117826c85c6f22ae8807e8bb3af02ac"
+    },
+    {
+      "path": "integration-native-events.json.gz",
+      "bytes": 5396,
+      "sha256": "4b215c69cfbde4507a549e82b67211c143f28679a52d9792c9a393be33f56187",
+      "compression": "gzip",
+      "uncompressed_bytes": 46249,
+      "uncompressed_sha256": "6b92a5fe75d803e46c69b60697ed20e334b848bbf12e72b96400e055e7d0aadb"
+    },
+    {
+      "path": "integration-native-receipt.json",
+      "bytes": 1791,
+      "sha256": "e1ef558b72a3e3f3651ed9205617c94e3edb9ec30984f2e7eb203027f582dff9"
+    },
+    {
+      "path": "integration-native-source.json.gz",
+      "bytes": 631040,
+      "sha256": "0cc810fe036b34f34744d2a4031ba674c362a2257bb451eb340171f4330be507",
+      "compression": "gzip",
+      "uncompressed_bytes": 1990766,
+      "uncompressed_sha256": "128d84e9d0c020c199ba8e5dd18312fa836ba8743dc38078e6a2cadec86cf079"
+    },
+    {
+      "path": "integration-native-summary.json",
+      "bytes": 1922,
+      "sha256": "0d5b48c72af5762749d6853665b982810d49de77726177c31dce67deb2cf5d61"
+    },
+    {
+      "path": "integration-native.log",
+      "bytes": 16069,
+      "sha256": "71e8defd0c61aa52fe89702ab6a70d1e66090d4807f3a41f3cdc5956dd98f75e"
     },
     {
       "path": "intermediate/README.md",
@@ -270,6 +324,60 @@
       "path": "native-summary.json",
       "bytes": 1187,
       "sha256": "28786e7ea9aaf349995a2e62d604bd84636d8770288ebf7f781670795d0bae62"
+    },
+    {
+      "path": "reconciled-analysis-receipt.json",
+      "bytes": 1747,
+      "sha256": "32ce6454d309abb058649efdf5b855e47634dc16f779c2051d18e2b99df9e8e3"
+    },
+    {
+      "path": "reconciled-analysis-source.json.gz",
+      "bytes": 632125,
+      "sha256": "3cd2b3944e4c59020a7055b563b383052cfc1db2f999b99dcb8ebeefa814c044",
+      "compression": "gzip",
+      "uncompressed_bytes": 1993874,
+      "uncompressed_sha256": "8d4acea3dddc3a6c4390abc89804c9a85749521d052341da23b81db43a8a22dd"
+    },
+    {
+      "path": "reconciled-analysis.log",
+      "bytes": 367,
+      "sha256": "e6136b36f87e657a2a375bfb77739e323117826c85c6f22ae8807e8bb3af02ac"
+    },
+    {
+      "path": "reconciled-hosted-ci-status.json",
+      "bytes": 3870,
+      "sha256": "10c529b2291cc539ebe2a73761d5c1f1dda30358589162114607267895ee3331"
+    },
+    {
+      "path": "reconciled-native-events.json.gz",
+      "bytes": 5396,
+      "sha256": "fc92678020b5f476ad510747f4724288fc30fac4a345028ed005823f2678b3f8",
+      "compression": "gzip",
+      "uncompressed_bytes": 46246,
+      "uncompressed_sha256": "66eee18705411c4b2c7abe6bcc44fe6d3f041143e11614541867181ed3d4b5c4"
+    },
+    {
+      "path": "reconciled-native-receipt.json",
+      "bytes": 1787,
+      "sha256": "eb4df75b0110fd778d719573f523262f4b3ece88280a76f2e06118494f186fb5"
+    },
+    {
+      "path": "reconciled-native-source.json.gz",
+      "bytes": 632125,
+      "sha256": "3cd2b3944e4c59020a7055b563b383052cfc1db2f999b99dcb8ebeefa814c044",
+      "compression": "gzip",
+      "uncompressed_bytes": 1993874,
+      "uncompressed_sha256": "8d4acea3dddc3a6c4390abc89804c9a85749521d052341da23b81db43a8a22dd"
+    },
+    {
+      "path": "reconciled-native-summary.json",
+      "bytes": 1921,
+      "sha256": "9420d57798e3eeace08b5cd11f336c9822e33d3358281f5e2795c62c78c8e1a2"
+    },
+    {
+      "path": "reconciled-native.log",
+      "bytes": 16119,
+      "sha256": "b436ab835b35d3f7401915cd9839915571da5afc1148186a6e715b15473daf1e"
     },
     {
       "path": "run_gate.py",

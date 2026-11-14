@@ -1,0 +1,39 @@
+{
+  "classification": "Passing native gate bound to the reconciled saved source revision below",
+  "source_revision": "22bd67b887c81a11ea22664defc3474a07eef50a",
+  "source_tree": "13abd6211f8ad2de199718afaac320753a9fb8b6",
+  "source_paths": 8137,
+  "source_unchanged": true,
+  "package_map_unchanged": true,
+  "exit_code": 0,
+  "passed": 94,
+  "failed": 0,
+  "skipped": 0,
+  "done": {
+    "success": true,
+    "type": "done",
+    "time": 13070
+  },
+  "count_basis": "Completed testDone events matched to testStart records; eight synthetic suite-loading records excluded",
+  "suites": 8,
+  "suite_loading_successes_excluded": 8,
+  "receipt_file": "reconciled-native-receipt.json",
+  "receipt_sha256": "eb4df75b0110fd778d719573f523262f4b3ece88280a76f2e06118494f186fb5",
+  "log_file": "reconciled-native.log",
+  "log_sha256": "b436ab835b35d3f7401915cd9839915571da5afc1148186a6e715b15473daf1e",
+  "source_inventory_file": "reconciled-native-source.json.gz",
+  "source_inventory_compressed_sha256": "3cd2b3944e4c59020a7055b563b383052cfc1db2f999b99dcb8ebeefa814c044",
+  "source_inventory_sha256": "8d4acea3dddc3a6c4390abc89804c9a85749521d052341da23b81db43a8a22dd",
+  "events_original_file": "reconciled-native-events.json",
+  "events_original_bytes": 46246,
+  "events_original_sha256": "66eee18705411c4b2c7abe6bcc44fe6d3f041143e11614541867181ed3d4b5c4",
+  "events_stored_file": "reconciled-native-events.json.gz",
+  "events_stored_bytes": 5396,
+  "events_stored_sha256": "fc92678020b5f476ad510747f4724288fc30fac4a345028ed005823f2678b3f8",
+  "events_compression": "gzip compression level 9; mtime=0; no filename header; decompression restores original JSON event bytes",
+  "dependency_manifest_sha256": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "dependency_manifests_unchanged": true
+}

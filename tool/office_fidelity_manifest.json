@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "codex/office-recovery-20261114",
-  "source_commit": "9219189e9a07103b029eaeb050658ab819356591",
+  "source_branch": "main",
+  "source_commit": "6ed4ebe047912ecd1756e6335068c9828d9fe68a",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
