@@ -1187,7 +1187,7 @@ void main() {
           controller.document.paragraphs.first.text,
           contains('Keep this edit'),
         );
-      await tester.tap(find.byTooltip('Close').first);
+        await tester.tap(find.byTooltip('Close').first);
         await tester.pump(const Duration(milliseconds: 400));
         expect(find.text('Unsaved changes'), findsOneWidget);
         await tester.tap(find.widgetWithText(TextButton, 'Discard'));

@@ -396,7 +396,10 @@ Stream<List<int>> _boundedInput(
   required int? expectedLength,
 }) async* {
   var bytes = 0, chunks = 0, emptyChunks = 0, sinceYield = 0;
-  final cursor = StreamIterator(guard.control.bind(stream));
+  // StreamIterator pauses the provider synchronously on delivery. An extra
+  // asynchronous controller here would let a provider reuse its buffer before
+  // the consumer had copied it, corrupting both capture and verification.
+  final cursor = StreamIterator(stream);
   try {
     while (await guard.wait(cursor.moveNext)) {
       guard.check();
@@ -457,9 +460,9 @@ Stream<List<int>> _boundedInput(
     guard.check();
     throw BinaryComparisonCancelled();
   } finally {
-    // FileOperationControl detaches stalled upstream cancellation, so a
-    // provider's pending cleanup cannot retain this operation or its spool.
-    await cursor.cancel().catchError((Object _) {});
+    // A provider's stalled cancellation must not retain the captured copies.
+    // guard.wait observes late completion and discards it after cancellation.
+    unawaited(cursor.cancel().catchError((Object _) {}));
   }
 }
 
@@ -487,7 +490,6 @@ class _ComparisonGuard {
 
   final BinaryComparisonLimits limits;
   final void Function() checkSource;
-  final control = FileOperationControl();
   final _watch = Stopwatch()..start();
   final _waiters = <void Function()>{};
   Duration _lastProgress = Duration.zero;
@@ -515,7 +517,6 @@ class _ComparisonGuard {
       _failure = error;
       _failureStack = stack;
       _timer?.cancel();
-      control.cancel();
       for (final waiter in _waiters.toList()) {
         waiter();
       }
