@@ -1236,6 +1236,8 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.recoveredHeaderTextboxShapeAlias:
         case LegacyWordWarning.recoveredLegacyDiagonalBorder:
         case LegacyWordWarning.recoveredUnpositionedTextbox:
+        case LegacyWordWarning.recoveredMissingStyle:
+        case LegacyWordWarning.recoveredFieldFlags:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

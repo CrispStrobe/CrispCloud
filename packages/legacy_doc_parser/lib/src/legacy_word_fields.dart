@@ -107,9 +107,15 @@ extension _WordFields on _StructuredWordParser {
           if (_fieldFlags.containsKey(cp) &&
               (((flags & 0x80) != 0) != (separator != null) ||
                   ((flags & 0x40) != 0) != (frame.parent != null))) {
-            throw const FormatException(
-              'Word field flags do not match its structure.',
-            );
+            // The field characters in the text are what Word renders; the
+            // PLCF flags only summarize them. Trust the structure and
+            // disclose the inconsistent summary.
+            if (!recover) {
+              throw const FormatException(
+                'Word field flags do not match its structure.',
+              );
+            }
+            warnings.add(LegacyWordWarning.recoveredFieldFlags);
           }
           final privateResult = (flags & 0x20) != 0;
           if (privateResult && separator != null) {

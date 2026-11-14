@@ -34,12 +34,18 @@ typedef _Props = Map<String, Object?>;
 
 /// A bounded interpretation of referenced MS-DOC body content and properties.
 /// The source compound file is never changed and no external content is read.
-LegacyWordDocument readStructuredLegacyWord(Uint8List bytes) =>
-    _StructuredWordParser(_BinarySource(bytes)).parse();
+LegacyWordDocument readStructuredLegacyWord(
+  Uint8List bytes, {
+  bool recover = false,
+}) => _StructuredWordParser(_BinarySource(bytes), recover: recover).parse();
 
 class _StructuredWordParser {
-  _StructuredWordParser(this.source);
+  _StructuredWordParser(this.source, {this.recover = false});
   final _BinarySource source;
+
+  /// See [parseLegacyWordDocument]: degrade auxiliary damage instead of
+  /// refusing the document.
+  final bool recover;
   final budget = _Budget();
   final warnings = <LegacyWordWarning>{};
   final _prms = <int, List<_Sprm>>{};
@@ -141,7 +147,7 @@ class _StructuredWordParser {
       ))
         section.endCp,
     };
-    _readNumbering();
+    _readNumberingOrOmit();
     _readBookmarks();
     _readFieldTables();
     _readAuxiliaryStories();
@@ -149,7 +155,23 @@ class _StructuredWordParser {
     final blocks = _parseRange(0, source.bodyLength, 'main');
     _resolveReferencePresentations();
     final media = _readMediaCatalog(mediaRuns);
-    _linkTextboxDrawings(media);
+    try {
+      _linkTextboxDrawings(media);
+    } on FormatException {
+      if (!recover) rethrow;
+      // Shape chains that contradict their text-box ranges cannot be bound
+      // to drawings. Word still opens such documents; keep everything else
+      // and omit the text-box stories with a declared limitation.
+      stories.removeWhere(
+        (story) =>
+            story.kind == LegacyWordStoryKind.textbox ||
+            story.kind == LegacyWordStoryKind.headerTextbox,
+      );
+      textboxReferences.clear();
+      _dropTextboxArtifacts(false);
+      _dropTextboxArtifacts(true);
+      warnings.add(LegacyWordWarning.textboxesOmitted);
+    }
     final renderer = LegacyWordHtmlRenderer(
       numberingDefinitions: numbering,
       fields: fields,
@@ -444,10 +466,17 @@ class _StructuredWordParser {
             _paragraphStyleForSelection(index, tableContext),
       );
     }
-    final styleIndex = properties['styleIndex'] as int? ?? prepared.styleIndex;
+    var styleIndex = properties['styleIndex'] as int? ?? prepared.styleIndex;
     if (styles[styleIndex]?.kind != 1 &&
         !(styleIndex == 0 && !styles.containsKey(0))) {
-      throw const FormatException('Invalid Word paragraph-style reference.');
+      // An undefined (or non-paragraph) style: Word formats the paragraph
+      // with Normal. Direct paragraph properties are kept.
+      if (!recover) {
+        throw const FormatException('Invalid Word paragraph-style reference.');
+      }
+      warnings.add(LegacyWordWarning.recoveredMissingStyle);
+      styleIndex = 0;
+      properties['styleIndex'] = 0;
     }
     final resolved = resolve(styleIndex);
     final characterBase = _applyListFormatting(properties, resolved.character);
@@ -786,7 +815,7 @@ class _StructuredWordParser {
     return LegacyWordParagraphStyle(
       layout: _paragraphLayout(properties),
       styleIndex: styleIndex,
-      styleName: styles[styleIndex]?.name,
+      styleName: _canonicalStyleName(styles[styleIndex]),
       headingLevel: outline != null && outline < 9 ? outline + 1 : null,
       alignment: switch (properties['alignment']) {
         1 => LegacyWordAlignment.center,

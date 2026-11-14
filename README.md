@@ -4,6 +4,12 @@
 
 Local, cloud and network storage. Automated unit, widget and native protocol tests. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
+Each pane has a visible Up button and one compact storage selector for connected
+accounts, local volumes, Home, Computer and bookmarks. The closed selector shows
+at most 15 characters; the menu and tooltip retain the full name. Edit a path
+through its context menu. Terminal remains on F9 and in More actions;
+synchronized browsing remains a menu command rather than a permanent toolbar button.
+
 Credential-storage recovery identifies the selected store, its path where available,
 the failed operation and native status, with copyable original stack traces.
 Locked custom macOS keychains use the system unlock dialog with the saved file
@@ -18,7 +24,10 @@ session-only. Nextcloud web connections provide endpoint and browser diagnostics
 server CORS still needs configuration. See the [live verification and limits](docs/cloud-issues-96-98-verification.md).
 
 
-The current Office integration includes undoable worksheet direction, frozen panes,
+The current Office integration preserves authored spreadsheet number formats and
+includes Word media deduplication, supported symbol characters and independent
+sibling text boxes. Legacy DOC import offers explicit auxiliary-feature recovery
+and exports canonical built-in style names. It also includes undoable worksheet direction, frozen panes,
 grid edits and selection formatting, plus more tolerant DOCX bookmark and measurement
 imports. Cell identity is retained across sorting and grid undo. Imported control-ID
 duplicates are retained; edits cannot add more. See the tested scope and remaining

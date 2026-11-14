@@ -95,8 +95,39 @@ extension _WordStories on _StructuredWordParser {
     _readNotes(true);
     _readComments();
     _readHeaders();
-    _readTextboxes(false);
-    _readTextboxes(true);
+    _readTextboxesOrOmit(false);
+    _readTextboxesOrOmit(true);
+  }
+
+  /// Bookmarks and fields inside an omitted text-box story set have no
+  /// story to live in; the rest of the document keeps its own.
+  void _dropTextboxArtifacts(bool header) {
+    final start = _storyBase(header ? 5 : 4);
+    final end = start + source.storyLengths[header ? 5 : 4];
+    bool inside(int cp) => cp >= start && cp <= end;
+    bookmarks.removeWhere((b) => inside(b.startCp));
+    fields.removeWhere((f) => inside(f.startCp));
+  }
+
+  /// Text-box stories are auxiliary: when their ranges, anchors or shape
+  /// chains cannot be validated, Word still opens the document. Omit that
+  /// story set (rolling back anything it added) and declare the omission
+  /// instead of refusing the whole document.
+  void _readTextboxesOrOmit(bool header) {
+    final storyCount = stories.length;
+    final referenceCount = textboxReferences.length;
+    final warningsBefore = {...warnings};
+    try {
+      _readTextboxes(header);
+    } on FormatException {
+      if (!recover) rethrow;
+      stories.removeRange(storyCount, stories.length);
+      textboxReferences.removeRange(referenceCount, textboxReferences.length);
+      _dropTextboxArtifacts(header);
+      warnings
+        ..retainAll(warningsBefore)
+        ..add(LegacyWordWarning.textboxesOmitted);
+    }
   }
 
   void _resolveReferencePresentations() {

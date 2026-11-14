@@ -55,6 +55,14 @@ enum LegacyWordWarning {
   /// shape. Their actual shape ID and individual anchor CPs are retained.
   recoveredHeaderTextboxShapeAlias,
 
+  /// A field's stored has-separator/nested flags contradicted its field
+  /// characters; the characters were used.
+  recoveredFieldFlags,
+
+  /// A paragraph or run referenced a style index the style sheet does not
+  /// define; it was formatted with Normal, as Word does.
+  recoveredMissingStyle,
+
   /// A note format is unknown or requires a disclosed decimal fallback.
   /// The original MSONFC code remains available on the note numbering model.
   unsupportedNoteNumberFormat,

@@ -431,7 +431,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             _navButton(
               icon: Icons.arrow_upward,
               tooltip: context.commanderTr("Up"),
-              onPressed: panel.navigateUp,
+              onPressed: () {
+                ref.read(activePanelProvider.notifier).state = widget.side;
+                panel.navigateUp();
+              },
             ),
             if (panel.isInArchive)
               _navButton(
@@ -671,7 +674,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             data: (value) => value,
             orElse: () => [
               DriveEntry(
-                path: Platform.environment['HOME'] ?? '/',
+                path:
+                    Platform.environment['HOME'] ??
+                    Platform.environment['USERPROFILE'] ??
+                    '/',
                 label: 'Home',
                 icon: Icons.home,
               ),
@@ -726,12 +732,19 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
           key: 'computer',
           label: context.commanderTr('Computer'),
           icon: Icons.computer,
-          onSelected: () =>
-              navigate(p.rootPrefix(Platform.environment['HOME'] ?? p.current)),
+          onSelected: () => navigate(
+            location != null && location.origin.source.isLocal
+                ? location.paths.rootPrefix(location.origin.source.currentPath)
+                : p.rootPrefix(
+                    Platform.environment['HOME'] ??
+                        Platform.environment['USERPROFILE'] ??
+                        p.current,
+                  ),
+          ),
         ),
       for (final bookmark in bookmarks.bookmarks)
         PanelSourceLocation(
-          key: 'bookmark:${bookmark.name}:${bookmark.path}',
+          key: 'bookmark:${bookmark.identity}',
           label: bookmark.name,
           icon: Icons.bookmark_outline,
           onSelected: () {
@@ -755,6 +768,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         lookupAppLocalizations(const Locale('en'));
     final m = BrowserMenuStrings(context);
     final h = PanelHeaderStrings(context);
+    // Narrow layouts keep account selectors above the active pane. Retain
+    // local destinations in its menu without adding another house button.
+    final locations = widget.showSource
+        ? const <PanelSourceLocation>[]
+        : _sourceLocations(panel, _captureLocation(panel));
 
     return PopupMenuButton<String>(
       tooltip: context.commanderTr("More commands"),
@@ -764,7 +782,16 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         size: 19,
         color: theme.colorScheme.onPrimaryContainer,
       ),
-      onSelected: (String value) => _handleMenu(value, panel, isLocal),
+      onSelected: (String value) {
+        if (value.startsWith('location:')) {
+          final index = int.tryParse(value.substring('location:'.length));
+          if (index != null && index >= 0 && index < locations.length) {
+            locations[index].onSelected();
+          }
+          return;
+        }
+        _handleMenu(value, panel, isLocal);
+      },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
         if (desktop)
           _menuItem(
@@ -775,6 +802,13 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                 : h.text('Show top toolbar'),
           ),
         if (desktop) const PopupMenuDivider(),
+        for (var index = 0; index < locations.length; index++)
+          _menuItem(
+            'location:$index',
+            locations[index].icon,
+            locations[index].label,
+          ),
+        if (locations.isNotEmpty) const PopupMenuDivider(),
         _menuItem('up', Icons.arrow_upward, 'Up'),
         _menuItem('refresh', Icons.refresh, 'Refresh'),
         _menuItem('new_folder', Icons.create_new_folder, 'New folder…'),

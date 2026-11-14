@@ -118,7 +118,8 @@ const int kLegacyWordPackageLimit = 64 * 1024 * 1024;
 LegacyWordStructuredConversion convertLegacyWordToStructuredDocx(
   Uint8List bytes, {
   LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
-}) => convertLegacyWord(bytes, fieldMode: fieldMode);
+  bool recover = false,
+}) => convertLegacyWord(bytes, fieldMode: fieldMode, recover: recover);
 
 /// Converts a separate copy. No source bytes, file paths, or applications are
 /// modified, and no fields, links, embedded objects, or macros are executed.
@@ -126,8 +127,9 @@ LegacyWordStructuredConversion convertLegacyWord(
   Uint8List bytes, {
   LegacyWordOutputFormat format = LegacyWordOutputFormat.docx,
   LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
+  bool recover = false,
 }) => convertLegacyWordDocument(
-  parseLegacyWordDocument(bytes),
+  parseLegacyWordDocument(bytes, recover: recover),
   format: format,
   fieldMode: fieldMode,
 );

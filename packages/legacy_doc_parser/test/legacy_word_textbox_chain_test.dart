@@ -145,6 +145,39 @@ void main() {
     },
   );
 
+  test('recover mode omits unbindable text boxes and keeps the document', () {
+    for (final input in [
+      _source(declared: 3),
+      _source(declared: 1, next: 99),
+      _source(declared: 1, lastNext: 42),
+      _source(declared: 1, conflictingId: 0x20000),
+    ]) {
+      final document = parseLegacyWordDocument(input, recover: true);
+      // Depending on where the contradiction sits, either the text-box
+      // stories (unbindable chain) or the drawing layer (conflicting shape
+      // identifiers) is omitted — always disclosed, never guessed.
+      final omitted = document.warnings.toSet().intersection({
+        LegacyWordWarning.textboxesOmitted,
+        LegacyWordWarning.floatingObjectsOmitted,
+      });
+      expect(omitted, isNotEmpty);
+      if (omitted.contains(LegacyWordWarning.textboxesOmitted)) {
+        expect(document.textboxReferences, isEmpty);
+        expect(
+          document.stories.where(
+            (s) =>
+                s.kind == LegacyWordStoryKind.textbox ||
+                s.kind == LegacyWordStoryKind.headerTextbox,
+          ),
+          isEmpty,
+        );
+      }
+      // The main story is intact and the package converts.
+      expect(document.plainText, isNotEmpty);
+      convertLegacyWord(input, recover: true);
+    }
+  });
+
   test('authored native DOC keeps the linked story and discloses recovery', () {
     final document = parseLegacyWordDocument(
       File('test/fixtures/word_native/linked-textboxes.doc').readAsBytesSync(),

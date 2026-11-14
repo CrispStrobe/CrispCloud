@@ -198,6 +198,42 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('equally named locations retain separate destinations', (
+    tester,
+  ) async {
+    String? chosen;
+    await tester.pumpWidget(
+      _wrap(
+        PanelSourceSelector(
+          side: PanelSide.local,
+          locations: [
+            PanelSourceLocation(
+              key: 'account:first',
+              label: 'Documents',
+              icon: Icons.bookmark_outline,
+              onSelected: () => chosen = 'first',
+            ),
+            PanelSourceLocation(
+              key: 'account:second',
+              label: 'Documents',
+              icon: Icons.bookmark_outline,
+              onSelected: () => chosen = 'second',
+            ),
+          ],
+        ),
+        overrides: [
+          availableSourcesProvider.overrideWithValue(_localOnlySources()),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Documents').last);
+    await tester.pumpAndSettle();
+    expect(chosen, 'second');
+  });
+
   group('PanelSourceSelector rendering', () {
     testWidgets('renders a DropdownButton', (tester) async {
       await tester.pumpWidget(

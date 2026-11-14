@@ -502,8 +502,24 @@ class WordDeserializer {
     if (reader.localName != 'drawing') {
       return false;
     }
+    // A text box's own paragraphs go through _addParagraph, which flushes
+    // pending frames/visuals into the blocks being built. Without isolation
+    // the frames already collected for the *host* paragraph were flushed
+    // into the next text box's content: with n boxes anchored in one
+    // paragraph, each box swallowed all earlier ones and export wrote
+    // 2^n - 1 boxes (4,095 for twelve). Inner content gets fresh pending
+    // lists; the host's are restored afterwards.
+    final List<WmlFrame> outerFrames = List<WmlFrame>.of(_pendingFrames);
+    final List<WmlVisual> outerVisuals = List<WmlVisual>.of(_pendingVisuals);
+    final List<WmlEquation> outerEquations = List<WmlEquation>.of(
+      _pendingEquations,
+    );
+    _pendingFrames.clear();
+    _pendingVisuals.clear();
+    _pendingEquations.clear();
     final WmlBlock? block;
     _drawingDepth++;
+
     try {
       block = WordDrawingIo.readBlock(
         reader,
@@ -516,6 +532,25 @@ class WordDeserializer {
       );
     } finally {
       _drawingDepth--;
+      // Anything the inner content left pending belongs to the host too
+      // (e.g. a picture inside a text-box paragraph that was not flushed).
+      final List<WmlFrame> innerFrames = List<WmlFrame>.of(_pendingFrames);
+      final List<WmlVisual> innerVisuals = List<WmlVisual>.of(_pendingVisuals);
+      final List<WmlEquation> innerEquations = List<WmlEquation>.of(
+        _pendingEquations,
+      );
+      _pendingFrames
+        ..clear()
+        ..addAll(outerFrames)
+        ..addAll(innerFrames);
+      _pendingVisuals
+        ..clear()
+        ..addAll(outerVisuals)
+        ..addAll(innerVisuals);
+      _pendingEquations
+        ..clear()
+        ..addAll(outerEquations)
+        ..addAll(innerEquations);
     }
     if (block is WmlVisual) {
       _pendingVisuals.add(block);
@@ -802,6 +837,22 @@ class WordDeserializer {
         }
       } else if (reader.localName == 'commentReference') {
         continue;
+      } else if (reader.localName == 'sym' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        final WmlRun? symbol = _symbolRun(reader, run.properties);
+        if (symbol != null) {
+          if (run.text.isNotEmpty) {
+            inlines.add(
+              WmlRun(
+                text: run.text,
+                properties: run.properties.copy(),
+                commentIds: List<int>.of(_openCommentIds),
+              ),
+            );
+            run.text = '';
+          }
+          inlines.add(symbol);
+        }
       } else if (reader.localName == 'tab') {
         run.text += '\t';
       } else if (reader.localName == 'br' || reader.localName == 'cr') {
@@ -1320,6 +1371,71 @@ class WordDeserializer {
         );
       }
     }
+  }
+
+  /// `w:sym`: one character of a symbol font (Symbol, Wingdings, …) —
+  /// bullets, check marks, arrows. It used to be skipped, losing the glyph.
+  /// It becomes its own run whose text is the stored character code (Word
+  /// keeps these in the private-use area, F000–F0FF) with the symbol font as
+  /// *direct* formatting in the run's source properties, so the style
+  /// cascade keeps it and export writes `w:t` + `w:rFonts`, which Word
+  /// renders identically to the original `w:sym`.
+  WmlRun? _symbolRun(XmlPullReader reader, WmlRunProps base) {
+    final String? font = reader.getAttribute(
+      'font',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    final int? code = int.tryParse(
+      reader.getAttribute('char', namespaceUri: OfficeNamespaces.w) ?? '',
+      radix: 16,
+    );
+    if (code == null || code <= 0 || code > 0x10FFFF) return null;
+    if (code >= 0xD800 && code <= 0xDFFF) return null;
+    final WmlRunProps props = base.copy();
+    if (font != null && font.isNotEmpty) {
+      final XmlElement source = WordPropertyIo.parse(
+        base.sourcePropertiesXml,
+        'rPr',
+      );
+      source.children.removeWhere(
+        (node) =>
+            node is XmlElement &&
+            node.localName == 'rFonts' &&
+            node.namespaceUri == OfficeNamespaces.w,
+      );
+      XmlAttribute attr(String name) => XmlAttribute(
+        localName: name,
+        prefix: 'w',
+        namespaceUri: OfficeNamespaces.w,
+        value: font,
+      );
+      // CT_RPr order: rStyle, then rFonts.
+      final int at =
+          source.children.indexWhere(
+            (node) => node is XmlElement && node.localName == 'rStyle',
+          ) +
+          1;
+      source.children.insert(
+        at,
+        XmlElement(
+          localName: 'rFonts',
+          prefix: 'w',
+          namespaceUri: OfficeNamespaces.w,
+          attributes: [attr('ascii'), attr('hAnsi'), attr('cs')],
+        ),
+      );
+      props
+        ..sourcePropertiesXml = XmlDocument(
+          root: source,
+        ).toXmlString(declaration: false)
+        ..asciiFont = font
+        ..csFont = font;
+    }
+    return WmlRun(
+      text: String.fromCharCode(code),
+      properties: props,
+      commentIds: List<int>.of(_openCommentIds),
+    );
   }
 
   void _readRPr(XmlPullReader reader, WmlRunProps props) {

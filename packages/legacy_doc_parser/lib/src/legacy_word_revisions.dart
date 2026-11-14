@@ -468,9 +468,15 @@ extension _WordRevisions on _StructuredWordParser {
       resolveCharacterStyle: (index) {
         if (index == 10 && !styles.containsKey(index)) return const {};
         if (styles[index]?.kind != 2) {
-          throw const FormatException(
-            'Invalid Word character-style reference.',
-          );
+          // Undefined (or non-character) style: Word falls back to the
+          // Default Paragraph Font, i.e. no character style.
+          if (!recover) {
+            throw const FormatException(
+              'Invalid Word character-style reference.',
+            );
+          }
+          warnings.add(LegacyWordWarning.recoveredMissingStyle);
+          return const {};
         }
         // Character styles are differences applied over the paragraph/table
         // context; evaluating their 0x80/0x81 toggles against an empty base

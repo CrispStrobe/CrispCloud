@@ -13,6 +13,22 @@ class _ListLevelData {
 }
 
 extension _WordLists on _StructuredWordParser {
+  /// List tables that cannot be validated (duplicate list identities,
+  /// malformed level templates) would otherwise refuse the whole document.
+  /// Word opens such files; keep the text and declare that numbering was
+  /// not reconstructed.
+  void _readNumberingOrOmit() {
+    try {
+      _readNumbering();
+    } on FormatException {
+      if (!recover) rethrow;
+      numbering.clear();
+      _numberingById.clear();
+      _listLevels.clear();
+      warnings.add(LegacyWordWarning.numberingNotReconstructed);
+    }
+  }
+
   void _readNumbering() {
     final (listStart, listSize) = source.pair(73);
     final (overrideStart, overrideSize) = source.pair(74);

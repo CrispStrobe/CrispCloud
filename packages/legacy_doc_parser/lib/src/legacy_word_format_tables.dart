@@ -338,7 +338,18 @@ extension _WordFormattingTables on _StructuredWordParser {
     if (style == null) {
       _styleActive.remove(index);
       if (index == 0 || index == 10) return const _ResolvedStyle({}, {});
-      throw const FormatException('Referenced Word style is missing.');
+      // Word treats a reference to an undefined style as Normal; refusing
+      // the whole document over one dangling istd lost documents Word and
+      // LibreOffice open normally.
+      if (!recover) {
+        throw const FormatException('Referenced Word style is missing.');
+      }
+      warnings.add(LegacyWordWarning.recoveredMissingStyle);
+      final normal = styles[0] == null
+          ? const _ResolvedStyle({}, {})
+          : _resolveStyle(0, depth + 1);
+      _resolvedStyles[index] = normal;
+      return normal;
     }
     final parent = style.parent == 0xfff
         ? const _ResolvedStyle({}, {})
@@ -496,4 +507,111 @@ extension _WordFormattingTables on _StructuredWordParser {
     }
     return result;
   }
+}
+
+/// Canonical names of built-in styles by sti (MS-DOC 2.9.271), 0–90.
+/// A .doc stores the UI-language name ("Standard", "Überschrift 1");
+/// OOXML identifies built-in styles by these names, as Word's own export
+/// does. Unknown or user-defined identifiers keep their stored name.
+const _builtinStyleNames = <String>[
+  'Normal',
+  'heading 1',
+  'heading 2',
+  'heading 3',
+  'heading 4',
+  'heading 5',
+  'heading 6',
+  'heading 7',
+  'heading 8',
+  'heading 9',
+  'index 1',
+  'index 2',
+  'index 3',
+  'index 4',
+  'index 5',
+  'index 6',
+  'index 7',
+  'index 8',
+  'index 9',
+  'toc 1',
+  'toc 2',
+  'toc 3',
+  'toc 4',
+  'toc 5',
+  'toc 6',
+  'toc 7',
+  'toc 8',
+  'toc 9',
+  'Normal Indent',
+  'footnote text',
+  'annotation text',
+  'header',
+  'footer',
+  'index heading',
+  'caption',
+  'table of figures',
+  'envelope address',
+  'envelope return',
+  'footnote reference',
+  'annotation reference',
+  'line number',
+  'page number',
+  'endnote reference',
+  'endnote text',
+  'table of authorities',
+  'macro',
+  'toa heading',
+  'List',
+  'List Bullet',
+  'List Number',
+  'List 2',
+  'List 3',
+  'List 4',
+  'List 5',
+  'List Bullet 2',
+  'List Bullet 3',
+  'List Bullet 4',
+  'List Bullet 5',
+  'List Number 2',
+  'List Number 3',
+  'List Number 4',
+  'List Number 5',
+  'Title',
+  'Closing',
+  'Signature',
+  'Default Paragraph Font',
+  'Body Text',
+  'Body Text Indent',
+  'List Continue',
+  'List Continue 2',
+  'List Continue 3',
+  'List Continue 4',
+  'List Continue 5',
+  'Message Header',
+  'Subtitle',
+  'Salutation',
+  'Date',
+  'Body Text First Indent',
+  'Body Text First Indent 2',
+  'Note Heading',
+  'Body Text 2',
+  'Body Text 3',
+  'Body Text Indent 2',
+  'Body Text Indent 3',
+  'Block Text',
+  'Hyperlink',
+  'FollowedHyperlink',
+  'Strong',
+  'Emphasis',
+  'Document Map',
+  'Plain Text',
+];
+
+String? _canonicalStyleName(_Style? style) {
+  if (style == null) return null;
+  final sti = style.builtinId;
+  if (sti >= 0 && sti < _builtinStyleNames.length) {
+    return _builtinStyleNames[sti];
+  }
+  return style.name;
 }

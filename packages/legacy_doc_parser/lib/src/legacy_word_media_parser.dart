@@ -4,13 +4,14 @@ part of 'legacy_word_structured_parser.dart';
 
 extension _WordMedia on _StructuredWordParser {
   LegacyWordMediaCatalog _readMediaCatalog(List<LegacyWordMediaRun> runs) =>
-      _WordMediaReader(source).read(runs);
+      _WordMediaReader(source, recover: recover).read(runs);
 }
 
 /// Follows documented references only: CPicLocation/PICF, FIB OfficeArt and
 /// FSPA, ObjectPool names, the Macros project root and named signature stores.
 class _WordMediaReader {
-  _WordMediaReader(this.source);
+  _WordMediaReader(this.source, {this.recover = false});
+  final bool recover;
   static const _byteLimit = 64 * 1024 * 1024;
   static const _itemLimit = 4096;
   final _BinarySource source;
@@ -54,9 +55,7 @@ class _WordMediaReader {
       }
       previousEnd = run.endCp;
     }
-    _readOfficeArt();
-    _readAnchors(header: false);
-    _readAnchors(header: true);
+    _readDrawingLayer();
     var examined = 0;
     for (final run in _mediaRuns) {
       if (!run.special) continue;
@@ -157,6 +156,32 @@ class _WordMediaReader {
       ),
     );
     return _artifactIds[key] = id;
+  }
+
+  /// OfficeArt shapes and their anchors. In recover mode a contradictory
+  /// drawing layer (conflicting shape identifiers, malformed records) is
+  /// omitted as a whole — no drawing is guessed — and disclosed; text-box
+  /// stories that depended on it are then omitted by the story binder.
+  void _readDrawingLayer() {
+    final drawingCount = drawings.length;
+    final assetCount = assets.length;
+    try {
+      _readOfficeArt();
+      _readAnchors(header: false);
+      _readAnchors(header: true);
+    } on FormatException {
+      if (!recover) rethrow;
+      drawings.removeRange(drawingCount, drawings.length);
+      assets.removeRange(assetCount, assets.length);
+      _shapes.clear();
+      _blipStore.clear();
+      _blipAssets.clear();
+      _drawingArtifact = null;
+      _notice(
+        LegacyWordMediaIssue.unsupportedDrawing,
+        _reference(_tablePath, 0, 0, 'OfficeArtContent'),
+      );
+    }
   }
 
   void _notice(
@@ -458,11 +483,20 @@ class _WordMediaReader {
     }
   }
 
+  /// A PlcfSpa whose size is not 4 + 30n bytes cannot be interpreted. Word
+  /// still opens such documents (their floating drawings are lost); the
+  /// story's drawings are omitted with a notice instead of refusing the
+  /// whole document.
+  bool _validAnchorTable(int length) => length >= 34 && (length - 4) % 30 == 0;
+
   Set<int> _anchoredShapeIds({required bool header}) {
     final (offset, length) = source.pair(header ? 41 : 40);
     if (length == 0) return const {};
-    if (length < 34 || (length - 4) % 30 != 0) {
-      throw const FormatException('Invalid Word drawing-anchor table.');
+    if (!_validAnchorTable(length)) {
+      if (!recover) {
+        throw const FormatException('Invalid Word drawing-anchor table.');
+      }
+      return const {};
     }
     final count = (length - 4) ~/ 30;
     if (count > _itemLimit) {
@@ -479,8 +513,20 @@ class _WordMediaReader {
   void _readAnchors({required bool header}) {
     final (offset, length) = source.pair(header ? 41 : 40);
     if (length == 0) return;
-    if (length < 34 || (length - 4) % 30 != 0) {
-      throw const FormatException('Invalid Word drawing-anchor table.');
+    if (!_validAnchorTable(length)) {
+      if (!recover) {
+        throw const FormatException('Invalid Word drawing-anchor table.');
+      }
+      _notice(
+        LegacyWordMediaIssue.unsupportedDrawing,
+        _reference(
+          _tablePath,
+          offset,
+          0,
+          header ? 'PlcfSpaHdr' : 'PlcfSpaMom',
+        ),
+      );
+      return;
     }
     final count = (length - 4) ~/ 30;
     if (count > _itemLimit) {
@@ -596,9 +642,30 @@ class _WordMediaReader {
     var picture = _pictures[offset];
     if (picture == null) {
       final data = source.data;
+      // Picture data that is missing, truncated or malformed costs this
+      // picture, not the document (Word and LibreOffice open these files).
+      if (offset < 0 || offset + 6 > data.length) {
+        if (!recover) {
+          throw const FormatException('Truncated Word binary document.');
+        }
+        _notice(
+          LegacyWordMediaIssue.unsupportedImage,
+          _reference('Data', offset < 0 ? 0 : offset, 0, 'PICF', cp: cp),
+        );
+        return;
+      }
       final length = data.i32(offset);
-      if (length < 68 || data.u16(offset + 4) != 68) {
-        throw const FormatException('Invalid Word picture header.');
+      if (length < 68 ||
+          offset + length > data.length ||
+          data.u16(offset + 4) != 68) {
+        if (!recover) {
+          throw const FormatException('Invalid Word picture header.');
+        }
+        _notice(
+          LegacyWordMediaIssue.unsupportedImage,
+          _reference('Data', offset, 0, 'PICF', cp: cp),
+        );
+        return;
       }
       final raw = data.slice(offset, length);
       final input = _Bytes(raw);
@@ -619,8 +686,15 @@ class _WordMediaReader {
         reference,
       );
       final width = input.i16(28), height = input.i16(30);
+      // A picture with an impossible size cannot be placed; Word still
+      // opens the document. Omit this picture with a notice instead of
+      // refusing the whole document.
       if (width <= 0 || height <= 0) {
-        throw const FormatException('Invalid Word picture dimensions.');
+        if (!recover) {
+          throw const FormatException('Invalid Word picture dimensions.');
+        }
+        _notice(LegacyWordMediaIssue.unsupportedImage, reference);
+        return;
       }
       final scaledWidth = width * input.u16(32);
       final scaledHeight = height * input.u16(34);
@@ -630,9 +704,13 @@ class _WordMediaReader {
           scaledWidth > 31680000 ||
           scaledHeight < 15000 ||
           scaledHeight > 31680000) {
-        throw const FormatException(
-          'Word picture dimensions exceed their limits.',
-        );
+        if (!recover) {
+          throw const FormatException(
+            'Word picture dimensions exceed their limits.',
+          );
+        }
+        _notice(LegacyWordMediaIssue.unsupportedImage, reference);
+        return;
       }
       // Word binary picture layout is represented in integer twips. The
       // independently measured native PICMID controls truncate positive

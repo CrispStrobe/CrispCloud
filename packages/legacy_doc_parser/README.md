@@ -37,6 +37,9 @@ The codebase currently supports:
   DOCM output that can retain one structurally complete VBA project. Embedded
   objects, macros and signature evidence are retained only within the documented
   conversion contracts; the library never executes them.
+- Canonical built-in style names in generated DOCX, independent of source UI language.
+- Opt-in recovery for damaged auxiliary features, with explicit diagnostics for
+  degraded output; strict parsing remains the default.
 - Explicit warnings, conversion limitations and preservation counts, so callers
   can distinguish supported output, recovered structures and retained evidence.
 

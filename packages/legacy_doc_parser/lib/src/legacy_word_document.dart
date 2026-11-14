@@ -10,8 +10,19 @@ export 'legacy_word_structured_model.dart';
 
 /// Parses referenced body text, resolved formatting and structural metadata.
 /// Unsupported features are explicit in [LegacyWordDocument.warnings].
-LegacyWordDocument parseLegacyWordDocument(Uint8List bytes) =>
-    readStructuredLegacyWord(bytes);
+///
+/// By default malformed structures are rejected. With [recover], damage
+/// confined to an auxiliary feature — text-box stories, floating-drawing
+/// anchors, list tables, a single picture record, a dangling style
+/// reference, contradictory field flags — omits or normalizes that feature
+/// and records a `recovered*`/`*Omitted` warning instead of refusing the
+/// document, as Word does. Nothing is invented: omitted content is absent,
+/// never guessed. Use it when a person opens a document; keep the default
+/// for validation.
+LegacyWordDocument parseLegacyWordDocument(
+  Uint8List bytes, {
+  bool recover = false,
+}) => readStructuredLegacyWord(bytes, recover: recover);
 
 /// Read-only body-text extraction for Word 97–2007 binary DOC/DOT files.
 ///

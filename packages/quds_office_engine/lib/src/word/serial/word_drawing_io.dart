@@ -227,6 +227,16 @@ abstract final class WordDrawingIo {
       return true;
     }
 
+    // Reuse an identical payload wherever it already lives. Imported
+    // packages name media freely (image1.jpg vs our image1.jpeg, other
+    // indices, header-specific names), and preserved XML may still point at
+    // the original part; matching only the preferred name stored a second
+    // copy of the same image on every save.
+    for (final PackagePart part in package.parts) {
+      if (part.uri.startsWith('/word/media/') && matches(part)) {
+        return part.uri;
+      }
+    }
     final int dot = preferredUri.lastIndexOf('.');
     final String stem = preferredUri.substring(0, dot);
     final String extension = preferredUri.substring(dot);

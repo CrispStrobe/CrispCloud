@@ -123,25 +123,25 @@ void main() {
   late _Auth auth;
   late _Local local;
   late PanelNotifier panel;
+  late List<DriveEntry> driveEntries;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     cloud = _Cloud('first')..put('/account/projects/deep/report.txt', [1]);
     auth = _Auth(cloud);
     local = _Local();
+    driveEntries = const [
+      DriveEntry(
+        path: '/External',
+        label: 'External drive',
+        icon: Icons.storage,
+      ),
+    ];
     container = ProviderContainer(
       overrides: [
         authProvider.overrideWith((_) => auth),
         localFileServiceProvider.overrideWithValue(local),
-        drivesProvider.overrideWith(
-          (_) async => const [
-            DriveEntry(
-              path: '/External',
-              label: 'External drive',
-              icon: Icons.storage,
-            ),
-          ],
-        ),
+        drivesProvider.overrideWith((_) async => driveEntries),
       ],
     );
     panel = container.read(panelProvider(PanelSide.remote));
@@ -669,6 +669,37 @@ void main() {
     await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
     expect(find.text('Computer'), findsOneWidget);
+    await tester.tap(find.text('External drive'));
+    await tester.pumpAndSettle();
+    expect(panel.currentPath, '/External');
+  });
+
+  testWidgets(
+    'removed volumes cannot be chosen from an already open selector',
+    (tester) async {
+      await openLocal();
+      await mount(tester, showSource: true);
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+      driveEntries = [];
+      container.invalidate(drivesProvider);
+      await container.read(drivesProvider.future);
+      await tester.pump();
+      local.reads.clear();
+      await tester.tap(find.text('External drive'));
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, '/Photos/Projects/Deep');
+      expect(local.reads, isEmpty);
+      expect(local.grants, isEmpty);
+    },
+  );
+
+  testWidgets('narrow headers retain volumes in More commands', (tester) async {
+    await openLocal();
+    await mount(tester);
+    local.nextGrant = '/External';
+    await tester.tap(find.byTooltip('More commands'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('External drive'));
     await tester.pumpAndSettle();
     expect(panel.currentPath, '/External');
