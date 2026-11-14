@@ -1176,3 +1176,19 @@ pubspec/lockfile changes. Classification, territory and TestFlight group policy
 remain as previously recorded. CLI validation: 140 tests passed, five existing
 conditional skips; the 11 new disk-usage cases passed. The native macOS bundle
 built and scanned successfully without reading cloud configuration.
+
+### 2026-11-14: native metadata catalogues and CAF interchange
+
+CLI dependency resolution adds the local `crisp_catalog` package. Its native
+library uses bundled SQLite, jwalk, temporary-file publication and the explicitly
+MIT-licensed CrispSorter format-only slice. It does not include the parent
+AGPL application, Tauri, LanceDB, content hashing, credentials or network
+transports. The reviewed-source fingerprint is refreshed for the CLI manifest
+and lockfile; no crypto primitive, provider, dependency version already locked
+in Dart, export classification, territory or TestFlight-group policy changes.
+Native dependencies are locked in the package Cargo.lock, source provenance
+is checked by `tool/verify_catalog_sources.py`, and the host-selected locked
+crate licence texts are collected into distributed CLI bundles. Native catalogues
+contain filesystem metadata only. The GUI does not yet depend on this package.
+Local acceptance and the remaining GUI/platform boundaries are recorded in
+`docs/evidence/catalog-cli-20261114/acceptance.json`.

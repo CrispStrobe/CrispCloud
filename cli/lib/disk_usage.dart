@@ -152,13 +152,13 @@ class DiskUsageScanner {
     bool recursive = false,
     bool filesOnly = false,
     bool directoriesOnly = false,
-    int maxEntries = 1000000,
+    int maxEntries = 0,
     int maxDepth = 200,
     bool Function()? isCancelled,
   }) async {
     if (top < 1 ||
         top > 10000 ||
-        maxEntries < 1 ||
+        maxEntries < 0 ||
         maxDepth < 0 ||
         maxDepth > 500 ||
         (filesOnly && directoriesOnly)) {
@@ -248,7 +248,7 @@ class DiskUsageScanner {
           final names = <String>{};
           try {
             await for (final listed in source.list(current)) {
-              if (stop() || visited >= maxEntries) {
+              if (stop() || (maxEntries > 0 && visited >= maxEntries)) {
                 if (!stopped) {
                   stopped = limited = true;
                   issue(current, 'entry_limit');

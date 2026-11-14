@@ -13,7 +13,7 @@ dart test
 For a distributable native bundle, use `dart build cli -o build/cli` and keep its
 native transport libraries alongside the executable. The existing storage
 commands are `connect`, `providers`, `ls`, `upload`, `download`, `search`, `share`,
-`sync`, `du`, and `config`. `crisp completion bash`, `zsh`, or `fish` includes PDF
+`sync`, `du`, `catalog`, and `config`. `crisp completion bash`, `zsh`, or `fish` includes PDF
 operations.
 
 ## Largest local files and folders
@@ -37,9 +37,8 @@ An explicitly supplied symlink root resolves once; child symlinks are skipped,
 including broken links and loops. Other special entries are excluded. The scan
 is a live observation, not an atomic filesystem snapshot.
 
-Results default to the largest 20 entries (`--top 1..10000`). Traversal defaults
-to 1,000,000 entries and depth 200; adjust `--max-entries` or `--max-depth` if
-needed. Unreadable or changing entries, exceeded budgets, interruption or totals
+Results default to the largest 20 entries (`--top 1..10000`). Live traversal has no entry cap by default (`--max-entries 0`) and a depth
+budget of 200. Set an explicit `--max-entries` or `--max-depth` when needed. Unreadable or changing entries, exceeded budgets, interruption or totals
 beyond the exact reporting bound produce **partial lower bounds**, never a
 claim of a complete ranking. JSON includes per-row completeness, issue paths
 and codes (first 100 issues, then a suppressed count), scan limits and skip
@@ -47,6 +46,63 @@ counts. Text output marks partial totals with `>=`.
 
 Exit codes: `0` complete, `1` partial scan or inaccessible root, `2` invalid
 arguments, `130` interrupted by Ctrl+C. No file contents are read or modified.
+
+## Persistent catalogues and Cathy/Catfish CAF
+
+```bash
+# No entry/depth cap by default; storing outside the scanned tree is convenient.
+crisp catalog scan /mnt/volume1 -o /var/tmp/volume1.crispindex
+crisp du --index /var/tmp/volume1.crispindex --files-only -n 50 --json
+crisp du --index /var/tmp/volume1.crispindex some/subfolder --dirs-only
+crisp catalog search /var/tmp/volume1.crispindex invoice
+crisp catalog info /var/tmp/volume1.crispindex
+
+# Refresh by staged replacement; the previous catalogue survives failed builds.
+crisp catalog scan /mnt/volume1 -o /var/tmp/volume1.crispindex --replace
+
+# CAF import/export. Imported CAF source coverage remains explicitly unknown.
+crisp catalog import archive.caf -o /var/tmp/archive.crispindex
+crisp catalog export /var/tmp/volume1.crispindex -o volume1.caf
+```
+
+The native Rust backend reuses CrispSorter's MIT-licensed CAF codec, adapted to
+retain empty directories, directory timestamps and legacy unknown-size records.
+Python is used only for independent compatibility checks; it is not shipped.
+The SQLite catalogue stores Unicode names, metadata, precomputed directory
+totals, coverage diagnostics and ranking indexes. Queries work without the
+original drive or credentials and are explicitly historical. SQL results are
+bounded (`--top`, at most 10,000); the catalogue is not limited to that count.
+There is no fixed catalogue-entry cap or GUI saved-scan count limit here.
+The selected catalogue database, its staging file and SQLite journal files are
+excluded from its own scan and counted in `catalogueFilesSkipped`. Available
+disk space, filesystem access and the exact byte-reporting bound
+still apply. The first scan reads metadata for the entire tree; refresh currently
+rebuilds it, without watchers or incremental reconciliation. A partial refresh
+will not replace an existing catalogue unless `--allow-partial` is explicitly
+given; the first partial catalogue can be retained with exit code 1.
+
+CAF v1–v8 input and v8 output are supported. Classic CAF export requires
+Latin-1 names and representable second-resolution timestamps. Unrepresentable
+names are rejected, never substituted. Root directory timestamps are not a
+separate CAF field. CAF does not encode source completeness or skipped links;
+exporting a partial/historical import therefore requires `--allow-lossy`.
+This flag never permits changing filenames or inventing unknown sizes.
+Successful import/info/search commands return 0 even when their report describes
+unknown historical coverage; `du --index` returns 1 for incomplete coverage, as
+does a partial live scan. Legacy v1–v6 zero-size file records are treated as unknown and excluded from
+known-byte totals; modern v7/v8 zero-byte files remain exact zeroes. The reused
+reader also recognizes CrispSorter's UTF-8 extension heuristically; ambiguous
+Latin-1 byte sequences remain an interoperability limit. Large CAF imports and
+exports currently materialize the format model in Rust memory, whereas native
+scans stream rows to SQLite.
+
+Builds require Cargo and a C compiler for bundled SQLite. The Dart native-assets
+hook packages the library with `dart build cli`; users of the finished bundle
+need neither Rust nor Python. Desktop target mappings cover macOS, Linux and
+Windows (arm64/x64); only macOS was locally executed. Hosted CI covers all three.
+The package is independent of Flutter and ready for future GUI consumption.
+The existing GUI analyzer still uses its own saved-report store; no automatic
+migration or live actions from imported CAFs are enabled.
 
 ## Storage providers and engines
 

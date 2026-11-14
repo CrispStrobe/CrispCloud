@@ -1,0 +1,13 @@
+name: crisp_catalog
+description: Shared native metadata catalogues and Cathy CAF interchange for Crisp apps.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+dependencies:
+  ffi: ^2.1.4
+  hooks: ^2.2.0
+  code_assets: ^2.1.0
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^5.0.0

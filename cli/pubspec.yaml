@@ -7,6 +7,8 @@ environment:
   sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
+  crisp_catalog:
+    path: ../packages/crisp_catalog
   pdf_operations:
     path: ../packages/pdf_operations
   args: ^2.4.2
