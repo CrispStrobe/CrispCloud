@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "checked_at": "2026-11-14T20:42:49.032298+00:00",
-  "runtime_commit": "5e0cb337c8f9323b8383242f2e58882b700ce4f6",
-  "app_version": "1.3.2",
-  "app_build": "25",
-  "application_path": "/Users/christianstrobele/Applications/CrispCloud 1.3.2 (5e0cb337).app",
+  "checked_at": "2026-11-14T21:22:14.228444+00:00",
+  "runtime_commit": "8556c11d7c5aa6b24a1349ed3294caa56734954b",
+  "app_version": "1.3.3",
+  "app_build": "26",
+  "application_path": "/Users/christianstrobele/Applications/CrispCloud 1.3.3 (8556c11d).app",
   "signature_verified_deep_strict": true,
   "startup_seconds": 45,
   "credential_policy_ready": true,
   "impeller_enabled": false,
-  "runner_sha256": "4812cb6a2b81984a7921ee14e899e7386733cfd88dd5f884830801276eaaf00a",
-  "aot_sha256": "e4dc05ef457183ff56eabdc70fec95fc08871a688d3b98373ea580a5df50288e",
+  "runner_sha256": "d12de8e577a578549ef133a76376b2f71a2d04f72e6933218ec799d230fa57bb",
+  "aot_sha256": "3c1263f03753dd3f50692e25d5f66ca13f25e478e2cef24a18acdd76156a3c4d",
   "runner_architectures": [
     "x86_64",
     "arm64"
@@ -69,17 +69,17 @@
     "production_package_parts": true
   },
   "offline_apple_artifact": {
-    "build": "25",
+    "build": "26",
     "bundle_id": "com.CrispStrobe.cloud",
-    "bytes": 104311659,
+    "bytes": 104311339,
     "compliance_code": null,
-    "info_plist_member": "CrispCloud 1.3.2 (5e0cb337).app/Contents/Info.plist",
-    "info_plist_sha256": "8e21d2a74eae993512245773b7a1442cd46a29eeea2bd63d9b55d5bad88f2b97",
-    "name": "CrispCloud-1.3.2-5e0cb337-macos-local.zip",
+    "info_plist_member": "CrispCloud 1.3.3 (8556c11d).app/Contents/Info.plist",
+    "info_plist_sha256": "3d272ae895d98f2aa5a26f0e1f412a3e1bd9717d10a68f8f4581016adb10590c",
+    "name": "CrispCloud-1.3.3-8556c11d-macos-local.zip",
     "platform": "macos",
-    "sha256": "0065e113576dd548e9f77833474bc26692743765994ac1dec9fc2b1ea72cc47e",
+    "sha256": "d4a696d7f09557cae0955b44407d0636fcb2e5807d38e04d0edec08443c78720",
     "uses_non_exempt_encryption": false,
-    "version": "1.3.2"
+    "version": "1.3.3"
   },
   "live_store_submission_checked": false,
   "existing_github_release_jobs_untouched": true,
@@ -99,7 +99,9 @@
     "model_viewer_and_zip_sources_unchanged": true,
     "transfer_sources_unchanged": true,
     "model_native_and_chrome_counts": 48,
-    "transfer_regression_count": 314
+    "transfer_regression_count": 314,
+    "office_source_unchanged_from": "5e0cb337",
+    "application_dart_sources_unchanged_from": "5e0cb337"
   },
   "branch_retirements": [
     {
@@ -144,5 +146,25 @@
     }
   ],
   "complete_editor_suite_rerun": false,
-  "whole_application_suite_rerun": false
+  "whole_application_suite_rerun": false,
+  "catalogue_patch": {
+    "canonical_staging_and_journal_exclusion": true,
+    "rust_tests_passed_macos": 14,
+    "rust_stress_tests_ignored": 1,
+    "strict_clippy_passed": true,
+    "formatting_passed": true,
+    "native_windows_confirmation": "pending GitHub CI",
+    "prior_windows_failure": {
+      "run_id": 43599759407,
+      "test": "malformed_import_does_not_replace_a_saved_index",
+      "actual_bytes": 582,
+      "expected_bytes": 70
+    },
+    "unix_alias_compatibility_control": "passes with both old and corrected code; not claimed as a Windows reproduction",
+    "later_native_source_delta": "test-only alias coverage and comments; production Rust compared with compiled checkpoint"
+  },
+  "release_version": "v1.3.3",
+  "native_catalogue_binaries": {
+    "Contents/Frameworks/crisp_catalog_bridge.framework/Versions/A/crisp_catalog_bridge": "f859926825c30b28ad030f3654a713368ca99797883a729b454bc3d5b8e5e2df"
+  }
 }
