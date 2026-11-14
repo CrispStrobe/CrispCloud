@@ -178,6 +178,11 @@ also be absent in other formats. An incomplete check is never a passing report.
 
 ## Using disk images
 
+For raw disk images, **F3 → Hex → Inspect partitions** reads bounded GPT/MBR
+metadata, reports independent primary/backup CRC results and selects fields in
+Hex. This read-only [partition inspector](disk-partition-inspection.md) does not
+mount, repair or browse the filesystems described by those tables.
+
 ISO multi-extent chains appear as one regular file, with sections read in their
 recorded order. The reader bounds section counts and combined logical size;
 existing preview/extraction limits still apply. Multi-extent images remain

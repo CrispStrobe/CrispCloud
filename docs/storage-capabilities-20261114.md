@@ -1,8 +1,12 @@
 # Storage capability expansion: archive, container and filesystem workbench
 
-Status: source-backed architecture and library assessment. This branch changes
-documentation and evidence only; recommended capabilities require implementation
-and qualification before they can be advertised in the app.
+Status: source-backed architecture and library assessment, followed by runtime
+implementation. **LZFSE DMG reading** and **read-only GPT/MBR inspection linked
+to Hex** are the first implemented increments. See the [DMG codec profiles](archive-dmg-codecs.md),
+[partition inspector](disk-partition-inspection.md) and
+[runtime evidence](evidence/storage-runtime-20261114). The remaining stages below
+are proposals; the initial assessment's documentation-only receipt remains
+preserved with its original source revision.
 
 Review: [draft PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
 
@@ -20,9 +24,13 @@ They are retained intact.
 
 The working branch is
 [`integration/storage-capabilities-20261114`](https://github.com/CrispStrobe/CrispCloud/tree/integration/storage-capabilities-20261114).
-Checkpoints are pushed as the assessment develops. Existing branches remain.
+Checkpoints are pushed as the assessment and implementation develop. Existing branches remain.
 The complete source refs and ancestry outcomes are in
 [`evidence/storage-capabilities-20261114/ancestry.json`](evidence/storage-capabilities-20261114/ancestry.json).
+
+During implementation, main advanced to `b84f450cbf8519e9c0107928d99e0372468b85ca`
+with the CLI disk-usage feature. That change was merged into this branch at
+`26540f65fd63713ca1b543f793aa2e5d4a75c650` before the first runtime checkpoint.
 
 ## Scope and license filter
 
@@ -333,7 +341,10 @@ general safe APFS repair, arbitrary filesystem resizing or a universal fsck.
 
 ## Delivery sequence and acceptance
 
-These are scoped implementation proposals, not estimated delivery dates.
+These are scoped implementation stages, not estimated delivery dates. Stages
+1 (GPT/MBR tables only) and 2 have entered implementation; the linked profile
+and runtime receipts define their current scope. The broader filesystem and
+container structure drill-down described in stage 1 remains future work.
 
 ### 1. Disk structures in the current viewer
 

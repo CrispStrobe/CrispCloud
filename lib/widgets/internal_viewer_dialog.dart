@@ -46,6 +46,7 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/commander_strings.dart';
 import '../l10n/binary_structure_strings.dart';
+import '../l10n/disk_partition_strings.dart';
 import '../l10n/lrc_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -59,6 +60,7 @@ import '../services/archive_volume_backend.dart';
 import '../services/archive_volume_source.dart';
 import '../services/binary_structure_service.dart';
 import '../services/binary_structure_source.dart';
+import '../services/disk_partition_inspector.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'ebook_editor_dialog.dart';
@@ -94,6 +96,7 @@ import 'syntax_line_view.dart';
 import '../services/syntax_line_highlighting.dart';
 import 'hex_viewer.dart';
 import 'binary_structure_dialog.dart';
+import 'disk_partition_dialog.dart';
 import 'lrc_preview.dart';
 import 'internal_viewer_views.dart';
 import 'office_html_widget_factory.dart';
@@ -2401,6 +2404,82 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
   }
 
+  Future<void> _showDiskPartitions() async {
+    final source = _source;
+    if (source == null || _mode != ViewerMode.hex || _inspectingStructure) {
+      return;
+    }
+    final loadToken = _loadToken;
+    final prepareToken = _prepareToken;
+    bool current() =>
+        mounted &&
+        identical(_source, source) &&
+        loadToken == _loadToken &&
+        prepareToken == _prepareToken &&
+        _mode == ViewerMode.hex;
+
+    setState(() => _inspectingStructure = true);
+    try {
+      int? sectorBytes;
+      while (current()) {
+        final analysis = await inspectDiskPartitions(
+          totalBytes: source.size,
+          read: source.readSync,
+          logicalSectorBytes: sectorBytes,
+          validateUnchanged: source.validateUnchanged,
+          isCancelled: () => !current(),
+        );
+        if (!mounted || !current()) return;
+        final result = await showDialog<DiskPartitionDialogResult>(
+          context: context,
+          builder: (_) => DiskPartitionDialog(
+            analysis: analysis,
+            filename: _expansionName ?? _viewName,
+            requestedSectorBytes: sectorBytes,
+          ),
+        );
+        if (!current() || result == null) return;
+        if (result is DiskPartitionSectorSelected) {
+          sectorBytes = result.sectorBytes;
+          continue;
+        }
+        final field = (result as DiskPartitionFieldSelected).field;
+        await source.validateUnchanged();
+        if (!current()) return;
+        if (field.start < 0 ||
+            field.end <= field.start ||
+            field.end > source.size) {
+          throw StateError('Partition field is outside the current source.');
+        }
+        setState(() {
+          _resetSearchResults();
+          _searchOpen = false;
+          _searchController.clear();
+          _selectedByte = field.start;
+          _structureHighlightStart = field.start;
+          _structureHighlightEnd = field.end;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (current()) _scrollToRow(field.start ~/ _bytesPerLine);
+        });
+        return;
+      }
+    } on DiskPartitionInspectionCancelled {
+      // The viewer changed or closed during a bounded metadata read.
+    } catch (error, stack) {
+      _log.warn('Partition inspection failed', error, stack);
+      if (mounted && current()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(BinaryStructureStrings(context).text('readError')),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _inspectingStructure = false);
+    }
+  }
+
   void _reload({ViewerMode? preferredMode}) {
     _resetSearchResults();
     _tailTimer?.cancel();
@@ -3178,6 +3257,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                       onPressed: _inspectingStructure
                           ? null
                           : () => unawaited(_showBinaryStructure()),
+                    ),
+                  if (_mode == ViewerMode.hex)
+                    IconButton(
+                      key: const ValueKey('viewer-partition-structure'),
+                      tooltip: DiskPartitionStrings(context).text('inspect'),
+                      icon: const Icon(Icons.storage_outlined, size: 20),
+                      onPressed: _inspectingStructure
+                          ? null
+                          : () => unawaited(_showDiskPartitions()),
                     ),
                   if (_autoMode == ViewerMode.image &&
                       !_imageDecodeFailed &&
