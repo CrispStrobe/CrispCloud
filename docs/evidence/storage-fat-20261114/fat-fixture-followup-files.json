@@ -1,0 +1,11 @@
+[
+  "test/archive_dmg_reader_test.dart",
+  "test/archive_dmg_rewrite_test.dart",
+  "test/archive_dmg_workspace_test.dart",
+  "test/archive_disk_writer_test.dart",
+  "test/archive_disk_verification_test.dart",
+  "test/archive_fat_integration_test.dart",
+  "test/archive_udf_integration_test.dart",
+  "test/archive_dmg_fat_provider_test.dart",
+  "test/archive_fat_reader_review_test.dart"
+]

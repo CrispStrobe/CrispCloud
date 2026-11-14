@@ -1,0 +1,48 @@
+/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:2424
+throw a},
+^
+
+Unsupported operation: Uint64 accessor not supported by dart2js.
+    at Object.d (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:435:20)
+    at f6.hX (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7179:19)
+    at kn.i8 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:20206:6)
+    at /workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:5852:4
+    at o3.a (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:1678:63)
+    at o3.$2 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7288:14)
+    at nS.$1 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7282:21)
+    at iU.eB (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:8006:23)
+    at mA.$0 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7486:11)
+    at Object.dA (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:1799:39) {
+  dartException: <ref *1> fo {
+    a: 'Uint64 accessor not supported by dart2js.',
+    '$thrownJsError': <ref *2> Unsupported operation: Uint64 accessor not supported by dart2js.
+        at Object.d (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:435:20)
+        at f6.hX (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7179:19)
+        at kn.i8 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:20206:6)
+        at /workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:5852:4
+        at o3.a (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:1678:63)
+        at o3.$2 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7288:14)
+        at nS.$1 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7282:21)
+        at iU.eB (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:8006:23)
+        at mA.$0 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7486:11)
+        at Object.dA (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:1799:39) {
+      dartException: [Circular *1],
+      '$cachedTrace': fV {
+        a: [Circular *2],
+        b: 'Unsupported operation: Uint64 accessor not supported by dart2js.\n' +
+          '    at Object.d (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:435:20)\n' +
+          '    at f6.hX (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7179:19)\n' +
+          '    at kn.i8 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:20206:6)\n' +
+          '    at /workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:5852:4\n' +
+          '    at o3.a (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:1678:63)\n' +
+          '    at o3.$2 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7288:14)\n' +
+          '    at nS.$1 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7282:21)\n' +
+          '    at iU.eB (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:8006:23)\n' +
+          '    at mA.$0 (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:7486:11)\n' +
+          '    at Object.dA (/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js:1799:39)'
+      }
+    }
+  }
+}
+
+Node.js v24.22.1

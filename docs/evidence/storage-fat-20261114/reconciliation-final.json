@@ -1,7 +1,9 @@
 {
   "schema": 1,
-  "checked_at_utc": "2026-11-14T10:10:33.686279+00:00",
-  "runtime_checkpoint": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+  "checked_at_utc": "2026-11-14T10:17:46.255913+00:00",
+  "checkpoint": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "runtime_implementation_checkpoint": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+  "qualification_source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
   "branch": "integration/storage-capabilities-20261114",
   "main": "14e022eb51c417803a1913131e78912a8a19b3be",
   "source": "git ls-remote after fetching all heads, PR heads and tags",
@@ -11,801 +13,800 @@
     "tag": 20
   },
   "all_branch_and_pr_heads_reachable": true,
-  "all_tags_reachable": false,
+  "all_remote_tags_preserved": true,
+  "tag_preservation": "All remote tags are retained as tags. One historical tag has a target outside the integration ancestry; it is preserved without importing that archived tree.",
   "refs": [
     {
       "ref": "refs/heads/checkpoint/app-final-next-20261113",
       "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/checkpoint/app-oracle-rollout-20261113",
       "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/checkpoint/ebook-native-input-20261112",
       "sha": "7e20b40c1b797d463704106c881b9e84415f4fd7",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/feature/apache-file-viewer-20261113",
       "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/feature/archive-commander-parity-20261113",
       "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/feature/ebook-parity-canary-20261112",
       "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/feature/office-fidelity-gaps-20261113",
       "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/feature/office-fidelity-oracle-validation-20261113",
       "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/integration/archive-containers-20261113",
       "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/integration/storage-capabilities-20261114",
-      "sha": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+      "sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/heads/main",
       "sha": "14e022eb51c417803a1913131e78912a8a19b3be",
       "kind": "branch",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/10/head",
       "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/100/head",
       "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/101/head",
-      "sha": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+      "sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/11/head",
       "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/12/head",
       "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/13/head",
       "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/14/head",
       "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/15/head",
       "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/16/head",
       "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/17/head",
       "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/18/head",
       "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/19/head",
       "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/20/head",
       "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/21/head",
       "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/22/head",
       "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/23/head",
       "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/24/head",
       "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/25/head",
       "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/26/head",
       "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/27/head",
       "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/28/head",
       "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/29/head",
       "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/30/head",
       "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/31/head",
       "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/32/head",
       "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/33/head",
       "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/34/head",
       "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/35/head",
       "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/36/head",
       "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/37/head",
       "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/38/head",
       "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/39/head",
       "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/40/head",
       "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/41/head",
       "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/42/head",
       "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/43/head",
       "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/45/head",
       "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/47/head",
       "sha": "be318f380fc47f94975a35c0924c89190d46f990",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/49/head",
       "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/5/head",
       "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/50/head",
       "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/51/head",
       "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/52/head",
       "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/53/head",
       "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/54/head",
       "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/55/head",
       "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/56/head",
       "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/57/head",
       "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/58/head",
       "sha": "9887b53272d5f747cae9f73b363748985937ad05",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/59/head",
       "sha": "132f70e746aa9815a51a046ab02e83393d084622",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/6/head",
       "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/60/head",
       "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/61/head",
       "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/62/head",
       "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/63/head",
       "sha": "baccf470e946fc86fde41c96443423006eac2be7",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/64/head",
       "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/65/head",
       "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/66/head",
       "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/67/head",
       "sha": "403e942dc99779883210125a01841ef209e19d2e",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/68/head",
       "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/69/head",
       "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/7/head",
       "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/70/head",
       "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/71/head",
       "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/72/head",
       "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/73/head",
       "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/74/head",
       "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/75/head",
       "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/76/head",
       "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/77/head",
       "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/78/head",
       "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/79/head",
       "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/8/head",
       "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/80/head",
       "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/81/head",
       "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/82/head",
       "sha": "085495527e0ab02f52eeded928d54cb766b79910",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/83/head",
       "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/84/head",
       "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/85/head",
       "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/86/head",
       "sha": "120f839ab9091bdbedf326621347ee737140e043",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/87/head",
       "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/88/head",
       "sha": "b100cd751688f13609a8829180b487b381588d14",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/89/head",
       "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/9/head",
       "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/90/head",
       "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/91/head",
       "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/92/head",
       "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/93/head",
       "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/94/head",
       "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/95/head",
       "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/pull/97/head",
       "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
       "kind": "pull_request",
-      "reachable_from_runtime": true
+      "reachable_from_checkpoint": true
     },
     {
       "ref": "refs/tags/archive/feature/commander-review-20261105",
       "sha": "a5103bb5bfd044540f68bfb786761222abccd98f",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "a5103bb5bfd044540f68bfb786761222abccd98f",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/archive/feature/madedit2-hex-editor-session-checkpoint",
       "sha": "bf6a2bc06f663d2733d4283cac7cd39261e25c48",
       "kind": "tag",
-      "reachable_from_runtime": false,
+      "reachable_from_checkpoint": false,
+      "object_type": "tag",
       "local_tag_sha": "bf6a2bc06f663d2733d4283cac7cd39261e25c48",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/audit/archive-v129-f1a03e80",
       "sha": "e392d53f15c714c53c02ce08fc30df5093dec5ef",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "e392d53f15c714c53c02ce08fc30df5093dec5ef",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/ci-native-assets-20261109",
       "sha": "e8b36e59c111facb1113b776c4e0ac866a82470a",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "e8b36e59c111facb1113b776c4e0ac866a82470a",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/dart-smb2-libsmb2-r9",
       "sha": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/nightly",
       "sha": "d32191c3af8d74c9ec59be20d3183e323dea532f",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "d32191c3af8d74c9ec59be20d3183e323dea532f",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v0.1.0",
       "sha": "259085c2381271c48e6c6353afeb00777675479d",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "259085c2381271c48e6c6353afeb00777675479d",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v0.2.0",
       "sha": "c3ef2129bcf1d5b0620434785e1973ae7a913888",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "c3ef2129bcf1d5b0620434785e1973ae7a913888",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v0.2.1",
       "sha": "5f9838426d3e07b61d5b3f005dbabbf0fee166f7",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "5f9838426d3e07b61d5b3f005dbabbf0fee166f7",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v0.2.2",
       "sha": "faef68b08e053f709c130d465746deaadac44b80",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "faef68b08e053f709c130d465746deaadac44b80",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.0.0",
       "sha": "f5f12886db8f9119f2e2976363ab8566ebb3777e",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "f5f12886db8f9119f2e2976363ab8566ebb3777e",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.1.0",
       "sha": "472064914ec00f5da289de94e166fa6c6d82b87a",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "commit",
       "local_tag_sha": "472064914ec00f5da289de94e166fa6c6d82b87a",
-      "local_tag_matches_remote": true,
-      "object_type": "commit"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.0",
       "sha": "70d43862fdbd04317e001c8788cb1ca4d63da2ee",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "70d43862fdbd04317e001c8788cb1ca4d63da2ee",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.1",
       "sha": "9701ceadf0ea0d519e9553bbd41ea4e0a2710712",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "9701ceadf0ea0d519e9553bbd41ea4e0a2710712",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.3",
       "sha": "b092db8126058f33879d526243d67aec8273fa09",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "b092db8126058f33879d526243d67aec8273fa09",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.4",
       "sha": "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.5",
       "sha": "cbaf25847c106a115eb45469ba7c4edea02fada5",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "cbaf25847c106a115eb45469ba7c4edea02fada5",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.6",
       "sha": "355371e3332184dbb780eb3e78a90d90baeab6dc",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "355371e3332184dbb780eb3e78a90d90baeab6dc",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.7",
       "sha": "ea85caeeb1414f586508d45acc6a48409513398c",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "ea85caeeb1414f586508d45acc6a48409513398c",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     },
     {
       "ref": "refs/tags/v1.2.8",
       "sha": "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862",
       "kind": "tag",
-      "reachable_from_runtime": true,
+      "reachable_from_checkpoint": true,
+      "object_type": "tag",
       "local_tag_sha": "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862",
-      "local_tag_matches_remote": true,
-      "object_type": "tag"
+      "local_tag_matches_remote": true
     }
-  ],
-  "tag_preservation": "All remote tags were fetched and retained as tags; tag ancestry is recorded separately from branch/PR reconciliation.",
-  "all_remote_tags_preserved": true
+  ]
 }

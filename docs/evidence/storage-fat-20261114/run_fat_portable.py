@@ -6,6 +6,7 @@ The evidence copy preserves the exact helper bytes executed for qualification.
 
 from pathlib import Path
 import argparse
+import copy
 import hashlib
 import json
 import re
@@ -55,11 +56,12 @@ while pending:
                 paths.add(dependency)
                 pending.append(dependency)
 paths = sorted(paths)
+evidence_helper = "docs/evidence/storage-fat-20261114/run_fat_portable.py"
 before = {name: sha((app / name).read_bytes()) for name in paths}
 for name, digest in before.items():
     if sha((primary / name).read_bytes()) != digest:
         raise SystemExit("Validation source differs from primary: " + name)
-    if args.source_revision:
+    if args.source_revision and name != evidence_helper:
         revision_bytes = subprocess.check_output(
             ["git", "show", args.source_revision + ":" + name], cwd=primary
         )
@@ -74,6 +76,12 @@ receipt = {
     "dart": subprocess.check_output([str(dart), "--version"], text=True).strip(),
     "node": subprocess.check_output(["node", "--version"], text=True).strip(),
     "source_sha256": before,
+    "revision_verified_paths": [name for name in paths if name != evidence_helper],
+    "evidence_helper_binding": {
+        "path": evidence_helper,
+        "sha256": before[evidence_helper],
+        "scope": "Evidence helper version saved with this receipt; all runtime, test, fixture and manifest paths are separately bound to source_revision.",
+    },
     "package_config_sha256": sha((app / ".dart_tool/package_config.json").read_bytes()),
     "helper_sha256": sha(Path(__file__).read_bytes()),
     "scope": "Dart VM and actual dart2js JavaScript executed under Node; no browser-engine or WebAssembly qualification.",
@@ -101,8 +109,22 @@ try:
         if kind in ("vm", "js"):
             receipt["results"][kind] = json.loads(log.read_text())
     receipt["vm_js_results_identical"] = receipt["results"]["vm"] == receipt["results"]["js"]
-    if not receipt["vm_js_results_identical"]:
-        raise RuntimeError("VM and JavaScript acceptance results differ")
+    semantic = copy.deepcopy(receipt["results"])
+    wrapper_lengths = {}
+    for kind in ("vm", "js"):
+        wrapper = semantic[kind]["derived_udif_wrappers"]["synthetic-udif-zlib"]
+        length = wrapper.pop("udif_bytes")
+        if not isinstance(length, int) or isinstance(length, bool) or length <= 0:
+            raise RuntimeError("Invalid synthetic zlib wrapper byte-length diagnostic")
+        wrapper_lengths[kind] = length
+    receipt["vm_js_semantic_comparison"] = {
+        "excluded_paths": ["derived_udif_wrappers.synthetic-udif-zlib.udif_bytes"],
+        "excluded_values": wrapper_lengths,
+        "reason": "Locked archive 4.6.0 selects native dart:io zlib on the VM and its Dart Deflate implementation on JavaScript. Their valid compressed encodings have different byte lengths; every payload and complete raw-volume SHA256 assertion remains unchanged and every other result field must compare exactly.",
+    }
+    receipt["vm_js_semantic_results_identical"] = semantic["vm"] == semantic["js"]
+    if not receipt["vm_js_semantic_results_identical"]:
+        raise RuntimeError("VM and JavaScript semantic acceptance results differ")
     receipt["javascript"] = {"bytes": javascript.stat().st_size, "sha256": sha(javascript.read_bytes())}
     receipt["source_unchanged_and_primary_matches"] = all(
         sha((app / name).read_bytes()) == digest
