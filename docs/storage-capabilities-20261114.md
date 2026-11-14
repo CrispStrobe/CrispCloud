@@ -10,7 +10,9 @@ and [ZIP recovery profile](archive-zip-recovery.md), plus the
 [FAT profile](archive-fat-profile.md) and [partition-image profile](archive-disk-image-profile.md).
 The [first runtime evidence](evidence/storage-runtime-20261114)
 and [UDF/ZIP evidence](evidence/storage-udf-zip-20261114) retain their separate
-qualified revisions. Later stages remain proposals; the initial assessment's
+qualified revisions. The [FAT and partition-image qualification](evidence/storage-fat-20261114)
+records this continuation, including external fixtures and native/JavaScript
+source bindings. Later stages remain proposals; the initial assessment's
 documentation-only receipt stays preserved with its original source revision.
 
 Review: [draft PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).

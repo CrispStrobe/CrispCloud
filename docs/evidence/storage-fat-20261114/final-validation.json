@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "completed_at_utc": "2026-11-14T10:24:05.490307+00:00",
+  "scope": "First read-only FAT12/16/32 and validated MBR/GPT image adapter, including native viewer/workspace and DMG composition.",
+  "branch": "integration/storage-capabilities-20261114",
+  "pull_request": "https://github.com/CrispStrobe/CrispCloud/pull/101",
+  "qualification_source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "production_implementation_revision": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+  "production_sources_identical_between_revisions": true,
+  "native_gates": [
+    {
+      "source_revision": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+      "passed": 843,
+      "failed": 0,
+      "skipped": 1,
+      "test_files": 29,
+      "summary": "fat-final-gate-summary.json",
+      "receipt": "fat-final-gate-receipt.json",
+      "source_binding": "fat-final-gate-source-binding.json",
+      "skip": "Existing physical TGZ member above 2 GiB; CRISP_RUN_LARGE_ARCHIVE_TESTS=1 was not enabled."
+    },
+    {
+      "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+      "passed": 229,
+      "failed": 0,
+      "skipped": 0,
+      "test_files": 9,
+      "summary": "fat-fixture-followup-gate-summary.json",
+      "receipt": "fat-fixture-followup-gate-receipt.json",
+      "source_binding": "fat-fixture-followup-source-binding.json",
+      "scope": "Nine affected native files after the shared test fixture became dart2js-compatible."
+    }
+  ],
+  "counts_are_not_additive": true,
+  "strict_analysis": {
+    "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+    "dart_files": 27,
+    "issues": 0,
+    "receipt": "fat-fixture-followup-analysis-receipt.json"
+  },
+  "native_profile": "Isolated Linux Flutter host validation temporarily disables only the optional native ebook conversion hook; original production manifests are restored byte-for-byte.",
+  "portable": {
+    "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+    "groups_per_target": 15,
+    "checks_per_target": 1276,
+    "targets": [
+      "Dart VM",
+      "Actual dart2js JavaScript executed by Node"
+    ],
+    "raw_json_identical": false,
+    "semantic_results_identical": true,
+    "comparison": {
+      "excluded_paths": [
+        "derived_udif_wrappers.synthetic-udif-zlib.udif_bytes"
+      ],
+      "excluded_values": {
+        "vm": 8026,
+        "js": 8033
+      },
+      "reason": "Locked archive 4.6.0 selects native dart:io zlib on the VM and its Dart Deflate implementation on JavaScript. Their valid compressed encodings have different byte lengths; every payload and complete raw-volume SHA256 assertion remains unchanged and every other result field must compare exactly."
+    },
+    "revision_verified_inputs": 23,
+    "helper_sha256": "6e27e144991cbb01feb132b60812acabf12d2c81bc8c09aaa180e5bb23bf3ee7",
+    "receipt": "fat-final-portable-receipt.json",
+    "source_note": "fat-portable-zlib-platform-note.json"
+  },
+  "independent_reference": {
+    "writer": "ChaN FatFs R0.16",
+    "writer_archive_sha256": "99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e",
+    "oracle": "7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06",
+    "physical_images": 4,
+    "file_instances": 36,
+    "directory_instances": 8,
+    "largest_complete_physical_image_bytes": 67108864,
+    "reproduction": "fixture-reproduction-receipt.json",
+    "extraction": "fat-sevenzip-oracle.json",
+    "inputs_unchanged": true
+  },
+  "production_web_release": {
+    "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+    "passed": true,
+    "app_version": "1.2.9+22",
+    "original_manifests": true,
+    "source_stamp_verified": true,
+    "license_asset_verified": true,
+    "outputs": {
+      "main.dart.js": {
+        "bytes": 27656008,
+        "sha256": "c0bb7bd0e6ffd61a64f0c33be80c60e4daf02023285fd26d16a5a2b5f4a4de8c"
+      },
+      "flutter_bootstrap.js": {
+        "bytes": 13776,
+        "sha256": "fd1638587cdfe90344a17853e282462575c11fc2eb372c390c0546eefbe0d3e1"
+      },
+      "index.html": {
+        "bytes": 2346,
+        "sha256": "30a0f3c562c65352e1cb8eab221a162351964b383ac08ba5eeddb0a476dbb7be"
+      },
+      "assets/packages/apple_lzfse/LICENSE": {
+        "bytes": 1514,
+        "sha256": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32"
+      }
+    },
+    "receipt": "fat-final-web-release-receipt.json"
+  },
+  "source_verification": {
+    "dart_and_manifest_paths": 1978,
+    "production_tree_entries": 1051,
+    "all_matched": true,
+    "only_test_change_after_broad_gate": [
+      "test/support/dmg_fixture.dart"
+    ],
+    "receipt": "fat-final-source-verification.json",
+    "transition": "fat-test-fixture-source-transition.json",
+    "production_manifest_sha256": {
+      "pubspec.yaml": "f10ba24448b047cf379dac0efeb11f8f60d9ae089022a831b12a6b32b8fa564f",
+      "pubspec.lock": "2a0b95288cf41be9087af0c01ea57afcc4a2f138876d15709bff2f866060ccb4"
+    }
+  },
+  "git_preservation": {
+    "branch_heads": 11,
+    "pr_heads": 91,
+    "all_branch_and_pr_heads_reachable": true,
+    "remote_tags_preserved": 20,
+    "main": "14e022eb51c417803a1913131e78912a8a19b3be",
+    "receipt": "reconciliation-final.json",
+    "incremental_checkpoints_through_qualified_source": "remote-checkpoints.json"
+  },
+  "hosted_ci": {
+    "qualified": false,
+    "checked_at_utc": "2026-11-14T10:22:13.478Z",
+    "qualification_source_status": {
+      "cancelled": 35,
+      "queued": 4
+    },
+    "evidence_checkpoint": "9baf998a58f44c21ccc7287f510a224d5e727356",
+    "evidence_checkpoint_status": {
+      "queued": 34
+    },
+    "receipt": "hosted-ci-qualification.json",
+    "note": "Queued or canceled jobs are not passing hosted results. The latest snapshot is separate from completed local qualification."
+  },
+  "licensing": {
+    "new_readers": "Original MIT Dart implementations",
+    "runtime_dependencies_added": false,
+    "external_fixture_writer": "FatFs BSD-style terms; not linked or shipped",
+    "external_oracle": "7-Zip test tool; not linked or shipped",
+    "new_gpl_or_noncommercial_runtime_additions": false,
+    "existing_project_licensing_changed": false
+  },
+  "boundaries": [
+    "Read-only FAT12/16/32; no exFAT, deleted-file recovery, allocation repair, formatting or filesystem writes.",
+    "Primary MBR or fully validated mirrored GPT; no EBR chain, dynamic storage, encrypted volume or ext/NTFS/APFS interpretation.",
+    "Native viewer/workspace image input cap remains 8 GiB; workspace aggregate accounting includes raw entries and overlapping file views.",
+    "Buffered member cap remains 64 MiB; existing browser, remote and nested bounds remain.",
+    "Largest fully mastered external reference is 64 MiB. Multi-terabyte addressing checks are synthetic.",
+    "Node acceptance and a production JavaScript compilation do not qualify browser interaction, WebAssembly or new native/device release packaging."
+  ],
+  "result": "passed_with_recorded_scope_and_one_existing_opt_in_skip"
+}
