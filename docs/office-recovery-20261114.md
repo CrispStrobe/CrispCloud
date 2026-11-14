@@ -99,8 +99,9 @@ compiled and executed in installed Chrome: its downloaded bytes and filename,
 anchor cleanup and delayed object-URL revocation passed. The
 [retained acceptance receipt](evidence/office-recovery-20261114/integrated-macos/acceptance.json)
 links exact render and browser receipts. The native probe did not run a fresh
-schema validator. Wider REC-08 coverage and physical-platform acceptance remain
-separate work.
+schema validator. At that checkpoint, wider REC-08 coverage and physical-platform
+acceptance remained separate work; the later native archive below supplies the
+recorded wider schema scope.
 
 ## Recovered native evidence and publication completion
 
@@ -127,3 +128,43 @@ recorded **241 host tests** and **65.4% line coverage** are historical totals,
 not newly recalculated results. The app's publication step is complete; new
 implementation changes need their own current-source checks. Physical devices,
 live providers, and authentic signed-file acceptance remain separate gates.
+
+## Fill-preservation continuation and continuous browser gate
+
+The continuation preserves main's integrated work and adds canonical suite
+implementation `9219189e9a07103b029eaeb050658ab819356591`, synchronized with
+`tool/sync_office_fidelity.py`. All **2,171 managed files** were verified before
+app checkpoint `394dc3199270599dd0badd91f89fdf1726c3fb46` was published.
+
+Bold, font and alignment changes now retain imported native cell fills.
+Explicit fill commands replace theme/indexed/pattern/gradient semantics with a
+direct solid color or no fill, including equal-RGB choices. Fill-edit intent is
+carried through import, sorting and editor history. This improves saved-file
+preservation; it does not add native gradient painting to the editor.
+
+Fresh suite validation passed **26 focused engine tests**, including the five
+new fill cases, direct/isolate three-save round trips, namespace preservation
+and explicit style identity. The same style-level harness fails nine of thirteen
+checks against the starting source and passes all thirteen against the fix.
+The [canonical fill evidence](https://github.com/CrispStrobe/quds_office_suite/tree/0a35127bb09cdb5fdd85a054d7876c8be2892cc0/docs/evidence/office-fill-preservation-20261114)
+records the commands, observed output and limits. The six new editor-history
+regressions are committed, but the editor runner exhausted disk space before
+loading a test. No editor pass, fresh analyzer pass or full native-host rerun is
+claimed for this continuation.
+
+The Office fidelity workflow now runs the real browser-copy harness in a
+separate Chromium job and retains its receipts. Both acceptance source files
+are included in pull-request path filters. Local compilation passed using the
+app-locked twelve-package browser dependency closure; the resulting JavaScript
+matches the earlier successful macOS probe exactly. The local browser launch
+was blocked by the sandbox's socket restriction before assertions ran. The
+[browser compilation and launch record](evidence/office-recovery-resume-20261114/browser/README.md)
+preserves that distinction. Hosted Actions jobs were queued without an assigned
+runner at the final status check; their completion remains an external gate.
+
+After the editor attempt, a full filesystem prevented any further sandbox
+command from starting. Automatic approval policy rejected removal of two
+reproducible temporary payloads outside the sandbox because escalations are
+disabled. The implementation, app source synchronization, evidence publication
+and browser CI were already saved remotely. Remaining editor validation needs
+available workspace storage or a hosted runner; it is not marked complete.
