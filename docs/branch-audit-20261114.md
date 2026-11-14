@@ -60,3 +60,9 @@ reusable-buffer scans, protected imports, ribbon state and queued file
 operations. The expanded Office record retains independent LibreOffice and
 actual browser-download acceptance. GitHub marked PR #104 merged when its head
 became an ancestor of main; its branch was retained.
+
+The final remote-head check at **17:49 UTC** also found and incorporated Office
+`1945a513` and binary comparison `26b5db21`. These retain the final fixture
+corrections and source-bound validation records. The expanded comparison cohort
+passes **29 tests in installed Chrome**. All other audited repositories still
+have the main checkpoints listed above; no additional branches were deleted.
