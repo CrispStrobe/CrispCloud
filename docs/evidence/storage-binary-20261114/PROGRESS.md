@@ -128,3 +128,21 @@ scanner suites, and strict scoped analysis. `run_gate.py` records the exact
 commit, all tracked non-document source blobs, the package map, commands and
 unedited output before/after each final gate. The production manifests remain
 unchanged; earlier blocked/failed setup and test-helper attempts stay separate.
+
+## Source-bound candidate correction
+
+At saved candidate `542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a`, the combined
+native gate passed 87 tests and failed one newly added portable reuse-buffer
+case. An asynchronous cancellation wrapper let a pause-respecting producer
+resume and reuse its array before the pull consumer had captured the first
+chunk. Both reads could observe the same incorrect sequence, so the digest
+check alone did not detect it. The failed gate and complete source receipt
+remain under `intermediate/candidate-542c1c8b/`, alongside the strict-analysis
+receipt for one subsequent brace-style finding.
+
+The correction gives `FileOperationControl.bind` an opt-in synchronous delivery
+mode and uses it only at the comparison's pull boundaries. StreamIterator's
+pause now reaches the producer before its next yield. All other queue callers
+retain the previous default. Capture and direct raw-stream reuse regressions
+now pass in a focused 28-test native run; full saved-source native and browser
+qualification will use the following corrected checkpoint.

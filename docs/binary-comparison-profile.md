@@ -82,6 +82,13 @@ input-sized contiguous allocation, alongside provider chunks and runtime
 overhead. Closing a browser capture drops its retained buffer even if the
 closed session object remains referenced.
 
+Input producers must respect stream pauses and keep the current buffer stable
+while paused. The comparison opts into synchronous cancellation-wrapper
+delivery so a pull consumer's pause reaches a producer before it resumes and
+reuses that buffer. Other transfer-queue callers retain their existing delivery
+behavior. Providers that mutate a buffer independently of stream backpressure
+are outside this input contract.
+
 Callers may lower input ceilings; they may not enlarge the platform ceiling.
 Chunk/time options are explicit finite budgets, not promises that every file
 under the byte ceiling is admissible. A provider emitting extremely small or

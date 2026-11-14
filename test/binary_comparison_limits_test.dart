@@ -1,10 +1,42 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/file_comparison_service.dart';
 
 void main() {
+  test('pull backpressure protects reusable buffers on either input', () async {
+    Stream<List<int>> reusable() async* {
+      final bytes = Uint8List.fromList([1, 2]);
+      yield bytes;
+      bytes.setAll(0, [3, 4]);
+      yield bytes;
+    }
+
+    for (final reuseLeft in [true, false]) {
+      Stream<List<int>> fragmented() async* {
+        for (final part in [
+          [1],
+          [2, 3],
+          [4],
+        ]) {
+          await Future<void>.delayed(const Duration(milliseconds: 1));
+          yield part;
+        }
+      }
+
+      final stable = fragmented();
+      final result = await compareBinaryStreams(
+        reuseLeft ? reusable() : stable,
+        reuseLeft ? stable : reusable(),
+      );
+      expect(result.equal, isTrue);
+      expect(result.leftBytes, 4);
+      expect(result.rightBytes, 4);
+    }
+  });
+
   test('unknown-length streams enforce the byte cap on each side', () async {
     for (final oversizedLeft in [false, true]) {
       final oversized = Stream<List<int>>.fromIterable([

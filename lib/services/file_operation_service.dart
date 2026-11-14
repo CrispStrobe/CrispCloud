@@ -373,7 +373,10 @@ class FileOperationControl implements StreamRateControl {
 
   /// Cancel a pending source read as well as a stream that is yielding chunks.
   /// A provider's asynchronous cleanup cannot hold the queue cancellation open.
-  Stream<T> bind<T>(Stream<T> input) {
+  /// Pull consumers of reusable provider buffers can opt into [sync] delivery
+  /// so their pause reaches the source before it resumes and reuses a buffer.
+  /// Existing queue consumers retain asynchronous delivery by default.
+  Stream<T> bind<T>(Stream<T> input, {bool sync = false}) {
     late StreamController<T> output;
     StreamSubscription<T>? source;
     StreamSubscription<void>? cancelled;
@@ -384,6 +387,7 @@ class FileOperationControl implements StreamRateControl {
     }
 
     output = StreamController<T>(
+      sync: sync,
       onListen: () {
         if (_cancelled) {
           output.addError(const FileOperationCancelled());

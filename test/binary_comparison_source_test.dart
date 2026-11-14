@@ -431,6 +431,31 @@ void main() {
     );
   }
 
+  for (final phase in [1, 2]) {
+    test(
+      'source error in pass $phase retains its identity and releases storage',
+      () async {
+        await captured(() async {
+          final backend = _Source();
+          final failure = StateError('fixture read failure');
+          Stream<List<int>> failing() async* {
+            yield [1, 2];
+            throw failure;
+          }
+
+          backend.onRead = (call) =>
+              call == phase ? failing() : Stream.value([1, 2, 3, 4]);
+          await expectLater(
+            BinaryComparisonSnapshot.capture(backend, backend.item),
+            throwsA(same(failure)),
+          );
+          expect(temporary.listSync(), isEmpty);
+          expect(backend.writes, 0);
+        });
+      },
+    );
+  }
+
   test(
     'same-current backend identity changes cancel a pending metadata read',
     () async {
