@@ -1,0 +1,326 @@
+{
+  "schema": 1,
+  "scope": "Every file in this evidence directory except this self-referential inventory. Source-bound receipts retain their original snapshots.",
+  "files": {
+    "README.md": {
+      "bytes": 13757,
+      "sha256": "fb50cd2d243d6db8e61f7f769fd4e1d1a3628322624b2d8f29e3d1fb7f1b538b"
+    },
+    "fat-analysis-files.json": {
+      "bytes": 1187,
+      "sha256": "c5d91f0f20713adfbb560da9ba5f8e9e9abf8d9037fc3f67e2018e24c32e802b"
+    },
+    "fat-broad-first-gate-receipt.json": {
+      "bytes": 38310,
+      "sha256": "91d9e55ed4da1f4fb01ceca2e8ec52411d593fced6a4b7a10b93a284f8144308"
+    },
+    "fat-broad-first-gate-source-binding.json": {
+      "bytes": 225825,
+      "sha256": "655d87d54ac5f7ad3d73eedf1d5047bd8de0ef0bb25ae6d9e6456e05d8515025"
+    },
+    "fat-broad-first-gate-summary.json": {
+      "bytes": 2167,
+      "sha256": "01568f95e1e9606e9ba3700f635e32f893a58b7b9ec2b1794b545c44ff55f8bc"
+    },
+    "fat-broad-first-gate.jsonl": {
+      "bytes": 449886,
+      "sha256": "4fe8c5ed84d6f00f22795bf3884c658bbbc6d3af13cfba67c4df7e70c4eb4841"
+    },
+    "fat-core-analysis-receipt.json": {
+      "bytes": 34336,
+      "sha256": "ea0b73313d072e508d3285d878e1e586037072bcda00b50d71c9c5ac90d9d649"
+    },
+    "fat-core-analysis.log": {
+      "bytes": 96,
+      "sha256": "1a840961707e2c7c57fcb5f548398a960eec1421aee35401c21a1f8627cd7e20"
+    },
+    "fat-core-gate-receipt.json": {
+      "bytes": 34067,
+      "sha256": "685b61afae084525c44fba84321e2e680c9ecd821a1d53cbc71d958214b2c222"
+    },
+    "fat-core-gate-summary.json": {
+      "bytes": 286,
+      "sha256": "2fc896c35275e0226269cce7cf6dc668bc53f8fc3bbbe68c4d248e16c4596fee"
+    },
+    "fat-core-gate.jsonl": {
+      "bytes": 91251,
+      "sha256": "a43621709ce3eeb3241a271cad0f95dac75f610e1e16c9aadcc709e4ac6983ae"
+    },
+    "fat-dmg-compatibility-gate-receipt.json": {
+      "bytes": 38680,
+      "sha256": "c1a1a568a7cb8d5d7ba9f50534d0297417a86ae8e5fc2bff8ec7732fb8a7c151"
+    },
+    "fat-dmg-compatibility-gate-summary.json": {
+      "bytes": 492,
+      "sha256": "3e26985c513cf35e03c0e36dd22bb8d4cc162d135c577b55780018f15844cda2"
+    },
+    "fat-dmg-compatibility-gate.jsonl": {
+      "bytes": 108587,
+      "sha256": "9aabe361af48d5a29181c9c8217b74f8570e8781eae3fd1c31f8465090ece742"
+    },
+    "fat-dmg-compatibility-source-binding.json": {
+      "bytes": 3628,
+      "sha256": "75bb25abb0ae442df40ee883e714f4f11c666a4b6a7746b1fa82c95f1b2d11d9"
+    },
+    "fat-dmg-interim-gate-receipt.json": {
+      "bytes": 38249,
+      "sha256": "823844ca0b6fa141d7a039cd277b3a0f3ae8444a9b62c32039fc4196803482d0"
+    },
+    "fat-dmg-interim-gate-summary.json": {
+      "bytes": 562,
+      "sha256": "a4563cfdb4f8667a5227f8842041ae26aab7a24b7abd0b55f09ec2b89d9016da"
+    },
+    "fat-dmg-interim-gate.jsonl": {
+      "bytes": 96595,
+      "sha256": "c13774a9085a005806b419ac18e803ce3b372d04eea9fda0f6c09761ef39dd67"
+    },
+    "fat-final-analysis-receipt.json": {
+      "bytes": 40212,
+      "sha256": "72adb6902252ea7d6f581d3a04aa0c523259e3382d45862871b381ff65d2d37b"
+    },
+    "fat-final-analysis.log": {
+      "bytes": 97,
+      "sha256": "bc78ee07a69a4f142dc23cb09d3064de7dbd4db3865d690e770c3364b8462052"
+    },
+    "fat-final-gate-files.json": {
+      "bytes": 1283,
+      "sha256": "06ca2b93e7a4f3da567db73e5acf787388e861882b7643e539a33d27d0301fee"
+    },
+    "fat-final-gate-receipt.json": {
+      "bytes": 40464,
+      "sha256": "bd98b63f36668cd2a6be34a5eae9844e720a268aaef189d6f61a231bcd3d9e7a"
+    },
+    "fat-final-gate-source-binding.json": {
+      "bytes": 225825,
+      "sha256": "72b4052af5c85df3ed2d480e86ab666bcf03deaa148b57b922f5b4392dd54c7e"
+    },
+    "fat-final-gate-summary.json": {
+      "bytes": 2130,
+      "sha256": "9d3c82e442d2d8f5ae1f90788ca9cdbfce5279ad6656483dad437ce50efce2cd"
+    },
+    "fat-final-gate.jsonl": {
+      "bytes": 450274,
+      "sha256": "8f5cfa3af974501091d45e23b044d4091cb3937db30a203b3f7c58f0c24c4bc8"
+    },
+    "fat-final-portable-js-compile.log": {
+      "bytes": 111,
+      "sha256": "12d406f168143669857511707a06707f222ecbc1f3f5f08613121f893b63cd7f"
+    },
+    "fat-final-portable-js.log": {
+      "bytes": 3670,
+      "sha256": "15569847eb642c40cbf97807001e52fe2ae77889bb9591be9cd0dfe73e56a1c5"
+    },
+    "fat-final-portable-receipt.json": {
+      "bytes": 16536,
+      "sha256": "ecb574fd6088f93d1527cfadcd3a9c69fcc8b61dddde3ffdf5abc8c4f59c36d1"
+    },
+    "fat-final-portable-vm.log": {
+      "bytes": 3670,
+      "sha256": "15264d29e9ad4d6dc9801b3a7e7632f404698b73394a678c02682fd0c3bc6ff2"
+    },
+    "fat-final-source-verification.json": {
+      "bytes": 3035,
+      "sha256": "32ca7d4fe0d47124dc3667af3e399ad8c963821bad3517051067e52269c95365"
+    },
+    "fat-final-web-release-receipt.json": {
+      "bytes": 41466,
+      "sha256": "5d8f8310c4f5ed180eb753d76491a19fee5890c4a98b0d590b1a6b3ec1cd0fc4"
+    },
+    "fat-final-web-release.log": {
+      "bytes": 779,
+      "sha256": "926db4edd95f920d6d207a427c3e29d16c868f43507a77effce26247fc1d99ac"
+    },
+    "fat-fixture-followup-analysis-files.json": {
+      "bytes": 1222,
+      "sha256": "a2c75f0ae047b6c1ee7726671fa2eab931cff11d40b5d83a4a98db5b6ff717ce"
+    },
+    "fat-fixture-followup-analysis-receipt.json": {
+      "bytes": 42106,
+      "sha256": "ed9aa1099c2baadb0968a71fdb2d112afa14804c9a3f07529f003a7f1ab8670e"
+    },
+    "fat-fixture-followup-analysis.log": {
+      "bytes": 97,
+      "sha256": "556961d7dbbaebf801552bab0de7071b29e7817ceb303ab70b33ea1b9887b2ec"
+    },
+    "fat-fixture-followup-files.json": {
+      "bytes": 389,
+      "sha256": "f4bf5f09a4e6897ddca59e545a05d3c4c2edf79a5c8371f6793408f69deef968"
+    },
+    "fat-fixture-followup-gate-receipt.json": {
+      "bytes": 41264,
+      "sha256": "dffaea618eebcef8eb0c0be0bfe851f7ea43e07c403a93ee658dbf1f7cca0b67"
+    },
+    "fat-fixture-followup-gate-summary.json": {
+      "bytes": 695,
+      "sha256": "c419af4b64fd8469986dd2bca9d6911b55b481a28acb059a3d5fac27ff04b859"
+    },
+    "fat-fixture-followup-gate.jsonl": {
+      "bytes": 106317,
+      "sha256": "7323d173207faf6f7d3e52ea612b0ec792a127dc4c03468039dae4b314fb88d2"
+    },
+    "fat-fixture-followup-source-binding.json": {
+      "bytes": 225821,
+      "sha256": "c725b6d79b84bbef5656393acb0966196488934b158b704c0d466dc6ca0f2de3"
+    },
+    "fat-independent-review-receipt.json": {
+      "bytes": 32979,
+      "sha256": "9b16403164eef49b9cf5a4fc6c1af17beaca6a85728b0c45afbae686ce90931a"
+    },
+    "fat-independent-review-summary.json": {
+      "bytes": 233,
+      "sha256": "87c01ec0fba87cffc885f2bed4caff9667264de5b0c2ec883d1bf51cb26fc0a7"
+    },
+    "fat-independent-review.jsonl": {
+      "bytes": 7051,
+      "sha256": "1aa3963e95eca8d0156992489ec320c41b940382db3919c7c0adfa1d3011a300"
+    },
+    "fat-integration-analysis-first-receipt.json": {
+      "bytes": 38025,
+      "sha256": "12551d1e335109a34612c3ef36428bc66e0b23cddac1727e60e9b2f788821ea4"
+    },
+    "fat-integration-analysis-first.log": {
+      "bytes": 795,
+      "sha256": "94a431c80d9fc955b5f527d2f40fa3f11c8a918e8c85a8df75c5546c2e46c9d2"
+    },
+    "fat-integration-first-receipt.json": {
+      "bytes": 35266,
+      "sha256": "73f38aed68a6358b9a51a9930fa4c4ff0bc3f09f1f7bdf80190328c363e835a1"
+    },
+    "fat-integration-first-summary.json": {
+      "bytes": 492,
+      "sha256": "60099705a25dadd7cb4d47534c9277709adeffd0a59988aa79390e2ed3ec41f3"
+    },
+    "fat-integration-first.jsonl": {
+      "bytes": 96106,
+      "sha256": "2554eeb2b86c9841e19693c673b1be5b6f2963f1666fb6250566bf3fa6904ea3"
+    },
+    "fat-integration-gate-receipt.json": {
+      "bytes": 36614,
+      "sha256": "526d5872b0d66ad387bd3febea69d65526595004d4068d923f0a1af7bb0bff1b"
+    },
+    "fat-integration-gate-source-binding.json": {
+      "bytes": 3568,
+      "sha256": "817086f743fbb55e2caaa877068900aa1b0e5c1c69cf9b2a8f976b5514c133d0"
+    },
+    "fat-integration-gate-summary.json": {
+      "bytes": 633,
+      "sha256": "226f46a3eaa40bbdaea0028bee5e85d9d8d0332beed064a647bd67d7e92f86de"
+    },
+    "fat-integration-gate.jsonl": {
+      "bytes": 113073,
+      "sha256": "73b99b5d0f67ce2ecc7244aa5ce67a1a65b48e8863072d12ac93e444a40721dd"
+    },
+    "fat-partition-first-receipt.json": {
+      "bytes": 33873,
+      "sha256": "fc27a0de1fb59db6ccd18f289003bbf120bb995d6cc39890bd7e21640a218477"
+    },
+    "fat-partition-first-summary.json": {
+      "bytes": 186,
+      "sha256": "074840f16258aeedc1775ff9a8bf321953d13843a3663c0b54b6e95e2a7e8377"
+    },
+    "fat-partition-first.jsonl": {
+      "bytes": 24020,
+      "sha256": "0a5091a105c5f3989e5270012b98517ee7e24403d1786d67c4d6b5d3b6f10488"
+    },
+    "fat-portable-fixture-uint64-first-js-compile.log": {
+      "bytes": 111,
+      "sha256": "9472cd5d69791956e818e648cac8ca28b1263839ec6dce5e05ff70d100d2c786"
+    },
+    "fat-portable-fixture-uint64-first-js.log": {
+      "bytes": 3457,
+      "sha256": "90cccf29892560a138c34e965b6ab757b8355558c4b4d01ac5c3d56ac486681f"
+    },
+    "fat-portable-fixture-uint64-first-receipt.json": {
+      "bytes": 9860,
+      "sha256": "cc9c583657464ed0a7ea5c8edc3a01d4dbce12f1f3502e01da76ae80b9ab4d0e"
+    },
+    "fat-portable-fixture-uint64-first-vm.log": {
+      "bytes": 3670,
+      "sha256": "15264d29e9ad4d6dc9801b3a7e7632f404698b73394a678c02682fd0c3bc6ff2"
+    },
+    "fat-portable-zlib-metadata-first-js-compile.log": {
+      "bytes": 111,
+      "sha256": "6b8d6921a727451dfbd8450ad3e5d77446bafa6ded9289ca4fc62e36eb17641f"
+    },
+    "fat-portable-zlib-metadata-first-js.log": {
+      "bytes": 3670,
+      "sha256": "15569847eb642c40cbf97807001e52fe2ae77889bb9591be9cd0dfe73e56a1c5"
+    },
+    "fat-portable-zlib-metadata-first-preservation.json": {
+      "bytes": 1111,
+      "sha256": "7e602541e0ba614e040018394404220e5ce8e2917877d81d83f7924459972d4f"
+    },
+    "fat-portable-zlib-metadata-first-receipt.json": {
+      "bytes": 14410,
+      "sha256": "3457140abb5bfba65831f39682b75bb082a734e2bc21fbfbd37d8430620dc5d2"
+    },
+    "fat-portable-zlib-metadata-first-vm.log": {
+      "bytes": 3670,
+      "sha256": "15264d29e9ad4d6dc9801b3a7e7632f404698b73394a678c02682fd0c3bc6ff2"
+    },
+    "fat-portable-zlib-platform-note.json": {
+      "bytes": 1902,
+      "sha256": "2b6b089926368a86e87b1147b478bef811168ab0e39e8909f0ad8952a8cb7859"
+    },
+    "fat-sevenzip-oracle.json": {
+      "bytes": 10878,
+      "sha256": "9529268d896b506e4a5a069a8b4d404db3863637d06035a610e81ebc1854b68b"
+    },
+    "fat-test-fixture-source-transition.json": {
+      "bytes": 171064,
+      "sha256": "9e454cfbc0c609546facb77d2c07be245675ed6b1da5003a10ddc511dfb123c6"
+    },
+    "final-validation.json": {
+      "bytes": 6990,
+      "sha256": "bbc8e44092dafb7c1f9324dbc0353907e26286f59e2a8a6f123e6592a414ae23"
+    },
+    "fixture-reproduction-receipt.json": {
+      "bytes": 3152,
+      "sha256": "578ba2300d041ccb78edc9249bb6efe707064e7b770d1acf5bb472c447319304"
+    },
+    "fixture-reproduction.log": {
+      "bytes": 2303,
+      "sha256": "0a1d91d5d5d328c778ae838923b78bcd21adf410b6201bb91595087ab4135367"
+    },
+    "hosted-ci-qualification.json": {
+      "bytes": 24126,
+      "sha256": "c186e7832a9725d1213694f315931d120f0a34d8da96d15f2750b141097e6ad5"
+    },
+    "hosted-ci-runtime.json": {
+      "bytes": 12134,
+      "sha256": "7cd6cabffb22d1055bfedf437f09f0e7d3f1a9bd0598ec0a7817d3c96946a7aa"
+    },
+    "implementation-plan.md": {
+      "bytes": 3137,
+      "sha256": "83097ecd3c08ea1b04c15c59ca6bc37a4fddcedb2f5c0e4a33734ae65a015011"
+    },
+    "independent-fixtures.md": {
+      "bytes": 5657,
+      "sha256": "0d2182fa15502be5848537ff76626dc54d17529ae06e44e814d4edac873071c6"
+    },
+    "pr-description.md": {
+      "bytes": 9135,
+      "sha256": "82b69f8bccac6ae6aab26bfe28df8ec8529c38917d6c68750b51ff70758f46de"
+    },
+    "qualification.md": {
+      "bytes": 14736,
+      "sha256": "ba3efa642bbf85b4b55812586660ad207ad9125a05f08b13e5ec4213f955e608"
+    },
+    "reconciliation-before-fat.json": {
+      "bytes": 15636,
+      "sha256": "779554d5f6e03a440afd97be86b2627246af7cb665ea50059edab5f07615752a"
+    },
+    "reconciliation-final.json": {
+      "bytes": 24988,
+      "sha256": "ff43d5835282be169541efc9a217d5a0b0421fc304f26242ea0bcda61063c1fc"
+    },
+    "remote-checkpoints.json": {
+      "bytes": 3015,
+      "sha256": "2739a60c97c9071659a24823f21add6589fdf7fe6d14d264fdea3855a619066d"
+    },
+    "run_fat_portable.py": {
+      "bytes": 7146,
+      "sha256": "6e27e144991cbb01feb132b60812acabf12d2c81bc8c09aaa180e5bb23bf3ee7"
+    }
+  }
+}

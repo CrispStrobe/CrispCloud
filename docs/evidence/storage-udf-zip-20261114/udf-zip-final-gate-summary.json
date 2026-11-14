@@ -1,0 +1,68 @@
+{
+  "files": {
+    "archive_container_dispatch_test.dart": {
+      "success": 35
+    },
+    "archive_container_viewer_test.dart": {
+      "success": 26
+    },
+    "archive_dmg_reader_test.dart": {
+      "success": 82
+    },
+    "archive_dmg_rewrite_test.dart": {
+      "success": 29
+    },
+    "archive_format_registry_test.dart": {
+      "success": 69
+    },
+    "archive_iso_multiextent_test.dart": {
+      "success": 32
+    },
+    "archive_iso_reader_test.dart": {
+      "success": 47
+    },
+    "archive_iso_streamed_test.dart": {
+      "success": 13
+    },
+    "archive_job_queue_test.dart": {
+      "success": 14
+    },
+    "archive_job_recovery_dialog_test.dart": {
+      "success": 5
+    },
+    "archive_job_recovery_test.dart": {
+      "success": 9
+    },
+    "archive_udf_integration_test.dart": {
+      "success": 15
+    },
+    "archive_udf_reader_review_test.dart": {
+      "success": 8
+    },
+    "archive_udf_reader_test.dart": {
+      "success": 60
+    },
+    "archive_zip_recovery_dialog_test.dart": {
+      "success": 10
+    },
+    "archive_zip_recovery_queue_test.dart": {
+      "success": 5
+    },
+    "archive_zip_recovery_review_test.dart": {
+      "success": 1
+    },
+    "archive_zip_recovery_service_test.dart": {
+      "success": 31
+    },
+    "archive_zip_recovery_workflow_test.dart": {
+      "success": 15
+    },
+    "browser_menu_layout_test.dart": {
+      "success": 20
+    }
+  },
+  "total": {
+    "success": 526
+  },
+  "success": true
+}

@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "oracle": "Python standard library zipfile, testzip CRC and SHA256",
+  "candidate_receipt_sha256": "94dbd293dbad164906d996e922fea260208effe1a23dfffa91764f075bd42e00",
+  "cases": [
+    {
+      "name": "complete",
+      "archive_bytes": 7573,
+      "archive_sha256": "390387a457b0d1d9a49195b1979b22d4e9c99ca93a9a98f5ff7458b640fda90e",
+      "files": {
+        "stored.txt": {
+          "bytes": 34,
+          "sha256": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+        },
+        "deflated.bin": {
+          "bytes": 7168,
+          "sha256": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+        },
+        "café-雪.txt": {
+          "bytes": 24,
+          "sha256": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "missing-directory",
+      "archive_bytes": 7573,
+      "archive_sha256": "390387a457b0d1d9a49195b1979b22d4e9c99ca93a9a98f5ff7458b640fda90e",
+      "files": {
+        "stored.txt": {
+          "bytes": 34,
+          "sha256": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+        },
+        "deflated.bin": {
+          "bytes": 7168,
+          "sha256": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+        },
+        "café-雪.txt": {
+          "bytes": 24,
+          "sha256": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "deflate-signed-descriptor",
+      "archive_bytes": 7299,
+      "archive_sha256": "ba4ed6c5ac408333762974d680a3577fb67d85b33875100152e8eacb2dc6e191",
+      "files": {
+        "deflated.bin": {
+          "bytes": 7168,
+          "sha256": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "deflate-unsigned-descriptor",
+      "archive_bytes": 7299,
+      "archive_sha256": "ba4ed6c5ac408333762974d680a3577fb67d85b33875100152e8eacb2dc6e191",
+      "files": {
+        "deflated.bin": {
+          "bytes": 7168,
+          "sha256": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "truncated-final-member",
+      "archive_bytes": 7438,
+      "archive_sha256": "74077a8ab6d06c3f70973b949e5e66ea2c5c1351b0c9ecd1f2347a77c6e80ff3",
+      "files": {
+        "stored.txt": {
+          "bytes": 34,
+          "sha256": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+        },
+        "deflated.bin": {
+          "bytes": 7168,
+          "sha256": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "bad-crc-after-good",
+      "archive_bytes": 161,
+      "archive_sha256": "d96ca841448efa4a86d99ee2a187bbf367801449e0e1005d625131abe2b26082",
+      "files": {
+        "stored.txt": {
+          "bytes": 34,
+          "sha256": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "unsafe-then-safe",
+      "archive_bytes": 127,
+      "archive_sha256": "738c03f5ee405cbde721a7bb37fdb77b752f54f34638fb2f6815269fa7f51bf1",
+      "files": {
+        "safe.txt": {
+          "bytes": 4,
+          "sha256": "8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860"
+        }
+      },
+      "all_crcs_match": true
+    },
+    {
+      "name": "deflate-input-rollover",
+      "archive_bytes": 26273,
+      "archive_sha256": "ac966e4fb5798d625a0446c79f032e66eedbfdd5f24ec8c0e791cab29622f45c",
+      "files": {
+        "rollover.bin": {
+          "bytes": 26003,
+          "sha256": "c502520ea7243755a4935fc8824cd810b2a6ed734c68c443fec6914f1d559d26"
+        },
+        "stored.txt": {
+          "bytes": 34,
+          "sha256": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+        }
+      },
+      "all_crcs_match": true
+    }
+  ],
+  "passed": 8,
+  "verified_members": 14
+}

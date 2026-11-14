@@ -1,0 +1,69 @@
+{
+  "recorded_at_utc": "2026-11-14T05:38:12Z",
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/52be1abfc881/runtime-setup/flutter"
+  },
+  "flutter_source": "https://github.com/flutter/flutter/tree/3.47.8",
+  "standalone_dart": {
+    "version": "Dart SDK version: 3.14.0 (stable) (Wed Nov 4 16:28:39 2026 -0800) on \"linux_x64\"",
+    "sdk_url": "https://storage.googleapis.com/dart-archive/channels/stable/release/3.14.0/sdk/dartsdk-linux-x64-release.zip",
+    "sdk_sha256": "90f7fd75fe21e16437778df882f280910d9bbd4809c90024f21de82435dded1d"
+  },
+  "node": "v24.22.1",
+  "clang": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/52be1abfc881/runtime-setup/llvm19/usr/lib/llvm-19/bin",
+  "gcc": "gcc (Debian 14.2.0-19) 14.2.0",
+  "debian_packages": {
+    "clang-19_19.1.7-3+b1_amd64.deb": {
+      "sha256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4",
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb"
+    },
+    "libclang-common-19-dev_19.1.7-3+b1_amd64.deb": {
+      "sha256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc",
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb"
+    },
+    "libclang-cpp19_19.1.7-3+b1_amd64.deb": {
+      "sha256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47",
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb"
+    }
+  },
+  "native_assets": {
+    "sqlite3": {
+      "library_sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+      "sqlite_version": "3.53.2",
+      "source": "Original sqlite3 3.3.3 hook download; no source override"
+    },
+    "dart_smb2": {
+      "library_sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "source": "Original dart_smb2 hook, libsmb2-r10 linux-x86_64 SHA-256 pinned in app source"
+    },
+    "flutter_pty2": {
+      "source": "Original app C sources compiled by actual Clang 19.1.7"
+    },
+    "crisp_ebook_conversion": {
+      "source": "Optional hook disabled only during isolated archive-test host profile; not qualified"
+    }
+  },
+  "scratch_environment": {
+    "PUB_CACHE": "/workspace/scratch/52be1abfc881/runtime-setup/pub-cache",
+    "TMPDIR": "/workspace/scratch/52be1abfc881/runtime-setup/tmp",
+    "env_script": "/workspace/scratch/52be1abfc881/runtime-setup/env.sh",
+    "app_validation_copy": "/workspace/scratch/52be1abfc881/runtime-setup/app-validation"
+  },
+  "validation_did_not_modify_primary_checkout_manifests": true,
+  "commands": [
+    "/workspace/scratch/52be1abfc881/runtime-setup/sync_validation_sources.py --include-manifests",
+    "/workspace/scratch/52be1abfc881/runtime-setup/run_native_profile.py --label NAME -- test --no-pub --reporter json TEST_PATHS"
+  ]
+}

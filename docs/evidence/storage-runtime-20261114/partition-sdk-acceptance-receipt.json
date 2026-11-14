@@ -1,0 +1,54 @@
+{
+  "dart_sdk": "3.13.7",
+  "flutter_sdk": "3.47.8",
+  "node": "v24.22.1",
+  "published_source_commit": "fb57e8abb22e1a2fe588c1a22d9ac0326e7358ee",
+  "vm_command": [
+    "dart",
+    "app-validation/test/support/disk_partition_web_acceptance.dart"
+  ],
+  "compile_command": [
+    "dart",
+    "compile",
+    "js",
+    "-O2",
+    "app-validation/test/support/disk_partition_web_acceptance.dart",
+    "-o",
+    "partition-final-web-acceptance.js"
+  ],
+  "node_command": [
+    "node",
+    "-e",
+    "globalThis.self = globalThis; require(process.argv[1]);",
+    "/workspace/scratch/52be1abfc881/runtime-setup/partition-final-web-acceptance.js"
+  ],
+  "node_environment_note": "Only aliases the browser self global to Node globalThis for Dart async timer support; executes the actual generated JavaScript.",
+  "vm_exit_code": 0,
+  "compile_exit_code": 0,
+  "node_exit_code": 0,
+  "vm_result": "Disk partition acceptance: 14 groups passed (516 checks).",
+  "node_result": "Disk partition acceptance: 14 groups passed (516 checks).",
+  "groups": 14,
+  "checks": 516,
+  "tested_file_sha256": {
+    "lib/services/disk_partition_inspector.dart": "46f5e40daa9818f6bf05b2cfe67bf0e03617deb58a6b5b719d51453391090ebf",
+    "lib/services/binary_structure_service.dart": "d78af3f2decd07e42370e4e5054d10ff79d9b620518d8dd8b4fb8f316e7c17ad",
+    "test/support/disk_partition_fixture.dart": "98131f8233d6a3d7169e78f6ffd04ac0d7289417528b899dd499e4391c0ec82a",
+    "test/support/disk_partition_web_acceptance.dart": "7eea895265bc909c198b198c1d92e7bf7c6478702022c1139108bb2a84def6f7"
+  },
+  "published_source_matches_tested_files": {
+    "lib/services/disk_partition_inspector.dart": true,
+    "lib/services/binary_structure_service.dart": true,
+    "test/support/disk_partition_fixture.dart": true,
+    "test/support/disk_partition_web_acceptance.dart": true
+  },
+  "generated_javascript": {
+    "bytes": 138279,
+    "sha256": "83c24572f4de0afe889fe33ae5569513cb2b05cb56c5d49df3d1c4269204b007"
+  },
+  "log_sha256": {
+    "partition-vm-acceptance.log": "b8c41f6bded7f70dff518d93134f5bbeef6dab3a6b158ed86c490118bc0d51ed",
+    "partition-js-compile.log": "d91daf0c837ff02e2a516b4b576aa9d7c6d6986e8d70e85f93b1b8dd42e56238",
+    "partition-js-acceptance.log": "b8c41f6bded7f70dff518d93134f5bbeef6dab3a6b158ed86c490118bc0d51ed"
+  }
+}

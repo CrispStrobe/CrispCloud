@@ -1,0 +1,1553 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "base": "4d65b86dab36ca8f5dcd192c776de369aa5a4932",
+  "branches": [
+    {
+      "name": "checkpoint/app-final-next-20261113",
+      "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+      "reachable_from_base": true
+    },
+    {
+      "name": "checkpoint/app-oracle-rollout-20261113",
+      "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+      "reachable_from_base": true
+    },
+    {
+      "name": "checkpoint/ebook-native-input-20261112",
+      "sha": "7e20b40c1b797d463704106c881b9e84415f4fd7",
+      "reachable_from_base": true
+    },
+    {
+      "name": "feature/apache-file-viewer-20261113",
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "reachable_from_base": true
+    },
+    {
+      "name": "feature/archive-commander-parity-20261113",
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "reachable_from_base": true
+    },
+    {
+      "name": "feature/ebook-parity-canary-20261112",
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "reachable_from_base": true
+    },
+    {
+      "name": "feature/office-fidelity-gaps-20261113",
+      "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+      "reachable_from_base": true
+    },
+    {
+      "name": "feature/office-fidelity-oracle-validation-20261113",
+      "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+      "reachable_from_base": true
+    },
+    {
+      "name": "integration/archive-containers-20261113",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "reachable_from_base": true
+    },
+    {
+      "name": "main",
+      "sha": "4d65b86dab36ca8f5dcd192c776de369aa5a4932",
+      "reachable_from_base": true
+    }
+  ],
+  "pull_requests": [
+    {
+      "number": 100,
+      "title": "Integrate all saved branch work and extend archive/container support",
+      "state": "closed",
+      "merged_at": "2026-11-13T22:13:16Z",
+      "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "head_ref": "integration/archive-containers-20261113",
+      "base": "e13fb727e4cfe785219c1ef31206d2fbefa8d6c9",
+      "merge": "81639c44da5c9c905e5bcbe8d04308fce7bda17a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/100",
+      "reachable_from_base": true
+    },
+    {
+      "number": 97,
+      "title": "Expand Commander archive workflows on the shared operation queue",
+      "state": "closed",
+      "merged_at": "2026-11-13T21:42:42Z",
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "head_ref": "feature/archive-commander-parity-20261113",
+      "base": "07928e070135d422fbd136fccd1bf53d0d2d47b6",
+      "merge": "1918dfd665a1914150d23e49de10abccb6ddbb76",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/97",
+      "reachable_from_base": true
+    },
+    {
+      "number": 95,
+      "title": "Improve document fonts, preview alternatives, and legacy DOC recovery",
+      "state": "closed",
+      "merged_at": "2026-11-13T21:42:43Z",
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "head_ref": "feature/apache-file-viewer-20261113",
+      "base": "07928e070135d422fbd136fccd1bf53d0d2d47b6",
+      "merge": "3d47583736eee67e5236f6c602c57846535ec54c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/95",
+      "reachable_from_base": true
+    },
+    {
+      "number": 94,
+      "title": "Retain final DOC fidelity receipts and verified source pins",
+      "state": "closed",
+      "merged_at": "2026-11-12T21:21:51Z",
+      "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+      "merge": "7f8248de581856c53e022ac7e2ddbc91db9e3d54",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/94",
+      "reachable_from_base": true
+    },
+    {
+      "number": 93,
+      "title": "Archive member rearrangement and preserved legacy CPIO writing",
+      "state": "closed",
+      "merged_at": null,
+      "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "head_ref": "feature/archive-rearrange-cpio-20261112",
+      "base": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "merge": "34738b857ce24b31a39d0da84b823a898fce91ba",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/93",
+      "reachable_from_base": true
+    },
+    {
+      "number": 92,
+      "title": "Add reviewed archive copy, integrity reports and portable codecs",
+      "state": "closed",
+      "merged_at": null,
+      "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "head_ref": "feature/archive-workflows-codecs-20261112",
+      "base": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "merge": "e9c8d83fc4f7154c0a3300f249e5a05d9f02b9e7",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/92",
+      "reachable_from_base": true
+    },
+    {
+      "number": 91,
+      "title": "Integrate tested DOC fidelity fixes and complete source receipts",
+      "state": "closed",
+      "merged_at": "2026-11-12T20:12:46Z",
+      "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9",
+      "merge": "f9cc264c8030b713f9071522bf4ed74559576ffa",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/91",
+      "reachable_from_base": true
+    },
+    {
+      "number": 90,
+      "title": "Browse RPM, CAB and Apple PBZX/portable CPIO payloads",
+      "state": "closed",
+      "merged_at": null,
+      "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "head_ref": "feature/archive-package-readers-20261112",
+      "base": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "merge": "af4e74c835c2a6b8cd2cb30c53e04e937ea561ba",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/90",
+      "reachable_from_base": true
+    },
+    {
+      "number": 89,
+      "title": "Expand writable archives and verified data-image creation",
+      "state": "closed",
+      "merged_at": null,
+      "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "head_ref": "feature/archive-writers-20261112",
+      "base": "120f839ab9091bdbedf326621347ee737140e043",
+      "merge": "f3955eca444d7cb48d0a0503447b48a6cba9c36a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/89",
+      "reachable_from_base": true
+    },
+    {
+      "number": 88,
+      "title": "Integrate DOC fidelity parser and vector previews with verified source pins",
+      "state": "closed",
+      "merged_at": "2026-11-12T18:21:06Z",
+      "head": "b100cd751688f13609a8829180b487b381588d14",
+      "head_ref": "feature/office-fidelity-oracles-20261112",
+      "base": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "merge": "504101505a059c0956011cc16d5b22a93d1a5b3b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/88",
+      "reachable_from_base": true
+    },
+    {
+      "number": 87,
+      "title": "Integrate measured legacy DOC fidelity and preserve native review semantics",
+      "state": "closed",
+      "merged_at": "2026-11-12T18:32:19Z",
+      "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "merge": "c2799b7208d7e5b466ad84da515be1ab28325d81",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/87",
+      "reachable_from_base": true
+    },
+    {
+      "number": 86,
+      "title": "Add ISO/DMG and package archive readers with source-backed F3 browsing",
+      "state": "closed",
+      "merged_at": "2026-11-12T18:21:06Z",
+      "head": "120f839ab9091bdbedf326621347ee737140e043",
+      "head_ref": "feature/archive-containers-20261112",
+      "base": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "merge": "1569d49d4dc78da7b53100e525b89e7fa72aa515",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/86",
+      "reachable_from_base": true
+    },
+    {
+      "number": 85,
+      "title": "Consume expanded Office fidelity and recover font and picture workflows",
+      "state": "closed",
+      "merged_at": null,
+      "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "head_ref": "feature/office-fidelity-expansion-20261112",
+      "base": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "merge": "9a7884cf0e7dae9bba3a8c5cca0f00c3f41fdf70",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/85",
+      "reachable_from_base": true
+    },
+    {
+      "number": 84,
+      "title": "Consolidate Linux ebook host readiness and platform parity recovery",
+      "state": "closed",
+      "merged_at": null,
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "head_ref": "feature/ebook-parity-canary-20261112",
+      "base": "5dce28e8c64b2557d3e42ef305da916e3bfcd91f",
+      "merge": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/84",
+      "reachable_from_base": true
+    },
+    {
+      "number": 83,
+      "title": "Bound remote viewer preparation and temporary-copy cleanup",
+      "state": "closed",
+      "merged_at": null,
+      "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "head_ref": "feature/viewer-spool-lifecycle-20261112",
+      "base": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "merge": "332edff034987bf4a80d5eb1948fed143915e304",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/83",
+      "reachable_from_base": true
+    },
+    {
+      "number": 82,
+      "title": "Use standalone MPL DOC parser and extend reviewed DOCX/DOCM preservation",
+      "state": "closed",
+      "merged_at": "2026-11-12T15:38:51Z",
+      "head": "085495527e0ab02f52eeded928d54cb766b79910",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "base": "02be67fecad5be2a040e6dcd1579a2a54fa51933",
+      "merge": "21d3c51759b530624b88c03c8a34216b69bb5687",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/82",
+      "reachable_from_base": true
+    },
+    {
+      "number": 81,
+      "title": "Add reviewed archive imports and verified native publication",
+      "state": "closed",
+      "merged_at": null,
+      "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "head_ref": "feature/writable-archive-endpoints-20261112",
+      "base": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "merge": "f5e4b2afeea2c4b32da35140605e0fc1f2617688",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/81",
+      "reachable_from_base": true
+    },
+    {
+      "number": 80,
+      "title": "Add retained external editing with revision-guarded remote saves",
+      "state": "closed",
+      "merged_at": null,
+      "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "head_ref": "feature/external-remote-editing-20261112",
+      "base": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "merge": "9613144cfdcf202f79188aca9838a91acbaf422e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/80",
+      "reachable_from_base": true
+    },
+    {
+      "number": 79,
+      "title": "Consume shared Office font, table and custom-tab improvements",
+      "state": "closed",
+      "merged_at": "2026-11-12T15:38:50Z",
+      "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "head_ref": "feature/office-fidelity-followup-20261112",
+      "base": "02be67fecad5be2a040e6dcd1579a2a54fa51933",
+      "merge": "3c5220d8c7e90c8f8e6cdb2b63f056b2cbae3d10",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/79",
+      "reachable_from_base": true
+    },
+    {
+      "number": 78,
+      "title": "Add verified archive publication and recovery foundation",
+      "state": "closed",
+      "merged_at": null,
+      "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "head_ref": "feature/archive-publication-recovery-20261112",
+      "base": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "merge": "c25048576be6673105be97be32300389dd7b56d6",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/78",
+      "reachable_from_base": true
+    },
+    {
+      "number": 77,
+      "title": "Add reviewed external text and image comparison tools",
+      "state": "closed",
+      "merged_at": null,
+      "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "head_ref": "feature/external-comparison-tools-20261112",
+      "base": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "merge": "61b181994e78f4eb1b80d4a47d8ca0e1252d4027",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/77",
+      "reachable_from_base": true
+    },
+    {
+      "number": 76,
+      "title": "Add conditional publication for retained remote edits",
+      "state": "closed",
+      "merged_at": null,
+      "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "head_ref": "feature/conditional-remote-publication-20261112",
+      "base": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "merge": "673f739adeb0ca80334a1a90f0be8e1e0ba3c325",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/76",
+      "reachable_from_base": true
+    },
+    {
+      "number": 75,
+      "title": "Add retained private staging for external tools",
+      "state": "closed",
+      "merged_at": null,
+      "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "head_ref": "feature/private-tool-staging-20261112",
+      "base": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "merge": "efc05f6833fcd1d59906f6968311dfccbdf21f3a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/75",
+      "reachable_from_base": true
+    },
+    {
+      "number": 74,
+      "title": "Scope external tools and writable archive endpoints",
+      "state": "closed",
+      "merged_at": null,
+      "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "head_ref": "feature/external-tools-archive-scope-20261112",
+      "base": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "merge": "678709cbac61c7ec33ccdfdc339f38fd48c1b019",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/74",
+      "reachable_from_base": true
+    },
+    {
+      "number": 73,
+      "title": "Add maintained offline guides and localized help reader",
+      "state": "closed",
+      "merged_at": null,
+      "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "head_ref": "feature/localized-help-20261112",
+      "base": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "merge": "22e77aa34a6d8281efcce526c8b49e5faed78a35",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/73",
+      "reachable_from_base": true
+    },
+    {
+      "number": 72,
+      "title": "Add persistent gathering stack with reviewed grouped transfers",
+      "state": "closed",
+      "merged_at": null,
+      "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "head_ref": "feature/gathering-stack-20261112",
+      "base": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "merge": "440846b01325fcdc87ef449dc6c8eeccad042e45",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/72",
+      "reachable_from_base": true
+    },
+    {
+      "number": 71,
+      "title": "Add reviewed command entry and scoped filename/path insertion",
+      "state": "closed",
+      "merged_at": null,
+      "head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "head_ref": "feature/command-entry-20261112",
+      "base": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "merge": "16a6af13e912623c334e55dfff721b3ac3101560",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/71",
+      "reachable_from_base": true
+    },
+    {
+      "number": 70,
+      "title": "Add verified FTP download resume and durable partial stages",
+      "state": "closed",
+      "merged_at": null,
+      "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "head_ref": "feature/ftp-download-resume-20261112",
+      "base": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "merge": "e3089b3c3813e6f3104657da0262c4ecca63352b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/70",
+      "reachable_from_base": true
+    },
+    {
+      "number": 69,
+      "title": "Scope the next gathering, command, resume and help increments",
+      "state": "closed",
+      "merged_at": null,
+      "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "head_ref": "feature/gap-extension-scope-20261112",
+      "base": "403e942dc99779883210125a01841ef209e19d2e",
+      "merge": "9122c5c9f6b980cf552d55fc54cbd83adc4cafd5",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/69",
+      "reachable_from_base": true
+    },
+    {
+      "number": 68,
+      "title": "Consolidate Quds Office fidelity and captured legacy Word conversion",
+      "state": "closed",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "head_ref": "feature/office-fidelity-gap-closure-20261112",
+      "base": "977b5037f133cb2d33c57db761864183455a705e",
+      "merge": "4c9164d227f57b8e59beab6da8b59037965345ef",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/68",
+      "reachable_from_base": true
+    },
+    {
+      "number": 67,
+      "title": "Add verified UUE, XXE and single-part MIME file conversion",
+      "state": "closed",
+      "merged_at": null,
+      "head": "403e942dc99779883210125a01841ef209e19d2e",
+      "head_ref": "feature/file-conversion-20261112",
+      "base": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "merge": "c0308ec525a45a720f04f01903ffd3d2c132a28e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/67",
+      "reachable_from_base": true
+    },
+    {
+      "number": 66,
+      "title": "Add SOCKS4 and SOCKS4a routing for native HTTP clients",
+      "state": "closed",
+      "merged_at": null,
+      "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "head_ref": "feature/socks4-http-routing-20261112",
+      "base": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "merge": "f748371afe0bccbf3a901a6f3cf159cad57ac30b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/66",
+      "reachable_from_base": true
+    },
+    {
+      "number": 65,
+      "title": "Add configurable browser menus and protected recovery controls",
+      "state": "closed",
+      "merged_at": null,
+      "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "head_ref": "feature/configurable-menus-20261112",
+      "base": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "merge": "d628a1e4ed00886ad45e7eb1fa7f344671b2798f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/65",
+      "reachable_from_base": true
+    },
+    {
+      "number": 64,
+      "title": "Close FTP transports during stalled TCP and TLS setup",
+      "state": "closed",
+      "merged_at": null,
+      "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "head_ref": "feature/ftp-transport-lifetime-20261112",
+      "base": "baccf470e946fc86fde41c96443423006eac2be7",
+      "merge": "9e62f1e3c50e4a1e7e7ffe9c7f00b820da5c6e54",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/64",
+      "reachable_from_base": true
+    },
+    {
+      "number": 63,
+      "title": "Open saved items directly with captured-source guards",
+      "state": "closed",
+      "merged_at": null,
+      "head": "baccf470e946fc86fde41c96443423006eac2be7",
+      "head_ref": "feature/quick-open-actions-20261112",
+      "base": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "merge": "6d37334b33ff49b4057657e167d602aafc15a025",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/63",
+      "reachable_from_base": true
+    },
+    {
+      "number": 62,
+      "title": "CI: dart format for #56's adapters; resolve vendored office editor against vendored engine",
+      "state": "closed",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "head_ref": "fix/ci-format-analyze",
+      "base": "977b5037f133cb2d33c57db761864183455a705e",
+      "merge": "2a8a63470b9c3eb03d3f40e30ea0c837ea7b5d1d",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/62",
+      "reachable_from_base": true
+    },
+    {
+      "number": 61,
+      "title": "Route incoming drops through captured copy review",
+      "state": "closed",
+      "merged_at": null,
+      "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "head_ref": "feature/incoming-drop-routing-20261112",
+      "base": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "merge": "09bdaf62782a1e37f003aa1b16cdd1867029c150",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/61",
+      "reachable_from_base": true
+    },
+    {
+      "number": 60,
+      "title": "Configure reviewed external terminal launches",
+      "state": "closed",
+      "merged_at": null,
+      "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "head_ref": "feature/external-terminal-20261112",
+      "base": "132f70e746aa9815a51a046ab02e83393d084622",
+      "merge": "6c754800fa5ed31837ece4b6fffeff4bc7d0bbe7",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/60",
+      "reachable_from_base": true
+    },
+    {
+      "number": 59,
+      "title": "Add bounded conflict previews and safe file details",
+      "state": "closed",
+      "merged_at": null,
+      "head": "132f70e746aa9815a51a046ab02e83393d084622",
+      "head_ref": "feature/conflict-review-20261112",
+      "base": "9887b53272d5f747cae9f73b363748985937ad05",
+      "merge": "6004d2839aed99d301c91c3d14ed9e7beba07de1",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/59",
+      "reachable_from_base": true
+    },
+    {
+      "number": 58,
+      "title": "Scope remaining file manager gaps and acceptance lanes",
+      "state": "closed",
+      "merged_at": null,
+      "head": "9887b53272d5f747cae9f73b363748985937ad05",
+      "head_ref": "feature/file-manager-gap-closure-20261112",
+      "base": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "merge": "75ca73d766dccb48495cdb2f665d06ae49e14359",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/58",
+      "reachable_from_base": true
+    },
+    {
+      "number": 57,
+      "title": "Rust Filen/Internxt engines, CLI support, reliable Internxt on both engines; fixes #44 #46 #48",
+      "state": "closed",
+      "merged_at": "2026-11-12T09:52:17Z",
+      "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "head_ref": "feature/rust-cloud-engines",
+      "base": "d32191c3af8d74c9ec59be20d3183e323dea532f",
+      "merge": "c33ddca4fcdb76d74ba2c44aa5b596fd4d9e2dbd",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/57",
+      "reachable_from_base": true
+    },
+    {
+      "number": 56,
+      "title": "Remote adapters: POSIX path rules on every platform (Windows backslash keys)",
+      "state": "closed",
+      "merged_at": "2026-11-12T10:12:48Z",
+      "head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "head_ref": "fix/remote-posix-paths",
+      "base": "d32191c3af8d74c9ec59be20d3183e323dea532f",
+      "merge": "977b5037f133cb2d33c57db761864183455a705e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/56",
+      "reachable_from_base": true
+    },
+    {
+      "number": 55,
+      "title": "Extend file viewers, KeePass editing, Office conversion and path favorites",
+      "state": "closed",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "base": "977b5037f133cb2d33c57db761864183455a705e",
+      "merge": "dae3374fe908010f1bbdc45fe81b377b2d975a0f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/55",
+      "reachable_from_base": true
+    },
+    {
+      "number": 54,
+      "title": "Add file manager workflow capabilities and document remaining gaps",
+      "state": "closed",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "head_ref": "feature/file-manager-capabilities-20261112",
+      "base": "4946a9a29b4cec0dd8a2efd3cb0b3200d620f39c",
+      "merge": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/54",
+      "reachable_from_base": true
+    },
+    {
+      "number": 53,
+      "title": "Harden ebook reader lifecycle and Linux startup recovery",
+      "state": "closed",
+      "merged_at": "2026-11-12T15:38:51Z",
+      "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "head_ref": "feature/ebook-reader-editor",
+      "base": "02be67fecad5be2a040e6dcd1579a2a54fa51933",
+      "merge": "911f87dfbeea2f527acbe59bdff844c67ca269c4",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/53",
+      "reachable_from_base": true
+    },
+    {
+      "number": 52,
+      "title": "crisp_storage: bundle the Rust SMB bridge via an opt-in build hook",
+      "state": "closed",
+      "merged_at": "2026-11-12T06:10:46Z",
+      "head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "head_ref": "feature/rust-smb-bundled",
+      "base": "8c8d5c6c0e0af1a43a5518c126c5ba2fac947fa1",
+      "merge": "29f494a59b307d1cf212ec1cfdcd15ef39822b4a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/52",
+      "reachable_from_base": true
+    },
+    {
+      "number": 51,
+      "title": "tool: sign_macos_local.sh finds identities outside the search list",
+      "state": "closed",
+      "merged_at": "2026-11-11T19:33:16Z",
+      "head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "head_ref": "fix/sign-script-keychain",
+      "base": "cb01c99e1def6d24f1867fbfe5bb793467ba8c75",
+      "merge": "5ec939e89d4ffd6acdf043993f37e8bf048c7c35",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/51",
+      "reachable_from_base": true
+    },
+    {
+      "number": 50,
+      "title": "ci: richer store screenshot content",
+      "state": "closed",
+      "merged_at": "2026-11-11T19:29:10Z",
+      "head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "head_ref": "fix/store-screenshots-content",
+      "base": "957e3e280062897d16438e9a48865872d29fd4bd",
+      "merge": "cb01c99e1def6d24f1867fbfe5bb793467ba8c75",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/50",
+      "reachable_from_base": true
+    },
+    {
+      "number": 49,
+      "title": "ci: fix store screenshot navigation and capture scale",
+      "state": "closed",
+      "merged_at": "2026-11-11T18:33:27Z",
+      "head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "head_ref": "fix/store-screenshots-capture",
+      "base": "05de9cfaa1d3727e7e4fd53b51ec63c5c39438cc",
+      "merge": "666770e8102b1f3cca71095ff14c71013aa38eef",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/49",
+      "reachable_from_base": true
+    },
+    {
+      "number": 47,
+      "title": "ci: capture Mac App Store screenshots from the real app",
+      "state": "closed",
+      "merged_at": "2026-11-11T08:38:35Z",
+      "head": "be318f380fc47f94975a35c0924c89190d46f990",
+      "head_ref": "chore/store-screenshots",
+      "base": "f124b790cafa4f0930df7845dba59ae514a65c92",
+      "merge": "05de9cfaa1d3727e7e4fd53b51ec63c5c39438cc",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/47",
+      "reachable_from_base": true
+    },
+    {
+      "number": 45,
+      "title": "release: advance to build 1.1.0+12 for TestFlight",
+      "state": "closed",
+      "merged_at": "2026-11-11T08:13:27Z",
+      "head": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "head_ref": "release/build-12",
+      "base": "18d8167a3d2a0113d8ca44e8a8fd89b6b6f57108",
+      "merge": "f124b790cafa4f0930df7845dba59ae514a65c92",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/45",
+      "reachable_from_base": true
+    },
+    {
+      "number": 43,
+      "title": "tool: sign local macOS builds with the team development identity",
+      "state": "closed",
+      "merged_at": "2026-11-11T08:00:53Z",
+      "head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "head_ref": "chore/macos-local-signing",
+      "base": "ae9683f0b40f56f9abee5cf06a2ba09571d4951d",
+      "merge": "18d8167a3d2a0113d8ca44e8a8fd89b6b6f57108",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/43",
+      "reachable_from_base": true
+    },
+    {
+      "number": 42,
+      "title": "fix: grant sandbox access when a listed keychain is chosen",
+      "state": "closed",
+      "merged_at": "2026-11-11T07:38:22Z",
+      "head": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "head_ref": "fix/keychain-picker-access",
+      "base": "4d1cd63b84044f2fa7c63a1c3ee433c769e7083e",
+      "merge": "ae9683f0b40f56f9abee5cf06a2ba09571d4951d",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/42",
+      "reachable_from_base": true
+    },
+    {
+      "number": 41,
+      "title": "fix: offer a confirmed choice of another credential store at startup",
+      "state": "closed",
+      "merged_at": "2026-11-11T06:07:02Z",
+      "head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "head_ref": "fix/startup-storage-choices",
+      "base": "92078b5d7db04c2f1c211cff62c08eceaf9ddf8a",
+      "merge": "4d1cd63b84044f2fa7c63a1c3ee433c769e7083e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/41",
+      "reachable_from_base": true
+    },
+    {
+      "number": 40,
+      "title": "Improve file workspace workflows and directory scan performance",
+      "state": "closed",
+      "merged_at": "2026-11-11T21:35:22Z",
+      "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "head_ref": "feature/file-manager-ux-20261110",
+      "base": "05de9cfaa1d3727e7e4fd53b51ec63c5c39438cc",
+      "merge": "d74c3aae56d9d628db0b71cbd3aae71469fece2c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/40",
+      "reachable_from_base": true
+    },
+    {
+      "number": 39,
+      "title": "Authenticate native asset cache downloads",
+      "state": "closed",
+      "merged_at": "2026-11-09T08:13:23Z",
+      "head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "head_ref": "fix/prime-gh-token",
+      "base": "948eb7c8774662c81faaff6109ee935b85b6c8df",
+      "merge": "92078b5d7db04c2f1c211cff62c08eceaf9ddf8a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/39",
+      "reachable_from_base": true
+    },
+    {
+      "number": 38,
+      "title": "Prime sqlite3 Apple assets from the verified mirror",
+      "state": "closed",
+      "merged_at": "2026-11-09T08:02:13Z",
+      "head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "head_ref": "fix/sqlite-ci-cache",
+      "base": "e8b36e59c111facb1113b776c4e0ac866a82470a",
+      "merge": "948eb7c8774662c81faaff6109ee935b85b6c8df",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/38",
+      "reachable_from_base": true
+    },
+    {
+      "number": 37,
+      "title": "Prime dart_smb2 Apple assets from a reliable mirror",
+      "state": "closed",
+      "merged_at": "2026-11-09T07:24:58Z",
+      "head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "head_ref": "fix/smb2-ci-cache",
+      "base": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
+      "merge": "e8b36e59c111facb1113b776c4e0ac866a82470a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/37",
+      "reachable_from_base": true
+    },
+    {
+      "number": 36,
+      "title": "Record build 11 upload and TestFlight review submission",
+      "state": "closed",
+      "merged_at": "2026-11-08T15:56:36Z",
+      "head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "head_ref": "docs/build11-status",
+      "base": "9617623b301d5042086847157bafe66ce36a553e",
+      "merge": "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/36",
+      "reachable_from_base": true
+    },
+    {
+      "number": 35,
+      "title": "Record the France condition attached to TestFlight build 10",
+      "state": "closed",
+      "merged_at": "2026-11-08T06:52:26Z",
+      "head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "head_ref": "docs/export-build10-condition",
+      "base": "7985a1fb77ccda59e9636f16ad964f453e0f8d7c",
+      "merge": "5a63e7be85f60122ed8ea6a72cce37c50157d519",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/35",
+      "reachable_from_base": true
+    },
+    {
+      "number": 34,
+      "title": "Audit crypto correctness and gate Apple/French encryption compliance",
+      "state": "closed",
+      "merged_at": "2026-11-08T13:55:48Z",
+      "head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "head_ref": "security/crypto-export-compliance-2026-11-08",
+      "base": "5a63e7be85f60122ed8ea6a72cce37c50157d519",
+      "merge": "9617623b301d5042086847157bafe66ce36a553e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/34",
+      "reachable_from_base": true
+    },
+    {
+      "number": 33,
+      "title": "Validate the reviewed no-documentation Apple export answer",
+      "state": "closed",
+      "merged_at": "2026-11-07T23:52:11Z",
+      "head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "head_ref": "fix/crypto-gate-france-exempt",
+      "base": "f6c40dcec289cf36dc841e2dfb15addc5d556c33",
+      "merge": "7985a1fb77ccda59e9636f16ad964f453e0f8d7c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/33",
+      "reachable_from_base": true
+    },
+    {
+      "number": 32,
+      "title": "Match Apple's no-documentation export route for France-excluded builds",
+      "state": "closed",
+      "merged_at": "2026-11-07T22:53:36Z",
+      "head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "head_ref": "fix/apple-export-france-excluded",
+      "base": "6743a6e82c02a67d8f546906220904bdd58749d4",
+      "merge": "f6c40dcec289cf36dc841e2dfb15addc5d556c33",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/32",
+      "reachable_from_base": true
+    },
+    {
+      "number": 31,
+      "title": "Record the no-French-declaration release route",
+      "state": "closed",
+      "merged_at": "2026-11-07T22:11:31Z",
+      "head": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "head_ref": "docs/export-route-decision",
+      "base": "0dc59c5cdcc23e789f9ee38c2dd90304d296ea71",
+      "merge": "6743a6e82c02a67d8f546906220904bdd58749d4",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/31",
+      "reachable_from_base": true
+    },
+    {
+      "number": 30,
+      "title": "Record the macOS TestFlight export-compliance blocker",
+      "state": "closed",
+      "merged_at": "2026-11-07T21:40:57Z",
+      "head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "head_ref": "docs/testflight-export-blocker",
+      "base": "79dbb566b73e8ce519ee4b0020dc774125ebfd75",
+      "merge": "26a0091e2c4658f6b9b31a5844e58f2e8a80ab39",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/30",
+      "reachable_from_base": true
+    },
+    {
+      "number": 29,
+      "title": "Fix macOS release smoke test for the first-run credential chooser",
+      "state": "closed",
+      "merged_at": "2026-11-07T19:56:53Z",
+      "head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "head_ref": "fix/macos-startup-smoke-first-run",
+      "base": "71d51380f02d01d22616db05a56d57a4ce32960c",
+      "merge": "79dbb566b73e8ce519ee4b0020dc774125ebfd75",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/29",
+      "reachable_from_base": true
+    },
+    {
+      "number": 28,
+      "title": "Add storage analyzer with treemap, sunburst and saved scans",
+      "state": "closed",
+      "merged_at": "2026-11-07T21:48:06Z",
+      "head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "head_ref": "feature/storage-analyzer-2026-11-07",
+      "base": "26a0091e2c4658f6b9b31a5844e58f2e8a80ab39",
+      "merge": "0dc59c5cdcc23e789f9ee38c2dd90304d296ea71",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/28",
+      "reachable_from_base": true
+    },
+    {
+      "number": 27,
+      "title": "fix(macos): repair custom-keychain enumeration and complete deletion",
+      "state": "closed",
+      "merged_at": "2026-11-07T17:28:27Z",
+      "head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "head_ref": "fix/credential-main-review-20261107",
+      "base": "aa1bde887b3f9f8755e3dd3a58d5d071a41a68d8",
+      "merge": "71d51380f02d01d22616db05a56d57a4ce32960c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/27",
+      "reachable_from_base": true
+    },
+    {
+      "number": 26,
+      "title": "Add configurable credential storage for keychain-less machines",
+      "state": "closed",
+      "merged_at": "2026-11-07T16:32:51Z",
+      "head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "head_ref": "feat/credential-storage-backends",
+      "base": "baed585fe3054cc98dfbbf6ba6a3d80907e82cc8",
+      "merge": "aa1bde887b3f9f8755e3dd3a58d5d071a41a68d8",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/26",
+      "reachable_from_base": true
+    },
+    {
+      "number": 25,
+      "title": "Audit encryption, preserve providers, and document no-report store releases",
+      "state": "closed",
+      "merged_at": "2026-11-07T11:24:35Z",
+      "head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "head_ref": "feat/crypto-export-audit",
+      "base": "c4847d284665ad04b253ce925dbf387ff7123402",
+      "merge": "baed585fe3054cc98dfbbf6ba6a3d80907e82cc8",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/25",
+      "reachable_from_base": true
+    },
+    {
+      "number": 24,
+      "title": "Replace process helpers with native APIs; document export compliance",
+      "state": "closed",
+      "merged_at": "2026-11-07T02:29:14Z",
+      "head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "head_ref": "fix/native-process-and-export",
+      "base": "39b8bb1a116bf2c16725d1cf55cf384ab5409f02",
+      "merge": "c1dc32161ed5a429c356c06e930966954faa4fbf",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/24",
+      "reachable_from_base": true
+    },
+    {
+      "number": 23,
+      "title": "Embed an iOS shell with scoped folders and staged cloud workspaces",
+      "state": "closed",
+      "merged_at": "2026-11-07T07:02:39Z",
+      "head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "head_ref": "feat/ios-embedded-shell",
+      "base": "c1dc32161ed5a429c356c06e930966954faa4fbf",
+      "merge": "c4847d284665ad04b253ce925dbf387ff7123402",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/23",
+      "reachable_from_base": true
+    },
+    {
+      "number": 22,
+      "title": "Fix terminal focus, add top-toolbar toggle, simplify multi-rename",
+      "state": "closed",
+      "merged_at": "2026-11-07T00:03:23Z",
+      "head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "head_ref": "fix/runtime-followups",
+      "base": "8362cd2f30570d31313dd07b564c0e18b6840945",
+      "merge": "39b8bb1a116bf2c16725d1cf55cf384ab5409f02",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/22",
+      "reachable_from_base": true
+    },
+    {
+      "number": 21,
+      "title": "Unify open PRs across queue, editors, terminal, mounts and localization",
+      "state": "closed",
+      "merged_at": "2026-11-06T21:28:27Z",
+      "head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "head_ref": "integrate/open-prs-20261106",
+      "base": "1a25b5ccd2c152f2a8938a75e54e88ed1c7bd949",
+      "merge": "8362cd2f30570d31313dd07b564c0e18b6840945",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/21",
+      "reachable_from_base": true
+    },
+    {
+      "number": 20,
+      "title": "Fix hex editor history limits, storage identity and host regression coverage",
+      "state": "closed",
+      "merged_at": "2026-11-06T21:28:29Z",
+      "head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "head_ref": "feature/madedit2-hex-editor",
+      "base": "e0a6684e27dc0e4622351e66180c999b7bee7ca0",
+      "merge": "cff8f9b4928b49b94ca8cfd1f017941edc81ea59",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/20",
+      "reachable_from_base": true
+    },
+    {
+      "number": 19,
+      "title": "Add copy/move job scheduling and batch queue management",
+      "state": "closed",
+      "merged_at": "2026-11-06T19:17:21Z",
+      "head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "head_ref": "feat/copy-move-job-manager",
+      "base": "e0a6684e27dc0e4622351e66180c999b7bee7ca0",
+      "merge": "1a25b5ccd2c152f2a8938a75e54e88ed1c7bd949",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/19",
+      "reachable_from_base": true
+    },
+    {
+      "number": 18,
+      "title": "Runtime polish: hex fonts, inline rename, editor choice, sandbox terminal, App Store guards",
+      "state": "closed",
+      "merged_at": "2026-11-06T21:28:29Z",
+      "head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "head_ref": "fix/hex-runtime-polish",
+      "base": "e0a6684e27dc0e4622351e66180c999b7bee7ca0",
+      "merge": "cff8f9b4928b49b94ca8cfd1f017941edc81ea59",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/18",
+      "reachable_from_base": true
+    },
+    {
+      "number": 17,
+      "title": "Add a real interactive PTY and SSH terminal",
+      "state": "closed",
+      "merged_at": "2026-11-06T14:03:54Z",
+      "head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "head_ref": "feat/real-terminal",
+      "base": "fa4a7af80001172edb3edda151a4ad544f3db9af",
+      "merge": "a1352d61f331cb78befab56bf4bb8e6d70f02645",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/17",
+      "reachable_from_base": true
+    },
+    {
+      "number": 16,
+      "title": "Add native MadEdit2-based hex editor",
+      "state": "closed",
+      "merged_at": "2026-11-06T14:12:07Z",
+      "head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "head_ref": "feature/madedit2-hex-editor",
+      "base": "fa4a7af80001172edb3edda151a4ad544f3db9af",
+      "merge": "e0a6684e27dc0e4622351e66180c999b7bee7ca0",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/16",
+      "reachable_from_base": true
+    },
+    {
+      "number": 15,
+      "title": "Complete missing Commander workflows and transfer safeguards",
+      "state": "closed",
+      "merged_at": "2026-11-06T10:34:26Z",
+      "head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "head_ref": "feature/commander-file-operations",
+      "base": "0b35b16cd1d1f90b1c11d5b839fa45257dff88d8",
+      "merge": "fa4a7af80001172edb3edda151a4ad544f3db9af",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/15",
+      "reachable_from_base": true
+    },
+    {
+      "number": 14,
+      "title": "Add Commander multi-rename, selection, collections, and transfer options",
+      "state": "closed",
+      "merged_at": null,
+      "head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "head_ref": "feature/commander-review-20261105",
+      "base": "53e75cda768db2021babb2e10671287220d3822c",
+      "merge": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/14",
+      "reachable_from_base": true
+    },
+    {
+      "number": 13,
+      "title": "Add Commander file workflows and safe batch undo",
+      "state": "closed",
+      "merged_at": "2026-11-06T00:45:30Z",
+      "head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "head_ref": "feature/commander-workflow-polish",
+      "base": "53e75cda768db2021babb2e10671287220d3822c",
+      "merge": "0b35b16cd1d1f90b1c11d5b839fa45257dff88d8",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/13",
+      "reachable_from_base": true
+    },
+    {
+      "number": 12,
+      "title": "Complete Commander workflows: rename, collections, transfers, recovery and workspaces",
+      "state": "closed",
+      "merged_at": null,
+      "head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "head_ref": "feature/commander-file-operations",
+      "base": "53e75cda768db2021babb2e10671287220d3822c",
+      "merge": "65888b55d50ec39a3feb6ed4dd1a89f5510e5769",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/12",
+      "reachable_from_base": true
+    },
+    {
+      "number": 11,
+      "title": "Add image gallery, tiles, viewer and batch photo tools",
+      "state": "closed",
+      "merged_at": "2026-11-05T21:44:47Z",
+      "head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "head_ref": "feat/image-gallery-tiles",
+      "base": "cba9e9c09069e8341b62e4e156530942618a85d3",
+      "merge": "f1c336b0d08dc515e814006dfe20b9dbbf833e0b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/11",
+      "reachable_from_base": true
+    },
+    {
+      "number": 10,
+      "title": "Add native audio and video editing with export-copy workflow",
+      "state": "closed",
+      "merged_at": "2026-11-05T21:04:53Z",
+      "head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "head_ref": "feature/media-editing",
+      "base": "b377a41cae2a5f0c3201e0426e9ae0ba928ae3cb",
+      "merge": "cba9e9c09069e8341b62e4e156530942618a85d3",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/10",
+      "reachable_from_base": true
+    },
+    {
+      "number": 9,
+      "title": "Extend CrispCloud image editing",
+      "state": "closed",
+      "merged_at": "2026-11-05T22:31:18Z",
+      "head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "head_ref": "feature/image-editor-completion",
+      "base": "f1c336b0d08dc515e814006dfe20b9dbbf833e0b",
+      "merge": "53e75cda768db2021babb2e10671287220d3822c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/9",
+      "reachable_from_base": true
+    },
+    {
+      "number": 8,
+      "title": "Integrate open-issue fixes, macOS mounts, and localization",
+      "state": "closed",
+      "merged_at": "2026-11-06T21:28:29Z",
+      "head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "head_ref": "fix/issues-integration",
+      "base": "0b35b16cd1d1f90b1c11d5b839fa45257dff88d8",
+      "merge": "cff8f9b4928b49b94ca8cfd1f017941edc81ea59",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/8",
+      "reachable_from_base": true
+    },
+    {
+      "number": 7,
+      "title": "Add F4 image editing with CrispCloud UI and maintained pro_image_editor fork",
+      "state": "closed",
+      "merged_at": "2026-11-05T10:44:53Z",
+      "head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "head_ref": "feature/f4-pro-image-editor",
+      "base": "b750d359cb9bcac7961b13d7c5d5e079738105d0",
+      "merge": "c56dd715b98a5d9804490cb930ab42ef56e1d723",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/7",
+      "reachable_from_base": true
+    },
+    {
+      "number": 6,
+      "title": "Add shared PDF operations to the GUI and CLI",
+      "state": "closed",
+      "merged_at": "2026-11-05T05:49:29Z",
+      "head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "head_ref": "feature/pdf-editor-integration",
+      "base": "2712f804b30b886475d2033a35f74a9cb5c02cd7",
+      "merge": "e2344b7390589674de7de67fe2ee1ed78bb1a134",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/6",
+      "reachable_from_base": true
+    },
+    {
+      "number": 5,
+      "title": "Integrate permissive Flutter PDF editing with save and recovery flows",
+      "state": "closed",
+      "merged_at": "2026-11-04T23:10:50Z",
+      "head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "head_ref": "feature/pdf-editor-integration",
+      "base": "80103b5dbbef9bbce91319836ce31334e9508e21",
+      "merge": "e822bf580ecc50962e4c07b51d752ff11dd0b0cb",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/5",
+      "reachable_from_base": true
+    }
+  ],
+  "fetched_refs": [
+    {
+      "ref": "refs/remotes/origin/checkpoint/app-final-next-20261113",
+      "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30"
+    },
+    {
+      "ref": "refs/remotes/origin/checkpoint/app-oracle-rollout-20261113",
+      "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756"
+    },
+    {
+      "ref": "refs/remotes/origin/checkpoint/ebook-native-input-20261112",
+      "sha": "7e20b40c1b797d463704106c881b9e84415f4fd7"
+    },
+    {
+      "ref": "refs/remotes/origin/feature/apache-file-viewer-20261113",
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3"
+    },
+    {
+      "ref": "refs/remotes/origin/feature/archive-commander-parity-20261113",
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49"
+    },
+    {
+      "ref": "refs/remotes/origin/feature/ebook-parity-canary-20261112",
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc"
+    },
+    {
+      "ref": "refs/remotes/origin/feature/office-fidelity-gaps-20261113",
+      "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30"
+    },
+    {
+      "ref": "refs/remotes/origin/feature/office-fidelity-oracle-validation-20261113",
+      "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756"
+    },
+    {
+      "ref": "refs/remotes/origin/integration/archive-containers-20261113",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2"
+    },
+    {
+      "ref": "refs/remotes/origin/main",
+      "sha": "4d65b86dab36ca8f5dcd192c776de369aa5a4932"
+    },
+    {
+      "ref": "refs/remotes/pull/10",
+      "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438"
+    },
+    {
+      "ref": "refs/remotes/pull/100",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2"
+    },
+    {
+      "ref": "refs/remotes/pull/11",
+      "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60"
+    },
+    {
+      "ref": "refs/remotes/pull/12",
+      "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc"
+    },
+    {
+      "ref": "refs/remotes/pull/13",
+      "sha": "cb2db48e5e0f623139f260b63f88405b577791ec"
+    },
+    {
+      "ref": "refs/remotes/pull/14",
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181"
+    },
+    {
+      "ref": "refs/remotes/pull/15",
+      "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5"
+    },
+    {
+      "ref": "refs/remotes/pull/16",
+      "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d"
+    },
+    {
+      "ref": "refs/remotes/pull/17",
+      "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb"
+    },
+    {
+      "ref": "refs/remotes/pull/18",
+      "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43"
+    },
+    {
+      "ref": "refs/remotes/pull/19",
+      "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106"
+    },
+    {
+      "ref": "refs/remotes/pull/20",
+      "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7"
+    },
+    {
+      "ref": "refs/remotes/pull/21",
+      "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2"
+    },
+    {
+      "ref": "refs/remotes/pull/22",
+      "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8"
+    },
+    {
+      "ref": "refs/remotes/pull/23",
+      "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1"
+    },
+    {
+      "ref": "refs/remotes/pull/24",
+      "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2"
+    },
+    {
+      "ref": "refs/remotes/pull/25",
+      "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde"
+    },
+    {
+      "ref": "refs/remotes/pull/26",
+      "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b"
+    },
+    {
+      "ref": "refs/remotes/pull/27",
+      "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455"
+    },
+    {
+      "ref": "refs/remotes/pull/28",
+      "sha": "e5858440cfc383aae7c000372f6f223a7041c85c"
+    },
+    {
+      "ref": "refs/remotes/pull/29",
+      "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6"
+    },
+    {
+      "ref": "refs/remotes/pull/30",
+      "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66"
+    },
+    {
+      "ref": "refs/remotes/pull/31",
+      "sha": "ab45ac55990233492208549c18f42dfe51e518e4"
+    },
+    {
+      "ref": "refs/remotes/pull/32",
+      "sha": "b31b114ed7aa368861056f183b1a61edb436a97c"
+    },
+    {
+      "ref": "refs/remotes/pull/33",
+      "sha": "f2eb2911cbf53833f5f385675edc4326b4787496"
+    },
+    {
+      "ref": "refs/remotes/pull/34",
+      "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c"
+    },
+    {
+      "ref": "refs/remotes/pull/35",
+      "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810"
+    },
+    {
+      "ref": "refs/remotes/pull/36",
+      "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d"
+    },
+    {
+      "ref": "refs/remotes/pull/37",
+      "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b"
+    },
+    {
+      "ref": "refs/remotes/pull/38",
+      "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7"
+    },
+    {
+      "ref": "refs/remotes/pull/39",
+      "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d"
+    },
+    {
+      "ref": "refs/remotes/pull/40",
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3"
+    },
+    {
+      "ref": "refs/remotes/pull/41",
+      "sha": "44aadba3b515fbbca0a7b2520be84204ee603007"
+    },
+    {
+      "ref": "refs/remotes/pull/42",
+      "sha": "ea4446482d7ca513160669fbb48e641397c6514f"
+    },
+    {
+      "ref": "refs/remotes/pull/43",
+      "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef"
+    },
+    {
+      "ref": "refs/remotes/pull/45",
+      "sha": "f39bcd927f32729e63194f35db019c36802d1c67"
+    },
+    {
+      "ref": "refs/remotes/pull/47",
+      "sha": "be318f380fc47f94975a35c0924c89190d46f990"
+    },
+    {
+      "ref": "refs/remotes/pull/49",
+      "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a"
+    },
+    {
+      "ref": "refs/remotes/pull/5",
+      "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf"
+    },
+    {
+      "ref": "refs/remotes/pull/50",
+      "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f"
+    },
+    {
+      "ref": "refs/remotes/pull/51",
+      "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2"
+    },
+    {
+      "ref": "refs/remotes/pull/52",
+      "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8"
+    },
+    {
+      "ref": "refs/remotes/pull/53",
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6"
+    },
+    {
+      "ref": "refs/remotes/pull/54",
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9"
+    },
+    {
+      "ref": "refs/remotes/pull/55",
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c"
+    },
+    {
+      "ref": "refs/remotes/pull/56",
+      "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476"
+    },
+    {
+      "ref": "refs/remotes/pull/57",
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe"
+    },
+    {
+      "ref": "refs/remotes/pull/58",
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05"
+    },
+    {
+      "ref": "refs/remotes/pull/59",
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622"
+    },
+    {
+      "ref": "refs/remotes/pull/6",
+      "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0"
+    },
+    {
+      "ref": "refs/remotes/pull/60",
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed"
+    },
+    {
+      "ref": "refs/remotes/pull/61",
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a"
+    },
+    {
+      "ref": "refs/remotes/pull/62",
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6"
+    },
+    {
+      "ref": "refs/remotes/pull/63",
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7"
+    },
+    {
+      "ref": "refs/remotes/pull/64",
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1"
+    },
+    {
+      "ref": "refs/remotes/pull/65",
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679"
+    },
+    {
+      "ref": "refs/remotes/pull/66",
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe"
+    },
+    {
+      "ref": "refs/remotes/pull/67",
+      "sha": "403e942dc99779883210125a01841ef209e19d2e"
+    },
+    {
+      "ref": "refs/remotes/pull/68",
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5"
+    },
+    {
+      "ref": "refs/remotes/pull/69",
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b"
+    },
+    {
+      "ref": "refs/remotes/pull/7",
+      "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886"
+    },
+    {
+      "ref": "refs/remotes/pull/70",
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb"
+    },
+    {
+      "ref": "refs/remotes/pull/71",
+      "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848"
+    },
+    {
+      "ref": "refs/remotes/pull/72",
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8"
+    },
+    {
+      "ref": "refs/remotes/pull/73",
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854"
+    },
+    {
+      "ref": "refs/remotes/pull/74",
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1"
+    },
+    {
+      "ref": "refs/remotes/pull/75",
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12"
+    },
+    {
+      "ref": "refs/remotes/pull/76",
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d"
+    },
+    {
+      "ref": "refs/remotes/pull/77",
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd"
+    },
+    {
+      "ref": "refs/remotes/pull/78",
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00"
+    },
+    {
+      "ref": "refs/remotes/pull/79",
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb"
+    },
+    {
+      "ref": "refs/remotes/pull/8",
+      "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800"
+    },
+    {
+      "ref": "refs/remotes/pull/80",
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865"
+    },
+    {
+      "ref": "refs/remotes/pull/81",
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71"
+    },
+    {
+      "ref": "refs/remotes/pull/82",
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910"
+    },
+    {
+      "ref": "refs/remotes/pull/83",
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67"
+    },
+    {
+      "ref": "refs/remotes/pull/84",
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc"
+    },
+    {
+      "ref": "refs/remotes/pull/85",
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b"
+    },
+    {
+      "ref": "refs/remotes/pull/86",
+      "sha": "120f839ab9091bdbedf326621347ee737140e043"
+    },
+    {
+      "ref": "refs/remotes/pull/87",
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307"
+    },
+    {
+      "ref": "refs/remotes/pull/88",
+      "sha": "b100cd751688f13609a8829180b487b381588d14"
+    },
+    {
+      "ref": "refs/remotes/pull/89",
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753"
+    },
+    {
+      "ref": "refs/remotes/pull/9",
+      "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5"
+    },
+    {
+      "ref": "refs/remotes/pull/90",
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4"
+    },
+    {
+      "ref": "refs/remotes/pull/91",
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21"
+    },
+    {
+      "ref": "refs/remotes/pull/92",
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416"
+    },
+    {
+      "ref": "refs/remotes/pull/93",
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299"
+    },
+    {
+      "ref": "refs/remotes/pull/94",
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1"
+    },
+    {
+      "ref": "refs/remotes/pull/95",
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3"
+    },
+    {
+      "ref": "refs/remotes/pull/97",
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49"
+    }
+  ],
+  "observed_at_utc": "2026-11-14T04:58:23.512887+00:00",
+  "method": "Fetched all heads, tags and refs/pull/*/head; checked each GitHub API branch and PR head with git merge-base --is-ancestor HEAD BASE.",
+  "summary": {
+    "branches": {
+      "count": 10,
+      "reachable": 10
+    },
+    "pull_requests": {
+      "count": 90,
+      "reachable": 90
+    },
+    "open_pull_requests": []
+  }
+}

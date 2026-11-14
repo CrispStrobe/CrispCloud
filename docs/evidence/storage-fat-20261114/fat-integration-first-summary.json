@@ -1,0 +1,27 @@
+{
+  "files": {
+    "archive_container_viewer_test.dart": {
+      "success": 27,
+      "error": 1
+    },
+    "archive_fat_integration_test.dart": {
+      "success": 16
+    },
+    "archive_fat_workspace_test.dart": {
+      "failure": 2
+    },
+    "archive_format_registry_test.dart": {
+      "success": 71
+    },
+    "disk_partition_viewer_test.dart": {
+      "success": 8,
+      "error": 1
+    }
+  },
+  "total": {
+    "success": 122,
+    "failure": 2,
+    "error": 2
+  },
+  "success": false
+}

@@ -1,0 +1,88 @@
+{
+  "scope": "Exact file contents checked before and after the acceptance commands; no branch HEAD claim",
+  "source_files_sha256": {
+    "lib/services/archive_lzfse_codec.dart": "487cd93fc4582bf1e2fde8b32e44984ab42e396163ca4354f5652ab434c2082b",
+    "lib/services/archive_types.dart": "08072e27d01fdd4794ddebab21ca943e650c0e9a09a004a651b2da984a4f8e86",
+    "test/archive_lzfse_codec_test.dart": "5465bdbffe5e0d02a00bd757baf97b939c56fa68a057995242c8f819e4be158f",
+    "test/support/lzfse_fixture.dart": "78e7e6440f21c05958265abff26266a011b230a5e7ef41a5ca0537aa8a5ea86e",
+    "test/support/lzfse_reference_data.dart": "5446b61502ccf9b50e6b33c185ed66c8311e488948044f856219199fe6313a25",
+    "test/support/lzfse_malformed_fixture.dart": "e36923e7ada12c28a0f98b55c7f71a9cd2b233bc763269a5ef0ccfe452cba981",
+    "test/support/lzfse_web_acceptance.dart": "5cf2d258df37d010ae178117c1e19f04af1b7b19a10b3c8ed58fbfa02096d5af",
+    "test/support/generate_lzfse_fixtures.py": "1393f60eaee8808e7d8d22f5e00123ab9496f0de75d5210862b26e7066858584",
+    "test/support/lzfse_reference_helper.c": "07808cb84f62ebf44ba91b84593a8050871844eaf722a6f19d261a092c73918d",
+    "test/support/check_lzfse_dmg.py": "fe11ef336185effd4171331dbba2ddc39a907ad59ddd534c303ad2ab4cc1bbac",
+    "test/support/check_dmg_codecs.py": "0de0875111ca97d1666263a52e07c8ebbd8803d42abd087a5740a6ca42c90e18",
+    "test/fixtures/archives/lzfse-reference-manifest.json": "1d4c2fccdce3729374abc28d011d7ba4ae20da22f25f62147ee8a78c35206fae",
+    "tool/verify_lzfse_sources.py": "f6a2cdcb36aebfa96b7fb7b8501fad193a4c3041b8bdf284cfb7b577aa8ccdb5",
+    "packages/apple_lzfse/UPSTREAM.json": "017fe79d7d2103e4e9d7b7b631c96b9e55e3b2ac0689b3f210d13dbbf8cae101",
+    "packages/apple_lzfse/LICENSE": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32"
+  },
+  "generated_js_sha256": "65cb109661f2e4c0ab2265991cc38054d259caee18a0f1fd9d217dd742d4585a",
+  "receipts": [
+    {
+      "log": "lzfse-vm.log",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "test/support/lzfse_web_acceptance.dart"
+      ],
+      "exit_code": 0
+    },
+    {
+      "log": "lzfse-js-build.log",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "-O2",
+        "test/support/lzfse_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/52be1abfc881/lzfse-fixture-work/lzfse_web_acceptance_3.13.7.js"
+      ],
+      "exit_code": 0
+    },
+    {
+      "log": "lzfse-js-run.log",
+      "command": [
+        "node",
+        "/workspace/scratch/52be1abfc881/lzfse-fixture-work/lzfse_web_acceptance_3.13.7.js"
+      ],
+      "exit_code": 0
+    },
+    {
+      "log": "lzfse-fixture-reference.log",
+      "command": [
+        "python3",
+        "test/support/generate_lzfse_fixtures.py",
+        "--source",
+        "/workspace/scratch/52be1abfc881/lzfse-reference",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "log": "lzfse-source-verification.log",
+      "command": [
+        "python3",
+        "tool/verify_lzfse_sources.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "log": "lzfse-sevenzip-run.log",
+      "command": [
+        "python3",
+        "test/support/check_lzfse_dmg.py",
+        "--source",
+        "/workspace/scratch/52be1abfc881/lzfse-reference",
+        "--sevenzip",
+        "/workspace/scratch/52be1abfc881/lzfse-fixture-work/7zip-26.06/7zz",
+        "--sevenzip-archive",
+        "/workspace/scratch/52be1abfc881/lzfse-fixture-work/7zip-26.06/7z2606-linux-x64.tar.xz",
+        "--work-dir",
+        "/workspace/scratch/52be1abfc881/lzfse-fixture-work/dmg-oracle",
+        "--allow-oracle-limitations"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

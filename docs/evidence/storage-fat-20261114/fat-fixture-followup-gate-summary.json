@@ -1,0 +1,35 @@
+{
+  "files": {
+    "archive_disk_verification_test.dart": {
+      "success": 15
+    },
+    "archive_disk_writer_test.dart": {
+      "success": 20
+    },
+    "archive_dmg_fat_provider_test.dart": {
+      "success": 32
+    },
+    "archive_dmg_reader_test.dart": {
+      "success": 82
+    },
+    "archive_dmg_rewrite_test.dart": {
+      "success": 29
+    },
+    "archive_dmg_workspace_test.dart": {
+      "success": 5
+    },
+    "archive_fat_integration_test.dart": {
+      "success": 17
+    },
+    "archive_fat_reader_review_test.dart": {
+      "success": 14
+    },
+    "archive_udf_integration_test.dart": {
+      "success": 15
+    }
+  },
+  "total": {
+    "success": 229
+  },
+  "success": true
+}

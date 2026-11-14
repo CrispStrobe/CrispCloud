@@ -1,0 +1,4 @@
+$ /workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart test/support/lzfse_web_acceptance.dart
+{"result":"passed","reference_fixtures":12,"reference_output_bytes":489825,"malformed_and_profile_cases":76,"truncated_prefixes":2660,"offset_view_and_input_preservation":"passed","block_and_memory_budgets":"passed"}
+
+exit_code=0

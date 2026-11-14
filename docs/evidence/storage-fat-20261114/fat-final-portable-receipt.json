@@ -1,0 +1,337 @@
+{
+  "schema": 1,
+  "started_at_utc": "2026-11-14T10:19:46Z",
+  "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "cwd": "/workspace/scratch/52be1abfc881/runtime-setup/app-validation",
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "node": "v24.22.1",
+  "source_sha256": {
+    "docs/evidence/storage-fat-20261114/run_fat_portable.py": "6e27e144991cbb01feb132b60812acabf12d2c81bc8c09aaa180e5bb23bf3ee7",
+    "lib/services/archive_adc_codec.dart": "6eb00226328d9294e72e73fb6b4a1bc5a53b4243ae1fc337851e8cb533ba800c",
+    "lib/services/archive_disk_image_reader.dart": "02ccd789baa22c4668938fef0521a3eb4ba814fedaac56fbe7f273bc57f9bd03",
+    "lib/services/archive_dmg_reader.dart": "ce153ca33d614de882e677546bc150bc42be54e3879bfaf5b93b5cb574b4ca20",
+    "lib/services/archive_fat_reader.dart": "31fd77e11e513ad3924153b7cfb72cc8fdb138a89dee6f1655558fc78385bea3",
+    "lib/services/archive_hfs_reader.dart": "ba3b3c3524a5a0ce2630c8ea58ca97e4fd2e22be5f4f580446d15fd7acd5efc5",
+    "lib/services/archive_hfs_writer.dart": "76cea5c6f5a0d12ac3e6c9cef721b24bf09b6056b7ab5daca0b0c8975e8511b3",
+    "lib/services/archive_iso_reader.dart": "b6eab6d9519992819ea9e03e7af5d5de2ea0cbebd6ef1552ae498ac4d7ee3386",
+    "lib/services/archive_lzfse_codec.dart": "487cd93fc4582bf1e2fde8b32e44984ab42e396163ca4354f5652ab434c2082b",
+    "lib/services/archive_slice_source.dart": "52b5d7a3e31bf31be7067c6c8648676d114913044c2d07e5c97c7cd7d23110c0",
+    "lib/services/archive_streaming_unsupported.dart": "41dc82d8ad61b5e80dea21d50a71e4810ce97b85ab19f5b2defd5468c8b8e51e",
+    "lib/services/archive_types.dart": "08072e27d01fdd4794ddebab21ca943e650c0e9a09a004a651b2da984a4f8e86",
+    "lib/services/archive_udf_reader.dart": "be1f8971b884d6f87443ec8a86111ad9ad60823ed03506bf7e38c41dda7876dc",
+    "lib/services/archive_write_model.dart": "c31a60b130d46b97906209c2036bc169446696cc1feb40ae35c9f5b49d883575",
+    "lib/services/binary_structure_service.dart": "d78af3f2decd07e42370e4e5054d10ff79d9b620518d8dd8b4fb8f316e7c17ad",
+    "lib/services/disk_partition_inspector.dart": "46f5e40daa9818f6bf05b2cfe67bf0e03617deb58a6b5b719d51453391090ebf",
+    "pubspec.lock": "2a0b95288cf41be9087af0c01ea57afcc4a2f138876d15709bff2f866060ccb4",
+    "pubspec.yaml": "f10ba24448b047cf379dac0efeb11f8f60d9ae089022a831b12a6b32b8fa564f",
+    "test/fixtures/archives/fat-reference-manifest.json": "913ef71dd1c057b774166fb46c798468e11bb70eb31456a8cd0fe18503b27a8b",
+    "test/support/archive_disk_image_fixture.dart": "7dd8d5031c22777a56cd5ccbececa3a87eaa1400b71b1af96b2bccf421b402e2",
+    "test/support/archive_fat_reference_data.dart": "980a6af116e0fc88bc2dbafc432d8b9b18c521adff26bc7b7c2c5f95c3ad079e",
+    "test/support/archive_fat_web_acceptance.dart": "bba98edf1716070d16f5401dfa28df34ec98a04a292d986fe16b9dd7ed452a2a",
+    "test/support/disk_partition_fixture.dart": "98131f8233d6a3d7169e78f6ffd04ac0d7289417528b899dd499e4391c0ec82a",
+    "test/support/dmg_fixture.dart": "8d806ae8f5cd2310a952a72df703506ad355149b44b24286ed93e978456e6485"
+  },
+  "revision_verified_paths": [
+    "lib/services/archive_adc_codec.dart",
+    "lib/services/archive_disk_image_reader.dart",
+    "lib/services/archive_dmg_reader.dart",
+    "lib/services/archive_fat_reader.dart",
+    "lib/services/archive_hfs_reader.dart",
+    "lib/services/archive_hfs_writer.dart",
+    "lib/services/archive_iso_reader.dart",
+    "lib/services/archive_lzfse_codec.dart",
+    "lib/services/archive_slice_source.dart",
+    "lib/services/archive_streaming_unsupported.dart",
+    "lib/services/archive_types.dart",
+    "lib/services/archive_udf_reader.dart",
+    "lib/services/archive_write_model.dart",
+    "lib/services/binary_structure_service.dart",
+    "lib/services/disk_partition_inspector.dart",
+    "pubspec.lock",
+    "pubspec.yaml",
+    "test/fixtures/archives/fat-reference-manifest.json",
+    "test/support/archive_disk_image_fixture.dart",
+    "test/support/archive_fat_reference_data.dart",
+    "test/support/archive_fat_web_acceptance.dart",
+    "test/support/disk_partition_fixture.dart",
+    "test/support/dmg_fixture.dart"
+  ],
+  "evidence_helper_binding": {
+    "path": "docs/evidence/storage-fat-20261114/run_fat_portable.py",
+    "sha256": "6e27e144991cbb01feb132b60812acabf12d2c81bc8c09aaa180e5bb23bf3ee7",
+    "scope": "Evidence helper version saved with this receipt; all runtime, test, fixture and manifest paths are separately bound to source_revision."
+  },
+  "package_config_sha256": "84689a36b3eebd54f6f0d1f18c5582a8b20f8274c94b3ee61a9cadb46af0d1d0",
+  "helper_sha256": "6e27e144991cbb01feb132b60812acabf12d2c81bc8c09aaa180e5bb23bf3ee7",
+  "scope": "Dart VM and actual dart2js JavaScript executed under Node; no browser-engine or WebAssembly qualification.",
+  "commands": [
+    {
+      "kind": "vm",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "test/support/archive_fat_web_acceptance.dart"
+      ],
+      "exit_code": 0,
+      "log": "fat-final-portable-vm.log",
+      "log_sha256": "15264d29e9ad4d6dc9801b3a7e7632f404698b73394a678c02682fd0c3bc6ff2"
+    },
+    {
+      "kind": "js-compile",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "-O2",
+        "--packages=.dart_tool/package_config.json",
+        "test/support/archive_fat_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js"
+      ],
+      "exit_code": 0,
+      "log": "fat-final-portable-js-compile.log",
+      "log_sha256": "12d406f168143669857511707a06707f222ecbc1f3f5f08613121f893b63cd7f"
+    },
+    {
+      "kind": "js",
+      "command": [
+        "node",
+        "-e",
+        "globalThis.self = globalThis; require(process.argv[1]);",
+        "/workspace/scratch/52be1abfc881/runtime-setup/fat-final-portable.js"
+      ],
+      "exit_code": 0,
+      "log": "fat-final-portable-js.log",
+      "log_sha256": "15569847eb642c40cbf97807001e52fe2ae77889bb9591be9cd0dfe73e56a1c5"
+    }
+  ],
+  "results": {
+    "vm": {
+      "checks": 1276,
+      "groups": [
+        "external-fat12",
+        "external-fat16",
+        "external-fat32",
+        "external-fat16-sector4096",
+        "offset-view-input-preservation-and-stream-cancellation",
+        "five-derived-corruption-controls",
+        "transport-and-open-cancellation",
+        "empty-member-cancellation",
+        "synthetic-mbr-fat12",
+        "synthetic-mbr-4096-fat16",
+        "synthetic-gpt-fat32",
+        "synthetic-gpt-large-offset-fat12",
+        "synthetic-udif-raw",
+        "synthetic-udif-zlib",
+        "synthetic-udif-lzfse-raw-blocks"
+      ],
+      "independent_reference_images": {
+        "fat12": {
+          "image_bytes": 1474560,
+          "image_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 27648,
+          "largest_source_request": 16384
+        },
+        "fat16": {
+          "image_bytes": 8388608,
+          "image_sha256": "fe00a83cac68257aca7eb2bc6195cbb29819add45304408e6d6e3f5649c2d894",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 27648,
+          "largest_source_request": 16384
+        },
+        "fat32": {
+          "image_bytes": 67108864,
+          "image_sha256": "9727d6c9fdc621d3fc58637182970fd31d8d4ba0921f98641e807e95de250a19",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 12800,
+          "largest_source_request": 8193
+        },
+        "fat16-sector4096": {
+          "image_bytes": 33554432,
+          "image_sha256": "dddb42265f1f92bfbafe63d43b9f2dad297b018279eb76819ec37f587cf2c708",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 34816,
+          "largest_source_request": 16384
+        }
+      },
+      "derived_partition_wrappers": {
+        "synthetic-mbr-fat12": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 1613824,
+          "partition_start_bytes": 65536,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "complete-image-sha256"
+        },
+        "synthetic-mbr-4096-fat16": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 34668544,
+          "partition_start_bytes": 524288,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "512-byte-prefix"
+        },
+        "synthetic-gpt-fat32": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 67248128,
+          "partition_start_bytes": 65536,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "512-byte-prefix"
+        },
+        "synthetic-gpt-large-offset-fat12": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 2199024814592,
+          "partition_start_bytes": 2199023266304,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "512-byte-prefix"
+        }
+      },
+      "derived_udif_wrappers": {
+        "synthetic-udif-raw": {
+          "classification": "Synthetic UDIF wrapper around an unchanged external FAT12 volume.",
+          "udif_bytes": 1478133,
+          "payloads_verified_buffered_and_streamed": 9,
+          "complete_raw_volume_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "codec_scope": "synthetic-udif-raw"
+        },
+        "synthetic-udif-zlib": {
+          "classification": "Synthetic UDIF wrapper around an unchanged external FAT12 volume.",
+          "udif_bytes": 8026,
+          "payloads_verified_buffered_and_streamed": 9,
+          "complete_raw_volume_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "codec_scope": "synthetic-udif-zlib"
+        },
+        "synthetic-udif-lzfse-raw-blocks": {
+          "classification": "Synthetic UDIF wrapper around an unchanged external FAT12 volume.",
+          "udif_bytes": 1478673,
+          "payloads_verified_buffered_and_streamed": 9,
+          "complete_raw_volume_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "codec_scope": "LZFSE raw block framing; compressed FSE/LZVN blocks are covered by separate existing codec references."
+        }
+      },
+      "large_offset_scope": "Sparse positional access to original small payloads; no complete large physical disk extraction."
+    },
+    "js": {
+      "checks": 1276,
+      "groups": [
+        "external-fat12",
+        "external-fat16",
+        "external-fat32",
+        "external-fat16-sector4096",
+        "offset-view-input-preservation-and-stream-cancellation",
+        "five-derived-corruption-controls",
+        "transport-and-open-cancellation",
+        "empty-member-cancellation",
+        "synthetic-mbr-fat12",
+        "synthetic-mbr-4096-fat16",
+        "synthetic-gpt-fat32",
+        "synthetic-gpt-large-offset-fat12",
+        "synthetic-udif-raw",
+        "synthetic-udif-zlib",
+        "synthetic-udif-lzfse-raw-blocks"
+      ],
+      "independent_reference_images": {
+        "fat12": {
+          "image_bytes": 1474560,
+          "image_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 27648,
+          "largest_source_request": 16384
+        },
+        "fat16": {
+          "image_bytes": 8388608,
+          "image_sha256": "fe00a83cac68257aca7eb2bc6195cbb29819add45304408e6d6e3f5649c2d894",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 27648,
+          "largest_source_request": 16384
+        },
+        "fat32": {
+          "image_bytes": 67108864,
+          "image_sha256": "9727d6c9fdc621d3fc58637182970fd31d8d4ba0921f98641e807e95de250a19",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 12800,
+          "largest_source_request": 8193
+        },
+        "fat16-sector4096": {
+          "image_bytes": 33554432,
+          "image_sha256": "dddb42265f1f92bfbafe63d43b9f2dad297b018279eb76819ec37f587cf2c708",
+          "payloads_verified_buffered_and_streamed": 9,
+          "metadata_requested_bytes_including_probes": 34816,
+          "largest_source_request": 16384
+        }
+      },
+      "derived_partition_wrappers": {
+        "synthetic-mbr-fat12": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 1613824,
+          "partition_start_bytes": 65536,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "complete-image-sha256"
+        },
+        "synthetic-mbr-4096-fat16": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 34668544,
+          "partition_start_bytes": 524288,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "512-byte-prefix"
+        },
+        "synthetic-gpt-fat32": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 67248128,
+          "partition_start_bytes": 65536,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "512-byte-prefix"
+        },
+        "synthetic-gpt-large-offset-fat12": {
+          "classification": "Synthetic partition table around an unchanged external FAT volume.",
+          "logical_disk_bytes": 2199024814592,
+          "partition_start_bytes": 2199023266304,
+          "payloads_verified_buffered_and_streamed": 9,
+          "raw_verification": "512-byte-prefix"
+        }
+      },
+      "derived_udif_wrappers": {
+        "synthetic-udif-raw": {
+          "classification": "Synthetic UDIF wrapper around an unchanged external FAT12 volume.",
+          "udif_bytes": 1478133,
+          "payloads_verified_buffered_and_streamed": 9,
+          "complete_raw_volume_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "codec_scope": "synthetic-udif-raw"
+        },
+        "synthetic-udif-zlib": {
+          "classification": "Synthetic UDIF wrapper around an unchanged external FAT12 volume.",
+          "udif_bytes": 8033,
+          "payloads_verified_buffered_and_streamed": 9,
+          "complete_raw_volume_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "codec_scope": "synthetic-udif-zlib"
+        },
+        "synthetic-udif-lzfse-raw-blocks": {
+          "classification": "Synthetic UDIF wrapper around an unchanged external FAT12 volume.",
+          "udif_bytes": 1478673,
+          "payloads_verified_buffered_and_streamed": 9,
+          "complete_raw_volume_sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+          "codec_scope": "LZFSE raw block framing; compressed FSE/LZVN blocks are covered by separate existing codec references."
+        }
+      },
+      "large_offset_scope": "Sparse positional access to original small payloads; no complete large physical disk extraction."
+    }
+  },
+  "vm_js_results_identical": false,
+  "vm_js_semantic_comparison": {
+    "excluded_paths": [
+      "derived_udif_wrappers.synthetic-udif-zlib.udif_bytes"
+    ],
+    "excluded_values": {
+      "vm": 8026,
+      "js": 8033
+    },
+    "reason": "Locked archive 4.6.0 selects native dart:io zlib on the VM and its Dart Deflate implementation on JavaScript. Their valid compressed encodings have different byte lengths; every payload and complete raw-volume SHA256 assertion remains unchanged and every other result field must compare exactly."
+  },
+  "vm_js_semantic_results_identical": true,
+  "javascript": {
+    "bytes": 547307,
+    "sha256": "13ceda0c96674faf1f7fc2be1f603bfa612ab28f2bf2671be0f5a4d090cf2b4d"
+  },
+  "source_unchanged_and_primary_matches": true,
+  "success": true,
+  "finished_at_utc": "2026-11-14T10:19:54Z"
+}

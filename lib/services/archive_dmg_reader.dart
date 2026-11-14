@@ -8,9 +8,12 @@ import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
 import 'archive_adc_codec.dart';
+import 'archive_fat_reader.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_iso_reader.dart';
+import 'archive_udf_reader.dart';
+import 'archive_lzfse_codec.dart';
 import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
@@ -20,6 +23,11 @@ const _maxPlistBytes = 8 * 1024 * 1024;
 const _maxChunkBytes = 16 * 1024 * 1024;
 const _maxImageBytes = 2 * 1024 * 1024 * 1024 * 1024;
 const _dataProfileChunkBytes = 1024 * 1024;
+const _maxFatMetadataBytes = 64 * 1024 * 1024;
+const _maxFatBackingBytes = 64 * 1024 * 1024;
+const _maxFatExpandedBytes = 256 * 1024 * 1024;
+const _maxFatPathBytes = 16 * 1024 * 1024;
+const _maxFatEntries = 100000;
 
 class StreamedDmgOpen {
   const StreamedDmgOpen({required this.archive, required this.inspection});
@@ -463,21 +471,54 @@ class _CheckedDmgSource implements koni.ByteSource {
 }
 
 /// Reads unencrypted, single-segment UDIF disk images without mounting them.
-/// Raw/zero/ADC/zlib/bzip2/XZ blocks form bounded positional partition sources.
-/// Supported HFS+/HFSX or ISO files are exposed under `files/`; raw partition
+/// Raw/zero/ADC/zlib/bzip2/LZFSE/XZ blocks form bounded positional sources.
+/// Supported FAT, HFS+/HFSX, UDF or ISO files are exposed under `files/`; raw partition
 /// images are independently available under `partitions/`.
 Future<ViewerArchive> openDmgArchive(
   koni.ByteSource source, {
   required int maxMemberBytes,
+  bool Function()? isCancelled,
 }) async {
   final children = <ViewerArchive>[];
   final partitions = <_DmgPartition>[];
+  final cache = _ChunkCache();
+  final input = _DmgOpenSource(source, isCancelled: isCancelled);
+  ViewerArchive? pendingChild;
+  Future<void> closeResources() async {
+    Object? failure;
+    StackTrace? failureStack;
+    Future<void> attempt(Future<void> Function() close) async {
+      try {
+        await close();
+      } catch (error, stack) {
+        failure ??= error;
+        failureStack ??= stack;
+      }
+    }
+
+    final pending = pendingChild;
+    pendingChild = null;
+    if (pending != null) await attempt(pending.close);
+    for (final child in children) {
+      await attempt(child.close);
+    }
+    for (final partition in partitions) {
+      await attempt(partition.close);
+    }
+    cache.clear();
+    await attempt(input.close);
+    if (failure != null) {
+      Error.throwWithStackTrace(failure!, failureStack!);
+    }
+  }
+
   try {
     if (maxMemberBytes <= 0) {
       throw ArgumentError.value(maxMemberBytes, 'maxMemberBytes');
     }
-    if (source.length < 512) _bad('Missing UDIF trailer.');
-    final trailer = await _readExact(source, source.length - 512, 512);
+    input.check();
+    if (input.length < 512) _bad('Missing UDIF trailer.');
+    final trailer = await _readExact(input, input.length - 512, 512);
     if (!_magic(trailer, 0, 'koly')) {
       _bad('Only unencrypted UDIF images with a koly trailer are supported.');
     }
@@ -498,8 +539,8 @@ Future<ViewerArchive> openDmgArchive(
     if (sectors <= 0 || sectors > _maxImageBytes ~/ _sectorBytes) {
       _bad('The declared disk size exceeds the supported range.');
     }
-    _range(source.length - 512, forkOffset, forkLength);
-    _range(source.length - 512, xmlOffset, xmlLength);
+    _range(input.length - 512, forkOffset, forkLength);
+    _range(input.length - 512, xmlOffset, xmlLength);
     if (xmlLength <= 0 ||
         xmlLength > _maxPlistBytes ||
         (forkLength > 0 &&
@@ -508,7 +549,7 @@ Future<ViewerArchive> openDmgArchive(
       _bad('Invalid, overlapping or oversized XML metadata.');
     }
     final plist = _plist(
-      utf8.decode(await _readExact(source, xmlOffset, xmlLength)),
+      utf8.decode(await _readExact(input, xmlOffset, xmlLength)),
     );
     final root = _dict(plist.rootElement.getElement('dict'));
     final resources = _dict(root['resource-fork']);
@@ -522,9 +563,9 @@ Future<ViewerArchive> openDmgArchive(
     if (tables.isEmpty || tables.length > 128) {
       _bad('The disk image must contain between 1 and 128 block maps.');
     }
-    final cache = _ChunkCache();
     var chunkCount = 0;
     for (var i = 0; i < tables.length; i++) {
+      input.check();
       final entry = _dict(tables[i]);
       final encoded = entry['Data'];
       if (encoded == null || encoded.name.local != 'data') {
@@ -535,7 +576,7 @@ Future<ViewerArchive> openDmgArchive(
       );
       final label = entry['Name']?.innerText ?? 'Partition';
       final partition = _partition(
-        source,
+        input,
         table,
         label,
         i,
@@ -544,19 +585,23 @@ Future<ViewerArchive> openDmgArchive(
         sectors,
         cache,
       );
+      partitions.add(partition);
       chunkCount += partition.chunks.length;
       if (chunkCount > 100000) _bad('The disk image has too many chunks.');
-      partitions.add(partition);
     }
 
     final members = <ViewerArchiveMember>[];
     final reads = <Future<Uint8List> Function(int)>[];
     final streams = <Stream<List<int>> Function(int)>[];
+    final fatBudget = ArchiveFatTraversalBudget();
+    final fatMetadata = _DmgFatMetadataBudget();
+    var fatPathBytes = 0;
+    var fatEntries = 0;
     final notices = <String>[
       'Read-only disk image. Files are data forks; filesystem permissions, '
           'resource forks and extended attributes are not restored.',
-      'Present compression checksums are checked on read; ADC has no embedded '
-          'checksum. Partition CRCs are checked on full partition extraction. '
+      'Present compression checksums are checked on read; ADC and LZFSE have '
+          'no embedded checksum. Partition CRCs are checked on full partition extraction. '
           'Whole-image checksums and publisher signatures are not verified.',
     ];
     void add(
@@ -573,18 +618,55 @@ Future<ViewerArchive> openDmgArchive(
     }
 
     for (final partition in partitions) {
+      input.check();
       final stem =
           '${(partition.ordinal + 1).toString().padLeft(3, '0')}-'
           '${_label(partition.name)}';
       var extension = 'img';
-      if (partition.length >= 1536) {
+      final fatSource = _DmgFatSource(
+        _BorrowedPartition(partition),
+        input,
+        fatMetadata,
+      );
+      var skipFilesystemProbes = false;
+      if (fatMetadata.canProbe) {
+        try {
+          // The smallest admitted FAT12 needs a reserved sector, one FAT,
+          // a fixed-root sector and a data cluster; FAT16/32 need more space.
+          // Tiny raw partitions retain deferred decoding/extraction behavior.
+          if (partition.length >= 4 * _sectorBytes &&
+              await hasFatVolumeRecognition(fatSource)) {
+            extension = 'fat';
+          }
+        } on _DmgFatBudgetException catch (error) {
+          skipFilesystemProbes = true;
+          notices.add(
+            '$stem: filesystem recognition unavailable: $error '
+            'The raw partition image remains available.',
+          );
+        }
+      } else {
+        skipFilesystemProbes = true;
+        const limited =
+            'A combined FAT listing allowance is exhausted. '
+            'Further partitions remain available as raw images without '
+            'additional filesystem probing.';
+        if (!notices.contains(limited)) notices.add(limited);
+      }
+      if (!skipFilesystemProbes &&
+          extension == 'img' &&
+          partition.length >= 1536) {
         final signature = await partition.read(1024, 2);
         if (_magic(signature, 0, 'H+') || _magic(signature, 0, 'HX')) {
           extension = 'hfs';
         }
       }
-      if (extension == 'img' && partition.length >= 17 * 2048) {
-        if (_magic(await partition.read(16 * 2048 + 1, 5), 0, 'CD001')) {
+      if (!skipFilesystemProbes &&
+          extension == 'img' &&
+          partition.length >= 17 * 2048) {
+        if (await hasUdfVolumeRecognition(partition)) {
+          extension = 'udf';
+        } else if (_magic(await partition.read(16 * 2048 + 1, 5), 0, 'CD001')) {
           extension = 'iso';
         }
       }
@@ -617,27 +699,86 @@ Future<ViewerArchive> openDmgArchive(
       try {
         // Each filesystem gets its own close state over the shared partition.
         // Failure/closing a reader must not close the raw partition entry.
-        if (extension == 'hfs') {
+        if (extension == 'fat') {
+          if (fatEntries >= _maxFatEntries ||
+              fatPathBytes >= _maxFatPathBytes ||
+              fatMetadata.remaining <= 0) {
+            throw const ArchiveViewException(
+              'The combined FAT filesystem listing exceeds its resource limit.',
+              code: ArchiveMessageCode.archiveLimit,
+            );
+          }
+          filesystem = await openFatArchive(
+            fatSource,
+            maxMemberBytes: maxMemberBytes,
+            maxEntries: _maxFatEntries - fatEntries,
+            maxMetadataBytes: fatMetadata.remaining,
+            maxRetainedPathBytes: _maxFatPathBytes - fatPathBytes,
+            traversalBudget: fatBudget,
+            isCancelled: input.checkCancellation,
+          );
+          pendingChild = filesystem;
+          var addedPathBytes = 0;
+          for (final member in filesystem.members) {
+            await input.checkpoint();
+            final fullPath = 'files/$stem/${member.name}';
+            // Both the child reader and composite archive retain their names.
+            addedPathBytes += (member.name.length + fullPath.length) * 2;
+            if (fullPath.length > 4096 ||
+                addedPathBytes > _maxFatPathBytes - fatPathBytes) {
+              throw const ArchiveViewException(
+                'The combined FAT filesystem paths exceed their resource limit.',
+                code: ArchiveMessageCode.archiveLimit,
+              );
+            }
+          }
+          fatPathBytes += addedPathBytes;
+          fatEntries += filesystem.members.length;
+        } else if (extension == 'hfs') {
           filesystem = await openHfsArchive(
             _BorrowedPartition(partition),
             maxMemberBytes: maxMemberBytes,
+            isCancelled: input.checkCancellation,
           );
+          pendingChild = filesystem;
+        } else if (extension == 'udf') {
+          filesystem = await openUdfArchive(
+            _BorrowedPartition(partition),
+            maxMemberBytes: maxMemberBytes,
+          );
+          pendingChild = filesystem;
         } else if (extension == 'iso') {
           filesystem = await openIsoArchive(
             _BorrowedPartition(partition),
             maxMemberBytes: maxMemberBytes,
           );
+          pendingChild = filesystem;
         }
+        input.check();
+      } on ArchiveFatCancelledException {
+        rethrow;
       } on ArchiveViewException catch (error) {
+        input.rethrowFailure();
+        await filesystem?.close();
+        pendingChild = null;
+        filesystem = null;
         notices.add(
           '$stem: filesystem browsing unavailable: $error '
           'The raw partition image remains available.',
         );
+      } finally {
+        // Subsequent file payload reads are not filesystem metadata reads.
+        fatSource.finishListing();
       }
       if (filesystem != null) {
         children.add(filesystem);
+        pendingChild = null;
         final opened = filesystem;
+        for (final notice in opened.notices) {
+          notices.add('$stem: $notice');
+        }
         for (final member in opened.members) {
+          await input.checkpoint();
           // Links remain visible only in the raw image, never as fake files.
           // In particular DMGs routinely contain an /Applications symlink.
           if (member.isSpecial || member.pathEscapedRoot) {
@@ -665,6 +806,7 @@ Future<ViewerArchive> openDmgArchive(
         }
       }
     }
+    input.check();
     if (!members.any((m) => m.name.startsWith('files/'))) {
       notices.add(
         'No supported filesystem could be opened. The listed members '
@@ -678,28 +820,183 @@ Future<ViewerArchive> openDmgArchive(
       read: (member, limit) =>
           reads[member.index](limit < maxMemberBytes ? limit : maxMemberBytes),
       streamReader: (member, chunkSize) => streams[member.index](chunkSize),
-      close: () async {
-        for (final child in children) {
-          await child.close();
-        }
-        for (final partition in partitions) {
-          await partition.close();
-        }
-        cache.clear();
-        await source.close();
-      },
+      close: closeResources,
     );
   } catch (error) {
-    for (final child in children) {
-      await child.close();
+    try {
+      await closeResources();
+    } catch (_) {
+      // Every resource was attempted; cleanup cannot replace the open failure.
     }
-    for (final partition in partitions) {
-      await partition.close();
-    }
-    await source.close();
+    input.rethrowFailure();
     if (error is ArchiveViewException || error is ArgumentError) rethrow;
     throw ArchiveViewException('Could not read the disk image: $error');
   }
+}
+
+/// Records input/cancellation failures separately from filesystem parse errors.
+/// Child readers may wrap their errors; this guard retains the original object.
+class _DmgOpenSource implements koni.ByteSource {
+  _DmgOpenSource(this.source, {this.isCancelled});
+  final koni.ByteSource source;
+  final bool Function()? isCancelled;
+  Object? _failure;
+  StackTrace? _failureStack;
+  Future<void>? _closing;
+  int _work = 0;
+  _DmgFatMetadataBudget? fatListingBudget;
+
+  T _provider<T>(T Function() operation) {
+    try {
+      return operation();
+    } catch (error, stack) {
+      _record(error, stack);
+      rethrow;
+    }
+  }
+
+  void _record(Object error, StackTrace stack) {
+    _failure ??= error;
+    _failureStack ??= stack;
+  }
+
+  void rethrowFailure() {
+    if (_failure != null) {
+      Error.throwWithStackTrace(_failure!, _failureStack!);
+    }
+  }
+
+  void check() {
+    try {
+      if (isCancelled?.call() ?? false) {
+        throw const ArchiveFatCancelledException();
+      }
+    } catch (error, stack) {
+      _record(error, stack);
+      rethrow;
+    }
+  }
+
+  bool checkCancellation() {
+    check();
+    return false;
+  }
+
+  Future<void> checkpoint() async {
+    check();
+    if (++_work % 128 == 0) {
+      await Future<void>.delayed(Duration.zero);
+      check();
+    }
+  }
+
+  void reserveExpansion(int count) => fatListingBudget?.reserveExpanded(count);
+
+  @override
+  String? get name => _provider(() => source.name);
+  @override
+  int get length => _provider(() => source.length);
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    check();
+    // A budget rejection is an explicit profile limit, not a provider failure.
+    fatListingBudget?.reserveBacking(length);
+    late Uint8List bytes;
+    try {
+      bytes = await source.read(offset, length);
+      if (bytes.length != length) {
+        throw const ArchiveViewException(
+          'The disk image source returned a different byte count than requested.',
+          code: ArchiveMessageCode.readEntry,
+          arguments: {
+            'detail': 'The disk image source returned a different byte count than requested.',
+          },
+        );
+      }
+    } catch (error, stack) {
+      _record(error, stack);
+      rethrow;
+    }
+    check();
+    return bytes;
+  }
+
+  @override
+  Future<void> close() => _closing ??= Future<void>.sync(source.close);
+}
+
+class _DmgFatBudgetException extends ArchiveViewException {
+  const _DmgFatBudgetException(super.message)
+    : super(code: ArchiveMessageCode.archiveLimit);
+}
+
+/// Counts logical metadata, physical input and actual cache-miss expansion
+/// separately. Reservations include failed attempts and cannot be refunded.
+class _DmgFatMetadataBudget {
+  int remaining = _maxFatMetadataBytes;
+  int backingRemaining = _maxFatBackingBytes;
+  int expandedRemaining = _maxFatExpandedBytes;
+  bool _failed = false;
+
+  bool get canProbe =>
+      !_failed &&
+      remaining >= 512 &&
+      backingRemaining > 0 &&
+      expandedRemaining > 0;
+
+  int _reserve(int count, int allowance, String kind) {
+    if (count < 0 || count > allowance || _failed) {
+      _failed = true;
+      throw _DmgFatBudgetException(
+        'The combined FAT $kind exceeds its resource limit.',
+      );
+    }
+    return allowance - count;
+  }
+
+  void reserve(int count) =>
+      remaining = _reserve(count, remaining, 'logical metadata reads');
+  void reserveBacking(int count) => backingRemaining = _reserve(
+    count,
+    backingRemaining,
+    'backing-input reads',
+  );
+  void reserveExpanded(int count) => expandedRemaining = _reserve(
+    count,
+    expandedRemaining,
+    'decompression work',
+  );
+}
+
+class _DmgFatSource implements koni.ByteSource {
+  _DmgFatSource(this.source, this.input, this.budget);
+  final koni.ByteSource source;
+  final _DmgOpenSource input;
+  final _DmgFatMetadataBudget budget;
+  bool _listing = true;
+  void finishListing() => _listing = false;
+  @override
+  String? get name => source.name;
+  @override
+  int get length => source.length;
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    input.check();
+    if (!_listing) return source.read(offset, length);
+    budget.reserve(length);
+    // Opens are sequential and no child archive is exposed until its listing
+    // completes. Limit only the backing reads/expansion caused by this request.
+    final previous = input.fatListingBudget;
+    input.fatListingBudget = budget;
+    try {
+      return await source.read(offset, length);
+    } finally {
+      input.fatListingBudget = previous;
+    }
+  }
+
+  @override
+  Future<void> close() => source.close();
 }
 
 const _skippedLinks =
@@ -843,12 +1140,10 @@ _DmgPartition _partition(
       0x80000004,
       0x80000005,
       0x80000006,
+      0x80000007,
       0x80000008,
     ].contains(type)) {
-      _bad(
-        'Compression method 0x${type.toRadixString(16)} is unavailable '
-        '(LZFSE and unknown methods are not supported).',
-      );
+      _bad('Compression method 0x${type.toRadixString(16)} is unavailable.');
     }
     _range(sectorCount, start, sectors);
     if (sectors <= 0 || start != endSector) {
@@ -942,8 +1237,14 @@ class _DmgPartition implements koni.ByteSource {
   final _ChunkCache cache;
   bool _closed = false;
 
+  void _checkInput() {
+    final input = source;
+    if (input is _DmgOpenSource) input.check();
+  }
+
   @override
   Future<Uint8List> read(int offset, int length) async {
+    _checkInput();
     if (_closed) _bad('The partition is closed.');
     _range(this.length, offset, length);
     if (length > kArchiveReadLimit) _bad('A partition read exceeds 64 MiB.');
@@ -960,6 +1261,7 @@ class _DmgPartition implements koni.ByteSource {
       }
     }
     for (var i = low; i < chunks.length && written < length; i++) {
+      _checkInput();
       final chunk = chunks[i];
       final from = offset + written - chunk.start;
       final count = (length - written < chunk.length - from)
@@ -975,6 +1277,8 @@ class _DmgPartition implements koni.ByteSource {
       } else if (chunk.type != 0 && chunk.type != 2) {
         Uint8List? expanded = identical(cache.chunk, chunk) ? cache.data : null;
         if (expanded == null) {
+          final input = source;
+          if (input is _DmgOpenSource) input.reserveExpansion(chunk.length);
           final packed = await _readExact(
             source,
             chunk.offset,
@@ -996,6 +1300,10 @@ class _DmgPartition implements koni.ByteSource {
                 verify: true,
                 maxOutputSize: chunk.length,
               ),
+              0x80000007 => decodeArchiveLzfse(
+                packed,
+                expectedBytes: chunk.length,
+              ),
               // ULMO uses an XZ stream, not an LZMA-alone byte stream.
               0x80000008 => ar.XZDecoder(
                 maxDictionarySize: _maxChunkBytes,
@@ -1009,6 +1317,7 @@ class _DmgPartition implements koni.ByteSource {
           if (expanded.length != chunk.length) {
             _bad('Expanded chunk size mismatch.');
           }
+          _checkInput();
           cache.chunk = chunk;
           cache.data = expanded;
         }
@@ -1017,6 +1326,7 @@ class _DmgPartition implements koni.ByteSource {
       written += count;
     }
     if (written != length) _bad('The partition is truncated.');
+    _checkInput();
     return output;
   }
 

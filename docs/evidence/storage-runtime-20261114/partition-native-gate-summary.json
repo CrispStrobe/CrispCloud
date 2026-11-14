@@ -1,0 +1,20 @@
+{
+  "files": {
+    "binary_structure_viewer_test.dart": {
+      "success": 6
+    },
+    "disk_partition_inspector_review_test.dart": {
+      "success": 20
+    },
+    "disk_partition_inspector_test.dart": {
+      "success": 24
+    },
+    "disk_partition_viewer_test.dart": {
+      "success": 8
+    }
+  },
+  "total": {
+    "success": 58
+  },
+  "success": true
+}

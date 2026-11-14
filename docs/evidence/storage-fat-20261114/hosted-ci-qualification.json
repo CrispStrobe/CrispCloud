@@ -1,0 +1,601 @@
+{
+  "schema": 1,
+  "checked_at_utc": "2026-11-14T10:22:13.478Z",
+  "qualification_source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "qualification_source": {
+    "total": 39,
+    "checks": [
+      {
+        "id": 132416885434,
+        "name": "Build iOS (no-codesign)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132416885434"
+      },
+      {
+        "id": 132416884980,
+        "name": "Build + launch macOS",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132416884980"
+      },
+      {
+        "id": 132416883085,
+        "name": "external-schema",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246061/job/132416883085"
+      },
+      {
+        "id": 132415227626,
+        "name": "Build linux (Ubuntu)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227626"
+      },
+      {
+        "id": 132415227562,
+        "name": "Build android (Ubuntu)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227562"
+      },
+      {
+        "id": 132415227537,
+        "name": "Crypto gate (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227537"
+      },
+      {
+        "id": 132415227528,
+        "name": "iOS folder and embedded shell tests",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227528"
+      },
+      {
+        "id": 132415227510,
+        "name": "Browser storage + terminal (Chrome)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227510"
+      },
+      {
+        "id": 132415227487,
+        "name": "Build Windows",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227487"
+      },
+      {
+        "id": 132415227471,
+        "name": "Crypto gate (windows-latest)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227471"
+      },
+      {
+        "id": 132415227446,
+        "name": "Crypto release evidence",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227446"
+      },
+      {
+        "id": 132415227438,
+        "name": "Crypto gate (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227438"
+      },
+      {
+        "id": 132415227420,
+        "name": "Build web (Ubuntu)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227420"
+      },
+      {
+        "id": 132415227282,
+        "name": "Analyze + Test (Linux)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246094/job/132415227282"
+      },
+      {
+        "id": 132415226767,
+        "name": "Image editor in Chrome",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246052/job/132415226767"
+      },
+      {
+        "id": 132415226741,
+        "name": "Shared PDF operations and CLI",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246049/job/132415226741"
+      },
+      {
+        "id": 132415226732,
+        "name": "Maintained image engine regression tests",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246052/job/132415226732"
+      },
+      {
+        "id": 132415226685,
+        "name": "PDF package (dart_pdf_editor)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246049/job/132415226685"
+      },
+      {
+        "id": 132415226667,
+        "name": "BSD provenance and actual JavaScript acceptance",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246150/job/132415226667"
+      },
+      {
+        "id": 132415226621,
+        "name": "PDF package (dart_pdf_editor_secure_storage)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246049/job/132415226621"
+      },
+      {
+        "id": 132415226614,
+        "name": "Image contracts and real file round trips",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246052/job/132415226614"
+      },
+      {
+        "id": 132415226608,
+        "name": "Real Media3 exports on Android",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246055/job/132415226608"
+      },
+      {
+        "id": 132415226603,
+        "name": "Real AVFoundation exports and unsigned iOS build",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246055/job/132415226603"
+      },
+      {
+        "id": 132415226568,
+        "name": "Native contracts (windows-latest)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246135/job/132415226568"
+      },
+      {
+        "id": 132415226563,
+        "name": "PDF integration and independent parser",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246049/job/132415226563"
+      },
+      {
+        "id": 132415226540,
+        "name": "workspace",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246077/job/132415226540"
+      },
+      {
+        "id": 132415226533,
+        "name": "contracts",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246135/job/132415226533"
+      },
+      {
+        "id": 132415226497,
+        "name": "Media contracts and real audio exports",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246055/job/132415226497"
+      },
+      {
+        "id": 132415226480,
+        "name": "Archive, FAT, partition, UDF and ZIP recovery regression gate",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246150/job/132415226480"
+      },
+      {
+        "id": 132415226387,
+        "name": "host-roundtrip",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246061/job/132415226387"
+      },
+      {
+        "id": 132415226375,
+        "name": "PDF web build",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246049/job/132415226375"
+      },
+      {
+        "id": 132415226359,
+        "name": "Native contracts (macos-latest)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246135/job/132415226359"
+      },
+      {
+        "id": 132415226120,
+        "name": "App save workflow, fallback UI and web build",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246050/job/132415226120"
+      },
+      {
+        "id": 132415226100,
+        "name": "archives",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246066/job/132415226100"
+      },
+      {
+        "id": 132415225689,
+        "name": "conformance",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246044/job/132415225689"
+      },
+      {
+        "id": 132415223413,
+        "name": "contracts",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246046/job/132415223413"
+      },
+      {
+        "id": 132415223164,
+        "name": "gui",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584246046/job/132415223164"
+      },
+      {
+        "id": 132415198911,
+        "name": "Archive, FAT, partition, UDF and ZIP recovery regression gate",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584236679/job/132415198911"
+      },
+      {
+        "id": 132415198572,
+        "name": "BSD provenance and actual JavaScript acceptance",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584236679/job/132415198572"
+      }
+    ]
+  },
+  "evidence_checkpoint_revision": "9baf998a58f44c21ccc7287f510a224d5e727356",
+  "evidence_checkpoint": {
+    "total": 34,
+    "checks": [
+      {
+        "id": 132416886427,
+        "name": "Analyze + Test (Linux)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886427"
+      },
+      {
+        "id": 132416886328,
+        "name": "Build Windows",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886328"
+      },
+      {
+        "id": 132416886316,
+        "name": "iOS folder and embedded shell tests",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886316"
+      },
+      {
+        "id": 132416886277,
+        "name": "Build android (Ubuntu)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886277"
+      },
+      {
+        "id": 132416886271,
+        "name": "Crypto gate (windows-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886271"
+      },
+      {
+        "id": 132416886246,
+        "name": "Build linux (Ubuntu)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886246"
+      },
+      {
+        "id": 132416886244,
+        "name": "Crypto release evidence",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886244"
+      },
+      {
+        "id": 132416886243,
+        "name": "Crypto gate (ubuntu-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886243"
+      },
+      {
+        "id": 132416886236,
+        "name": "Crypto gate (macos-15-intel)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886236"
+      },
+      {
+        "id": 132416886226,
+        "name": "Build web (Ubuntu)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886226"
+      },
+      {
+        "id": 132416886006,
+        "name": "Browser storage + terminal (Chrome)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801681/job/132416886006"
+      },
+      {
+        "id": 132416885231,
+        "name": "Image contracts and real file round trips",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801710/job/132416885231"
+      },
+      {
+        "id": 132416885227,
+        "name": "Maintained image engine regression tests",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801710/job/132416885227"
+      },
+      {
+        "id": 132416884996,
+        "name": "Image editor in Chrome",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801710/job/132416884996"
+      },
+      {
+        "id": 132416884990,
+        "name": "App save workflow, fallback UI and web build",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801692/job/132416884990"
+      },
+      {
+        "id": 132416884810,
+        "name": "Native contracts (windows-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801633/job/132416884810"
+      },
+      {
+        "id": 132416884715,
+        "name": "contracts",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801633/job/132416884715"
+      },
+      {
+        "id": 132416884596,
+        "name": "Real Media3 exports on Android",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801580/job/132416884596"
+      },
+      {
+        "id": 132416884539,
+        "name": "Real AVFoundation exports and unsigned iOS build",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801580/job/132416884539"
+      },
+      {
+        "id": 132416884501,
+        "name": "Native contracts (macos-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801633/job/132416884501"
+      },
+      {
+        "id": 132416884456,
+        "name": "conformance",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801706/job/132416884456"
+      },
+      {
+        "id": 132416884445,
+        "name": "PDF package (dart_pdf_editor)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801586/job/132416884445"
+      },
+      {
+        "id": 132416884442,
+        "name": "PDF package (dart_pdf_editor_secure_storage)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801586/job/132416884442"
+      },
+      {
+        "id": 132416884392,
+        "name": "PDF web build",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801586/job/132416884392"
+      },
+      {
+        "id": 132416884380,
+        "name": "Media contracts and real audio exports",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801580/job/132416884380"
+      },
+      {
+        "id": 132416884365,
+        "name": "PDF integration and independent parser",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801586/job/132416884365"
+      },
+      {
+        "id": 132416884361,
+        "name": "Archive, FAT, partition, UDF and ZIP recovery regression gate",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801569/job/132416884361"
+      },
+      {
+        "id": 132416884196,
+        "name": "BSD provenance and actual JavaScript acceptance",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801569/job/132416884196"
+      },
+      {
+        "id": 132416884164,
+        "name": "Shared PDF operations and CLI",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801586/job/132416884164"
+      },
+      {
+        "id": 132416884046,
+        "name": "archives",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801577/job/132416884046"
+      },
+      {
+        "id": 132416883851,
+        "name": "workspace",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801585/job/132416883851"
+      },
+      {
+        "id": 132416883592,
+        "name": "host-roundtrip",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801578/job/132416883592"
+      },
+      {
+        "id": 132416881700,
+        "name": "gui",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801576/job/132416881700"
+      },
+      {
+        "id": 132416881408,
+        "name": "contracts",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "9baf998a58f44c21ccc7287f510a224d5e727356",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43584801576/job/132416881408"
+      }
+    ]
+  },
+  "scope": "GitHub-hosted checks remain unqualified; canceled and queued jobs are not passing results. Completed local qualification is reported separately."
+}

@@ -1,0 +1,5278 @@
+{
+  "schema": 1,
+  "broad_native_gate_revision": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+  "followup_portable_build_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "all_production_lib_paths_and_manifests_identical": true,
+  "production_path_count": 1051,
+  "production_tree_entries": {
+    "lib/l10n/access_and_fkey_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f4418b83d40651df284931a01ada72f0337c67fc"
+    },
+    "lib/l10n/app_ar.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "17a3c92c375206bbacb2bed69f40433deed66521"
+    },
+    "lib/l10n/app_de.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7ef6f2fa711b19a7630db8001796f040e70a80a1"
+    },
+    "lib/l10n/app_en.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2cb9a12cdd5d3df38e3ccfdf518f7d7f0dceec35"
+    },
+    "lib/l10n/app_es.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9fce7264341f55ad496edc88f57070a9e8806eee"
+    },
+    "lib/l10n/app_fr.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "70e0e9d45503467b03488e801f038852680a2212"
+    },
+    "lib/l10n/app_ja.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "073376b9131321c58d6f99965cfab25803eaffe1"
+    },
+    "lib/l10n/app_ko.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9d9756cbbe3379faed441f4f40ca339b16a1b1ed"
+    },
+    "lib/l10n/app_localizations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c24805c527dcc3b1b428f924fac0bac989f7d0a2"
+    },
+    "lib/l10n/app_localizations_ar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "690fba492c67a463962fe08cd19a1628b59af691"
+    },
+    "lib/l10n/app_localizations_de.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6349374d54c8ba95246384730606f48870a8ec0b"
+    },
+    "lib/l10n/app_localizations_en.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8b5f46de77b5fd2e404bd594d105fb41a37f8406"
+    },
+    "lib/l10n/app_localizations_es.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a9d52dc4708ae1330fc626b9b1d3ef3a723bd90a"
+    },
+    "lib/l10n/app_localizations_fr.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9428e2e2390af7c2b92751f646a45c7a5b283ca5"
+    },
+    "lib/l10n/app_localizations_ja.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bcd5eb1512ee9bf7196df71e7cd668ac480085a2"
+    },
+    "lib/l10n/app_localizations_ko.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0ff0616ef5e22bcd799789bc6413978f9e5696b5"
+    },
+    "lib/l10n/app_localizations_pt.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2c3fb5adc9a81dfecf096259fdba2c902e33de84"
+    },
+    "lib/l10n/app_localizations_zh.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "55522fec63db8fc9eaab08bd8fb078e047ab4345"
+    },
+    "lib/l10n/app_pt.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8ffda206c4abe129ea41b1e3d2dd3ab2647bb4c2"
+    },
+    "lib/l10n/app_zh.arb": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "13b35fb872aa1c8454d06f57510a6bbb2c2884e2"
+    },
+    "lib/l10n/archive_batch_extraction_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5fc1bf9225440a13a51c12cbc67d6a77df572a4b"
+    },
+    "lib/l10n/archive_batch_integrity_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1f50bb83ba69d5b9c08426728a0aaf9af160b16c"
+    },
+    "lib/l10n/archive_creation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1356328870563f6c4ed7d3cc36e6a34cc062b2da"
+    },
+    "lib/l10n/archive_directory_sync_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bcf9c78bb9b1c0f74619deea4ed61c841ec5b916"
+    },
+    "lib/l10n/archive_endpoint_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2974e0eb01465262101090615e7991a010c33835"
+    },
+    "lib/l10n/archive_external_packer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "34f8060f35f5ef1200e58cd08cf1abf354ba11c1"
+    },
+    "lib/l10n/archive_integrity_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "93595e04209808021031315af562ba30a857ca8a"
+    },
+    "lib/l10n/archive_job_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e7d0533daccf98cee3bb42d64d92a87624e54fe3"
+    },
+    "lib/l10n/archive_member_move_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9a7bc20d8331b331fdb2cc2e39f733bb1bb96141"
+    },
+    "lib/l10n/archive_transfer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "70b4d649267ff24600c68dab676cc48283c49aa0"
+    },
+    "lib/l10n/archive_viewer_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c9c1c3892b3800da102d761768a22c8b828048a2"
+    },
+    "lib/l10n/archive_zip_recovery_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ba528af4b9bb8d4ab11dff128ea4a59879335fdb"
+    },
+    "lib/l10n/audit_log_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0ae9089c92bc14a6e21139a739ab51a8e1860cbc"
+    },
+    "lib/l10n/auth_sync_notice_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "10b75c72bc20abcbe5a1ee09e12cf903d871e94b"
+    },
+    "lib/l10n/azure_hetzner_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5aed6b84194357a2d5a3666132869c08a7152f53"
+    },
+    "lib/l10n/b2_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1d78e17260caa9a5d848151a591b8e18cc2502b8"
+    },
+    "lib/l10n/background_notification_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b1c11daa6555bf0e7adfa43b796d3d214f8388e"
+    },
+    "lib/l10n/batch_rename_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8108c521439c5f3d2f6d915a5510640d0b776609"
+    },
+    "lib/l10n/binary_structure_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ad3cdecd588cf267af0d3ddc25554bbbb3248835"
+    },
+    "lib/l10n/biometric_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9f924285f9028bc1c778a49b759fc3801828358c"
+    },
+    "lib/l10n/browser_drawer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ecf1e6962a1938938c5f10f1e04a4d181cf23385"
+    },
+    "lib/l10n/browser_menu_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e082d77197368da78173aed6e0c9e87d16cb5dc0"
+    },
+    "lib/l10n/cache_settings_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c858b8b2d253b0a47cd1c22c8b943515e3c47c37"
+    },
+    "lib/l10n/checksum_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "41e45f0d683f1f67fc1cf00a8bd5afc78eab7f80"
+    },
+    "lib/l10n/cloud_setup_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dea79f42168e613dbdcb0debd5abac4231f65ffc"
+    },
+    "lib/l10n/code_document_ui_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7e5fe0a8c454fd90f3b9d449d110c5a230279c60"
+    },
+    "lib/l10n/code_search_panel_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "24f1be0484a0327de863e2ee974e9d6e24df5d62"
+    },
+    "lib/l10n/command_entry_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6d10180f045f5149b993817b1cdb18ad2b7d7888"
+    },
+    "lib/l10n/command_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6c1b08dcbb447174b61c2cbc66e2ed6bd472ad48"
+    },
+    "lib/l10n/commander_completion_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "122940e1abac4ce943b1534198eb5bcf5daf9950"
+    },
+    "lib/l10n/commander_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cc67d1fb5bfd6ae566999f64f340b842bfc19f58"
+    },
+    "lib/l10n/commander_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "607b38eb3e3fe14e1bcb14a79e49d229886017ee"
+    },
+    "lib/l10n/connection_dialog_extra_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b82d5d8a10569a7df1406ed418cc3fd9026799a0"
+    },
+    "lib/l10n/connection_failure_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ce9dc5cf07f24b56d9e5bfd75e8a73d01d4c0059"
+    },
+    "lib/l10n/connection_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eb80ea96e6f1bca36941f48ac246ab9bd8848e20"
+    },
+    "lib/l10n/diff_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3873dbfe6a2142633f9cad556ef993567c389ad3"
+    },
+    "lib/l10n/disk_partition_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3f222da5a961a54366dcbca86adba36a1f5bc20c"
+    },
+    "lib/l10n/document_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3f7ae8bfeea7f1cdc0f5ad875fbd2828da53cc39"
+    },
+    "lib/l10n/dropbox_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f3da4fbfa31cc7cfb6ca5c36bb7b4ef0b223388a"
+    },
+    "lib/l10n/duplicate_finder_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4b82fcc3615733adf65f6bd871fd7b6627513bbc"
+    },
+    "lib/l10n/ebook_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4780e6e082164ce1e27884fdb09eff87cad826cc"
+    },
+    "lib/l10n/email_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2dbdb648e82f2bda8124d3136c7b36c48141ccff"
+    },
+    "lib/l10n/extension_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "304007552a22fbe0f1a89d003d2ab28435b711af"
+    },
+    "lib/l10n/external_comparison_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "80614d1c673388e05b0245e9c5158c00e2417cd2"
+    },
+    "lib/l10n/external_drop_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f190002c53b7b0529e4fbf5dee618b84038c5d40"
+    },
+    "lib/l10n/external_editing_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a0b04859b52eab716ff96050f544e0b815cc0ab9"
+    },
+    "lib/l10n/external_terminal_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "04a8f4c761b0cadbf7a75cb8e092e54a329428b0"
+    },
+    "lib/l10n/file_bytes_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9fed96e762e6ba7dbb366295c5929522955e81d7"
+    },
+    "lib/l10n/file_conflict_preview_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ee51a8e67bfa001bcd9da9a76928fbf361b16aa7"
+    },
+    "lib/l10n/file_conversion_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2f102bd5144e90546a4c61f34184e396ba30ab3b"
+    },
+    "lib/l10n/file_delete_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7bdf8c158a2c66a0ff1e2c9cd228d1a639b57e30"
+    },
+    "lib/l10n/file_editor_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "99a4ab301d64e847398b4d8f14940ad100207a2f"
+    },
+    "lib/l10n/file_list_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9541fdda3ffcd2deffa6832a97eb9b6b769de10f"
+    },
+    "lib/l10n/file_operations_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9586d46d8963f91376d296a29f94e8c0facf72d2"
+    },
+    "lib/l10n/file_panel_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a49b023fc838799ac91a25444cee689af7f055c0"
+    },
+    "lib/l10n/filen_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "650f449f04f5b03c81b316d734f1968c517cbce9"
+    },
+    "lib/l10n/folder_drop_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6409bc21b372180026537480ab63f2c2f6d37cbf"
+    },
+    "lib/l10n/ftp_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e050d41611daf4f58d32b54fe74c4ae0e23e6788"
+    },
+    "lib/l10n/ftp_security_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7108cb2f7ed7c440ee01c0a97e968ebef9239572"
+    },
+    "lib/l10n/gallery_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d6381ca090ffe6c08f79fcd0c07554fb309f9e37"
+    },
+    "lib/l10n/gallery_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6c68fb39b89547027582af23f7b01638098ef3dc"
+    },
+    "lib/l10n/gathering_stack_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "595d672dc61ea76a4bb72ada1dd3a9ef0c9c535a"
+    },
+    "lib/l10n/gdrive_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3094bd4819e35a979258c8a9ac785870d1087c99"
+    },
+    "lib/l10n/help_guide_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "37e7635d11997093a40f721992b839b5a61757ff"
+    },
+    "lib/l10n/hetzner_setup_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c9f05fcec65c4e6540409ed4a19c788c327ba420"
+    },
+    "lib/l10n/image_editor_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "873235833d235203229dd853f56e318363b5b7f2"
+    },
+    "lib/l10n/image_editor_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eec4eb03af2902a85c4ba6b2d32052973f7f99b1"
+    },
+    "lib/l10n/installed_office_preview_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "48c3e90bb485cd2ab68825c56438a4be96570d9e"
+    },
+    "lib/l10n/installed_office_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "70173171545d815b2f2e51325a969d75a0901bdc"
+    },
+    "lib/l10n/internal_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "21611e0fe043e227e25d570880ad9043fb958290"
+    },
+    "lib/l10n/internxt_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "32544d20efec946480059754e7917738b455ace2"
+    },
+    "lib/l10n/keepass_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "86374cf51de62d63fec6c0bbb1244b5ca618ff9d"
+    },
+    "lib/l10n/key_management_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a78745254be58a33caed8f9d5e440e7f06d06db5"
+    },
+    "lib/l10n/legacy_word_conversion_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a7bcf48d608318bf506af6abbef1859ca5d3cfd4"
+    },
+    "lib/l10n/legacy_word_preview_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "10defe5de8725c63eed6a2983e63053ce0685865"
+    },
+    "lib/l10n/link_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "99f55fd89f44020bfc005f12932ee4bfd96228c8"
+    },
+    "lib/l10n/lock_extra_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "908cc20177842e27c160f0f2d3d44089c68594ee"
+    },
+    "lib/l10n/lrc_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8f351ae85accc7f57b050227e41502a0fb54c59a"
+    },
+    "lib/l10n/mbox_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f1bc90ddc9dd98956495a3c142faa2f36854b639"
+    },
+    "lib/l10n/media_editor_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ab0ff7aa381638d41cce9b4e1e43a8e075b94a74"
+    },
+    "lib/l10n/misc_ui_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "356bf28f5c61ae6692b728e6bcfa959c55c63d58"
+    },
+    "lib/l10n/mount_backend_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "979603b5cf9680dc0ec66ec4b6f807ce7fa54159"
+    },
+    "lib/l10n/mount_dialog_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c99df75041d721bc9d9a363a86b121e8917a4a2c"
+    },
+    "lib/l10n/mount_error_presentation.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "24b06b8e9dc98a449a3d65e669c5fa2fd3d787b0"
+    },
+    "lib/l10n/mount_guard_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1c80c998d39be3e95ef85cd109b75053c12d8bd2"
+    },
+    "lib/l10n/multi_cloud_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c5d2f5676ecb3398b91aac77ba18da2ba8a05273"
+    },
+    "lib/l10n/native_preview_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "837e04eac9af1d5732aed9d00ba83efccab56633"
+    },
+    "lib/l10n/navigation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7973538cf6cd82a934923f68ea86cea05b921112"
+    },
+    "lib/l10n/nextcloud_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "804e117c033b532b4e7f69171c3e73986de60933"
+    },
+    "lib/l10n/office_editor_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4a39f059cd2ea12cba44d34bae97a7ef5bef7566"
+    },
+    "lib/l10n/office_fallback_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e294b182127f76d62b02503d9aa6ee6037d01443"
+    },
+    "lib/l10n/office_pdf_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "46900c11ab0c99600e77200ded135b0f9e403497"
+    },
+    "lib/l10n/office_pdf_font_notice_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c3fd0b0b3a9fcb0fc8c6a85ef6b1ffb13fbce322"
+    },
+    "lib/l10n/office_preview_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9800625b8649ebdf822b2774981c3417f424b649"
+    },
+    "lib/l10n/office_replace_status_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a338c15cd9f47c31be041db6fdd7f78af86bebe3"
+    },
+    "lib/l10n/office_ribbon_common_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6a459ee4c1f632ba65725d0b0075e5382ce85ed1"
+    },
+    "lib/l10n/office_ribbon_control_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ab16fd1dedb9b90b311aa4a99c5dc6603bba8177"
+    },
+    "lib/l10n/office_surface_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "17667de6068bd2c4c9276b9b7b5c0cb72c45162a"
+    },
+    "lib/l10n/onedrive_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "705f4573deaff33542d34baee679de1a715dffb1"
+    },
+    "lib/l10n/operations_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "275aa879a79ce77bf9e1e08be7f6356fcda49223"
+    },
+    "lib/l10n/page_navigation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d3a2d80c21e7c1528b5411c32699ea98c20c3a64"
+    },
+    "lib/l10n/panel_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "82be8e5fdb3e3e511d6ecca7b96f0eb8a4020ee8"
+    },
+    "lib/l10n/panel_header_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6ecec0e38c8a022cc77a5372b94e10e108477fbb"
+    },
+    "lib/l10n/panel_tab_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8978f86fa710605b6bcf641c5342e9f754dfb80a"
+    },
+    "lib/l10n/path_favorites_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d8207df847284678b9d66776bb1a523b0fecfc10"
+    },
+    "lib/l10n/pcloud_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a514a8936503d683dfd5715e899376685164c2a6"
+    },
+    "lib/l10n/pdf_editor_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2e38c334a0c143e000dbd0499820b716f900b536"
+    },
+    "lib/l10n/pdf_operations_cjk.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a0203c429a19eba427c7c4305c54797f9479e104"
+    },
+    "lib/l10n/pdf_operations_ko_ar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "53eb0fc3aef68f7d716bfb1ce5034103c7136346"
+    },
+    "lib/l10n/pdf_operations_romance.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "20e25e33875af9aade4ca030afa4d9cd4d461a5b"
+    },
+    "lib/l10n/pdf_operations_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5a46891aae8f7a901f4c74e8a3a29c45473150f3"
+    },
+    "lib/l10n/pdf_workflow_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "81ff7b7423be662ecee4b4e29f9e6a6e2f5b93b4"
+    },
+    "lib/l10n/permissions_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "09d9a305ef96e1b106be93dbd918d08d06315e63"
+    },
+    "lib/l10n/platform_message_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7887c661a15f66e5327c3e78dd85780bedfec113"
+    },
+    "lib/l10n/portable_office_preview_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "10ec6335f2f9094bdff9edbf994d0e0fccb4db69"
+    },
+    "lib/l10n/preview_media_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2f17fdca4a83853e05bf2aee99737cc39ed5eb18"
+    },
+    "lib/l10n/provider_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e35485b526d46353feedf2343e87eb8376ac5cbd"
+    },
+    "lib/l10n/provider_settings_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f379fc17b7228f23543dbc1e5189b573a0acd109"
+    },
+    "lib/l10n/provider_workflow_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "169f5d4fd6538eb88f6d36c840c67f0cb37924aa"
+    },
+    "lib/l10n/proxy_settings_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "64956e2263da6e6725d0dbc632fd52ebede14e6e"
+    },
+    "lib/l10n/quick_open_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9014c892b642818f8205aff35596ddd63aa1d4bb"
+    },
+    "lib/l10n/quick_search_status_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "47bdbd355a203dbe9a66c8c8f517d1462063f410"
+    },
+    "lib/l10n/remote_transport_extra_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "222e2b38f68a05d1aac962d399f8d90f335e3a07"
+    },
+    "lib/l10n/remote_transport_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9f65d604edb98bace54372f17034936f578fe64e"
+    },
+    "lib/l10n/remote_validation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "230295b17f954f8c97e1ce05ad63c88b05f36e0e"
+    },
+    "lib/l10n/rename_mask_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2d7d7425df8d90f4ea7748b3fd2327aee5cc60c4"
+    },
+    "lib/l10n/s3_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f93291d48e58bb854a124630ea857e2590d4f4e8"
+    },
+    "lib/l10n/s3_storage_class_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f75266ce7c2070f46cf4acb111792e1531a78481"
+    },
+    "lib/l10n/saved_search_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "34382d3313e6b4b261fe034baa4e2e082b631593"
+    },
+    "lib/l10n/screen_dialog_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1d6b7d1e5b4058309e283623a2659d4b7703b5bd"
+    },
+    "lib/l10n/search_dialog_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "803be1215a53ad13629f29859c35810702a100a8"
+    },
+    "lib/l10n/settings_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f2485ab85f26494d3780f3473fab38552de2086a"
+    },
+    "lib/l10n/sftp_key_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9cc440db513330fb2c3b6c05ce4eb864f6d91fa0"
+    },
+    "lib/l10n/sftp_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "809fbc8ab033a429c7a267136c4c40adc70032c3"
+    },
+    "lib/l10n/share_link_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d5446c21a6deae5b2c8072ada0b8aefe6176c683"
+    },
+    "lib/l10n/shortcut_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e0216be248774d8b06e40fbaa1f0f561b9ec71b2"
+    },
+    "lib/l10n/slide_viewer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "79a6f850f52d8cb3325404b623d03c7204eb7a27"
+    },
+    "lib/l10n/smb_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f9c65509c15bdcd8a17f5758bb41bc59cf000131"
+    },
+    "lib/l10n/startup_failure_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bf6fec5046ec7d396074e510d45f56562becbdbf"
+    },
+    "lib/l10n/status_bar_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "abe665607babee34c7f1936e83a2fad18dab577d"
+    },
+    "lib/l10n/storage_analyzer_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eb11306e94de49d6f6e7cda73ea1727c426edd36"
+    },
+    "lib/l10n/streaming_view_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "738725f89b6cf981a804b25a4d86831f01e2caa4"
+    },
+    "lib/l10n/sync_dialog_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "414301204ade57a30f4614f610930098f42ad2cf"
+    },
+    "lib/l10n/synchronized_browsing_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a03b818902246cf9e38a3868066c3a266ad9f014"
+    },
+    "lib/l10n/terminal_mount_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bb34527c0c66b586c50ef6b3a50a075305539fdd"
+    },
+    "lib/l10n/terminal_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5f0330bb5ef91e145b6523ce1e8c389a1e48a1d5"
+    },
+    "lib/l10n/terminal_workspace_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0c3951ecded53f70fe31610b9d3381790edc5f89"
+    },
+    "lib/l10n/theme_update_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d358f10ac553fbd9892223a8a556a553e8140242"
+    },
+    "lib/l10n/transfer_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eaf5e141f8894d1f48c86ad50b82213e74d99046"
+    },
+    "lib/l10n/transfer_queue_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cede25ed45fdfac8cb1149dcb411aace427f8ca1"
+    },
+    "lib/l10n/tray_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e28938792608533006f25f99b9e8456247de4e37"
+    },
+    "lib/l10n/undo_presentation.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58ac85b2ed955738a7c835a1f0e69a301e111507"
+    },
+    "lib/l10n/update_dialog_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6a90e374d95681126ef632489a0aebe9abf85051"
+    },
+    "lib/l10n/version_history_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b729f19585eddf43dc72cb221bfdf2675047095d"
+    },
+    "lib/l10n/viewer_action_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ad798039ecdc416fb1903972752252085d4df086"
+    },
+    "lib/l10n/web_file_error_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0180e70b3777b6a34512919912657a5e04c6c640"
+    },
+    "lib/l10n/web_vault_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e3a71841bd657f8be7d266f83c7e1a410b3b98b4"
+    },
+    "lib/l10n/webdav_operation_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "07c82ee5667bb8d6e75fcd0272e75a44d851230e"
+    },
+    "lib/l10n/word_format_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bdd851b298079a218618cb88168bcced54aaf686"
+    },
+    "lib/l10n/workspace_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e3744ded10f90aec362e8aed9e6bb84a4f1c5ee9"
+    },
+    "lib/l10n/workspace_translations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cbade1c428ed75fc1fd5a50e768ca40fec7c4c28"
+    },
+    "lib/l10n/workspace_ux_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a3f76d0a7e37c2bb9b6ab9b901a58004d4f8afe8"
+    },
+    "lib/l10n/xml_view_strings.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3943c3b93a8e3ea19619590623bed4d86641a3cb"
+    },
+    "lib/main.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "07452fffacfdbd2ebef5ee8d5ec039e52ec7ac21"
+    },
+    "lib/models/archive_endpoint.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "484de29087879488a3dc512022abd0dd1c2a7448"
+    },
+    "lib/models/archive_job.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ac85f6d128b71268a9222a05acbbb5eff0a0fc27"
+    },
+    "lib/models/archive_operation.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "af96f65a9545abb581593edf8035a51339dd3416"
+    },
+    "lib/models/browser_menu_layout.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eca0b96fba518d739583fa37e86a9f5db3b5a88e"
+    },
+    "lib/models/command_entry.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ab3ea91a44868347c94cca0f43f9f9aaae956b21"
+    },
+    "lib/models/command_extension.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6fe7837d9d25ba89fdae59c1b03b7dd8c42dd147"
+    },
+    "lib/models/custom_toolbar_command.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c99dca1a613c21ae8342ad6f13973bf9cd6c68a5"
+    },
+    "lib/models/external_comparison.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3e7ed7bf2eddcc0a7435495022921df5fa4c5dd3"
+    },
+    "lib/models/external_edit_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dae6c85a2d6f4bc6ec98e8f062809ebc04cded53"
+    },
+    "lib/models/file_collection.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fb7e1aa4ac0829ce8612a6dba4f71ce1a8bea253"
+    },
+    "lib/models/file_collection_page.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58972bf2de424eb84ad6ff4a6b233712d061672f"
+    },
+    "lib/models/file_item.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9658f079e16cb7abb17b4be0b0473009f0c1f1b9"
+    },
+    "lib/models/file_search_query.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1e0f2b68aebea5dc54d231a33b27fa3e3c1faf5f"
+    },
+    "lib/models/file_view_configuration.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "50cc5c6ad05b6058acdd75ff9766f3771a067ec8"
+    },
+    "lib/models/folder_size_measurement.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "aa543fd7a1ed1d6df692047e211bed4104d7c1c4"
+    },
+    "lib/models/gallery.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3df903129f6aae601e03469d6ea257412c1f2a50"
+    },
+    "lib/models/gathering_stack.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "19cabc3365ceeffda66d7f8a3a682e11f538fd4a"
+    },
+    "lib/models/integrity_recovery.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "42828cd979133da0be4d95df4a1aa55dbffe3d1c"
+    },
+    "lib/models/operation_progress.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "391993659eb1c6936086febf9c43400f910d1541"
+    },
+    "lib/models/panel_breadcrumb.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7fc1d0f7cc7f7de7f20b7b7111ab4e2f6fe4f96c"
+    },
+    "lib/models/panel_drag_data.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "179e4f8bb359c602d6a85ede685e9d585e495aaa"
+    },
+    "lib/models/panel_navigation.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "55497e842ab9d6b4d08e2660ec2572cb9389bd2e"
+    },
+    "lib/models/panel_side.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e7cf665faf7acd8fd2a082aa753c3b013078a5d2"
+    },
+    "lib/models/panel_tab.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b234f316ebe85b5c91d800f1c4f71a64fd757aa2"
+    },
+    "lib/models/rename_batch.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5ee3ac9bfe927e4da6d35182d375d73fb0b92f82"
+    },
+    "lib/models/sort.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7edd33dc43e5018bc06c7dd1cad942f142e406e8"
+    },
+    "lib/models/storage_analysis.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "31de8de7e6f24e976d391549aaf8a7fef7a79e9a"
+    },
+    "lib/models/storage_reference.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1e26cfe18080b4d155609fb73a5d9c1532c2bf8a"
+    },
+    "lib/models/terminal_workspace.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "14517f06a21dbccfa7cfcb5fbbad187f9617dc48"
+    },
+    "lib/models/transfer_job.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fb3dfb4ddc7a1ead033a0055d72cd96332d5f3e6"
+    },
+    "lib/models/transfer_queue_summary.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "136bb7756af7fef7804fe93266c3cc15608b907d"
+    },
+    "lib/models/workspace_configuration.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f3145d9256a4cd736ac318a6c656354a65e4c126"
+    },
+    "lib/providers/accessibility_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7ac29cf4b33751f79c1cb0003371a623c3576a07"
+    },
+    "lib/providers/action_history_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1c569fc957bb8ee5cbe198ccd9fa52402fd41f0f"
+    },
+    "lib/providers/analytics_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e011766730e656d3d43775262226e1c4ba6d56e4"
+    },
+    "lib/providers/auth_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d7f1d3e8a6da28cfcfd88d3ebc39ca68ab8ddafa"
+    },
+    "lib/providers/automation_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "185d0b8bb91993bc039695cb190fecb524a0c027"
+    },
+    "lib/providers/backup_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d43a500826e3a9cf50bab181fe8b8a06159fda1b"
+    },
+    "lib/providers/bookmarks_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "232d783e0dfc14dd2561061459abd38ad63a3975"
+    },
+    "lib/providers/browser_menu_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "841c07ee6f85d1ffd4a4a484dc164e4e804e1ff6"
+    },
+    "lib/providers/command_extension_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b1e36c7d4a8e1e119feaaad43c4abb7cc1a9fe00"
+    },
+    "lib/providers/core_providers.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "34e2ab2039510d035596c18a767f3ecedca69030"
+    },
+    "lib/providers/crash_reporting_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "33c48fb6ced3239101fdd61157484e469f6b24c3"
+    },
+    "lib/providers/custom_command_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "74349b09f0318b3da006edfcaa60287bd1ab682d"
+    },
+    "lib/providers/delta_sync_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b1c2441996ac222123255c36b232f70ef7e4cba"
+    },
+    "lib/providers/dir_size_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7563c2028cdb7596502a78fa333526542c83c11d"
+    },
+    "lib/providers/error_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0a9a537a31a5035ea59575018991342030c37e64"
+    },
+    "lib/providers/external_comparison_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fbc70c9d0bc03569a833a5f7b7e99dd6de7187c2"
+    },
+    "lib/providers/external_remote_editing_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ce5515332caa17b8f188b475b6db111b7fa58fb3"
+    },
+    "lib/providers/file_clipboard_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a39582c6d6ce06ab925ce0848b27f48966b95546"
+    },
+    "lib/providers/file_collection_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "793b9749d3e6bfc93c95527e4e3de8c837980ea6"
+    },
+    "lib/providers/file_type_color_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7776d2f082a30ee8bc00dc81e0e44afaa19935f4"
+    },
+    "lib/providers/focus_area_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7f6c128779e48d1da01efdb986d5fe0d5be58cf4"
+    },
+    "lib/providers/gallery_media_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "353606374af8ffe17c0cea0ab7846016ae730d09"
+    },
+    "lib/providers/gallery_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7518c966d777d432468778d5fdff97597fbda836"
+    },
+    "lib/providers/gathering_stack_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2e73c9c01f92252b4f62adabd0b5a5000b61b00c"
+    },
+    "lib/providers/keyboard_shortcut_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dcaec060facbaa6b87d44d2484510bf5fdc2675b"
+    },
+    "lib/providers/linux_integration_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3667cc3d7c65946bf4636de69975cc01ecd636f2"
+    },
+    "lib/providers/local_api_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "86e42bedf1ffa5f47e3e4794ee535b46130204b3"
+    },
+    "lib/providers/migration_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8b50770b04acb91cf5988acb7f8a67c4db348929"
+    },
+    "lib/providers/mount_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8e0d161cf903b70acd3438f87e4169673ce39162"
+    },
+    "lib/providers/multi_cloud_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "039a765affb0370c21cf5e8290dcb8c38133e791"
+    },
+    "lib/providers/native_file_operations_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d73e2ee67f13fb72fc2298d2865711cce9740103"
+    },
+    "lib/providers/office_conversion_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "15052e1f5fd045becf769186bc410044a814d673"
+    },
+    "lib/providers/panel_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9685b77e4596f3df04c6f24313c97f9cfa7c518a"
+    },
+    "lib/providers/panel_source_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1f0f0520e071a756b73b5af608d9501fe8e75e5c"
+    },
+    "lib/providers/plugin_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "24754e54df216c77369dcf6a8ee080f27d62ac48"
+    },
+    "lib/providers/provider_comparison_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "663a6c5c354829f86d6f48e4f7960fe5952b7b6a"
+    },
+    "lib/providers/providers.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4fed1b1152105149a5e21aadd12844583a5e4343"
+    },
+    "lib/providers/quick_open_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b55cfc97ae54e56c0f2eb3d6f4bf5dce2c670ced"
+    },
+    "lib/providers/quick_search_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a1edf9e9fd1bbb65e10d20fa2d86c1cda5bbc243"
+    },
+    "lib/providers/recent_locations_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0b837f7cba437f7cb1eb33d0152ed3f69b3b1a83"
+    },
+    "lib/providers/search_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "82630ddb9117897eed54bb4224565b5573bac0f7"
+    },
+    "lib/providers/shared_folder_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "adcdc5e097ab8300f2efd454032e49b1b8bc7a63"
+    },
+    "lib/providers/ssh_terminal_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b7fe12e15d517b82e877a006eb61483657048298"
+    },
+    "lib/providers/storage_analytics_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "72dabc76243126ab3c63a3a27a98cd7703c178c3"
+    },
+    "lib/providers/sync_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5b87043b2586b2d4687e530ef02965c2b926b2f1"
+    },
+    "lib/providers/synchronized_browsing_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "12410b97e2bcff0c3a61c33c02a2d5e596c74244"
+    },
+    "lib/providers/terminal_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "83f516897d97450aefaf1b9a9c84b5bcf9cefbb0"
+    },
+    "lib/providers/terminal_workspace_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d288cdf7d08a9d9ee17fb17b25b086757144eb41"
+    },
+    "lib/providers/toolbar_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7eb84d07d0ccf6a09e32d2a7387e3765da526eee"
+    },
+    "lib/providers/transfer_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "63a9443fdc2b19411d6d5de0cf30352f77ca2c95"
+    },
+    "lib/providers/trash_history_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e5525f464c2d379905cca9ccf32348d0ffa35014"
+    },
+    "lib/providers/ui_chrome_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "19d837bab3c3d76b5ee01f4b51562591c5c31232"
+    },
+    "lib/providers/update_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "82e1305a93210f9937ad2f21b8781d39d096ceec"
+    },
+    "lib/providers/vault_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "429f9e3600bfaa1e76f4fd403455485606f8e933"
+    },
+    "lib/providers/veracrypt_mount_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2e9ad46bd4e91b8af34c3deb3bfb4c5a2d45ac8a"
+    },
+    "lib/providers/workspace_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b73b9680e8f3890dcfbc664bc903411030932dfc"
+    },
+    "lib/providers/xdg_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "74bc147863095a30dbdc8ba86ab4066f34f4ceb7"
+    },
+    "lib/screens/about_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fc6288845841f1aa0f3cdf36b4ade6b1ca834525"
+    },
+    "lib/screens/file_browser_screen.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e743d9e346a43fdcf2f3771651098778903cd9b1"
+    },
+    "lib/screens/keyboard_shortcuts.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fb400145d08049eb26dcc02f859e44870c9cb511"
+    },
+    "lib/screens/screen_dialogs.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d653ac4959186d42902ddfed9c9fc1869386bdbb"
+    },
+    "lib/services/accessibility_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "89a3000a4a227566b03535a4b81c5f43b3d41a6d"
+    },
+    "lib/services/action_history_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "39b7be241e5a54b2ef2e6656399a10ccb5513c8b"
+    },
+    "lib/services/aes_siv.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bf364626aac075adf2734ae92de7db0f7fe6b0cd"
+    },
+    "lib/services/analytics_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7a4a3e3ec331d64399159a9dcc974c866f9d65db"
+    },
+    "lib/services/app_lock_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "626e1a8a310180e055058cd4839547537fe7f789"
+    },
+    "lib/services/app_state.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d234ff6232a7228fb0bd97e566ddd2dc154cbd8a"
+    },
+    "lib/services/archive_adc_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0d79c9251e4634e6a0e2f625b40454f1b9e83423"
+    },
+    "lib/services/archive_batch_extraction_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "183e795f145ff3f6cc5512fb4b8dc9b0fc4fe2c9"
+    },
+    "lib/services/archive_batch_integrity_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58d533997a7fd3da68ef9d47503c14ce33cf3c73"
+    },
+    "lib/services/archive_browser_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "23c4a4d117743d42d53824b577a1bb2ad8166c1e"
+    },
+    "lib/services/archive_cab_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c8191a083e7b1c3508c9c2c66c7a39548a5724a7"
+    },
+    "lib/services/archive_checkpoint_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "810e05899b7b41aa810f6b5ae9a94936ce8eeef5"
+    },
+    "lib/services/archive_compression_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "597b36d04dd640a493b3753e5780c6ce63679466"
+    },
+    "lib/services/archive_container_publisher.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "efaccf097ce3ddc26e405e1077048c7c87d9609d"
+    },
+    "lib/services/archive_created_zip_metadata.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "64a9868986c17054166cd18b2259392562679d3e"
+    },
+    "lib/services/archive_creation_batch.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b710c68384cceef7de83123045382454e1fd2550"
+    },
+    "lib/services/archive_creation_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e619dadb3be97216b613a89ea720fdf22c2e4189"
+    },
+    "lib/services/archive_directory_snapshot.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a556d9817759ebd26f5d135444745877ad232331"
+    },
+    "lib/services/archive_directory_sync_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a1f5df5b6e0ff9a164be4045aab83de3e04a7396"
+    },
+    "lib/services/archive_disk_image_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "705ee999a3c92874fb7a7636555df2443b520e98"
+    },
+    "lib/services/archive_disk_verification.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0dbc4f6f10017546c3ce7a1599b8be31c6c1aee5"
+    },
+    "lib/services/archive_dmg_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "80aa6430737545ae725bdc52d2e8ba965b87d461"
+    },
+    "lib/services/archive_dmg_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c9667faed824ca6524e86e0233b2c69dfebf3dbc"
+    },
+    "lib/services/archive_endpoint.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6d814a59ced15fa0b3a864505ba7e45cb0ae5520"
+    },
+    "lib/services/archive_endpoint_policy.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "56ab1c35bd662a88b56904cb4c080efe66ed9205"
+    },
+    "lib/services/archive_external_packer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "393321fd0d13f421c46d0adf27330844f067d113"
+    },
+    "lib/services/archive_external_packer_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "02f3ba9b916e570046988cabcf25b4d6736eca29"
+    },
+    "lib/services/archive_external_packer_metadata_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "db6ef40326ed9eb2917f0c966e0468fa44cb3bda"
+    },
+    "lib/services/archive_external_packer_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a2f59c628a63d2cf8d1306715bfc4bb22c00d72d"
+    },
+    "lib/services/archive_external_packer_types.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0074eeeae2c224af94fd6beed841101bbf4e1900"
+    },
+    "lib/services/archive_fat_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "433b049fdc4e8ca45d031dc0f6a4ee0eba4ead4d"
+    },
+    "lib/services/archive_format_registry.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "91260e351e6a1f9f36029807f6309c08989f293e"
+    },
+    "lib/services/archive_hfs_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "612db9f7b05d78822a0b2bb212facda6d67d9ee0"
+    },
+    "lib/services/archive_hfs_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1620cb0c0669995c08ba7b2df35b24d401509e4f"
+    },
+    "lib/services/archive_integrity_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "16f9d8b9620fd8308d62cffaff3b12adc62d7b4c"
+    },
+    "lib/services/archive_iso_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4288756e6cea0cf900ba33fe80c788454ba3c553"
+    },
+    "lib/services/archive_iso_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6e08b4d800ed803dcb6e5acb2c68e5c2afc39096"
+    },
+    "lib/services/archive_job_recovery_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cc5fd9b72c59f7d0130a62f33dab7cc525686a5b"
+    },
+    "lib/services/archive_lz4_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d6b8d20b0db73129eb83030eb13bfe965381b376"
+    },
+    "lib/services/archive_lzfse_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "741672662c7b7d2f5dfa8a7c282d2bf5e57d4468"
+    },
+    "lib/services/archive_lzfse_license.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "410e6a0990a7ad4c07d827eebc66378fdb366f81"
+    },
+    "lib/services/archive_lzip_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "004fcc253f3a5a2b80e0004f8407c83a778a879f"
+    },
+    "lib/services/archive_lzma_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "59fb7fb910a8b74276a11a22dc468e5691d97f28"
+    },
+    "lib/services/archive_member_index.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7689bb3576245e781725851b1076a2046d14c277"
+    },
+    "lib/services/archive_output_spool.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e38804e99063752310f2ab3a9f557551b0019eea"
+    },
+    "lib/services/archive_output_spool_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "42f13f8e5599a9707d82b2be226386faac49608c"
+    },
+    "lib/services/archive_output_spool_memory.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b6dfdc1f3be8b04a8132d8548af02f2bede5281"
+    },
+    "lib/services/archive_package_readers.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b4572391e3a38157234b0614570476e9daaf1e60"
+    },
+    "lib/services/archive_package_writers.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "43bef75d9c86314b9592aa396b0b6fe33760b319"
+    },
+    "lib/services/archive_pbzx_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0cf7959220be290c3bef244bfe9d1920aa8c8af9"
+    },
+    "lib/services/archive_publication_access_policy.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1d59f4706bfd569ed6340aa2409bb87fa9f8f871"
+    },
+    "lib/services/archive_publication_cleanup_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "34157deceb8dee0fd740d314ee8aa6a3d775efb8"
+    },
+    "lib/services/archive_publication_cleanup_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "abdff8cd55836ee05fe1a6b9b2f294fcfaab7e23"
+    },
+    "lib/services/archive_publication_journal.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8c62229e48d8aa7464a285a3e322b23c4f8c1e77"
+    },
+    "lib/services/archive_publication_lease.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a19584c755ee38498a1099a5397d844496e8a3e4"
+    },
+    "lib/services/archive_publication_lease_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "683d8baf0edb49f5aec3693a869a23da52d593c2"
+    },
+    "lib/services/archive_publication_lease_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2362a5a28d923aa58c8350b3925903140fa9738e"
+    },
+    "lib/services/archive_publication_storage_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b66257587891db286b30af7287a7964f34d4e50a"
+    },
+    "lib/services/archive_publication_storage_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "27a7a9ca0b5cbc1408b76cf08936d294898cd413"
+    },
+    "lib/services/archive_rar_metadata_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a5edce6126e16de42d3317d3324a35e5bf5c4d60"
+    },
+    "lib/services/archive_rar_stored_format.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0a24d424f5436ec1a8694aca7051180a866210fc"
+    },
+    "lib/services/archive_rar_stored_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f03816f77e22b7e24524430ccd683ecccdf4108a"
+    },
+    "lib/services/archive_rar_stored_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3bcd038367e68a5ffc506a4da8a9ef0fd20bfd8b"
+    },
+    "lib/services/archive_rpm_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ea5ad5a27e5da11b6903ee302b7952a1378c5d89"
+    },
+    "lib/services/archive_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8ffa34643c16fe7a7b543da2cdc99c64336b3dba"
+    },
+    "lib/services/archive_sevenz_byte_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "537c94c27a65b16ac3fa882a6c2489e652eb5009"
+    },
+    "lib/services/archive_sevenz_metadata.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "53b97c4b0aabc1bb14df222d9a95644857e0fa9b"
+    },
+    "lib/services/archive_sevenz_streamed_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "947765feb2716a7a68031dde13b94bd3b0e9a9c8"
+    },
+    "lib/services/archive_sfx_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7db0c56eb0ded31c0067bb797336eb8d2a4f9c41"
+    },
+    "lib/services/archive_slice_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3a141157f79adfeffb2e45380708a22edf7ec052"
+    },
+    "lib/services/archive_source_cleanup_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2ae6b6f194b1b0ab81d7d67356dfe7a776283984"
+    },
+    "lib/services/archive_source_cleanup_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "057867a74b839abbcc731b385c9ec9f55aae5fbf"
+    },
+    "lib/services/archive_streamed_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9033447f6e94d0a21cc86ace91671a939c9db5af"
+    },
+    "lib/services/archive_streaming_lzma.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef9aa5e1be4cdcd6f44e7b41890e936e99e992b0"
+    },
+    "lib/services/archive_streaming_lzma2.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a2f48d61cdd995a609617bd77c2bf4684885bcc2"
+    },
+    "lib/services/archive_streaming_unsupported.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f4f8975e59da293199e940fea9b49c681b7fb593"
+    },
+    "lib/services/archive_streaming_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f53fa18605f5f60d07915af2945e3a9761979e83"
+    },
+    "lib/services/archive_streaming_writer_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ffe741d291fedd7ae970a7dfd004180e7a3a9576"
+    },
+    "lib/services/archive_streaming_writer_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fe6e14eeab926a5a1ad5aeea017d6632fb99c076"
+    },
+    "lib/services/archive_tar_writer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6e582bae76bf3e50a286aad54c528c7ea66ff540"
+    },
+    "lib/services/archive_types.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "aa76eb084a99c81fef172fca842d0e31cc534807"
+    },
+    "lib/services/archive_udf_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fe77a0ff62ece4498d10780945f7da63ab157899"
+    },
+    "lib/services/archive_unix_compress_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f7e837443dfa21a21414e81ab29b4a2d96a5ca04"
+    },
+    "lib/services/archive_viewer_file.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9650cd9e54ee0c0a8bbe087f034c3939b7224e95"
+    },
+    "lib/services/archive_viewer_file_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c058b4fdbf376d2fde01cd5ac0191ee4d64076a5"
+    },
+    "lib/services/archive_viewer_file_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2153d6f3ce20d9b76b949ace3de720e78a57f671"
+    },
+    "lib/services/archive_viewer_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f3fcc3d1860b55d71e20566e10a887b608a27e19"
+    },
+    "lib/services/archive_viewer_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "47ae98b5a5933a38bc275c42c084fac20e0b86b2"
+    },
+    "lib/services/archive_viewer_streaming.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0deac5f986177da908bf0a9d955e9053984e1db3"
+    },
+    "lib/services/archive_volume_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "230ad8a91708f2fe2c3e3899f56cbb78b8c7c9c5"
+    },
+    "lib/services/archive_volume_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4d1901de57507283368ce70a2e4897158920e70b"
+    },
+    "lib/services/archive_workspace.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ab44af65ebfa26b913d8ba4021af3da3b32752ee"
+    },
+    "lib/services/archive_write_model.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9adb00765dd0ab1565ac1856e0e1d00e8ddcc2e5"
+    },
+    "lib/services/archive_writer_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "79521d5b571675dd7a97d26c5a6dbd8681d98db0"
+    },
+    "lib/services/archive_writer_worker.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1723d65895b956a7a9015109df23e50c0baa13f0"
+    },
+    "lib/services/archive_writer_worker_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2a99fd660de707907038e3a8a0e8a93859a64163"
+    },
+    "lib/services/archive_writer_worker_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e209db9d7e10aff7d9f9bdf0c031ddc9d8fa9d6e"
+    },
+    "lib/services/archive_zip_metadata.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "11222e6207c080e6848a0afd436d577a8aa3c0d9"
+    },
+    "lib/services/archive_zip_package_policy.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "85c394e455a5fed5a82b0a00cb692041fcfbe518"
+    },
+    "lib/services/archive_zip_recovery_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ffd0effe5c9c3978cc0fba4babe24c22eaa1fa58"
+    },
+    "lib/services/archive_zip_recovery_workflow.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "07d6b9592cd77f07366ee273bfa5866d709c393e"
+    },
+    "lib/services/audit_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "288e3682291da9edd5bed73d1db362c686094a15"
+    },
+    "lib/services/auth_sync_notice.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "35ec7321f547bd605f6edeaa8e0c0add2de3ecde"
+    },
+    "lib/services/auto_update_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "760166d277136c16667f430a1c0415b08368005d"
+    },
+    "lib/services/automation_engine.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e3d2439e67cd2485f9b9dfb7816e924b377e4a77"
+    },
+    "lib/services/automation_rule_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef329ee71d581f96128c58d4e78af65398432ffb"
+    },
+    "lib/services/azure_blob_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "174a5e1f80ff6a84f438a2267a20d35b82529858"
+    },
+    "lib/services/azure_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "94519605590ebae3370066a34155553938ca9edc"
+    },
+    "lib/services/azure_hetzner_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "628e836fa35dc6599751f2b85bdcf20dcc8f7263"
+    },
+    "lib/services/b2_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d22cd826c6c5ff9b80f72c994d97d601f4961d61"
+    },
+    "lib/services/b2_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cb257673f6dba21e74645d7b983ad46dcff55b48"
+    },
+    "lib/services/b2_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ce1802b51ed8096109b29c32657250270b80ef40"
+    },
+    "lib/services/background_sync_mobile.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c6da41d8cdd91509e6a9ebe1d3a5197b85905d84"
+    },
+    "lib/services/background_sync_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8a22d196496b5b5238c7299eea3e8ac87bc45ae0"
+    },
+    "lib/services/background_sync_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a9357b6f563d609c06161b28e544e70a135f4d63"
+    },
+    "lib/services/background_transfer_journal.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4b477d4d5c690c675c501bc2020bde65a7dde85d"
+    },
+    "lib/services/background_transfer_journal_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "04180e4fe3913c0c2faa5500113d6811fe8b3c21"
+    },
+    "lib/services/background_transfer_journal_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "520de4fa562a7d9c98c8d919ab7c71ab715596ec"
+    },
+    "lib/services/background_transfer_journal_types.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6b48c21f9bf30a241c1ff4e8d17bf53c33c1e221"
+    },
+    "lib/services/backup_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1f4f69b2cd5f14f3f1582e341fccc1eb7ab00490"
+    },
+    "lib/services/bcrypt_aesgcm.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "245eab8fbaa837bdf1ac4cb5ff9e5973160137e5"
+    },
+    "lib/services/bcrypt_crypto_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2cf4bf96b008602f196c94c256cd300e56f23b9c"
+    },
+    "lib/services/benchmark_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d1cccfd932b7a44327857e2bff16b6b0de9b8364"
+    },
+    "lib/services/binary_structure_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f4310d2a622f6584a39ad211d3a28ed815f5e484"
+    },
+    "lib/services/binary_structure_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8f10f958c5aac248c9bfd12f1de25caa54053955"
+    },
+    "lib/services/bookmark_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0bb0bf70e3d3a631570b8a3d02f9249f76c479e0"
+    },
+    "lib/services/bounded_http_transfer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d39edd518f4ff2c98822b88214e412fa69570b31"
+    },
+    "lib/services/bounded_transfer_stream.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "08312a49c0648165acdb68c317c5705afe7fd562"
+    },
+    "lib/services/broken_link.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4a0b682f52c4479cc811a694c09b6bd3ff8cfa41"
+    },
+    "lib/services/browser_menu_shortcut.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "257c14726833decc60676445e5bd94f61d93e5e2"
+    },
+    "lib/services/browser_menu_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7368f96911339a76f6a7a7aebfa4487295f352cc"
+    },
+    "lib/services/captured_file_target.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "97e036644f9990691f1d0490ea0be4b31fbbadd8"
+    },
+    "lib/services/cert_pinning_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "45327136c4048723b35563b6eaa67452c38292a6"
+    },
+    "lib/services/checksum_file_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "316f7ab86e8d23c1796bcf3656b082cf9320d1d3"
+    },
+    "lib/services/checksum_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58f526718f13263f25115eb36d01b73aacaa59e4"
+    },
+    "lib/services/cloud_storage_interface.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a56f0cfc54c0558adf38eabcbc93fb7dd77cfe01"
+    },
+    "lib/services/code_editor_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "edfb0a1b5dd3e9dab9ed77f487dcef0dec1a8d69"
+    },
+    "lib/services/collection_panel_state.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "afa09d9901eccc16e53038b55850e357af72724e"
+    },
+    "lib/services/command_entry_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "150b013e15bd67a685d80dd735d68ac5ad5a9e21"
+    },
+    "lib/services/command_extension_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "db796838366b75219525e4cdf88ad4f4f468afca"
+    },
+    "lib/services/command_search.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ab58f0cf332b811d0ebe032ad42f9ffcc475d1d6"
+    },
+    "lib/services/conditional_file_publication.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3eddbc2a897411bce728f6e557231aa3d0359d92"
+    },
+    "lib/services/connection_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f1c7ff55672d39a83b23ffcff1a5e539ad989b59"
+    },
+    "lib/services/connection_profiles.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "abdc9f6f979ec2533c366b5600cb9d3d74e1fa8f"
+    },
+    "lib/services/crash_reporting_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "18ff2528f833fb98efb6ebe7aa3504452534baa0"
+    },
+    "lib/services/credential_storage_bootstrap.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "468b448a11a99e6ad0a73df22a5b0218ab64203b"
+    },
+    "lib/services/credential_storage_config.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3790135b46c19da01d74c9b2b10d12f41957c2be"
+    },
+    "lib/services/credential_storage_diagnostics.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fa9712686ba47b53c304ff4e3f65c90d150d1a2d"
+    },
+    "lib/services/credential_storage_first_setup.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1885b29ab11804a924ce2078ea38f0a84e04e8e4"
+    },
+    "lib/services/credential_storage_first_setup_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8989a8b08468ad5bf77e700a1400e144c1fe612a"
+    },
+    "lib/services/credential_storage_recovery.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "184ea8eece56eb67c70a88fade6deedc451efa92"
+    },
+    "lib/services/cryptography_crypto_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "067bb27cff34ecb4353f0284228ce3a5bca0d4f6"
+    },
+    "lib/services/cryptomator_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9d5591f750edd0359bd163a6ea52b0aa9c080aa3"
+    },
+    "lib/services/custom_toolbar_command_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1df441e808c204d5b5f9f81abe07e09ad8ab9bf2"
+    },
+    "lib/services/delta_sync_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4cd7c5d3b24f6000f6e999dbc94afc0ebf1f8906"
+    },
+    "lib/services/destination_name_mask.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "24808b9ac8f6f6396d1be42752dc65df765b6d00"
+    },
+    "lib/services/dir_size_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "62a9e09f85c80e322215df3f8f5d5a32ba43dfd7"
+    },
+    "lib/services/directory_cache_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dd020e9d8a3004efe009edb7b694fcaff8a0dd9c"
+    },
+    "lib/services/directory_comparison_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a84f8c7c8ae8b404d71f10d3e3224d68478c3369"
+    },
+    "lib/services/directory_selection_comparison.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ee49e53d5dc415b0a102021380c178fbff405b2a"
+    },
+    "lib/services/disk_partition_inspector.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f0c41a487bbc798cd1fdc0e41f903bacd8b877de"
+    },
+    "lib/services/document_font_catalog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "33408d27fde0b7e0a7195c3ac3192171873a454e"
+    },
+    "lib/services/document_fonts.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9dbcfecdf31e0f91772b97d89a2906b1de4c69a9"
+    },
+    "lib/services/document_preview_fonts.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "484922b5e80fdec9e0ee6f43904be8dc2b9e9994"
+    },
+    "lib/services/document_preview_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f963604e1790f8ce548ba01345360c36c016554e"
+    },
+    "lib/services/documents_provider_bridge.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5244377dc93d776dbb03a2c47b30c7af2ebf55c2"
+    },
+    "lib/services/dropbox_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "836c602907858fb35697663dbaf772a6547283c3"
+    },
+    "lib/services/dropbox_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "662587fcba8034b9816dcc7396af758df015b2ac"
+    },
+    "lib/services/dropbox_file_publication.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1daf7c0bddcfb0902938fef960c2074d3e5e46a8"
+    },
+    "lib/services/dropbox_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e9a0165e2a13b45921c12078e279a97bf007d4ed"
+    },
+    "lib/services/duplicate_finder_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b3bc29a099de8d3711f3892115947cdb158cf5ab"
+    },
+    "lib/services/duplicate_name_template.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0313d277dbb78ceb5ad220fe21139eff04698e13"
+    },
+    "lib/services/ebook_annotations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "866a3418d62e52dc15df4d916aa97f19d434c45f"
+    },
+    "lib/services/ebook_chapter_reader_controller.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9cdc0acf1a162eba19b2065a9caf3427e6895a77"
+    },
+    "lib/services/ebook_device_export.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "69057ee795735c02190af8e1ba512cadfd51d140"
+    },
+    "lib/services/ebook_device_export_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "87875b95a89ba14ccb36b35c0412c4910335b487"
+    },
+    "lib/services/ebook_device_export_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "60d1bc71cd40dfb27c137350582952aa3c07cda2"
+    },
+    "lib/services/ebook_edit_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4504b4b070cf3707012a653f1b363c8fa6f674c1"
+    },
+    "lib/services/ebook_editor_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "41377c60b97591ddddd787e73fe2413e104766a2"
+    },
+    "lib/services/ebook_file_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5f4041c3defccb9b15d160fc7092646a3789584d"
+    },
+    "lib/services/ebook_library.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "376a0f1d1c3a863ec5924582091c061e2d8d5aa3"
+    },
+    "lib/services/ebook_licenses.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6a17e59de208f8e97451e7e467918a912d149787"
+    },
+    "lib/services/ebook_reading_data.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ae630c0325e84181eeb64f5feb0f8805956e586b"
+    },
+    "lib/services/ebook_reading_data_files.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "60f89d9784c67671a8b1d9fb6b9ef75459b772cc"
+    },
+    "lib/services/ebook_reading_data_files_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "721fcca32b158fd033c37f4a0fe429b1a9b447ab"
+    },
+    "lib/services/ebook_reading_data_files_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1d64ab0dbd82dbecf9c4d2db4932963da629c399"
+    },
+    "lib/services/editor_document.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b07910f6766526f8c489ace72e301dd162e5784"
+    },
+    "lib/services/editor_document_history.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c24ef6db23b9b2848a3a73b474154339bfb63f5c"
+    },
+    "lib/services/editor_highlighting.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d2eb215d18e16458a475c98cf73c743eca3223af"
+    },
+    "lib/services/editor_kind.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b57a57a190f6def7914c10adde4f9e984233d00"
+    },
+    "lib/services/email_message_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7e8696646efb3b8bf1ac6dfb4eaa85ca6ee97e00"
+    },
+    "lib/services/encrypted_storage_wrapper.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6be336b220159a97949b97d52a8a6c1071ab4a07"
+    },
+    "lib/services/encryption_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dd4e133c2d7da87da5236ee8f06833bb433fa6fd"
+    },
+    "lib/services/external_comparison_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bebb0f28ccb02123b76f6ea7b13280043ed3b278"
+    },
+    "lib/services/external_comparison_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "604cbd01da1f31359a177d0f1bf3170007d841b8"
+    },
+    "lib/services/external_drop_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "694645c9f3863102ff2a170fc92c50c0eb33d9fd"
+    },
+    "lib/services/external_drop_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "952cfc4859a072dfe36bbf67c72ee29e318f6d04"
+    },
+    "lib/services/external_edit_copy_export.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "50cc9af4a4f62a1af121abc314c0e8b1afd3e299"
+    },
+    "lib/services/external_editor_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f9d1e5f4dc78f8d802ba3fb87cecb795b5117e78"
+    },
+    "lib/services/external_remote_editing_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b152d6c756344fd8f6b6e0de75be67286ed468f8"
+    },
+    "lib/services/external_terminal_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7f6f89240232cccd6e6161334547410aa2063cf6"
+    },
+    "lib/services/file_action_requests.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ffa683674ea4fd1f309c017d5f63cb9eaa737f26"
+    },
+    "lib/services/file_attributes_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fb1a2e5c40f49958e6251cbfc0c581404c1493cf"
+    },
+    "lib/services/file_bytes_loader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2c6b388303c045ff13d01b76f946d3af51f50b08"
+    },
+    "lib/services/file_cache_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3aa983fbdd24fc7930a317ffa04c8fd9cdc6118a"
+    },
+    "lib/services/file_collection_query.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7164a449b4ea798bf63de7b4698f9a6e4a6674fe"
+    },
+    "lib/services/file_collection_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ff392482aab071e0f0d7de3898201d7fb362f469"
+    },
+    "lib/services/file_collection_storage.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fdb591167125593bd8586f4cb6f48e3e2c1b8092"
+    },
+    "lib/services/file_collection_storage_browser.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "11d09df8bf8da2c2f6c9b9358ebd59ad73668367"
+    },
+    "lib/services/file_collection_storage_factory.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1718d99fb1d60c9a4a32fcb0b38e690a1589d311"
+    },
+    "lib/services/file_collection_storage_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4bad25b47fd94dd6f098e8317ec8987bccd960e8"
+    },
+    "lib/services/file_collection_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d6bd414a04704c759d87aec0b91477b8a099e3e8"
+    },
+    "lib/services/file_comparison_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "90a28f6555742974b91cf91b14be4c92c8327ea5"
+    },
+    "lib/services/file_conflict_preview_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c46581b908847e43603c1aa7ff368c05ea64be39"
+    },
+    "lib/services/file_conversion_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7a68abfd17ffe0ad8029e0cbff6aab6d490f49ce"
+    },
+    "lib/services/file_conversion_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5777323dac86900480062cf0ae70da7223463153"
+    },
+    "lib/services/file_integrity_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bc1809f0df70ace3da2e1876942b7f52e26fc477"
+    },
+    "lib/services/file_list_export.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8503aeb5d54ff8656fa8c4a3e2c66076fcd8aeda"
+    },
+    "lib/services/file_list_export_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "70ba3df1e129bfd9a60993fd123630c0882c795b"
+    },
+    "lib/services/file_list_export_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "435a0157704547d32465465c32f19b29cb3a50d6"
+    },
+    "lib/services/file_list_paths.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0182c20edabd1cbf9f837c5ee27d30b1e28545ea"
+    },
+    "lib/services/file_operation_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7b447b4f2555b477595c8e6f7d9b3b685529649a"
+    },
+    "lib/services/file_operation_options.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d75973dd2cdbf028a1dffaf571232bc43d118ec7"
+    },
+    "lib/services/file_operation_profiles.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "52a5bdc548fc0a985a100285a6c41b5cfecaaeae"
+    },
+    "lib/services/file_operation_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c2bc3c5f4867d05472814d2eef611d7f990b9832"
+    },
+    "lib/services/file_pointer_modifiers.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "88ad5b4c5e716a772f0a3d92e4206e00efca4592"
+    },
+    "lib/services/file_provider_bridge.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "181caf632a84a263918dc33d35bb65d0fc9060fe"
+    },
+    "lib/services/file_search_path_filter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b39286b14a77cd47acba685264380024d3845724"
+    },
+    "lib/services/file_selection_pattern.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7981671ed4fb14097a4eeb7043835556ac9004d2"
+    },
+    "lib/services/file_split_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "52efa7812684adf8137fe66fc4223c19704c50e5"
+    },
+    "lib/services/file_system_access_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5b77ed4424c096830549bb067e7454565f96bcb4"
+    },
+    "lib/services/file_system_access_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "63f9a7cc8d2fde5743c8a9b74560dc3594a740db"
+    },
+    "lib/services/file_system_access_service_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4c7cdd9d0fe5825329e9145e2a4753b8c49f9994"
+    },
+    "lib/services/file_type_color_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6e704a917c32677a8c693bbc02e608ce161a9449"
+    },
+    "lib/services/file_viewer_binary_license.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3bd3c60acf1cf6737a23f9c90cc028db7ed95cfa"
+    },
+    "lib/services/file_viewer_documents_license.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0a2f9c18ccabfaeb1b8d4c54f138f4f23c693921"
+    },
+    "lib/services/file_viewer_lrc_license.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "032d976b05c6d133a5b3c61abceb4ce4a2ba60b4"
+    },
+    "lib/services/filen_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eb7ddd72a49139309382c067dbb7c664970ffe2f"
+    },
+    "lib/services/filen_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a8bf220a230c1f7cac16b371a837faaa349a1d28"
+    },
+    "lib/services/filen_legacy_credentials_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c6e9e82c88eb7e8e062706ad011f2db612333271"
+    },
+    "lib/services/filen_legacy_credentials_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0bc70f9575016b92c0d0e28feb4fb5dfd7ad57e7"
+    },
+    "lib/services/filen_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4065710f1dc9b7cb41fe0e1038f00acdecbd5cc0"
+    },
+    "lib/services/filen_stream_transfer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "80a5098a764645ec8be92370f20f045edec7b6d5"
+    },
+    "lib/services/filen_web_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "224eb53fbc31dc2e0e76f4b247ce7b1ab5d2aa85"
+    },
+    "lib/services/finder_extension_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5b41ba8f532535f8d0c7470dd17d7103746156cb"
+    },
+    "lib/services/fkey_action_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "909761439b28bcde6fd8f42deb395b3e8e1947f8"
+    },
+    "lib/services/folder_drop_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "806d5dad15c76ac6b0823e5ec72df19f63e67e9a"
+    },
+    "lib/services/foreground_transfer_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "135b2ae92de13b30cb4ac482bf31bb0186017e8f"
+    },
+    "lib/services/formatters.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "108493981d9404c6eb6bf60515039d810be814c9"
+    },
+    "lib/services/ftp_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9fb82a9590439dc04e703edfe42839deae370b39"
+    },
+    "lib/services/ftp_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b1545ccfe559f7bbb15e2910b1659be1a598fee7"
+    },
+    "lib/services/ftp_download_snapshot.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4490e295297d1207e7afe19c395a58714aaf4b2f"
+    },
+    "lib/services/ftp_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "30ef29720fee62fb96b18cbe4bff95ecd7693705"
+    },
+    "lib/services/ftp_security_mode.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2255a3a03014d426c6e00e2b0e974d3917d5c38a"
+    },
+    "lib/services/ftp_transfer_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c70372d6bd9f3ad027aef163b14fffb7d9bb773e"
+    },
+    "lib/services/fuse_filesystem.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "29d38834891263e5adad8d727763d8332b51e9e9"
+    },
+    "lib/services/fuse_helper_script.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7ac068cef2ff7c525f6e687d7db180bd1018fa0d"
+    },
+    "lib/services/fuse_mount_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3d3c1097ef8fca128eabbb45e9df9e324590066b"
+    },
+    "lib/services/gallery_catalog_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ba3412036b50fa3ff6b81a40a07047101519f686"
+    },
+    "lib/services/gallery_device_export.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7330e42d07e0324be6e1bfa2d8f480e8fbf9482f"
+    },
+    "lib/services/gallery_device_export_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b006da2e0b9ebb49745159b6afd9c2da5e29db27"
+    },
+    "lib/services/gallery_device_export_types.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2c8ab68b899f377014788549f08ff38c5dfb11ff"
+    },
+    "lib/services/gallery_device_export_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a53716d40e964c2ecc4b5ea88305ab51e4c8ac2e"
+    },
+    "lib/services/gallery_export_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "39993dd7327da9d47f04778d84498b4b236e44ec"
+    },
+    "lib/services/gallery_image_decoder.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2171c9b0592556b2864bb93053c5dd6d91eb4093"
+    },
+    "lib/services/gallery_media_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "249ec126163b25bc70d090712a5c4ff15f51375b"
+    },
+    "lib/services/gathering_stack_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dec185ca8c2de08821612ff0cd76694286dc4ff8"
+    },
+    "lib/services/gathering_stack_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e4cfcf9cbff5e4153d23f39440d399ecf3db5610"
+    },
+    "lib/services/gcm_transfer_stream.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e582c239058dff49199b69f3c25d59adb28285c9"
+    },
+    "lib/services/gdrive_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f4e006242a70b96c8816f19e92e7bfbc5387bad0"
+    },
+    "lib/services/gdrive_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4d18b87ec9041909f63c05afc4d67da69b248917"
+    },
+    "lib/services/gdrive_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a4e04870372e9193c42e99a096373c3396d875c6"
+    },
+    "lib/services/help_guide_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d5015297ecd4ac4284592be2c1a2ce6a5a85680a"
+    },
+    "lib/services/hetzner_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d98af60d57272e86beef790bfab8e7b3ddf701e2"
+    },
+    "lib/services/hetzner_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ced09f2383129b2ade30a67b95e754eba0cc6d6a"
+    },
+    "lib/services/hex_file_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "05e5d90729ad305ecc0d155be80ef59d3976c768"
+    },
+    "lib/services/hex_file_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9eed156537d9466f340a5f38b124d377f0c05b44"
+    },
+    "lib/services/hex_file_source_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "78a9b89c06f048d2bcb92abc6286716c3c75e97a"
+    },
+    "lib/services/hex_file_source_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c380d5040a4a4a6ef90e62364fa28a1773a95f5d"
+    },
+    "lib/services/image_device_export.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "daff3217f91d5f5cf45528d9deb830d39d406f66"
+    },
+    "lib/services/image_device_export_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "37fe91f4a7eb132d863aafe437a722ad6d43cd8d"
+    },
+    "lib/services/image_device_export_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3417ca61cb06cf61eb9a948a9beacbbfa3c016f9"
+    },
+    "lib/services/image_edit_project.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "50093d7cb163d3bc3ff7f16041bb71d1194a3e94"
+    },
+    "lib/services/image_edit_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "122b252a381febaab15aafd8971bc9da3437dc9e"
+    },
+    "lib/services/image_editor_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b6d8d0d7680bdb6aaaba4e47878540546674c82"
+    },
+    "lib/services/image_export_options.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c37b64389cbf016e7fcc0506abc1a7a14e835271"
+    },
+    "lib/services/image_file_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ec266c8f0b4b5ff4cb3c8810f5d4eedb96c4b36f"
+    },
+    "lib/services/image_gif_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b0236db1dd9e351bf4cce82f1d61a25f21595bc7"
+    },
+    "lib/services/image_overlay.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5108ffcbff62c941990e4183fc7ccea7dffb789b"
+    },
+    "lib/services/image_project_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "765a569a38b059e8db8bf60c6e4459cc84929c9d"
+    },
+    "lib/services/image_raster_codec.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b1badeb67f153fde16f7135deb932bd073feb2a1"
+    },
+    "lib/services/installation_identity.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5ff06bbb17f3005dbe637e501d35b4688ca61e64"
+    },
+    "lib/services/installed_office_converter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "05a51a1a84a5027ec989dae1efb3daf348533a85"
+    },
+    "lib/services/installed_office_converter_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "755c4d15eb4b624c29ca46778c74d724ce132de1"
+    },
+    "lib/services/installed_office_converter_models.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "818133278fd46e450bb0c9acbdd5f8664c971241"
+    },
+    "lib/services/installed_office_converter_scripts.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ba2099dde5cfb39c44971d10ae434615baecda2c"
+    },
+    "lib/services/installed_office_converter_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a0e7f9fe2401b24dcf69022c511d2e5689dfa586"
+    },
+    "lib/services/integrity_recovery_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "08a2fba323c3a5c8ce02f9d5e5fda17cd25a59bf"
+    },
+    "lib/services/intent_handler_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "29e271fdd04ff679c8cd73e994a60ae905fc46bd"
+    },
+    "lib/services/internal_viewer_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "114eef6b79c9e149f58c9faaf300b805db5a70f9"
+    },
+    "lib/services/internxt_client.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2e5a0079dfb25667887c2b87968cee70313e212d"
+    },
+    "lib/services/internxt_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e742d91d6aa7713b592ec05b8d106d31b6d86000"
+    },
+    "lib/services/internxt_flutter/legacy_config_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4d2f25d3ad97b09b17778c93afaf832b48ed20f0"
+    },
+    "lib/services/internxt_flutter/legacy_config_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b5c19433d562d722dfaf8be32c5428626dbadcd6"
+    },
+    "lib/services/internxt_flutter/secure_config_storage.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8782a1bd28159b3aa02feb88968c51993e7b5dac"
+    },
+    "lib/services/internxt_flutter/shared_prefs_storage.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cbd06701d3d6d2ba3e5d0f007aacb5856d38d3ee"
+    },
+    "lib/services/internxt_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "985e7ce84a2f92753aa8f5c15bdf50ff982e6b08"
+    },
+    "lib/services/internxt_streaming_transfer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0d1deb8c0ee81a934daee94192a241c627403550"
+    },
+    "lib/services/internxt_transfer_platform.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c0ece71dd0378a12de94658bf03200a3268d4198"
+    },
+    "lib/services/internxt_transfer_platform_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "42445e8fa49f5c5196eac6e54c3ac1efd14f2242"
+    },
+    "lib/services/internxt_transfer_platform_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6c5469b5378f0e7c91dee420e496110c6fdbfc2f"
+    },
+    "lib/services/internxt_transfer_platform_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4d77044dc327eda4690b93dee1a3518af533a7bf"
+    },
+    "lib/services/ios_file_listing.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3ee9cbcd1765071f86cd7716d56dec26dff71732"
+    },
+    "lib/services/ios_terminal_connection.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fdb9256c2fd205cadde16f074bdf081397058eac"
+    },
+    "lib/services/keepass_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7eee91c18a2358ce4b6bc1bedd60ef7fcaccddd6"
+    },
+    "lib/services/keyboard_shortcut_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e06efd08f0747f8c1b31c7255443919875ccde61"
+    },
+    "lib/services/legacy_doc_licenses.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "732417bf12768062aab1ac551ab79ec9c930da76"
+    },
+    "lib/services/legacy_powerpoint_document.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2cf5a3c00e4138dbc4d6cce7df01e08228b4dabd"
+    },
+    "lib/services/legacy_text_encoding.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e1e88eb452f6ebcf2699f8f48981b64942527fb7"
+    },
+    "lib/services/legacy_word_conversion.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "57aabab40e451e3b8c60168211830d8ea37de24c"
+    },
+    "lib/services/legacy_word_copy.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f7d4df67582a53a2c41d107750074d8e13718e17"
+    },
+    "lib/services/legacy_word_copy_target.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef1b501ebaaeafad8d42dcd2e244b2ed0776dde5"
+    },
+    "lib/services/legacy_word_document.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a912cf1d0f57a3624e09621a6586202e9ddbab71"
+    },
+    "lib/services/legacy_word_preview.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7551b43d4cdec5fed94cd144d94418257b5e6574"
+    },
+    "lib/services/legacy_word_structured_model.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a912cf1d0f57a3624e09621a6586202e9ddbab71"
+    },
+    "lib/services/legacy_word_structured_render.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a912cf1d0f57a3624e09621a6586202e9ddbab71"
+    },
+    "lib/services/link_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "08000cb68a0a7665a565e64b3ac2004cccf4751f"
+    },
+    "lib/services/link_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bf91fe32c6eb1e3b93edeb170f559acd4401bbd9"
+    },
+    "lib/services/linux_integration_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "785a00b2f1b7faefc92ff6d23710d882104cb59c"
+    },
+    "lib/services/local_api_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "efe0f941ad22155ceaba4c151ad044cca1d25439"
+    },
+    "lib/services/local_api_service_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "91b2c68ed54fa968b927bea5f741cc7eff196f40"
+    },
+    "lib/services/local_api_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef9894953a6e61c8d6cd2b8cc078bb25ad685551"
+    },
+    "lib/services/local_file_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "daa0c7a03071e64a40c01ee051d968485e6ec79e"
+    },
+    "lib/services/local_file_service_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "be786fda6f77d554400efaaa63b5f7a3d772af82"
+    },
+    "lib/services/local_file_service_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7b02728b2ff98dd24cbfd504d1ad3e18cca6ef04"
+    },
+    "lib/services/locale_preference.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8d082d3078f070d3fa4f858b855f45ad23bb6429"
+    },
+    "lib/services/log_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e62d55a4c504589ed5c7d42d6b6df2c6965d37db"
+    },
+    "lib/services/lrc_parser.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c80aa3e93d21de7f28458bfbba6c0ad74b78d4b6"
+    },
+    "lib/services/lrc_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "11724bd2a3c0f1db6e8e18d813a08e38897ed1b2"
+    },
+    "lib/services/mac_browser_toolbar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ec948523e859a95100b821747c53a53a474cab89"
+    },
+    "lib/services/macos_app_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "55ab93c643e3e33e68ed9c23af502af070586aea"
+    },
+    "lib/services/macos_app_store_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "124de56254666db1bb81ac3f4a375477c7ba3c8c"
+    },
+    "lib/services/macos_app_store_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "83a70b7bb4a1f0924d188522acea19957507ab74"
+    },
+    "lib/services/macos_bookmark_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c7c321459018ba3d4fa6444068990e089a8142cf"
+    },
+    "lib/services/macos_bookmark_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d8f33bb537424e1bdaea6088690430cadea6c239"
+    },
+    "lib/services/macos_keychain_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fd8b1a9225af54b1b8374a654e69134065ce67eb"
+    },
+    "lib/services/macos_keychain_service_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a0bf441981d00e7e162573be043cf54ff110cea6"
+    },
+    "lib/services/macos_keychain_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4eb4b62379c7b5478ea2966908fa7b3e0dbaba2b"
+    },
+    "lib/services/mbox_message_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a06f01d9c747cb81aada0b3351d1ab3368f3c867"
+    },
+    "lib/services/media_audio_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "afca914fa753c0f3b95bc016d8734322125fbb69"
+    },
+    "lib/services/media_capabilities.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5196e8e8372f5821734762c1430550af842104b0"
+    },
+    "lib/services/media_edit_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7951f67d5ae2922925dc97900de334d7b86308b1"
+    },
+    "lib/services/media_editor_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0a2f378405a5856df61f3a1d37f852149a022a94"
+    },
+    "lib/services/media_editor_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a579ecdd8ba85c17e8a8a757236e101b06d12ae9"
+    },
+    "lib/services/media_file_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a28d8bfb3866fdbeb9c633d472acef41f1eb8507"
+    },
+    "lib/services/media_video_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6bcdc8cdb3bbccb72fa8b92e2b2a7c6cee449b53"
+    },
+    "lib/services/migration_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7fbf7e6880c069cf395ecf1d3353fe2a7766f8d0"
+    },
+    "lib/services/multi_cloud_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f74c9dd975b66ea56cfe66d8cf4f3353d6a9ef29"
+    },
+    "lib/services/multi_rename_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4aa738a3fcfb8ef39a2df76c126118e60998c035"
+    },
+    "lib/services/multi_window_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef8f2689a434625a04e41638bb710ea522df0ee5"
+    },
+    "lib/services/native_copy_primitives_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bccc076c26a79a10536e366bdbea243279a2f33e"
+    },
+    "lib/services/native_file_drag.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3255241fa717cefb7477ba76cae13b8595a44fb2"
+    },
+    "lib/services/native_file_operations.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e5945b87f879aea0eb4559a25423a2c8debcee43"
+    },
+    "lib/services/native_file_primitives.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a5c4b12c577c0c9ad2fb78f006f4ef976107f4cd"
+    },
+    "lib/services/native_file_primitives_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9713575a0546468d0be67e23bad9e4f50002acd5"
+    },
+    "lib/services/native_file_primitives_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cbc2506855f18306fe7b4dd65df061b93ddd10bc"
+    },
+    "lib/services/native_journal_lease.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2c2fad68fd643111c85675fad3e4d7cf8e6c01c8"
+    },
+    "lib/services/native_journal_lease_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "471bb705ef433122614ed3395b04c38d6480e4fc"
+    },
+    "lib/services/native_journal_lease_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5a542dae4e61afd1f1c7a6798920d469488a7890"
+    },
+    "lib/services/native_metadata.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ba241ebed3ad36870c87968de641df31738ab46d"
+    },
+    "lib/services/native_metadata_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f9e08d12768efa604d807c64a297b1a900888328"
+    },
+    "lib/services/native_metadata_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0c9a72c7576807611b8733c168486cde6d51247c"
+    },
+    "lib/services/native_metadata_windows.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cb439acb525776e665f537b0f9c35985f9c728cd"
+    },
+    "lib/services/native_system.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3e66d4584a2eae8c5d94c3b7efa8606e6efaa4b9"
+    },
+    "lib/services/native_system_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "03018e5328c1c390871fc1973bfcf00e57c1516c"
+    },
+    "lib/services/native_system_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9d939a6d3d7e911bf3f34d9ab435845f77f77207"
+    },
+    "lib/services/nextcloud_browser_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f6fa454c7d4fb84be26b297515678a1b60f9f9ac"
+    },
+    "lib/services/nextcloud_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d7b303d3f71b4eaebe1abfafd2d6f5206e6f5987"
+    },
+    "lib/services/nextcloud_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d897eed5c506f430913840356fa37c6542e599f7"
+    },
+    "lib/services/nextcloud_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0dcc37609983500a4d327848b5a7fe233ef79683"
+    },
+    "lib/services/oauth_callback_page.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e775aff3ee68598aa15b8dad756495a44d50d338"
+    },
+    "lib/services/office_css_font.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2744fb2cada2c93ebbbdf651068397a773d5a0aa"
+    },
+    "lib/services/office_document_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5214ba69597563264583e0c22edc6a745afd5828"
+    },
+    "lib/services/office_editor_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2b84b3b9eb4dc2907b3e55b9b516e52b334c9937"
+    },
+    "lib/services/office_pdf_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3df193ae2a03ce78a20e86840abcd01310c0d5bb"
+    },
+    "lib/services/office_picture.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eb4ebc9054ce2281d177b78acb3a549c2c686104"
+    },
+    "lib/services/onedrive_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e7fbbb2383dcf7911143a3ef4354664866ef4217"
+    },
+    "lib/services/onedrive_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c844f490924ddd476fc1a9a6ccc471681491d48f"
+    },
+    "lib/services/onedrive_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6f7f680adb1d136f5e7398e34451df5d72dad79a"
+    },
+    "lib/services/openssl_aesgcm.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e7232eb9c36e5753976adc41021ef8ed60fdaa7f"
+    },
+    "lib/services/openssl_crypto_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "731bcd637858cbeec0d2f532375bf90f265b3c9f"
+    },
+    "lib/services/opfs_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dbbe4451765f10518ae6bddc131194c38b66079a"
+    },
+    "lib/services/opfs_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0bacc98de9b9d61493b34fe2e301573af5b82001"
+    },
+    "lib/services/opfs_service_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "955defc365de088dcadb589cf3aeaf089eae07ae"
+    },
+    "lib/services/outlook_rtf_compression.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ade4476c733f35333ccd3d1479912918b3a643a2"
+    },
+    "lib/services/panel_source_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d9a21256e2f6df33e732ca7f42fc030e07846296"
+    },
+    "lib/services/panel_swap_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3f17fa85718911acc16765dd2b4eda709768e77e"
+    },
+    "lib/services/panel_view_mode_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1fa8448611c7076cd8067ce05700f768dfc48583"
+    },
+    "lib/services/path_sanitizer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "966d850078254e30dafb450431f382c9b5b1955a"
+    },
+    "lib/services/pcloud_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c7a296d017c75caa89a8422576f352908149bd8c"
+    },
+    "lib/services/pcloud_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6095fc75da806c3435cbe2fe1d07d298258d4e07"
+    },
+    "lib/services/pcloud_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7eeb9aa061bbba68bc1ffd798010e2e2fdd3204a"
+    },
+    "lib/services/pdf_device_export.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c2beb8a794656ab65402a7d8e86cafc55421437a"
+    },
+    "lib/services/pdf_device_export_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7d03fdeb830059d6debb14151658d44f15ccfd1f"
+    },
+    "lib/services/pdf_device_export_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cce4c0d7c9b751e58bc4e7a32193bc9d3f9a12b8"
+    },
+    "lib/services/pdf_edit_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "28622d827093932023986920fed141c436f6abfd"
+    },
+    "lib/services/pdf_editor_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "67c28a7803c6de3ec7c238e3b44e1b0786bcb6b1"
+    },
+    "lib/services/pdf_file_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "66150f0f9f2fd97913d54841e7f43abb4ff4fb9d"
+    },
+    "lib/services/pdf_font_licenses.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "89750e8081d4c82a2db0959b97fdf01ab649e307"
+    },
+    "lib/services/pdf_operations_host.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "041737826bf5fb94d35af83423456759323d270b"
+    },
+    "lib/services/pdf_text_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4b1f8aa1dbc358364e119d8869594c1f1f61e2f8"
+    },
+    "lib/services/placeholder_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "71c56774e790591dc4086614b67e512623813b5c"
+    },
+    "lib/services/platform_diagnostics_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b1e31a9914b61dd51ee2ee6ed227d25a12b02c56"
+    },
+    "lib/services/plugin_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1c860df502a178700467be59aaec17dc42f0a74f"
+    },
+    "lib/services/plugin_workspace.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "40226608a2908c889ebe0fea27c518e11f107017"
+    },
+    "lib/services/plugin_workspace_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a004f2caddbc063cd64c8d9cf1d946cb0b4e6884"
+    },
+    "lib/services/plugin_workspace_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "299d0832c227ad6c57bdac210f6b49a3c8ea1931"
+    },
+    "lib/services/private_tool_staging.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c318f70a69c359451dd752ff0682875d80368e53"
+    },
+    "lib/services/private_tool_staging_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "012a0f59a862ab4c12890692d3243b520bc8d57a"
+    },
+    "lib/services/private_tool_staging_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e071b4684ece796e5e139fdb6bc53bbc2e705ab3"
+    },
+    "lib/services/provider_comparison_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0ed7f67029d291275c17b52264f2de7364e3115b"
+    },
+    "lib/services/provider_workflow_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "46c1490a6b5d01f6c92ef949c8edef8f0b65dc6b"
+    },
+    "lib/services/proxy_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "273388b648dd21aebf1439b41df87b29ddf1ee28"
+    },
+    "lib/services/quick_open_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0b8bf22506437ad68ac82dd36daf7dbc2f4a62f0"
+    },
+    "lib/services/read_only_operation_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4b25487fbe3196af7da4048e8041aa63827e6acc"
+    },
+    "lib/services/receive_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f1f411193f90614b72b4e62dbb46a5504ec87ffd"
+    },
+    "lib/services/recursive_search_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7b80fbd33efab27d220e048542f784d836aae15c"
+    },
+    "lib/services/rename_batch_digest.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "258727f619b307f4c6eb830967eb7dcb02855cec"
+    },
+    "lib/services/rename_batch_digest_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b87d25f92d8cf757d565983028157a748136217d"
+    },
+    "lib/services/rename_batch_digest_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5320c6590330a6e4e893dd9276d884b1f0db089a"
+    },
+    "lib/services/rename_batch_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2f74afd6ac8f7a3a277e4cf696710cb4418e57db"
+    },
+    "lib/services/rename_batch_storage.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c98de90e6c2bcf28ba0db4b6b921d282e9790615"
+    },
+    "lib/services/rename_batch_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "48b8e9f0376d1a3f83cbc590dcdb15ca5af8208a"
+    },
+    "lib/services/rename_batch_store_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "55bcafbbd1a74a17ec3f9243bf2431cd3223f8ef"
+    },
+    "lib/services/rename_batch_store_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1d718d0244a72ecbebef72c678f46c21411a2b3b"
+    },
+    "lib/services/rename_batch_undo.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b46c00a41f4aac05426c70d189c38894f43da5d0"
+    },
+    "lib/services/rename_mask.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "21b03ed4a6bef5ed70fe024d432ccea128d13a59"
+    },
+    "lib/services/rename_name_list.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dfdcc334166d12fa03920b6cbdacaebfabb56b7f"
+    },
+    "lib/services/rename_preset_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8d920f3be671225b170efb9b4f85ce077499f675"
+    },
+    "lib/services/rtf_codepages.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d540dd785a48e1afaa0c3a7508490558357c77d7"
+    },
+    "lib/services/rtf_document.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a0964932772703c30558bcc0611266e7ced1e397"
+    },
+    "lib/services/rust_cloud_delegate.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "54355d613b3528ad3a17400f27858139a6a187a8"
+    },
+    "lib/services/rust_cloud_temp_file_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0b0a23d3c6db4a4290bcabad3f3dd48896078562"
+    },
+    "lib/services/rust_cloud_temp_file_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f6f1138e1a0764ac7d389ccb25b64edd802a88eb"
+    },
+    "lib/services/s3_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0a9006be3aec253c591b566b3d67bbd819d19f76"
+    },
+    "lib/services/s3_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "77fc5784137876c3b7a1105aabd48c59fa94251a"
+    },
+    "lib/services/s3_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "83489144b6828d7f98037efc622f0795adfe866d"
+    },
+    "lib/services/saf_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dd4a7e661ad96a9a224c4116990a5abf9ecfd418"
+    },
+    "lib/services/sandbox_shell.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "85a69991940bdd7492d16de015ff1295f48e878b"
+    },
+    "lib/services/sandbox_shell_connection.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a8589d5323c88520cd4091254a15f2ec0eb4803f"
+    },
+    "lib/services/sandbox_shell_fs.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0add9d2b742574439534fe0707ffa7bb6fa98ff3"
+    },
+    "lib/services/sandbox_shell_fs_base.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bfc05a6d65880551f61a7031f310740e3df57d66"
+    },
+    "lib/services/sandbox_shell_fs_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6001f3da25139c1085cc9d259cd42ad45ddc45c3"
+    },
+    "lib/services/sandbox_shell_fs_memory.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bd7fff25d384e273195b9a73612539c25e9594dc"
+    },
+    "lib/services/save_coordinator.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "994950de5bc7f9aadd3fcfd9e2a4bbb3753ef951"
+    },
+    "lib/services/saved_search_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f6dd3af20618eca0ea00515999e650021e8db7e6"
+    },
+    "lib/services/search_content_matcher.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f49be93f6e5b8f0794542d0c580f88c6b3865ef1"
+    },
+    "lib/services/search_replace.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d8783df73e85b98c6c971f84f90c4f231999454f"
+    },
+    "lib/services/secure_storage_file.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1d549d801a32b324e4250fc0bb8ccff8a4e12d4a"
+    },
+    "lib/services/secure_storage_file_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e5d38223cff5f8794eb673f7e7f594ed522e683e"
+    },
+    "lib/services/secure_storage_file_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e470aeef708711ab126f3745073ab712fa52a0d9"
+    },
+    "lib/services/secure_storage_macos_keychain.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f43620ec63da879bb01a2c8e6945ead5be7afbd5"
+    },
+    "lib/services/secure_storage_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2f49fb204897f6f1b613eb520995136733eb7e0b"
+    },
+    "lib/services/secure_storage_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f6f7f19d38b757f8696f98343b6e828be2a9ef20"
+    },
+    "lib/services/secure_wipe_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef11576e6347e5f987359cb1f1b411bb72790ca5"
+    },
+    "lib/services/selection_pattern_history.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "50214d79e951fa6724094e83bb5150097a4ca8c4"
+    },
+    "lib/services/sftp_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8f8836d261d480226a22537943756bd73b77ef3e"
+    },
+    "lib/services/sftp_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "12b8bc782d88f813620bee3346f95d23ae206ae5"
+    },
+    "lib/services/sftp_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "befbdd3fc2dcb3c9d439d27a08361a4cf0bbbb66"
+    },
+    "lib/services/share_extension_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1ec18ba325e817861ca92e0506dab51f050f7117"
+    },
+    "lib/services/share_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1547bffa2898edb9f7e0e3ea811c7a4b288e2bc7"
+    },
+    "lib/services/shared_folder_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "125a317714b1ff5d09da08cd6658b5d54eb1ed30"
+    },
+    "lib/services/siri_shortcuts_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4ee9525c9fd0c6b196e3e60ccad3447a78298ded"
+    },
+    "lib/services/smb_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a6de395d4587595ad807b242c9f389e78a47abe8"
+    },
+    "lib/services/smb_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "355f0c2ccc07bcb4213ba29c63d1de2f82931690"
+    },
+    "lib/services/smb_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3daf0f09b9f77c9a4f9d0e22a8c73b1d90a89f08"
+    },
+    "lib/services/socks4_connector.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cac1324a1644b8320b7c0f01175a5bc9d418ed62"
+    },
+    "lib/services/socks5_connector.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "52abed651a777007c71dfb73c0684f41f74e5649"
+    },
+    "lib/services/socks5_socket.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6514359009fda38dd1433492eccfc309eea61bc2"
+    },
+    "lib/services/socks_connector.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "71071032f99d08eb57726bc59c0bb621820cad5e"
+    },
+    "lib/services/spooled_http_upload.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9e45674222d8b6c8b7940468ffab25d9c1bd50fe"
+    },
+    "lib/services/spooled_http_upload_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "02680649ec18e4244b83cd0cf640f986a49b9e75"
+    },
+    "lib/services/spooled_http_upload_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "70056e570f7ce9e5f7a6d5551cee8384472b09d0"
+    },
+    "lib/services/ssh_gateway.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fb08680cc51b70dd389b1b2fbc9f3ae2849916df"
+    },
+    "lib/services/ssh_terminal_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "24e9ca45252e0bb3c36065f942519686957f4052"
+    },
+    "lib/services/storage_analytics_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8a94bb557ad62339294217b24827dd31c4f77180"
+    },
+    "lib/services/storage_identity.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "342a3a89fa6e77e25fded799c494cb4685cd1c28"
+    },
+    "lib/services/storage_scan_backend.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0c959cfe52f0ceed838d657d856dea8817a7c5ed"
+    },
+    "lib/services/storage_scan_batch_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6d796161b9e06eaee1943a9965ba2078d299d8b8"
+    },
+    "lib/services/storage_scan_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a4512a4ce9beb8758220b390b6b7f55a3f63ac04"
+    },
+    "lib/services/storage_scan_native_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f29b4a56cd3e80b12f6c1c636bc98dfd13af9ca0"
+    },
+    "lib/services/storage_scan_native_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "31124e2c67d55ad8536c7092b6a9a59428bad6a6"
+    },
+    "lib/services/storage_scan_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0ef0fbf708555bac8a0de96b140800c9bad92d1d"
+    },
+    "lib/services/storage_scan_snapshot_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e51b52e7b8a76187d8ac32a8a9a4b0967d2456e2"
+    },
+    "lib/services/storage_scan_source.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ed806cbb7799a721ef61bd4620111575e91a28ea"
+    },
+    "lib/services/storage_transfer_contract.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b8ad5920d02c33da31a7a71fdf6f6f1bf18466b2"
+    },
+    "lib/services/storage_trash.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ecc46fc5cd1eadac95a90cdd66dcd60830d93c17"
+    },
+    "lib/services/stream_rate_limiter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eb5f91ecbb55da9fb8bf3c992a24d71ac6a54013"
+    },
+    "lib/services/sync_database.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7df9db6cd2bee6a544255f06d59c3fc24afa6d62"
+    },
+    "lib/services/sync_database.g.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eda9615f2c5c0f51d396313b35f01ac27d5f3197"
+    },
+    "lib/services/sync_database_connection.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e3549bd498f629c8cf045adf1068595915fb99b4"
+    },
+    "lib/services/sync_database_connection_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "809ee27e1bcf5de3ceec496a1f746f97cc4bde44"
+    },
+    "lib/services/sync_database_connection_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "93b467f2a7428944635969b6c0e8e7aa4e2811b6"
+    },
+    "lib/services/sync_engine.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6704384331d0c2e3eee1b67e47684917943b2c54"
+    },
+    "lib/services/sync_offline_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e49dd15302c8a89a725f1c5dc67d1a465b8fa094"
+    },
+    "lib/services/sync_source_binding.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a6557f7bcc2e6c86062c9b0655d87fdc55b149bd"
+    },
+    "lib/services/sync_transfer_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "72f249c8ab5d7a8988b805e79ad52168308608da"
+    },
+    "lib/services/sync_watcher.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "286f289424d14dc534d072ac3044ab68c1a83510"
+    },
+    "lib/services/synchronized_browsing_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "54239e4fe14b4d6aa6a80d2461a48d7c68a25196"
+    },
+    "lib/services/syntax_highlight_theme.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a6ccb1bdbcd67499db6cc5e5f0527bfeca55d1a9"
+    },
+    "lib/services/syntax_line_highlighting.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f6fbc1cf7ab304cfa2fb7e661aea81a51019ae8e"
+    },
+    "lib/services/system_preview_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "aec61d32ec4afc8dbf09a219cb4e53cafb29c95f"
+    },
+    "lib/services/terminal_backends.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ddc50d9a3a53e843cf1656f510127074cf601b33"
+    },
+    "lib/services/terminal_connection.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "128cc143638f625b6ad5431d122ea6ed3bc19546"
+    },
+    "lib/services/terminal_directory.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "103e83a172d0f24e9964b5a3b742e77a4b865338"
+    },
+    "lib/services/terminal_licenses.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a3400973490d7e45c7e865db978e82dcf03c729c"
+    },
+    "lib/services/terminal_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cfafc3f5f2ac0a5e582e1e6c9cdf70a0104bdd44"
+    },
+    "lib/services/terminal_mount_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "68bfdf2823d973fe0097726d2c02d2fdf48b2539"
+    },
+    "lib/services/terminal_output.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c1cc3632da4e077daf55b0528ff6ddc502f69379"
+    },
+    "lib/services/terminal_session.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b46b64b5f9dd95e59b103490027e40103d442cd9"
+    },
+    "lib/services/terminal_workspace_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c232ccdea356c681372e99ba2bee1198891a79d3"
+    },
+    "lib/services/terminal_workspace_service_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c19abc25377d5dd846a71f88cc418c2cc383244a"
+    },
+    "lib/services/terminal_workspace_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6cbdaa307494e8f4e55f0321196a0113d3028a31"
+    },
+    "lib/services/theme_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2e40268c539edb6e91f8232063a6e5d80c3cb464"
+    },
+    "lib/services/thumbnail_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "438647a851aa04f146931784dee1a0b36a6244ad"
+    },
+    "lib/services/toolbar_command_runner.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "139f25cc1a8699b70d80270e926a04e756a45fb7"
+    },
+    "lib/services/toolbar_customization_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1aae59ddf6eae596ee28b6a5137e8bd639eb495d"
+    },
+    "lib/services/transfer_journal.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4030ec470163d8073303ebe65ede9bea37abf4bd"
+    },
+    "lib/services/transfer_journal_storage.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b46901a43df67e4e53c42e57965964ce47125eab"
+    },
+    "lib/services/transfer_journal_storage_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d5dc44dc4eeaeef1c85a9d781e4ecabf0f2686e6"
+    },
+    "lib/services/transfer_journal_storage_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5b561d5efb30a3578739a4c567650939cfb570e8"
+    },
+    "lib/services/transfer_part_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8f7571aa8c9dd6f100fdf3ec1451f5765b09ff36"
+    },
+    "lib/services/transfer_queue.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d76b6d039afc9a8b5eacb53182348226c2f4ad6e"
+    },
+    "lib/services/transfer_recovery_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5a1b951210dc1745fe123bf0bdcb9c108442341d"
+    },
+    "lib/services/transfer_resource_claims.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a08474261f9d4a6ba1ce12eff98c533db8781e7e"
+    },
+    "lib/services/transfer_spool.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "28316ce46930a2adbc91239da9d53ee6a6ed36d7"
+    },
+    "lib/services/transfer_spool_contract.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6b4c0bfb812f87e225c84c29d95b3a21cff1fd1c"
+    },
+    "lib/services/transfer_spool_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "784c78e2e5922ab13710aa4d2b4ef30750c2d2a2"
+    },
+    "lib/services/transfer_spool_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "05893d3b90742f200244a93c3f55ef243ea51500"
+    },
+    "lib/services/transfer_spool_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e3b3df46fabd6dee3f910bfd3a7d86689e4dece0"
+    },
+    "lib/services/transfer_stream_request.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58015944e940641acfa7372d92c74528935364d9"
+    },
+    "lib/services/trash_history_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4c83cdea8d6513ad746fe8c2c9939974bf4e4142"
+    },
+    "lib/services/tray_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dc476615336ac20fdb39bbfb453e1ed6455d877e"
+    },
+    "lib/services/upload_temp_file.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ee0868d5cb8c94e10e7585e0b6b1e4127ef8b4f3"
+    },
+    "lib/services/veracrypt_mount_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "67dda7cd1b32568bdef10fff21d35465b6e20a3c"
+    },
+    "lib/services/veracrypt_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "433d1b17d5b82938ec6aaca90c7d83ae6e45f80d"
+    },
+    "lib/services/viewer_search_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ea48b7739f50efb5eae09a62dfd0c7bf3b8e2072"
+    },
+    "lib/services/viewer_spool.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "30e2b98ededdc06b011a4821a7005634954d2a6a"
+    },
+    "lib/services/viewer_spool_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "125f87d569c50cc82edb4877e6aac7a1e0106ebf"
+    },
+    "lib/services/viewer_spool_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0844f872a77566684959bb8754a6a363523d3037"
+    },
+    "lib/services/viewer_tail_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1c9b0deffbb99f0753808e394d9860df36532a62"
+    },
+    "lib/services/viewer_text_decoder.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bc3c8500ac5feee2222be864d29e780946861dd8"
+    },
+    "lib/services/virtual_fs_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "05c61f4da1078d5aeaa543d80e6486deac02fcce"
+    },
+    "lib/services/web_crypto_factory_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d1334a43f5d9d4d3857b2c686a69e205a7a68da8"
+    },
+    "lib/services/web_crypto_factory_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "115403dfe039661ae4069f29499afc187bbe954f"
+    },
+    "lib/services/web_crypto_provider.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c23e96811d804cc038d7a4c57b2c1c87eee82b17"
+    },
+    "lib/services/web_crypto_subtle.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1c3ab737ff7e51382fb8cddc5ecbbc82838c3d72"
+    },
+    "lib/services/web_file_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e5dbf8e995ed7e3c3535544bf5ea0ef2a7d13abf"
+    },
+    "lib/services/web_push_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ffc3940c64f1712abc9f8e3c0144c672764f3509"
+    },
+    "lib/services/web_push_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "db8b0a2693a6aaf017c09d4b19ee81c950c3e13f"
+    },
+    "lib/services/web_push_service_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "098bd732636ec75407d1db6ceb575965025be3a3"
+    },
+    "lib/services/web_share_target_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7f44f86a37fe5252c91697c8455a8f730e6bf308"
+    },
+    "lib/services/web_share_target_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7009ce60db6caa12dbc66a5e074be191c3885b7e"
+    },
+    "lib/services/web_share_target_service_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "596a7453dfc0989cc22020f377c79118ea794df6"
+    },
+    "lib/services/web_ssh_socket.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "964a4641da171ac5171b55dc33487bfc73f0e084"
+    },
+    "lib/services/web_streaming_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "859e21522288687b91a553776f487f149ccd4e0d"
+    },
+    "lib/services/web_streaming_service_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7615f6bb16661bfc04dcdb00eb679c26977cdb5a"
+    },
+    "lib/services/web_streaming_service_web.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "faf4cd3ddd99bb40d4814af15493c01b334575b4"
+    },
+    "lib/services/webdav_client_adapter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d9c5a9d5f85b3c208b8fd20019bd377f84f1b2b9"
+    },
+    "lib/services/webdav_config_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2598460de111ceda700020894d6c9b63b2c3aaf8"
+    },
+    "lib/services/webdav_filesystem.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6b6b96012b1ce928a64bc4a9d60ef5a73a3b2b84"
+    },
+    "lib/services/webdav_operation_failure.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f5e099b2ec238ec90df82f113b1da7f5f103fb45"
+    },
+    "lib/services/windows_integration_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3077e49d87d008826112cc84d3d16e7f7cd93f84"
+    },
+    "lib/services/windows_registry.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "80f52bb723055885df5234096e043ac6f688d01d"
+    },
+    "lib/services/windows_registry_io.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58ac2de1b006a8de60d2cf42c13594c889038815"
+    },
+    "lib/services/windows_registry_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e8134c90b0f901263a028f8df63279f0b2b63263"
+    },
+    "lib/services/word_conversion_inspection.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f278185a27f434889cf9dee65653cf7af5495fce"
+    },
+    "lib/services/workspace_store.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ef7c7d4e33aafe505ed6f1cbb6e4989f3ef7c199"
+    },
+    "lib/services/xdg_service.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eda8a89f54e664109540e5ea97246e3433520b18"
+    },
+    "lib/utils/app_version.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3c4ae2034538f892684c52dff60f8c94cdbbd198"
+    },
+    "lib/utils/async_lock.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f36da530319da874666d63b65b5b34ade3945b6b"
+    },
+    "lib/utils/file_editability.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2f68e126d4a60abd972b9513223409025012f852"
+    },
+    "lib/utils/formatters.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e96c08e5dde98147ed4923ac47eb99679e86eadb"
+    },
+    "lib/utils/path_access.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8c153be881045bf1f51ad69719882e40317a24cb"
+    },
+    "lib/utils/secure_clipboard.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b9b42a70ca6904171e531e8ecefccc0fab3ec0f6"
+    },
+    "lib/utils/storage_sunburst_layout.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e7cd9223839a778b8b35b2a8efe5773c3a0ae749"
+    },
+    "lib/utils/storage_treemap_layout.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "01f674cb74193e7435b7716a0329a0157430e87e"
+    },
+    "lib/utils/system_links.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c6e4d411e3bd3821f427f92867a16017eac94a8e"
+    },
+    "lib/widgets/archive_batch_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0f3ae3485d1c7f8961fef10bc5cefcfefb205cdb"
+    },
+    "lib/widgets/archive_batch_extraction_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f3698f81372f75df3a1b949d1e12f6cd969f1124"
+    },
+    "lib/widgets/archive_batch_integrity_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0c044c33134ea62c14202637bbffc76785d8ffc3"
+    },
+    "lib/widgets/archive_creation_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ac0edba396a76b30d347b0d39f9e4fa23177c617"
+    },
+    "lib/widgets/archive_directory_sync_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "73eff6a369c3a9db1aaa9d8c2a20ec5815f15827"
+    },
+    "lib/widgets/archive_endpoint_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "967569e2b5493abae3f1c9875e1f55b1d4ba55df"
+    },
+    "lib/widgets/archive_endpoint_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a85f1072812a2b1a4a76c16870598559f8d6a64b"
+    },
+    "lib/widgets/archive_external_packer_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "72245db97b547577983839b7b1a56588e65d49dd"
+    },
+    "lib/widgets/archive_integrity_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3a2c77dff3e65462af614314ba30c07c908e0a0b"
+    },
+    "lib/widgets/archive_job_recovery_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "382437f1517d246538896656df853ad5e64050ef"
+    },
+    "lib/widgets/archive_jobs_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7ddd5ff3b36ab9e8272dc2183df64778a427f934"
+    },
+    "lib/widgets/archive_member_move_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "48c53681ce47c527a25b46984e6b73934897efc3"
+    },
+    "lib/widgets/archive_workspace_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3031b0be9eb707bb160098a43df6ea4a40217fa1"
+    },
+    "lib/widgets/archive_zip_recovery_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "613a7ea1bb10f9ed30dd48cdd94646977f5e2e69"
+    },
+    "lib/widgets/archive_zip_recovery_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0481cad5f4afc42cec710b4eda6574734ce764f7"
+    },
+    "lib/widgets/audit_log_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "955efecb2975df3a39468435c64af1d9274170e7"
+    },
+    "lib/widgets/azure_connection_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "17cf9c3f90773678aefc34c94781d7535d83061d"
+    },
+    "lib/widgets/b2_connection_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "03f3ec09c83310a02c547f25e7ee64ca79e0ecb9"
+    },
+    "lib/widgets/batch_rename_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7c55ad3958d56a376fb926c228a9f25626b4a73c"
+    },
+    "lib/widgets/binary_structure_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5ffb270d6fb2a9a9cf4cb9968248e44c612ba445"
+    },
+    "lib/widgets/bookmark_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bf2e900bc4bd0491af9ceac505a3e370bda63b67"
+    },
+    "lib/widgets/browser_menu_editor.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "674886484d6364371a7b986f9ac5b9934b59bd7f"
+    },
+    "lib/widgets/cache_settings_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2a02328d040c0493f48663e21a3a60a5d8cd8935"
+    },
+    "lib/widgets/cloud_engine_field.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d04b02043d6cb3acaea103dacc4b91c134342e01"
+    },
+    "lib/widgets/code_editor_context_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1c7f8fdb956084fd6e4f8754280dba285cec537a"
+    },
+    "lib/widgets/code_editor_find_panel.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "13a9468d97132d588afc29f767ef79a287d03dd7"
+    },
+    "lib/widgets/code_editor_menus.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "66ba679e97277476619816b6a9d19f15bfa21b96"
+    },
+    "lib/widgets/code_editor_status_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "99a5d23f3b058d1d9ef8e5a1016d96aa1f1193bf"
+    },
+    "lib/widgets/code_highlighting.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "13183a5c5d6d26fe905dd0dcecac81a879b1cea4"
+    },
+    "lib/widgets/command_entry_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0ec1ec972d4e21cdcc044043ac71a36004e58615"
+    },
+    "lib/widgets/command_extension_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1120f76e4233944d3af6c7fdbd1452e50f973a48"
+    },
+    "lib/widgets/command_palette.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1e7e923fd4a6fee89c3c8bc9a3c2492eb6dc3bfd"
+    },
+    "lib/widgets/commander_review_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f733a8cf4c9b5cf9992e48845abb1aa44e8ca88c"
+    },
+    "lib/widgets/configurable_browser_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ec67be013ed80768012fb91874f62512e9b99d27"
+    },
+    "lib/widgets/connection_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "804fd13e8d37cc58c8b108f131dd2d1e2d758105"
+    },
+    "lib/widgets/credential_storage_diagnostics.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2653135d0de246283d9f753849ed49ece2fbe12e"
+    },
+    "lib/widgets/credential_storage_setup.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6948274e714a332bff543e29993a09d059fd7fd1"
+    },
+    "lib/widgets/custom_command_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "823a8acdc5a5e20cdabcf181fb85446316fb60a9"
+    },
+    "lib/widgets/diff_viewer_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f4d023f59e83a045fcb70afd752da665fa1a3b5c"
+    },
+    "lib/widgets/directory_comparison_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e1126c02631b9ec80a2d54cf10dee0db757326d4"
+    },
+    "lib/widgets/directory_selection_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "579170a0d30a5b7bd29279e14c1660aadbb7ab07"
+    },
+    "lib/widgets/disk_partition_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d6275ea4934b7ced8aee10e99a7b726e6c8b91a4"
+    },
+    "lib/widgets/drive_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "868e065cb5a0299e7bd2d36dae17e010b81058d9"
+    },
+    "lib/widgets/duplicate_finder_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a0326c0e85fa64770f617eb1768af9b14372eeae"
+    },
+    "lib/widgets/ebook_appearance_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9e2142fd29ee9f061544de1428b9d7b9f097b4e3"
+    },
+    "lib/widgets/ebook_chapter_reader.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f31398f88f1abb1ba4996b1a08b7f05190f3bd02"
+    },
+    "lib/widgets/ebook_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e2a63916814cbcb3dc5f3369f7e9e6503e6a6e0d"
+    },
+    "lib/widgets/ebook_editor_menus.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "decb8f2864ec86323ca5991e670e406711ec7cc2"
+    },
+    "lib/widgets/ebook_kindle_metadata_editor.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9b3353e2be12812500fdac05456501fab5021b42"
+    },
+    "lib/widgets/ebook_library_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "d68bff30833db4270d25571439c321dbf674baba"
+    },
+    "lib/widgets/ebook_library_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "666b2a7c526d617d9c4b2b0b997d679b7c4cc068"
+    },
+    "lib/widgets/ebook_prose_editor.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2f893544ce81222686ef0fc363696cc56c1112a3"
+    },
+    "lib/widgets/ebook_reading_data_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2ba01a3d8586e3682353615a6b9a716aabe95a98"
+    },
+    "lib/widgets/editor_chooser_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2750bf4f7e83b494428f860a74fa3a1bbbaefe40"
+    },
+    "lib/widgets/email_message_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "35301128478397af7509929a2dbc64bdac8781fc"
+    },
+    "lib/widgets/extensions_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fea29e02b29079d9d11127cdb728059a8e4a38d3"
+    },
+    "lib/widgets/external_comparison_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7eaa79050e10bd4669bf11a86521348aa462033f"
+    },
+    "lib/widgets/external_comparison_menu_action.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "263e6f2ae3b024efff4ac4a8eb9296bda5030037"
+    },
+    "lib/widgets/external_drop_review.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1a34d9fc4ef9f263ae7cbe2c6347e0ce17c2d9a4"
+    },
+    "lib/widgets/external_editing_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c6cf3311326c4302edb649f96b57135bc34bdba6"
+    },
+    "lib/widgets/external_editing_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ec95d10e03644b8983f370a48cb1dd3e47bbc42e"
+    },
+    "lib/widgets/external_terminal_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "976b55b61cd06cde6569416c40aa58d036816ce6"
+    },
+    "lib/widgets/file_attributes_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6bcaab75b59e42398dbd85a4fd7676dc0ed71342"
+    },
+    "lib/widgets/file_breadcrumbs.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cafde34fe06e6887fac2fb0e957aafc4056821d2"
+    },
+    "lib/widgets/file_clipboard_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "359a95f24ca86e19b47332bc54058ad16e701aa8"
+    },
+    "lib/widgets/file_collections_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5b34201fe6831896333e87fd98ef041923c8699a"
+    },
+    "lib/widgets/file_column_header.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2309b42ddbfc3630bbfdeffe749809c0b9491b5b"
+    },
+    "lib/widgets/file_column_metrics.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5160abe8030a914f6d81bf6ab0907e5712cc2855"
+    },
+    "lib/widgets/file_column_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "57f153fbcac65143b7c78dd82220e53f0207c31c"
+    },
+    "lib/widgets/file_command_toolbar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bab09a14de476c882cb87b94fcec3f713aa3ebf1"
+    },
+    "lib/widgets/file_context_menu.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0f47799c54c3b6e71ee4e8d4f8c98c962c7b0c09"
+    },
+    "lib/widgets/file_conversion_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6ac217f77746dc4251ef92e710faf72abaf280be"
+    },
+    "lib/widgets/file_delete_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6fd41b724dd00abf9a9821bf8b446f31bc507907"
+    },
+    "lib/widgets/file_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c835ab37da64bd8ec394934028488a888b09d268"
+    },
+    "lib/widgets/file_encryption_recovery_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5015242d6652995887bbf094c3540f95ce9e8810"
+    },
+    "lib/widgets/file_grid_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "19585f34049e7ba71b4a935c56703865378ed1c1"
+    },
+    "lib/widgets/file_list_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "77c80d7538fb323460e5a254ce238becc3f8417d"
+    },
+    "lib/widgets/file_list_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6ce58b9a5d05e3167e34fa4c89cc74cabcf1fca1"
+    },
+    "lib/widgets/file_name_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e8c2a68a71e06204584ea8d8a656e887d0f505fa"
+    },
+    "lib/widgets/file_operation_conflict_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a1fccd24f4037e98c4fd2f0298c6277eb96b1aa3"
+    },
+    "lib/widgets/file_operation_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7500cc12395f28a468b309dd9fb1027de3731ea3"
+    },
+    "lib/widgets/file_origin_actions.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f1935eddc30dbecdcf99372fac75691ed796f2ce"
+    },
+    "lib/widgets/file_panel.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c607b5201ffc4bf79b0b6a15a0ddc8ddf50818e9"
+    },
+    "lib/widgets/file_selection_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e34997f7a493843ca94489f373117bd2873a04ab"
+    },
+    "lib/widgets/file_toolbar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c8ccaac3c0c4f7326719ec5c9eb5f6da9477827c"
+    },
+    "lib/widgets/file_tree_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "156c99b553a2a569c732c212e4cdb0df864f6f9e"
+    },
+    "lib/widgets/file_tree_view_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6abf9530dbdfe68c3a5df2ef8518acccddc5adee"
+    },
+    "lib/widgets/file_view_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "62ea115262a88d4f40d8754847fbe1503f215339"
+    },
+    "lib/widgets/file_view_selector.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "14168fa0c2914727725ab67dbf215f18b7d8053d"
+    },
+    "lib/widgets/fkey_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1bdeb0bc09154eb2e906b05ad3b252d98180160f"
+    },
+    "lib/widgets/folder_drop_target.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "af06bf35cc70ac66c9be8aa45738b165814fc92a"
+    },
+    "lib/widgets/folder_size_presentation.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e7b7f478d126faed59948a7c06f262fc4a3e1bca"
+    },
+    "lib/widgets/ftp_security_field.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c0ac3de488d179665cf54234d25ed389eaf08bd1"
+    },
+    "lib/widgets/gallery_annotations_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0b0411a9e1c27d23364c54a2d46bf03c84c6d915"
+    },
+    "lib/widgets/gallery_export_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e6da74dd8b57b2f00c51e4b77b3217fc35a2f152"
+    },
+    "lib/widgets/gallery_thumbnail.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "506eaf0dbfc87fcd106cb0c21060b2e5d8ea1946"
+    },
+    "lib/widgets/gallery_viewer_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bbf35c3d2dc1b04737bffb2b672c9f7da393a97d"
+    },
+    "lib/widgets/gathering_stack_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "306bb38dd351be825db2447af9d8cd86f317cc66"
+    },
+    "lib/widgets/help_guide_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "58e9a10ae500948505122404e6160757f7be6e4a"
+    },
+    "lib/widgets/hetzner_connection_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "01ebf2368976ebe3639556da05edb06b26e6c67f"
+    },
+    "lib/widgets/hex_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e9d2e74792d22808f8bc9eff27370da67f31acef"
+    },
+    "lib/widgets/hex_viewer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4e682a07624e9d314baef01ca2d418fe5697d24c"
+    },
+    "lib/widgets/image_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "828c338486d0b35f57b30bf3d9d1e7d7dec53461"
+    },
+    "lib/widgets/image_editor_menus.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b836e77fcea060ec2261840478ee9abc99965725"
+    },
+    "lib/widgets/image_editor_surface.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ea67bcbaf47838f49705205b30ba1c5571119ec9"
+    },
+    "lib/widgets/image_export_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8e1cfc5faeaf6c51f77c5f54315e0aa4e61c7cec"
+    },
+    "lib/widgets/installed_office_preview_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "84ace619a87d88fd006bd498642900af4fa85d8e"
+    },
+    "lib/widgets/integrity_dialogs.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bd00cce11a0a385e854da41abfbb2ee8300ac41e"
+    },
+    "lib/widgets/integrity_recovery_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e486ce6d915cee4acf1df0e7d38b5bcf3eb89b78"
+    },
+    "lib/widgets/internal_viewer_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f117eeb719450f8a219da12435a36978756c07c3"
+    },
+    "lib/widgets/internal_viewer_views.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b5de3f33d6183be49d8767036f9870165ab71f55"
+    },
+    "lib/widgets/keepass_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "627896c485f226b17343f216a81b3c6089af7c23"
+    },
+    "lib/widgets/key_management_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "728dc3f73a2bef2433f0424c050de416cc74d1c4"
+    },
+    "lib/widgets/keyboard_shortcut_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "236f781cf88b056743babab1b78a79c204c4e47d"
+    },
+    "lib/widgets/legacy_word_conversion_action.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "176a453db3839488fa1896ee42aea930f8f713d8"
+    },
+    "lib/widgets/legacy_word_conversion_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "529b5ae8baa8126b882b9239eb2e9a303523a3d8"
+    },
+    "lib/widgets/lock_screen.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c5dbf830a72c15009b32eaf6d6a6b8dbb66cfdf3"
+    },
+    "lib/widgets/log_viewer_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5079c28708e21c259854c1bd32450c5d485025e0"
+    },
+    "lib/widgets/lrc_preview.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "98dc1b84e6ff500065c1b5efbfe7658f80ab7c81"
+    },
+    "lib/widgets/mbox_message_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b130a0bdfe02b9b6d7ce6f4d60bcebaced8366f3"
+    },
+    "lib/widgets/media_editor_controls.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bdbf60fe18bc6c26f56d0d36d981a021ebd61629"
+    },
+    "lib/widgets/media_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "749291af30fe10923bbd703a8db1de3c7cc20d19"
+    },
+    "lib/widgets/media_editor_menus.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1112bd33a095795261e926929c854f7038332f8b"
+    },
+    "lib/widgets/media_editor_preview.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bcf0566afc90a314487316f1ce803febabea268a"
+    },
+    "lib/widgets/mount_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "92dc3d8c84e835b9f9ea02ca1243b85998153c28"
+    },
+    "lib/widgets/multi_cloud_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0ff1e14e2dbd76c6027626220ea7cd53ac6b2f6f"
+    },
+    "lib/widgets/office_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "677ba8bb955ae91896c8aa553ea115459f47b7f5"
+    },
+    "lib/widgets/office_editor_dialogs.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1006c012712a46a2a709dd9ea6c945809cdc7a6b"
+    },
+    "lib/widgets/office_editor_find_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "bcca0edd458aebb384801af8cae619d8acb2c886"
+    },
+    "lib/widgets/office_editor_ribbon.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f5441afb74af6068735d3d1b84c281252e801f2f"
+    },
+    "lib/widgets/office_html_widget_factory.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e66a26c0ee5f566443ed4d14b2e4788cc97cb9ad"
+    },
+    "lib/widgets/office_pdf_font_notice.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7e7d6eb86887710335639172d77738c499496fc0"
+    },
+    "lib/widgets/operations_panel.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "ed04071a1abb55d8fbc92846d8c00ba879025595"
+    },
+    "lib/widgets/panel_header.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "49f8b79a7d53e0f98f2a9a83b17a2b43b8d4d8d7"
+    },
+    "lib/widgets/panel_history_button.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "708bb84d332c604582bdb23601eaa123ae242f5c"
+    },
+    "lib/widgets/panel_listing_placeholder.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9cb0adfe345f51b700ba1c693642ad523e6f5eac"
+    },
+    "lib/widgets/panel_source_selector.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0f52e26d711fafd24f96571d3a78327664dbc425"
+    },
+    "lib/widgets/panel_splitter.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "65fda1ae50b4fcac52d17eb360601c2c606a300b"
+    },
+    "lib/widgets/panel_tab_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1f1b58f8d4d011586f674f48b677f84dc17ae04c"
+    },
+    "lib/widgets/path_favorites.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cd4de1bddeb3de97b2def8c3f6bf42667d1fa919"
+    },
+    "lib/widgets/pattern_selection_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cc90e55885d4d597eba2341c26b8d45a67086ad1"
+    },
+    "lib/widgets/pdf_editor_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c4a0e0a4feff6de9a3f15d7ed955b9cc08c0c404"
+    },
+    "lib/widgets/pdf_editor_menus.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "50c23612b4154775be05d8cc456d435091508614"
+    },
+    "lib/widgets/pdf_operations_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fc3caf4e7a145624b27ea606707655f1d9f24ccd"
+    },
+    "lib/widgets/permissions_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "cbe07fdc72a2fbaaa2d551229a4b505c8a783abb"
+    },
+    "lib/widgets/pptx_slide_viewer.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "9d54b760b2131559a173d8995bc438370f477453"
+    },
+    "lib/widgets/preview_media.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "000bceb34f61a3c853896173dc87618f4edb4eae"
+    },
+    "lib/widgets/preview_pane.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3b6c9c910b7523b22ccb13e112535ccc9e3cdc0b"
+    },
+    "lib/widgets/provider_settings_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "960e4e1b7a3a1b61a67216d948ed34a9784725c6"
+    },
+    "lib/widgets/proxy_settings_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dd02b50c5b2fbfd8a9a7b40c9c7407cac932a9b3"
+    },
+    "lib/widgets/rename_history_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "819f2545f11f48af4ea15b0743354cfb88e3e0f3"
+    },
+    "lib/widgets/rename_names_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "f9b70e5f1d5cde750bc7db0372c2ab86c808112c"
+    },
+    "lib/widgets/rename_text_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "56b520216d6d42d4283908e91e46f366abcf2c40"
+    },
+    "lib/widgets/saved_searches_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "8d9e641346e5d5bec36c7a9c4a1ad1de505e72a4"
+    },
+    "lib/widgets/search_dialogs.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "5a6ba98c5f34edf1d7de72fae2759a8733d23385"
+    },
+    "lib/widgets/settings_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "09258787637d469434d96b455970dee3e222c98a"
+    },
+    "lib/widgets/share_link_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fe90c68a50635f904471be9e9cb7b62e7885c0b6"
+    },
+    "lib/widgets/smb_backend_field.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b594a1dfff923d2ad9dcfffe0332087c9755271b"
+    },
+    "lib/widgets/status_bar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "abafed31916f2f45d730a0bd79af8f1aaf59d03f"
+    },
+    "lib/widgets/storage_analysis_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1ad8c2e8bc5d98de7cb3b7214d3f8160c7634cd1"
+    },
+    "lib/widgets/storage_analyzer_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a85ed4a0100992c2776f559e5d616e73abd9147f"
+    },
+    "lib/widgets/storage_scan_batch_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7a4278b20e4cb6d2c4972e71dff8b6fec48e25e9"
+    },
+    "lib/widgets/storage_sunburst.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7359af848379ed20cd11f36ba6c06a2779b40f23"
+    },
+    "lib/widgets/storage_treemap.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0af5309b1709fd5da5479b1df65a2aa07c2008a7"
+    },
+    "lib/widgets/sync_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b24b62b68e08b5d6a47bd68194d7d79f50b7efb0"
+    },
+    "lib/widgets/sync_plan_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "6ee080272502aaddf7f17bb6b1fdea7406dc7eef"
+    },
+    "lib/widgets/synchronized_browsing_controls.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "fe72341c438981386683034cc2a11fc50f660112"
+    },
+    "lib/widgets/syntax_line_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "dfa8aacc0b63a6a11e05163a3fd37b947a1e7539"
+    },
+    "lib/widgets/terminal_panel.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "97d9311fb361549f23d8b2ec96437a81373fb6e4"
+    },
+    "lib/widgets/terminal_process_native.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "4b7788c7d51f924dd74a98a6010cc77be095787e"
+    },
+    "lib/widgets/terminal_process_stub.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c1c185a5391f1174616b44852b4f322c84bb2e7c"
+    },
+    "lib/widgets/terminal_shell.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "3aee0b10a6849d3a70e62941505df0ba1df49fea"
+    },
+    "lib/widgets/terminal_workspace_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "0e6641bc28e0bafa8508e1a746b8e3ed527caeeb"
+    },
+    "lib/widgets/theme_picker.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7d7e69fb4c58cecffb454625f8a8618d88110f8c"
+    },
+    "lib/widgets/transfer_file_details.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "49d2edc54502409c3e3a5100044b8729a5301388"
+    },
+    "lib/widgets/transfer_history_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e93a720f37d8742bd224ebfadf43a80bd7bb2e78"
+    },
+    "lib/widgets/transfer_schedule_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "a7c3cbfe28647693fabe94e4a134f462bf357261"
+    },
+    "lib/widgets/trash_history_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "1203d0c606d6950f7de83369b6389c772249423a"
+    },
+    "lib/widgets/tree_sidebar.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "db93ff0252b596241cd75ccf94785690f17b18d5"
+    },
+    "lib/widgets/update_banner.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "307ba14be150d4803aedeb69c490de7e10edb7e6"
+    },
+    "lib/widgets/update_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "e58fa083da79f340ed05f3d96fd3f8fd552882c8"
+    },
+    "lib/widgets/version_history_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "2d481127ba41a890901cd6c71914ac2d333d1133"
+    },
+    "lib/widgets/workspace_dialog.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "eb2b2ae007fbc07109b7fb5f4f3fa30e8abacf08"
+    },
+    "lib/widgets/xml_tree_view.dart": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "b10506db61f15961c7c22120d9d1cdb16cf18f03"
+    },
+    "pubspec.lock": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "c7aad8464988840b45831ec3efaebff14aa4f46a"
+    },
+    "pubspec.yaml": {
+      "mode": "100644",
+      "type": "blob",
+      "git_blob": "7b0cd72800e33ed379162f544b0e7636671532fb"
+    }
+  },
+  "only_changed_lib_test_manifest_paths": [
+    "test/support/dmg_fixture.dart"
+  ],
+  "fixture_sha256_before": "c80d2edacfb506a17bd0d2c96d157747d19872c9c1c766c9dd3e7e85d5084df7",
+  "fixture_sha256_after": "8d806ae8f5cd2310a952a72df703506ad355149b44b24286ed93e978456e6485",
+  "fixture_change": "Nine ByteData.setUint64 writes replaced by a helper that writes big-endian high/low uint32 halves using exact division/remainder; this avoids unsupported dart2js uint64 accessors. No production reader or dependency changes.",
+  "broad_gate_result": {
+    "passed": 843,
+    "failed": 0,
+    "skipped": 1,
+    "files": 29,
+    "receipt": "fat-final-gate-receipt.json"
+  },
+  "followup_source_binding": "fat-fixture-followup-source-binding.json"
+}

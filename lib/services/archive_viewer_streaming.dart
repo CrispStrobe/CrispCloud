@@ -15,6 +15,15 @@ bool isStreamedArchiveViewerName(String name) {
     '.tgz',
     '.tar.gz',
     '.iso',
+    '.udf',
+    '.fat',
+    '.fat12',
+    '.fat16',
+    '.fat32',
+    '.img',
+    '.ima',
+    '.dd',
+    '.raw',
     '.rar',
     '.cbr',
     '.dmg',
@@ -45,9 +54,21 @@ bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
   if (lower.endsWith('.rar') || lower.endsWith('.cbr')) {
     return startsWith(const [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07]);
   }
-  // ISO descriptors begin at sector 16 and the UDIF signature is a trailer.
-  // Their readers validate the actual signature before accepting the source.
-  if (lower.endsWith('.iso') || lower.endsWith('.dmg')) return true;
+  // Image formats need metadata beyond this short prefix. Their readers
+  // validate the actual filesystem/partition signature before accepting it.
+  if (lower.endsWith('.iso') ||
+      lower.endsWith('.udf') ||
+      lower.endsWith('.fat') ||
+      lower.endsWith('.fat12') ||
+      lower.endsWith('.fat16') ||
+      lower.endsWith('.fat32') ||
+      lower.endsWith('.img') ||
+      lower.endsWith('.ima') ||
+      lower.endsWith('.dd') ||
+      lower.endsWith('.raw') ||
+      lower.endsWith('.dmg')) {
+    return true;
+  }
   // Historic TARs have several valid header variants. Let the reader decide;
   // an explicit decoded-format mismatch can still use the sniffing fallback.
   return lower.endsWith('.tar') || lower.endsWith('.cbt');

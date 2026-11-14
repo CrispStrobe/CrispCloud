@@ -1,0 +1,9 @@
+export PUB_CACHE=/workspace/scratch/52be1abfc881/runtime-setup/pub-cache
+export TMPDIR=/workspace/scratch/52be1abfc881/runtime-setup/tmp
+export XDG_CACHE_HOME=/workspace/scratch/52be1abfc881/runtime-setup/xdg-cache
+export XDG_CONFIG_HOME=/workspace/scratch/52be1abfc881/runtime-setup/xdg-config
+export FLUTTER_ROOT=/workspace/scratch/52be1abfc881/runtime-setup/flutter
+export PATH=/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin:$PATH
+export CI=true
+export PATH=/workspace/scratch/52be1abfc881/runtime-setup/llvm19/usr/lib/llvm-19/bin:$PATH
+export LD_LIBRARY_PATH=/workspace/scratch/52be1abfc881/runtime-setup/llvm19/usr/lib/x86_64-linux-gnu:/workspace/scratch/52be1abfc881/runtime-setup/llvm19/usr/lib/llvm-19/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}

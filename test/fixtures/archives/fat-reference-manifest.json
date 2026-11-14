@@ -1,0 +1,348 @@
+{
+  "schema": 1,
+  "writer": {
+    "name": "ChaN FatFs",
+    "version": "R0.16",
+    "url": "https://elm-chan.org/fsw/ff/arc/ff16.zip",
+    "archive_sha256": "99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e",
+    "source_sha256": {
+      "ff.c": "dbeae3d7d22dbc070983e31af897fa5e43d29c726a0a240fe9589ffe2ec0ef1e",
+      "ff.h": "42920ae4d6080bfc2a72d92a9969b5e94eeaff070e5e71d90da9ab6d7d8e158e",
+      "ffconf.h": "202a7321066873fb3fa8c6ca83eba2b5964a091c366962f87ebd86332652430a",
+      "ffunicode.c": "3f1632c1f1e64b0b683b0d7e51341b9870728f398604869dd8211f1819509a8e",
+      "diskio.h": "1c2b29f53e061c55d43b2e412c3a61320b2621bac7561a05e275514baa44785a"
+    },
+    "license": "Upstream FatFs BSD-style, equivalent to BSD-1-Clause",
+    "license_url": "https://elm-chan.org/fsw/ff/doc/appnote.html#license",
+    "runtime_dependency": false,
+    "config_overrides": {
+      "FF_USE_MKFS": 1,
+      "FF_USE_LABEL": 1,
+      "FF_USE_LFN": 2,
+      "FF_LFN_UNICODE": 2,
+      "FF_CODE_PAGE": 437,
+      "FF_MAX_SS": 4096,
+      "FF_FS_NORTC": 1,
+      "FF_NORTC_YEAR": 2000
+    },
+    "configured_ffconf_sha256": "05c7c83b37b9767706cfd7c6406a5d6075c867cefb624b4750abe9a58ceee7da",
+    "host_helper_sha256": "ec220556efb5a96e93ddd5e44bfb2b00545bb7100fea52b9db82d1facebd012f"
+  },
+  "payload_origin": "Original deterministic CrispCloud test content; MIT.",
+  "directories": [
+    "nested",
+    "empty-dir"
+  ],
+  "files": {
+    "HELLO.TXT": {
+      "bytes": 38,
+      "sha256": "7af8acca208990d25bc8de1ca0159502a0486a63e63cd5b227f8be4b66f8944e"
+    },
+    "café-雪.txt": {
+      "bytes": 36,
+      "sha256": "9fcca22f1031ba931d9d6e955c30d3c9885f7de6b08c1fea2db1aa94daaf27d2"
+    },
+    "empty.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "nested/payload.bin": {
+      "bytes": 8193,
+      "sha256": "d37426b71db09954cacd4d2be0059f5dbd7ad5d32fc42ab0eeda4ed1a4e1bebc"
+    },
+    "nested/Long Unicode name 雪 beyond thirteen.txt": {
+      "bytes": 28,
+      "sha256": "e7565e949c1a37422c761253b30ca2ab7b906945055e987c1dcb941ee6c3a66f"
+    },
+    "emoji-😀.txt": {
+      "bytes": 33,
+      "sha256": "2948fa854e91736b692378f9d90b52e965d8c453851ef253d595b87952fb8679"
+    },
+    "abcdefghijklm": {
+      "bytes": 36,
+      "sha256": "a645c38f274a0fe8310a91abca6feb513bc962298e258e6fae956fe98c545f56"
+    },
+    "fragmented.bin": {
+      "bytes": 4099,
+      "sha256": "cdff14dd288adbb00c320ab43694c4655a03d836eb78ba048aa7ee016a6dd4eb"
+    },
+    "blocker.bin": {
+      "bytes": 4096,
+      "sha256": "3ec86f0ba2daa5b34103971a22a85f153bbca9f23933add49d83ebc19160d880"
+    }
+  },
+  "images": [
+    {
+      "name": "fat12",
+      "bytes": 1474560,
+      "sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953",
+      "geometry": {
+        "fat_bits": 12,
+        "sector_bytes": 512,
+        "sectors_per_cluster": 1,
+        "reserved_sectors": 1,
+        "fat_copies": 2,
+        "fat_sectors": 9,
+        "root_entries": 512,
+        "root_cluster": null,
+        "root_directory_offset": 9728,
+        "data_offset": 26112,
+        "data_clusters": 2829,
+        "total_sectors": 2880
+      },
+      "fragmented_file": {
+        "first_cluster": 26,
+        "cluster_chain": [
+          26,
+          28,
+          30,
+          32,
+          34,
+          36,
+          38,
+          40,
+          42
+        ],
+        "noncontiguous": true
+      },
+      "encoding": "Exact nonzero 512-byte sector runs; all omitted bytes are zero.",
+      "stored_ranges": [
+        {
+          "offset": 0,
+          "bytes": 1024,
+          "sha256": "641a2f97b9fb24619274611c745b54a498331c210a7ead0d629908b4532e5525"
+        },
+        {
+          "offset": 5120,
+          "bytes": 512,
+          "sha256": "759485bface049557d51061048f44c0d148c9d4b218589c71e9af2c54d933b0d"
+        },
+        {
+          "offset": 9728,
+          "bytes": 512,
+          "sha256": "45a4f5c35554a80547484ec25ab26d3d3c7ee72d249bc9c27fa5784f36b3ce3b"
+        },
+        {
+          "offset": 26112,
+          "bytes": 20992,
+          "sha256": "c89e98ee6f21829bff45defd3b795fe0a79f9a61fc8ff40adf8ccc947ccf9d6f"
+        }
+      ]
+    },
+    {
+      "name": "fat16",
+      "bytes": 8388608,
+      "sha256": "fe00a83cac68257aca7eb2bc6195cbb29819add45304408e6d6e3f5649c2d894",
+      "geometry": {
+        "fat_bits": 16,
+        "sector_bytes": 512,
+        "sectors_per_cluster": 1,
+        "reserved_sectors": 1,
+        "fat_copies": 2,
+        "fat_sectors": 65,
+        "root_entries": 512,
+        "root_cluster": null,
+        "root_directory_offset": 67072,
+        "data_offset": 83456,
+        "data_clusters": 16221,
+        "total_sectors": 16384
+      },
+      "fragmented_file": {
+        "first_cluster": 26,
+        "cluster_chain": [
+          26,
+          28,
+          30,
+          32,
+          34,
+          36,
+          38,
+          40,
+          42
+        ],
+        "noncontiguous": true
+      },
+      "encoding": "Exact nonzero 512-byte sector runs; all omitted bytes are zero.",
+      "stored_ranges": [
+        {
+          "offset": 0,
+          "bytes": 1024,
+          "sha256": "015a052ce572ae0d88dce74d97b3785c10888cf426c9602cb669522c3789aafc"
+        },
+        {
+          "offset": 33792,
+          "bytes": 512,
+          "sha256": "e5b649bfa6cbea539252643bc025c8081f787c6dd723bf89efb197b7b2801da8"
+        },
+        {
+          "offset": 67072,
+          "bytes": 512,
+          "sha256": "45a4f5c35554a80547484ec25ab26d3d3c7ee72d249bc9c27fa5784f36b3ce3b"
+        },
+        {
+          "offset": 83456,
+          "bytes": 20992,
+          "sha256": "c89e98ee6f21829bff45defd3b795fe0a79f9a61fc8ff40adf8ccc947ccf9d6f"
+        }
+      ]
+    },
+    {
+      "name": "fat32",
+      "bytes": 67108864,
+      "sha256": "9727d6c9fdc621d3fc58637182970fd31d8d4ba0921f98641e807e95de250a19",
+      "geometry": {
+        "fat_bits": 32,
+        "sector_bytes": 512,
+        "sectors_per_cluster": 1,
+        "reserved_sectors": 32,
+        "fat_copies": 2,
+        "fat_sectors": 1025,
+        "root_entries": 0,
+        "root_cluster": 2,
+        "root_directory_offset": 1065984,
+        "data_offset": 1065984,
+        "data_clusters": 128990,
+        "total_sectors": 131072
+      },
+      "fragmented_file": {
+        "first_cluster": 27,
+        "cluster_chain": [
+          27,
+          29,
+          31,
+          33,
+          35,
+          37,
+          39,
+          41,
+          43
+        ],
+        "noncontiguous": true
+      },
+      "encoding": "Exact nonzero 512-byte sector runs; all omitted bytes are zero.",
+      "stored_ranges": [
+        {
+          "offset": 0,
+          "bytes": 1024,
+          "sha256": "ec70ade722f878fd77d63154943a8ce144a61919f37e244b40ca73d4b9b79e1a"
+        },
+        {
+          "offset": 3072,
+          "bytes": 1024,
+          "sha256": "9374c24dad8d0ad8914713a960ac33fd0679c33225f569379483c469ed562f60"
+        },
+        {
+          "offset": 16384,
+          "bytes": 512,
+          "sha256": "91cfd0edfe08aedfa60c66dd54326824dc132d8792fbb52fe6e961327edcd148"
+        },
+        {
+          "offset": 541184,
+          "bytes": 512,
+          "sha256": "91cfd0edfe08aedfa60c66dd54326824dc132d8792fbb52fe6e961327edcd148"
+        },
+        {
+          "offset": 1065984,
+          "bytes": 21504,
+          "sha256": "e7ac8165ab34611a7e286eab4f1426ab544d9a8c13ae701173172a5450607b19"
+        }
+      ]
+    },
+    {
+      "name": "fat16-sector4096",
+      "bytes": 33554432,
+      "sha256": "dddb42265f1f92bfbafe63d43b9f2dad297b018279eb76819ec37f587cf2c708",
+      "geometry": {
+        "fat_bits": 16,
+        "sector_bytes": 4096,
+        "sectors_per_cluster": 1,
+        "reserved_sectors": 1,
+        "fat_copies": 2,
+        "fat_sectors": 5,
+        "root_entries": 512,
+        "root_cluster": null,
+        "root_directory_offset": 45056,
+        "data_offset": 61440,
+        "data_clusters": 8177,
+        "total_sectors": 8192
+      },
+      "fragmented_file": {
+        "first_cluster": 12,
+        "cluster_chain": [
+          12,
+          14
+        ],
+        "noncontiguous": true
+      },
+      "encoding": "Exact nonzero 512-byte sector runs; all omitted bytes are zero.",
+      "stored_ranges": [
+        {
+          "offset": 0,
+          "bytes": 512,
+          "sha256": "bb1907bdba15d928da11e24b3bad172c3a223174b21a7fe6962475f818d414bd"
+        },
+        {
+          "offset": 4096,
+          "bytes": 512,
+          "sha256": "c3229572cb2a34c4b023a3eeb64f8c9793af939ee5eeb58f0cba1314f75d2077"
+        },
+        {
+          "offset": 24576,
+          "bytes": 512,
+          "sha256": "c3229572cb2a34c4b023a3eeb64f8c9793af939ee5eeb58f0cba1314f75d2077"
+        },
+        {
+          "offset": 45056,
+          "bytes": 512,
+          "sha256": "e9deb2eb751878bb0aafd479d790f83388a1e97993cd5a92dc17db23e006db1d"
+        },
+        {
+          "offset": 61440,
+          "bytes": 512,
+          "sha256": "ce7c600213769b1c9a12947a0bef2acd33b11743bebd7dbe31555074d794fdbc"
+        },
+        {
+          "offset": 65536,
+          "bytes": 512,
+          "sha256": "550638b474fb12c4d2fb13b24879b8d87b7c8ea44816212a8f295badb7ca8d94"
+        },
+        {
+          "offset": 69632,
+          "bytes": 512,
+          "sha256": "321066aa66bca85998d8ca7eb671af6bb57d97a8d1aa696c35443dc9886528a7"
+        },
+        {
+          "offset": 73728,
+          "bytes": 512,
+          "sha256": "0752727022bb08a7143e834293ddbfdfc67df949ae82e7b459675f6bcb38f148"
+        },
+        {
+          "offset": 77824,
+          "bytes": 8704,
+          "sha256": "93bdde891ab3641ff529b3f6eea9c1c461b56b0be100e971e193fa97ea82405c"
+        },
+        {
+          "offset": 90112,
+          "bytes": 512,
+          "sha256": "ad8814b625bfb913d95ca61409d52fb6ea4b8e635363464ec9e645f819f8b952"
+        },
+        {
+          "offset": 94208,
+          "bytes": 512,
+          "sha256": "6aebb7a0f84e06d3b0f1d7c88f2d464e0035de5482cac26d90280b794a65dcf9"
+        },
+        {
+          "offset": 98304,
+          "bytes": 512,
+          "sha256": "661cf8a0f214066e54812ea90be7846ddc9336f784405b19f0dce1c434797c07"
+        },
+        {
+          "offset": 102400,
+          "bytes": 12288,
+          "sha256": "507b2db3ff8b758f5899d93c0eac2dada79f566f336a9e7c84835df8587a68c6"
+        }
+      ]
+    }
+  ],
+  "normalization": "None: fixed clock/configuration in the writer; output image bytes are not patched."
+}

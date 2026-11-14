@@ -1,0 +1,18 @@
+{
+  "web-release-build-helper.py": {
+    "bytes": 2937,
+    "sha256": "709e86ee19e65c3556d3cbe3995ea2946d204f758f00a2403a27122dc1ac1b8a"
+  },
+  "web-release-build-receipt.json": {
+    "bytes": 12380,
+    "sha256": "e02676245039b983a06971cdb8bcf1f40173ae2b24eeb02c994fc9a962bbf4f2"
+  },
+  "web-release-build.log": {
+    "bytes": 852,
+    "sha256": "c4636b04646528e4951bfb486d6b85893c42ad38d081c25a65d487060af2d534"
+  },
+  "web-validation.md": {
+    "bytes": 1860,
+    "sha256": "3a07ef1513b5aa806b6723065a945e31e4c944a59123bc53ee3bdb05ab774aa0"
+  }
+}

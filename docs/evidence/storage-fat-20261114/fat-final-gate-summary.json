@@ -1,0 +1,97 @@
+{
+  "files": {
+    "archive_container_dispatch_test.dart": {
+      "success": 35
+    },
+    "archive_container_viewer_test.dart": {
+      "success": 28
+    },
+    "archive_disk_image_reader_test.dart": {
+      "success": 46
+    },
+    "archive_dmg_fat_failure_test.dart": {
+      "success": 3
+    },
+    "archive_dmg_fat_provider_test.dart": {
+      "success": 32
+    },
+    "archive_dmg_reader_test.dart": {
+      "success": 82
+    },
+    "archive_dmg_rewrite_test.dart": {
+      "success": 29
+    },
+    "archive_dmg_workspace_test.dart": {
+      "success": 5
+    },
+    "archive_endpoint_policy_malformed_test.dart": {
+      "success": 4
+    },
+    "archive_endpoint_test.dart": {
+      "success": 38
+    },
+    "archive_fat_integration_test.dart": {
+      "success": 17
+    },
+    "archive_fat_reader_review_test.dart": {
+      "success": 14
+    },
+    "archive_fat_reader_test.dart": {
+      "success": 131
+    },
+    "archive_fat_workspace_test.dart": {
+      "success": 2
+    },
+    "archive_format_registry_test.dart": {
+      "success": 71
+    },
+    "archive_iso_multiextent_test.dart": {
+      "success": 32
+    },
+    "archive_iso_reader_test.dart": {
+      "success": 47
+    },
+    "archive_iso_streamed_test.dart": {
+      "success": 13
+    },
+    "archive_streamed_endpoint_test.dart": {
+      "success": 11
+    },
+    "archive_streamed_extraction_test.dart": {
+      "success": 16
+    },
+    "archive_streamed_workspace_test.dart": {
+      "success": 13,
+      "skipped": 1
+    },
+    "archive_udf_integration_test.dart": {
+      "success": 15
+    },
+    "archive_udf_reader_test.dart": {
+      "success": 62
+    },
+    "archive_viewer_integration_test.dart": {
+      "success": 10
+    },
+    "archive_workspace_test.dart": {
+      "success": 14
+    },
+    "browser_menu_layout_test.dart": {
+      "success": 20
+    },
+    "disk_partition_inspector_review_test.dart": {
+      "success": 20
+    },
+    "disk_partition_inspector_test.dart": {
+      "success": 24
+    },
+    "disk_partition_viewer_test.dart": {
+      "success": 9
+    }
+  },
+  "total": {
+    "success": 843,
+    "skipped": 1
+  },
+  "success": true
+}

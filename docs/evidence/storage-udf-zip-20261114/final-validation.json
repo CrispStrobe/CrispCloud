@@ -1,0 +1,102 @@
+{
+  "checked_at_utc": "2026-11-14T08:30:23.263729+00:00",
+  "qualified_runtime_revision": "20798b39a0c792e533a5c785294417f26db03272",
+  "broad_gate_revision": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+  "completed_local_qualification": {
+    "broad_native": {
+      "passed": 526,
+      "failed": 0,
+      "skipped": 0,
+      "files": 20
+    },
+    "targeted_native": {
+      "passed": 96,
+      "failed": 0,
+      "skipped": 0,
+      "files": 4
+    },
+    "strict_analysis": {
+      "changed_dart_files": 38,
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    "udf_vm_and_compiled_js": {
+      "groups_per_runtime": 26,
+      "checks_per_runtime": 500,
+      "identical_results": true
+    },
+    "zip_vm_and_compiled_js": {
+      "groups_per_runtime": 15,
+      "checks_per_runtime": 131,
+      "identical_results": true
+    },
+    "udf_external_extraction": {
+      "images": 3,
+      "payloads": 12
+    },
+    "udf_python_oracle": {
+      "images": 3,
+      "descriptor_checks": 93
+    },
+    "zip_python_candidate_readback": {
+      "archives": 8,
+      "verified_members": 14
+    },
+    "fixture_reproduction": {
+      "generated_files": 4,
+      "byte_identical": true
+    },
+    "production_web": {
+      "passed": true,
+      "app_version": "1.2.9+22",
+      "source_revision_stamp": "20798b39a0c792e533a5c785294417f26db03272",
+      "main_dart_js": {
+        "bytes": 27607886,
+        "sha256": "a308d6341dd73477addda31aec855df7fc39116f78cebcdc6853e337787c309b"
+      },
+      "production_manifests_unchanged": true,
+      "apple_lzfse_license_present": true
+    },
+    "final_source_verification": {
+      "files": 54,
+      "primary_validation_and_commit_match": true
+    }
+  },
+  "counts_overlap_and_are_not_additive": true,
+  "reconciliation": {
+    "main": "14e022eb51c417803a1913131e78912a8a19b3be",
+    "branches": 11,
+    "pull_request_heads": 91,
+    "all_reachable": true
+  },
+  "hosted_ci": {
+    "revision": "20798b39a0c792e533a5c785294417f26db03272",
+    "checks": 38,
+    "status_counts": {
+      "queued": 38
+    },
+    "included_in_local_passes": false
+  },
+  "publication": {
+    "pull_request": 101,
+    "draft": true,
+    "branch": "integration/storage-capabilities-20261114",
+    "runtime_changes_after_qualified_revision": false,
+    "merged_into_main": false
+  },
+  "native_test_profile": "Isolated validation copy; only optional crisp_ebook_conversion hook disabled for native host tests; production pubspec.yaml and pubspec.lock restored byte-for-byte.",
+  "scope_limits": [
+    "UDF physical Type 1 maps, 2048-byte blocks and revisions 1.02/1.50/2.00/2.01 only; no repair or writes.",
+    "ZIP recovery publication is native local only, with separate 64 MiB bounds and a 4,096-record cap.",
+    "Synthetic huge-offset and sparse-prefix cases do not establish full physical huge-image extraction.",
+    "No WebAssembly, new native/device release or browser-interaction qualification.",
+    "Hosted checks were queued at the recorded query."
+  ],
+  "manifest_sha256": {
+    "pubspec.yaml": "f10ba24448b047cf379dac0efeb11f8f60d9ae089022a831b12a6b32b8fa564f",
+    "pubspec.lock": "2a0b95288cf41be9087af0c01ea57afcc4a2f138876d15709bff2f866060ccb4"
+  },
+  "receipt_integrity": "independent-receipt-verification.json",
+  "evidence_inventory": "evidence-sha256.json"
+}

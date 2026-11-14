@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "scope": "Incremental remote checkpoints in the FAT continuation through its final source checkpoint; later documentation/evidence-only commits are visible in branch history.",
+  "branch": "integration/storage-capabilities-20261114",
+  "pull_request": "https://github.com/CrispStrobe/CrispCloud/pull/101",
+  "continuation_baseline": "25061e2250f394c41690a70aa3ac56e136b5168e",
+  "full_native_gate_revision": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+  "qualification_source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "checkpoints": [
+    {
+      "sha": "b8d3e617483f2a1accfb37eaf7b6972f8710c25c",
+      "message": "docs(storage): preserve reconciled FAT implementation baseline",
+      "files": 2,
+      "tree": "5ed5e0eff56f53bb06b0b4455b0c145a81f294f9"
+    },
+    {
+      "sha": "afd02118681df8db9a10dacb04c44383594f045a",
+      "message": "test(storage): preserve independently mastered FAT reference images",
+      "files": 9,
+      "tree": "3d8692bbabec9ae05e39287acbde5d3ac7e1d188"
+    },
+    {
+      "sha": "29da9144f8b8b31055849b8578aa179e64095e99",
+      "message": "feat(storage): add bounded FAT and partitioned-image readers with independent controls",
+      "files": 12,
+      "tree": "794d2b4fccac4b647cfb5cdb06a9b6c40c4c47b0"
+    },
+    {
+      "sha": "794a50cbb904968091a9f8117956c0b9ee9eb917",
+      "message": "fix(storage): honor cancellation for empty FAT members and document host limits",
+      "files": 3,
+      "tree": "856728c069d3e88304e3317d79ab79d4041b8ba1"
+    },
+    {
+      "sha": "f982740b01d82374d8ace1c4100ff069f7b14511",
+      "message": "feat(storage): integrate read-only FAT browsing with viewer, workspace and bounded DMG decoding",
+      "files": 45,
+      "tree": "38ddb3d056231585a71e29bb09946e8c738ffb2c"
+    },
+    {
+      "sha": "fcb7daaaafcd556068bece8f7c37bee9d446f687",
+      "message": "fix(storage): keep DMG listing assembly cancellable and clear scoped analysis",
+      "files": 3,
+      "tree": "a7a8cbd8513000231e0ddd654b4a0153d32cad6c"
+    },
+    {
+      "sha": "2fa5223eaef7d54962a28062ea59cdbea713759e",
+      "message": "fix(storage): retain raw DMG diagnostics without masking failed source reads",
+      "files": 2,
+      "tree": "b2dce3d6ebd894fe2d75777bb4703c8f162b8532"
+    },
+    {
+      "sha": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+      "message": "fix(storage): limit FAT probes to possible volumes and preserve DMG codec boundaries",
+      "files": 2,
+      "tree": "a24f4c0c5c9af55cefadcd48a089d193b8c26419"
+    },
+    {
+      "sha": "456c84138a56c334f1750a13180ab0f19e8a0155",
+      "message": "test(storage): preserve passing FAT image regression gate and compatibility evidence",
+      "files": 26,
+      "tree": "617eadd58b871008eec315f7583d1549c16d01c4"
+    },
+    {
+      "sha": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+      "message": "test(storage): make shared DMG fixture generation work under dart2js",
+      "files": 1,
+      "tree": "82cde3b67ee2f6e807012e3b9b6a914ff6ded3cd"
+    }
+  ]
+}

@@ -224,6 +224,15 @@ void main() {
       },
     );
 
+    test('UDF is browsable with an explicitly read-only capability', () {
+      final capability = archiveFormatForName('disc.UDF');
+      expect(capability, isNotNull);
+      expect(capability!.id, 'udf');
+      expect(capability.canCreate, isFalse);
+      expect(capability.canModify, isFalse);
+      expect(ArchiveService.isArchive('disc.udf'), isTrue);
+    });
+
     test('unsupported formats are not advertised as browsable or writable', () {
       for (final suffix in [
         '.arj',
@@ -231,14 +240,12 @@ void main() {
         '.lha',
         '.ace',
         '.uc2',
-        '.udf',
         '.vhd',
         '.vhdx',
         '.vmdk',
         '.qcow2',
         '.vdi',
         '.apfs',
-        '.img',
         '.sparseimage',
         '.sparsebundle',
         '.lzo',

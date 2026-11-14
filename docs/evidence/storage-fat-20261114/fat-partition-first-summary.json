@@ -1,0 +1,13 @@
+{
+  "files": {
+    "archive_disk_image_reader_test.dart": {
+      "success": 43,
+      "failure": 2
+    }
+  },
+  "total": {
+    "success": 43,
+    "failure": 2
+  },
+  "success": false
+}

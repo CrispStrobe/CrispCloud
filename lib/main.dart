@@ -54,6 +54,7 @@ import 'services/pdf_font_licenses.dart';
 import 'services/terminal_licenses.dart';
 import 'services/file_viewer_binary_license.dart';
 import 'services/catalogue_licenses.dart';
+import 'services/archive_lzfse_license.dart';
 import 'services/file_viewer_lrc_license.dart';
 import 'services/file_viewer_documents_license.dart';
 import 'services/ebook_licenses.dart';
@@ -329,6 +330,7 @@ Future<void> _startCrispCloud() async {
     registerTerminalLicenses();
     registerFileViewerBinaryLicense();
     registerCatalogueLicenses();
+    registerArchiveLzfseLicense();
     registerFileViewerLrcLicense();
     registerFileViewerDocumentsLicenses();
     registerEbookLicenses();

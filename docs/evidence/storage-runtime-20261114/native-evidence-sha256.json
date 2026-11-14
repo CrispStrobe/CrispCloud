@@ -1,0 +1,62 @@
+{
+  "native-archive-gate-receipt.json": {
+    "bytes": 7258,
+    "sha256": "4999f0ffe33d346f4ee8e5bd5ae0ae45fb9465ceeecf89ec2bef4d18db60f0a7"
+  },
+  "native-archive-gate-summary.json": {
+    "bytes": 681,
+    "sha256": "b044846527aae434a4efe8deab622b376d0905bab17a3fb6440d632f6b2fbf56"
+  },
+  "native-archive-gate.jsonl": {
+    "bytes": 186692,
+    "sha256": "f1a911d68d4be484afad782c506e4070fdf6eef1f15d9d0ac9df1af43b5c784f"
+  },
+  "native-archive-gate.stderr.log": {
+    "bytes": 117,
+    "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322"
+  },
+  "native-dmg-followup-gate-receipt.json": {
+    "bytes": 6125,
+    "sha256": "bb061a03c19557ceb21e82012922a1afe3a6eb8e9b4bdd417d9c9668cb6279d5"
+  },
+  "native-dmg-followup-gate-summary.json": {
+    "bytes": 140,
+    "sha256": "e9fee91f80b6f03e0a5c2fa589f0bcd1669e5060f4d868be03782b9b39560f97"
+  },
+  "native-dmg-followup-gate.jsonl": {
+    "bytes": 34010,
+    "sha256": "1d16591fb3cf3e1683a2fd1f6bc2bb1af5a9dfb5c594e93025918a8687af9314"
+  },
+  "native-dmg-followup-gate.stderr.log": {
+    "bytes": 117,
+    "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322"
+  },
+  "native-runtime-environment.json": {
+    "bytes": 3535,
+    "sha256": "8e0de239c28655efd72c46f2e04b91382f0c78472a62cd93a38ca9e545cbad2c"
+  },
+  "native-scoped-analysis-receipt.json": {
+    "bytes": 2209,
+    "sha256": "658af8fa6c58633178ac64c8008bf7e4e863e1256b6990667af81d7311c7175b"
+  },
+  "native-scoped-analysis.log": {
+    "bytes": 97,
+    "sha256": "cf46eca6d67b0893651458194d9df0ba7a8f365309555c5da806e52365414a6a"
+  },
+  "native-source-sync.py": {
+    "bytes": 1465,
+    "sha256": "c5b8bcc1de5675da27645212814f160b7969819900518685b3bd4624d237ed4c"
+  },
+  "native-validation-env.sh": {
+    "bytes": 762,
+    "sha256": "0bf3e2fc1089b26060f535370812fcdc79eb32d40d6cc5365905e6cf04c46f09"
+  },
+  "native-validation-profile.py": {
+    "bytes": 2505,
+    "sha256": "8c4dfe0c2ff6d6ff6924657aaf91932aedb50a11d75a609f4e7c46e8fa3e7257"
+  },
+  "native-validation.md": {
+    "bytes": 5309,
+    "sha256": "4615717103bb143b5e577a94f7f48b5f7ea8a1c8764124bcdf13703a0aa7ecdf"
+  }
+}

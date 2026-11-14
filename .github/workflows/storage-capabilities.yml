@@ -1,0 +1,157 @@
+name: Storage capabilities
+
+on:
+  push:
+    branches: [main, integration/storage-capabilities-20261114]
+    paths: &storage_paths
+      - '.github/workflows/storage-capabilities.yml'
+      - '.github/actions/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'tool/**'
+      - 'packages/apple_lzfse/**'
+      - 'packages/file_viewer_binary/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+  pull_request:
+    paths: *storage_paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: storage-capabilities-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.8
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  portable:
+    name: BSD provenance and actual JavaScript acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.13.7
+      - name: Verify admitted source and independent Apple fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/storage-ci
+          git rev-parse HEAD > build/storage-ci/REVISION.txt
+          dart --version > build/storage-ci/dart-version.txt 2>&1
+          python3 tool/verify_lzfse_sources.py | tee build/storage-ci/lzfse-source.log
+          python3 tool/verify_file_viewer_binary.py | tee build/storage-ci/header-source.log
+          git clone https://github.com/lzfse/lzfse "$RUNNER_TEMP/storage-lzfse-reference"
+          git -C "$RUNNER_TEMP/storage-lzfse-reference" checkout --detach e634ca58b4821d9f3d560cdc6df5dec02ffc93fd
+          python3 test/support/generate_lzfse_fixtures.py --source "$RUNNER_TEMP/storage-lzfse-reference" --check | tee build/storage-ci/apple-reference.log
+          python3 test/support/verify_disk_partition_fixtures.py --dart "$(command -v dart)" | tee build/storage-ci/partition-reference.json
+          python3 test/support/verify_archive_udf_fixtures.py --report build/storage-ci/udf-descriptor-reference.json | tee build/storage-ci/udf-descriptor-reference.log
+      - name: Run the real decoder and partition inspector on VM and JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          for driver in lzfse disk_partition; do
+            dart "test/support/${driver}_web_acceptance.dart" | tee "build/storage-ci/${driver}-vm.log"
+            dart compile js -O2 "test/support/${driver}_web_acceptance.dart" -o "build/storage-ci/${driver}.js" | tee "build/storage-ci/${driver}-compile.log"
+            node -e "global.self=global; require('./build/storage-ci/${driver}.js')" | tee "build/storage-ci/${driver}-js.log"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storage-portable-${{ github.sha }}
+          path: build/storage-ci/
+          retention-days: 14
+
+  native:
+    name: Archive, FAT, partition, UDF and ZIP recovery regression gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-ebook-rust
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Configure dependency access
+        env:
+          STORAGE_DEPENDENCY_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: git config --global "url.https://x-access-token:${STORAGE_DEPENDENCY_TOKEN}@github.com/.insteadOf" "https://github.com/"
+      - name: Install native test libraries
+        run: sudo apt-get update && sudo apt-get install -y clang libsqlite3-dev liblz4-1
+      - name: Resolve the unchanged locked dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/storage-ci
+          git rev-parse HEAD > build/storage-ci/REVISION.txt
+          sha256sum pubspec.yaml pubspec.lock > build/storage-ci/manifest-before.txt
+          flutter pub get --enforce-lockfile
+      - name: Run storage regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub --reporter expanded \
+            --file-reporter json:build/storage-ci/native-events.json \
+            test/archive_lzfse_codec_test.dart test/archive_lzfse_license_test.dart \
+            test/archive_dmg_reader_test.dart test/archive_adc_codec_test.dart \
+            test/archive_hfs_reader_test.dart test/archive_iso_reader_test.dart \
+            test/archive_iso_multiextent_test.dart test/archive_format_registry_test.dart \
+            test/archive_container_dispatch_test.dart \
+            test/archive_fat_*_test.dart test/archive_disk_image_reader_test.dart \
+            test/archive_dmg_fat_failure_test.dart test/archive_dmg_fat_provider_test.dart \
+            test/archive_udf_*_test.dart test/archive_zip_recovery_*_test.dart \
+            test/archive_job_queue_test.dart test/archive_job_recovery_test.dart \
+            test/browser_menu_layout_test.dart \
+            test/widget/archive_zip_recovery_dialog_test.dart \
+            test/widget/archive_container_viewer_test.dart \
+            test/widget/archive_job_recovery_dialog_test.dart \
+            test/binary_structure_service_test.dart test/binary_structure_source_test.dart \
+            test/disk_partition_*_test.dart \
+            test/widget/binary_structure_viewer_test.dart \
+            test/widget/disk_partition_viewer_test.dart \
+            2>&1 | tee build/storage-ci/native.log
+      - name: Reproduce pinned external FAT reference images
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 https://elm-chan.org/fsw/ff/arc/ff16.zip -o "$RUNNER_TEMP/storage-ff16.zip"
+          python3 test/support/generate_fat_reference.py \
+            --fatfs-zip "$RUNNER_TEMP/storage-ff16.zip" \
+            --output-dir "$RUNNER_TEMP/storage-fat-reference" \
+            --cc cc --dart "$(command -v dart)" --check \
+            | tee build/storage-ci/fat-reference.log
+      - name: Run portable FAT, UDF and ZIP recovery on VM and JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          for driver in archive_fat archive_udf archive_zip_recovery; do
+            dart --packages=.dart_tool/package_config.json "test/support/${driver}_web_acceptance.dart" | tee "build/storage-ci/${driver}-vm.log"
+            dart compile js --packages=.dart_tool/package_config.json -O2 "test/support/${driver}_web_acceptance.dart" -o "build/storage-ci/${driver}.js" | tee "build/storage-ci/${driver}-compile.log"
+            node -e "global.self=global; require('./build/storage-ci/${driver}.js')" | tee "build/storage-ci/${driver}-js.log"
+          done
+          dart --packages=.dart_tool/package_config.json test/support/archive_zip_recovery_web_acceptance.dart --emit-candidates > build/storage-ci/zip-recovery-candidates.json
+          python3 test/support/check_archive_zip_recovery.py --candidates build/storage-ci/zip-recovery-candidates.json --report build/storage-ci/zip-recovery-python.json | tee build/storage-ci/zip-recovery-python.log
+      - name: Verify production manifests were restored
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum -c build/storage-ci/manifest-before.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storage-native-${{ github.sha }}
+          path: build/storage-ci/
+          retention-days: 14

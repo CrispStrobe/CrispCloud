@@ -1,0 +1,26 @@
+{
+  "files": {
+    "archive_container_viewer_test.dart": {
+      "success": 28
+    },
+    "archive_dmg_fat_failure_test.dart": {
+      "success": 3
+    },
+    "archive_dmg_fat_provider_test.dart": {
+      "success": 32
+    },
+    "archive_dmg_reader_test.dart": {
+      "success": 82
+    },
+    "archive_fat_integration_test.dart": {
+      "success": 16
+    },
+    "archive_udf_integration_test.dart": {
+      "success": 15
+    }
+  },
+  "total": {
+    "success": 176
+  },
+  "success": true
+}

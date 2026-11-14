@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "source_sha256": {
+    "lib/l10n/disk_partition_strings.dart": "e9b8b39b86cb4a1ef61961965530517a30ba345b844889dd9ecbfbaf5181bb47",
+    "lib/services/archive_disk_image_reader.dart": "02ccd789baa22c4668938fef0521a3eb4ba814fedaac56fbe7f273bc57f9bd03",
+    "lib/services/archive_dmg_reader.dart": "064026540a9633fa7348a5e700443fc0601e4ec8b435691cba0e822df30b1b56",
+    "lib/services/archive_endpoint_policy.dart": "b69a254ded4ff86b464ab4e1a860b435ab37e4f0cb167ddfb4709a42f0ed2d38",
+    "lib/services/archive_fat_reader.dart": "31fd77e11e513ad3924153b7cfb72cc8fdb138a89dee6f1655558fc78385bea3",
+    "lib/services/archive_format_registry.dart": "5a53a0f793015c46eaa508a4687db535324233f535f1abf77490f3e9df371098",
+    "lib/services/archive_streamed_reader.dart": "384f54018d4de42fa0e322b0f7313ab818ba0fc3c8ad2b044d3812647996bcbc",
+    "lib/services/archive_viewer_service.dart": "844ff1f2559abe7e4633f109a8f16178cef575236341eb8a00ad6fd64b8a03eb",
+    "lib/services/archive_viewer_streaming.dart": "823c32e8f7c5c621b9351b743c56e3e1a95fd28abe3a38c0633074e143c02544",
+    "lib/services/archive_workspace.dart": "55f3ece449599fefe352ca61a4f26a7616bc0841d08a7cb245975ffb0cf34be9",
+    "lib/widgets/disk_partition_dialog.dart": "d4d5db13a3081d30b1c989e8c5e61fbfd76addf7c3fc9e167bf68cfc96e76fce",
+    "lib/widgets/internal_viewer_dialog.dart": "a1cd2e5d32afcbcc85d8d2a9b5309237107d4780a32c2910cd8b09583163b40c",
+    "test/archive_disk_image_reader_test.dart": "125fd3099d4747da5e2f2617a3da165017176ab617ce5b9149ad80ec1fea8b85",
+    "test/archive_dmg_fat_failure_test.dart": "c236c3da4cb95f603435dc99da1864439b1586c8254929f29df2f2c063a1e915",
+    "test/archive_dmg_fat_provider_test.dart": "717c591e78c05922c9228cfb09c9ff6277a34ee15e0cd0a22f91366ef7cc9357",
+    "test/archive_fat_integration_test.dart": "cc2fbcc0981bf8186fa13eacfd8c592020460052fdc541e604cb3e7910134a40",
+    "test/archive_fat_reader_review_test.dart": "7f3b2e3c855d0b60bdc3d70344d5131c3813b33c941f138cdb11d568f4d46eba",
+    "test/archive_fat_reader_test.dart": "5e7b9730d7b9f4362587765de239b22c2c1f74aa862098bbfdf1cdeffde8ddf2",
+    "test/archive_fat_workspace_test.dart": "7178ee38e3e2d54592b78beae718ae0c4b0d2928b262ea124cf632911d125173",
+    "test/archive_format_registry_test.dart": "4d5abc8944be718bd8819ab0303a444938c4507150b911d3b4dc80f55e6da0ec",
+    "test/support/archive_disk_image_fixture.dart": "7dd8d5031c22777a56cd5ccbececa3a87eaa1400b71b1af96b2bccf421b402e2",
+    "test/support/archive_fat_fixture.dart": "53314b0ada47330446fa8deaa667016ac980125cc8bcb4e9f80cb7560862357e",
+    "test/support/archive_fat_reference_data.dart": "980a6af116e0fc88bc2dbafc432d8b9b18c521adff26bc7b7c2c5f95c3ad079e",
+    "test/support/archive_fat_web_acceptance.dart": "bba98edf1716070d16f5401dfa28df34ec98a04a292d986fe16b9dd7ed452a2a",
+    "test/widget/archive_container_viewer_test.dart": "f38fa3a6e6c66842a7559cdd08f2389573880e0b6547234f1bf0eb96b6ebd968",
+    "test/widget/disk_partition_viewer_test.dart": "d9b6af688ffee0b1574a9133c904e594e9df85f8b8a0eb9aad0fcef1e049159b",
+    "pubspec.yaml": "f10ba24448b047cf379dac0efeb11f8f60d9ae089022a831b12a6b32b8fa564f",
+    "pubspec.lock": "2a0b95288cf41be9087af0c01ea57afcc4a2f138876d15709bff2f866060ccb4"
+  },
+  "differences_from_current_primary": [
+    "lib/services/archive_dmg_reader.dart",
+    "test/archive_fat_integration_test.dart"
+  ],
+  "note": "After this successful run, primary added the positive 2048-byte FAT12 integration case/import and clarified only the DMG minimum-size comment; root confirmed no additional runtime semantic change. The final exact-runtime gate includes both byte differences."
+}

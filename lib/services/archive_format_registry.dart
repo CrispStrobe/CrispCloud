@@ -281,7 +281,28 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     mimeType: 'application/x-iso9660-image',
     canCreate: true,
     canModify: true,
-    notes: 'Read ISO9660/Joliet/Rock Ridge and bounded multi-extent regular files. Create and rewrite inspected single-extent data images up to 8 GiB; each written file is limited to 4 GiB minus one byte. Multi-extent, boot, hybrid and UDF images remain outside the writer profile.',
+    notes: 'Read ISO9660/Joliet/Rock Ridge and bounded multi-extent regular files. UDF-only and bridge images use the separate read-only UDF profile. Create and rewrite inspected single-extent data images up to 8 GiB; each written file is limited to 4 GiB minus one byte. Multi-extent, boot, hybrid and UDF images remain outside the writer profile.',
+  ),
+  ArchiveFormatCapability(
+    id: 'udf',
+    label: 'UDF disk image',
+    suffixes: ['.udf'],
+    mimeType: 'application/x-udf-image',
+    notes: 'Read-only UDF physical-partition images with 2048-byte blocks. Supported revisions, allocation forms and resource limits are checked before listing; virtual, sparable and metadata partitions remain unsupported.',
+  ),
+  ArchiveFormatCapability(
+    id: 'fat',
+    label: 'FAT filesystem image',
+    suffixes: ['.fat', '.fat12', '.fat16', '.fat32'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read-only FAT12/16/32 filesystem images with validated allocation chains, long names and bounded positional reads. The on-disk geometry selects the FAT variant. exFAT, repairs and writes are outside this profile.',
+  ),
+  ArchiveFormatCapability(
+    id: 'disk-image',
+    label: 'Raw disk image',
+    suffixes: ['.img', '.ima', '.dd', '.raw'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read supported FAT volumes or unambiguous primary MBR/GPT images. Raw partition slices remain available; supported FAT partitions expose files. Other filesystem and virtual-disk formats are not implied by the filename. Read-only; no mounting, repair or partition writes.',
   ),
   ArchiveFormatCapability(
     id: 'dmg',
@@ -291,7 +312,7 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     canCreate: true,
     canModify: true,
     notes:
-        'Unencrypted UDIF images with raw, zero, ADC, zlib, bzip2 or XZ/LZMA blocks. '
+        'Unencrypted UDIF images with raw, zero, ADC, zlib, bzip2, LZFSE or XZ/LZMA blocks. '
         'Create HFSX data-volume DMGs up to 8 GiB on native local storage. Rewrite fully inspected CrispCloud single-volume data profiles; other filesystem layouts remain read-only. APFS files are unavailable.',
   ),
   ArchiveFormatCapability(

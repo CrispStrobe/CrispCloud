@@ -1,0 +1,645 @@
+{
+  "checked_at_utc": "2026-11-14T05:09:18.961878+00:00",
+  "status": "passed",
+  "scope": "Documentation and research evidence; no runtime implementation or new runtime qualification.",
+  "baseline_main": "4d65b86dab36ca8f5dcd192c776de369aa5a4932",
+  "saved_source_checkpoint": "7dfc175e0d05ca278a5406f7c049567948ae46d5",
+  "review_url": "https://github.com/CrispStrobe/CrispCloud/pull/101",
+  "review_state": "draft",
+  "current_ref_checks": {
+    "branch_heads": 11,
+    "pr_heads": 91,
+    "all_reachable": true,
+    "refs": [
+      {
+        "ref": "refs/remotes/origin/checkpoint/app-final-next-20261113",
+        "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/checkpoint/app-oracle-rollout-20261113",
+        "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/checkpoint/ebook-native-input-20261112",
+        "sha": "7e20b40c1b797d463704106c881b9e84415f4fd7",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/feature/apache-file-viewer-20261113",
+        "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/feature/archive-commander-parity-20261113",
+        "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/feature/ebook-parity-canary-20261112",
+        "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/feature/office-fidelity-gaps-20261113",
+        "sha": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/feature/office-fidelity-oracle-validation-20261113",
+        "sha": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/integration/archive-containers-20261113",
+        "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/integration/storage-capabilities-20261114",
+        "sha": "7dfc175e0d05ca278a5406f7c049567948ae46d5",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/origin/main",
+        "sha": "4d65b86dab36ca8f5dcd192c776de369aa5a4932",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/10",
+        "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/100",
+        "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/101",
+        "sha": "7dfc175e0d05ca278a5406f7c049567948ae46d5",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/11",
+        "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/12",
+        "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/13",
+        "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/14",
+        "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/15",
+        "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/16",
+        "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/17",
+        "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/18",
+        "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/19",
+        "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/20",
+        "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/21",
+        "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/22",
+        "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/23",
+        "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/24",
+        "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/25",
+        "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/26",
+        "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/27",
+        "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/28",
+        "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/29",
+        "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/30",
+        "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/31",
+        "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/32",
+        "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/33",
+        "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/34",
+        "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/35",
+        "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/36",
+        "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/37",
+        "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/38",
+        "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/39",
+        "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/40",
+        "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/41",
+        "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/42",
+        "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/43",
+        "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/45",
+        "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/47",
+        "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/49",
+        "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/5",
+        "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/50",
+        "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/51",
+        "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/52",
+        "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/53",
+        "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/54",
+        "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/55",
+        "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/56",
+        "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/57",
+        "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/58",
+        "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/59",
+        "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/6",
+        "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/60",
+        "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/61",
+        "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/62",
+        "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/63",
+        "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/64",
+        "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/65",
+        "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/66",
+        "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/67",
+        "sha": "403e942dc99779883210125a01841ef209e19d2e",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/68",
+        "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/69",
+        "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/7",
+        "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/70",
+        "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/71",
+        "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/72",
+        "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/73",
+        "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/74",
+        "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/75",
+        "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/76",
+        "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/77",
+        "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/78",
+        "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/79",
+        "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/8",
+        "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/80",
+        "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/81",
+        "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/82",
+        "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/83",
+        "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/84",
+        "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/85",
+        "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/86",
+        "sha": "120f839ab9091bdbedf326621347ee737140e043",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/87",
+        "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/88",
+        "sha": "b100cd751688f13609a8829180b487b381588d14",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/89",
+        "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/9",
+        "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/90",
+        "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/91",
+        "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/92",
+        "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/93",
+        "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/94",
+        "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/95",
+        "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+        "reachable_from_saved_checkpoint": true
+      },
+      {
+        "ref": "refs/remotes/pull/97",
+        "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+        "reachable_from_saved_checkpoint": true
+      }
+    ]
+  },
+  "initial_inherited_heads": 100,
+  "latest_main_unchanged": true,
+  "only_open_pr_at_final_api_check": 101,
+  "runtime_tree_matches_baseline": true,
+  "changed_paths_at_saved_checkpoint": [
+    "docs/evidence/storage-capabilities-20261114/README.md",
+    "docs/evidence/storage-capabilities-20261114/ancestry.json",
+    "docs/evidence/storage-capabilities-20261114/archive-library-evidence.json",
+    "docs/evidence/storage-capabilities-20261114/delta-source-review.txt",
+    "docs/evidence/storage-capabilities-20261114/evidence-validation.json",
+    "docs/evidence/storage-capabilities-20261114/filesystem-library-evidence.json",
+    "docs/evidence/storage-capabilities-20261114/hex-copy-library-evidence.json",
+    "docs/storage-capabilities-20261114.md"
+  ],
+  "relative_links": {
+    "docs/storage-capabilities-20261114.md": 26,
+    "docs/evidence/storage-capabilities-20261114/README.md": 8
+  },
+  "delta_source_hashes": [
+    {
+      "path": "lib/services/delta_sync_service.dart",
+      "sha256": "f3a7d11990d686848daf1a0d575e393e9cbee57d9ab62d6ec7f0da7da5acf43b",
+      "matches_baseline": true
+    },
+    {
+      "path": "lib/services/s3_client_adapter.dart",
+      "sha256": "0956406aa960c7256dac5b0e61e32f2d56813a8ac9fab4c0ea39b5d16a8d8dc8",
+      "matches_baseline": true
+    },
+    {
+      "path": "lib/services/pcloud_client_adapter.dart",
+      "sha256": "76850ebd231cec369380cead092fd71cdf76b257dbbd1e144605720b6ea301e4",
+      "matches_baseline": true
+    },
+    {
+      "path": "lib/services/nextcloud_client_adapter.dart",
+      "sha256": "4a09fbd2a5df8f3f00035364bac31c7752d362192b1bd432dcb2e5cc6283b070",
+      "matches_baseline": true
+    },
+    {
+      "path": "lib/providers/delta_sync_provider.dart",
+      "sha256": "bacf5982f20f6bdfc72ae4d83586d3ef4db90f77d2dc74b44b68996c4e0f1182",
+      "matches_baseline": true
+    },
+    {
+      "path": "docs/adr/007-block-level-delta-sync.md",
+      "sha256": "37d5d3c317f75fb724ed5bb00453aac6da01a77ef856e7da464c0f3dad61c86d",
+      "matches_baseline": true
+    }
+  ],
+  "upstream_source_evidence_validation": {
+    "status": "passed",
+    "scope": "Research evidence byte identity only, not a dependency, runtime or legal approval.",
+    "checks": [
+      "Exact retrieved source byte lengths",
+      "SHA-256 against ledgers",
+      "Git blob SHA-1 framing against source blob IDs",
+      "Immutable commit is present in each source URL"
+    ],
+    "counts": {
+      "source_files": 63,
+      "license_files": 33,
+      "entries": 27
+    },
+    "source_evidence": "Exact source retrievals were rehashed independently by the parent reviewer; final ledgers retain the immutable URLs and hashes."
+  },
+  "artifacts": [
+    {
+      "path": "docs/storage-capabilities-20261114.md",
+      "bytes": 33570,
+      "sha256": "28e26634775db96dd52253a634b16fb7af236b172f6b40a9721c662977fc1b47"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/README.md",
+      "bytes": 4141,
+      "sha256": "5f1a3bee14060b81ac271134cda2095e745dd07912411deff6110aacde4d780b"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/ancestry.json",
+      "bytes": 58348,
+      "sha256": "255782a38a00a17d14047a7228abd51f6f3ba44c5daa1581fefcfd985ec71eff"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/archive-library-evidence.json",
+      "bytes": 19187,
+      "sha256": "7e6b0af217b2b133d29ddb0a4fa346d755d63906e0282002d16fbc93307e26dc"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/delta-source-review.txt",
+      "bytes": 7253,
+      "sha256": "686daa1f26681427097aed6d07fa2c6092ffece545eb1fc87611907ea16978fc"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/evidence-validation.json",
+      "bytes": 560,
+      "sha256": "7f06f8864b8ead66b41a52e5a8b20267b8276ca4e2663cd3e0ddaced04ad45d2"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/filesystem-library-evidence.json",
+      "bytes": 28000,
+      "sha256": "f818344b26482e64fb5dac051415b14f30126fd338704f480cd4cb714e8b849f"
+    },
+    {
+      "path": "docs/evidence/storage-capabilities-20261114/hex-copy-library-evidence.json",
+      "bytes": 16190,
+      "sha256": "8ccff9bad56c1931fb47641737e2bba1eafdcedf77b99c2a331f710681792c76"
+    }
+  ],
+  "runtime_tests_run": false,
+  "focused_scope_reviews": [
+    "archive/container",
+    "filesystem/recovery",
+    "hex/copy"
+  ],
+  "limitations": [
+    "Candidate license/source observations do not approve dependency graphs or shipped binaries.",
+    "The delta review has no runtime reproduction and uncertain ordinary caller reachability.",
+    "No new native, browser, Wasm or physical-device qualification."
+  ]
+}

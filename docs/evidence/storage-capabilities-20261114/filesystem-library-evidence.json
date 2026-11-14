@@ -1,0 +1,602 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-11-14T05:02:17Z",
+  "purpose": "CrispCloud filesystem, partition, disk-image and recovery library candidate evidence",
+  "scope": "Top-level licensing and documented capability research only; no integration approval or completed software-bill-of-materials audit.",
+  "policy": {
+    "eligible_families": [
+      "MIT",
+      "Apache-2.0",
+      "BSD",
+      "MPL",
+      "equivalent unrestricted commercial-use open-source licenses"
+    ],
+    "excluded": [
+      "GPL",
+      "AGPL",
+      "noncommercial licenses"
+    ],
+    "conservative_exclusion": [
+      "LGPL until the user explicitly approves it"
+    ]
+  },
+  "verification": {
+    "commit_observation": "git ls-remote against each upstream repository",
+    "source_retrieval": "GitHub connector fetch_file at the observed exact commit SHA, base64 decoded without newline normalization",
+    "integrity": "Every downloaded source was checked against its Git blob SHA-1; SHA-256 here is over the exact file bytes.",
+    "resolved_build_graph_audited": false,
+    "runtime_downloads_or_builds_performed": false,
+    "candidates_installed_in_app": false
+  },
+  "entries": [
+    {
+      "id": "discutils",
+      "repository": "https://github.com/DiscUtils/DiscUtils",
+      "repository_full_name": "DiscUtils/DiscUtils",
+      "observed_branch": "develop",
+      "observed_commit_sha": "59d7cadab839c6d8dfcf52f8be5efe6d2ced190f",
+      "commit_observation_method": "git ls-remote https://github.com/DiscUtils/DiscUtils.git HEAD refs/heads/develop",
+      "top_level_license": "MIT",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "ISO/UDF/FAT/NTFS filesystem libraries",
+        "VM image formats including VHD, VDI, VMDK, XVA",
+        "C# managed implementation"
+      ],
+      "limitations": [
+        "Requires .NET integration, helper process, or a deliberate port for Flutter/Dart.",
+        "Read/create/edit support is format-specific; broad project description is not permission to advertise universal writes.",
+        "No native or Wasm qualification was performed."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE.txt",
+          "url": "https://github.com/DiscUtils/DiscUtils/blob/59d7cadab839c6d8dfcf52f8be5efe6d2ced190f/LICENSE.txt",
+          "git_blob_sha": "f96005f0392ff2566b420405cbc966e344f77cbd",
+          "sha256": "7f62225e8d08b717f9e580e3768d64791df324dd1ff509a6b5d2a684b9e058c4",
+          "bytes": 1091,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/DiscUtils/DiscUtils/blob/59d7cadab839c6d8dfcf52f8be5efe6d2ced190f/README.md",
+          "git_blob_sha": "db87148d0d8b56aa45b8100bce57f5961a0ae2d7",
+          "sha256": "a702147901b5dbca38c7d388ecfc86663c5c6b4e97ae7259ef8358dff73c0d12",
+          "bytes": 4601,
+          "retrieved_exact_bytes": true
+        }
+      ]
+    },
+    {
+      "id": "go-diskfs",
+      "repository": "https://github.com/diskfs/go-diskfs",
+      "repository_full_name": "diskfs/go-diskfs",
+      "observed_branch": "master",
+      "observed_commit_sha": "044eda388da364f6d616cc12868ce0e49e0a6fff",
+      "commit_observation_method": "git ls-remote https://github.com/diskfs/go-diskfs.git HEAD refs/heads/master",
+      "top_level_license": "MIT",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "MBR/GPT table operations",
+        "FAT32, ISO9660, SquashFS and ext4 image access",
+        "Current README documents a limited read-only EROFS profile"
+      ],
+      "limitations": [
+        "ISO9660 and SquashFS use create/finalize workflows; finalized filesystems are not arbitrarily editable.",
+        "Ext4 read/create/write APIs do not establish universal journal recovery, filesystem resize, or safe repair.",
+        "Current go.mod includes anchore/go-lzo; full dependency and bundled-data audit remains outstanding."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE",
+          "url": "https://github.com/diskfs/go-diskfs/blob/044eda388da364f6d616cc12868ce0e49e0a6fff/LICENSE",
+          "git_blob_sha": "7f4b860b5f185c22bdc33f11f64a57c4b16886a7",
+          "sha256": "22fcc7885cdba5aeac7c0e983fe2d7f3323629aae1ad0b99bab5ebc52a2f3485",
+          "bytes": 1069,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/diskfs/go-diskfs/blob/044eda388da364f6d616cc12868ce0e49e0a6fff/README.md",
+          "git_blob_sha": "af374cffda272396533ad6d8b921233e5acdf9b2",
+          "sha256": "009724b4d6b96f9769abb1ee53acc25a5fe0a59a78d011d797555c90c154dc13",
+          "bytes": 9683,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "go.mod",
+          "url": "https://github.com/diskfs/go-diskfs/blob/044eda388da364f6d616cc12868ce0e49e0a6fff/go.mod",
+          "git_blob_sha": "0b878d6f993b2d223afaefa1430fb3b5c9b81ef6",
+          "sha256": "5f41a41eb1c5a1f14acb14c599cb337075b425bc064decfbc4e1cd1caa573333",
+          "bytes": 494,
+          "retrieved_exact_bytes": true
+        }
+      ]
+    },
+    {
+      "id": "gptman",
+      "repository": "https://github.com/rust-disk-partition-management/gptman",
+      "repository_full_name": "rust-disk-partition-management/gptman",
+      "observed_branch": "main",
+      "observed_commit_sha": "d180fa52e375c205edb508aa113d7c39e4c3afde",
+      "commit_observation_method": "git ls-remote https://github.com/rust-disk-partition-management/gptman.git HEAD refs/heads/main",
+      "top_level_license": "MIT OR Apache-2.0",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "GPT read/write with 512-byte and 4096-byte sectors",
+        "Partition entries, names, GUIDs and attributes",
+        "Protective MBR"
+      ],
+      "limitations": [
+        "Partition table resizing is not filesystem resizing or physical file-data relocation.",
+        "Optional Linux nix feature handles device ioctls; image-only profile can disable it.",
+        "No native or Wasm qualification was performed."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE.MIT",
+          "url": "https://github.com/rust-disk-partition-management/gptman/blob/d180fa52e375c205edb508aa113d7c39e4c3afde/LICENSE.MIT",
+          "git_blob_sha": "c57a48d01168a4b8b898a2cb42f1efa2d5c3bd69",
+          "sha256": "ffc1541fa3b5bc15fb6a02d2f373dc7b212cd8c70eabb123e63ff03fc634a5df",
+          "bytes": 1071,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "license",
+          "path": "LICENSE.Apache-2.0",
+          "url": "https://github.com/rust-disk-partition-management/gptman/blob/d180fa52e375c205edb508aa113d7c39e4c3afde/LICENSE.Apache-2.0",
+          "git_blob_sha": "e45143a4280b8320cd24c29a174a473475d0257c",
+          "sha256": "b9699545db70e53618bea9ed2e641edc77ad2769329bac767f9bee282908c03c",
+          "bytes": 11344,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/rust-disk-partition-management/gptman/blob/d180fa52e375c205edb508aa113d7c39e4c3afde/README.md",
+          "git_blob_sha": "8cfe6ac1380be64349eaa1769b29f04b4238868f",
+          "sha256": "99bc236260c872f2ac3235ddf6c3c9768428b68e76721cb01fb502abf25a6d12",
+          "bytes": 5283,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "Cargo.toml",
+          "url": "https://github.com/rust-disk-partition-management/gptman/blob/d180fa52e375c205edb508aa113d7c39e4c3afde/Cargo.toml",
+          "git_blob_sha": "f74d21684ba19597826e6cfb6b68ac79d04427c3",
+          "sha256": "8ce47f939be48679b575d3b8f30e80c900b32f85e65fd876742438fb5e9a9f3e",
+          "bytes": 783,
+          "retrieved_exact_bytes": true
+        }
+      ],
+      "observed_manifest_version": "3.1.1",
+      "manifest_version_note": "Version string in the observed source tree; not a claim of published release or tested integration."
+    },
+    {
+      "id": "mbrman",
+      "repository": "https://github.com/rust-disk-partition-management/mbrman",
+      "repository_full_name": "rust-disk-partition-management/mbrman",
+      "observed_branch": "main",
+      "observed_commit_sha": "9cd09eddbf6c436c66d2954423641e52572830cb",
+      "commit_observation_method": "git ls-remote https://github.com/rust-disk-partition-management/mbrman.git HEAD refs/heads/main",
+      "top_level_license": "MIT OR Apache-2.0",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "MBR partition table parsing and management",
+        "Source features separate std and alloc use"
+      ],
+      "limitations": [
+        "Partition table edits do not resize the filesystem contained in a partition.",
+        "Read/write and image-bound checks must be enforced by the application.",
+        "No native or Wasm qualification was performed."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE.MIT",
+          "url": "https://github.com/rust-disk-partition-management/mbrman/blob/9cd09eddbf6c436c66d2954423641e52572830cb/LICENSE.MIT",
+          "git_blob_sha": "c57a48d01168a4b8b898a2cb42f1efa2d5c3bd69",
+          "sha256": "ffc1541fa3b5bc15fb6a02d2f373dc7b212cd8c70eabb123e63ff03fc634a5df",
+          "bytes": 1071,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "license",
+          "path": "LICENSE.Apache-2.0",
+          "url": "https://github.com/rust-disk-partition-management/mbrman/blob/9cd09eddbf6c436c66d2954423641e52572830cb/LICENSE.Apache-2.0",
+          "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/rust-disk-partition-management/mbrman/blob/9cd09eddbf6c436c66d2954423641e52572830cb/README.md",
+          "git_blob_sha": "ee53fdf30870782c373912c53150187686a2d66e",
+          "sha256": "6a11cc6e53e44cb93711a40fcb5a128ab3ea59af806ddbe49b8347420bd865ff",
+          "bytes": 13854,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "Cargo.toml",
+          "url": "https://github.com/rust-disk-partition-management/mbrman/blob/9cd09eddbf6c436c66d2954423641e52572830cb/Cargo.toml",
+          "git_blob_sha": "50deb89b82a51251eb8bfe944607951eb7650135",
+          "sha256": "54aa549afb65a05b9c855cbecf4b528ca0cc22564d27813cc2f3803e7400e46a",
+          "bytes": 921,
+          "retrieved_exact_bytes": true
+        }
+      ],
+      "observed_manifest_version": "0.7.0",
+      "manifest_version_note": "Version string in the observed source tree; not a claim of published release or tested integration."
+    },
+    {
+      "id": "rust-fatfs",
+      "repository": "https://github.com/rafalh/rust-fatfs",
+      "repository_full_name": "rafalh/rust-fatfs",
+      "observed_branch": "master",
+      "observed_commit_sha": "38b3a7950bf0e765e34286d1dfe76c519ee347e2",
+      "commit_observation_method": "git ls-remote https://github.com/rafalh/rust-fatfs.git HEAD refs/heads/master",
+      "top_level_license": "MIT",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "FAT12/FAT16/FAT32 read/write",
+        "Long filenames, directories, rename/move and timestamps",
+        "Volume formatting"
+      ],
+      "limitations": [
+        "Not an exFAT implementation.",
+        "Mutating existing images requires a separately qualified image-writing workflow.",
+        "Default optional chrono feature affects the dependency graph."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE.txt",
+          "url": "https://github.com/rafalh/rust-fatfs/blob/38b3a7950bf0e765e34286d1dfe76c519ee347e2/LICENSE.txt",
+          "git_blob_sha": "5054c878fc2e035306989348c6ef6f2dfe05bc7d",
+          "sha256": "9125b4be91e0486ca97316a7547ec0f7e15093b3eacbf4d85e4de1718e9bbfbf",
+          "bytes": 1056,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/rafalh/rust-fatfs/blob/38b3a7950bf0e765e34286d1dfe76c519ee347e2/README.md",
+          "git_blob_sha": "4d36fe627b8beb6609b30e8366e179cfceb032b7",
+          "sha256": "64271b82790b3b3f98c78e1e0757052220cd1c68d35de543268dfd3740abe92c",
+          "bytes": 2767,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "Cargo.toml",
+          "url": "https://github.com/rafalh/rust-fatfs/blob/38b3a7950bf0e765e34286d1dfe76c519ee347e2/Cargo.toml",
+          "git_blob_sha": "c022d23e11f5f669da73384ef6e96262b777e8cd",
+          "sha256": "858dc3c2c198db3b4816475bca9a6447ccc3f0e264752541b75767c817d9eaa1",
+          "bytes": 1416,
+          "retrieved_exact_bytes": true
+        }
+      ],
+      "observed_manifest_version": "0.4.0",
+      "manifest_version_note": "Version string in the observed source tree; not a claim of published release or tested integration."
+    },
+    {
+      "id": "ext4-view",
+      "repository": "https://github.com/nicholasbishop/ext4-view-rs",
+      "repository_full_name": "nicholasbishop/ext4-view-rs",
+      "observed_branch": "main",
+      "observed_commit_sha": "68ebcaf70a470593fe410a7e927678e3fe80e86d",
+      "commit_observation_method": "git ls-remote https://github.com/nicholasbishop/ext4-view-rs.git HEAD refs/heads/main",
+      "top_level_license": "MIT OR Apache-2.0",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "Read-only ext2/ext3/ext4 family access",
+        "Filesystem metadata, directories and file extraction",
+        "Caller-supplied Ext4Read source"
+      ],
+      "limitations": [
+        "No filesystem write or general repair capability is claimed.",
+        "Supported on-disk feature profile and corrupt-image behavior need qualification.",
+        "No native or Wasm qualification was performed."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE-MIT",
+          "url": "https://github.com/nicholasbishop/ext4-view-rs/blob/68ebcaf70a470593fe410a7e927678e3fe80e86d/LICENSE-MIT",
+          "git_blob_sha": "c02bcffb7d8eeda7a987d470f8f275d4ad3cb231",
+          "sha256": "5735d2b5112f23b3a5d17914acec6a4cac00e45bb32fcb8b07716e1a3027cbd1",
+          "bytes": 1050,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "license",
+          "path": "LICENSE-APACHE",
+          "url": "https://github.com/nicholasbishop/ext4-view-rs/blob/68ebcaf70a470593fe410a7e927678e3fe80e86d/LICENSE-APACHE",
+          "git_blob_sha": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/nicholasbishop/ext4-view-rs/blob/68ebcaf70a470593fe410a7e927678e3fe80e86d/README.md",
+          "git_blob_sha": "62cbb6f5b4e0a2200e6a5ff92c72303283a796b4",
+          "sha256": "b0aab8753d8ddb1223377d90c9e0fddff3174c2136205c91467ecf3554928ce9",
+          "bytes": 2892,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "Cargo.toml",
+          "url": "https://github.com/nicholasbishop/ext4-view-rs/blob/68ebcaf70a470593fe410a7e927678e3fe80e86d/Cargo.toml",
+          "git_blob_sha": "eaf727b64eff50031585f47eb93ec80dd55e7df4",
+          "sha256": "def38669f1c1e69f5289bc5d86bfb92abb2f22cb4269b93b7ccfadc9a6ab32bd",
+          "bytes": 1341,
+          "retrieved_exact_bytes": true
+        }
+      ],
+      "observed_manifest_version": "1.0.0",
+      "manifest_version_note": "Version string in the observed source tree; not a claim of published release or tested integration."
+    },
+    {
+      "id": "ntfs",
+      "repository": "https://github.com/ColinFinck/ntfs",
+      "repository_full_name": "ColinFinck/ntfs",
+      "observed_branch": "master",
+      "observed_commit_sha": "47ae0168f6c607208b27c61ed89b4ffac9a3c99a",
+      "commit_observation_method": "git ls-remote https://github.com/ColinFinck/ntfs.git HEAD refs/heads/master",
+      "top_level_license": "MIT OR Apache-2.0",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "Read-only NTFS 3.x parsing",
+        "Resident/nonresident attributes and attribute lists",
+        "Sparse file data and alternate data streams"
+      ],
+      "limitations": [
+        "Upstream lists writing, compression, encryption, journaling, reparse points and security descriptors as unsupported.",
+        "Metadata parsing does not by itself implement deleted-file recovery.",
+        "No native or Wasm qualification was performed."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE-MIT",
+          "url": "https://github.com/ColinFinck/ntfs/blob/47ae0168f6c607208b27c61ed89b4ffac9a3c99a/LICENSE-MIT",
+          "git_blob_sha": "ffffa74c407e9b8e7bcfd6c8b6bd96307fe2092d",
+          "sha256": "3c7c759c075988d492b5be7c54e280e1c0ecaab655821f20ffddf10e89887941",
+          "bytes": 1071,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "license",
+          "path": "LICENSE-APACHE",
+          "url": "https://github.com/ColinFinck/ntfs/blob/47ae0168f6c607208b27c61ed89b4ffac9a3c99a/LICENSE-APACHE",
+          "git_blob_sha": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/ColinFinck/ntfs/blob/47ae0168f6c607208b27c61ed89b4ffac9a3c99a/README.md",
+          "git_blob_sha": "3e9097e802f7b040c3dd515b90da78f9d884b255",
+          "sha256": "e7581e29c7e539914c9550d091d856cd79651bc15d0c4014faf1ccea738b90d2",
+          "bytes": 5110,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "Cargo.toml",
+          "url": "https://github.com/ColinFinck/ntfs/blob/47ae0168f6c607208b27c61ed89b4ffac9a3c99a/Cargo.toml",
+          "git_blob_sha": "840708a33be7154d2d705395a778896e426b57a2",
+          "sha256": "63eb2993a89a2146cac202278227af0a7f3b0d175ace9db9cd262dcf0726d748",
+          "bytes": 1561,
+          "retrieved_exact_bytes": true
+        }
+      ],
+      "observed_manifest_version": "0.4.0",
+      "manifest_version_note": "Version string in the observed source tree; not a claim of published release or tested integration."
+    },
+    {
+      "id": "go-apfs",
+      "repository": "https://github.com/blacktop/go-apfs",
+      "repository_full_name": "blacktop/go-apfs",
+      "observed_branch": "main",
+      "observed_commit_sha": "1ce96a1cf1da89d78106ae1c45b14c5a0fc0ff5c",
+      "commit_observation_method": "git ls-remote https://github.com/blacktop/go-apfs.git HEAD refs/heads/main",
+      "top_level_license": "Apache-2.0",
+      "assessment": "candidate_pending_build_graph_audit",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "APFS directory listing, file content reading and extraction",
+        "APFS DMG examples"
+      ],
+      "limitations": [
+        "Upstream labels the project WIP.",
+        "Current go.mod includes blacktop/lzfse-cgo; complete stack is not established as pure Go or Wasm-ready.",
+        "Do not infer APFS repair, write, encryption or snapshot support from basic extraction examples."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE",
+          "url": "https://github.com/blacktop/go-apfs/blob/1ce96a1cf1da89d78106ae1c45b14c5a0fc0ff5c/LICENSE",
+          "git_blob_sha": "9d79a9b5b8c096eae20c6aaa8722621aba155d64",
+          "sha256": "09c17231099413dde1bc8d457cf4f8860cb547e470d445427047f1f9b19f6f74",
+          "bytes": 11343,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/blacktop/go-apfs/blob/1ce96a1cf1da89d78106ae1c45b14c5a0fc0ff5c/README.md",
+          "git_blob_sha": "02d4e71aff95b3be9b93d3634fecfb17a24eaad7",
+          "sha256": "b91d5ddfa4ebf5eec94b375770bef6e85361b5476f506d09ecc17d8d383b015c",
+          "bytes": 2686,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "go.mod",
+          "url": "https://github.com/blacktop/go-apfs/blob/1ce96a1cf1da89d78106ae1c45b14c5a0fc0ff5c/go.mod",
+          "git_blob_sha": "d2b6bb35f7dba5490154f9cd1583a19b08921039",
+          "sha256": "9290bd975de14dbf6a9099f6531ddfe3d059e8f4ccacc7757c56808640685819",
+          "bytes": 1015,
+          "retrieved_exact_bytes": true
+        }
+      ]
+    },
+    {
+      "id": "scalpel",
+      "repository": "https://github.com/sleuthkit/scalpel",
+      "repository_full_name": "sleuthkit/scalpel",
+      "observed_branch": "master",
+      "observed_commit_sha": "35e1367ef2232c0f4883c92ec2839273c821dd39",
+      "commit_observation_method": "git ls-remote https://github.com/sleuthkit/scalpel.git HEAD refs/heads/master",
+      "top_level_license": "Apache-2.0",
+      "assessment": "conditional_core_only_candidate",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "Signature-based file carving",
+        "Apache-2.0 core source",
+        "Library entry points as well as CLI"
+      ],
+      "limitations": [
+        "Upstream explicitly reports no active maintenance and prior memory leaks.",
+        "Stock Windows distribution includes LGPL pthreads-win32 and TRE according to README.",
+        "Only an audited core-only build with qualifying replacement dependencies could be considered.",
+        "New Scalpel3 is a separate GPL project and is not covered by this candidate.",
+        "No build graph, memory-safety or recovery-quality qualification was performed."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE-2.0.txt",
+          "url": "https://github.com/sleuthkit/scalpel/blob/35e1367ef2232c0f4883c92ec2839273c821dd39/LICENSE-2.0.txt",
+          "git_blob_sha": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+          "bytes": 11357,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README",
+          "url": "https://github.com/sleuthkit/scalpel/blob/35e1367ef2232c0f4883c92ec2839273c821dd39/README",
+          "git_blob_sha": "2ff08a4b0705511068ca7c95bf98e79ab839752b",
+          "sha256": "4ec3eb12d619847de32936ca74060cd8b2697ae7381ccf1bf733b51e92ae96aa",
+          "bytes": 5729,
+          "retrieved_exact_bytes": true
+        }
+      ],
+      "license_scope": "Core source; the supplied Windows dependency bundle is not covered by this approval candidate."
+    },
+    {
+      "id": "lwext4",
+      "repository": "https://github.com/gkostka/lwext4",
+      "repository_full_name": "gkostka/lwext4",
+      "observed_branch": "master",
+      "observed_commit_sha": "58bcf89a121b72d4fb66334f1693d3b30e4cb9c5",
+      "commit_observation_method": "git ls-remote https://github.com/gkostka/lwext4.git HEAD refs/heads/master",
+      "top_level_license": "GPL-2.0 combined build; BSD-3-Clause subset",
+      "assessment": "excluded_combined_build",
+      "build_graph_audited": false,
+      "native_qualified": false,
+      "wasm_qualified": false,
+      "capabilities": [
+        "Mixed-license ext2/ext3/ext4 implementation"
+      ],
+      "limitations": [
+        "Excluded as a combined/default build: upstream states its GPL source files make the whole library GPLv2.",
+        "Other modules and headers are described as BSD-3-Clause; that does not approve the whole project.",
+        "README calls the GPL extent file ext4_extents.c; the observed tree uses src/ext4_extent.c. Both that file and src/ext4_xattr.c were fetched, and their initial license headers identify the GNU General Public License.",
+        "Removing GPL extents and xattrs changes usable functionality and requires a new build audit."
+      ],
+      "sources": [
+        {
+          "role": "license",
+          "path": "LICENSE",
+          "url": "https://github.com/gkostka/lwext4/blob/58bcf89a121b72d4fb66334f1693d3b30e4cb9c5/LICENSE",
+          "git_blob_sha": "ca992f8a35622f183a39f0c24a91cbe081569d67",
+          "sha256": "969e219ae4d0e45a1fc0ca55ebc8f09eae67a2ccdddc1932e7a655dae4181a50",
+          "bytes": 18189,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "README.md",
+          "url": "https://github.com/gkostka/lwext4/blob/58bcf89a121b72d4fb66334f1693d3b30e4cb9c5/README.md",
+          "git_blob_sha": "3abd86066a6dc43e69c07ebc88cf520bdf38f6bf",
+          "sha256": "34968120e87f3aa0f2678a402c5106aab1885db67954ed3b3ba26bf35b040d3f",
+          "bytes": 6786,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "src/ext4_xattr.c",
+          "url": "https://github.com/gkostka/lwext4/blob/58bcf89a121b72d4fb66334f1693d3b30e4cb9c5/src/ext4_xattr.c",
+          "git_blob_sha": "f8a577891c061e673746b2ffc0dec587c5d00e47",
+          "sha256": "535657611319eb5bd2a9629b123a18339dc43478bbd5df994b886f48ca22f823",
+          "bytes": 41023,
+          "retrieved_exact_bytes": true
+        },
+        {
+          "role": "evidence",
+          "path": "src/ext4_extent.c",
+          "url": "https://github.com/gkostka/lwext4/blob/58bcf89a121b72d4fb66334f1693d3b30e4cb9c5/src/ext4_extent.c",
+          "git_blob_sha": "abac59bcb6dcc56fdac87c619a6687eb080fe509",
+          "sha256": "aad2eece6a8e310ab44dea984d9c221fcebcea1dd2cd57214cebbfcad613a1ea",
+          "bytes": 58568,
+          "retrieved_exact_bytes": true
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "candidate_entries": 9,
+    "excluded_mixed_license_entries": 1,
+    "pinned_source_files": 33,
+    "license_files": 14
+  },
+  "known_limits": [
+    "Sources were observed at the listed upstream commits; recheck before selecting a release.",
+    "A qualifying top-level license does not establish licenses of every dependency, optional feature, data file, fixture or bundled executable.",
+    "Read, create, edit, repair and undelete are separate capabilities; none should be inferred from the others.",
+    "No native, mobile, browser or Wasm compatibility was tested in this evidence task."
+  ]
+}

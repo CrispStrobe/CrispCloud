@@ -1,0 +1,171 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":28,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":2,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":2888}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":82,"line":null,"column":null,"url":null},"type":"group","time":2889}
+{"test":{"id":3,"name":"UDIF method 1 extracts exact partition bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":33,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2889}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2943}
+{"test":{"id":4,"name":"UDIF method 1 browses HFS files without materializing volume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":43,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2943}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2967}
+{"test":{"id":5,"name":"UDIF method 2147483652 extracts exact partition bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":33,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2967}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2975}
+{"test":{"id":6,"name":"UDIF method 2147483652 browses HFS files without materializing volume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":43,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2975}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2982}
+{"test":{"id":7,"name":"UDIF method 2147483653 extracts exact partition bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":33,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2982}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2992}
+{"test":{"id":8,"name":"UDIF method 2147483653 browses HFS files without materializing volume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":43,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2992}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2996}
+{"test":{"id":9,"name":"UDIF method 2147483654 extracts exact partition bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":33,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":2996}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3033}
+{"test":{"id":10,"name":"UDIF method 2147483654 browses HFS files without materializing volume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":43,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3033}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3171}
+{"test":{"id":11,"name":"UDIF method 2147483655 extracts exact partition bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":33,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3173}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3179}
+{"test":{"id":12,"name":"UDIF method 2147483655 browses HFS files without materializing volume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":43,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3180}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3186}
+{"test":{"id":13,"name":"UDIF method 2147483656 extracts exact partition bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":33,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3186}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3199}
+{"test":{"id":14,"name":"UDIF method 2147483656 browses HFS files without materializing volume","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":43,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3200}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3207}
+{"test":{"id":15,"name":"native UDIF reads HFS files and verifies all five partition CRCs","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":69,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3207}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3244}
+{"test":{"id":16,"name":"a bzip2-first DMG is identified by trailer before stream magic","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":98,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3245}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3269}
+{"test":{"id":17,"name":"ISO inside a DMG is browsed through random-access chunks","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":112,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3269}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3286}
+{"test":{"id":18,"name":"independent apple-hdiutil.adc bytes decode through UDIF and stream CRC","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":139,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3286}
+{"testID":18,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3296}
+{"test":{"id":19,"name":"independent liblzma-1m.xz bytes decode through UDIF and stream CRC","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":139,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3296}
+{"testID":19,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3305}
+{"test":{"id":20,"name":"ULMO rejects dictionaries above 16 MiB and closes source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":161,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3306}
+{"testID":20,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3310}
+{"test":{"id":21,"name":"Apple v1 decodes through ULFO and streamed partition CRC","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":176,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3310}
+{"testID":21,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3327}
+{"test":{"id":22,"name":"Apple v2 decodes through ULFO and streamed partition CRC","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":176,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3327}
+{"testID":22,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3342}
+{"test":{"id":23,"name":"Apple lzvn decodes through ULFO and streamed partition CRC","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":176,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3342}
+{"testID":23,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3345}
+{"test":{"id":24,"name":"corrupt LZFSE during filesystem probing closes the image source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":206,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3345}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3347}
+{"test":{"id":25,"name":"raw, Apple LZFSE and zlib chunks share one partition and CRC","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":221,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3347}
+{"testID":25,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3367}
+{"test":{"id":26,"name":"cancelling LZFSE extraction stops before the next chunk","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":261,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3367}
+{"testID":26,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3372}
+{"test":{"id":27,"name":"new method 2147483652 keeps UDIF routing for image.dmg","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3372}
+{"testID":27,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3375}
+{"test":{"id":28,"name":"new method 2147483652 keeps UDIF routing for misleading.xz","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3375}
+{"testID":28,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3377}
+{"test":{"id":29,"name":"new method 2147483652 keeps UDIF routing for download","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3377}
+{"testID":29,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3380}
+{"test":{"id":30,"name":"new method 2147483652 can browse ISO files inside a DMG","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":300,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3380}
+{"testID":30,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3384}
+{"test":{"id":31,"name":"new method 2147483652 stays outside the canonical DMG writer","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":311,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3384}
+{"testID":31,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3389}
+{"test":{"id":32,"name":"new method 2147483652 rejects truncate","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3389}
+{"testID":32,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3392}
+{"test":{"id":33,"name":"new method 2147483652 rejects append","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3392}
+{"testID":33,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3394}
+{"test":{"id":34,"name":"new method 2147483652 rejects oversized output","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3394}
+{"testID":34,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3396}
+{"test":{"id":35,"name":"new method 2147483652 verifies present partition CRC on streamed extraction","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":348,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3396}
+{"testID":35,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3401}
+{"test":{"id":36,"name":"new method 2147483655 keeps UDIF routing for image.dmg","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3401}
+{"testID":36,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3403}
+{"test":{"id":37,"name":"new method 2147483655 keeps UDIF routing for misleading.xz","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3403}
+{"testID":37,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3405}
+{"test":{"id":38,"name":"new method 2147483655 keeps UDIF routing for download","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3405}
+{"testID":38,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3407}
+{"test":{"id":39,"name":"new method 2147483655 can browse ISO files inside a DMG","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":300,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3407}
+{"testID":39,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3408}
+{"test":{"id":40,"name":"new method 2147483655 stays outside the canonical DMG writer","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":311,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3408}
+{"testID":40,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3410}
+{"test":{"id":41,"name":"new method 2147483655 rejects truncate","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3410}
+{"testID":41,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3411}
+{"test":{"id":42,"name":"new method 2147483655 rejects append","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3411}
+{"testID":42,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3413}
+{"test":{"id":43,"name":"new method 2147483655 rejects oversized output","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3413}
+{"testID":43,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3414}
+{"test":{"id":44,"name":"new method 2147483655 verifies present partition CRC on streamed extraction","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":348,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3414}
+{"testID":44,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3416}
+{"test":{"id":45,"name":"new method 2147483656 keeps UDIF routing for image.dmg","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3416}
+{"testID":45,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3419}
+{"test":{"id":46,"name":"new method 2147483656 keeps UDIF routing for misleading.xz","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3419}
+{"testID":46,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3421}
+{"test":{"id":47,"name":"new method 2147483656 keeps UDIF routing for download","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":286,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3421}
+{"testID":47,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3423}
+{"test":{"id":48,"name":"new method 2147483656 can browse ISO files inside a DMG","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":300,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3423}
+{"testID":48,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3426}
+{"test":{"id":49,"name":"new method 2147483656 stays outside the canonical DMG writer","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":311,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3426}
+{"testID":49,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3427}
+{"test":{"id":50,"name":"new method 2147483656 rejects truncate","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3428}
+{"testID":50,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3429}
+{"test":{"id":51,"name":"new method 2147483656 rejects append","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3429}
+{"testID":51,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3430}
+{"test":{"id":52,"name":"new method 2147483656 rejects oversized output","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":323,"column":7,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3430}
+{"testID":52,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3432}
+{"test":{"id":53,"name":"new method 2147483656 verifies present partition CRC on streamed extraction","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":348,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3432}
+{"testID":53,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3434}
+{"test":{"id":54,"name":"zero-fill method 0 expands without reading payload","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":367,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3434}
+{"testID":54,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3435}
+{"test":{"id":55,"name":"zero-fill method 2 expands without reading payload","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":367,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3435}
+{"testID":55,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3436}
+{"test":{"id":56,"name":"special HFS entries are omitted explicitly; regular files remain browsable","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":375,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3436}
+{"testID":56,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3439}
+{"test":{"id":57,"name":"unsupported HFS state leaves raw partition plus visible explanation","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":386,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3439}
+{"testID":57,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3442}
+{"test":{"id":58,"name":"partition label cannot inject an extraction path","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":403,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3442}
+{"testID":58,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3443}
+{"test":{"id":59,"name":"partition CRC is checked on full extraction","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":416,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3443}
+{"testID":59,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3445}
+{"test":{"id":60,"name":"truncated compressed chunk is rejected","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":428,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3445}
+{"testID":60,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3446}
+{"test":{"id":61,"name":"rejects trailer version","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3446}
+{"testID":61,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3447}
+{"test":{"id":62,"name":"rejects trailer length","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3447}
+{"testID":62,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3448}
+{"test":{"id":63,"name":"rejects segmented image","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3448}
+{"testID":63,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3449}
+{"test":{"id":64,"name":"rejects running fork offset","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3449}
+{"testID":64,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3450}
+{"test":{"id":65,"name":"rejects XML points outside","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3450}
+{"testID":65,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3451}
+{"test":{"id":66,"name":"rejects XML overlaps data","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3452}
+{"testID":66,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3453}
+{"test":{"id":67,"name":"rejects empty XML","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3453}
+{"testID":67,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3454}
+{"test":{"id":68,"name":"rejects oversized XML","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3454}
+{"testID":68,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3456}
+{"test":{"id":69,"name":"rejects non-exact integer","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3456}
+{"testID":69,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3457}
+{"test":{"id":70,"name":"rejects oversized disk","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":457,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3458}
+{"testID":70,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3458}
+{"test":{"id":71,"name":"rejects wrong table signature","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3458}
+{"testID":71,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3460}
+{"test":{"id":72,"name":"rejects wrong table version","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3460}
+{"testID":72,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3461}
+{"test":{"id":73,"name":"rejects partition past disk","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3461}
+{"testID":73,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3462}
+{"test":{"id":74,"name":"rejects invalid run count","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3462}
+{"testID":74,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3463}
+{"test":{"id":75,"name":"rejects unsupported compression method","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3463}
+{"testID":75,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3465}
+{"test":{"id":76,"name":"rejects missing extent","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3465}
+{"testID":76,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3466}
+{"test":{"id":77,"name":"rejects size mismatch","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3466}
+{"testID":77,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3467}
+{"test":{"id":78,"name":"rejects data outside fork","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3467}
+{"testID":78,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3468}
+{"test":{"id":79,"name":"rejects invalid checksum length","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3468}
+{"testID":79,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3469}
+{"test":{"id":80,"name":"rejects unsupported checksum","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3469}
+{"testID":80,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3471}
+{"test":{"id":81,"name":"rejects invalid terminator","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3471}
+{"testID":81,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3472}
+{"test":{"id":82,"name":"rejects missing terminator","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":479,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3472}
+{"testID":82,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3473}
+{"test":{"id":83,"name":"truncated source and missing footer close the owned source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":487,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3473}
+{"testID":83,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3474}
+{"test":{"id":84,"name":"successful close closes input and blocks further reads","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":496,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_dmg_reader_test.dart"},"type":"testStart","time":3474}
+{"testID":84,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3475}
+{"success":true,"type":"done","time":3493}

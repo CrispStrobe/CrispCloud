@@ -1,0 +1,398 @@
+{
+  "started_at_utc": "2026-11-14T08:13:32Z",
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "node": "v24.22.1",
+  "cwd": "/workspace/scratch/52be1abfc881/runtime-setup/app-validation",
+  "source_sha256": {
+    "lib/services/archive_types.dart": "08072e27d01fdd4794ddebab21ca943e650c0e9a09a004a651b2da984a4f8e86",
+    "lib/services/archive_udf_reader.dart": "61fd60b23337d46ea16252961348abf767890ff738c4528ac7eea7c52516320a",
+    "lib/services/archive_zip_recovery_service.dart": "411c959c591e788ef1b63bd27813cbb429b9a4fba0d50658916b0aed5d4c30c6",
+    "lib/services/archive_write_model.dart": "c31a60b130d46b97906209c2036bc169446696cc1feb40ae35c9f5b49d883575",
+    "test/support/archive_udf_fixture.dart": "3052f095bebba3a2acf34f3ab0c0461e897be97e3c4b77abfebf0e87ee41cbb6",
+    "test/support/archive_udf_reference_data.dart": "cca79fd23033594ab788fb498ecbbcf6ef3fa390afbab72618190aa3d69dae4e",
+    "test/support/archive_zip_recovery_reference_data.dart": "d66df0d2b868a0756d0fc892f1627ab56f9f9e46f5db521db4de16f351149ab5",
+    "test/support/archive_udf_web_acceptance.dart": "c1d12eeb8f5b34d00d6828080db9d1e5e278a743f7ddd59f3c52c83ccd450276",
+    "test/support/archive_zip_recovery_web_acceptance.dart": "822481ca7f3f047fcacc22615af3ca627799ff02c5dc6ece6313fb4749d77287",
+    "test/fixtures/archives/udf-reference-manifest.json": "b63bc2b15f1b8a272e86d60193ab411ba4ea4366b2ff25ae14459e523674a47f",
+    "test/fixtures/archives/zip-recovery-reference-manifest.json": "587a7bb17d76303037a57fbd579a602bc0c44afa839660bc8ebcd5b0b2ff953a"
+  },
+  "commands": [
+    {
+      "kind": "udf-vm",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "test/support/archive_udf_web_acceptance.dart"
+      ],
+      "exit_code": 0,
+      "log": "udf-vm-acceptance.log",
+      "log_sha256": "f781948cb4e2b68312b1ed413e9190f21cbf965a6f46f5012b7a9bf5be83e0e0"
+    },
+    {
+      "kind": "udf-js-compile",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "-O2",
+        "test/support/archive_udf_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/52be1abfc881/runtime-setup/udf-final-portable-acceptance.js"
+      ],
+      "exit_code": 0,
+      "log": "udf-js-compile-acceptance.log",
+      "log_sha256": "e691d608591932d66f8603f4e63f0c1e129d3487e94cfe47f28f57cf8731395f"
+    },
+    {
+      "kind": "udf-js",
+      "command": [
+        "node",
+        "-e",
+        "globalThis.self = globalThis; require(process.argv[1]);",
+        "/workspace/scratch/52be1abfc881/runtime-setup/udf-final-portable-acceptance.js"
+      ],
+      "exit_code": 0,
+      "log": "udf-js-acceptance.log",
+      "log_sha256": "f781948cb4e2b68312b1ed413e9190f21cbf965a6f46f5012b7a9bf5be83e0e0"
+    },
+    {
+      "kind": "zip-vm",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "test/support/archive_zip_recovery_web_acceptance.dart"
+      ],
+      "exit_code": 0,
+      "log": "zip-vm-acceptance.log",
+      "log_sha256": "e44c032c578cd05743ade298bd52b45c9d6073455598aeadc02f443aa930eea7"
+    },
+    {
+      "kind": "zip-js-compile",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "-O2",
+        "test/support/archive_zip_recovery_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/52be1abfc881/runtime-setup/zip-final-portable-acceptance.js"
+      ],
+      "exit_code": 0,
+      "log": "zip-js-compile-acceptance.log",
+      "log_sha256": "5a7314e731328288df8ed561feaad6b03a7b3aa16a92243668e7f0b4e81b1c30"
+    },
+    {
+      "kind": "zip-js",
+      "command": [
+        "node",
+        "-e",
+        "globalThis.self = globalThis; require(process.argv[1]);",
+        "/workspace/scratch/52be1abfc881/runtime-setup/zip-final-portable-acceptance.js"
+      ],
+      "exit_code": 0,
+      "log": "zip-js-acceptance.log",
+      "log_sha256": "e44c032c578cd05743ade298bd52b45c9d6073455598aeadc02f443aa930eea7"
+    },
+    {
+      "kind": "zip-candidates",
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "test/support/archive_zip_recovery_web_acceptance.dart",
+        "--emit-candidates"
+      ],
+      "exit_code": 0,
+      "log": "zip-recovery-candidates.json",
+      "log_sha256": "94dbd293dbad164906d996e922fea260208effe1a23dfffa91764f075bd42e00"
+    }
+  ],
+  "results": {
+    "udf-vm": {
+      "groups": 25,
+      "checks": 493,
+      "independentImages": {
+        "mastered-bridge": {
+          "café-雪.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+          "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+          "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        },
+        "derived-udf-only": {
+          "café-雪.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+          "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+          "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        },
+        "derived-fragmented": {
+          "café-雪.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+          "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+          "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        }
+      },
+      "malformedIndependentImagesRejected": 5,
+      "sourceOwnership": true,
+      "offsetViewsAndInputPreservation": true,
+      "cancelledStreamPrefixBytes": 128,
+      "syntheticRevisionAllocationProfiles": 12,
+      "syntheticPhysicalOffset": 6144000040960,
+      "syntheticLogicalSize": 8589934592,
+      "syntheticSparsePrefixBytes": 17
+    },
+    "udf-js": {
+      "groups": 25,
+      "checks": 493,
+      "independentImages": {
+        "mastered-bridge": {
+          "café-雪.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+          "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+          "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        },
+        "derived-udf-only": {
+          "café-雪.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+          "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+          "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        },
+        "derived-fragmented": {
+          "café-雪.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+          "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+          "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        }
+      },
+      "malformedIndependentImagesRejected": 5,
+      "sourceOwnership": true,
+      "offsetViewsAndInputPreservation": true,
+      "cancelledStreamPrefixBytes": 128,
+      "syntheticRevisionAllocationProfiles": 12,
+      "syntheticPhysicalOffset": 6144000040960,
+      "syntheticLogicalSize": 8589934592,
+      "syntheticSparsePrefixBytes": 17
+    },
+    "zip-vm": {
+      "groups": 15,
+      "checks": 131,
+      "referenceCases": {
+        "complete": {
+          "recoverable": [
+            "café-雪.txt",
+            "deflated.bin",
+            "stored.txt"
+          ],
+          "stop": "centralDirectory",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5",
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0",
+            "café-雪.txt": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+          }
+        },
+        "missing-directory": {
+          "recoverable": [
+            "café-雪.txt",
+            "deflated.bin",
+            "stored.txt"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5",
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0",
+            "café-雪.txt": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+          }
+        },
+        "deflate-signed-descriptor": {
+          "recoverable": [
+            "deflated.bin"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+          }
+        },
+        "deflate-unsigned-descriptor": {
+          "recoverable": [
+            "deflated.bin"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+          }
+        },
+        "stored-descriptor-unsupported": {
+          "recoverable": [],
+          "stop": "rejectedRecord"
+        },
+        "truncated-final-member": {
+          "recoverable": [
+            "deflated.bin",
+            "stored.txt"
+          ],
+          "stop": "truncatedRecord",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5",
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+          }
+        },
+        "bad-crc-after-good": {
+          "recoverable": [
+            "stored.txt"
+          ],
+          "stop": "rejectedRecord",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+          }
+        },
+        "duplicate-names": {
+          "recoverable": [],
+          "stop": "endOfInput"
+        },
+        "unsafe-then-safe": {
+          "recoverable": [
+            "safe.txt"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "safe.txt": "8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860"
+          }
+        },
+        "zip64-unsupported": {
+          "recoverable": [],
+          "stop": "rejectedRecord"
+        },
+        "descriptor-size-mismatch": {
+          "recoverable": [],
+          "stop": "rejectedRecord"
+        },
+        "deflate-input-rollover": {
+          "recoverable": [
+            "rollover.bin",
+            "stored.txt"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "rollover.bin": "c502520ea7243755a4935fc8824cd810b2a6ed734c68c443fec6914f1d559d26",
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+          }
+        }
+      },
+      "sourceSnapshotAndSelectionImmutable": true,
+      "candidateLimitAndCancellation": true
+    },
+    "zip-js": {
+      "groups": 15,
+      "checks": 131,
+      "referenceCases": {
+        "complete": {
+          "recoverable": [
+            "café-雪.txt",
+            "deflated.bin",
+            "stored.txt"
+          ],
+          "stop": "centralDirectory",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5",
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0",
+            "café-雪.txt": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+          }
+        },
+        "missing-directory": {
+          "recoverable": [
+            "café-雪.txt",
+            "deflated.bin",
+            "stored.txt"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5",
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0",
+            "café-雪.txt": "04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660"
+          }
+        },
+        "deflate-signed-descriptor": {
+          "recoverable": [
+            "deflated.bin"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+          }
+        },
+        "deflate-unsigned-descriptor": {
+          "recoverable": [
+            "deflated.bin"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+          }
+        },
+        "stored-descriptor-unsupported": {
+          "recoverable": [],
+          "stop": "rejectedRecord"
+        },
+        "truncated-final-member": {
+          "recoverable": [
+            "deflated.bin",
+            "stored.txt"
+          ],
+          "stop": "truncatedRecord",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5",
+            "deflated.bin": "2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0"
+          }
+        },
+        "bad-crc-after-good": {
+          "recoverable": [
+            "stored.txt"
+          ],
+          "stop": "rejectedRecord",
+          "hashes": {
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+          }
+        },
+        "duplicate-names": {
+          "recoverable": [],
+          "stop": "endOfInput"
+        },
+        "unsafe-then-safe": {
+          "recoverable": [
+            "safe.txt"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "safe.txt": "8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860"
+          }
+        },
+        "zip64-unsupported": {
+          "recoverable": [],
+          "stop": "rejectedRecord"
+        },
+        "descriptor-size-mismatch": {
+          "recoverable": [],
+          "stop": "rejectedRecord"
+        },
+        "deflate-input-rollover": {
+          "recoverable": [
+            "rollover.bin",
+            "stored.txt"
+          ],
+          "stop": "endOfInput",
+          "hashes": {
+            "rollover.bin": "c502520ea7243755a4935fc8824cd810b2a6ed734c68c443fec6914f1d559d26",
+            "stored.txt": "9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5"
+          }
+        }
+      },
+      "sourceSnapshotAndSelectionImmutable": true,
+      "candidateLimitAndCancellation": true
+    }
+  },
+  "udf_javascript": {
+    "bytes": 202310,
+    "sha256": "98b255ade9c2ee87405de37faa3a2be86cf32e2b60705b4cb380b61576400818"
+  },
+  "zip_javascript": {
+    "bytes": 593880,
+    "sha256": "b65334cbfac109546e9716bb32dfee45495178e9f59d75d713aa676f0e7c01b2"
+  },
+  "source_unchanged_and_primary_matches": true,
+  "finished_at_utc": "2026-11-14T08:13:46Z"
+}

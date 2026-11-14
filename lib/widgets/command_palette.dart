@@ -70,6 +70,8 @@ import 'drive_bar.dart';
 import 'archive_batch_actions.dart';
 import 'archive_jobs_dialog.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
+import '../l10n/archive_zip_recovery_strings.dart';
+import 'archive_zip_recovery_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/archive_job_strings.dart';
 
@@ -444,6 +446,15 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         action: () =>
             showChecksumToolsDialog(widget.parentContext, ref, side, pdfFiles),
       ),
+      if (!kIsWeb)
+        _Command(
+          id: 'archive-zip-recovery',
+          name: archiveZipRecoveryText(context, 'Recover ZIP to new file…'),
+          icon: Icons.healing_outlined,
+          keywords: 'zip recover salvage repair damaged truncated archive',
+          enabled: canRecoverArchiveZipSelection(ref),
+          action: () => showArchiveZipRecoveryForSelection(widget.parentContext, ref),
+        ),
       _Command(
         id: 'archive-test-selected',
         name: archiveBatchIntegrityText(context, 'Test selected archives'),

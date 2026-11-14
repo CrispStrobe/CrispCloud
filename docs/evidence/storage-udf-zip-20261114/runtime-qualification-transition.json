@@ -1,0 +1,19 @@
+{
+  "broad_gate_revision": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+  "final_runtime_revision": "20798b39a0c792e533a5c785294417f26db03272",
+  "runtime_test_dart_or_dependency_changes": [
+    "lib/services/archive_udf_reader.dart",
+    "lib/widgets/archive_zip_recovery_dialog.dart",
+    "test/archive_udf_reader_test.dart",
+    "test/support/archive_udf_web_acceptance.dart",
+    "test/widget/archive_zip_recovery_dialog_test.dart"
+  ],
+  "runtime_changed_files": [
+    "lib/services/archive_udf_reader.dart",
+    "lib/widgets/archive_zip_recovery_dialog.dart"
+  ],
+  "dependency_manifests_unchanged": true,
+  "followup_native_receipt": "udf-zip-hardening-gate-receipt.json",
+  "followup_portable_receipt": "udf-path-budget-portable-receipt.json",
+  "note": "All other Dart implementation, fixture, and test files are unchanged between the broad gate and final runtime revision. Only the two implementation changes above require the targeted follow-up qualification; no counts are additive."
+}

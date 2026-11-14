@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "generator": {
+    "version": "genisoimage 1.1.11 (Linux)",
+    "sha256": "48dd2cf116561683a4a4a32c51570590fc79bcc6bcce6fc806a3c3ee4f3b8118",
+    "arguments": [
+      "-quiet",
+      "-udf",
+      "-J",
+      "-iso-level",
+      "3",
+      "-V",
+      "CRISP_UDF_REF",
+      "-input-charset",
+      "utf-8",
+      "-creation-date",
+      "946684800",
+      "-o",
+      "<output.iso>",
+      "<input-directory>"
+    ]
+  },
+  "normalization": "Only UDF descriptor timestamps and volume-set identifier; CRC/tag checks recomputed with Python stdlib. ISO timestamps set by generator option and source metadata.",
+  "variant_origin": {
+    "mastered-bridge": "External genisoimage UDF1.02/ISO/Joliet master with deterministic metadata normalization.",
+    "derived-udf-only": "Same UDF filesystem; ISO VRS removed and BEA01/NSR02/TEA01 moved to sectors16-18.",
+    "derived-fragmented": "Derived UDF-only; one real file entry changed to three nonascending short extents; original payload redistributed within its original five sectors."
+  },
+  "payloads": {
+    "café-雪.txt": {
+      "bytes": 20,
+      "sha256": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f"
+    },
+    "empty.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "hello.txt": {
+      "bytes": 37,
+      "sha256": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594"
+    },
+    "nested/payload.bin": {
+      "bytes": 8193,
+      "sha256": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+    }
+  },
+  "fragmented_layout": {
+    "file_entry_byte_offset": 544768,
+    "partition_start_sector": 257,
+    "sections": [
+      {
+        "length": 2048,
+        "relative_lba": 28
+      },
+      {
+        "length": 4096,
+        "relative_lba": 24
+      },
+      {
+        "length": 2049,
+        "relative_lba": 26
+      }
+    ]
+  },
+  "fixtures": {
+    "mastered-bridge": {
+      "bytes": 894976,
+      "sha256": "4a78c55c4471871b9dac6dfb885388102028e6296158d3345d304724e3532fba"
+    },
+    "derived-udf-only": {
+      "bytes": 894976,
+      "sha256": "9b9433bac37ae9e81a94a17edd7f51a255362f4d6d91209f17cfa21288ce4f3c"
+    },
+    "derived-fragmented": {
+      "bytes": 894976,
+      "sha256": "995e912555642f1ef40ac77490003912788778ea2716d6d13831ea021e0a765a"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "reason": "Both runtimes completed all checks, but raw result equality failed because the native and Dart zlib encoders emitted valid wrappers of different byte lengths. These are the unmodified original attempt files.",
+  "original_log_aliases": {
+    "fat-final-portable-vm.log": {
+      "preserved_as": "fat-portable-zlib-metadata-first-vm.log",
+      "sha256": "15264d29e9ad4d6dc9801b3a7e7632f404698b73394a678c02682fd0c3bc6ff2"
+    },
+    "fat-final-portable-js-compile.log": {
+      "preserved_as": "fat-portable-zlib-metadata-first-js-compile.log",
+      "sha256": "6b8d6921a727451dfbd8450ad3e5d77446bafa6ded9289ca4fc62e36eb17641f"
+    },
+    "fat-final-portable-js.log": {
+      "preserved_as": "fat-portable-zlib-metadata-first-js.log",
+      "sha256": "15569847eb642c40cbf97807001e52fe2ae77889bb9591be9cd0dfe73e56a1c5"
+    },
+    "fat-final-portable-receipt.json": {
+      "preserved_as": "fat-portable-zlib-metadata-first-receipt.json",
+      "sha256": "3457140abb5bfba65831f39682b75bb082a734e2bc21fbfbd37d8430620dc5d2"
+    }
+  }
+}

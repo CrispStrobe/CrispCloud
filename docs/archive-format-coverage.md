@@ -33,8 +33,11 @@ metadata, protection or filesystem structures cannot be preserved.
 | XAR | XAR v1, stored/zlib/bzip2/XZ members | Unsigned XAR | Inspected unsigned profiles | Preserves known IDs, ownership, permissions, times, checksums and compression policy. Unknown XML/heap data, signatures, ACLs and xattrs block rewriting. |
 | DEB / UDEB | AR wrapper and nested TAR members | No package builder | Coordinated prebuilt payload replacement | Exact original three-member wrapper/order; required control fields and present md5sums are checked. Replace prepared control/data payloads together. Nested in-app package edits are disabled. |
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge, including bounded regular-file multi-extent chains | Data ISO | Inspected data-only, single-extent profiles | Native creation/editing uses an 8 GiB image budget; each written member must be smaller than 4 GiB. Reader chains can represent logical members up to 8 GiB within existing operation limits. Retains inspected volume/root/Rock Ridge/Joliet metadata. Multi-extent files, boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
+| UDF / ISO-UDF bridge | UDF 1.02/1.50/2.00/2.01 physical Type 1 partitions, FE/EFE, bounded embedded/short/long allocations, ordered multi-extent and sparse regular files | No | No | 2048-byte blocks; metadata CRC/tag/location checks. Virtual, sparable and metadata partitions, chained volume/file-set sequences and filesystem repair remain unsupported. Bridge images expose the UDF namespace and never acquire ISO writer eligibility. |
+| FAT volume | FAT12/16/32, validated live chains, ASCII short names and checked UTF-16 long names | No | No | 512–4096-byte sectors, clusters through 32 KiB, bounded allocation and directory work. Dirty/active-table notices remain visible. No exFAT, OEM-only name decoding, deleted-file recovery or repair. |
+| Raw disk image | Unambiguous primary MBR or fully validated mirrored GPT; exact raw partition slices and eligible supported FAT filesystems | No | No | `.img`, `.ima`, `.dd`, `.raw`; `.fat`, `.fat12`, `.fat16`, `.fat32` name standalone volumes. Unknown partition types remain raw. No EBR, VM-container decoding, mounting or table writes. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
-| DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
+| DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/LZFSE/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
 | RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
@@ -86,6 +89,21 @@ DEB/UDEB editing accepts externally prepared control and data archives together;
 it does not regenerate dependency metadata, Installed-Size or missing checksum
 coverage. The structural and present-md5sums checks establish the supported
 wrapper profile, not full package-build validity or publisher trust.
+
+## Recovering ZIP records
+
+Select one native local ZIP or CBZ and choose **Recover ZIP to new file…** from
+the context menu, Tools menu or command palette. The report lists verified
+stored/deflated local records and explains exclusions or an early scan stop.
+Review the selected entries and new ZIP filename, then recover through the
+Operations queue. The candidate is rebuilt, reopened by a separate ZIP reader,
+and verified before staged exclusive publication. Existing files are never
+replaced. Input, expanded contents and output each have a 64 MiB bound.
+
+Measured deflate data descriptors are supported; stored descriptors, encrypted
+entries, ZIP64, self-extractors and recognized split sets are outside this
+recovery profile. A verified prefix does not establish completeness of a
+truncated archive. See the [complete recovery and restart contract](archive-zip-recovery.md).
 
 ## Copying between archives
 
@@ -178,12 +196,31 @@ also be absent in other formats. An incomplete check is never a passing report.
 
 ## Using disk images
 
+For raw disk images, **F3 → Hex → Inspect partitions** reads bounded GPT/MBR
+metadata, reports independent primary/backup CRC results and selects fields in
+Hex. For an admitted table, **Browse image** opens the
+[read-only image adapter](archive-disk-image-profile.md) and retains the chosen
+512/4096-byte sector size. The source and table are revalidated when opening.
+Each partition has `partition-<table-index>/raw.img`; eligible FAT partitions
+also expose `partition-<table-index>/files/…`. Standalone FAT volumes expose
+their own files directly. Neither path grants partition or filesystem writes.
+
+The first [FAT profile](archive-fat-profile.md) supports FAT12/16/32 with
+validated chains, safe long names and bounded metadata work. MBR/GPT browsing
+requires an admitted table; damaged or conflicting copies stay in the
+inspection workflow. An unsupported or corrupt child filesystem remains raw
+with a notice. Source-access failures and cancellation stop the operation.
+Native F3 and workspace input images retain the existing 8 GiB ceiling. A
+workspace also counts raw partitions and their file views in its aggregate
+8 GiB expanded-content allowance; selecting both copies their overlapping
+content twice. Buffered and remote paths retain their own smaller limits.
+
 ISO multi-extent chains appear as one regular file, with sections read in their
 recorded order. The reader bounds section counts and combined logical size;
 existing preview/extraction limits still apply. Multi-extent images remain
 read-only. See [ISO section-chain support](archive-iso-multiextent.md).
 
-Supported DMG compression includes ADC (UDCO) and XZ-wrapped LZMA (ULMO), with
+Supported DMG compression includes ADC (UDCO), LZFSE (ULFO) and XZ-wrapped LZMA (ULMO), with
 strict chunk-length checks and a 16 MiB compressed-chunk/dictionary ceiling.
 These added codecs are read-only; see [DMG codec profiles](archive-dmg-codecs.md)
 for integrity boundaries and independently generated verification inputs.
@@ -195,10 +232,10 @@ copied through the existing archive workflow.
 
 DMGs expose two distinct trees:
 
-- `files/<number>-<volume>/…` contains files from supported HFS+/HFSX or ISO
+- `files/<number>-<volume>/…` contains files from supported FAT, HFS+/HFSX, UDF or ISO
   partitions. These are data forks, not complete macOS application bundles
   with resource forks, extended attributes, permissions or code signatures.
-- `partitions/<number>-<volume>.<hfs|iso|img>` contains raw partition images.
+- `partitions/<number>-<volume>.<fat|hfs|udf|iso|img>` contains raw partition images.
   Their size may exceed the member extraction limit even when small files in
   their filesystem remain readable. Select the `files` tree when extracting
   filesystem contents; extracting everything also requests the raw images.
@@ -207,6 +244,8 @@ DMG symbolic links, including the common `Applications` link, are omitted
 from the file tree with an explicit notice. Their original records remain in
 the raw image. An unsupported or damaged filesystem produces a raw partition
 plus a visible explanation, never a claim that its files were decoded.
+Child filesystem notices are forwarded into the DMG details, including dirty
+FAT flags and open UDF volume status.
 Direct pane browsing rejects namespaces containing unsafe paths or unsupported
 special entries. Extraction rejects any such selected entry, while safe selected
 subsets remain extractable. F3 displays these records with reading disabled when
@@ -361,11 +400,22 @@ content checksums from publisher authentication.
   Each compressed chunk is limited to 16 MiB. One shared chunk cache avoids
   retaining an expanded buffer per partition. Declared disk geometry is
   bounded separately from allocatable memory.
-- DMG compression checksums, when present, are checked when decoded. ADC has
-  no embedded checksum. A raw partition's
+- DMG compression checksums, when present, are checked when decoded. ADC and
+  LZFSE have no embedded checksum. A raw partition's
   CRC is checked when that whole partition is extracted; UDIF ignore blocks
   do not contribute to the CRC. Partial file browsing does not verify the
   whole-image checksum or any publisher signature.
+- FAT listing is bounded by 64 MiB metadata reads, 32 MiB directory allocation,
+  100,000 entries, depth 64, 1,048,576 cluster visits and 100,000 extents.
+  Partition-image and DMG FAT adapters share traversal and metadata allowances
+  across child volumes and count retained relative plus prefixed paths against
+  16 MiB. Member payload reads are separately bounded. See the two reader
+  profiles for exact accounting and unsupported structures.
+- During FAT recognition/listing inside DMG, separate shared caps permit at
+  most 64 MiB of backing input and 256 MiB of cache-miss decompression work.
+  This accounts for compressed-block amplification beyond logical metadata
+  request sizes. Exhaustion retains raw entries with a notice and suppresses
+  further filesystem probing; it does not broaden extraction limits.
 - Readers validate source ranges and short reads, enforce source ownership,
   reject malformed metadata, and never follow archive links. Extraction
   keeps existing path traversal, destination-link and overwrite protections.
@@ -443,10 +493,11 @@ optional reference checks are:
 These reference tools are test dependencies only. Native macOS mounting and
 platform-specific release acceptance are not established by Linux readback.
 
-UDF, APFS, ARJ/LZH/ACE/UC2, CAB Quantum/LZX/spanning, RPM v6/stripped
+APFS, ARJ/LZH/ACE/UC2, CAB Quantum/LZX/spanning, RPM v6/stripped
 payloads, Apple Archive/YAA and additional ZIPX methods are not enabled by these
 increments. G22 remains partial; additional profiles require their own
-implementation and independent fixtures.
+implementation and independent fixtures. The later read-only
+[UDF increment](archive-udf-profile.md) has its own bounded profile and evidence.
 
 The workflow/codec continuation adds original liblz4, liblzma and libarchive
 fixtures, public-domain ncompress validation, binary CPIO in both byte orders,

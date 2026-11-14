@@ -1,0 +1,26 @@
+{
+  "package": "archive",
+  "version": "4.6.0",
+  "locked_package_sha256": "de5ac590b8155e4e676088d714bd41ea620449a6adc0f7950c5073874b287ddb",
+  "package_source_sha256": {
+    "lib/src/codecs/zlib_encoder.dart": "a589c3c2785716d909dc3f97331669e7fe196b68dd9b2105bde4bb890eefd524",
+    "lib/src/codecs/zlib/_zlib_encoder.dart": "a4a2c3fe8d145d2e1ab0adf42fa1eb36a05a8abf342dc1c5f4fb7b4b4afafddd",
+    "lib/src/codecs/zlib/_zlib_encoder_io.dart": "b6aa2325faad6ffeb8974a09c859046a2242aba24ee75d61ae5e9547a4b30752",
+    "lib/src/codecs/zlib/_zlib_encoder_web.dart": "733710482749d64ea51383d8c2ce1a403e2f766b1ab09275f95baf0c9e3c1189",
+    "lib/src/codecs/zlib/deflate.dart": "ffc492d96977c11ebcde772b5f8c8eafe9c291707967b794677673321c17b97a"
+  },
+  "source_behavior": {
+    "public_encoder": "ZLibEncoder.encode delegates to encodeBytes and platformZLibEncoder.",
+    "conditional_export": "_zlib_encoder.dart selects _zlib_encoder_io.dart when dart.library.io is available; otherwise it selects _zlib_encoder_web.dart.",
+    "vm": "The dart:io implementation calls ZLibCodec(...).encode(bytes), defaulting to level 6 and windowBits 15.",
+    "javascript": "The web implementation calls Deflate.stream and emits the Adler32 wrapper checksum."
+  },
+  "observed_diagnostic": "derived_udif_wrappers.synthetic-udif-zlib.udif_bytes",
+  "observed_values": {
+    "vm": 8026,
+    "js": 8033
+  },
+  "qualification": "Distinct encoders produce different valid compressed lengths. Final acceptance verifies identical complete raw FAT12 SHA256 and every extracted payload SHA256 on both targets, retaining both original diagnostic values. Only this length diagnostic is excluded from deep semantic-result equality; all other fields compare exactly.",
+  "receipt": "fat-final-portable-receipt.json",
+  "review": "Independently checked by the FAT reader reviewer, then source hashes recomputed by the validation owner."
+}

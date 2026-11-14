@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
 import '../l10n/archive_creation_strings.dart';
+import '../l10n/archive_zip_recovery_strings.dart';
 import '../l10n/transfer_error_strings.dart';
 import '../models/archive_job.dart';
 import '../models/operation_progress.dart';
@@ -89,6 +90,14 @@ String _stateLabel(_JobState state) => switch (state) {
 };
 
 String _phaseText(BuildContext context, String phase) {
+  final recovery = switch (phase) {
+    'zipRecovery:scanning' => 'Scanning ZIP records…',
+    'zipRecovery:recovering' => 'Recovering files…',
+    'zipRecovery:verifying' => 'Verifying recovered ZIP…',
+    'zipRecovery:publishing' => 'Saving new ZIP…',
+    _ => null,
+  };
+  if (recovery != null) return archiveZipRecoveryText(context, recovery);
   final creation = switch (phase) {
     'archive:scanning' => 'Scanning selection…',
     'archive:packing' => 'Packing…',

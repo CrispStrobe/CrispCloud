@@ -1,0 +1,20 @@
+{
+  "files": {
+    "archive_udf_integration_test.dart": {
+      "success": 15
+    },
+    "archive_udf_reader_review_test.dart": {
+      "success": 8
+    },
+    "archive_udf_reader_test.dart": {
+      "success": 62
+    },
+    "archive_zip_recovery_dialog_test.dart": {
+      "success": 11
+    }
+  },
+  "total": {
+    "success": 96
+  },
+  "success": true
+}

@@ -283,6 +283,7 @@ flutter:
     - assets/licenses/terminal/
     - packages/crisp_catalog/THIRD_PARTY_NOTICES.txt
     - packages/file_viewer_binary/LICENSE
+    - packages/apple_lzfse/LICENSE
     - packages/file_viewer_lrc/LICENSE
     - packages/legacy_doc_parser/UPSTREAM.json
     - packages/legacy_doc_parser/NOTICE

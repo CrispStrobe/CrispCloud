@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "scope": "Research evidence byte identity only, not a dependency, runtime or legal approval.",
+  "checks": [
+    "Exact retrieved source byte lengths",
+    "SHA-256 against ledgers",
+    "Git blob SHA-1 framing against source blob IDs",
+    "Immutable commit is present in each source URL"
+  ],
+  "counts": {
+    "source_files": 63,
+    "license_files": 33,
+    "entries": 27
+  },
+  "source_evidence": "Exact source retrievals were rehashed independently by the parent reviewer; final ledgers retain the immutable URLs and hashes."
+}

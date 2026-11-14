@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "verified_at_utc": "2026-11-14T10:22:49Z",
+  "source_revision": "bcd44b86a410d4f52ca7a7cd694294dbef05c181",
+  "production_runtime_identical_to": "da5c889795e5c5f684bd851dc0ffb6e272646122",
+  "dart_and_manifest_path_count": 1978,
+  "dart_and_manifest_source_binding": "fat-fixture-followup-source-binding.json",
+  "all_dart_manifests_unchanged_after_followup_portable_and_build": true,
+  "all_primary_and_validation_dart_manifests_match_bound_revision": true,
+  "all_production_lib_paths_and_manifests_match_git_blob_identities": true,
+  "production_tree_entry_count": 1051,
+  "production_tree_binding": "fat-test-fixture-source-transition.json",
+  "additional_non_dart_production_source_sha256": {
+    "lib/l10n/app_ar.arb": "8cce5724f65d6b72f269a397740a1edda8443bd98d29eee72c6271ef5d2764af",
+    "lib/l10n/app_de.arb": "19c828b2130157711c41d155c5178698ca83475c163bca6f158bef6166ce5d5c",
+    "lib/l10n/app_en.arb": "4f3d0794fc8cfe20cb90f430a8b939ad4a8ef28f930d9995ff1b28b6eab72ec6",
+    "lib/l10n/app_es.arb": "62b8b77e5f003d92fe2ff96f67d53e12c668a94a8e45993ed3e7120a297c9c2f",
+    "lib/l10n/app_fr.arb": "38f123c2878b286373fbbb1ef456b486ed27fb2370faa2e55204bdaa6ba50dd5",
+    "lib/l10n/app_ja.arb": "21444cdb1be6676d77659ea12ba939e465c2de5515cf40845fa47c08429c40e8",
+    "lib/l10n/app_ko.arb": "b1127cd5f41ff581210982bd4c58b937689b399676ea7d30d5279fe73b3d4234",
+    "lib/l10n/app_pt.arb": "5af44033c5df815376256b717a40cffce4a9c24426edf766da4dad144c244879",
+    "lib/l10n/app_zh.arb": "1df4fee4bf20fb0aaf8273ab17bbfce7674a2861b38b67b789fb5f527a5fde1b"
+  },
+  "only_test_source_transition_from_broad_gate": [
+    "test/support/dmg_fixture.dart"
+  ],
+  "production_manifest_sha256": {
+    "pubspec.yaml": "f10ba24448b047cf379dac0efeb11f8f60d9ae089022a831b12a6b32b8fa564f",
+    "pubspec.lock": "2a0b95288cf41be9087af0c01ea57afcc4a2f138876d15709bff2f866060ccb4"
+  },
+  "portable_revision_verified_path_count": 23,
+  "portable_saved_helper_matches_executed_helper": true,
+  "portable_helper_sha256": "6e27e144991cbb01feb132b60812acabf12d2c81bc8c09aaa180e5bb23bf3ee7",
+  "portable_logs_match_receipt": true,
+  "portable_source_binding_unchanged_after_build": true,
+  "portable_receipt": "fat-final-portable-receipt.json",
+  "portable_semantic_comparison": {
+    "excluded_paths": [
+      "derived_udif_wrappers.synthetic-udif-zlib.udif_bytes"
+    ],
+    "excluded_values": {
+      "vm": 8026,
+      "js": 8033
+    },
+    "reason": "Locked archive 4.6.0 selects native dart:io zlib on the VM and its Dart Deflate implementation on JavaScript. Their valid compressed encodings have different byte lengths; every payload and complete raw-volume SHA256 assertion remains unchanged and every other result field must compare exactly."
+  },
+  "reference_generation_and_oracle_source_hashes_still_match": true,
+  "reference_reproduction_receipt": "fixture-reproduction-receipt.json",
+  "production_web_release_receipt": "fat-final-web-release-receipt.json",
+  "build_outputs_rehashed_and_match_receipt": true,
+  "success": true
+}

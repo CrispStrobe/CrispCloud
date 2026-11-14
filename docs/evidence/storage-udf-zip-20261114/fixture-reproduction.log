@@ -1,0 +1,5 @@
+{"fixtures": {"mastered-bridge": {"bytes": 894976, "sha256": "4a78c55c4471871b9dac6dfb885388102028e6296158d3345d304724e3532fba"}, "derived-udf-only": {"bytes": 894976, "sha256": "9b9433bac37ae9e81a94a17edd7f51a255362f4d6d91209f17cfa21288ce4f3c"}, "derived-fragmented": {"bytes": 894976, "sha256": "995e912555642f1ef40ac77490003912788778ea2716d6d13831ea021e0a765a"}}, "payloads": 4, "reproduction_check": false}
+{"fixtures": {"mastered-bridge": {"bytes": 894976, "sha256": "4a78c55c4471871b9dac6dfb885388102028e6296158d3345d304724e3532fba"}, "derived-udf-only": {"bytes": 894976, "sha256": "9b9433bac37ae9e81a94a17edd7f51a255362f4d6d91209f17cfa21288ce4f3c"}, "derived-fragmented": {"bytes": 894976, "sha256": "995e912555642f1ef40ac77490003912788778ea2716d6d13831ea021e0a765a"}}, "payloads": 4, "reproduction_check": true}
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py:1625: UserWarning: Duplicate name: 'same.txt'
+  return self._open_to_write(zinfo, force_zip64=force_zip64)
+{"cases": 12, "payloads": 5, "reproduction_check": true}

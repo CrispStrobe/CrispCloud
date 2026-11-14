@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../services/archive_creation_service.dart';
+import '../services/archive_zip_recovery_service.dart';
 import '../services/file_operation_service.dart';
 import 'operation_progress.dart';
 
@@ -20,6 +21,7 @@ class ArchiveOperationHandle<T> extends ChangeNotifier {
   final FileOperationControl control;
   final Completer<void> _completion = Completer<void>();
   ArchiveCreationProgress? creationProgress;
+  ArchiveZipRecoveryProgress? zipRecoveryProgress;
   T? result;
   Object? error;
   Object? publicationWarning;

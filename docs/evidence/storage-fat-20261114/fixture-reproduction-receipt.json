@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "result": "passed",
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "test/support/generate_fat_reference.py",
+        "--fatfs-zip",
+        "/workspace/scratch/52be1abfc881/fat-oracles/ff16.zip",
+        "--output-dir",
+        "/workspace/scratch/52be1abfc881/fat-oracles/reference",
+        "--cc",
+        "/usr/bin/gcc",
+        "--dart",
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "fixture-reproduction.log"
+    },
+    {
+      "argv": [
+        "python3",
+        "test/support/check_archive_fat.py",
+        "--sevenzip",
+        "/workspace/scratch/52be1abfc881/lzfse-fixture-work/7zip-26.06/7zz",
+        "--report",
+        "docs/evidence/storage-fat-20261114/fat-sevenzip-oracle.json",
+        "--work-dir",
+        "/workspace/scratch/52be1abfc881/fat-oracles/verification"
+      ],
+      "exit_code": 0,
+      "report": "fat-sevenzip-oracle.json"
+    }
+  ],
+  "environment": {
+    "python": "3.12.14",
+    "zlib": "1.3.2",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "compiler_sha256": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f",
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\""
+  },
+  "sources": {
+    "test/support/fat_reference_helper.c": "ec220556efb5a96e93ddd5e44bfb2b00545bb7100fea52b9db82d1facebd012f",
+    "test/support/generate_fat_reference.py": "080818c57beb0915035aea874bd2e937f5505f0fc0a65632eca18ffa1c986082",
+    "test/support/archive_fat_reference_data.dart": "980a6af116e0fc88bc2dbafc432d8b9b18c521adff26bc7b7c2c5f95c3ad079e",
+    "test/support/check_archive_fat.py": "a5e5f74c61a39fa9f7dbbb18ce886ee49240d200ad2782a8b99f3d2701255e5a",
+    "test/fixtures/archives/fat-reference-manifest.json": "913ef71dd1c057b774166fb46c798468e11bb70eb31456a8cd0fe18503b27a8b"
+  },
+  "external_writer_archive_sha256": "99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e",
+  "external_helper_binary_sha256": "227a7740d8598ee0294a8a6a4422cab40e585198c13229a651d906e193b16c83",
+  "images": [
+    {
+      "name": "fat12",
+      "bytes": 1474560,
+      "sha256": "a1f6164b925c6fcbc2b2332780a047dec2c5a0787dc24197952798cba8a21953"
+    },
+    {
+      "name": "fat16",
+      "bytes": 8388608,
+      "sha256": "fe00a83cac68257aca7eb2bc6195cbb29819add45304408e6d6e3f5649c2d894"
+    },
+    {
+      "name": "fat32",
+      "bytes": 67108864,
+      "sha256": "9727d6c9fdc621d3fc58637182970fd31d8d4ba0921f98641e807e95de250a19"
+    },
+    {
+      "name": "fat16-sector4096",
+      "bytes": 33554432,
+      "sha256": "dddb42265f1f92bfbafe63d43b9f2dad297b018279eb76819ec37f587cf2c708"
+    }
+  ],
+  "reference_classification": "All four images were fully formatted and populated by external FatFs; no post-writer bytes were patched. Sparse gzip representation is lossless.",
+  "reproduction_log_sha256": "0a1d91d5d5d328c778ae838923b78bcd21adf410b6201bb91595087ab4135367",
+  "boilerplate_refresh": "Generated Dart uses a const gzip decoder and explicit braces; physical image and manifest hashes are unchanged."
+}

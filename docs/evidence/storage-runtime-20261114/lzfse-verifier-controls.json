@@ -1,0 +1,51 @@
+{
+  "scope": "Fresh temporary copy per mutation; original repo files unchanged",
+  "verifier": "tool/verify_lzfse_sources.py",
+  "verifier_sha256": "f6a2cdcb36aebfa96b7fb7b8501fad193a4c3041b8bdf284cfb7b577aa8ccdb5",
+  "derivative_sha256": "487cd93fc4582bf1e2fde8b32e44984ab42e396163ca4354f5652ab434c2082b",
+  "command_template": [
+    "python3",
+    "tool/verify_lzfse_sources.py",
+    "--repo-root",
+    "<isolated-copy>"
+  ],
+  "baseline_controls": 1,
+  "negative_controls": 4,
+  "results": [
+    {
+      "case": "baseline",
+      "result": "passed",
+      "exit_code": 0,
+      "stdout": "Verified seven pinned BSD-3-Clause LZFSE files, Dart attribution and imports.\nScope: selected LZFSE source only; no native library or new Pub dependency.",
+      "stderr": ""
+    },
+    {
+      "case": "changed_snapshot",
+      "result": "rejected_as_expected",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "LZFSE source verification failed: Changed source: upstream/lzfse_decode_base.c"
+    },
+    {
+      "case": "changed_snapshot_rehashed_manifest",
+      "result": "rejected_as_expected",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "LZFSE source verification failed: Manifest differs from approved source identities"
+    },
+    {
+      "case": "unapproved_dart_import",
+      "result": "rejected_as_expected",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "LZFSE source verification failed: Unreviewed Dart imports: ['dart:typed_data', 'dart:io', 'archive_types.dart']"
+    },
+    {
+      "case": "removed_bsd_notice",
+      "result": "rejected_as_expected",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "LZFSE source verification failed: Full upstream BSD notice missing from derivative"
+    }
+  ]
+}

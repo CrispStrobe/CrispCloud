@@ -1,0 +1,37 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":6,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":3,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":3617}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":14,"line":null,"column":null,"url":null},"type":"group","time":3619}
+{"test":{"id":3,"name":"external FAT references and derived partition wrappers pass acceptance","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":16,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3620}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3946}
+{"test":{"id":4,"name":"external file contents stay lazy and provider failures keep their identity","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":26,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3947}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3954}
+{"test":{"id":5,"name":"metadata decisions do not change when a borrowed allocation page changes later","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":54,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3955}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3963}
+{"test":{"id":6,"name":"configured member ceiling rejects buffered and streamed reads before payload I/O","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":73,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3964}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3971}
+{"test":{"id":7,"name":"FAT type derives from data clusters instead of the informational label","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":98,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3971}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3975}
+{"test":{"id":8,"name":"bytes after the declared volume are reported and never used","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":120,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3975}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3983}
+{"test":{"id":9,"name":"external reference respects reduced entry count budget and closes once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3983}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3986}
+{"test":{"id":10,"name":"external reference respects reduced metadata bytes budget and closes once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3987}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3988}
+{"test":{"id":11,"name":"external reference respects reduced directory bytes budget and closes once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3989}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3990}
+{"test":{"id":12,"name":"external reference respects reduced cluster traversal budget and closes once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3990}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3992}
+{"test":{"id":13,"name":"external reference respects reduced decoded names budget and closes once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3992}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3994}
+{"test":{"id":14,"name":"external reference respects reduced retained paths budget and closes once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3994}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":3996}
+{"test":{"id":15,"name":"short provider reads reject the reference and release ownership","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":184,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":3996}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":4003}
+{"test":{"id":16,"name":"invalid API limits close the transferred source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":203,"column":3,"url":"file:///workspace/scratch/52be1abfc881/runtime-setup/app-validation/test/archive_fat_reader_review_test.dart"},"type":"testStart","time":4003}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":4008}
+{"success":true,"type":"done","time":4022}

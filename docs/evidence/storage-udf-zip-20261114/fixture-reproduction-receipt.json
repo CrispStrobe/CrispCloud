@@ -1,0 +1,52 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "zlib_compiled": "1.3.2",
+  "zlib_runtime": "1.3.2",
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "test/support/generate_udf_reference.py",
+        "--genisoimage",
+        "/workspace/scratch/52be1abfc881/udf-oracles/genisoimage/usr/bin/genisoimage",
+        "--output-dir",
+        "/workspace/scratch/52be1abfc881/udf-oracles/reference"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python3",
+        "test/support/generate_udf_reference.py",
+        "--genisoimage",
+        "/workspace/scratch/52be1abfc881/udf-oracles/genisoimage/usr/bin/genisoimage",
+        "--output-dir",
+        "/workspace/scratch/52be1abfc881/udf-oracles/reference",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python3",
+        "test/support/generate_zip_recovery_reference.py",
+        "--output-dir",
+        "/workspace/scratch/52be1abfc881/udf-oracles/zip-reference",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "generated_bytes_match_committed": true,
+  "generated_files_sha256": {
+    "test/support/archive_udf_reference_data.dart": "cca79fd23033594ab788fb498ecbbcf6ef3fa390afbab72618190aa3d69dae4e",
+    "test/fixtures/archives/udf-reference-manifest.json": "b63bc2b15f1b8a272e86d60193ab411ba4ea4366b2ff25ae14459e523674a47f",
+    "test/support/archive_zip_recovery_reference_data.dart": "d66df0d2b868a0756d0fc892f1627ab56f9f9e46f5db521db4de16f351149ab5",
+    "test/fixtures/archives/zip-recovery-reference-manifest.json": "587a7bb17d76303037a57fbd579a602bc0c44afa839660bc8ebcd5b0b2ff953a"
+  },
+  "generator_sha256": {
+    "test/support/generate_udf_reference.py": "33e34d74f75a2fb9983955d0bfa79b7feb29aa33bd9bc307d9d7bf72a4108940",
+    "test/support/generate_zip_recovery_reference.py": "d79660fb58b1dc085ba59e0b0bac1790530b372bd590b6783b9fdcbe82d19cd9"
+  },
+  "log_sha256": "b77fbea25ef08bed97eedefe8218e90d9a2090618f5dbf3d2eca976a147185aa"
+}

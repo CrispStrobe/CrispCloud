@@ -25,6 +25,7 @@ class DmgFixture {
         0x80000004 => _adcLiterals(raw),
         0x80000005 => Uint8List.fromList(const ZLibEncoder().encode(raw)),
         0x80000006 => Uint8List.fromList(BZip2Encoder().encode(raw)),
+        0x80000007 => _lzfseRawBlock(raw),
         0x80000008 => Uint8List.fromList(XZEncoder().encode(raw)),
         _ => raw,
       };
@@ -42,7 +43,7 @@ class DmgFixture {
     final header = ByteData.sublistView(table);
     table.setAll(0, ascii.encode('mish'));
     header.setUint32(4, 1);
-    header.setUint64(16, logical.length ~/ 512);
+    _setUint64(header, 16, logical.length ~/ 512);
     header.setUint32(32, chunkBytes ~/ 512);
     if (checksum) {
       header.setUint32(64, 2);
@@ -54,10 +55,10 @@ class DmgFixture {
       final chunk = chunks[i];
       final at = 204 + i * 40;
       header.setUint32(at, chunk[0]);
-      header.setUint64(at + 8, chunk[1]);
-      header.setUint64(at + 16, chunk[2]);
-      header.setUint64(at + 24, chunk[3]);
-      header.setUint64(at + 32, chunk[4]);
+      _setUint64(header, at + 8, chunk[1]);
+      _setUint64(header, at + 16, chunk[2]);
+      _setUint64(header, at + 24, chunk[3]);
+      _setUint64(header, at + 32, chunk[4]);
     }
     packedBytes = packed.takeBytes();
     rebuild();
@@ -91,17 +92,25 @@ class DmgFixture {
     trailer.setUint32(4, 4);
     trailer.setUint32(8, 512);
     trailer.setUint32(12, 1);
-    trailer.setUint64(32, packedBytes.length);
+    _setUint64(trailer, 32, packedBytes.length);
     trailer.setUint32(56, 1);
     trailer.setUint32(60, 1);
-    trailer.setUint64(216, xmlOffset);
-    trailer.setUint64(224, xmlLength);
+    _setUint64(trailer, 216, xmlOffset);
+    _setUint64(trailer, 224, xmlLength);
     trailer.setUint32(488, 1);
-    trailer.setUint64(492, logical.length ~/ 512);
+    _setUint64(trailer, 492, logical.length ~/ 512);
   }
 
   ByteData get trailer => ByteData.sublistView(bytes, bytes.length - 512);
   ByteData get tableData => ByteData.sublistView(table);
+}
+
+// dart2js does not implement ByteData's uint64 accessors. All fixture offsets
+// are exact integers; division/remainder preserve the same big-endian bytes on
+// the VM and JavaScript without truncating their high word through bit shifts.
+void _setUint64(ByteData target, int offset, int value) {
+  target.setUint32(offset, value ~/ 0x100000000, Endian.big);
+  target.setUint32(offset + 4, value % 0x100000000, Endian.big);
 }
 
 // Only literal runs are needed to wrap arbitrary filesystem test data. Real
@@ -114,4 +123,15 @@ Uint8List _adcLiterals(Uint8List input) {
     output.add(Uint8List.sublistView(input, at, end));
   }
   return output.takeBytes();
+}
+
+// LZFSE's raw framing wraps arbitrary filesystem data for workflow tests.
+// Compressed FSE/LZVN blocks come from the separate Apple reference fixtures.
+Uint8List _lzfseRawBlock(Uint8List input) {
+  final output = Uint8List(input.length + 12)
+    ..setAll(0, ascii.encode('bvx-'))
+    ..setAll(8, input)
+    ..setAll(input.length + 8, ascii.encode('bvx\u0024'));
+  ByteData.sublistView(output).setUint32(4, input.length, Endian.little);
+  return output;
 }

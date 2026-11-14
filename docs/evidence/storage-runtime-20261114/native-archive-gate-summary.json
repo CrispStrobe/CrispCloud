@@ -1,0 +1,35 @@
+{
+  "files": {
+    "archive_adc_codec_test.dart": {
+      "success": 19
+    },
+    "archive_container_dispatch_test.dart": {
+      "success": 35
+    },
+    "archive_dmg_reader_test.dart": {
+      "success": 80
+    },
+    "archive_format_registry_test.dart": {
+      "success": 67
+    },
+    "archive_hfs_reader_test.dart": {
+      "success": 40
+    },
+    "archive_iso_multiextent_test.dart": {
+      "success": 32
+    },
+    "archive_iso_reader_test.dart": {
+      "success": 47
+    },
+    "archive_lzfse_codec_test.dart": {
+      "success": 97
+    },
+    "archive_lzfse_license_test.dart": {
+      "success": 1
+    }
+  },
+  "total": {
+    "success": 418
+  },
+  "success": true
+}

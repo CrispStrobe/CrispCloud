@@ -9,6 +9,7 @@ import 'archive_dmg_reader.dart';
 import 'archive_endpoint_policy.dart';
 import 'archive_format_registry.dart';
 import 'archive_iso_reader.dart';
+import 'archive_udf_reader.dart';
 import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
 import 'archive_rar_stored_reader.dart';
@@ -42,6 +43,7 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
   int maxBytes = kArchiveStreamingLimit,
   bool Function()? isCancelled,
   bool inspectIsoForRewrite = true,
+  int? diskImageSectorBytes,
 }) async {
   ArchiveOutputSpool? decoded;
   koni.ByteSource? decodedSource;
@@ -69,6 +71,38 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       source.length < 512 ? source.length : 512,
     );
     final descriptor = archiveFormatForName(name);
+    if (descriptor?.id == 'fat' ||
+        descriptor?.id == 'disk-image' ||
+        diskImageSectorBytes != null) {
+      inner = await openViewerArchiveSource(
+        input,
+        name: name,
+        password: password,
+        maxMemberBytes: maxBytes < kArchiveReadLimit
+            ? maxBytes
+            : kArchiveReadLimit,
+        maxDiskImageMemberBytes: maxBytes,
+        diskImageSectorBytes: diskImageSectorBytes,
+        isCancelled: isCancelled,
+      );
+      final policy = ArchiveEndpointPolicy(
+        ArchiveEndpointFormat.readOnly,
+        encrypted: inner.members.any((member) => member.isEncrypted),
+        encryptNames: false,
+        reason: 'Disk images support browsing and extraction only.',
+      );
+      check();
+      final ownedArchive = _own(
+        inner,
+        source,
+        null,
+        null,
+        inner.maxStreamingMemberBytes,
+      );
+      inner = null;
+      opening = false;
+      return StreamedArchiveOpen(archive: ownedArchive, policy: policy);
+    }
     final format = switch (descriptor?.id) {
       'zip' => ArchiveEndpointFormat.zip,
       'zip-alias' ||
@@ -81,6 +115,26 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       'dmg' => ArchiveEndpointFormat.dmg,
       _ => ArchiveEndpointFormat.readOnly,
     };
+    if ((format == ArchiveEndpointFormat.iso || descriptor?.id == 'udf') &&
+        await hasUdfVolumeRecognition(input)) {
+      inner = await openUdfArchive(input, maxMemberBytes: maxBytes);
+      const policy = ArchiveEndpointPolicy(
+        ArchiveEndpointFormat.readOnly,
+        encrypted: false,
+        encryptNames: false,
+        reason: 'UDF and ISO/UDF bridge images support browsing and extraction only.',
+      );
+      check();
+      final ownedArchive = _own(inner, source, null, null, maxBytes);
+      inner = null;
+      opening = false;
+      return StreamedArchiveOpen(archive: ownedArchive, policy: policy);
+    }
+    if (descriptor?.id == 'udf') {
+      throw const ArchiveViewException(
+        'The archive does not match its filename.',
+      );
+    }
     if (format == ArchiveEndpointFormat.readOnly) {
       throw const ArchiveViewException(
         'This format has no streamed writable profile.',

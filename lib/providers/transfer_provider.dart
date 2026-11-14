@@ -30,6 +30,8 @@ import '../models/panel_side.dart';
 import '../services/audit_service.dart';
 import '../services/archive_creation_service.dart';
 import '../services/archive_creation_batch.dart';
+import '../services/archive_zip_recovery_workflow.dart';
+import '../services/archive_zip_recovery_service.dart';
 import '../services/archive_job_recovery_service.dart';
 import '../services/archive_workspace.dart';
 import '../services/file_operation_service.dart';
@@ -1020,6 +1022,91 @@ class TransferNotifier extends ChangeNotifier {
         Error.throwWithStackTrace(error, stack);
       }
     });
+  }
+
+  /// Runs a reviewed ZIP salvage snapshot through the shared durable queue.
+  /// The journal records only the recipe/digests; restart requires a fresh scan.
+  Future<ArchiveOperationHandle<ArchiveCreationResult>>
+  enqueueArchiveZipRecovery({
+    required CapturedArchiveZipRecovery captured,
+    required FileOperationBackend destination,
+    required String destinationDirectory,
+    required String outputName,
+    required Set<int> selectedOffsets,
+    VoidCallback? onPublished,
+  }) async {
+    final offsets = Set<int>.unmodifiable(selectedOffsets);
+    await ready;
+    if (!captured.isCurrent ||
+        offsets.isEmpty ||
+        !offsets.every(
+          (offset) => captured.report.recoverableEntries.any(
+            (entry) => entry.offset == offset,
+          ),
+        )) {
+      throw StateError('Review the available ZIP recovery entries first.');
+    }
+    final plan = archiveCreationJobPlan(
+      source: captured.source,
+      destination: destination,
+      files: [captured.file],
+      destinationDirectory: destinationDirectory,
+      options: ArchiveCreationOptions(name: outputName),
+    );
+    plan.entries.first.recovery = {
+      'archiveVersion': 1,
+      'archiveKind': 'zipRecovery',
+      'name': outputName,
+      'sourceSha256': captured.report.sourceSha256,
+      'sourceBytes': captured.report.sourceBytes,
+      'selectedOffsets': offsets.toList()..sort(),
+    };
+    return _enqueueArchiveJob<ArchiveCreationResult>(
+      id: 'archive_zip_recovery_${const Uuid().v4()}',
+      plan: plan,
+      onPublished: onPublished,
+      warning: (result) => result?.publicationWarning,
+      execute: (handle) => publishArchiveZipRecovery(
+        captured: captured,
+        destination: destination,
+        destinationDirectory: destinationDirectory,
+        outputName: outputName,
+        selectedOffsets: offsets,
+        control: handle.control,
+        onProgress: (progress) {
+          handle.zipRecoveryProgress = progress;
+          final byteProgress =
+              progress.phase == ArchiveZipRecoveryPhase.scanning ||
+              progress.phase == ArchiveZipRecoveryPhase.publishing;
+          handle.operation
+            ..phaseLabel = 'zipRecovery:${progress.phase.name}'
+            ..currentFilePath = progress.path
+            ..totalBytes = byteProgress ? progress.total : 0;
+          handle.operation.updateProgress(
+            byteProgress ? progress.completed : 0,
+          );
+          handle.update();
+          notifyListeners();
+        },
+        onPublicationCheckpoint: (event) async {
+          final entry = plan.entries.first;
+          entry.recovery = {
+            ...?entry.recovery,
+            'archivePublication': {
+              ...?entry.recovery?['archivePublication']
+                  as Map<String, dynamic>?,
+              ...event,
+            },
+          };
+          await _journal.checkpoint(
+            handle.id,
+            0,
+            entry,
+            event['phase'] as String,
+          );
+        },
+      ),
+    );
   }
 
   Future<ArchiveOperationHandle<ArchiveCreationResult>> enqueueArchiveCreation({

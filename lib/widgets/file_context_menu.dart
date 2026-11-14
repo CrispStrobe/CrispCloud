@@ -3,6 +3,8 @@ import '../l10n/archive_creation_strings.dart';
 import 'archive_creation_dialog.dart';
 import 'archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
+import '../l10n/archive_zip_recovery_strings.dart';
+import 'archive_zip_recovery_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/file_conversion_strings.dart';
 import 'file_conversion_dialog.dart';
@@ -1413,6 +1415,21 @@ void showFileContextMenu(
         ),
       );
     }
+  }
+
+  if (origin.source is LocalPanelSource && isArchiveZipRecoverySelection(files)) {
+    items.add(PopupMenuItem(
+      child: ListTile(
+        leading: const Icon(Icons.healing_outlined),
+        title: Text(archiveZipRecoveryText(context, 'Recover ZIP to new file…')),
+      ),
+      onTap: () => Future<void>.delayed(Duration.zero, () async {
+        if (context.mounted) {
+          await showArchiveZipRecoveryForSelection(context, ref,
+            side: side, files: files, sourceOrigin: origin);
+        }
+      }),
+    ));
   }
 
   if (files.isNotEmpty && files.every((selected) => !selected.isFolder && selected.isSymlink != true && ArchiveService.isArchive(selected.name))) {
