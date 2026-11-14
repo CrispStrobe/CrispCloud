@@ -41,12 +41,15 @@ void main() {
         backend,
         (await backend.stat('/right'))!,
       );
+      addTearDown(session.close);
+      final downloads = cloud.downloads.length;
       final window = await session
           .window(0)
           .timeout(const Duration(seconds: 2));
       expect(window.left.length, 9);
       expect(window.right.length, 10);
       expect((await session.difference(1)).start, 4);
+      expect(cloud.downloads.length, downloads);
     },
   );
   test(
@@ -94,6 +97,7 @@ void main() {
         (await b.stat(right.path))!,
         maxIndexedRanges: 8,
       );
+      addTearDown(session.close);
       expect(session.result.rangeCount, 20000);
       expect(session.result.ranges.length, lessThanOrEqualTo(9));
       for (final index in [0, 1, 77, 12345, 12346, 19999, 10000]) {
@@ -107,10 +111,10 @@ void main() {
       expect(page.left.length, 64);
       expect(page.right.length, 64);
       expect(page.right[2], 1);
-      expect(a.wholeReads, 1);
-      expect(b.wholeReads, 1);
-      expect(a.rangeOffsets.any((offset) => offset > 0), isTrue);
-      expect(b.rangeOffsets.any((offset) => offset > 0), isTrue);
+      expect(a.wholeReads, 2);
+      expect(b.wholeReads, 2);
+      expect(a.rangeOffsets, isEmpty);
+      expect(b.rangeOffsets, isEmpty);
     },
   );
 
@@ -138,6 +142,7 @@ void main() {
         b,
         (await b.stat(right.path))!,
       );
+      addTearDown(session.close);
       expect(session.result.rangeCount, 2);
       expect((await session.difference(0)).start, changed);
       final last = await session.difference(1);
@@ -164,9 +169,104 @@ void main() {
       backend,
       (await backend.stat(right.path))!,
     );
+    addTearDown(session.close);
     await right.writeAsBytes([1, 4, 5]);
     await expectLater(session.window(0), throwsStateError);
     await expectLater(session.difference(0), throwsStateError);
+    expect(session.isClosed, isTrue);
+  });
+
+  test(
+    'same-size unversioned edits cannot mix captured ranges and live bytes',
+    () async {
+      final cloud = WorkflowFakeClient()
+        ..put('/left', List<int>.filled(40, 0))
+        ..put('/right', List<int>.generate(40, (i) => i.isEven ? 1 : 0));
+      final backend = CloudOperationBackend(cloud, isCurrent: () => true);
+      final session = await BinaryComparisonSession.open(
+        backend,
+        (await backend.stat('/left'))!,
+        backend,
+        (await backend.stat('/right'))!,
+        maxIndexedRanges: 2,
+      );
+      addTearDown(session.close);
+      final reads = cloud.downloads.length;
+      // The fake provider deliberately has no version token, and put preserves
+      // its size and timestamp. Navigation must still use the captured content.
+      cloud.put('/right', List<int>.filled(40, 0));
+      final range = await session.difference(7);
+      expect([range.start, range.end], [14, 15]);
+      final window = await session.window(12, length: 8);
+      expect(window.left, List<int>.filled(8, 0));
+      expect(window.right, [1, 0, 1, 0, 1, 0, 1, 0]);
+      expect(cloud.downloads.length, reads);
+      expect(session.leftSha256, isNot(session.rightSha256));
+    },
+  );
+
+  test('closing invalidates both cached and uncached navigation', () async {
+    final cloud = WorkflowFakeClient()
+      ..put('/left', [0, 0, 0])
+      ..put('/right', [1, 0, 1]);
+    final backend = CloudOperationBackend(cloud, isCurrent: () => true);
+    final session = await BinaryComparisonSession.open(
+      backend,
+      (await backend.stat('/left'))!,
+      backend,
+      (await backend.stat('/right'))!,
+    );
+    await session.close();
+    await session.close();
+    expect(session.isClosed, isTrue);
+    await expectLater(session.difference(0), throwsStateError);
+    await expectLater(session.window(0), throwsStateError);
+  });
+
+  test(
+    'source revocation invalidates captured navigation permanently',
+    () async {
+      final cloud = WorkflowFakeClient()
+        ..put('/left', [1, 2])
+        ..put('/right', [1, 3]);
+      var current = true;
+      final backend = CloudOperationBackend(cloud, isCurrent: () => current);
+      final session = await BinaryComparisonSession.open(
+        backend,
+        (await backend.stat('/left'))!,
+        backend,
+        (await backend.stat('/right'))!,
+      );
+      addTearDown(session.close);
+      current = false;
+      await expectLater(session.difference(0), throwsStateError);
+      current = true;
+      expect(session.isClosed, isTrue);
+      await expectLater(session.window(0), throwsStateError);
+    },
+  );
+
+  test('empty captures and asymmetric tails keep exact lengths', () async {
+    final cloud = WorkflowFakeClient()
+      ..put('/empty', [])
+      ..put('/full', [0, 0, 0]);
+    final backend = CloudOperationBackend(cloud, isCurrent: () => true);
+    final session = await BinaryComparisonSession.open(
+      backend,
+      (await backend.stat('/empty'))!,
+      backend,
+      (await backend.stat('/full'))!,
+    );
+    addTearDown(session.close);
+    expect(session.result.leftBytes, 0);
+    expect(session.result.rightBytes, 3);
+    expect(session.result.differingBytes, 3);
+    expect((await session.difference(0)).end, 3);
+    final tail = await session.window(2, length: 5);
+    expect(tail.left, isEmpty);
+    expect(tail.right, [0]);
+    final eof = await session.window(3);
+    expect(eof.length, 0);
   });
 
   test(
