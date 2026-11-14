@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import 'dart:typed_data';
 
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
@@ -18,29 +20,32 @@ void main() {
   });
 
   test('cached indirect properties remain subject to expansion limits', () {
-    const references = 100;
-    const rootLength = references * 6;
-    const leafOffset = rootLength + 2;
-    final root = <int>[
-      for (var i = 0; i < references; i++)
-        ...wordSprm(0x6646, wordU32(leafOffset)),
-    ];
+    const references = 110;
     final leaf = <int>[
-      for (var i = 0; i < 4000; i++) ...wordSprm(0x2405, [1]),
+      for (var i = 0; i < 20000; i++) ...wordSprm(0x2405, [1]),
     ];
-    final source = _indirectDocument([
-      ...wordU16(root.length),
-      ...root,
-      ...wordU16(leaf.length),
-      ...leaf,
-    ]);
+    // Each independent array has its own first (and sole) PHugePapx. Repeating
+    // PHugePapx in one array would only expand the first reference, because it
+    // replaces that array's remaining operations.
+    final source = StructuredWordFixture(
+      pieces: [
+        for (var i = 0; i < references; i++)
+          WordFixturePiece('A\r', offset: 8192 + 2 * i, prm: i * 2 + 1),
+      ],
+      characterRuns: [WordFixtureFkpRun(8192, 8192 + references * 2)],
+      paragraphRuns: [WordFixtureFkpRun(8192, 8192 + references * 2)],
+      prcs: [for (var i = 0; i < references; i++) wordSprm(0x6646, wordU32(0))],
+      extraStreams: {
+        'Data': Uint8List.fromList([...wordU16(leaf.length), ...leaf]),
+      },
+    ).build();
     expect(
       () => parseLegacyWordDocument(source),
       throwsA(
         isA<FormatException>().having(
           (error) => error.message,
           'message',
-          contains('complexity limit'),
+          equals('Word properties exceed the preview complexity limit.'),
         ),
       ),
     );
@@ -52,6 +57,7 @@ void main() {
       final properties = [
         ...wordSprm(0x2403, [2]),
         ...wordSprm(0x2406, [1]),
+        ...wordSprm(0xa413, wordU16(120)),
       ];
       final document = parseLegacyWordDocument(
         _indirectDocument([...wordU16(properties.length), ...properties]),
@@ -59,13 +65,23 @@ void main() {
       final paragraph = document.blocks.single as LegacyWordParagraph;
       expect(paragraph.style.alignment, LegacyWordAlignment.right);
       expect(paragraph.style.keepNext, isTrue);
+      expect(paragraph.style.spaceBeforeTwips, 120);
 
-      final cycle = wordSprm(0x6646, wordU32(0));
+      final cycle = [
+        ...wordSprm(0x6646, wordU32(0)),
+        ...wordSprm(0xa413, wordU16(120)),
+      ];
       expect(
         () => parseLegacyWordDocument(
           _indirectDocument([...wordU16(cycle.length), ...cycle]),
         ),
-        throwsFormatException,
+        throwsA(
+          isA<FormatException>().having(
+            (error) => error.message,
+            'message',
+            contains('Cyclic'),
+          ),
+        ),
       );
     },
   );
