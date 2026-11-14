@@ -1,0 +1,54 @@
+{
+  "artifact_sha256": "4a39622892b512d768cd425e4021c76b60fa3ea3f95706198b9e97e21d7c7fcd",
+  "compression": "gzip mtime=0; original bytes preserved on decompression",
+  "files": [
+    {
+      "original_name": "REVISION.txt",
+      "original_bytes": 41,
+      "original_sha256": "2b185c41378b5fb9bf4c85703dbf0fab782195991653ddea3b620cf0d3f795a2",
+      "stored_name": "REVISION.txt",
+      "stored_bytes": 41,
+      "stored_sha256": "2b185c41378b5fb9bf4c85703dbf0fab782195991653ddea3b620cf0d3f795a2"
+    },
+    {
+      "original_name": "manifest-before.txt",
+      "original_bytes": 158,
+      "original_sha256": "026bcdda9960f7f1a7449fbda74901fdddd150e5b26dbbe07cc7bab5ecb5b2aa",
+      "stored_name": "manifest-before.txt",
+      "stored_bytes": 158,
+      "stored_sha256": "026bcdda9960f7f1a7449fbda74901fdddd150e5b26dbbe07cc7bab5ecb5b2aa"
+    },
+    {
+      "original_name": "binary-browser.log",
+      "original_bytes": 3919,
+      "original_sha256": "71612c21c1cbb712f405ce6405ee676fa6c1a1738908f8929c396efe186abfe1",
+      "stored_name": "binary-browser.log.gz",
+      "stored_bytes": 1170,
+      "stored_sha256": "0349cdf40bef7908c6505bb1a9f42558c856c95a5893ef86c14577518b9954f8"
+    },
+    {
+      "original_name": "binary-browser-events.json",
+      "original_bytes": 13983,
+      "original_sha256": "d23ddc8d6637158ec5c034f4377b103c5cd3c77d9f4130783e9060b7d9ea490a",
+      "stored_name": "binary-browser-events.json.gz",
+      "stored_bytes": 1965,
+      "stored_sha256": "bb58e4593342be3a9d4384728f45280f20ada8a93146190512d6831b69b41fb4"
+    },
+    {
+      "original_name": "native.log",
+      "original_bytes": 241635,
+      "original_sha256": "64edcf51de6080caa0b39e439497d998eef7f89c3e02f88090f843afd606ff15",
+      "stored_name": "native.log.gz",
+      "stored_bytes": 19705,
+      "stored_sha256": "198a741cd881d0294bd4fcae87bbb44352326737ce82deb710a56a3168918af0"
+    },
+    {
+      "original_name": "native-events.json",
+      "original_bytes": 669773,
+      "original_sha256": "59e70ac32c5e05f105a6415906628c22f43c660d2d8f2ba67a514a9638e3615a",
+      "stored_name": "native-events.json.gz",
+      "stored_bytes": 58611,
+      "stored_sha256": "b76b5410af48eb85d58b6b0d028ee32b7ae755a71a51fa493833cdc096de9545"
+    }
+  ]
+}
