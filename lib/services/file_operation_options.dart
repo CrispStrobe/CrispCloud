@@ -6,7 +6,7 @@ import 'stream_rate_limiter.dart';
 
 enum FileOperationKind { copy, move }
 
-enum FileCopyMethod { automatic, stream, copyOnWrite }
+enum FileCopyMethod { automatic, stream, copyOnWrite, verifiedDelta }
 
 enum FileConflictPolicy {
   ask,
@@ -129,6 +129,15 @@ class FileOperationOptions {
 
   void validateTransferSettings() {
     DuplicateNameTemplate(duplicateNameTemplate);
+    if (copyMethod == FileCopyMethod.verifiedDelta &&
+        (kind != FileOperationKind.copy ||
+            fileConflict == FileConflictPolicy.append ||
+            fileConflict == FileConflictPolicy.resumeVerified ||
+            preallocate)) {
+      throw const FormatException(
+        'Verified S3 block reuse requires Copy without append, partial resume, or disk preallocation.',
+      );
+    }
     final rate = clientBytesPerSecond;
     if (rate != null && (rate <= 0 || rate > maximumClientBytesPerSecond)) {
       throw const FormatException(

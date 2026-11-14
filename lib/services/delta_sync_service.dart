@@ -27,7 +27,9 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
+import '../models/file_item.dart';
 import 'file_operation_backend.dart';
+import 'file_operation_content_strategy.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
 import 'log_service.dart';
@@ -705,23 +707,13 @@ class DeltaSyncService {
 
   /// Reconstruct a download through the existing native staged publisher.
   ///
-  /// Every block, including reused local blocks, must match the bound source
-  /// map. The complete private candidate and the original destination are
-  /// verified before replacement. Empty/all-skip plans still apply final size.
-  /// A source with a remote identity requires [revalidateSource]; an unbound
-  /// local map created by [computeBlockMap] in this process is rechecked against
-  /// its captured local source instead. Deserialized paths cannot authorize it.
+  /// This compatibility entry point uses the same scoped contents and renewed
+  /// publication proofs as queued copies. It does not create a queue record,
+  /// acquire path claims or authorize restart. The captured destination backend
+  /// supplies its existing access scope and native check/rename boundary.
   ///
-  /// [destinationBackend] must be a current [LocalOperationBackend] with staged
-  /// verification. Its existing local check/rename boundary is not an atomic
-  /// compare-and-swap against external writers. This method adds no durable
-  /// queue record, resume token or path reservation by itself.
-  ///
-  /// Cancellation is cooperative at read and verification boundaries. Once
-  /// replacement is acknowledged, late cancellation does not undo success.
-  /// Upload planning is available, but raw [remoteWriteBlock] callbacks cannot
-  /// establish private staging, final verification and conditional publication;
-  /// upload execution is refused before invoking any callback.
+  /// Upload execution remains unavailable: a raw remote write callback cannot
+  /// establish private staging, verification and conditional publication.
   Future<void> applyDelta(
     BlockTransferPlan plan,
     String localPath, {
@@ -735,9 +727,61 @@ class DeltaSyncService {
     Future<void> Function()? revalidateSource,
     Future<void> Function()? checkpoint,
     bool Function()? isCancelled,
+  }) => withPreparedDelta<void>(
+    plan,
+    localPath,
+    destinationBackend: destinationBackend,
+    remoteReadBlock: remoteReadBlock,
+    revalidateSource: revalidateSource,
+    checkpoint: checkpoint,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    consume: (contents) async {
+      final prepared = contents as _PreparedDeltaContents;
+      await prepared.backend.writePreparedFile(
+        localPath,
+        contents.openRead(),
+        contents.length,
+        replace: true,
+        verifyStaged: contents.verifyStaged,
+        checkpoint: (state) async {
+          switch (state['phase']) {
+            case 'committed':
+              await contents.committed();
+            case 'committing':
+              await contents.revalidateBeforePublication();
+            default:
+              await prepared.check();
+          }
+        },
+      );
+    },
+  );
+
+  /// Hold the captured native access scope while one bound reconstruction is
+  /// consumed by the ordinary staged copy writer.
+  ///
+  /// The returned contents are live only inside [consume]. Their complete
+  /// logical stream may be opened once. [PreparedFileContents.verifyStaged]
+  /// must precede [PreparedFileContents.revalidateBeforePublication], which
+  /// must run after all awaited journal/control publication checkpoints. No
+  /// awaited user callback may follow that final proof before publication.
+  Future<T> withPreparedDelta<T>(
+    BlockTransferPlan plan,
+    String localPath, {
+    required FileOperationBackend? destinationBackend,
+    required Future<T> Function(PreparedFileContents contents) consume,
+    FileItem? existingDestination,
+    Future<List<int>> Function(int blockIndex, int offset, int size)?
+    remoteReadBlock,
+    Future<void> Function()? revalidateSource,
+    Future<void> Function()? checkpoint,
+    bool Function()? isCancelled,
+    void Function(int processedBlocks, int totalBlocks, int processedBytes)?
+    onProgress,
+    Future<void> Function()? onCommitted,
   }) async {
-    // Freeze caller-owned collections and reject contradictory plans before
-    // acquiring access, running callbacks, or creating a staging directory.
+    // Reject and freeze caller-owned plans before access, callbacks or staging.
     final execution = _validatedPlan(plan);
     if (execution.direction == TransferDirection.upload) {
       throw UnsupportedError(
@@ -745,25 +789,16 @@ class DeltaSyncService {
         'contract; direct block-write callbacks are unavailable.',
       );
     }
-    final backend = destinationBackend;
-    if (backend is! LocalOperationBackend ||
-        !backend.supportsStagedVerification) {
-      throw UnsupportedError(
-        'Delta downloads require a native local staged destination backend.',
-      );
-    }
+    final backend = _preparedBackend(destinationBackend);
     final source = execution.sourceMap!;
     final baseline = execution.baselineMap!;
+    _validateReviewedDestination(existingDestination, localPath);
     if (source.identity == null && source._localSourceStamp == null) {
       throw const FormatException(
         'An unbound map cannot authorize opening its recorded source path.',
       );
     }
-    if (!p.equals(p.absolute(baseline.filePath), p.absolute(localPath))) {
-      throw const FormatException(
-        'The plan belongs to a different local destination.',
-      );
-    }
+    _validateBaselinePath(baseline, localPath);
     if (source.identity != null && revalidateSource == null) {
       throw ArgumentError(
         'A remote delta source requires an awaited revision revalidation.',
@@ -777,153 +812,186 @@ class DeltaSyncService {
         'remoteReadBlock is required for changed download blocks.',
       );
     }
-    final backendIdentity = backend.identity;
-    void checkNow() {
-      if (isCancelled?.call() ?? false) throw const DeltaSyncCancelled();
-      if (!backend.isCurrent || backend.identity != backendIdentity) {
-        throw StateError(
-          'The original delta destination is no longer available.',
+
+    Stream<List<int>> reconstruct(
+      Future<void> Function() check,
+      void Function() checkNow,
+    ) async* {
+      var processed = 0;
+      var transferred = 0;
+      await check();
+      final reader = await File(localPath).open(mode: FileMode.read);
+      try {
+        for (final op in execution.operations) {
+          await check();
+          Uint8List bytes;
+          if (op.type == BlockOperationType.download) {
+            final received = await remoteReadBlock!(
+              op.blockIndex,
+              op.offset,
+              op.size,
+            );
+            checkNow();
+            if (received.length != op.size) {
+              throw StateError(
+                'The delta range did not have its exact requested length.',
+              );
+            }
+            if (received.any((byte) => byte < 0 || byte > 255)) {
+              throw StateError('A delta range contained invalid byte values.');
+            }
+            bytes = Uint8List.fromList(received);
+          } else {
+            await reader.setPosition(op.offset);
+            bytes = await _readExact(reader, op.size, check);
+          }
+          final signature = source.signatures[op.blockIndex];
+          if (sha256Hex(bytes) != op.expectedSha256 ||
+              adler32(bytes) != signature.weakHash) {
+            throw StateError(
+              'A delta block does not match the captured source.',
+            );
+          }
+          await check();
+          yield bytes;
+          if (op.type == BlockOperationType.download) transferred += op.size;
+          processed++;
+          onProgress?.call(processed, execution.operations.length, transferred);
+        }
+        await check();
+      } finally {
+        await reader.close();
+      }
+    }
+
+    return _withPreparedContents(
+      localPath,
+      backend: backend,
+      length: source.totalSize,
+      destinationExists: true,
+      existingDestination: existingDestination,
+      baselineMap: baseline,
+      knownSourceMap: source,
+      sourceIdentity: source.identity,
+      read: reconstruct,
+      revalidateSource: revalidateSource,
+      checkpoint: checkpoint,
+      isCancelled: isCancelled,
+      onCommitted: onCommitted,
+      consume: consume,
+    );
+  }
+
+  /// Verify a one-pass conditional remote download whose map is completed by
+  /// reading its stream. [sourceMap] is called exactly once, after exact EOF.
+  ///
+  /// A supplied baseline must come from [computeBlockMap] in this process and
+  /// name this destination. Otherwise an existing destination is scanned under
+  /// the captured backend's scope. A new destination must remain absent through
+  /// publication. This helper creates neither a journal nor a trust receipt;
+  /// the provider must establish remote provenance and version-bound reads.
+  Future<T> withPreparedVerifiedDownload<T>(
+    String localPath, {
+    required FileOperationBackend? destinationBackend,
+    required BlockMapIdentity sourceIdentity,
+    required Stream<List<int>> Function() openRead,
+    required BlockMap Function() sourceMap,
+    required Future<void> Function() revalidateSource,
+    required Future<T> Function(PreparedFileContents contents) consume,
+    required bool destinationExists,
+    FileItem? existingDestination,
+    BlockMap? baselineMap,
+    Future<void> Function()? checkpoint,
+    bool Function()? isCancelled,
+    Future<void> Function()? onCommitted,
+  }) async {
+    sourceIdentity.validate();
+    _validateText(localPath, 'destination path');
+    final backend = _preparedBackend(destinationBackend);
+    _validateReviewedDestination(existingDestination, localPath);
+    final baseline = baselineMap == null ? null : _snapshotMap(baselineMap);
+    if (!destinationExists &&
+        (baseline != null || existingDestination != null)) {
+      throw const FormatException(
+        'An absent destination cannot have a baseline.',
+      );
+    }
+    if (baseline != null) {
+      _validateBaselinePath(baseline, localPath);
+      if (baseline._localSourceStamp == null) {
+        throw const FormatException(
+          'A supplied destination baseline requires a current local scan.',
         );
       }
     }
+    return _withPreparedContents(
+      localPath,
+      backend: backend,
+      length: sourceIdentity.totalSize,
+      destinationExists: destinationExists,
+      existingDestination: existingDestination,
+      baselineMap: baseline,
+      sourceIdentity: sourceIdentity,
+      completedSourceMap: sourceMap,
+      read: (_, _) => openRead(),
+      revalidateSource: revalidateSource,
+      checkpoint: checkpoint,
+      isCancelled: isCancelled,
+      onCommitted: onCommitted,
+      consume: consume,
+    );
+  }
 
-    Future<void> check() async {
-      checkNow();
-      await checkpoint?.call();
-      checkNow();
-    }
-
-    Future<void> verifySource() async {
-      await check();
-      if (source.identity == null) {
-        if (!_sameFileStamp(
-          source._localSourceStamp!,
-          _regularFileStamp(source.filePath),
-        )) {
-          throw StateError('The captured local delta source changed.');
-        }
-        await _verifyLocalFile(source.filePath, source, check);
-      }
-      await revalidateSource?.call();
-      checkNow();
-    }
-
-    await check();
-    await backend.service.withFileOperationAccess(localPath, () async {
-      final originalStamp = await _verifyLocalFile(localPath, baseline, check);
-      await verifySource();
-      var processed = 0;
-      var transferred = 0;
-      String? stagedPath;
-      FileStat? stagedStamp;
-
-      Stream<List<int>> reconstructed() async* {
-        final reader = await File(localPath).open(mode: FileMode.read);
-        try {
-          for (final op in execution.operations) {
-            await check();
-            Uint8List bytes;
-            if (op.type == BlockOperationType.download) {
-              final received = await remoteReadBlock!(
-                op.blockIndex,
-                op.offset,
-                op.size,
-              );
-              checkNow();
-              if (received.length != op.size) {
-                throw StateError(
-                  'The delta range did not have its exact requested length.',
-                );
-              }
-              // Own bytes across asynchronous publication; providers may reuse
-              // their response buffers after returning from the callback.
-              if (received.any((byte) => byte < 0 || byte > 255)) {
-                throw StateError(
-                  'A delta range contained invalid byte values.',
-                );
-              }
-              bytes = Uint8List.fromList(received);
-            } else {
-              await reader.setPosition(op.offset);
-              bytes = await _readExact(reader, op.size, check);
-            }
-            final signature = source.signatures[op.blockIndex];
-            if (sha256Hex(bytes) != op.expectedSha256 ||
-                adler32(bytes) != signature.weakHash) {
-              throw StateError(
-                'A delta block does not match the captured source.',
-              );
-            }
-            await check();
-            yield bytes;
-            if (op.type == BlockOperationType.download) transferred += op.size;
-            processed++;
-            onProgress?.call(
-              processed,
-              execution.operations.length,
-              transferred,
-            );
-          }
-          await check();
-        } finally {
-          await reader.close();
-        }
-      }
-
-      await backend.writePreparedFile(
-        localPath,
-        reconstructed(),
-        source.totalSize,
-        replace: true,
-        verifyStaged: (staged) async {
-          final path = staged.path;
-          if (path == null || staged.isFolder || staged.isSymlink == true) {
-            throw StateError(
-              'The delta candidate is not a regular staged file.',
-            );
-          }
-          stagedPath = path;
-          stagedStamp = await _verifyLocalFile(path, source, check);
-          final currentOriginal = await _verifyLocalFile(
-            localPath,
-            baseline,
-            check,
-          );
-          if (!_sameFileStamp(originalStamp, currentOriginal)) {
-            throw StateError(
-              'The delta destination changed during preparation.',
-            );
-          }
-          await verifySource();
-          // No awaited pause/checkpoint follows these final proofs. Recheck
-          // both metadata stamps after all callbacks and source revalidation.
-          checkNow();
-          if (!_sameFileStamp(originalStamp, _regularFileStamp(localPath)) ||
-              !_sameFileStamp(stagedStamp!, _regularFileStamp(path))) {
-            throw StateError(
-              'The delta destination or candidate changed before publication.',
-            );
-          }
-        },
-        checkpoint: (state) async {
-          final phase = state['phase'];
-          if (phase == 'committed') return;
-          if (phase == 'committing') {
-            // The backend is about to enter its existing rename boundary. Do
-            // not insert an awaited user pause after candidate verification.
-            checkNow();
-            if (stagedPath == null ||
-                stagedStamp == null ||
-                !_sameFileStamp(originalStamp, _regularFileStamp(localPath)) ||
-                !_sameFileStamp(stagedStamp!, _regularFileStamp(stagedPath!))) {
-              throw StateError('Delta publication proof is no longer current.');
-            }
-            return;
-          }
-          await check();
+  Future<T> _withPreparedContents<T>(
+    String localPath, {
+    required LocalOperationBackend backend,
+    required int length,
+    required bool destinationExists,
+    required Stream<List<int>> Function(
+      Future<void> Function() check,
+      void Function() checkNow,
+    )
+    read,
+    required Future<T> Function(PreparedFileContents contents) consume,
+    FileItem? existingDestination,
+    BlockMap? baselineMap,
+    BlockMap? knownSourceMap,
+    BlockMapIdentity? sourceIdentity,
+    BlockMap Function()? completedSourceMap,
+    Future<void> Function()? revalidateSource,
+    Future<void> Function()? checkpoint,
+    bool Function()? isCancelled,
+    Future<void> Function()? onCommitted,
+  }) async {
+    final prepared = _PreparedDeltaContents(
+      service: this,
+      backend: backend,
+      localPath: localPath,
+      expectedLength: length,
+      destinationExists: destinationExists,
+      existingDestination: existingDestination,
+      baseline: baselineMap,
+      source: knownSourceMap,
+      sourceIdentity: sourceIdentity,
+      completedSourceMap: completedSourceMap,
+      read: read,
+      revalidateSource: revalidateSource,
+      checkpoint: checkpoint,
+      isCancelled: isCancelled,
+      onCommitted: onCommitted,
+    );
+    try {
+      await prepared.check();
+      return await backend.service.withFileOperationAccess(
+        destinationExists ? localPath : backend.paths.dirname(localPath),
+        () async {
+          await prepared.initialize();
+          return consume(prepared);
         },
       );
-    });
+    } finally {
+      prepared.invalidate();
+    }
   }
 
   BlockTransferPlan _validatedPlan(BlockTransferPlan plan) {
@@ -1115,6 +1183,353 @@ class DeltaSyncService {
       utf8.encode(jsonEncode([2, provider, storageId, filePath])),
     );
     return p.join(cacheDir, 'block_maps', '$key.json');
+  }
+}
+
+/// A live proof object, never a serialized execution or recovery authority.
+class _PreparedDeltaContents implements PreparedFileContents {
+  _PreparedDeltaContents({
+    required this.service,
+    required this.backend,
+    required this.localPath,
+    required this.expectedLength,
+    required this.destinationExists,
+    required this.read,
+    this.existingDestination,
+    this.baseline,
+    this.source,
+    this.sourceIdentity,
+    this.completedSourceMap,
+    this.revalidateSource,
+    this.checkpoint,
+    this.isCancelled,
+    this.onCommitted,
+  }) : backendIdentity = backend.identity;
+
+  final DeltaSyncService service;
+  final LocalOperationBackend backend;
+  final Object backendIdentity;
+  final String localPath;
+  final int expectedLength;
+  final bool destinationExists;
+  final FileItem? existingDestination;
+  final Stream<List<int>> Function(
+    Future<void> Function() check,
+    void Function() checkNow,
+  )
+  read;
+  final BlockMapIdentity? sourceIdentity;
+  final BlockMap Function()? completedSourceMap;
+  final Future<void> Function()? revalidateSource;
+  final Future<void> Function()? checkpoint;
+  final bool Function()? isCancelled;
+  final Future<void> Function()? onCommitted;
+  BlockMap? baseline;
+  BlockMap? source;
+  FileStat? _originalStamp;
+  String? _stagedPath;
+  FileStat? _stagedStamp;
+  bool _active = true;
+  bool _initialized = false;
+  bool _opened = false;
+  bool _streamComplete = false;
+  bool _verificationStarted = false;
+  bool _verified = false;
+  bool _publicationStarted = false;
+  bool _publicationReady = false;
+  bool _committed = false;
+
+  void invalidate() => _active = false;
+
+  void _ensureActive() {
+    if (!_active) {
+      throw StateError('Prepared delta contents have left their access scope.');
+    }
+  }
+
+  void checkNow() {
+    _ensureActive();
+    if (isCancelled?.call() ?? false) throw const DeltaSyncCancelled();
+    if (!backend.isCurrent || backend.identity != backendIdentity) {
+      throw StateError(
+        'The original delta destination is no longer available.',
+      );
+    }
+  }
+
+  Future<void> check() async {
+    checkNow();
+    await checkpoint?.call();
+    checkNow();
+  }
+
+  Future<void> initialize() async {
+    await check();
+    if (destinationExists) {
+      _assertReviewedDestination(_regularFileStamp(localPath));
+      baseline ??= await service.computeBlockMap(
+        localPath,
+        checkpoint: check,
+        isCancelled: isCancelled,
+      );
+      _validateBaselinePath(baseline!, localPath);
+      final captured = baseline!._localSourceStamp;
+      if (captured != null &&
+          !_sameFileStamp(captured, _regularFileStamp(localPath))) {
+        throw StateError('The captured delta destination changed.');
+      }
+      _originalStamp = await service._verifyLocalFile(
+        localPath,
+        baseline!,
+        check,
+      );
+      if (captured != null && !_sameFileStamp(captured, _originalStamp!)) {
+        throw StateError('The captured delta destination changed.');
+      }
+      _assertReviewedDestination(_originalStamp!);
+    } else {
+      _assertDestinationNow();
+    }
+    await _verifySource();
+    _assertDestinationNow();
+    _initialized = true;
+  }
+
+  @override
+  int get length {
+    _ensureActive();
+    return expectedLength;
+  }
+
+  @override
+  Stream<List<int>> openRead() {
+    checkNow();
+    if (!_initialized || _opened || _committed) {
+      throw StateError('Prepared delta contents can be consumed only once.');
+    }
+    _opened = true;
+    return _checkedContents();
+  }
+
+  Stream<List<int>> _checkedContents() async* {
+    var received = 0;
+    await check();
+    _assertDestinationNow();
+    await for (final chunk in read(check, checkNow)) {
+      checkNow();
+      if (chunk.length > _kMaxBlockSize ||
+          chunk.length > expectedLength - received ||
+          chunk.any((byte) => byte < 0 || byte > 255)) {
+        throw StateError(
+          'Prepared delta contents exceeded their byte contract.',
+        );
+      }
+      // Own each provider buffer before any pause or asynchronous writer can
+      // allow its producer to reuse it.
+      final bytes = Uint8List.fromList(chunk);
+      received += bytes.length;
+      await check();
+      yield bytes;
+    }
+    await check();
+    if (received != expectedLength) {
+      throw StateError(
+        'Prepared delta contents ended before their exact length.',
+      );
+    }
+    if (completedSourceMap != null) {
+      final completed = _snapshotMap(completedSourceMap!());
+      if (!completed.matchesIdentity(sourceIdentity!)) {
+        throw StateError(
+          'The completed map belongs to another remote revision.',
+        );
+      }
+      source = completed;
+    }
+    if (source == null || source!.totalSize != expectedLength) {
+      throw StateError('The prepared delta source map is incomplete.');
+    }
+    checkNow();
+    _streamComplete = true;
+  }
+
+  @override
+  Future<void> verifyStaged(FileItem staged) async {
+    checkNow();
+    if (!_streamComplete || _verificationStarted || _committed) {
+      throw StateError(
+        'A complete single-use stream is required for verification.',
+      );
+    }
+    _verificationStarted = true;
+    final path = staged.path;
+    if (path == null ||
+        staged.isFolder ||
+        staged.isSymlink == true ||
+        !backend.isRetainedStagePath(path, localPath)) {
+      throw StateError(
+        'The delta candidate is not a private native staged file.',
+      );
+    }
+    _stagedPath = path;
+    _stagedStamp = await service._verifyLocalFile(path, source!, check);
+    await _verifyOriginal();
+    await _verifySource();
+    _assertFinalStamps();
+    _verified = true;
+  }
+
+  @override
+  Future<void> revalidateBeforePublication() async {
+    checkNow();
+    if (!_verified || _publicationStarted || _committed) {
+      throw StateError(
+        'Delta publication requires a fresh verified candidate.',
+      );
+    }
+    _publicationStarted = true;
+    // The caller has persisted its committing record and passed its final
+    // pause gate. Re-read both files so time spent awaiting that durable
+    // checkpoint cannot invalidate earlier content proofs.
+    final candidate = await service._verifyLocalFile(
+      _stagedPath!,
+      source!,
+      check,
+    );
+    if (!_sameFileStamp(_stagedStamp!, candidate)) {
+      throw StateError('The delta candidate changed before publication.');
+    }
+    await _verifyOriginal();
+    await _verifySource();
+    // Only synchronous guards follow the last source revalidation. The native
+    // publisher retains its documented non-CAS check/rename boundary.
+    _assertFinalStamps();
+    _publicationReady = true;
+  }
+
+  Future<void> _verifyOriginal() async {
+    if (!destinationExists) {
+      checkNow();
+      _assertDestinationNow();
+      return;
+    }
+    final current = await service._verifyLocalFile(localPath, baseline!, check);
+    if (!_sameFileStamp(_originalStamp!, current)) {
+      throw StateError('The delta destination changed during preparation.');
+    }
+  }
+
+  Future<void> _verifySource() async {
+    await check();
+    final known = source;
+    if (known != null && known.identity == null) {
+      if (known._localSourceStamp == null ||
+          !_sameFileStamp(
+            known._localSourceStamp,
+            _regularFileStamp(known.filePath),
+          )) {
+        throw StateError('The captured local delta source changed.');
+      }
+      await service._verifyLocalFile(known.filePath, known, check);
+    }
+    await revalidateSource?.call();
+    checkNow();
+  }
+
+  void _assertDestinationNow() {
+    if (destinationExists) {
+      if (_originalStamp == null ||
+          !_sameFileStamp(_originalStamp!, _regularFileStamp(localPath))) {
+        throw StateError('The delta destination changed before publication.');
+      }
+    } else if (FileSystemEntity.typeSync(localPath, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      throw StateError('The new delta destination became occupied.');
+    }
+  }
+
+  void _assertReviewedDestination(FileStat stamp) {
+    final reviewed = existingDestination;
+    if (reviewed != null &&
+        (reviewed.size != stamp.size ||
+            !reviewed.updatedAt!.isAtSameMomentAs(stamp.modified))) {
+      throw StateError(
+        'The reviewed delta destination changed before capture.',
+      );
+    }
+  }
+
+  void _assertFinalStamps() {
+    checkNow();
+    _assertDestinationNow();
+    if (_stagedPath == null ||
+        _stagedStamp == null ||
+        !_sameFileStamp(_stagedStamp!, _regularFileStamp(_stagedPath!))) {
+      throw StateError('Delta publication proof is no longer current.');
+    }
+    final known = source;
+    if (known != null &&
+        known.identity == null &&
+        !_sameFileStamp(
+          known._localSourceStamp!,
+          _regularFileStamp(known.filePath),
+        )) {
+      throw StateError('The captured local delta source changed.');
+    }
+  }
+
+  @override
+  Future<void> committed() async {
+    // A completed replacement is recorded even if cancellation/authentication
+    // changes arrive in its acknowledgement. Auxiliary cache work cannot undo
+    // the installation or turn it into a transfer failure.
+    _ensureActive();
+    if (!_publicationReady || _committed) {
+      throw StateError('Delta publication has not been acknowledged once.');
+    }
+    _committed = true;
+    try {
+      await onCommitted?.call();
+    } catch (error) {
+      DeltaSyncService._log.warn(
+        'Verified delta cache bookkeeping failed.',
+        error,
+      );
+    }
+  }
+}
+
+LocalOperationBackend _preparedBackend(FileOperationBackend? backend) {
+  if (backend is! LocalOperationBackend ||
+      !backend.supportsStagedVerification ||
+      !backend.supportsRetainedStageCleanup) {
+    throw UnsupportedError(
+      'Delta downloads require a native local staged destination backend.',
+    );
+  }
+  return backend;
+}
+
+void _validateBaselinePath(BlockMap baseline, String localPath) {
+  _validateText(localPath, 'destination path');
+  if (!p.equals(p.absolute(baseline.filePath), p.absolute(localPath))) {
+    throw const FormatException(
+      'The plan belongs to a different local destination.',
+    );
+  }
+}
+
+void _validateReviewedDestination(FileItem? reviewed, String localPath) {
+  if (reviewed != null &&
+      (reviewed.path == null ||
+          !p.equals(p.absolute(reviewed.path!), p.absolute(localPath)) ||
+          reviewed.isFolder ||
+          reviewed.isSymlink == true ||
+          reviewed.size == null ||
+          reviewed.updatedAt == null)) {
+    throw const FormatException(
+      'Invalid reviewed native destination snapshot.',
+    );
   }
 }
 

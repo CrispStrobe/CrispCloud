@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'cloud_storage_interface.dart';
+import 'file_operation_content_strategy.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
 import 'panel_source_service.dart';
@@ -1349,6 +1350,46 @@ class CloudOperationBackend extends FileOperationBackend {
       _check();
       yield chunk;
     }
+  }
+
+  @override
+  bool supportsVerifiedBlockCopyTo(FileOperationBackend destination) {
+    final provider = client;
+    return isCurrent &&
+        destination.isCurrent &&
+        provider is VerifiedBlockContentSource &&
+        (provider as VerifiedBlockContentSource)
+            .supportsVerifiedBlockContentsTo(destination);
+  }
+
+  @override
+  Future<T> withVerifiedBlockContents<T>({
+    required FileItem sourceFile,
+    required FileOperationBackend destination,
+    required String destinationPath,
+    required FileItem? existingDestination,
+    required FileOperationControl control,
+    required Future<T> Function(PreparedFileContents contents) consume,
+  }) async {
+    _check();
+    final provider = client;
+    if (provider is! VerifiedBlockContentSource ||
+        !supportsVerifiedBlockCopyTo(destination)) {
+      throw UnsupportedError(
+        'Verified block reuse is unavailable for this copy.',
+      );
+    }
+    return (provider as VerifiedBlockContentSource).withVerifiedBlockContents(
+      sourceFile: sourceFile,
+      destination: destination,
+      destinationPath: destinationPath,
+      existingDestination: existingDestination,
+      control: control,
+      consume: (contents) async {
+        _check();
+        return consume(contents);
+      },
+    );
   }
 
   @override

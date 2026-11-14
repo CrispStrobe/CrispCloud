@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
+import 'file_operation_content_strategy.dart';
 import 'destination_name_mask.dart';
 import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
@@ -111,6 +112,21 @@ abstract class FileOperationBackend implements StorageScanSource {
   Future<List<FileItem>> list(String path);
   Future<void> createDirectory(String path);
   Stream<List<int>> readFile(FileItem file);
+
+  /// Admission for a live verified-block strategy, separate from generic range
+  /// support. Saved journal options cannot recreate this execution capability.
+  bool supportsVerifiedBlockCopyTo(FileOperationBackend destination) => false;
+
+  Future<T> withVerifiedBlockContents<T>({
+    required FileItem sourceFile,
+    required FileOperationBackend destination,
+    required String destinationPath,
+    required FileItem? existingDestination,
+    required FileOperationControl control,
+    required Future<T> Function(PreparedFileContents contents) consume,
+  }) => Future<T>.error(
+    UnsupportedError('Verified block reuse is unavailable for this copy.'),
+  );
   Future<void> writeFile(
     String path,
     Stream<List<int>> data,
@@ -555,6 +571,23 @@ class FileOperationService {
     }
     if (options.preallocate && !destination.capabilities.preallocate) {
       errors.add('The destination cannot reserve physical disk space.');
+    }
+    if (options.copyMethod == FileCopyMethod.verifiedDelta) {
+      if (!source.supportsVerifiedBlockCopyTo(destination)) {
+        errors.add(
+          'Verified block reuse requires a supported S3 source and native local destination.',
+        );
+      }
+      if (files.any(
+        (file) =>
+            file.name != '..' &&
+            (file.isFolder || file.isSymlink == true || file.size == null),
+      )) {
+        errors.add(
+          'Verified block reuse requires regular files with known sizes.',
+        );
+      }
+      if (errors.isNotEmpty) return plan;
     }
     if (options.copyMethod == FileCopyMethod.copyOnWrite) {
       if (source.identity != destination.identity ||
@@ -1008,6 +1041,19 @@ class FileOperationService {
     final source = plan.source;
     final target = plan.destination;
     final options = plan.options;
+    final verifiedBlocks = options.copyMethod == FileCopyMethod.verifiedDelta;
+    if (verifiedBlocks &&
+        (!source.supportsVerifiedBlockCopyTo(target) ||
+            plan.entries.any(
+              (entry) =>
+                  entry.source.isFolder ||
+                  entry.source.isSymlink == true ||
+                  entry.source.size == null,
+            ))) {
+      throw UnsupportedError(
+        'Verified block reuse requires regular files from a supported S3 source and a native local destination.',
+      );
+    }
     final rateLimiter = options.clientBytesPerSecond == null
         ? null
         : rateLimiterFactory(options.clientBytesPerSecond!);
@@ -1090,6 +1136,13 @@ class FileOperationService {
                 resolveDetailedConflict,
               );
           final decision = resolution.decision;
+          if (verifiedBlocks &&
+              (decision == FileConflictDecision.append ||
+                  decision == FileConflictDecision.resumeVerified)) {
+            throw UnsupportedError(
+              'Verified block reuse cannot append or resume partial bytes.',
+            );
+          }
           if ((entry.source.isFolder &&
                   decision != FileConflictDecision.merge &&
                   decision != FileConflictDecision.skip &&
@@ -1226,6 +1279,12 @@ class FileOperationService {
             entry.recovery?['resumeStagePath'] as String?;
         final recoveredUploadPath =
             entry.recovery?['resumeUploadPath'] as String?;
+        if (verifiedBlocks &&
+            (recoveredStagePath != null || recoveredUploadPath != null)) {
+          throw UnsupportedError(
+            'Recover this copy with the reviewed streaming method before resuming partial bytes.',
+          );
+        }
         if (recoveredUploadPath != null) {
           plan.assertDestinationUnprotected(recoveredUploadPath);
           if (append || resumeOffset > 0 || recoveredStagePath != null) {
@@ -1384,7 +1443,8 @@ class FileOperationService {
           if (!nativeMoved &&
               (options.preferNative ||
                   options.copyMethod == FileCopyMethod.copyOnWrite) &&
-              options.copyMethod != FileCopyMethod.stream &&
+              (options.copyMethod == FileCopyMethod.automatic ||
+                  options.copyMethod == FileCopyMethod.copyOnWrite) &&
               !options.preallocate &&
               !append &&
               recoveredStagePath == null &&
@@ -1468,9 +1528,11 @@ class FileOperationService {
             final inputDigest = _DigestCollector();
             final hashSink = sha256.startChunkedConversion(inputDigest);
             if (!nativeCopied) {
-              Stream<List<int>> tracked() async* {
+              Stream<List<int>> tracked(PreparedFileContents? prepared) async* {
                 try {
-                  final input = control.bind(contents());
+                  final input = control.bind(
+                    prepared?.openRead() ?? contents(),
+                  );
                   final limited =
                       rateLimiter?.bind(input, control: control) ?? input;
                   await for (final chunk in limited) {
@@ -1497,37 +1559,87 @@ class FileOperationService {
                 }
               }
 
-              await target.writeConfiguredFile(
-                entry.destination,
-                tracked(),
-                expectedLength,
-                replace: replace,
-                preallocate: options.preallocate,
-                retainPartialFileOnFailure: retainPartialFileOnFailure,
-                resumeUploadPath: recoveredUploadPath,
-                checkpoint: (state) => recordWriteState(
-                  state,
-                  contentSha256: inputDigest.value?.toString(),
-                ),
-                verifyStaged:
-                    options.verifyContents || append || resumeOffset > 0
-                    ? (staged) async {
-                        await control.checkpoint();
-                        _checkSources(source, target);
-                        final actual = await _digest(
-                          target,
-                          staged,
-                          control,
-                          source,
-                        );
-                        if (actual != inputDigest.value?.toString()) {
-                          throw StateError(
-                            'SHA-256 verification failed before commit; existing destination retained.',
-                          );
-                        }
+              Future<void> writeContents(PreparedFileContents? prepared) async {
+                if (prepared != null && prepared.length != expectedLength) {
+                  throw StateError(
+                    'Verified source length changed after preview.',
+                  );
+                }
+                await target.writeConfiguredFile(
+                  entry.destination,
+                  tracked(prepared),
+                  expectedLength,
+                  replace: replace,
+                  preallocate: options.preallocate,
+                  retainPartialFileOnFailure: retainPartialFileOnFailure,
+                  resumeUploadPath: recoveredUploadPath,
+                  checkpoint: (state) async {
+                    await recordWriteState(
+                      state,
+                      contentSha256: inputDigest.value?.toString(),
+                    );
+                    // The durable journal and its control gate may pause for
+                    // an arbitrary time. Provider/baseline proof must be the
+                    // last awaited step before native publication, not a
+                    // proof taken before that pause.
+                    if (state['phase'] == 'committing' && prepared != null) {
+                      await prepared.revalidateBeforePublication();
+                      // The provider owns revision proof, while these
+                      // backends own the captured pane/account authority.
+                      // Recheck it synchronously after the final await.
+                      if (control.isCancelled) {
+                        throw const FileOperationCancelled();
                       }
-                    : null,
-              );
+                      _checkSources(source, target);
+                    }
+                  },
+                  verifyStaged:
+                      prepared != null ||
+                          options.verifyContents ||
+                          append ||
+                          resumeOffset > 0
+                      ? (staged) async {
+                          await control.checkpoint();
+                          _checkSources(source, target);
+                          final actual = await _digest(
+                            target,
+                            staged,
+                            control,
+                            source,
+                          );
+                          if (actual != inputDigest.value?.toString()) {
+                            throw StateError(
+                              'SHA-256 verification failed before commit; existing destination retained.',
+                            );
+                          }
+                          await prepared?.verifyStaged(staged);
+                        }
+                      : null,
+                );
+                if (prepared != null) {
+                  // Publication and its committed acknowledgement have
+                  // already succeeded. Auxiliary cache bookkeeping cannot
+                  // turn an installed file into a failed transfer.
+                  try {
+                    await prepared.committed();
+                  } catch (_) {
+                    /* The next copy can safely build a fresh verified map. */
+                  }
+                }
+              }
+
+              if (verifiedBlocks) {
+                await source.withVerifiedBlockContents<void>(
+                  sourceFile: entry.source,
+                  destination: target,
+                  destinationPath: entry.destination,
+                  existingDestination: existing,
+                  control: control,
+                  consume: writeContents,
+                );
+              } else {
+                await writeContents(null);
+              }
               if (expectedLength != null && sent != expectedLength) {
                 throw StateError(
                   'Source length changed while copying; source retained.',

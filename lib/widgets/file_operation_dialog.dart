@@ -396,6 +396,23 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   );
   bool get _busy => _preparing || _running;
 
+  bool _supportsVerifiedDelta(
+    FileOperationBackend? source,
+    FileOperationBackend? destination,
+  ) =>
+      widget.kind == FileOperationKind.copy &&
+      source != null &&
+      destination != null &&
+      source.isCurrent &&
+      destination.isCurrent &&
+      source.supportsVerifiedBlockCopyTo(destination) &&
+      widget.files.every(
+        (file) => !file.isFolder && file.isSymlink != true && file.size != null,
+      ) &&
+      _fileConflict != FileConflictPolicy.append &&
+      _fileConflict != FileConflictPolicy.resumeVerified &&
+      !_preallocate;
+
   @override
   void initState() {
     super.initState();
@@ -519,6 +536,18 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final origin = _sourceOrigin;
     final destinationOrigin = _origins[_destinationSide];
     if (origin == null || destinationOrigin == null) return;
+    if (_copyMethod == FileCopyMethod.verifiedDelta &&
+        !_supportsVerifiedDelta(
+          _capturedSourceBackend,
+          _backend(destinationOrigin),
+        )) {
+      setState(() {
+        _error = context.commanderTr(
+          'Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.',
+        );
+      });
+      return;
+    }
     setState(() {
       _control = FileOperationControl();
       _preparing = true;
@@ -805,6 +834,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       existing: existing,
       source: _plan!.source,
       destination: _plan!.destination,
+      copyMethod: _plan!.options.copyMethod,
     );
   }
 
@@ -948,6 +978,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         destinationBackend.capabilities.copyOnWrite;
     final supportsAllocation =
         destinationBackend?.capabilities.preallocate ?? false;
+    final supportsVerifiedDelta = _supportsVerifiedDelta(
+      sourceBackend,
+      destinationBackend,
+    );
+    final unavailableVerifiedDelta =
+        _copyMethod == FileCopyMethod.verifiedDelta && !supportsVerifiedDelta;
     final plan = _plan;
     final asksConflicts =
         _fileConflict == FileConflictPolicy.ask ||
@@ -1205,6 +1241,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.resumeVerified,
+                            enabled:
+                                _copyMethod != FileCopyMethod.verifiedDelta,
                             child: Text(
                               context.commanderTr(
                                 "Resume after prefix verification",
@@ -1214,6 +1252,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           ),
                           DropdownMenuItem(
                             value: FileConflictPolicy.append,
+                            enabled:
+                                _copyMethod != FileCopyMethod.verifiedDelta,
                             child: Text(
                               context.commanderTr(
                                 "Append source to destination",
@@ -1519,7 +1559,13 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   isExpanded: true,
                   decoration: InputDecoration(
                     labelText: context.commanderTr("Copy method"),
-                    helperText: supportsClone
+                    helperText: _copyMethod == FileCopyMethod.verifiedDelta
+                        ? context.commanderTr(
+                            unavailableVerifiedDelta
+                                ? 'Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.'
+                                : 'The first copy downloads the whole file once and builds a verified block map. Later copies can reuse local blocks for the same S3 version during this connection.',
+                          )
+                        : supportsClone
                         ? context.commanderTr(
                             "A required clone fails if the filesystem cannot create it; it never falls back to a full copy.",
                           )
@@ -1556,6 +1602,15 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    DropdownMenuItem(
+                      value: FileCopyMethod.verifiedDelta,
+                      enabled: supportsVerifiedDelta,
+                      child: Text(
+                        context.commanderTr('Reuse verified S3 blocks'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                   onChanged: _busy
                       ? null
@@ -1563,7 +1618,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                           if (value == null) return;
                           _change(() {
                             _copyMethod = value;
-                            if (value == FileCopyMethod.copyOnWrite) {
+                            if (value == FileCopyMethod.copyOnWrite ||
+                                value == FileCopyMethod.verifiedDelta) {
                               _preallocate = false;
                             }
                           });
@@ -1599,7 +1655,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   (value) => _preallocate = value,
                   enabled:
                       supportsAllocation &&
-                      _copyMethod != FileCopyMethod.copyOnWrite,
+                      _copyMethod != FileCopyMethod.copyOnWrite &&
+                      _copyMethod != FileCopyMethod.verifiedDelta,
                 ),
                 Text(
                   supportsAllocation
@@ -1777,7 +1834,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               ),
             ),
             OutlinedButton(
-              onPressed: _preparing || _sourceOrigin == null ? null : _preview,
+              onPressed:
+                  _preparing ||
+                      _sourceOrigin == null ||
+                      unavailableVerifiedDelta
+                  ? null
+                  : _preview,
               child: Text(context.commanderTr("Preview")),
             ),
             if (widget.allowBackground && widget.sourceBackend == null)
@@ -1792,6 +1854,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       !_finished &&
                           (plan?.canExecute ?? false) &&
                           !_preparing &&
+                          !unavailableVerifiedDelta &&
                           backgroundCanWait
                       ? () async {
                           final start = await showTransferStartPicker(context);
@@ -1820,6 +1883,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       !_finished &&
                           (plan?.canExecute ?? false) &&
                           !_preparing &&
+                          !unavailableVerifiedDelta &&
                           backgroundCanWait
                       ? () => _start(background: true)
                       : null,
@@ -1828,7 +1892,10 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               ),
             FilledButton(
               onPressed:
-                  !_finished && (plan?.canExecute ?? false) && !_preparing
+                  !_finished &&
+                      (plan?.canExecute ?? false) &&
+                      !_preparing &&
+                      !unavailableVerifiedDelta
                   ? _start
                   : null,
               child: Text(context.commanderTr("Start {0}", [_verb])),

@@ -19,3 +19,9 @@ Add an explicitly reviewed **Reuse verified S3 blocks** copy method to the exist
 - The global experimental preference remains inactive. This increment does not enable background/automatic delta selection, remote delta upload or browser/mobile acceptance.
 
 This checkpoint preserves the audit and plan. Implementation and qualification are in progress; no new passing runtime evidence is claimed yet.
+
+## Implementation checkpoint
+
+The explicit method, scoped core/provider contents, ordinary queue/journal integration, UI eligibility, recovery downgrade and focused regressions are implemented. Independent source reviews addressed final captured-backend authority after provider proof, missing-ETag admission before source bytes, and cancellation/transport exception ordering.
+
+A first native development cohort exercised the new queue integration and existing delta core/provider suites. The core/provider regressions passed. Three new recovery cases revealed that the fixture had not initialized the durable local installation identity; that setup was corrected so the tests exercise actual persistent recovery rather than a session-only destination. Combined qualification is still pending; this is a preservation checkpoint, not a passing release claim.

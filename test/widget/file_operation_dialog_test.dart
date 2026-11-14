@@ -13,6 +13,7 @@ import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/file_operation_content_strategy.dart';
 import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
@@ -44,7 +45,24 @@ class _Local extends Fake implements LocalFileService {
 
 /// In-memory provider with actual stream, staging and rename semantics. The
 /// production dialog, planner, backend and transfer queue all remain in use.
-class _Cloud extends Fake implements CloudStorageClient {
+class _Cloud extends Fake
+    implements CloudStorageClient, VerifiedBlockContentSource {
+  bool verifiedBlocks = false;
+
+  @override
+  bool supportsVerifiedBlockContentsTo(FileOperationBackend destination) =>
+      verifiedBlocks && destination is LocalOperationBackend;
+
+  @override
+  Future<T> withVerifiedBlockContents<T>({
+    required FileItem sourceFile,
+    required FileOperationBackend destination,
+    required String destinationPath,
+    required FileItem? existingDestination,
+    required FileOperationControl control,
+    required Future<T> Function(PreparedFileContents contents) consume,
+  }) => throw UnsupportedError('The UI fixture must not start a delta copy.');
+
   final files = <String, List<int>>{
     '/one.txt': utf8.encode('one\n'),
     '/two.bin': [0, 1, 2, 3],
@@ -289,6 +307,174 @@ void main() {
     await tester.enterText(field('Destination directory'), '/target');
     await tester.pumpAndSettle();
   }
+
+  DropdownButton<FileCopyMethod> copyMethod(WidgetTester tester) =>
+      tester.widget<DropdownButton<FileCopyMethod>>(
+        find.descendant(
+          of: find.byKey(const ValueKey('transfer-copy-method')),
+          matching: find.byType(DropdownButton<FileCopyMethod>),
+        ),
+      );
+
+  testWidgets(
+    'verified block copy explains first-copy traffic and gates incompatible controls',
+    (tester) async {
+      cloud.verifiedBlocks = true;
+      await open(tester);
+      expect(
+        copyMethod(tester).items!
+            .singleWhere((item) => item.value == FileCopyMethod.verifiedDelta)
+            .enabled,
+        isTrue,
+      );
+      final method = find.byKey(const ValueKey('transfer-copy-method'));
+      await tester.ensureVisible(method);
+      await tester.tap(method);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Reuse verified S3 blocks').last);
+      await tester.pumpAndSettle();
+      expect(copyMethod(tester).value, FileCopyMethod.verifiedDelta);
+      expect(
+        find.text(
+          'The first copy downloads the whole file once and builds a verified block map. Later copies can reuse local blocks for the same S3 version during this connection.',
+        ),
+        findsOneWidget,
+      );
+      final conflicts = tester.widget<DropdownButton<FileConflictPolicy>>(
+        find.byType(DropdownButton<FileConflictPolicy>),
+      );
+      for (final policy in [
+        FileConflictPolicy.append,
+        FileConflictPolicy.resumeVerified,
+      ]) {
+        expect(
+          conflicts.items!.singleWhere((item) => item.value == policy).enabled,
+          isFalse,
+        );
+      }
+      final allocationRow = find
+          .ancestor(
+            of: find.text('Reserve destination disk space before copying'),
+            matching: find.byType(Row),
+          )
+          .first;
+      expect(
+        tester
+            .widget<Checkbox>(
+              find.descendant(
+                of: allocationRow,
+                matching: find.byType(Checkbox),
+              ),
+            )
+            .onChanged,
+        isNull,
+      );
+      expect(cloud.reads, isEmpty);
+      expect(cloud.uploads, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final scenario in [
+    'provider',
+    'move',
+    'folder',
+    'symlink',
+    'unknown size',
+    'remote destination',
+    'append',
+    'resume',
+    'preallocate',
+  ]) {
+    testWidgets('verified block copy is unavailable for $scenario', (
+      tester,
+    ) async {
+      cloud.verifiedBlocks = scenario != 'provider';
+      final origin = container
+          .read(panelProvider(PanelSide.remote))
+          .captureCurrentOrigin();
+      if (scenario == 'folder') {
+        files = container
+            .read(panelProvider(PanelSide.remote))
+            .files!
+            .where((file) => file.isFolder)
+            .toList();
+      } else if (scenario == 'symlink' || scenario == 'unknown size') {
+        final original = files.first;
+        files = [
+          FileItem(
+            name: original.name,
+            path: original.path,
+            isFolder: false,
+            isSymlink: scenario == 'symlink',
+            size: scenario == 'unknown size' ? null : original.size,
+          ),
+        ];
+      }
+      await FileOperationProfiles().save(
+        '@default:copy',
+        FileOperationOptions(
+          fileConflict: scenario == 'append'
+              ? FileConflictPolicy.append
+              : scenario == 'resume'
+              ? FileConflictPolicy.resumeVerified
+              : FileConflictPolicy.ask,
+          preallocate: scenario == 'preallocate',
+        ),
+      );
+      await open(
+        tester,
+        kind: scenario == 'move'
+            ? FileOperationKind.move
+            : FileOperationKind.copy,
+        sourceOrigin: origin,
+        destinationOrigin: scenario == 'remote destination' ? origin : null,
+        destinationPath: scenario == 'remote destination' ? '/target' : null,
+      );
+      expect(
+        copyMethod(tester).items!
+            .singleWhere((item) => item.value == FileCopyMethod.verifiedDelta)
+            .enabled,
+        isFalse,
+      );
+      expect(cloud.reads, isEmpty);
+      expect(cloud.uploads, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+    'a saved verified-block method cannot authorize an unsupported storage',
+    (tester) async {
+      await FileOperationProfiles().save(
+        '@default:copy',
+        const FileOperationOptions(copyMethod: FileCopyMethod.verifiedDelta),
+      );
+      await open(tester);
+      expect(copyMethod(tester).value, FileCopyMethod.verifiedDelta);
+      expect(
+        find.text(
+          'Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.widgetWithText(OutlinedButton, 'Preview'),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+        isNull,
+      );
+      expect(cloud.reads, isEmpty);
+      expect(cloud.uploads, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   Future<({BuildContext context, WidgetRef ref})> mountReviewHost(
     WidgetTester tester,
