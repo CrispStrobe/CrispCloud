@@ -278,7 +278,11 @@ class ByteSink {
   }
 
   /// takeBytes API.
-  Uint8List takeBytes() => _builder.takeBytes();
+  Uint8List takeBytes() {
+    final bytes = _builder.takeBytes();
+    _length = 0;
+    return bytes;
+  }
 
   /// toBytes API.
   Uint8List toBytes() => _builder.toBytes();

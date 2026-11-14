@@ -55,12 +55,17 @@ def main():
     public_metafiles_helper = (repository / "tool/public_metafile_web_acceptance.dart").as_uri()
     public_compound_helper = (repository / "tool/public_compound_web_acceptance.dart").as_uri()
     extra_helpers = [
+        ("Section geometry", "section_geometry_web_acceptance.dart", "verifySectionGeometryWebAcceptance"),
         ("Public note ownership", "public_note_reference_web_acceptance.dart", "verifyPublicNoteReferenceWebAcceptance"),
+        ("Public bookmarks", "public_bookmark_web_acceptance.dart", "verifyPublicBookmarkWebAcceptance"),
+        ("Public textbox references", "public_textbox_reference_web_acceptance.dart", "verifyPublicTextboxReferenceWebAcceptance"),
         ("Compound generated matrix", "compound_property_acceptance.dart", "verifyCompoundPropertyAcceptance"),
         ("Generated field trees", "generated_field_tree_web_acceptance.dart", "verifyGeneratedFieldTreeWebAcceptance"),
         ("Public formatting", "public_formatting_web_acceptance.dart", "verifyPublicFormattingWebAcceptance"),
         ("Public table formatting", "public_table_formatting_web_acceptance.dart", "verifyPublicTableFormattingWebAcceptance"),
+        ("Public cell shading", "public_cell_shading_web_acceptance.dart", "verifyPublicCellShadingWebAcceptance"),
         ("Binary scalar domains", "scalar_sprm_web_acceptance.dart", "verifyScalarSprmWebAcceptance"),
+        ("Binary property contracts", "binary_property_contract_web_acceptance.dart", "verifyBinaryPropertyContractWebAcceptance"),
         ("Literal list labels", "list_literal_web_acceptance.dart", "verifyListLiteralWebAcceptance"),
         ("List label visibility", "list_visibility_web_acceptance.dart", "verifyListVisibilityWebAcceptance"),
         ("List marker formatting", "list_marker_style_web_acceptance.dart", "verifyListMarkerStyleWebAcceptance"),

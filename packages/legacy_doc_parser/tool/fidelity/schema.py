@@ -23,6 +23,15 @@ FIELD_VISIBILITY_CASES = (
     "cached-controls", "nested-cached-controls", "visible-result-child", "character-hidden-result",
 )
 EXPECTED_CASES = frozenset([
+    *(f"binary-contracts/bool8-{scope}-{value}"
+      for scope in ("fkp", "piece") for value in ("false", "true")),
+    *(f"binary-contracts/heading-{heading}-{scope}-outline-{outline}"
+      for heading in range(1, 10) for scope in ("fkp", "piece") for outline in (0, 9)),
+    *(f"binary-contracts/heading-{heading}-historical-outline-9" for heading in range(1, 10)),
+    *(f"binary-contracts/normal-outline-{outline}" for outline in (0, 8, 9)),
+    *(f"binary-contracts/indirect-{name}" for name in (
+        "huge-first-replaces-tail", "huge-nonfirst-ignored", "huge-nonfirst-cycle-ignored",
+        "huge-minimum-size", "table-to-huge-chain")),
     "symbols/plain", "symbols/deleted",
     "font-charsets/symbol", "font-charsets/default", "font-charsets/default-symbol-alias",
     "font-charsets/conflict", "font-charsets/unknown",
@@ -183,6 +192,136 @@ EXPECTED_CASES = frozenset([
         "gradient-hundred", "gradient-axial", "gradient-alpha", "picture",
         "texture", "pattern", "unknown-gradient", "unknown-bitmap")),
 ])
+
+# Public-model packages are a distinct inventory: they have no binary DOC input.
+# Pin names independently of the Dart generators so an omitted case cannot pass.
+PUBLIC_CHARACTER_CASES = (
+    "unspecified", "font-size-min", "font-size-max", "position-min", "position-max",
+    "character-spacing-min", "character-spacing-max",
+    "character-spacing-inside-min", "character-spacing-inside-max", "character-spacing-zero",
+)
+PUBLIC_PARAGRAPH_CASES = (
+    "unspecified", "heading-min", "heading-max", "before-max", "after-max",
+    "indent-min", "indent-max", "line-min", "line-max",
+    "line-multiple-min", "line-multiple-max", "line-zero",
+)
+PUBLIC_COMPOUND_MUTATIONS = (
+    "valid", "not-compound", "missing-required-stream",
+    "storage-instead-of-stream", "wrong-path", "truncated-stream",
+)
+PUBLIC_CELL_SHADING_CASES = (
+    "absent", "formatting-clear", "formatting-solid", "legacy-only", "both-equal",
+    "legacy-override", "legacy-nil-override", "legacy-unmapped-override", "formatting-unmapped",
+)
+PUBLIC_BOOKMARK_CASES = (
+    "valid", "maximum-name", "international-name", "point-start", "point-end", "full-range",
+    "first-column", "last-column", "auxiliary", "adjacent-header-point", "adjacent-header-range",
+    "adjacent-footnote-point", "adjacent-footnote-range", "adjacent-comment-point",
+    "adjacent-comment-range", "auxiliary-end", "adjacent-footnote-end", "shared-auxiliary-point",
+)
+PUBLIC_TEXTBOX_REFERENCE_CASES = (
+    "single", "single-without-client", "chain", "chain-reversed", "chain-null-links",
+    "chain-zero-links", "recovered-chain", "unresolved-chain", "two-stories", "two-stories-reversed",
+    "single-header", "single-footer", "single-footnoteSeparator", "single-footnoteContinuationSeparator",
+    "single-footnoteContinuationNotice", "single-endnoteSeparator", "single-endnoteContinuationSeparator",
+    "single-endnoteContinuationNotice",
+)
+
+
+def _public_cases(names, *, output_suffix=".docx", source_suffix=None) -> dict:
+    return {name: {"output": name + output_suffix,
+                   **({"source": name + source_suffix} if source_suffix else {})}
+            for name in names}
+
+
+PUBLIC_CORPORA = {
+    "public-metafile": {
+        "generator": "tool/fidelity/public_metafile_fixture.dart",
+        "cases": {
+            name: {"source": name + "." + kind, "output": name + ".docx"}
+            for kind in ("emf", "wmf")
+            for placement in ("inline", "floating", "textbox-fill")
+            for mutation in ("valid", "escape", "truncated", "bad-size")
+            for name in (f"{kind}-{placement}-{mutation}",)
+        },
+    },
+    "public-compound": {
+        "generator": "tool/fidelity/public_compound_fixture.dart",
+        "cases": _public_cases((
+            f"{kind}-{mutation}" for kind in ("ole", "vba")
+            for mutation in (*PUBLIC_COMPOUND_MUTATIONS,
+                             *(("linked", "bad-version", "bad-flags", "bad-reserved", "bad-moniker")
+                               if kind == "ole" else ()))
+        ), output_suffix=".docm", source_suffix=".bin"),
+    },
+    "public-formatting": {
+        "generator": "tool/fidelity/public_formatting_fixture.dart",
+        "cases": _public_cases((
+            *(f"character-{scope}-{name}"
+              for scope in ("run", "mark", "revision", "line-number", "note-reference", "note-marker", "list-marker")
+              for name in PUBLIC_CHARACTER_CASES),
+            *(f"paragraph-{scope}-{name}" for scope in ("paragraph", "revision", "list-marker")
+              for name in PUBLIC_PARAGRAPH_CASES),
+        )),
+    },
+    "public-table-formatting": {
+        "generator": "tool/fidelity/public_table_formatting_fixture.dart",
+        "cases": _public_cases((
+            *(f"{kind}-{scope}-{name}" for scope in ("base", "conditional")
+              for kind, names in (("character", PUBLIC_CHARACTER_CASES), ("paragraph", PUBLIC_PARAGRAPH_CASES))
+              for name in names),
+            *(f"cell-shading-{name}" for name in PUBLIC_CELL_SHADING_CASES),
+        )),
+    },
+    "cached-field-structure": {
+        "generator": "tool/fidelity/cached_field_structure_fixture.dart",
+        "cases": _public_cases(
+            f"{scope}-{revision}-{visibility}"
+            for scope in ("body", "table", "list", "header", "footer", "footnote", "endnote",
+                          "comment", "textbox", "header-textbox", "coincident")
+            for revision in ("ordinary", "inserted", "deleted", "both")
+            for visibility in ("display", "private")
+        ),
+    },
+    "display-field-evidence": {
+        "generator": "tool/fidelity/display_field_evidence_fixture.dart",
+        "cases": _public_cases((
+            *(f"{name}-{representation}-{mode}"
+              for name in ("active", "hidden", "private", "unsupported-type", "mislabeled-instruction",
+                           "unsupported-ancestor", "private-ancestor", "supported-instruction-child",
+                           "xml-control-original", "surrogate-original", "sparse-metadata")
+              for representation in ("public", "record") for mode in ("preserve", "cachedResults")),
+            *(f"no-history-{mode}" for mode in ("preserve", "cachedResults")),
+        )),
+    },
+    "public-section-geometry": {
+        "generator": "tool/fidelity/public_section_geometry_fixture.dart",
+        "cases": _public_cases(
+            f"{name}-{scope}-{value}" for scope in ("current", "historical")
+            for name, values in (
+                ("width", (144, 31680)), ("height", (144, 31680)),
+                ("top", (-31665, 31665, 0)), ("bottom", (-31665, 31665, 0)),
+                *((name, (0, 31680)) for name in ("left", "right", "header", "footer", "columns", "gutter")),
+            )
+            for value in values
+        ),
+    },
+    "public-bookmarks": {
+        "generator": "tool/fidelity/public_bookmark_fixture.dart",
+        "cases": _public_cases((
+            *(f"visible-{name}" for name in PUBLIC_BOOKMARK_CASES),
+            *(f"hidden-{name}" for name in ("valid", "first-column", "last-column")),
+        )),
+    },
+    "public-textbox-references": {
+        "generator": "tool/fidelity/public_textbox_reference_fixture.dart",
+        "cases": _public_cases((
+            *(f"visible-{name}" for name in PUBLIC_TEXTBOX_REFERENCE_CASES),
+            *(f"hidden-{name}" for name in ("single", "chain")),
+        )),
+    },
+}
+
 PACKAGES = (
     ("DocumentFormat.OpenXml", "3.3.0",
      "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7",
@@ -211,7 +350,7 @@ def write_json(path: Path, value: object) -> None:
 def source_snapshot(root: Path = ROOT) -> dict:
     paths = set()
     for pattern in ("lib/**/*.dart", "test/support/**/*.dart", "tool/fidelity/*.dart",
-                    "tool/fidelity/schema.py", "tool/office-validation/*",
+                    "tool/fidelity/schema.py", "tool/*_web_acceptance.dart", "tool/office-validation/*",
                     "test/fixtures/word_native/*.doc", "test/fixtures/fidelity/image-appearance/**/*",
                     "test/fixtures/ink_wpf/**/*", "test/fixtures/ink_wpf_headers/**/*",
                     "test/fixtures/fidelity/officeart-shapes.doc",
@@ -278,6 +417,54 @@ def corpus_receipt(directory: Path, expected_cases=EXPECTED_CASES) -> dict:
     if outputs != office_files(directory):
         raise ValueError("Schema corpus has unregistered or missing Office outputs")
     return {"cases": records, "outputs": outputs}
+
+
+def public_corpus_receipt(directory: Path, expected_cases: dict) -> dict:
+    """Bind each public case to its model description and any retained raw input."""
+    manifest_path = directory / "cases.json"
+    manifest = json.loads(manifest_path.read_text())
+    if isinstance(manifest, dict):
+        if manifest.get("uncheckedBaseline", False) is not False:
+            raise ValueError("Unchecked public-model baseline cannot pass the schema gate")
+        cases = manifest.get("cases")
+    else:
+        cases = manifest
+    if (not isinstance(cases, list) or
+            any(not isinstance(case, dict) or not isinstance(case.get("name"), str) for case in cases)):
+        raise ValueError("Invalid public-model corpus manifest")
+    names = [case["name"] for case in cases]
+    if len(names) != len(set(names)) or set(names) != set(expected_cases):
+        raise ValueError("Public-model corpus omitted, duplicated, or added a required case")
+    outputs, records, retained = {}, [], {"cases.json"}
+    for case in cases:
+        record = dict(case)
+        expected = expected_cases[case["name"]]
+        for kind in ("source", "output"):
+            if (kind in case) != (kind in expected):
+                raise ValueError(f"Missing or unexpected public-model {kind}")
+            if kind not in expected:
+                continue
+            if not isinstance(case[kind], str):
+                raise ValueError(f"Invalid public-model {kind} path")
+            relative = Path(case[kind])
+            path = (directory / relative).resolve()
+            if relative.is_absolute() or ".." in relative.parts or not path.is_relative_to(directory.resolve()):
+                raise ValueError(f"Public-model {kind} escapes its directory")
+            if case[kind] != expected[kind]:
+                raise ValueError(f"Unexpected public-model {kind} path for {case['name']}")
+            if not path.is_file():
+                raise ValueError(f"Missing public-model {kind}: {relative}")
+            retained.add(relative.as_posix())
+            record[kind + "Sha256"] = sha(path)
+            if kind == "output":
+                if str(path) in outputs:
+                    raise ValueError("Two public-model cases alias the same output")
+                outputs[str(path)] = record[kind + "Sha256"]
+        records.append(record)
+    if retained != set(tree_snapshot(directory)) or outputs != office_files(directory):
+        raise ValueError("Public-model corpus has unregistered or missing retained files")
+    return {"manifest": manifest_path.name, "manifestSha256": sha(manifest_path),
+            "cases": records, "outputs": outputs}
 
 
 def verify_report(report: dict, expected: dict[str, str], returncode: int,
@@ -484,6 +671,29 @@ def validate_directory(gate: Gate, dotnet: str, validator: Path, directory: Path
     return receipt
 
 
+def run_public_corpora(gate: Gate, dart: str, dotnet: str, validator: Path) -> None:
+    public = gate.report["publicCorpora"] = {}
+    for name, specification in PUBLIC_CORPORA.items():
+        receipt = public[name] = {"generator": specification["generator"]}
+        gate.save()
+        directory = gate.output / "public-corpora" / name
+        gate.command("generate-" + name, [dart, "run", specification["generator"], str(directory)])
+        receipt["corpus"] = public_corpus_receipt(directory, specification["cases"])
+        gate.save()
+        repeated = gate.output / "public-corpora-repeat" / name
+        gate.command("repeat-" + name, [dart, "run", specification["generator"], str(repeated)])
+        repeated_receipt = public_corpus_receipt(repeated, specification["cases"])
+        first_files, repeated_files = tree_snapshot(directory), tree_snapshot(repeated)
+        if first_files != repeated_files:
+            raise ValueError(f"Public-model corpus generation was not byte-for-byte deterministic: {name}")
+        receipt["determinism"] = {"passed": True, "files": len(first_files),
+                                  "cases": len(repeated_receipt["cases"]),
+                                  "sha256ByRelativePath": first_files}
+        gate.save()
+        receipt["validation"] = validate_directory(gate, dotnet, validator, directory, name + "-schema-validation")
+        gate.save()
+
+
 def run_gate(args) -> int:
     output = args.out.resolve()
     if output.exists():
@@ -532,6 +742,11 @@ def run_gate(args) -> int:
                                        "sha256ByRelativePath": first_files}
         gate.save()
         gate.report["validation"] = validate_directory(gate, dotnet, validator, corpus, "schema-validation")
+        run_public_corpora(gate, dart, dotnet, validator)
+        doc_count = len(gate.report["corpus"]["cases"])
+        public_count = sum(len(item["corpus"]["cases"]) for item in gate.report["publicCorpora"].values())
+        gate.report["counts"] = {"docDerived": doc_count, "publicModel": public_count,
+                                 "total": doc_count + public_count}
         after = source_snapshot()
         gate.report["sourceAfter"] = after
         if before != after:
@@ -540,7 +755,7 @@ def run_gate(args) -> int:
             raise ValueError("Validator build artifacts changed during the gate")
         gate.report["passed"] = True
         gate.save()
-        print(f'Open XML SDK gate passed: {len(gate.report["corpus"]["cases"])} DOCX outputs, positive/negative controls, exact hashes, unchanged inputs. {output / "report.json"}')
+        print(f'Open XML SDK gate passed: {doc_count} DOC-derived + {public_count} public-model outputs, positive/negative controls, exact hashes, unchanged inputs. {output / "report.json"}')
         return 0
     except Exception as error:
         gate.report["error"] = f"{type(error).__name__}: {error}"

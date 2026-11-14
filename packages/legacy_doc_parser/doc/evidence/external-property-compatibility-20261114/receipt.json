@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "baselineCommit": "6b0d7e816faf70415f15bfb47c0ab0f8d61172dc",
+  "worktreeState": "focused runtime patch and tests uncommitted on baseline; source hashes identify tested bytes",
+  "sourceSha256": {
+    "lib/src/legacy_word_decorations.dart": "44f47d976b6dd2ba922fcf5bfedabca85043e44ce9394b7b558288eac089e793",
+    "lib/src/legacy_word_lists.dart": "5a653beb86bf7dd6495786faa5a6c0c284c51bfb389833778060d98bd14d0401",
+    "lib/src/legacy_word_sprms.dart": "cad77bb97cbb44c86bd00c5172c37a846a1158cb5f561799b81bfe4e54763d2b",
+    "lib/src/legacy_word_structured_parser.dart": "e25a4055038cfb57451432b8095d6de81416869f3e05fa4e49d4e6305877ab6f",
+    "lib/src/legacy_word_table_styles.dart": "115bffeed7b8e525cb734c60ebf674764c693efa55b58e0bddcce674913cea4e",
+    "test/legacy_word_ignored_property_test.dart": "96f183c593922f12b8caada1c9bf82497782888f938743b269a81ed5ef3e8344",
+    "test/support/ignored_property_fixture.dart": "ff2b832a1bc4882df55bcfd9270f00d5c7e5fd1407e0f7dfeb5b76539f22d7da"
+  },
+  "focusedCases": 82,
+  "adjacentFiles": 22,
+  "adjacentCases": 1142,
+  "analysisIssues": 0,
+  "legacyActiveAnld": "explicit unsupported; no numbering synthesized",
+  "archive": {
+    "file": "validation.zip",
+    "sha256": "4dc75c14129e994238a580d50a9073285db5adc61097761dc21b2704f2a8fc22",
+    "bytes": 69483
+  },
+  "sourceInspectionSha256": "c18e8aa7198fb268edfd43257dbeced3ff96db1427805fda2deef1a1f42f57f7",
+  "nativeComparisonSha256": "395241d47e0861f7793ed9babdb37a39059dfa7ef9005fdda71d8311156a60a1"
+}

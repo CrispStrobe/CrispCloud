@@ -317,6 +317,44 @@ extension _WordStories on _StructuredWordWriter {
     final bookmarkNames = <String>{};
     var bookmarkId = 0;
     for (final bookmark in document.bookmarks) {
+      // A terminal point in the main body belongs to main even when the next
+      // story starts at that CP, matching the parser's bookmark ownership.
+      String? story;
+      if (bookmark.startCp >= 0 && bookmark.endCp <= _mainEnd) {
+        story = 'main';
+      } else {
+        // Bookmark positions are boundaries, not character anchors. The
+        // latest story starting at/before the boundary wins, including its
+        // terminal point when no following story begins at the same CP.
+        var low = 0, high = _storyRanges.length;
+        while (low < high) {
+          final middle = (low + high) ~/ 2;
+          if (_storyRanges[middle].$1 <= bookmark.startCp) {
+            low = middle + 1;
+          } else {
+            high = middle;
+          }
+        }
+        if (low > 0) story = _storyRanges[low - 1].$3;
+      }
+      final storyEnd = story == 'main' ? _mainEnd : _stories[story]?.endCp;
+      final first = bookmark.firstCell, last = bookmark.lastCell;
+      // BKC's six-bit exclusive column limit becomes an inclusive 0..62
+      // interval. Word's native bookmark name limit is 40 UTF-16 units.
+      if (story == null ||
+          storyEnd == null ||
+          bookmark.endCp < bookmark.startCp ||
+          bookmark.endCp > storyEnd ||
+          bookmark.name.isEmpty ||
+          bookmark.name.length > 40 ||
+          !bookmarkNames.add(bookmark.name) ||
+          (first == null) != (last == null) ||
+          (first != null && (first < 0 || last! < first || last > 62))) {
+        throw const FormatException('Invalid Word bookmark.');
+      }
+      // Inert bookmarks must satisfy the same Unicode/XML attribute contract.
+      // Do not narrow international names to an invented ASCII grammar.
+      _BoundedWordXml().text(bookmark.name, attribute: true);
       if (!_displayPosition(bookmark.startCp) ||
           !_displayPosition(
             bookmark.endCp > bookmark.startCp
@@ -328,20 +366,13 @@ extension _WordStories on _StructuredWordWriter {
           'name': bookmark.name,
           'startCp': bookmark.startCp,
           'endCp': bookmark.endCp,
+          if (first != null) 'firstCell': first,
+          if (last != null) 'lastCell': last,
           'reason':
               'inert; a boundary is inside field instructions or a private result',
         });
         limitations.add(LegacyWordConversionLimitation.fieldsLists);
         continue;
-      }
-      final story =
-          _storyAt(bookmark.startCp) ??
-          (bookmark.startCp == _mainEnd ? 'main' : null);
-      if (story == null ||
-          bookmark.endCp < bookmark.startCp ||
-          bookmark.name.isEmpty ||
-          !bookmarkNames.add(bookmark.name)) {
-        throw const FormatException('Invalid Word bookmark.');
       }
       final id = bookmarkId++;
       _event(story, bookmark.startCp, 20, () {

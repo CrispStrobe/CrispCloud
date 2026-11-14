@@ -1112,7 +1112,16 @@
     "packages/crisp_catalog/native/Cargo.toml",
     "packages/crisp_catalog/native/Cargo.lock",
     "packages/crisp_catalog/hook/build.dart",
-    "packages/crisp_catalog/lib/crisp_catalog.dart"
+    "packages/crisp_catalog/lib/crisp_catalog.dart",
+    "lib/services/archive_lzfse_codec.dart",
+    "lib/services/archive_fat_reader.dart",
+    "lib/services/archive_udf_reader.dart",
+    "lib/services/archive_disk_image_reader.dart",
+    "lib/services/archive_zip_recovery_service.dart",
+    "lib/services/archive_zip_recovery_workflow.dart",
+    "packages/apple_lzfse/UPSTREAM.json",
+    "tool/verify_lzfse_sources.py",
+    "tool/verify_web_deployment.py"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",

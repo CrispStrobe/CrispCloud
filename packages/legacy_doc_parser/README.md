@@ -63,25 +63,12 @@ format coverage, revision and drawing semantics, and a stable published API.
 The [fidelity status](doc/fidelity-status.md) gives the supported contracts and
 open gaps; the [oracle guide](doc/fidelity-oracles.md) explains how schema,
 semantic and native-rendering checks differ.
-The [current continuation handoff](doc/continuation-20261113-followup.md) records the
-saved parser/app integration, complete validation and next bounded work.
-The [13 November parser audit](doc/parser-audit-20261113.md) records subsequent
-input/conversion hardening, portable acceptance and remaining native field
-rendering differences.
-The [audit follow-up](doc/parser-audit-20261113-followup.md) adds story-boundary,
-field-text and compound-allocation fixes, with 1,175 passing Dart tests and
-263 schema-valid DOCX outputs. All 260 earlier corpus outputs remain byte-exact.
-The [third audit pass](doc/parser-audit-20261113-third-pass.md) adds exclusive
-compound-sector ownership, public-model and native-image validation, nested
-result controls, and list-label fixes. It passes 1,300 Dart tests and independent
-schema checks for 297 outputs; all 263 preceding DOCX outputs remain byte-exact.
-Literal binary list labels containing `%1`–`%9` now fail explicitly because the
-current numbering model cannot preserve that literal meaning.
-The [fourth audit pass](doc/parser-audit-20261113-fourth-pass.md) preserves
-literal/ancestor list labels and exact label TABs, validates text-only UTF-16
-before display filtering, and checks actual OLE/VBA container bytes before
-native activation. It passes 1,361 Dart tests and independent schema checks
-for 320 packages; all 297 preceding DOCX outputs remain byte-exact.
+Current property and ownership contracts include bounded section geometry, cell
+shading, embedded-object operands, heading levels, bookmark/story boundaries,
+and textbox identities and chains. The [current audit](doc/parser-audit-20261114-followup.md)
+and [external corpus coverage](doc/external-property-compatibility-20261114.md)
+record independent evidence and remaining compatibility gaps. Passing semantic
+or schema checks does not establish identical native Word rendering.
 
 Use Dart 3.8 or later. `archive` is the runtime package dependency. A development
 Git dependency can be configured as follows; pin a reviewed full commit SHA

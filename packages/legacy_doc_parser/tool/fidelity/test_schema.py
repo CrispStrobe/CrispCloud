@@ -147,6 +147,24 @@ class SchemaGateTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             schema.corpus_receipt(directory, {"case"})
 
+    def test_binary_contract_inventory_keeps_malformed_controls_out_of_successes(self):
+        prefix = "binary-contracts/"
+        required = {name.removeprefix(prefix) for name in schema.EXPECTED_CASES
+                    if name.startswith(prefix)}
+        self.assertEqual(57, len(required))
+        self.assertEqual({"bool8-fkp-false", "bool8-fkp-true", "bool8-piece-false", "bool8-piece-true"},
+                         {name for name in required if name.startswith("bool8-")})
+        self.assertEqual(45, len([name for name in required if name.startswith("heading-")]))
+        self.assertEqual({"normal-outline-0", "normal-outline-8", "normal-outline-9"},
+                         {name for name in required if name.startswith("normal-")})
+        self.assertEqual({"indirect-huge-first-replaces-tail", "indirect-huge-nonfirst-ignored",
+                          "indirect-huge-nonfirst-cycle-ignored", "indirect-huge-minimum-size",
+                          "indirect-table-to-huge-chain"},
+                         {name for name in required if name.startswith("indirect-")})
+        self.assertFalse(any("invalid" in name for name in required))
+        self.assertNotIn("indirect-huge-short-data", required)
+        self.assertNotIn("indirect-huge-first-cycle", required)
+
     def test_required_border_inventory_matches_the_independent_fixture_case_list(self):
         fixture = (schema.ROOT / "test/support/table_border_fixture.dart").read_text()
         names = re.findall(r"TableBorderCase\(\s*'([^']+)'", fixture)
@@ -245,6 +263,184 @@ class SchemaGateTest(unittest.TestCase):
         schema.write_json(directory / "manifest.json", manifest)
         with self.assertRaisesRegex(ValueError, "escapes"):
             schema.corpus_receipt(directory, {"case"})
+
+    def make_public_corpus(self, directory=None, *, raw=False):
+        directory = directory or self.root / "public"
+        directory.mkdir(parents=True)
+        shutil.copyfile(self.directory / "valid.docx", directory / "case.docx")
+        case = {"name": "case", "inputKind": "public-model", "output": "case.docx"}
+        expected = {"case": {"output": "case.docx"}}
+        if raw:
+            (directory / "case.bin").write_bytes(b"independently retained raw input")
+            case["source"] = expected["case"]["source"] = "case.bin"
+        manifest = [case]
+        schema.write_json(directory / "cases.json", manifest)
+        return directory, manifest, expected
+
+    def test_all_public_inventories_have_independent_required_sizes(self):
+        self.assertEqual({
+            "public-metafile": 24, "public-compound": 17,
+            "public-formatting": 106, "public-table-formatting": 53,
+            "cached-field-structure": 88, "display-field-evidence": 46,
+            "public-section-geometry": 44,
+            "public-bookmarks": 21, "public-textbox-references": 20,
+        }, {name: len(specification["cases"]) for name, specification in schema.PUBLIC_CORPORA.items()})
+        self.assertEqual(419, sum(len(item["cases"]) for item in schema.PUBLIC_CORPORA.values()))
+        for specification in schema.PUBLIC_CORPORA.values():
+            self.assertTrue((schema.ROOT / specification["generator"]).is_file())
+            outputs = [case["output"] for case in specification["cases"].values()]
+            self.assertEqual(len(outputs), len(set(outputs)))
+
+    def test_public_semantic_inventories_require_terminal_owners_and_inert_controls(self):
+        required = {
+            "public-bookmarks": {
+                "visible-auxiliary-end", "visible-adjacent-footnote-end", "visible-shared-auxiliary-point",
+                "hidden-valid", "hidden-first-column", "hidden-last-column",
+            },
+            "public-textbox-references": {
+                "visible-single-header", "visible-single-footer", "visible-single-footnoteSeparator",
+                "visible-single-footnoteContinuationSeparator", "visible-single-footnoteContinuationNotice",
+                "visible-single-endnoteSeparator", "visible-single-endnoteContinuationSeparator",
+                "visible-single-endnoteContinuationNotice", "visible-unresolved-chain", "hidden-single", "hidden-chain",
+            },
+        }
+        for group, controls in required.items():
+            with self.subTest(group=group):
+                expected = schema.PUBLIC_CORPORA[group]["cases"]
+                self.assertLessEqual(controls, set(expected))
+                self.assertTrue(all(set(case) == {"output"} for case in expected.values()))
+                self.assertFalse(any(name.startswith(group + "/") for name in schema.EXPECTED_CASES))
+                directory = self.root / group
+                directory.mkdir()
+                manifest = []
+                for name, paths in expected.items():
+                    shutil.copyfile(self.directory / "valid.docx", directory / paths["output"])
+                    manifest.append({"name": name, "inputKind": "public-model", **paths})
+                schema.write_json(directory / "cases.json", manifest)
+                self.assertEqual(len(expected), len(schema.public_corpus_receipt(directory, expected)["cases"]))
+                for omitted in controls:
+                    with self.subTest(omitted=omitted):
+                        schema.write_json(directory / "cases.json", [case for case in manifest if case["name"] != omitted])
+                        with self.assertRaisesRegex(ValueError, "required case"):
+                            schema.public_corpus_receipt(directory, expected)
+
+    def test_public_receipts_bind_model_metadata_outputs_and_optional_raw_inputs(self):
+        for index, (raw, wrapped) in enumerate(((False, False), (False, True), (True, False), (True, True))):
+            with self.subTest(raw=raw, wrapped=wrapped):
+                directory, manifest, expected = self.make_public_corpus(self.root / f"public-{index}", raw=raw)
+                if wrapped:
+                    schema.write_json(directory / "cases.json", {"cases": manifest, "uncheckedBaseline": False})
+                receipt = schema.public_corpus_receipt(directory, expected)
+                self.assertEqual(receipt["manifestSha256"], schema.sha(directory / "cases.json"))
+                self.assertEqual(receipt["cases"][0]["outputSha256"], schema.sha(directory / "case.docx"))
+                self.assertEqual(receipt["outputs"], schema.office_files(directory))
+                if raw:
+                    self.assertEqual(receipt["cases"][0]["sourceSha256"], schema.sha(directory / "case.bin"))
+                else:
+                    self.assertNotIn("sourceSha256", receipt["cases"][0])
+
+    def test_public_manifest_rejects_missing_duplicate_extra_and_malformed_cases(self):
+        directory, manifest, expected = self.make_public_corpus()
+        for value in (
+            [], manifest * 2, manifest + [dict(manifest[0], name="extra")],
+            None, {}, {"cases": None}, [None], [{}], [dict(manifest[0], name=1)],
+        ):
+            with self.subTest(manifest=value):
+                schema.write_json(directory / "cases.json", value)
+                with self.assertRaises(ValueError):
+                    schema.public_corpus_receipt(directory, expected)
+        (directory / "cases.json").write_text("{invalid JSON")
+        with self.assertRaises(ValueError):
+            schema.public_corpus_receipt(directory, expected)
+        (directory / "cases.json").unlink()
+        with self.assertRaises(FileNotFoundError):
+            schema.public_corpus_receipt(directory, expected)
+
+    def test_public_manifest_rejects_unchecked_baselines(self):
+        directory, manifest, expected = self.make_public_corpus()
+        for unchecked in (True, 1, "false", None):
+            with self.subTest(unchecked=unchecked):
+                schema.write_json(directory / "cases.json", {"cases": manifest, "uncheckedBaseline": unchecked})
+                with self.assertRaisesRegex(ValueError, "Unchecked"):
+                    schema.public_corpus_receipt(directory, expected)
+
+    def test_public_source_and_output_paths_are_pinned_and_contained(self):
+        directory, manifest, expected = self.make_public_corpus(raw=True)
+        for kind in ("source", "output"):
+            for value in (None, [], "../outside.bin", str(directory / manifest[0][kind]), "other.docx"):
+                with self.subTest(kind=kind, path=value):
+                    changed = copy.deepcopy(manifest)
+                    changed[0][kind] = value
+                    schema.write_json(directory / "cases.json", changed)
+                    with self.assertRaises(ValueError):
+                        schema.public_corpus_receipt(directory, expected)
+            changed = copy.deepcopy(manifest)
+            del changed[0][kind]
+            schema.write_json(directory / "cases.json", changed)
+            with self.subTest(missing=kind), self.assertRaises(ValueError):
+                schema.public_corpus_receipt(directory, expected)
+        schema.write_json(directory / "cases.json", manifest)
+        with self.assertRaisesRegex(ValueError, "unexpected public-model source"):
+            schema.public_corpus_receipt(directory, {"case": {"output": "case.docx"}})
+
+    def test_public_inventory_requires_retained_files_and_rejects_extras_and_aliases(self):
+        directory, manifest, expected = self.make_public_corpus(raw=True)
+        for filename in ("case.bin", "case.docx"):
+            contents = (directory / filename).read_bytes()
+            (directory / filename).unlink()
+            with self.subTest(missing=filename), self.assertRaisesRegex(ValueError, "Missing public-model"):
+                schema.public_corpus_receipt(directory, expected)
+            (directory / filename).write_bytes(contents)
+        for filename in ("unregistered.DOCX", "unregistered.bin"):
+            (directory / filename).write_bytes(b"unregistered")
+            with self.subTest(extra=filename), self.assertRaisesRegex(ValueError, "unregistered"):
+                schema.public_corpus_receipt(directory, expected)
+            (directory / filename).unlink()
+        manifest.append(dict(manifest[0], name="alias"))
+        schema.write_json(directory / "cases.json", manifest)
+        with self.assertRaisesRegex(ValueError, "alias"):
+            schema.public_corpus_receipt(directory, {**expected, "alias": dict(expected["case"])})
+
+    def test_public_gate_checks_second_inventory_and_all_retained_bytes_before_validation(self):
+        specification = {"sample": {"generator": "fixture.dart", "cases": {"case": {"output": "case.docx"}}}}
+        for mutation in ("none", "missing-case", "output-bytes", "model-description"):
+            with self.subTest(mutation=mutation):
+                output = self.root / ("public-gate-" + mutation)
+                output.mkdir()
+                gate = schema.Gate(output)
+
+                def generate(name, arguments, **kwargs):
+                    directory, manifest, _ = self.make_public_corpus(Path(arguments[-1]))
+                    if name == "repeat-sample":
+                        if mutation == "missing-case":
+                            schema.write_json(directory / "cases.json", [])
+                        elif mutation == "output-bytes":
+                            with (directory / "case.docx").open("ab") as stream:
+                                stream.write(b"changed")
+                        elif mutation == "model-description":
+                            manifest[0]["scope"] = "changed"
+                            schema.write_json(directory / "cases.json", manifest)
+                    return subprocess.CompletedProcess(arguments, 0, "", "")
+
+                with mock.patch.object(schema, "PUBLIC_CORPORA", specification), \
+                        mock.patch.object(gate, "command", side_effect=generate) as commands, \
+                        mock.patch.object(schema, "validate_directory", return_value={"files": 1}) as validate:
+                    if mutation == "none":
+                        schema.run_public_corpora(gate, "dart", "dotnet", Path("validator.dll"))
+                        validate.assert_called_once_with(
+                            gate, "dotnet", Path("validator.dll"), output / "public-corpora/sample",
+                            "sample-schema-validation")
+                        receipt = gate.report["publicCorpora"]["sample"]
+                        self.assertTrue(receipt["determinism"]["passed"])
+                        self.assertEqual(receipt["determinism"]["cases"], 1)
+                        self.assertEqual(receipt["determinism"]["files"], 2)
+                    else:
+                        with self.assertRaises(ValueError):
+                            schema.run_public_corpora(gate, "dart", "dotnet", Path("validator.dll"))
+                        validate.assert_not_called()
+                    self.assertEqual([call.args[0] for call in commands.call_args_list],
+                                     ["generate-sample", "repeat-sample"])
+
 
     def test_noop_validator_leaves_failed_receipt_without_generating_corpus(self):
         output = self.root / "failed-gate"

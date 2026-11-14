@@ -9,20 +9,37 @@ extension _WordCompatibilitySource on _BinarySource {
     final dop = _Bytes(table.slice(offset, length));
     final extensionOffset = 154 + pairCount * 8;
     final cswNew = word.u16(extensionOffset);
-    if (!const {0, 2, 5}.contains(cswNew)) {
-      throw const FormatException('Invalid Word FIB extension size.');
-    }
     word.require(extensionOffset + 2, cswNew * 2);
     final newVersion = cswNew == 0 ? null : word.u16(extensionOffset + 2);
-    if (newVersion != null &&
-        (!const {0xd9, 0x101, 0x10c, 0x112}.contains(newVersion) ||
-            (newVersion == 0x112 ? cswNew != 5 : cswNew != 2))) {
+    final knownWords = switch (newVersion) {
+      null => 0,
+      0xd9 || 0x101 || 0x10c => 2,
+      0x112 => 5,
+      _ => null,
+    };
+    // Apache POI's retained Stanford biography has this older Word97-family
+    // signature. Keep its reported version, and read only established legacy
+    // DOP prefixes; its extra words do not prove a newer compatibility layout.
+    final legacy97Extension =
+        version == 0xc1 &&
+        pairCount == 108 &&
+        cswNew == 4 &&
+        newVersion == 0xc3 &&
+        length == 544;
+    if ((knownWords == null && !legacy97Extension) ||
+        (knownWords != null && cswNew < knownWords)) {
       throw const FormatException('Invalid Word FIB extension version.');
     }
     final issues = <LegacyWordCompatibilityIssue>[];
+    // Real Word files such as POI 47304.doc append counted FIB words to a
+    // recognized prefix. Bound the whole declared extension, diagnose it,
+    // and leave the additional fields uninterpreted.
+    if (legacy97Extension || cswNew != knownWords) {
+      issues.add(LegacyWordCompatibilityIssue.nonstandardFibExtension);
+    }
     final partialLegacy = cswNew == 0 && (length == 84 || length == 88);
     final expectedMinimum = switch (newVersion) {
-      null => 500,
+      null || 0xc3 => 500,
       0xd9 => 544,
       0x101 => 594,
       0x10c => 616,
@@ -51,7 +68,8 @@ extension _WordCompatibilitySource on _BinarySource {
     // This exception does not classify arbitrary trailing bytes as Copts.
     final legacyExtended =
         cswNew == 0 && version == 0x101 && pairCount == 136 && length == 610;
-    final hasExtended = newVersion != null || legacyExtended;
+    final hasExtended =
+        (newVersion != null && !legacy97Extension) || legacyExtended;
     if (hasExtended) {
       blocks.add(
         LegacyWordCompatibilityBlock(

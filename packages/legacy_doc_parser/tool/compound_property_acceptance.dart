@@ -102,6 +102,22 @@ Map<String, int> verifyCompoundGeneratedCase(
 }
 
 Map<String, Object?> verifyCompoundPropertyAcceptance({bool enforce = true}) {
+  var sinkReuseCases = 0;
+  for (final alignment in [4, 8]) {
+    final sink = ByteSink()..add([1, 2, 3]);
+    _equal(sink.takeBytes(), [1, 2, 3], 'first sink drain');
+    if (sink.length != 0) throw StateError('Drained sink has stale length');
+    sink.padTo(alignment, 0xaa);
+    _equal(sink.takeBytes(), [], 'empty sink padding');
+    sink.u8(0x42);
+    sink.padTo(alignment, 0xcc);
+    _equal(sink.takeBytes(), [
+      0x42,
+      ...List.filled(alignment - 1, 0xcc),
+    ], 'reused sink alignment');
+    if (sink.length != 0) throw StateError('Reused sink has stale length');
+    sinkReuseCases++;
+  }
   var generated = 0, streams = 0, reads = 0, digest = 0, publicChecks = 0;
   for (final version4 in [false, true]) {
     for (var seed = 0; seed < 128; seed++) {
@@ -249,6 +265,7 @@ Map<String, Object?> verifyCompoundPropertyAcceptance({bool enforce = true}) {
   final report = <String, Object?>{
     'seed': 0x5cfb2026,
     'generatedFiles': generated,
+    'byteSinkReuseCases': sinkReuseCases,
     'generatedStreams': streams,
     'exactPayloadReads': reads,
     'publicEntryRejections': publicChecks,

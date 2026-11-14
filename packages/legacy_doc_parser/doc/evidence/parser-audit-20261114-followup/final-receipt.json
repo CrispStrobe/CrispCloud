@@ -1,0 +1,858 @@
+{
+  "archive": {
+    "bytes": 1106620,
+    "file": "evidence.zip",
+    "internalManifestSha256": "6a3e8a38af6c1fdb60f70b34800753f765282489ee0b13135a90198884e0b67e",
+    "manifestMembers": 397,
+    "members": 398,
+    "sha256": "b04be7342342bfa4ee879495fce6e8d26f6fd8e5e07dc9d975bba4585e015146",
+    "verification": "ZIP CRC, exact member inventory, all member lengths and SHA-256 values verified before upload."
+  },
+  "branch": "fix/parser-audit-20261114",
+  "checks": {
+    "analyze": {
+      "command": [
+        "dart",
+        "analyze",
+        "--fatal-infos"
+      ],
+      "exitCode": 0,
+      "log": "logs/followup-analyze-final.log",
+      "logSha256": "ad2ea1afd8dc83bdc28ef93f2914a0b11e1b8d54f1cae177bf068620befcbe86"
+    },
+    "dart": {
+      "command": [
+        "dart",
+        "test",
+        "--reporter",
+        "expanded"
+      ],
+      "exitCode": 0,
+      "log": "logs/followup-dart-final.log",
+      "logSha256": "f5b48b8dca44133579facd5bd08a7048ecc8a6c1968276817664c2804c0436d4",
+      "testsPassed": 3903
+    },
+    "format": {
+      "command": [
+        "dart",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "lib",
+        "test",
+        "tool",
+        "example"
+      ],
+      "exitCode": 0,
+      "filesChanged": 0,
+      "filesChecked": 353,
+      "log": "logs/followup-format-final.log",
+      "logSha256": "929a41bf35b2aa813bfbb6fb94e5d9a78b4c0ac3eaae0a58278b03175f29df69"
+    },
+    "javascript": {
+      "command": [
+        "python3",
+        "tool/verify_web.py"
+      ],
+      "exitCode": 0,
+      "groupReceipts": {
+        "Binary property contracts": {
+          "booleanCases": 4,
+          "convertedPackages": 57,
+          "headingCases": 48,
+          "indirectCases": 5,
+          "invalidBooleansRejected": 10,
+          "invalidIndirectRejected": 2,
+          "sourceBytesUnchanged": true
+        },
+        "Binary scalar domains": {
+          "exactXmlAndTypedValues": true,
+          "invalidSourcesRejected": 136,
+          "operandKinds": 11,
+          "sourceBytesUnchanged": true,
+          "validSourcesPreserved": 220
+        },
+        "Cached field mode": {
+          "activeFields": 0,
+          "docmControl": true,
+          "fieldEvidenceExact": true,
+          "fieldsPerLayout": 866,
+          "fixtures": 11,
+          "generatedCases": 96,
+          "generatedLayouts": 192,
+          "malformedOwnershipRejected": 7,
+          "sourceUnchanged": true
+        },
+        "Cached field structure": {
+          "activeFields": 0,
+          "contradictoryRunsRejected": 8,
+          "excessiveDepthRejected": 2,
+          "fieldEvidenceExact": true,
+          "maximumDepthAccepted": 64,
+          "structureVariants": 88
+        },
+        "Compound allocation": {
+          "malformedCases": 16,
+          "overallocatedReads": 4,
+          "overallocatedSectorReads": 32,
+          "portableIntegers": {
+            "rawFiletimePreserved": true,
+            "readRangeRejections": 3,
+            "validValues": 6,
+            "writeRangeRejections": 2
+          },
+          "readerRejections": 160,
+          "sharedTailSectorReads": 0,
+          "sharedTailStreams": 65,
+          "sharedTailZeroLengthReads": 0,
+          "sourceUnchanged": true,
+          "streamComparisons": 20,
+          "validCases": 7
+        },
+        "Compound directory": {
+          "malformedCases": 12,
+          "readerRejections": 24,
+          "sourceUnchanged": true,
+          "streamComparisons": 12,
+          "validCases": 4
+        },
+        "Compound generated matrix": {
+          "bothAccepted": 1654,
+          "boundedAccepted": 1654,
+          "byteSinkReuseCases": 2,
+          "deterministicDigest": 736869674,
+          "directoryRejectionChecks": 114,
+          "exactPayloadReads": 10240,
+          "failures": [],
+          "generatedFiles": 256,
+          "generatedStreams": 1280,
+          "geometryRejectionChecks": 154,
+          "mutationCases": 4096,
+          "mutationGroups": {
+            "directoryNameUnits": 512,
+            "directoryReferencesAndSizes": 512,
+            "directoryTypesAndNameLengths": 512,
+            "fatLinks": 512,
+            "headerAllocation": 512,
+            "headerGeometry": 512,
+            "miniFatLinks": 512,
+            "truncation": 512
+          },
+          "outsideReadAttempts": 0,
+          "policyDifferences": 0,
+          "publicEntryRejections": 17920,
+          "rawAccepted": 1654,
+          "seed": 1559961638,
+          "unexpectedFailures": 0
+        },
+        "Compound ownership": {
+          "compatibilityCases": 3,
+          "malformedOverlapCases": 15,
+          "negativeSizePreservesBudget": true,
+          "readerRejections": 80,
+          "sourceUnchanged": true,
+          "streamComparisons": 32
+        },
+        "Display field revision evidence": {
+          "cases": 44,
+          "completeMetadata": true,
+          "inertHistoryCases": 38,
+          "nativeHistoryCases": 6,
+          "noHistoryControls": 2,
+          "originalRecordsExact": true
+        },
+        "Field metadata": {
+          "bodyNoteTargetSwapRejected": true,
+          "cases": {
+            "external": {
+              "fields": 4,
+              "ownerBindingsChecked": true,
+              "representation": "lockedFields",
+              "sourceBytesUnchanged": true
+            },
+            "reference": {
+              "fields": 3,
+              "ownerBindingsChecked": true,
+              "representation": "lockedFields",
+              "sourceBytesUnchanged": true
+            }
+          },
+          "fieldResultsEvaluated": false,
+          "fields": 7
+        },
+        "Field visibility": {
+          "cachedResultsEvaluated": false,
+          "cases": 11,
+          "nativeRenderingClaimed": false,
+          "results": [
+            {
+              "fields": 1,
+              "hiddenRuns": 0,
+              "name": "formula",
+              "visibleRuns": 7,
+              "visibleText": "A999Z"
+            },
+            {
+              "fields": 3,
+              "hiddenRuns": 11,
+              "name": "nested-results",
+              "visibleRuns": 8,
+              "visibleText": "AVisibleZ"
+            },
+            {
+              "fields": 1,
+              "hiddenRuns": 4,
+              "name": "private-result",
+              "visibleRuns": 2,
+              "visibleText": "AZ"
+            },
+            {
+              "fields": 2,
+              "hiddenRuns": 4,
+              "name": "private-instruction-result",
+              "visibleRuns": 8,
+              "visibleText": "AVisibleZ"
+            },
+            {
+              "fields": 2,
+              "hiddenRuns": 7,
+              "name": "unsupported-result",
+              "visibleRuns": 8,
+              "visibleText": "AVisibleZ"
+            },
+            {
+              "fields": 1,
+              "hiddenRuns": 0,
+              "name": "instruction-whitespace",
+              "visibleRuns": 7,
+              "visibleText": "ACachedZ"
+            },
+            {
+              "fields": 2,
+              "hiddenRuns": 5,
+              "name": "nested-instruction-whitespace",
+              "visibleRuns": 8,
+              "visibleText": "AVisibleZ"
+            },
+            {
+              "fields": 1,
+              "hiddenRuns": 0,
+              "name": "cached-controls",
+              "visibleRuns": 7,
+              "visibleText": "Aco\u2011op\u00aderate\u000enextZ"
+            },
+            {
+              "fields": 2,
+              "hiddenRuns": 5,
+              "name": "nested-cached-controls",
+              "visibleRuns": 8,
+              "visibleText": "AVisibleZ"
+            },
+            {
+              "fields": 2,
+              "hiddenRuns": 0,
+              "name": "visible-result-child",
+              "visibleRuns": 13,
+              "visibleText": "Abefore7afterZ"
+            },
+            {
+              "fields": 1,
+              "hiddenRuns": 5,
+              "name": "character-hidden-result",
+              "visibleRuns": 2,
+              "visibleText": "AZ"
+            }
+          ],
+          "sourceUnchanged": true
+        },
+        "Font charset": {
+          "cases": 8,
+          "checks": 40,
+          "puaRemapped": false
+        },
+        "Generated field trees": {
+          "asciiCases": 96,
+          "binaryLayouts": 384,
+          "cases": 192,
+          "fieldsPerLayout": 1732,
+          "pieceLayoutIndependentDocx": true,
+          "seedFirst": 1,
+          "seedLast": 96,
+          "sourceUnchanged": true,
+          "storedResultsEvaluated": false,
+          "unicodeCases": 96
+        },
+        "Ink": {
+          "cases": 24,
+          "points": 96,
+          "strokes": 32
+        },
+        "Ink budget": {
+          "decodedPayloads": 2,
+          "decodedPoints": 100000,
+          "limitedPayloads": 2,
+          "payloads": 4,
+          "rawPayloadsPreserved": 4
+        },
+        "Ink header": {
+          "cases": 32,
+          "points": 160,
+          "specifiedMetricDifferences": 1,
+          "strokes": 32
+        },
+        "Legacy DOC": {
+          "boundedTextExtraction": true,
+          "cfbSimpleNames": true,
+          "cfbVersionedStreamSizes": true,
+          "footers": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "images": 1,
+          "internalRelationships": true,
+          "oleMetadata": true,
+          "signatureValidityClaimed": false,
+          "sourceUnchanged": true,
+          "tables": 1,
+          "unicode": true,
+          "vbaMetadata": true
+        },
+        "List label visibility": {
+          "cases": 22,
+          "emptyParagraphLabels": true,
+          "fieldBoundaryVisibility": true,
+          "fieldModes": 2,
+          "hiddenCountersAdvance": true,
+          "sourceUnchanged": true
+        },
+        "List marker formatting": {
+          "cases": 66,
+          "explicitResets": true,
+          "nativeMarkerProperties": true,
+          "nullableInheritance": true,
+          "numberingHighlightUsesShading": true,
+          "sourceUnchanged": true,
+          "sparseBooleanInheritance": true
+        },
+        "List metadata": {
+          "cases": 21,
+          "invalidNumberedRestartsRejected": 1,
+          "literalLabelsPreserved": true,
+          "materializedLiteralLabels": 5,
+          "sourceUnchanged": true,
+          "supportedCases": 20
+        },
+        "Literal list labels": {
+          "automaticRenumberingDisclosed": true,
+          "cases": 408,
+          "exactDocxPrefixes": true,
+          "exactHtmlLabels": true,
+          "fixtureCases": 24,
+          "metamorphicCases": 384,
+          "sourceTemplatesRetained": true,
+          "sourceUnchanged": true
+        },
+        "Media": {
+          "checks": 51,
+          "emfBytes": 540,
+          "recordCounts": {
+            "emf": 21,
+            "wmf": 17
+          },
+          "wmfBytes": 230
+        },
+        "Nested field": {
+          "balancedFields": true,
+          "cachedControlsPreserved": true,
+          "cases": 9,
+          "externalFieldsInert": true,
+          "fieldCounts": {
+            "cached-controls": 1,
+            "formula": 1,
+            "instruction-whitespace": 1,
+            "nested-cached-controls": 2,
+            "nested-instruction-whitespace": 2,
+            "nested-results": 3,
+            "private-instruction-result": 2,
+            "private-result": 1,
+            "unsupported-result": 2
+          },
+          "instructionWhitespacePreserved": true,
+          "nestedCachedControlsPreserved": true,
+          "privateDescendantsSuppressed": true,
+          "sourceUnchanged": true
+        },
+        "Public bookmarks": {
+          "auxiliaryOwnerCases": 7,
+          "convertedPackages": 21,
+          "hiddenEvidenceCases": 3,
+          "malformedInputsRejected": 34,
+          "sourceMetadataUnchanged": true,
+          "visibleCases": 18
+        },
+        "Public cell shading": {
+          "cases": 9,
+          "htmlPreviews": 9,
+          "malformedInputsRejected": 2,
+          "unmappedEvidenceCases": 2
+        },
+        "Public compound": {
+          "activeContainers": 2,
+          "cases": 17,
+          "externalRelationships": false,
+          "fullCfbConformanceClaimed": false,
+          "inertContainers": 15,
+          "rawEvidencePreserved": true,
+          "sourceUnchanged": true,
+          "vbaCodeValidityClaimed": false
+        },
+        "Public field": {
+          "balancedFields": 3,
+          "malformedRangesRejected": [
+            "crossing-roots",
+            "duplicate-range",
+            "missing-parent",
+            "shared-separator",
+            "missing-inert-story",
+            "negative-inert-start",
+            "past-story-end"
+          ],
+          "reverseModelOrderPreserved": true,
+          "visibleTextPreserved": true
+        },
+        "Public formatting": {
+          "invalidStylesRejected": 179,
+          "validStylesPreserved": 106
+        },
+        "Public metafile": {
+          "activeImages": 6,
+          "cases": 24,
+          "externalRelationships": false,
+          "inertImages": 18,
+          "rawEvidencePreserved": true,
+          "sourceUnchanged": true
+        },
+        "Public note ownership": {
+          "danglingReferences": 0,
+          "rejectedCases": 16,
+          "validCases": 6
+        },
+        "Public table formatting": {
+          "invalidStylesRejected": 90,
+          "validStylesPreserved": 44
+        },
+        "Public textbox references": {
+          "convertedPackages": 20,
+          "headerOwnerCases": 8,
+          "inertEvidenceCases": 3,
+          "malformedInputsRejected": 38,
+          "sourceMetadataUnchanged": true,
+          "visibleCases": 17
+        },
+        "Section geometry": {
+          "binaryRejected": 52,
+          "emitted": 44,
+          "parsed": 48,
+          "publicRejected": 70
+        },
+        "Source field instruction visibility": {
+          "cachedResultsEvaluated": false,
+          "immutableRanges": true,
+          "publicRejections": 21,
+          "sourceCases": 6,
+          "sourceUnchanged": true
+        },
+        "Source field marker formatting": {
+          "cases": 96,
+          "instructionStatesIndependent": true,
+          "markerStatesIndependent": true,
+          "sourceUnchanged": true
+        },
+        "Story Unicode": {
+          "cases": 4,
+          "invalidStoryBoundariesRejected": 3,
+          "sourceUnchanged": true,
+          "supplementaryStoryTextPreserved": true
+        },
+        "Symbol": {
+          "cases": 9,
+          "checks": 18,
+          "laterFalseIsQualified": true,
+          "ordinaryPunctuationIsDistinct": true,
+          "symbolCode": "F061"
+        },
+        "Text Unicode": {
+          "invalidMainBodiesRejected": 10,
+          "sourceUnchanged": true,
+          "supportedCases": 3
+        }
+      },
+      "groupsPassed": 38,
+      "log": "logs/followup-javascript-final.log",
+      "logSha256": "76c72601d4a1dc64d9a15f9b9c6fc50903e45fb3a0ae018ef06a955daee461e7"
+    },
+    "oracle": {
+      "command": [
+        "python3",
+        "tool/fidelity/oracle.py"
+      ],
+      "exitCode": 0,
+      "log": "logs/followup-oracle-final.log",
+      "logSha256": "11baa5f95b1e9f5e530e9280e15f7e105fea388dfcc79b7619eac0f8b4c5bb3d",
+      "sourceHashesAndPackageGraphs": 24
+    },
+    "publish": {
+      "command": [
+        "dart",
+        "pub",
+        "publish",
+        "--dry-run"
+      ],
+      "exitCode": 0,
+      "log": "logs/followup-publish-final.log",
+      "logSha256": "2fa761b5a8680dfda0a7da7dea6312e11bb416fb25e6a2e5c35ebdd38bf955b7",
+      "published": false,
+      "warnings": 0
+    },
+    "python": {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool/fidelity",
+        "-p",
+        "test_*.py"
+      ],
+      "exitCode": 0,
+      "log": "logs/followup-python-final.log",
+      "logSha256": "b4746fccaa1edff13d7800e17084da0a4d1f59dbdd6af8ee2d359ed082381d7a",
+      "qualification": "Messages about failed gates are deliberate negative controls; the unittest result is OK.",
+      "testsPassed": 197
+    },
+    "schema": {
+      "command": [
+        "python3",
+        "tool/fidelity/schema.py",
+        "--cached-nuget",
+        "../toolchains/nuget-cache",
+        "--out",
+        "build/schema-followup-20261114"
+      ],
+      "counts": {
+        "docDerived": 1114,
+        "publicModel": 419,
+        "total": 1533
+      },
+      "exitCode": 0,
+      "log": "logs/followup-schema-final.log",
+      "logSha256": "a007d2025e1b104b12e5439888ca1159ac6ae753a618c0d9d0c41aafdc11fea1"
+    }
+  },
+  "createdUtc": "2026-11-14T07:58:38.644211+00:00",
+  "limitations": [
+    "No new native Word/LibreOffice pagination, rendering, or editor accept/reject acceptance.",
+    "This bundle does not reconstruct missing historical native evidence.",
+    "Hosted GitHub Actions status is separate from these local execution receipts."
+  ],
+  "repository": "https://github.com/CrispStrobe/legacy-doc-parser",
+  "retainedOfficeFiles": {
+    "binarySources": 69,
+    "malformedBinarySourcesWithoutOutputs": 12,
+    "newPositiveOutputs": 107,
+    "paths": [
+      "sdk/corpus/binary-contracts/bool8-fkp-false.docx",
+      "sdk/corpus/binary-contracts/bool8-fkp-true.docx",
+      "sdk/corpus/binary-contracts/bool8-piece-false.docx",
+      "sdk/corpus/binary-contracts/bool8-piece-true.docx",
+      "sdk/corpus/binary-contracts/heading-1-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-1-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-1-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-1-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-1-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-2-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-2-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-2-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-2-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-2-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-3-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-3-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-3-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-3-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-3-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-4-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-4-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-4-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-4-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-4-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-5-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-5-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-5-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-5-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-5-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-6-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-6-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-6-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-6-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-6-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-7-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-7-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-7-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-7-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-7-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-8-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-8-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-8-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-8-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-8-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-9-fkp-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-9-piece-outline-0.docx",
+      "sdk/corpus/binary-contracts/heading-9-fkp-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-9-piece-outline-9.docx",
+      "sdk/corpus/binary-contracts/heading-9-historical-outline-9.docx",
+      "sdk/corpus/binary-contracts/normal-outline-0.docx",
+      "sdk/corpus/binary-contracts/normal-outline-8.docx",
+      "sdk/corpus/binary-contracts/normal-outline-9.docx",
+      "sdk/corpus/binary-contracts/indirect-huge-first-replaces-tail.docx",
+      "sdk/corpus/binary-contracts/indirect-huge-nonfirst-ignored.docx",
+      "sdk/corpus/binary-contracts/indirect-huge-nonfirst-cycle-ignored.docx",
+      "sdk/corpus/binary-contracts/indirect-huge-minimum-size.docx",
+      "sdk/corpus/binary-contracts/indirect-table-to-huge-chain.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-absent.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-formatting-clear.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-formatting-solid.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-legacy-only.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-both-equal.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-legacy-override.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-legacy-nil-override.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-legacy-unmapped-override.docx",
+      "sdk/public-corpora/public-table-formatting/cell-shading-formatting-unmapped.docx",
+      "sdk/public-corpora/public-bookmarks/visible-valid.docx",
+      "sdk/public-corpora/public-bookmarks/visible-maximum-name.docx",
+      "sdk/public-corpora/public-bookmarks/visible-international-name.docx",
+      "sdk/public-corpora/public-bookmarks/visible-point-start.docx",
+      "sdk/public-corpora/public-bookmarks/visible-point-end.docx",
+      "sdk/public-corpora/public-bookmarks/visible-full-range.docx",
+      "sdk/public-corpora/public-bookmarks/visible-first-column.docx",
+      "sdk/public-corpora/public-bookmarks/visible-last-column.docx",
+      "sdk/public-corpora/public-bookmarks/visible-auxiliary.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-header-point.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-header-range.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-footnote-point.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-footnote-range.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-comment-point.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-comment-range.docx",
+      "sdk/public-corpora/public-bookmarks/visible-auxiliary-end.docx",
+      "sdk/public-corpora/public-bookmarks/visible-adjacent-footnote-end.docx",
+      "sdk/public-corpora/public-bookmarks/visible-shared-auxiliary-point.docx",
+      "sdk/public-corpora/public-bookmarks/hidden-valid.docx",
+      "sdk/public-corpora/public-bookmarks/hidden-first-column.docx",
+      "sdk/public-corpora/public-bookmarks/hidden-last-column.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-without-client.docx",
+      "sdk/public-corpora/public-textbox-references/visible-chain.docx",
+      "sdk/public-corpora/public-textbox-references/visible-chain-reversed.docx",
+      "sdk/public-corpora/public-textbox-references/visible-chain-null-links.docx",
+      "sdk/public-corpora/public-textbox-references/visible-chain-zero-links.docx",
+      "sdk/public-corpora/public-textbox-references/visible-recovered-chain.docx",
+      "sdk/public-corpora/public-textbox-references/visible-unresolved-chain.docx",
+      "sdk/public-corpora/public-textbox-references/visible-two-stories.docx",
+      "sdk/public-corpora/public-textbox-references/visible-two-stories-reversed.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-header.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-footer.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-footnoteSeparator.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-footnoteContinuationSeparator.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-footnoteContinuationNotice.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-endnoteSeparator.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-endnoteContinuationSeparator.docx",
+      "sdk/public-corpora/public-textbox-references/visible-single-endnoteContinuationNotice.docx",
+      "sdk/public-corpora/public-textbox-references/hidden-single.docx",
+      "sdk/public-corpora/public-textbox-references/hidden-chain.docx"
+    ],
+    "positiveBreakdown": {
+      "binary-contracts": 57,
+      "public-bookmarks": 21,
+      "public-table-formatting": 9,
+      "public-textbox-references": 20
+    }
+  },
+  "retainedSourceManifest": {
+    "files": 749,
+    "path": "source/maintained-source-sha256.json",
+    "sha256": "a69a82dd2a52bfb470e7b168d6cf26eaf9a9a2a877490fe228f98e50152a3caf"
+  },
+  "retentionScope": "Complete final and selected before/after logs; all SDK reports and stage logs; both generations of corpus metadata; all 107 newly added positive packages and 69 binary inputs; source hashes and resolved dependency declarations. The preceding 1426 output packages and validator dependency assemblies are not duplicated in this compact bundle; their exact hashes and reproducible source inventory are retained in the full SDK receipt.",
+  "sdk": {
+    "buildModeQualification": "Fresh direct C# SDK compilation from unchanged validator sources and hash-pinned NuGet archives; this pass used the existing fallback without reattempting ordinary MSBuild.",
+    "corpusGroupsRepeated": 10,
+    "docDerivedRepeatFiles": 2559,
+    "negativeControlQualification": "The negative-controls stage exits 1 because two deliberately invalid packages are rejected; this is the required successful control outcome.",
+    "negativeControls": {
+      "errors": 2,
+      "files": 2,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "negative-controls.json",
+      "reportSha256": "228f869157c147f993b02575bbe753dfafc02e855c640b2d04b10432f9c73fd8"
+    },
+    "positiveControl": {
+      "errors": 0,
+      "files": 1,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "positive-control.json",
+      "reportSha256": "414c1758b54b50129a32b6ffba9d3ee7f74a4db2fed61ba38ee3b9d4bff13e9d"
+    },
+    "publicGroups": {
+      "cached-field-structure": {
+        "cases": 88,
+        "determinismPassed": true,
+        "repeatedFileCount": 89,
+        "validation": {
+          "errors": 0,
+          "files": 88,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "cached-field-structure-schema-validation.json",
+          "reportSha256": "937349fd8f5bdc118b89c162dd510126e7a72290f8c893e06916299de261f806"
+        }
+      },
+      "display-field-evidence": {
+        "cases": 46,
+        "determinismPassed": true,
+        "repeatedFileCount": 47,
+        "validation": {
+          "errors": 0,
+          "files": 46,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "display-field-evidence-schema-validation.json",
+          "reportSha256": "b917f9919907996c25757ca193904abb83ee90e053b3e508652359be3582538c"
+        }
+      },
+      "public-bookmarks": {
+        "cases": 21,
+        "determinismPassed": true,
+        "repeatedFileCount": 22,
+        "validation": {
+          "errors": 0,
+          "files": 21,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-bookmarks-schema-validation.json",
+          "reportSha256": "3b1c7411ebefa974dff15a0313935d611eea9337b4bbd171c739429480ce4293"
+        }
+      },
+      "public-compound": {
+        "cases": 17,
+        "determinismPassed": true,
+        "repeatedFileCount": 35,
+        "validation": {
+          "errors": 0,
+          "files": 17,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-compound-schema-validation.json",
+          "reportSha256": "a6ec129b1fad33aaf4197a9d0d20ef0f0e769278e62d2eecb3e1cf2e5bb2c482"
+        }
+      },
+      "public-formatting": {
+        "cases": 106,
+        "determinismPassed": true,
+        "repeatedFileCount": 107,
+        "validation": {
+          "errors": 0,
+          "files": 106,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-formatting-schema-validation.json",
+          "reportSha256": "75c7f334541fbbdf2b673bfbc5114cfc5f87602d2462c4f924af7bc46fceebf5"
+        }
+      },
+      "public-metafile": {
+        "cases": 24,
+        "determinismPassed": true,
+        "repeatedFileCount": 49,
+        "validation": {
+          "errors": 0,
+          "files": 24,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-metafile-schema-validation.json",
+          "reportSha256": "a1e09512aeea9571054d1db7badf2208b2966033ead7ea7bb617b394e066cf63"
+        }
+      },
+      "public-section-geometry": {
+        "cases": 44,
+        "determinismPassed": true,
+        "repeatedFileCount": 45,
+        "validation": {
+          "errors": 0,
+          "files": 44,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-section-geometry-schema-validation.json",
+          "reportSha256": "368983f6bb59297d9bf76165613ffb55ed5db4c4b287ec50391b55fab28feb13"
+        }
+      },
+      "public-table-formatting": {
+        "cases": 53,
+        "determinismPassed": true,
+        "repeatedFileCount": 54,
+        "validation": {
+          "errors": 0,
+          "files": 53,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-table-formatting-schema-validation.json",
+          "reportSha256": "ae58aade1d5d44610510f000a0a20e23a88f71f41f5ef28935ec02c29f99e9c7"
+        }
+      },
+      "public-textbox-references": {
+        "cases": 20,
+        "determinismPassed": true,
+        "repeatedFileCount": 21,
+        "validation": {
+          "errors": 0,
+          "files": 20,
+          "hashesVerified": true,
+          "inputsUnchanged": true,
+          "report": "public-textbox-references-schema-validation.json",
+          "reportSha256": "8a6ece53335cc1f828e796a096ea7cfc945a47dba7d690c2ca8a185b1b54fc11"
+        }
+      }
+    },
+    "report": "sdk/report.json",
+    "reportSha256": "3e5af3b66057f41f48b99734f2b925498f963f00ef45b70aa6c8d2b1c70b30ce",
+    "selfTestPassed": true,
+    "sourceAggregateSha256": "aa65a8821e8026c81d34f414438f6ae0a26210818e39eba4dab6466c835ec496",
+    "sourceFileCount": 485,
+    "sourceUnchanged": true,
+    "stages": 40,
+    "validation": {
+      "errors": 0,
+      "files": 1114,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "schema-validation.json",
+      "reportSha256": "fad05dc0ce03c63fe29f5cb6b0baacb2de775b6f093f125827cc97e659f10403"
+    }
+  },
+  "subsequentCommitScope": "Documentation and evidence only; tested runtime and gates remain at testedCommit.",
+  "testedCommit": "a25e4ea824886327b97bde2873e6ef175a5ab971",
+  "testedWorktreeDirty": false,
+  "tools": {
+    "dart": {
+      "executableSha256": "6f40046d43f5dcd51f788e41c2da23d4e425f8581cd0a38cb6fa4631b37d064b",
+      "version": "Dart SDK version: 3.14.0 (stable) (Wed Nov 4 16:28:39 2026 -0800) on \"linux_x64\""
+    },
+    "dotnetRuntime": "8.0.34",
+    "dotnetSdk": "8.0.428",
+    "node": "v24.22.1",
+    "openXmlSdk": "3.3.0",
+    "python": "Python 3.12.14",
+    "validationRules": "Office2019",
+    "validatorBuildMode": "direct-sdk-compiler"
+  },
+  "version": 1
+}

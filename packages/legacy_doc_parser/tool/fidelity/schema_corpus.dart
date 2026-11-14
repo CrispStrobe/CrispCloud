@@ -21,6 +21,7 @@ import 'field_cache_import_fixture.dart' as field_cache_import;
 import 'generated_field_tree_fixture.dart' as generated_fields;
 import 'generated_field_ascii_fixture.dart' as generated_ascii_fields;
 import 'cached_field_fixture.dart' as cached_fields;
+import 'binary_property_contract_fixture.dart' as binary_contracts;
 import 'scalar_sprm_fixture.dart' as scalar_sprms;
 import 'list_literal_fixture.dart' as list_literal;
 import 'list_marker_style_fixture.dart' as list_marker_styles;
@@ -127,6 +128,12 @@ void main(List<String> arguments) {
       'cases.json',
       'scalar_sprm_fixture.dart',
       scalar_sprms.main,
+    ),
+    (
+      'binary-contracts',
+      'cases.json',
+      'binary_property_contract_fixture.dart',
+      binary_contracts.main,
     ),
     (
       'list-literal',

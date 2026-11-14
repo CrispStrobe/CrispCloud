@@ -360,6 +360,21 @@ extension _WordFormattingTables on _StructuredWordParser {
     return _resolvedStyles[index] = _ResolvedStyle(paragraph, character);
   }
 
+  _Props _paragraphStyleForSelection(
+    int index, [
+    _TableTextContext? tableContext,
+  ]) {
+    // PIstd may temporarily select an empty, missing, or non-paragraph style.
+    // MS-DOC 2.6.2 applies document defaults at that step, without borrowing
+    // Normal or table-context properties. The final style is checked after
+    // all PAPX and piece operations have run.
+    if (styles[index]?.kind != 1) return const {};
+    return (tableContext == null
+            ? _resolveStyle(index)
+            : _resolveStyleOverTable(index, tableContext))
+        .paragraph;
+  }
+
   LegacyWordCharacterStyle? _lineNumberStyle() {
     // StdfBase.sti is the semantic built-in identity, independent of the
     // stylesheet index and localized display name. These generated characters

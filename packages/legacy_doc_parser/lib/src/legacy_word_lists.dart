@@ -299,11 +299,28 @@ extension _WordLists on _StructuredWordParser {
     );
   }
 
+  int? _resolvedListLevel(_Props properties) {
+    final id = properties['listId'] as int? ?? 0;
+    if (id == 0 || id == -2047) return null;
+    if (id == 2047) {
+      // The Word 97-2007 format describes this as an ANLD compatibility
+      // sentinel. It may be replaced during style inheritance; it is never
+      // a PlfLfo index and active legacy numbering is not reconstructed.
+      throw const FormatException('Unsupported pre-Word 97 numbering.');
+    }
+    final level = properties['listLevel'] as int? ?? 0;
+    if (level > 8 && level != 12) {
+      throw const FormatException('Invalid Word list level.');
+    }
+    return level;
+  }
+
   _Props _applyListFormatting(_Props properties, _Props characterBase) {
     final rawId = properties['listId'] as int? ?? 0;
-    final level = properties['listLevel'] as int? ?? 0;
-    if (rawId == 0 || rawId == -2047 || level == 12) {
+    final level = _resolvedListLevel(properties);
+    if (level == null || level == 12) {
       if (rawId == -2047 || level == 12) properties['listId'] = 0;
+      properties.remove('listLevel');
       return characterBase;
     }
     final definition = _listLevels[(rawId.abs(), level)];

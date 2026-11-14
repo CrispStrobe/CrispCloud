@@ -301,3 +301,7 @@ for CORS, HTTPS and server configuration limits.
 ### Offline catalogues and CLI
 
 Tools → Catalogues provides offline SQLite catalogue browsing, Cathy/Catfish CAF import/export, paged search and size rankings, cancellation and safe refresh. See [catalogue usage and limits](docs/catalogues.md). The primary CLI command is `crispcloud`; `crisp` remains an alias. CrispSorter uses `crispsorter` (and `crispcat` for its lightweight catalogue companion).
+
+### 1.3 release scope
+
+This release combines the offline catalogue library and `crispcloud` CLI with read-only FAT/UDF and partition-image browsing, supported LZFSE/DMG decoding, reviewed ZIP recovery, and the current shared legacy DOC parser. Format limitations and recovery boundaries remain explicit; see the format matrix and catalogue guide. Standalone CLI bundles accompany the desktop/mobile release artifacts. Pages and Vercel deployments publish their exact source in `deployment.json`.

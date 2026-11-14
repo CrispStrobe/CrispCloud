@@ -1,0 +1,145 @@
+{
+  "archive": {
+    "bytes": 612434,
+    "crcAndAllMemberHashesVerified": true,
+    "manifestSha256": "8d4ea841cb3520c99e0619f9f08554a73571fcf2a8155343b330c7fc57eb8bb8",
+    "members": 129,
+    "path": "final-validation.zip",
+    "sha256": "e86e9fdf94a3ac505fe81f040a5cbee9fc49c0b7ed999cef5afab6f7b7e5bce5"
+  },
+  "coverageLimits": [
+    "The new 43 comment and 21 section-range tests run on the Dart VM; the 34 compiled-JavaScript groups are a separately defined acceptance suite.",
+    "Geometry controls check scalar domains, not physical feasibility of combined page dimensions and margins.",
+    "Binary historical fixtures inspect stored snapshots; public models separately exercise emitted sectPrChange.",
+    "No missing historical native artifacts were reconstructed or counted as new acceptance."
+  ],
+  "gates": {
+    "analyze": {
+      "issues": 0,
+      "passed": true
+    },
+    "dart": {
+      "passed": true,
+      "tests": 3688
+    },
+    "format": {
+      "changed": 0,
+      "files": 338,
+      "passed": true
+    },
+    "javascript": {
+      "groups": 34,
+      "markers": [
+        "Legacy DOC JavaScript acceptance passed",
+        "Media JavaScript acceptance passed",
+        "Nested field JavaScript acceptance passed",
+        "Story Unicode JavaScript acceptance passed",
+        "Text Unicode JavaScript acceptance passed",
+        "Compound allocation JavaScript acceptance passed",
+        "Compound directory JavaScript acceptance passed",
+        "Compound ownership JavaScript acceptance passed",
+        "List metadata JavaScript acceptance passed",
+        "Public field JavaScript acceptance passed",
+        "Public metafile JavaScript acceptance passed",
+        "Public compound JavaScript acceptance passed",
+        "Section geometry JavaScript acceptance passed",
+        "Public note ownership JavaScript acceptance passed",
+        "Compound generated matrix JavaScript acceptance passed",
+        "Generated field trees JavaScript acceptance passed",
+        "Public formatting JavaScript acceptance passed",
+        "Public table formatting JavaScript acceptance passed",
+        "Binary scalar domains JavaScript acceptance passed",
+        "Literal list labels JavaScript acceptance passed",
+        "List label visibility JavaScript acceptance passed",
+        "List marker formatting JavaScript acceptance passed",
+        "Field visibility JavaScript acceptance passed",
+        "Cached field mode JavaScript acceptance passed",
+        "Cached field structure JavaScript acceptance passed",
+        "Display field revision evidence JavaScript acceptance passed",
+        "Source field marker formatting JavaScript acceptance passed",
+        "Source field instruction visibility JavaScript acceptance passed",
+        "Ink budget JavaScript acceptance passed",
+        "Ink JavaScript acceptance passed",
+        "Ink header JavaScript acceptance passed",
+        "Symbol JavaScript acceptance passed",
+        "Field metadata JavaScript acceptance passed",
+        "Font charset JavaScript acceptance passed"
+      ],
+      "passed": true
+    },
+    "openXmlSdk": {
+      "docDerived": 1057,
+      "negativeControlPackagesRejected": 2,
+      "passed": true,
+      "positiveControlPackages": 1,
+      "publicGroups": {
+        "cached-field-structure": 88,
+        "display-field-evidence": 46,
+        "public-compound": 17,
+        "public-formatting": 106,
+        "public-metafile": 24,
+        "public-section-geometry": 44,
+        "public-table-formatting": 44
+      },
+      "publicModel": 369,
+      "repeatGenerationExact": true,
+      "reportSha256": "b80db8c5a4b5ffea1269400a79dc158ab38925f7958902e2a7262064b6c2d67d",
+      "schemaErrors": 0,
+      "sourceUnchanged": true,
+      "total": 1426,
+      "validatorArtifactsUnchanged": true,
+      "validatorSelfTests": true
+    },
+    "publishDryRun": {
+      "passed": true,
+      "published": false,
+      "warnings": 0
+    },
+    "python": {
+      "passed": true,
+      "tests": 195
+    },
+    "retainedCorpus": {
+      "nativeRendering": false,
+      "passed": true,
+      "sourceHashesAndPackageGraphs": 24
+    }
+  },
+  "gitWorktreeDirtyAtRun": false,
+  "recordedAtUtc": "2026-11-14T05:33:25.893639+00:00",
+  "reproductions": {
+    "comments": {
+      "afterPassedIncludingExistingThreadTests": 51,
+      "beforeFailed": 20,
+      "beforePassed": 23,
+      "earlierReceipt": "portable-receipt.json",
+      "preFixRuntime": "4cd7321729ae14a04dcd452c16e6336b206afaa1"
+    },
+    "geometryAndByteSink": {
+      "afterPassed": 217,
+      "beforeFailed": 108,
+      "beforePassed": 109,
+      "earlierReceipt": "portable-receipt.json",
+      "testCheckpoint": "2fa820a6bf19520dcbd3f08d688f82eafedaeb03"
+    },
+    "sectionCoverageAndInactiveHistory": {
+      "afterPassedIncludingGeometryAndNativeRecoveryAndRevisions": 248,
+      "beforeFailed": 16,
+      "beforePassed": 5,
+      "preFixRuntime": "3d9b3422476027bd5d21af1705b2ee5dd13c4caf",
+      "testCheckpoint": "bf1db91709270bb8fd9ca43ef083d71e2890392f"
+    }
+  },
+  "retainedArtifacts": "Complete final command logs, source hashes, dependency lockfile, full SDK report and per-group SDK reports, generator manifests, validator controls, all 44 new section-geometry DOCX outputs, original section-range reproduction, and the failed normal-build environment receipt. Other generated corpus packages are reproducible from the pinned sources and individually hashed in the SDK receipt; their package bytes are not duplicated in this compact archive.",
+  "scope": "Portable parser/export checks and Open XML SDK Office2019 schema/semantic validation. No new native Office rendering or review acceptance.",
+  "sourceAggregateSha256": "e6284e99a2eb821410935bfd7a5ffda8f95aa6bf3dd243b197f1ff47e49e06f4",
+  "sourceFiles": 734,
+  "testedCommit": "2f8a307f6066401445109b41466e367dcc94cb99",
+  "tools": {
+    "dart": "Dart SDK version: 3.14.0 (stable) (Wed Nov 4 16:28:39 2026 -0800) on \"linux_x64\"",
+    "dotnetSdk": "8.0.428",
+    "openXmlSdk": "3.3.0",
+    "validatorBuildMode": "direct-sdk-compiler"
+  },
+  "version": 1
+}

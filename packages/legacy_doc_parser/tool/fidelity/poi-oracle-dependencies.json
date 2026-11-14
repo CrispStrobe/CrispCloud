@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "artifacts": [
+    {
+      "group": "org.apache.poi",
+      "artifact": "poi",
+      "version": "6.0.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/poi/poi/6.0.0/poi-6.0.0.jar",
+      "bytes": 3102357,
+      "sha256": "4977f1ae04e1c77e42c81dd94cca008e0d81ff8d0daa8b85e2a0740c3c1da3cc",
+      "publishedChecksumAlgorithm": "sha512",
+      "publishedChecksum": "737603fee553791062c562af90caa20b2fe1542cc8de6adafccdaccf6087db30454d85b8b70e99fd0e970805fb65c305de2a313b18abf841ec21378c1557fcb2",
+      "publishedChecksumVerified": true,
+      "pomSha256": "f6970de957d69c8dc60069a6a35edc254fd51610b4f2e19c774705c509901e81"
+    },
+    {
+      "group": "org.apache.poi",
+      "artifact": "poi-scratchpad",
+      "version": "6.0.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/poi/poi-scratchpad/6.0.0/poi-scratchpad-6.0.0.jar",
+      "bytes": 1959418,
+      "sha256": "0fb2b1db4ae69f750ea97f3c4d103e35f544bc3a6ec4be2753281ec65ef4f8b5",
+      "publishedChecksumAlgorithm": "sha512",
+      "publishedChecksum": "9a27ddbcba61df8f46a18c2319c143d697ad08dd8375a963d36550201d27bfb67ef1455adea03ca6ab6f8308be1c82877df5acf4f07b6648b2ba9920fdeee384",
+      "publishedChecksumVerified": true,
+      "pomSha256": "d2ec73f4b2dbccb31584ce1e370dc5c532145852019580fdac058f4f9d495f63"
+    },
+    {
+      "group": "org.apache.poi",
+      "artifact": "poi-ooxml",
+      "version": "6.0.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml/6.0.0/poi-ooxml-6.0.0.jar",
+      "bytes": 2099900,
+      "sha256": "759d97d608ef03b8aa701f56fef0cf9c67fac49f7fa0de4be43c01ca97542c9c",
+      "publishedChecksumAlgorithm": "sha512",
+      "publishedChecksum": "942f987c46791e2beccae9161079a293b5400714944908dd7f56fbd3f1152c2ff001dc8db46f1f121ecb13bec17fb1ba0444131a79ed693d698ca932dbd2281c",
+      "publishedChecksumVerified": true,
+      "pomSha256": "d8ff5643dfb985a06d6cfb3d7ac06da7c841ad459c59c6ebaba7d1a3be12cfdc"
+    },
+    {
+      "group": "org.apache.poi",
+      "artifact": "poi-ooxml-lite",
+      "version": "6.0.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml-lite/6.0.0/poi-ooxml-lite-6.0.0.jar",
+      "bytes": 6079238,
+      "sha256": "d722039d325de73562ec79758253e6a659750a53d2e8e998bb3da54c0ad157fc",
+      "publishedChecksumAlgorithm": "sha512",
+      "publishedChecksum": "136cb895bbf263892627a074f7125845e6a33d1ac579611209c7cfe4d99eae2345e164ec21e8921c35f7fba032f0c0f7511e7d5b034edde2ee4d517972a5b354",
+      "publishedChecksumVerified": true,
+      "pomSha256": "ba6ec16004e88dbb00fecedcb3338dc6fa948916ca79162b7ad44545c08d5dfa"
+    },
+    {
+      "group": "org.apache.xmlbeans",
+      "artifact": "xmlbeans",
+      "version": "5.4.1",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/xmlbeans/xmlbeans/5.4.1/xmlbeans-5.4.1.jar",
+      "bytes": 2227616,
+      "sha256": "b8fe946b41983e86496a7a68508af82a41daafd0e2a2cc8c9302c53fcbd9802c",
+      "publishedChecksumAlgorithm": "sha512",
+      "publishedChecksum": "6c7862f15edad981cefe54d598da7854b9d565848fa5d72651a5403bd6e5531a20d4d1716fee97b9339e5058bee06f6d89dd1c52bbb97262571d01f5ba48b1a2",
+      "publishedChecksumVerified": true,
+      "pomSha256": "dae75d703af4b9ef1c9272a557cac32a11d88aec690b59da47c8b3598bbb3d5d"
+    },
+    {
+      "group": "commons-codec",
+      "artifact": "commons-codec",
+      "version": "1.23.0",
+      "url": "https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.23.0/commons-codec-1.23.0.jar",
+      "bytes": 440773,
+      "sha256": "47504a3ce71d73a1b0af07675546b8d8c5af87f82ef12b6381f9eb3c17dd5a5b",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "11adf2daaeb941e80599a3e8010d63aed995f509",
+      "publishedChecksumVerified": true,
+      "pomSha256": "8c234370108606fee866044f5795124d941708ff4e70bfe7208e6b3d4d304031"
+    },
+    {
+      "group": "org.apache.commons",
+      "artifact": "commons-collections4",
+      "version": "4.6.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/commons/commons-collections4/4.6.0/commons-collections4-4.6.0.jar",
+      "bytes": 934384,
+      "sha256": "4e0d0896bac5356cead277bac0283f09813e14417e3e84e0c86b573b54d218a3",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "e3f46a0753e01b8397363ba0edbfb6ec38dedf0a",
+      "publishedChecksumVerified": true,
+      "pomSha256": "94e5772ea3c7ba80f7c345a6950cc7a4015463f08a2a7be82e8ce8584c3978c3"
+    },
+    {
+      "group": "org.apache.commons",
+      "artifact": "commons-math3",
+      "version": "3.6.1",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/commons/commons-math3/3.6.1/commons-math3-3.6.1.jar",
+      "bytes": 2213560,
+      "sha256": "1e56d7b058d28b65abd256b8458e3885b674c1d588fa43cd7d1cbb9c7ef2b308",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "e4ba98f1d4b3c80ec46392f25e094a6a2e58fcbf",
+      "publishedChecksumVerified": true,
+      "pomSha256": "fad72336ea7d7dd06da103144e3740db508fa4b17d9c54d7847737edc24a7e60"
+    },
+    {
+      "group": "commons-io",
+      "artifact": "commons-io",
+      "version": "2.22.0",
+      "url": "https://repo.maven.apache.org/maven2/commons-io/commons-io/2.22.0/commons-io-2.22.0.jar",
+      "bytes": 609182,
+      "sha256": "2b9a7b1f726fb86216dbd2c8321eabe0221dbd5b1be81c18e1cb53811b104758",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "5b1e18bc0ad651ed878029d83f88d9c8189fd51e",
+      "publishedChecksumVerified": true,
+      "pomSha256": "6425cec0ea760035efa77277de85f89fa6dbed147ab3dd95b8d2cbc55340accf"
+    },
+    {
+      "group": "com.zaxxer",
+      "artifact": "SparseBitSet",
+      "version": "1.3",
+      "url": "https://repo.maven.apache.org/maven2/com/zaxxer/SparseBitSet/1.3/SparseBitSet-1.3.jar",
+      "bytes": 25843,
+      "sha256": "f76b85adb0c00721ae267b7cfde4da7f71d3121cc2160c9fc00c0c89f8c53c8a",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "533eac055afe3d5f614ea95e333afd6c2bde8f26",
+      "publishedChecksumVerified": true,
+      "pomSha256": "118d67e345329a18dff4ebd1557f95f0c0ab4b4cb9d678749d666f9230001768"
+    },
+    {
+      "group": "org.apache.commons",
+      "artifact": "commons-compress",
+      "version": "1.28.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/commons/commons-compress/1.28.0/commons-compress-1.28.0.jar",
+      "bytes": 1117221,
+      "sha256": "e1522945218456f3649a39bc4afd70ce4bd466221519dba7d378f2141a4642ca",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "e482f2c7a88dac3c497e96aa420b6a769f59c8d7",
+      "publishedChecksumVerified": true,
+      "pomSha256": "033f4c78d632da88d0eb8ead974fc14a264392cebf12ab6c68d6cea7adf0c64a"
+    },
+    {
+      "group": "com.github.virtuald",
+      "artifact": "curvesapi",
+      "version": "1.08",
+      "url": "https://repo.maven.apache.org/maven2/com/github/virtuald/curvesapi/1.08/curvesapi-1.08.jar",
+      "bytes": 117159,
+      "sha256": "ad95b08b8bbf9d7d17e5e00814898fa23324f32bc5b62f1a37801e6a56ce0079",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "3d3d36568154059825089b289dcfca481fe44e2c",
+      "publishedChecksumVerified": true,
+      "pomSha256": "372e19ac518d58ce5ab553ca80388c7fe9920c5554d1362d18645a6ddbc5d126"
+    },
+    {
+      "group": "org.apache.logging.log4j",
+      "artifact": "log4j-api",
+      "version": "2.26.1",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/logging/log4j/log4j-api/2.26.1/log4j-api-2.26.1.jar",
+      "bytes": 351428,
+      "sha256": "f1810a4704ccce019d02bba029dc02a4f2ac0c997f647b465e7d409c1927f822",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "b9864ed8d0c01f65f3b0bf70f1447e5cc1b49c24",
+      "publishedChecksumVerified": true,
+      "pomSha256": "c8ab868f9c532233bd12f311cea90a3f6de65ea07a7aa470c3e2bbf83b5c79fb"
+    },
+    {
+      "group": "org.apache.commons",
+      "artifact": "commons-lang3",
+      "version": "3.18.0",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar",
+      "bytes": 702952,
+      "sha256": "4eeeae8d20c078abb64b015ec158add383ac581571cddc45c68f0c9ae0230720",
+      "publishedChecksumAlgorithm": "sha1",
+      "publishedChecksum": "fb14946f0e39748a6571de0635acbe44e7885491",
+      "publishedChecksumVerified": true,
+      "pomSha256": "aa254b373b6f6d46bc9dca86331b072a8ab86eb25ea9921fd439618392e98a16"
+    }
+  ]
+}

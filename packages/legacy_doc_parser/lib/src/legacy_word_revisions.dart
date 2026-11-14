@@ -305,13 +305,7 @@ extension _WordRevisions on _StructuredWordParser {
     int end, {
     bool includeRevision = true,
   }) {
-    for (final key in ['width', 'height']) {
-      final value = properties[key] as int?;
-      if (value != null && (value < 144 || value > 31680)) {
-        throw const FormatException('Invalid Word page dimension.');
-      }
-    }
-    return LegacyWordSection(
+    final section = LegacyWordSection(
       startCp: start,
       endCp: end,
       layout: _sectionLayout(properties),
@@ -335,6 +329,8 @@ extension _WordRevisions on _StructuredWordParser {
       breakKind:
           LegacyWordSectionBreak.values[properties['breakKind'] as int? ?? 2],
     );
+    validateLegacyWordSectionGeometry(section);
+    return section;
   }
 
   LegacyWordSectionFormattingRevision? _sectionRevision(

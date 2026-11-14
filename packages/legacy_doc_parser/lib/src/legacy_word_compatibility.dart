@@ -123,6 +123,10 @@ enum LegacyWordCompatibilityIssue {
 
   /// Bytes beyond the recognized DOP version have no inferred semantics.
   unrecognizedExtension,
+
+  /// A fully bounded FIB extension has extra uninterpreted words, or matches
+  /// the independently retained older Word97-family extension signature.
+  nonstandardFibExtension,
 }
 
 /// Immutable explicit source choices. An absent flag is unknown/unspecified,

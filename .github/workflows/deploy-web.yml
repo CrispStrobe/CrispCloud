@@ -9,6 +9,11 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact reviewed commit or release tag to deploy
+        required: false
+        default: main
 
 concurrency:
   group: deploy-web
@@ -23,12 +28,14 @@ env:
 jobs:
   deploy:
     name: Build & Deploy to Vercel
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository) }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.ref || github.sha }}
 
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
@@ -63,6 +70,15 @@ jobs:
             --dart-define=GIT_HASH=$GIT_HASH \
             --dart-define=APP_VERSION=$APP_VERSION
 
+      - name: Record deployed source
+        run: |
+          python3 - <<'PYTHON'
+          import json, pathlib, subprocess
+          sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          version = next(line.split(':', 1)[1].strip() for line in pathlib.Path('pubspec.yaml').read_text().splitlines() if line.startswith('version:'))
+          pathlib.Path('build/web/deployment.json').write_text(json.dumps({'commit': sha, 'version': version}) + '\n')
+          PYTHON
+
       - name: Verify build output
         run: |
           test -f build/web/index.html || { echo "ERROR: index.html missing"; exit 1; }
@@ -96,3 +112,6 @@ jobs:
         env:
           DEPLOY_URL: https://crisp-cloud.vercel.app
         run: flutter test test/integration/deploy_verify_test.dart --tags deploy --run-skipped
+
+      - name: Verify exact deployed source
+        run: python3 tool/verify_web_deployment.py --url https://crisp-cloud.vercel.app --commit "$(git rev-parse HEAD)"

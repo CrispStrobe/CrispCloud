@@ -248,7 +248,8 @@ extension _WordTableStyles on _StructuredWordParser {
             0xd685 => LegacyWordTableBorderSide.tl2br,
             _ => LegacyWordTableBorderSide.tr2bl,
           };
-          borders[side] = _readTableBorder(value);
+          final border = _readTableBorder(value);
+          if (border != null) borders[side] = border;
         default:
           warnings.add(LegacyWordWarning.unsupportedFormatting);
       }
@@ -386,16 +387,20 @@ Map<LegacyWordTableBorderSide, LegacyWordBorder> _readTableBorders(
   if (value.length != width * 6) {
     throw const FormatException('Invalid Word row border operand.');
   }
-  return Map.unmodifiable({
-    for (var side = 0; side < 6; side++)
-      LegacyWordTableBorderSide.values[side]: _readTableBorder(
-        _Bytes(value.slice(side * width, width)),
-        old: old,
-      ),
-  });
+  final borders = <LegacyWordTableBorderSide, LegacyWordBorder>{};
+  for (var side = 0; side < 6; side++) {
+    final border = _readTableBorder(
+      _Bytes(value.slice(side * width, width)),
+      old: old,
+    );
+    if (border != null) {
+      borders[LegacyWordTableBorderSide.values[side]] = border;
+    }
+  }
+  return Map.unmodifiable(borders);
 }
 
-LegacyWordBorder _readTableBorder(_Bytes value, {bool old = false}) {
+LegacyWordBorder? _readTableBorder(_Bytes value, {bool old = false}) {
   if ((old && value.u32(0) == 0xffffffff) ||
       (!old && value.u32(4) == 0xffffffff)) {
     return const LegacyWordBorder(style: 'nil', widthEighthPoints: 0);

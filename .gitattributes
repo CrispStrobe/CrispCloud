@@ -25,3 +25,7 @@ packages/file_viewer_documents/** -text -whitespace
 # Catalogue provenance hashes identify exact upstream bytes on every host.
 packages/crisp_catalog/** text eol=lf
 cli/test/fixtures/catalog/*.caf binary
+
+# Keep immutable reviewed source and retained command receipts byte-exact.
+packages/apple_lzfse/** -text -whitespace
+docs/evidence/storage-*/**/*.log -text -whitespace

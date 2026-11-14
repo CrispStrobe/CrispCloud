@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-11-14T05:16:33.762209+00:00",
+  "baseline": "731e37032e11a3bc1ae6bdb0475fdcb48067bda4",
+  "retainedFiles": 3124,
+  "expectedFiles": 14103,
+  "missingFiles": 10979,
+  "retainedHashesPassed": true,
+  "archiveCrcPassed": true,
+  "archives": [
+    {
+      "path": "doc/evidence/parser-audit-20261113-fifth-pass/bundle/evidence-000-control.zip",
+      "bytes": 1184077,
+      "sha256": "727709b946442b591fa77ff27a736aabf047aca79f4fa44b8ef64219349e0a09"
+    },
+    {
+      "path": "doc/evidence/parser-audit-20261113-fifth-pass/bundle/evidence-001.zip",
+      "bytes": 1899876,
+      "sha256": "10da93f486485ade62b4264a5817068b4e149bc8d7f3f3ed8a2a5478a3e1176d"
+    },
+    {
+      "path": "doc/evidence/parser-audit-20261113-fifth-pass/bundle/evidence-002.zip",
+      "bytes": 1899958,
+      "sha256": "dd9fa2bd1f1f49b8fc5a71ad60f1952a9b191956e1347a2784f3429367e59451"
+    },
+    {
+      "path": "doc/evidence/parser-audit-20261113-fifth-pass/bundle/evidence-003.zip",
+      "bytes": 1898512,
+      "sha256": "4a89ce2fff8e509db1f972e46955fe0b78193cb121378d4706b5093b8bd95495"
+    },
+    {
+      "path": "doc/evidence/parser-audit-20261113-fifth-pass/bundle/evidence-004.zip",
+      "bytes": 1899514,
+      "sha256": "85cc09a54b4aa845afb7edb09a05f65fe2c646e96cefc1fea07c679bf5b92ba4"
+    }
+  ],
+  "scope": "Retained original archives only; no replacement for missing historical evidence."
+}

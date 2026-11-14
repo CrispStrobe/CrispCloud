@@ -632,16 +632,161 @@ extension _WordMedia on _StructuredWordWriter {
       }
     }
     final ids = <(bool, int)>{};
+    final storyOwners = <String>{};
+    final occurrenceOwners = <(bool, int, int), LegacyWordTextboxReference>{};
+    void claim(
+      LegacyWordTextboxReference reference,
+      int shapeId,
+      int anchorCp,
+    ) {
+      final owner = _storyAt(anchorCp);
+      // PlcfSpaMom addresses main; PlcfSpaHdr addresses the Hdd buffer,
+      // including all six note separator/continuation slots. A field-hidden
+      // anchor still has to belong to the declared source domain.
+      if (owner != null &&
+          (reference.inHeaderFooter
+              ? !const {
+                  LegacyWordStoryKind.header,
+                  LegacyWordStoryKind.footer,
+                  LegacyWordStoryKind.footnoteSeparator,
+                  LegacyWordStoryKind.footnoteContinuationSeparator,
+                  LegacyWordStoryKind.footnoteContinuationNotice,
+                  LegacyWordStoryKind.endnoteSeparator,
+                  LegacyWordStoryKind.endnoteContinuationSeparator,
+                  LegacyWordStoryKind.endnoteContinuationNotice,
+                }.contains(_stories[owner]?.kind)
+              : owner != 'main')) {
+        throw const FormatException('Conflicting Word textbox anchor story.');
+      }
+      final key = (reference.inHeaderFooter, shapeId, anchorCp);
+      final previous = occurrenceOwners[key];
+      if (previous != null && !identical(previous, reference)) {
+        throw const FormatException('A Word textbox drawing has two owners.');
+      }
+      occurrenceOwners[key] = reference;
+    }
+
+    void validateDrawingLink(
+      LegacyWordTextboxReference reference,
+      LegacyWordTextboxAnchor anchor,
+      int? nextShapeId,
+    ) {
+      final shape =
+          drawings[(reference.inHeaderFooter, anchor.shapeId, anchor.anchorCp)];
+      if (shape == null) return;
+      final encoded = shape.textboxId;
+      if (encoded != null &&
+          encoded != 0 &&
+          (encoded >> 16 != reference.id ||
+              (encoded & 0xffff) != anchor.chainIndex)) {
+        throw const FormatException('Conflicting Word textbox drawing link.');
+      }
+      if (shape.nextTextboxShapeId != null &&
+          shape.nextTextboxShapeId != 0 &&
+          shape.nextTextboxShapeId != nextShapeId) {
+        // POI Bug50936_1 retains singleton FTXBXS stories whose FSPA has no
+        // client textbox identity and points to itself. This does not prove
+        // a valid active chain. Preserve the source and its raw self-link as
+        // inert evidence, after validating the exact story/drawing ownership.
+        final unidentifiedSelfLink =
+            (encoded == null || encoded == 0) &&
+            reference.chainLength == 1 &&
+            reference.shapeId == shape.shapeId &&
+            reference.anchorCp == shape.anchorCp &&
+            reference.anchors.isEmpty &&
+            reference.headerAliases.isEmpty &&
+            reference.replicaAnchors.isEmpty &&
+            anchor.chainIndex == 0 &&
+            nextShapeId == null &&
+            shape.nextTextboxShapeId == shape.shapeId;
+        if (!unidentifiedSelfLink) {
+          throw const FormatException('Conflicting Word textbox drawing link.');
+        }
+        _unidentifiedTextboxSelfLinks[reference] = shape;
+      }
+    }
+
     WordHeaderTextboxAliases? headerAliases;
     for (final reference in document.textboxReferences) {
-      if (!ids.add((reference.inHeaderFooter, reference.id))) {
+      if (reference.id < 1 ||
+          !ids.add((reference.inHeaderFooter, reference.id)) ||
+          !storyOwners.add(reference.storyId)) {
         throw const FormatException('Duplicate Word textbox identity.');
       }
       final story = _stories[reference.storyId];
       if (story == null ||
-          (story.kind != LegacyWordStoryKind.textbox &&
-              story.kind != LegacyWordStoryKind.headerTextbox)) {
+          story.kind !=
+              (reference.inHeaderFooter
+                  ? LegacyWordStoryKind.headerTextbox
+                  : LegacyWordStoryKind.textbox)) {
         throw const FormatException('Invalid Word textbox story.');
+      }
+      if (reference.chainLength < 1 || reference.chainLength > 4096) {
+        throw const FormatException('Invalid Word textbox chain length.');
+      }
+      // Source indices define the chain. Caller list order must neither
+      // invent a different flow nor mutate the retained public model.
+      final primaryAnchors = reference.anchors.toList()
+        ..sort((a, b) => a.chainIndex.compareTo(b.chainIndex));
+      if (primaryAnchors.isNotEmpty) {
+        if (primaryAnchors.length != reference.chainLength ||
+            (reference.shapeId != null &&
+                primaryAnchors.first.shapeId != reference.shapeId) ||
+            (reference.anchorCp != null &&
+                primaryAnchors.first.anchorCp != reference.anchorCp)) {
+          throw const FormatException('Incomplete Word textbox shape chain.');
+        }
+        final shapes = <int>{};
+        for (var i = 0; i < primaryAnchors.length; i++) {
+          final anchor = primaryAnchors[i];
+          final next = i + 1 < primaryAnchors.length
+              ? primaryAnchors[i + 1].shapeId
+              : null;
+          if (anchor.chainIndex != i ||
+              !shapes.add(anchor.shapeId) ||
+              (anchor.nextShapeId != null &&
+                  anchor.nextShapeId != 0 &&
+                  anchor.nextShapeId != next)) {
+            throw const FormatException('Invalid Word textbox shape chain.');
+          }
+        }
+      }
+      if (reference.declaredChainLength != null &&
+          (reference.declaredChainLength != 1 ||
+              reference.chainLength <= 1 ||
+              primaryAnchors.length != reference.chainLength ||
+              List.generate(
+                primaryAnchors.length - 1,
+                (i) =>
+                    primaryAnchors[i].nextShapeId ==
+                    primaryAnchors[i + 1].shapeId,
+              ).any((matches) => !matches))) {
+        throw const FormatException('Unproved Word textbox chain recovery.');
+      }
+      if (reference.shapeId != null && reference.anchorCp != null) {
+        claim(reference, reference.shapeId!, reference.anchorCp!);
+      }
+      for (final anchor in [
+        ...primaryAnchors,
+        ...reference.headerAliases,
+        ...reference.replicaAnchors,
+      ]) {
+        claim(reference, anchor.shapeId, anchor.anchorCp);
+      }
+      // Validate every supplied link before any unavailable/hidden placement
+      // can cause an inert fallback and skip the remainder of the chain.
+      for (var i = 0; i < primaryAnchors.length; i++) {
+        validateDrawingLink(
+          reference,
+          primaryAnchors[i],
+          i + 1 < primaryAnchors.length ? primaryAnchors[i + 1].shapeId : null,
+        );
+      }
+      for (final anchor in [
+        ...reference.headerAliases,
+        ...reference.replicaAnchors,
+      ]) {
+        validateDrawingLink(reference, anchor, null);
       }
       if (reference.placementUnresolved) {
         if (reference.inHeaderFooter ||
@@ -698,19 +843,45 @@ extension _WordMedia on _StructuredWordWriter {
           )] ??
           firstDrawings[(reference.inHeaderFooter, reference.shapeId)] ??
           drawingStories[(reference.inHeaderFooter, reference.id)];
+      if (drawing != null) {
+        if ((reference.shapeId != null &&
+                reference.shapeId != drawing.shapeId) ||
+            (reference.anchorCp != null &&
+                reference.anchorCp != drawing.anchorCp)) {
+          throw const FormatException(
+            'Word textbox first-shape references do not agree.',
+          );
+        }
+        claim(reference, drawing.shapeId, drawing.anchorCp);
+        if (primaryAnchors.isEmpty && reference.chainLength == 1) {
+          validateDrawingLink(
+            reference,
+            LegacyWordTextboxAnchor(
+              shapeId: drawing.shapeId,
+              anchorCp: drawing.anchorCp,
+              chainIndex: 0,
+            ),
+            null,
+          );
+        }
+      }
       final cp = reference.anchorCp ?? drawing?.anchorCp;
       final owner = cp == null ? null : _storyAt(cp);
       if (owner == null ||
           !_displayPosition(cp!) ||
           drawing == null ||
           drawing.shapeDeleted ||
-          !_validDrawing(drawing)) {
+          !_validDrawing(drawing) ||
+          _unidentifiedTextboxSelfLinks.containsKey(reference) ||
+          (primaryAnchors.isEmpty && reference.chainLength != 1)) {
         limitations.add(LegacyWordConversionLimitation.embeddedObjects);
+        // A declared multi-frame story without client links cannot be
+        // represented by guessing one active frame from its first FSPA.
         // Serialize after all inline events have been prepared and sorted.
         _unplacedTextboxes.add((reference, story));
         continue;
       }
-      final primaryChain = reference.anchors.isEmpty
+      final primaryChain = primaryAnchors.isEmpty
           ? [
               LegacyWordTextboxAnchor(
                 shapeId: drawing.shapeId,
@@ -718,7 +889,7 @@ extension _WordMedia on _StructuredWordWriter {
                 chainIndex: 0,
               ),
             ]
-          : reference.anchors;
+          : primaryAnchors;
       final shared =
           reference.replicaAnchors.isNotEmpty &&
           reference.headerAliases.isEmpty;
@@ -745,7 +916,8 @@ extension _WordMedia on _StructuredWordWriter {
       if (chain.length > 4096) _tooComplex();
       final resolved = <(LegacyWordDrawing, int, String)>[];
       final sharedOwners = <String>{};
-      for (final anchor in chain) {
+      for (var chainIndex = 0; chainIndex < chain.length; chainIndex++) {
+        final anchor = chain[chainIndex];
         final shape =
             drawings[(
               reference.inHeaderFooter,
@@ -753,6 +925,7 @@ extension _WordMedia on _StructuredWordWriter {
               anchor.anchorCp,
             )];
         final owner = _storyAt(anchor.anchorCp);
+        claim(reference, anchor.shapeId, anchor.anchorCp);
         if (shared &&
             (anchor.chainIndex != 0 ||
                 (anchor.nextShapeId ?? 0) != 0 ||
@@ -932,6 +1105,7 @@ extension _WordMedia on _StructuredWordWriter {
       });
     }
     for (final (reference, story) in _unplacedTextboxes) {
+      final selfLink = _unidentifiedTextboxSelfLinks[reference];
       final evidence = _wordPart('txbxContent');
       final path = 'word/textboxEvidence${_evidenceRecords.length + 1}.xml';
       _withStory(story, path, evidence, () => _blocks(story.blocks));
@@ -944,8 +1118,27 @@ extension _WordMedia on _StructuredWordWriter {
         'story': story.id,
         'nextTextboxId': reference.nextTextboxId,
         'shapeId': reference.shapeId,
+        'chainLength': reference.chainLength,
+        if (reference.declaredChainLength != null)
+          'declaredChainLength': reference.declaredChainLength,
+        if (reference.anchors.isNotEmpty)
+          'anchors': [
+            for (final anchor in reference.anchors)
+              {
+                'shapeId': anchor.shapeId,
+                'anchorCp': anchor.anchorCp,
+                'chainIndex': anchor.chainIndex,
+                'nextShapeId': anchor.nextShapeId,
+              },
+          ],
         'placementUnresolved': reference.placementUnresolved,
-        'reason': 'source placement not established',
+        if (selfLink != null) ...{
+          'anchorCp': selfLink.anchorCp,
+          'nextShapeId': selfLink.nextTextboxShapeId,
+        },
+        'reason': selfLink == null
+            ? 'source placement not established'
+            : 'unidentified singleton has a self-link',
       });
     }
     // Non-renderable/unreferenced assets are never silently discarded, even if

@@ -735,9 +735,10 @@ class LegacyWordTableCell {
     this.mergeContinue = false,
     this.verticalMergeStart = false,
     this.verticalMergeContinue = false,
-    this.shading,
+    LegacyWordShading? shading,
     this.formatting = const LegacyWordTableCellFormat(),
-  }) : _blocks = blocks;
+  }) : _blocks = blocks,
+       _shading = shading;
 
   /// Direct paragraphs in this cell. [blocks] retains their order relative to
   /// nested tables; consumers rendering complete content should use [blocks].
@@ -749,7 +750,11 @@ class LegacyWordTableCell {
   final bool mergeContinue;
   final bool verticalMergeStart;
   final bool verticalMergeContinue;
-  final LegacyWordShading? shading;
+  final LegacyWordShading? _shading;
+
+  /// Effective cell shading. An explicit legacy constructor value takes
+  /// precedence; otherwise use the direct cell [formatting].
+  LegacyWordShading? get shading => _shading ?? formatting.shading;
   final LegacyWordTableCellFormat formatting;
 }
 

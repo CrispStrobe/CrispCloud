@@ -18,15 +18,64 @@ every Word document or every renderer.
 
 ## Evidence is versioned
 
+The [14 November follow-up](parser-audit-20261114-followup.md) validates clean
+source **a25e4ea824886327b97bde2873e6ef175a5ab971**, separately from subsequent
+documentation commits. Its six repairs preserve direct public cell shading,
+enforce the embedded-object Bool8 operand, retain fixed built-in heading
+levels, apply indirect paragraph-property replacement correctly, validate
+bookmark metadata and story boundaries before visibility fallback, and check
+textbox identities, owners and source chains before placement fallback.
+Valid header/footer and six Hdd separator/continuation owners remain supported.
+
+The combined gate passes 3,903 Dart tests, 197 Python controls, 38 compiled
+JavaScript groups and 1,533 independent SDK package validations: 1,114
+DOC-derived outputs and 419 public-model outputs in nine groups. All 24
+retained oracle inputs validate; 353 Dart files need no formatting changes,
+and the publish dry run reports zero warnings. The
+[follow-up receipt and logs](evidence/parser-audit-20261114-followup/README.md)
+retain the exact source and acceptance evidence. No new native rendering or
+editor accept/reject measurement is claimed by this pass.
+
+The [14 November audit continuation](parser-audit-20261114.md) validates clean
+runtime **2f8a307** with 3,688 Dart tests, 195 Python controls, 34 compiled
+JavaScript acceptance groups and 1,426 schema-valid packages (1,057 DOC-derived
+and 369 public-model outputs). It fixes current/historical section scalar
+domains, missing public section coverage, hidden comment-reference validation,
+and compound byte-sink reuse. All seven public export corpora now run inside
+the SDK gate with independent inventories, hashes and repeated generation.
+The [saved receipt and logs](evidence/parser-audit-20261114/README.md) are new
+portable/schema evidence; they do not replace missing historical native
+artifacts or certify physical layout and editor review behavior.
+
+
+The [fifth parser audit](parser-audit-20261113-fifth-pass.md) is implemented
+through runtime `6b57d17` and merged in `83acdf1`. It adds source-aware
+literal-percent list labels, complete supported marker inheritance and resets,
+bounded compound metadata and shared directory ownership, note ownership,
+formatting-domain validation, field visibility validation and complete typed
+display-field revision evidence. Callers can opt into
+`LegacyWordFieldMode.cachedResults`; default active fields can still be
+recalculated by consuming applications.
+
+The [fifth-pass recovery index](evidence/parser-audit-20261113-fifth-pass/README.md)
+retains successful portable and SDK receipts for that historical runtime.
+**The original evidence upload is incomplete:** 3,124 of 14,103 manifest files
+are present, with every retained member hash verified. Archives 005–017 and
+the principal native rerun artifacts are missing. Transcript native totals
+must not be treated as newly verified rendering acceptance. Later validation
+needs its own source identities and complete saved artifacts.
+
 The [fourth parser audit](parser-audit-20261113-fourth-pass.md) validates runtime
 **e84f413** with 1,361 Dart tests, 162 Python controls, actual compiled-JavaScript
 acceptance and 320 schema-valid packages (279 DOC-derived DOCX, 24 public-image
 DOCX and 17 public-compound DOCM). All 297 preceding DOCX outputs remain
 byte-identical. The [evidence bundle](evidence/parser-audit-20261113-fourth-pass/README.md)
 retains exact source identities, original failures and the passing receipts.
-This adds list-text, text-only Unicode and public OLE/VBA activation checks;
-literal `%1`–`%9` labels, the two measured LibreOffice field-import differences,
-full CFB conformance and native Word rendering fidelity remain open.
+That historical pass added list-text, text-only Unicode and public OLE/VBA
+activation checks. Literal `%1`–`%9` labels and the two measured LibreOffice
+field-import differences were still open at that checkpoint; the fifth pass
+subsequently changed list and field handling as described above. Full CFB
+conformance and native Word rendering fidelity remain broader open scope.
 
 The earlier integrated runtime **c5ff75e7** has
 [portable/schema evidence](evidence/continuation-c5ff75e7/README.md) records

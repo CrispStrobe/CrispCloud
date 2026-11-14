@@ -242,7 +242,7 @@ extension _WordTableText on _StructuredWordParser {
       properties,
       budget,
       warnings,
-      resolveParagraphStyle: (index) => _resolveStyle(index).paragraph,
+      resolveParagraphStyle: _paragraphStyleForSelection,
     );
     return _PreparedParagraph(papx.styleIndex, operations, properties);
   }

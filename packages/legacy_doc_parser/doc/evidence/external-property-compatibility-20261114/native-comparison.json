@@ -1,0 +1,118 @@
+[
+  {
+    "file": "Bug51834.doc",
+    "ours": {
+      "sha256": "d43a05050c6b7b9252903ec1e71b2c2025862dd832809ff89e957bb538a45c79",
+      "characters": 4897,
+      "tables": 2,
+      "rowCellCounts": [
+        [
+          4,
+          1,
+          4,
+          1,
+          4,
+          1,
+          2,
+          2,
+          2,
+          2,
+          1,
+          2,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "gridColumns": [
+        4,
+        1
+      ]
+    },
+    "lo": {
+      "sha256": "8e72ba6d47c1038195299a2367319006ec538f41f0e4ded138094734dcece5cd",
+      "characters": 4897,
+      "tables": 2,
+      "rowCellCounts": [
+        [
+          4,
+          1,
+          4,
+          1,
+          4,
+          1,
+          2,
+          2,
+          2,
+          2,
+          1,
+          2,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "gridColumns": [
+        4,
+        1
+      ]
+    },
+    "textEqual": true,
+    "rowCellCountsEqual": true,
+    "gridColumnsEqual": true
+  },
+  {
+    "file": "57603-seven_columns.doc",
+    "ours": {
+      "sha256": "6ef780368addf75ad222b289f71110eb2a4a9f94592422e7e8bd463402e96c37",
+      "characters": 0,
+      "tables": 1,
+      "rowCellCounts": [
+        [
+          7
+        ]
+      ],
+      "gridColumns": [
+        7
+      ]
+    },
+    "lo": {
+      "sha256": "2ece740e64ea4591a13f7193abbb751c6fd0f2b2e6acb8a230a94ed3938e1879",
+      "characters": 0,
+      "tables": 1,
+      "rowCellCounts": [
+        [
+          7
+        ]
+      ],
+      "gridColumns": [
+        7
+      ]
+    },
+    "textEqual": true,
+    "rowCellCountsEqual": true,
+    "gridColumnsEqual": true
+  }
+]

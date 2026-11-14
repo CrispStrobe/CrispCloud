@@ -59,7 +59,7 @@ List<_Sprm> _decodeSprms(
   Uint8List bytes,
   _Budget budget, {
   void Function()? onPapxOrphanByte,
-  bool stopAtTableProperties = false,
+  bool stopAtReplacingProperties = false,
 }) {
   final input = _Bytes(bytes);
   final output = <_Sprm>[];
@@ -117,7 +117,10 @@ List<_Sprm> _decodeSprms(
     input.require(position, size);
     output.add(_Sprm(code, input.slice(position + prefix, size - prefix)));
     position += size;
-    if (stopAtTableProperties && code == 0x646b) break;
+    if (stopAtReplacingProperties &&
+        (code == 0x646b || (code == 0x6646 && output.length == 1))) {
+      break;
+    }
   }
   return output;
 }
@@ -187,7 +190,6 @@ const _toggleProperties = <int, String>{
   0x083c: 'hidden',
   0x2a53: 'doubleStrike',
   0x0855: 'special',
-  0x0856: 'object',
 };
 const _palette = <String?>[
   null,
@@ -387,6 +389,9 @@ void _applyCharacter(
         output['data'] = _boolean(data);
       case 0x080a:
         output['ole2'] = _boolean(data);
+      case 0x0856:
+        // CFObj is Bool8; CFSpec and the visual flags use ToggleOperand.
+        output['object'] = _boolean(data);
       // Language, proofing and revision-save identifiers do not change the
       // supported visual properties. Script language selection remains a limit.
       case 0x486d:
@@ -600,10 +605,12 @@ void _applyParagraph(
         output['tableStyleOptions'] = value.u16(2);
       case 0xd605:
       case 0xd613:
-        output['tableBorders'] = _readTableBorders(
-          value,
-          old: operation.code == 0xd605,
-        );
+        output['tableBorders'] =
+            Map<LegacyWordTableBorderSide, LegacyWordBorder>.unmodifiable({
+              ...?output['tableBorders']
+                  as Map<LegacyWordTableBorderSide, LegacyWordBorder>?,
+              ..._readTableBorders(value, old: operation.code == 0xd605),
+            });
       case 0xd632:
       case 0xd634:
         final wholeRow = operation.code == 0xd634;
@@ -710,6 +717,7 @@ void _applyParagraph(
           _Bytes(value.slice(3, width)),
           old: old,
         );
+        if (border == null) continue;
         final borders = <LegacyWordTableBorderSide, LegacyWordBorder>{
           for (var side = 0; side < (old ? 4 : 6); side++)
             if ((sides & (1 << side)) != 0)
@@ -775,16 +783,17 @@ void _applyParagraph(
         output['outline'] = level;
       case 0x460b:
         final id = value.i16(0);
-        if (id < -2047 || id > 2046) {
+        // 2047 is the pre-Word 97 ANLD marker, not an LFO index. Preserve it
+        // while composing styles; the final list context rejects it unless
+        // a descendant has replaced the old numbering with supported data.
+        if (id < -2047 || id > 2047) {
           throw const FormatException('Invalid Word list-instance index.');
         }
         output['listId'] = id;
       case 0x260a:
-        final level = value.u8(0);
-        if (level > 8 && level != 12) {
-          throw const FormatException('Invalid Word list level.');
-        }
-        output['listLevel'] = level;
+        // The operand is ignored for non-list paragraphs. Resolve ilfo first,
+        // including later properties and each retained revision snapshot.
+        output['listLevel'] = value.u8(0);
       case 0xc60d:
       case 0xc615:
         output['tabs'] = _changeTabs(
@@ -807,14 +816,13 @@ void _applyParagraph(
         final side = operation.code == 0x6629
             ? 5
             : operation.code - (old ? 0x6424 : 0xc64e);
+        final border = _readParagraphBorder(value, old: old);
+        if (border == null) continue;
         output['borders'] =
             Map<LegacyWordBorderSide, LegacyWordBorder>.unmodifiable({
               ...?output['borders']
                   as Map<LegacyWordBorderSide, LegacyWordBorder>?,
-              LegacyWordBorderSide.values[side]: _readParagraphBorder(
-                value,
-                old: old,
-              ),
+              LegacyWordBorderSide.values[side]: border,
             });
       case 0xd609:
         _applyCellShading(value, output, budget, warnings, old: true);
@@ -838,6 +846,8 @@ void _applyParagraph(
           raw: operation.code >= 0xd670,
         );
       case 0xd608:
+        final previousDefinition =
+            output['tableDefinition'] as _TableDefinition?;
         final count = value.u8(0);
         if (count > 63) {
           throw const FormatException('Invalid Word table column count.');
@@ -880,12 +890,19 @@ void _applyParagraph(
           };
           final borders = <LegacyWordTableBorderSide, LegacyWordBorder>{};
           for (var side = 0; side < 4; side++) {
-            borders[LegacyWordTableBorderSide.values[side]] = i * 20 < available
+            final borderSide = LegacyWordTableBorderSide.values[side];
+            final parsed = i * 20 < available
                 ? _readTableBorder(
                     _Bytes(value.slice(cellStart + i * 20 + 4 + side * 4, 4)),
                     old: true,
                   )
                 : const LegacyWordBorder(style: 'none', widthEighthPoints: 0);
+            final border =
+                parsed ??
+                (i < (previousDefinition?.formats.length ?? 0)
+                    ? previousDefinition!.formats[i].borders[borderSide]
+                    : null);
+            if (border != null) borders[borderSide] = border;
           }
           formats.add(
             LegacyWordTableCellFormat(

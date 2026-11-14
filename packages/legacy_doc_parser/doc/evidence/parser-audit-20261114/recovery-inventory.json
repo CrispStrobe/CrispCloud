@@ -1,0 +1,94 @@
+{
+  "schema": "legacy-doc-parser.evidence-recovery",
+  "version": 1,
+  "checkedDate": "2026-11-14",
+  "repository": "CrispStrobe/legacy-doc-parser",
+  "examinedMainCommit": "731e37032e11a3bc1ae6bdb0475fdcb48067bda4",
+  "implementationReceiptCommit": "6b57d176fccd6f4b8b11bae2e7168f73e870e9dc",
+  "evidenceCheckpointCommit": "4de67fe946bd13304e5999759f1d9846e9a50864",
+  "mergeCommit": "83acdf1c8b6b1b6346f0744988ef3d15f9fa08ff",
+  "evidenceDirectory": "doc/evidence/parser-audit-20261113-fifth-pass/bundle",
+  "complete": false,
+  "controlArchive": {
+    "name": "evidence-000-control.zip",
+    "bytes": 1184077,
+    "crcPassed": true,
+    "files": [
+      "manifest.json",
+      "SHA256SUMS",
+      "partition-plan.json"
+    ]
+  },
+  "plannedDataArchiveCount": 17,
+  "availableDataArchiveCount": 4,
+  "expectedManifestEntries": 14103,
+  "retainedManifestEntries": 3124,
+  "missingManifestEntries": 10979,
+  "availableDataArchives": [
+    {
+      "name": "evidence-001.zip",
+      "bytes": 1899876,
+      "manifestEntries": 572,
+      "crcPassed": true
+    },
+    {
+      "name": "evidence-002.zip",
+      "bytes": 1899958,
+      "manifestEntries": 879,
+      "crcPassed": true
+    },
+    {
+      "name": "evidence-003.zip",
+      "bytes": 1898512,
+      "manifestEntries": 1029,
+      "crcPassed": true
+    },
+    {
+      "name": "evidence-004.zip",
+      "bytes": 1899514,
+      "manifestEntries": 644,
+      "crcPassed": true
+    }
+  ],
+  "missingDataArchives": [
+    "evidence-005.zip",
+    "evidence-006.zip",
+    "evidence-007.zip",
+    "evidence-008.zip",
+    "evidence-009.zip",
+    "evidence-010.zip",
+    "evidence-011.zip",
+    "evidence-012.zip",
+    "evidence-013.zip",
+    "evidence-014.zip",
+    "evidence-015.zip",
+    "evidence-016.zip",
+    "evidence-017.zip"
+  ],
+  "verification": {
+    "method": "Python zipfile CRC checks and hashlib.sha256 of every available data member compared with the original control manifest",
+    "verifiedMemberHashes": 3124,
+    "mismatchedMemberHashes": 0,
+    "originalArchivesModified": false,
+    "scope": "Retained subset only; missing files prevent full-bundle verification."
+  },
+  "retainedAcceptanceReceipts": [
+    "runs/final/acceptance/portable-receipt.json",
+    "runs/final/acceptance/schema-receipt.json"
+  ],
+  "historicalRecordedResults": {
+    "dartTests": 3345,
+    "pythonControls": 166,
+    "retainedCorpusChecks": 24,
+    "compiledJavaScriptGroups": 30,
+    "docDerivedSdkPackages": 1046,
+    "publicModelSdkPackages": 325,
+    "totalSdkPackages": 1371,
+    "portableSourceHashes": 697,
+    "schemaSourceHashes": 432,
+    "scope": "Results recorded for the receipt commit; not new execution against examined main.",
+    "countSource": "Contemporaneous session transcript, corroborated by retained successful-command receipts; archived logs were not rerun during recovery."
+  },
+  "nativeEvidenceStatus": "Principal native evidence is missing. Aggregate native outcomes quoted by the supplied transcript are not newly verified by this recovery.",
+  "laterSourceIdentityStatus": "No new source-hash equivalence or acceptance claim is made for the merge or subsequent repairs."
+}

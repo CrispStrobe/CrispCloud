@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "containerReader": "olefile 0.47",
+  "sources": [
+    {
+      "file": "56880.doc",
+      "sha256": "447fb46ea0d0d374f8f10f99c4ec92d0c9f694427b5d17ae02574a4b17bce224",
+      "bytes": 19968,
+      "tableStream": "1Table",
+      "nFib": "0x00C1",
+      "revisionAuthorTable": {
+        "fibPair": 51,
+        "offset": 1351,
+        "bytes": 22,
+        "hex": "00000000000000000000000000000000000000000000",
+        "allZero": true
+      }
+    },
+    {
+      "file": "57603-seven_columns.doc",
+      "sha256": "1e37dac76f3690f88674b44558a73ff447946264250ed41ccb1a25e33b9988ef",
+      "bytes": 42496,
+      "tableStream": "1Table",
+      "nFib": "0x00C1",
+      "styles": [
+        {
+          "styleIndex": 40,
+          "name": "PR_Corps à puce",
+          "parentIndex": 0,
+          "recordOffset": 4436,
+          "numberingProperties": [
+            {
+              "sprm": "0x260A",
+              "operandHex": "0a",
+              "value": 10
+            },
+            {
+              "sprm": "0x460B",
+              "operandHex": "ff07",
+              "signedValue": 2047
+            },
+            {
+              "sprm": "0xC63E",
+              "operandHex": "ff01000800000700000001001c01710000000000b7f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+              "operandBytes": 84
+            }
+          ]
+        },
+        {
+          "styleIndex": 41,
+          "name": "PR_Corps contrôle",
+          "parentIndex": 0,
+          "recordOffset": 4614,
+          "numberingProperties": [
+            {
+              "sprm": "0x260A",
+              "operandHex": "0a",
+              "value": 10
+            },
+            {
+              "sprm": "0x460B",
+              "operandHex": "ff07",
+              "signedValue": 2047
+            },
+            {
+              "sprm": "0xC63E",
+              "operandHex": "ff01000800000700180001008d011c01000000003ff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+              "operandBytes": 84
+            }
+          ]
+        },
+        {
+          "styleIndex": 42,
+          "name": "PR_Corps choix",
+          "parentIndex": 41,
+          "recordOffset": 4804,
+          "numberingProperties": [
+            {
+              "sprm": "0xC63E",
+              "operandHex": "ff01000800000700180001008d011c0100000000aef00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+              "operandBytes": 84
+            }
+          ]
+        },
+        {
+          "styleIndex": 43,
+          "name": "PR_Corps directive",
+          "parentIndex": 42,
+          "recordOffset": 4958,
+          "numberingProperties": [
+            {
+              "sprm": "0x260A",
+              "operandHex": "00",
+              "value": 0
+            },
+            {
+              "sprm": "0x460B",
+              "operandHex": "0600",
+              "signedValue": 6
+            }
+          ]
+        },
+        {
+          "styleIndex": 53,
+          "name": "PR_Liste à numéro",
+          "parentIndex": 40,
+          "recordOffset": 6244,
+          "numberingProperties": [
+            {
+              "sprm": "0x260A",
+              "operandHex": "00",
+              "value": 0
+            },
+            {
+              "sprm": "0x460B",
+              "operandHex": "0700",
+              "signedValue": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "Bug51834.doc",
+      "sha256": "fb570d42bc0bdea8df147549a8b662a013bfb61b953c9c058138caf65af64907",
+      "bytes": 47104,
+      "tableStream": "1Table",
+      "nFib": "0x00C1",
+      "ignoredBorderOperand": {
+        "hex": "ffffffffffffe0ff",
+        "type": 255,
+        "lastFourBytes": "ffffe0ff",
+        "isModernNil": false,
+        "exactByteOccurrences": [
+          {
+            "stream": "Data",
+            "offset": 2842
+          }
+        ]
+      }
+    }
+  ]
+}

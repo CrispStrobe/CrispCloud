@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "sourceRepository": "CrispStrobe/legacy-doc-parser",
+  "baselineRuntimeCommit": "be0c01adf6b422a5dbc67a6d22d8bb14428375da",
+  "integrationRuntimeCommit": "0537d1e158cce465a5780fc8e3c0cd0d1bfdd243",
+  "corpusCommit": "6b0d7e816faf70415f15bfb47c0ab0f8d61172dc",
+  "upstreamCorpusCommit": "47dcff769bb395034dddfd59c4609659b6dbc6a4",
+  "archives": [
+    {
+      "file": "baseline-and-oracles.zip",
+      "bytes": 3950290,
+      "sha256": "a2fa058e9eeaf363978eeb7735ad209b1f9427abfe6b4a00cbeb2a31c34c6282",
+      "entries": 726
+    },
+    {
+      "file": "integration-0537.zip",
+      "bytes": 4134362,
+      "sha256": "6f116c8c6a701e099efb05767d52a95961841bbb53571990177af5023f79b764",
+      "entries": 652
+    },
+    {
+      "file": "visual-review.zip",
+      "bytes": 1008960,
+      "sha256": "36e12a1c16196403d78d405f1ee06e6349a818d28f7f000eed86ea575685a1ac",
+      "entries": 12
+    }
+  ],
+  "counts": {
+    "sources": 88,
+    "doc": 40,
+    "docx": 48,
+    "baselineConvertedDoc": 26,
+    "integrationConvertedDoc": 31,
+    "sdkGeneratedPackages": 62,
+    "sdkErrors": 0,
+    "nativePdfRenders": 62,
+    "poiReadSuccess": 87,
+    "poiDepthLimitRejection": 1,
+    "dartTests": 4063,
+    "pythonTests": 197
+  },
+  "notes": [
+    "This is an immutable integration checkpoint. Any later repair and final gate is recorded separately.",
+    "A native DOC import is an oracle observation, not a specification or Microsoft Word behavior claim.",
+    "Both field modes are included; all originals and generated inputs remain byte unchanged.",
+    "The 53446 main text disagreement is fully explained by native revision import handling, independently inspected with source CHPX and Apache POI."
+  ]
+}

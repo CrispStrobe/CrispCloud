@@ -18,6 +18,7 @@ void main() {
   test('seeded CFB mutation, geometry and source-work matrix', () {
     final report = verifyCompoundPropertyAcceptance();
     expect(report['mutationCases'], 4096);
+    expect(report['byteSinkReuseCases'], 2);
     expect(report['unexpectedFailures'], 0);
     expect(report['outsideReadAttempts'], 0);
   });

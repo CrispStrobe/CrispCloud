@@ -1,0 +1,124 @@
+{
+  "gates": {
+    "analysis": {
+      "exit": 0
+    },
+    "dart": {
+      "exit": 0,
+      "passedTests": 3667
+    },
+    "javascript": {
+      "exit": 0,
+      "groups": 34
+    },
+    "retainedCorpus": {
+      "checks": 24,
+      "exit": 0
+    }
+  },
+  "logArchive": {
+    "bytes": 40480,
+    "path": "portable-logs.zip",
+    "sha256": "e010b526f986d851ba17553bec67c1a6e26974a274281e1bf13cfa9566f28f9e"
+  },
+  "logs": [
+    {
+      "bytes": 65345,
+      "path": "targeted-before.log",
+      "sha256": "b22d6027d5ebed1520509a5550508131297ff6ade6a58c384942a20ea496c883"
+    },
+    {
+      "bytes": 20755,
+      "path": "targeted-fixed.log",
+      "sha256": "c2fa0855c28aaca29ede0b01f7c99fe5ae7a6373905940fd8d06df0730ff2c6c"
+    },
+    {
+      "bytes": 10944,
+      "path": "comments-before.log",
+      "sha256": "796f0fece7cfd10c89057008d83f6c282da8727d57571a1d93fe50199a988940"
+    },
+    {
+      "bytes": 6323,
+      "path": "comments-fixed.log",
+      "sha256": "425627d5110577177085d81a0b6a3d82cebb898c7475ca1103e01a959e731221"
+    },
+    {
+      "bytes": 10960,
+      "path": "geometry-web-fixed.log",
+      "sha256": "e44e276df7aa15d89efa76bc40a0bb1f12eb7629e3f31716874110c73c31ddeb"
+    },
+    {
+      "bytes": 50538,
+      "path": "web-vm.log",
+      "sha256": "0067868208ce9f708fd6d4b117dc7fbb3181d19a652261ea2c3d28b761fe0002"
+    },
+    {
+      "bytes": 441677,
+      "path": "dart-full.log",
+      "sha256": "c116a048c1494e74e0c9a333f392b48fda4f69101ad091cc92a605d2355625e3"
+    },
+    {
+      "bytes": 48,
+      "path": "analyze-full.log",
+      "sha256": "ad2ea1afd8dc83bdc28ef93f2914a0b11e1b8d54f1cae177bf068620befcbe86"
+    },
+    {
+      "bytes": 8368,
+      "path": "javascript.log",
+      "sha256": "8d4b158957e85509091cf931d7c0e2e550c26be25de3573e5fcb84a5329736d3"
+    },
+    {
+      "bytes": 51,
+      "path": "oracle.log",
+      "sha256": "11baa5f95b1e9f5e530e9280e15f7e105fea388dfcc79b7619eac0f8b4c5bb3d"
+    },
+    {
+      "bytes": 160,
+      "path": "format.log",
+      "sha256": "7ee0385f478008ddbfe395ba4c1aea8224ca94a8c1459b9edcec641e1501e3ea"
+    },
+    {
+      "bytes": 98,
+      "path": "format-second.log",
+      "sha256": "2347142fc123ae038d6ff8ec921d828d57b7bbedebd3972dd9a539ad392488e9"
+    },
+    {
+      "bytes": 1252,
+      "path": "pub-get.log",
+      "sha256": "ab6544db9223e49fab35f5a633989030cb75887b2c97bbc5f966a43e436393db"
+    },
+    {
+      "bytes": 12536,
+      "path": "resolved-pubspec.lock",
+      "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3"
+    }
+  ],
+  "reproductions": {
+    "commentReferences": {
+      "afterPassed": 43,
+      "beforeCommit": "4cd7321729ae14a04dcd452c16e6336b206afaa1",
+      "beforeFailed": 20,
+      "beforePassed": 23,
+      "withExistingThreadTestsPassed": 51
+    },
+    "geometryAndByteSink": {
+      "afterPassed": 217,
+      "beforeCommit": "2fa820a6bf19520dcbd3f08d688f82eafedaeb03",
+      "beforeFailed": 108,
+      "beforePassed": 109
+    }
+  },
+  "schema": "legacy-doc-parser.portable-audit",
+  "scope": "Dart VM, compiled JavaScript, analysis and retained source/package integrity. No native Office rendering or SDK result is claimed in this receipt.",
+  "sourceFiles": 733,
+  "sourceHashFile": "portable-source-hashes.json",
+  "sourceHashFileSha256": "7b4b8256cd1b95562fcf1f2f9ac57bd04c93b36d16dcc998a0395d2ac9d40916",
+  "testedCommit": "64901c6e5eb51c468325c59b0eed4b89a8bf1ebf",
+  "testedSourcesMatchGitHead": true,
+  "tools": {
+    "dart": "Dart SDK version: 3.14.0 (stable) (Wed Nov 4 16:28:39 2026 -0800) on \"linux_x64\"",
+    "node": "v24.22.1",
+    "python": "Python 3.12.14"
+  },
+  "version": 1
+}

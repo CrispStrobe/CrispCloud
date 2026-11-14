@@ -15,6 +15,24 @@ extension _WordCommentWriter on _StructuredWordWriter {
           'Invalid or duplicate Word comment reference.',
         );
       }
+      // Visibility never makes an invalid source position acceptable. Validate
+      // every thread member before hidden-parent propagation can suppress it.
+      final owner = _storyAt(reference.anchorCp);
+      if (owner == null) {
+        throw const FormatException('Invalid Word comment anchor.');
+      }
+      final rangeStart = reference.rangeStartCp;
+      final rangeEnd = reference.rangeEndCp;
+      if ((rangeStart == null) != (rangeEnd == null)) {
+        throw const FormatException('Invalid Word comment range.');
+      }
+      if (rangeStart != null && rangeEnd != null) {
+        final start = owner == 'main' ? 0 : _stories[owner]!.startCp;
+        final end = owner == 'main' ? _mainEnd : _stories[owner]!.endCp;
+        if (rangeStart < start || rangeEnd > end || rangeStart > rangeEnd) {
+          throw const FormatException('Invalid Word comment range.');
+        }
+      }
       _commentsById[reference.id] = reference;
       if (!_displayPosition(reference.anchorCp) ||
           reference.presentation.hidden) {

@@ -115,12 +115,15 @@ LegacyWordShading _readShading(
   );
 }
 
-LegacyWordBorder _readParagraphBorder(_Bytes value, {bool old = false}) {
+LegacyWordBorder? _readParagraphBorder(_Bytes value, {bool old = false}) {
   if (value.length != (old ? 4 : 8)) {
     throw const FormatException('Invalid Word border operand.');
   }
   final width = value.u8(old ? 0 : 4);
   final type = value.u8(old ? 1 : 5);
+  // BrcType 0xFF is ignored. It is not an explicit none/nil reset, and its
+  // unused color/width fields do not describe a replacement border.
+  if (type == 0xff) return null;
   final style = _borderStyles[type];
   // Art borders are valid only on a page, never on a paragraph. Brc80 does
   // not represent inset/outset. Unused bitfields are intentionally ignored.

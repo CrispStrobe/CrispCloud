@@ -7,6 +7,7 @@ import 'compound/cfbf_writer.dart';
 import 'legacy_word_metafile.dart';
 import 'legacy_word_number_formats.dart';
 import 'legacy_word_numbering.dart';
+import 'legacy_word_section_geometry.dart';
 import 'legacy_word_structured_model.dart';
 import 'legacy_word_structured_render.dart';
 import 'legacy_word_textbox_alias.dart';
@@ -341,7 +342,7 @@ class _StructuredWordParser {
     final operations = _decodeSprms(
       bytes,
       budget,
-      stopAtTableProperties: true,
+      stopAtReplacingProperties: true,
       onPapxOrphanByte: recoverPapxOrphanByte
           ? () {
               warnings.add(LegacyWordWarning.recoveredNonconformingProperties);
@@ -360,7 +361,11 @@ class _StructuredWordParser {
       output.addAll(values);
     }
 
-    for (final operation in operations) {
+    for (var index = 0; index < operations.length; index++) {
+      final operation = operations[index];
+      // MS-DOC 2.6.2: PHugePapx is ignored outside the first array position,
+      // including its otherwise unusable Data-stream offset.
+      if (operation.code == 0x6646 && index != 0) continue;
       if (operation.code != 0x6646 &&
           operation.code != 0x646b &&
           operation.code != 0x6645) {
@@ -370,13 +375,15 @@ class _StructuredWordParser {
       final offset = operation.data.u32(0);
       final data = source.data;
       final length = data.u16(offset);
-      if (operation.code == 0x646b && length < 10) {
-        throw const FormatException('Invalid Word indirect table properties.');
+      final replacesRemainder =
+          operation.code == 0x646b || operation.code == 0x6646;
+      if (replacesRemainder && length < 10) {
+        throw const FormatException('Invalid Word indirect properties.');
       }
       final cached = _indirectProperties[offset];
       if (cached != null) {
         append(cached);
-        if (operation.code == 0x646b) break;
+        if (replacesRemainder) break;
         continue;
       }
       if (!_indirectActive.add(offset)) {
@@ -386,9 +393,8 @@ class _StructuredWordParser {
       _indirectActive.remove(offset);
       _indirectProperties[offset] = nested;
       append(nested);
-      // PTableProps replaces the remainder of its containing array; older
-      // table properties after it are intended for readers without styles.
-      if (operation.code == 0x646b) break;
+      // PTableProps and a first PHugePapx replace the remainder of the array.
+      if (replacesRemainder) break;
     }
     return output;
   }
@@ -434,10 +440,15 @@ class _StructuredWordParser {
         properties,
         budget,
         warnings,
-        resolveParagraphStyle: (index) => resolve(index).paragraph,
+        resolveParagraphStyle: (index) =>
+            _paragraphStyleForSelection(index, tableContext),
       );
     }
     final styleIndex = properties['styleIndex'] as int? ?? prepared.styleIndex;
+    if (styles[styleIndex]?.kind != 1 &&
+        !(styleIndex == 0 && !styles.containsKey(0))) {
+      throw const FormatException('Invalid Word paragraph-style reference.');
+    }
     final resolved = resolve(styleIndex);
     final characterBase = _applyListFormatting(properties, resolved.character);
     final style = _paragraphStyle(properties, styleIndex);
@@ -764,7 +775,14 @@ class _StructuredWordParser {
   }
 
   LegacyWordParagraphStyle _paragraphStyle(_Props properties, int styleIndex) {
-    final outline = properties['outline'] as int?;
+    // Heading istd values have fixed outline levels. Apply this at the final
+    // style boundary so current and retained PWall states use their own istd.
+    final outline = styleIndex >= 1 && styleIndex <= 9
+        ? styleIndex - 1
+        : properties['outline'] as int?;
+    final rawListId = properties['listId'] as int?;
+    final listLevel = _resolvedListLevel(properties);
+    final listId = rawListId == -2047 || listLevel == 12 ? 0 : rawListId;
     return LegacyWordParagraphStyle(
       layout: _paragraphLayout(properties),
       styleIndex: styleIndex,
@@ -787,8 +805,8 @@ class _StructuredWordParser {
       keepNext: properties['keepNext'] == true,
       keepTogether: properties['keepTogether'] == true,
       pageBreakBefore: properties['pageBreakBefore'] == true,
-      listId: properties['listId'] as int?,
-      listLevel: properties['listLevel'] as int?,
+      listId: listId,
+      listLevel: listId == null || listId == 0 ? null : listLevel,
       tabs: properties['tabs'] as List<LegacyWordTabStop>? ?? const [],
       borders:
           properties['borders']
