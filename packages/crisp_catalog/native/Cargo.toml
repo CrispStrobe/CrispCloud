@@ -1,0 +1,13 @@
+[package]
+name = "crisp_catalog_bridge"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+crispcat-format = { path = "vendor/crispcat-format" }
+rusqlite = { version = "0.38", features = ["bundled"] }
+jwalk = "0.8"
+serde_json = "1"
+tempfile = "3"

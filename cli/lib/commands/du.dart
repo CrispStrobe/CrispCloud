@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:args/command_runner.dart';
 
 import '../disk_usage.dart';
+import 'package:crisp_catalog/crisp_catalog.dart';
 
 class DuCommand extends Command<int> {
   DuCommand({DiskUsageScanner? scanner})
@@ -30,8 +31,9 @@ class DuCommand extends Command<int> {
       ..addFlag('dirs-only', negatable: false, help: 'Show only directories.')
       ..addOption(
         'max-entries',
-        defaultsTo: '1000000',
-        help: 'Metadata entry budget, including the root.',
+        defaultsTo: '0',
+        help:
+            'Metadata entry budget including root; 0 scans without an entry cap.',
       )
       ..addOption(
         'max-depth',
@@ -43,6 +45,11 @@ class DuCommand extends Command<int> {
         'bytes',
         negatable: false,
         help: 'Print exact byte counts instead of human-readable sizes.',
+      )
+      ..addOption(
+        'index',
+        help:
+            'Query a saved .crispindex database offline; path is relative within it.',
       )
       ..addFlag(
         'json',
@@ -77,10 +84,54 @@ class DuCommand extends Command<int> {
       usageException('Use either --files-only or --dirs-only.');
     }
     final top = _number('top', 1, 10000);
-    final maxEntries = _number('max-entries', 1, 1000000000);
+    final maxEntries = _number('max-entries', 0, 9007199254740991);
     final maxDepth = _number('max-depth', 0, 500);
     final path = args.rest.isEmpty ? '.' : args.rest.single;
     final json = args['json'] as bool;
+    if (args['index'] case final String index) {
+      try {
+        final report = await const CrispCatalog().execute({
+          'op': 'query',
+          'index': index,
+          'path': args.rest.isEmpty ? '' : args.rest.single,
+          'top': top,
+          'filesOnly': args['files-only'],
+          'directoriesOnly': args['dirs-only'],
+          'recursive': args['recursive'],
+        });
+        if (json) {
+          stdout.writeln(const JsonEncoder.withIndent('  ').convert(report));
+        } else {
+          stdout.writeln(
+            'Historical catalogue indexed at '
+            '${DateTime.fromMillisecondsSinceEpoch((report['indexedAtUnix'] as int) * 1000, isUtc: true).toIso8601String()}; '
+            'source availability has not been checked.',
+          );
+          for (final row in report['entries'] as List) {
+            final bytes = row['bytes'] as int;
+            stdout.writeln(
+              '${row['complete'] == true ? '' : '>='}${args['bytes'] == true ? bytes : _human(bytes)}  ${row['type']}  ${jsonEncode(row['path'])}',
+            );
+          }
+          stdout.writeln('Logical total: ${report['root']['bytes']} bytes.');
+          if (report['complete'] != true) {
+            stderr.writeln(
+              'Catalogue is partial or its original coverage is unknown; use --json for diagnostics.',
+            );
+          }
+        }
+        return report['complete'] == true ? 0 : 1;
+      } on CatalogException catch (e) {
+        stderr.writeln(
+          json
+              ? jsonEncode({
+                  'error': {'code': 'catalogue_failed', 'message': e.message},
+                })
+              : e,
+        );
+        return 1;
+      }
+    }
     var cancelled = false;
     StreamSubscription<ProcessSignal>? signal;
     try {

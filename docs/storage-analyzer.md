@@ -74,8 +74,11 @@ the scanned folder or cloud account.
 Native installations store independent records in application support storage;
 the browser stores them in IndexedDB. These are local saved reports, without
 automatic cross-device synchronization or portable export. This analyzer does
-not currently import or export Cathy `.caf` files. The native snapshot format
-is independent of catalog interchange formats.
+not currently import or export Cathy `.caf` files through its GUI. The
+[standalone CLI](../cli/README.md#persistent-catalogues-and-cathycatfish-caf) now
+provides `crisp catalog` and `crisp du --index` using a shared native Rust/SQLite
+package with CAF interchange. Its catalogues are separate from these GUI saved
+reports; automatic migration and GUI catalogue controls remain pending.
 
 Opening history never grants access to the original source. Reveal and rescan
 require a matching live source and root; a different account stays read-only.

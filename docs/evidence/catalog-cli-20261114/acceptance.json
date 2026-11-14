@@ -1,0 +1,41 @@
+{
+  "local_platform": "macOS arm64",
+  "cli_tests": {
+    "passed": 148,
+    "existing_conditional_skips": 5
+  },
+  "rust_backend_tests": {
+    "passed": 8
+  },
+  "reused_format_tests": {
+    "passed": 23
+  },
+  "synthetic_scale": {
+    "synthetic_rows": 1000005,
+    "build_ms": 37505,
+    "query_ms": 2,
+    "database_bytes": 137625600
+  },
+  "scale_scope": "Synthetic SQLite metadata rows; excludes filesystem enumeration and is not a throughput guarantee. Earlier observed build/query: 16285/1 ms; final: 37505/2 ms.",
+  "interop": {
+    "writer_repository": "https://github.com/CrispStrobe/Catfish",
+    "writer_revision": "b4aa7b8a960bb74dcfd313719017dd0a739654a7",
+    "reader_fixed_revision": "18ce25f",
+    "result": "Windows root, Latin-1 filename and exact v8 zero-byte file agree after Python -> Rust/Dart -> Python readback",
+    "catfish_tests_passed": 135
+  },
+  "source_boundary": "CrispSorter crates/crispcat explicitly MIT slice at 3b0b7cc3216d54bf410184acf1f233bfa29c2284, with reviewed directory/unknown-size adaptations",
+  "licenses": {
+    "locked_host_packages": 45,
+    "collected": true
+  },
+  "analyzers": "New CLI/scanner/tests and complete crisp_catalog package: no issues",
+  "native_bundle": "Built with both libsmb2 and crisp_catalog code assets",
+  "pending": [
+    "Hosted Linux/Windows/macOS matrix acceptance",
+    "GUI analyzer/store migration to shared catalogue API",
+    "Incremental refresh and watchers",
+    "Streaming CAF import/export",
+    "Mobile/browser/WASM catalogue API"
+  ]
+}

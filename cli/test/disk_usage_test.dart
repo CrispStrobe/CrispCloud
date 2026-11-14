@@ -79,6 +79,15 @@ void main() {
     expect(result.root.bytes, 20);
     expect(result.rows.single.kind, UsageKind.file);
   });
+  test('zero entry budget means unlimited rather than an empty scan', () async {
+    final full = await DiskUsageScanner().scan(root, maxEntries: 0);
+    expect(full.root.bytes, 100);
+    expect(full.root.complete, isTrue);
+    expect(full.limited, isFalse);
+    final limited = await DiskUsageScanner().scan(root, maxEntries: 2);
+    expect(limited.root.complete, isFalse);
+    expect(limited.limited, isTrue);
+  });
   test('entry and depth limits produce partial totals', () async {
     for (final result in [
       await DiskUsageScanner().scan(root, maxEntries: 1),

@@ -11,6 +11,7 @@ import 'commands/config.dart';
 import 'commands/connect.dart';
 import 'commands/download.dart';
 import 'commands/du.dart';
+import 'commands/catalog.dart';
 import 'commands/ls.dart';
 import 'commands/pdf.dart';
 import 'commands/providers.dart';
@@ -48,6 +49,7 @@ CommandRunner<int> buildRunner({String? configPath}) {
     ..addCommand(SyncCommand(config))
     ..addCommand(SearchCommand(config))
     ..addCommand(DuCommand())
+    ..addCommand(CatalogCommand())
     ..addCommand(ShareCommand(config))
     ..addCommand(ProvidersCommand(config))
     ..addCommand(ConfigCommand(config))
@@ -102,7 +104,7 @@ _crisp_completion() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-  local commands="connect ls upload download sync search du share providers config pdf completion"
+  local commands="connect ls upload download sync search du catalog share providers config pdf completion"
 
   if [[ ${COMP_CWORD} -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
@@ -114,7 +116,14 @@ _crisp_completion() {
       COMPREPLY=( $(compgen -W "--provider --json" -- "${cur}") )
       ;;
     du)
-      COMPREPLY=( $(compgen -f -- "${cur}") $(compgen -W "--top --recursive --files-only --dirs-only --max-entries --max-depth --bytes --json" -- "${cur}") )
+      COMPREPLY=( $(compgen -f -- "${cur}") $(compgen -W "--top --recursive --files-only --dirs-only --max-entries --max-depth --bytes --json --index" -- "${cur}") )
+      ;;
+    catalog)
+      if [[ ${COMP_CWORD} -eq 2 ]]; then
+        COMPREPLY=( $(compgen -W "scan import export info search" -- "${cur}") )
+      else
+        COMPREPLY=( $(compgen -f -- "${cur}") $(compgen -W "--output --replace --allow-lossy --top --max-entries --max-depth" -- "${cur}") )
+      fi
       ;;
     upload)
       COMPREPLY=( $(compgen -f -- "${cur}") )
@@ -158,6 +167,7 @@ _crisp() {
         'upload[Upload a file]' \
         'download[Download a file]' \
         'sync[Sync local to remote]' \
+        'catalog[Persistent indexes and CAF interchange]' \
         'du[Find largest local files and folders]' \
         'search[Search for files]' \
         'share[Generate share link]' \
@@ -174,8 +184,15 @@ _crisp() {
         config)
           _values 'subcommand' show path set-default remove smb-backend
           ;;
+        catalog)
+          if (( CURRENT == 3 )); then
+            _values 'catalogue operation' scan import export info search
+          else
+            _files
+          fi
+          ;;
         du)
-          _arguments '--top[Number of results]:count:' '--recursive[Rank all depths]' '--files-only[Largest individual files]' '--dirs-only[Directories only]' '--max-entries[Entry budget]:count:' '--max-depth[Depth budget]:depth:' '--bytes[Exact bytes]' '--json[JSON output]' '*:path:_files'
+          _arguments '--top[Number of results]:count:' '--recursive[Rank all depths]' '--files-only[Largest individual files]' '--dirs-only[Directories only]' '--max-entries[Entry budget]:count:' '--max-depth[Depth budget]:depth:' '--bytes[Exact bytes]' '--json[JSON output]' '--index[Saved catalogue]:index:_files' '*:path:_files'
           ;;
         pdf)
           if (( CURRENT == 3 )); then
@@ -201,7 +218,7 @@ _crisp "$@"
   static const _fishCompletion = r'''
 # crisp fish completion
 
-set -l commands connect ls upload download sync search du share providers config pdf completion
+set -l commands connect ls upload download sync search du catalog share providers config pdf completion
 
 # Top-level commands
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a connect -d "Connect a provider"
@@ -225,6 +242,13 @@ complete -c crisp -n "__fish_seen_subcommand_from du" -l max-entries -x
 complete -c crisp -n "__fish_seen_subcommand_from du" -l max-depth -x
 complete -c crisp -n "__fish_seen_subcommand_from du" -l bytes
 complete -c crisp -n "__fish_seen_subcommand_from du" -l json -s j
+
+complete -c crisp -n "not __fish_seen_subcommand_from $commands" -a catalog -d "Persistent indexes and CAF interchange"
+complete -c crisp -n "__fish_seen_subcommand_from catalog; and not __fish_seen_subcommand_from scan import export info search" -a "scan import export info search"
+complete -c crisp -n "__fish_seen_subcommand_from catalog" -l output -s o -r
+complete -c crisp -n "__fish_seen_subcommand_from catalog" -l replace
+complete -c crisp -n "__fish_seen_subcommand_from catalog" -l allow-lossy
+complete -c crisp -n "__fish_seen_subcommand_from du" -l index -r
 
 # connect provider types
 complete -c crisp -f -n "__fish_seen_subcommand_from connect" -a "s3 sftp smb webdav"
