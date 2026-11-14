@@ -481,7 +481,11 @@ The next implemented adapter is [read-only ext](archive-ext-profile.md):
 standalone and Linux MBR/GPT images, classic/extent allocation, sparse files,
 selected checksum features and explicit refusal of unsupported layouts. Its
 [evidence](evidence/storage-ext-20261114) remains separate from FAT qualification.
-NTFS reading remains a later, separately reviewed adapter profile.
+The [NTFS continuation](archive-ntfs-profile.md) adds the next bounded read-only
+adapter on `integration/storage-ntfs-20261114`, stacked on the ext branch. Its
+[evidence](evidence/storage-ntfs-20261114) keeps separate source bindings and
+independently mastered supported/unsupported fixtures. Alternate DATA streams
+remain exact named metadata notices; ordinary unnamed data is extracted.
 Preserve alternate-stream names, sparse semantics, timestamps and unsupported
 metadata notices where available. Broader UDF profiles, VM container families
 and offline OCI semantics remain later increments. exFAT, deleted-file recovery,

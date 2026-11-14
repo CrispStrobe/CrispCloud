@@ -1,0 +1,533 @@
+{
+  "schema": 1,
+  "scope": "External NTFS corpus reproduction only; no application reader qualification is inferred.",
+  "argv": [
+    "python3",
+    "test/support/generate_ntfs_reference.py",
+    "--tools-root",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g",
+    "--tool-provenance",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g-package-provenance.json",
+    "--output-dir",
+    "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final",
+    "--dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+    "--check"
+  ],
+  "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+  "started_utc": "2026-11-14T13:05:30.735569+00:00",
+  "finished_utc": "2026-11-14T13:05:33.117294+00:00",
+  "elapsed_seconds": 2.506068899998354,
+  "exit_code": 0,
+  "stdout": {
+    "bytes": 629,
+    "sha256": "ca9d6173eff92b2f107e1cdfee87a6bd6c5b19ffad3c9ab694d688a1de4feb42"
+  },
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "inputs_before": {
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/generate_ntfs_reference.py": {
+      "bytes": 24469,
+      "sha256": "8097e7e377c917a2ca4a958c78eb4da2ffb66d5016cc12f404891c212021decb"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/ntfs_reference_tool.c": {
+      "bytes": 7033,
+      "sha256": "a0e88703e8543cc0df457f4c6865099a20301ec00d01a56b2624a2de193e7f5f"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/ntfs_reference_fixed_time.c": {
+      "bytes": 742,
+      "sha256": "ad882188f0f590ee7bb12092889510d721bcfc029cfee71dfc3b0568c48c930c"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/archive_ntfs_reference_data.dart": {
+      "bytes": 879954,
+      "sha256": "f5e11bcc43f9a3ad0e6b41f4e5eb0836d5be8635ad35ca30bf809fee57b77a91"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/fixtures/archives/ntfs-reference-manifest.json": {
+      "bytes": 419501,
+      "sha256": "c2b576f94a89f65fb5efad755ad07a1cd4e17ef8de9c743ff1d03e0027938163"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g-package-provenance.json": {
+      "bytes": 997,
+      "sha256": "4eae7703d68a3b9bee27882c3bc52d3f8511ecb6c411be42738555264eb3083c"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/acls.h": {
+      "bytes": 6439,
+      "sha256": "9198a98804da5588610b039f035fea7f9b14415e31b775c280bab7fb905dec2d"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/attrib.h": {
+      "bytes": 15833,
+      "sha256": "ad0ee5a9a7c11b8c703f55495b96de0864ed8312f8bea2cf9c53df4508d9e9b5"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/attrlist.h": {
+      "bytes": 1845,
+      "sha256": "cc99838c7f27874611ad33af982970062341e92aafc11dbaeacf5c299fd89fc6"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/bitmap.h": {
+      "bytes": 3015,
+      "sha256": "988060c780cd49cdd67b43d0c0826b31129d47d9c41c6a78d8bdc10119061ada"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/bootsect.h": {
+      "bytes": 1591,
+      "sha256": "654ba4c17cd1b6155f3c1fe1ce4724df036162d7f8ff7bf18881f84bc1f2c550"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/cache.h": {
+      "bytes": 3370,
+      "sha256": "d4c4cbf4717e758f446a57754be935190045c90aaceb0cf1738bc15276091165"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/collate.h": {
+      "bytes": 1224,
+      "sha256": "a6aca823a9bc93045b9bad477102ef16ecadca10bae82f8f974a258b57309241"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/compat.h": {
+      "bytes": 2451,
+      "sha256": "2372fc1f9527e92809084471a75f0077b62f617827ca5d6255948e98f3a3d843"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/compress.h": {
+      "bytes": 1479,
+      "sha256": "d19ca9b68a1b82723fd12fb74ac62bd638fb6f505c21310a3f86a406cba28207"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/debug.h": {
+      "bytes": 1555,
+      "sha256": "08f4b98896664e80d79cc85fd995a1370f55e853fa784bebda1bab87af13a0dd"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/device.h": {
+      "bytes": 5551,
+      "sha256": "eb74fd2b77b117adb0cc7a885de8dd88b2319ba2748a10ecb3850bab83c84da0"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/device_io.h": {
+      "bytes": 2465,
+      "sha256": "1c2a491aefc604475d0a03aef8b9ea2e6ca158e2fd5d0d0d7dfdbb55b8b9adfe"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/dir.h": {
+      "bytes": 4414,
+      "sha256": "5c01f85315905ae754ba0212303ff08a3243ee0148229f0254773bed976b0c33"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/ea.h": {
+      "bytes": 1220,
+      "sha256": "ee709c93b923e787f472dfdb2199f5c7371030e2a59a10213a7f51705f2e9075"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/efs.h": {
+      "bytes": 1133,
+      "sha256": "ddfa701e7bd5b5c15c27a275148f46f45c0407d3c79cf5157676e4e6ee3135f9"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/endians.h": {
+      "bytes": 10863,
+      "sha256": "cf901694415eb395e788fcb5f9b61b0e79d34e15b36e34140b23dae95be798bd"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/index.h": {
+      "bytes": 6348,
+      "sha256": "369b2109d88701d4a38095a399a2b66c7176a3c1c21015725ce2744aba12524c"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/inode.h": {
+      "bytes": 8402,
+      "sha256": "e0ee2383dab124132aba0524ca68eabb597055db7aad59262b9a2482f4cb3c01"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/ioctl.h": {
+      "bytes": 1239,
+      "sha256": "a9a1440b444f1e83157c8c5877e812bc097a5045c3bfe6574785361f545e10b4"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/layout.h": {
+      "bytes": 110758,
+      "sha256": "ae5e45acfea93003399dcfe5fb9a5886ac5e32d8bc69881491ea78dcdc35a4f6"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/lcnalloc.h": {
+      "bytes": 1806,
+      "sha256": "8b74fc7113b0deb311278f08773ce359e19c6e07a0dae268a3331d3f8abd2f13"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/logfile.h": {
+      "bytes": 18327,
+      "sha256": "55a459c5e0cc2e9c392e98fe3e0d412c0677532783f183780d467018a3582290"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/logging.h": {
+      "bytes": 6143,
+      "sha256": "87ceb94f699f2a49b59f3d2f5ca378bb3faa735cae125246c7a6ec3c63e8142d"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/mft.h": {
+      "bytes": 4856,
+      "sha256": "22124ea3b16baf380e06d6c9d2d2b0a3498c7b507f6eebb65248af3215f9d8f5"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/misc.h": {
+      "bytes": 1134,
+      "sha256": "a1a1f4d900153a4c863898776049a577a4da95996867dee0f114e8c5bcb27bb2"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/mst.h": {
+      "bytes": 1405,
+      "sha256": "7424fd492715e57d535509227840a86ca3b2174e0a3b90a5560996b424fe5fbc"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/ntfstime.h": {
+      "bytes": 3892,
+      "sha256": "0fdc445cac0f812dd213794dafb84b5b1dd004aa55f4152c0a44c06997e756cd"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/object_id.h": {
+      "bytes": 1178,
+      "sha256": "362b8deb1e320ee6107635072f0192ab21ec43263beca060489403a7c2d14c20"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/param.h": {
+      "bytes": 5402,
+      "sha256": "e6b60ecee664a6675d53281a26c32bdac4b56ad4b5cc2d2d69144aa7b7b215ff"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/plugin.h": {
+      "bytes": 6696,
+      "sha256": "b0e870bccb9631b5524264b46b4bfc2e7a11f02aaa96b69b0b9be84f4d268773"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/realpath.h": {
+      "bytes": 459,
+      "sha256": "1867a8faf18c0eff079342bd1b380ca3f526aaad37fcf9c6e84631fa8d960da9"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/reparse.h": {
+      "bytes": 1695,
+      "sha256": "13892fffb90e198ef072fe8c1b7393a778a25246effa79fad9ac177125ac83f1"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/runlist.h": {
+      "bytes": 3271,
+      "sha256": "bc8d23163c7ad72e6abf4e30f508018ec69fea91e3a57c82ff4bc8fb7c2c046d"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/security.h": {
+      "bytes": 9613,
+      "sha256": "73f90d38f4957d81ae1ba5afd428b2ce596111c97d2102a46ed653b722e93381"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/support.h": {
+      "bytes": 2268,
+      "sha256": "a5cbfd9276a872c7319640ede62e069d271d5b4ef2c2ce9ec61f07ecd73c0656"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/types.h": {
+      "bytes": 3245,
+      "sha256": "9fe7014b3674fba4eb0014580075e1e1ee81f54879fa50297bfbb2e8a1bd6755"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/unistr.h": {
+      "bytes": 5070,
+      "sha256": "d05156084f98a86b41db72d0b52e9445ee18c789a8d96a1a353174383ce5b192"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/volume.h": {
+      "bytes": 12029,
+      "sha256": "a3c6e982e4fcbc514cde4639bf7f622a34f46a28902dadc85c991e735679c528"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/xattrs.h": {
+      "bytes": 3074,
+      "sha256": "9b9a9243c87e62b05454ed5f02a566907d381aea8134f6090ea66c46071c9efb"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/mkntfs": {
+      "bytes": 88416,
+      "sha256": "c20783a186dd3ff64b1c6a5d2033dfeca11afd257edafa00eb0542241ed60447"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/ntfslabel": {
+      "bytes": 35160,
+      "sha256": "66fc1b0e2ded6aaa48be8f96e319489efacab818b1d304aa188a575b261137a3"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/ntfsresize": {
+      "bytes": 80232,
+      "sha256": "88a31104629d42079b5c8796ecc2438d600e410c42edce38118ee451d98d1f14"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfscat": {
+      "bytes": 35160,
+      "sha256": "d6fc05a7969942b47ef3839488dcb49939f0f4222a90c9953bcecc7a882f1409"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsls": {
+      "bytes": 36264,
+      "sha256": "f196d6764e205f274e035950aac8f0034244968bea80b4f48062936f43d7357c"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsfix": {
+      "bytes": 47456,
+      "sha256": "9a05fd43bc31e921c95be9c2081c887d0714393d9029789bb02c92f2336e7821"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsinfo": {
+      "bytes": 59752,
+      "sha256": "0418071dcc8a100155bd03bbd8ffe4be71fde006f0e25e316e8fdc3949a62f2a"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/lib/x86_64-linux-gnu/libntfs-3g.so.89.0.0": {
+      "bytes": 354832,
+      "sha256": "75919cc3302b70fd275fd0e9cbc315ff7d4accd40983259ba03f42907166838e"
+    }
+  },
+  "inputs_after": {
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/generate_ntfs_reference.py": {
+      "bytes": 24469,
+      "sha256": "8097e7e377c917a2ca4a958c78eb4da2ffb66d5016cc12f404891c212021decb"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/ntfs_reference_tool.c": {
+      "bytes": 7033,
+      "sha256": "a0e88703e8543cc0df457f4c6865099a20301ec00d01a56b2624a2de193e7f5f"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/ntfs_reference_fixed_time.c": {
+      "bytes": 742,
+      "sha256": "ad882188f0f590ee7bb12092889510d721bcfc029cfee71dfc3b0568c48c930c"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/support/archive_ntfs_reference_data.dart": {
+      "bytes": 879954,
+      "sha256": "f5e11bcc43f9a3ad0e6b41f4e5eb0836d5be8635ad35ca30bf809fee57b77a91"
+    },
+    "/workspace/scratch/4f6714f1660a/crispcloud/test/fixtures/archives/ntfs-reference-manifest.json": {
+      "bytes": 419501,
+      "sha256": "c2b576f94a89f65fb5efad755ad07a1cd4e17ef8de9c743ff1d03e0027938163"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g-package-provenance.json": {
+      "bytes": 997,
+      "sha256": "4eae7703d68a3b9bee27882c3bc52d3f8511ecb6c411be42738555264eb3083c"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/acls.h": {
+      "bytes": 6439,
+      "sha256": "9198a98804da5588610b039f035fea7f9b14415e31b775c280bab7fb905dec2d"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/attrib.h": {
+      "bytes": 15833,
+      "sha256": "ad0ee5a9a7c11b8c703f55495b96de0864ed8312f8bea2cf9c53df4508d9e9b5"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/attrlist.h": {
+      "bytes": 1845,
+      "sha256": "cc99838c7f27874611ad33af982970062341e92aafc11dbaeacf5c299fd89fc6"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/bitmap.h": {
+      "bytes": 3015,
+      "sha256": "988060c780cd49cdd67b43d0c0826b31129d47d9c41c6a78d8bdc10119061ada"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/bootsect.h": {
+      "bytes": 1591,
+      "sha256": "654ba4c17cd1b6155f3c1fe1ce4724df036162d7f8ff7bf18881f84bc1f2c550"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/cache.h": {
+      "bytes": 3370,
+      "sha256": "d4c4cbf4717e758f446a57754be935190045c90aaceb0cf1738bc15276091165"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/collate.h": {
+      "bytes": 1224,
+      "sha256": "a6aca823a9bc93045b9bad477102ef16ecadca10bae82f8f974a258b57309241"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/compat.h": {
+      "bytes": 2451,
+      "sha256": "2372fc1f9527e92809084471a75f0077b62f617827ca5d6255948e98f3a3d843"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/compress.h": {
+      "bytes": 1479,
+      "sha256": "d19ca9b68a1b82723fd12fb74ac62bd638fb6f505c21310a3f86a406cba28207"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/debug.h": {
+      "bytes": 1555,
+      "sha256": "08f4b98896664e80d79cc85fd995a1370f55e853fa784bebda1bab87af13a0dd"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/device.h": {
+      "bytes": 5551,
+      "sha256": "eb74fd2b77b117adb0cc7a885de8dd88b2319ba2748a10ecb3850bab83c84da0"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/device_io.h": {
+      "bytes": 2465,
+      "sha256": "1c2a491aefc604475d0a03aef8b9ea2e6ca158e2fd5d0d0d7dfdbb55b8b9adfe"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/dir.h": {
+      "bytes": 4414,
+      "sha256": "5c01f85315905ae754ba0212303ff08a3243ee0148229f0254773bed976b0c33"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/ea.h": {
+      "bytes": 1220,
+      "sha256": "ee709c93b923e787f472dfdb2199f5c7371030e2a59a10213a7f51705f2e9075"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/efs.h": {
+      "bytes": 1133,
+      "sha256": "ddfa701e7bd5b5c15c27a275148f46f45c0407d3c79cf5157676e4e6ee3135f9"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/endians.h": {
+      "bytes": 10863,
+      "sha256": "cf901694415eb395e788fcb5f9b61b0e79d34e15b36e34140b23dae95be798bd"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/index.h": {
+      "bytes": 6348,
+      "sha256": "369b2109d88701d4a38095a399a2b66c7176a3c1c21015725ce2744aba12524c"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/inode.h": {
+      "bytes": 8402,
+      "sha256": "e0ee2383dab124132aba0524ca68eabb597055db7aad59262b9a2482f4cb3c01"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/ioctl.h": {
+      "bytes": 1239,
+      "sha256": "a9a1440b444f1e83157c8c5877e812bc097a5045c3bfe6574785361f545e10b4"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/layout.h": {
+      "bytes": 110758,
+      "sha256": "ae5e45acfea93003399dcfe5fb9a5886ac5e32d8bc69881491ea78dcdc35a4f6"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/lcnalloc.h": {
+      "bytes": 1806,
+      "sha256": "8b74fc7113b0deb311278f08773ce359e19c6e07a0dae268a3331d3f8abd2f13"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/logfile.h": {
+      "bytes": 18327,
+      "sha256": "55a459c5e0cc2e9c392e98fe3e0d412c0677532783f183780d467018a3582290"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/logging.h": {
+      "bytes": 6143,
+      "sha256": "87ceb94f699f2a49b59f3d2f5ca378bb3faa735cae125246c7a6ec3c63e8142d"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/mft.h": {
+      "bytes": 4856,
+      "sha256": "22124ea3b16baf380e06d6c9d2d2b0a3498c7b507f6eebb65248af3215f9d8f5"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/misc.h": {
+      "bytes": 1134,
+      "sha256": "a1a1f4d900153a4c863898776049a577a4da95996867dee0f114e8c5bcb27bb2"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/mst.h": {
+      "bytes": 1405,
+      "sha256": "7424fd492715e57d535509227840a86ca3b2174e0a3b90a5560996b424fe5fbc"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/ntfstime.h": {
+      "bytes": 3892,
+      "sha256": "0fdc445cac0f812dd213794dafb84b5b1dd004aa55f4152c0a44c06997e756cd"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/object_id.h": {
+      "bytes": 1178,
+      "sha256": "362b8deb1e320ee6107635072f0192ab21ec43263beca060489403a7c2d14c20"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/param.h": {
+      "bytes": 5402,
+      "sha256": "e6b60ecee664a6675d53281a26c32bdac4b56ad4b5cc2d2d69144aa7b7b215ff"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/plugin.h": {
+      "bytes": 6696,
+      "sha256": "b0e870bccb9631b5524264b46b4bfc2e7a11f02aaa96b69b0b9be84f4d268773"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/realpath.h": {
+      "bytes": 459,
+      "sha256": "1867a8faf18c0eff079342bd1b380ca3f526aaad37fcf9c6e84631fa8d960da9"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/reparse.h": {
+      "bytes": 1695,
+      "sha256": "13892fffb90e198ef072fe8c1b7393a778a25246effa79fad9ac177125ac83f1"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/runlist.h": {
+      "bytes": 3271,
+      "sha256": "bc8d23163c7ad72e6abf4e30f508018ec69fea91e3a57c82ff4bc8fb7c2c046d"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/security.h": {
+      "bytes": 9613,
+      "sha256": "73f90d38f4957d81ae1ba5afd428b2ce596111c97d2102a46ed653b722e93381"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/support.h": {
+      "bytes": 2268,
+      "sha256": "a5cbfd9276a872c7319640ede62e069d271d5b4ef2c2ce9ec61f07ecd73c0656"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/types.h": {
+      "bytes": 3245,
+      "sha256": "9fe7014b3674fba4eb0014580075e1e1ee81f54879fa50297bfbb2e8a1bd6755"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/unistr.h": {
+      "bytes": 5070,
+      "sha256": "d05156084f98a86b41db72d0b52e9445ee18c789a8d96a1a353174383ce5b192"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/volume.h": {
+      "bytes": 12029,
+      "sha256": "a3c6e982e4fcbc514cde4639bf7f622a34f46a28902dadc85c991e735679c528"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/include/ntfs-3g/xattrs.h": {
+      "bytes": 3074,
+      "sha256": "9b9a9243c87e62b05454ed5f02a566907d381aea8134f6090ea66c46071c9efb"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/mkntfs": {
+      "bytes": 88416,
+      "sha256": "c20783a186dd3ff64b1c6a5d2033dfeca11afd257edafa00eb0542241ed60447"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/ntfslabel": {
+      "bytes": 35160,
+      "sha256": "66fc1b0e2ded6aaa48be8f96e319489efacab818b1d304aa188a575b261137a3"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/ntfsresize": {
+      "bytes": 80232,
+      "sha256": "88a31104629d42079b5c8796ecc2438d600e410c42edce38118ee451d98d1f14"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfscat": {
+      "bytes": 35160,
+      "sha256": "d6fc05a7969942b47ef3839488dcb49939f0f4222a90c9953bcecc7a882f1409"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsls": {
+      "bytes": 36264,
+      "sha256": "f196d6764e205f274e035950aac8f0034244968bea80b4f48062936f43d7357c"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsfix": {
+      "bytes": 47456,
+      "sha256": "9a05fd43bc31e921c95be9c2081c887d0714393d9029789bb02c92f2336e7821"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsinfo": {
+      "bytes": 59752,
+      "sha256": "0418071dcc8a100155bd03bbd8ffe4be71fde006f0e25e316e8fdc3949a62f2a"
+    },
+    "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/lib/x86_64-linux-gnu/libntfs-3g.so.89.0.0": {
+      "bytes": 354832,
+      "sha256": "75919cc3302b70fd275fd0e9cbc315ff7d4accd40983259ba03f42907166838e"
+    }
+  },
+  "inputs_unchanged": true,
+  "images": {
+    "ntfs31": {
+      "master": {
+        "bytes": 16777216,
+        "sha256": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d"
+      },
+      "reproduced": {
+        "bytes": 16777216,
+        "sha256": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d"
+      },
+      "supported_profile": true,
+      "unnamed_paths": 61,
+      "named_streams": 2
+    },
+    "ntfs31-small": {
+      "master": {
+        "bytes": 16777216,
+        "sha256": "3186351ffea391d40e77796a38c64a415c41ba775de7c47b524d771f142eee99"
+      },
+      "reproduced": {
+        "bytes": 16777216,
+        "sha256": "3186351ffea391d40e77796a38c64a415c41ba775de7c47b524d771f142eee99"
+      },
+      "supported_profile": true,
+      "unnamed_paths": 61,
+      "named_streams": 2
+    },
+    "ntfs31-4k": {
+      "master": {
+        "bytes": 33554432,
+        "sha256": "9e6bdecb5c610e5b2edc356ae87912553732b0eee5a3b233088b34020601a4df"
+      },
+      "reproduced": {
+        "bytes": 33554432,
+        "sha256": "9e6bdecb5c610e5b2edc356ae87912553732b0eee5a3b233088b34020601a4df"
+      },
+      "supported_profile": true,
+      "unnamed_paths": 21,
+      "named_streams": 2
+    },
+    "ntfs31-4k-attrlist": {
+      "master": {
+        "bytes": 33554432,
+        "sha256": "6688866a63976df0a81bb2c69c888437b192fc24c36059be851a835696b90cb5"
+      },
+      "reproduced": {
+        "bytes": 33554432,
+        "sha256": "6688866a63976df0a81bb2c69c888437b192fc24c36059be851a835696b90cb5"
+      },
+      "supported_profile": false,
+      "unnamed_paths": 61,
+      "named_streams": 2
+    }
+  },
+  "generated_dart_and_manifest_equal": true,
+  "readonly_external_oracle_source_invariance": true,
+  "external_command_receipts": {
+    "final": {
+      "bytes": 277421,
+      "sha256": "3de75eeef4862a808e0244e22d3aaf556db28dc21fc02a9fd7ce19dfece4d1d6"
+    },
+    "reproduction": {
+      "bytes": 281166,
+      "sha256": "b1190ca8809ea3b290ccde3cf802218bf9f6691f8ce0100a6e3473818c98a4f1"
+    }
+  }
+}

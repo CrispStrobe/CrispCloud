@@ -6,6 +6,7 @@ import 'package:koni_codecs/koni_codecs.dart' as codecs;
 
 import '../models/archive_endpoint.dart';
 import 'archive_dmg_reader.dart';
+import 'archive_ntfs_reader.dart';
 import 'archive_endpoint_policy.dart';
 import 'archive_format_registry.dart';
 import 'archive_iso_reader.dart';
@@ -71,8 +72,10 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       source.length < 512 ? source.length : 512,
     );
     final descriptor = archiveFormatForName(name);
-    if (descriptor?.id == 'fat' ||
+    if (await hasNtfsVolumeRecognition(input) ||
+        descriptor?.id == 'fat' ||
         descriptor?.id == 'ext' ||
+        descriptor?.id == 'ntfs' ||
         descriptor?.id == 'disk-image' ||
         diskImageSectorBytes != null) {
       inner = await openViewerArchiveSource(

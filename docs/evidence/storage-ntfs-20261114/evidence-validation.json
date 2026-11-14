@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "verified_at_utc": "2026-11-14T13:32:31.642697+00:00",
+  "result": "passed",
+  "artifact_index_sha256": "41b5b56af64cf454abe92ddf26cae86b5bd0a3e20932633f6e7235261d22bb7e",
+  "artifacts": 94,
+  "stored_bytes": 4321202,
+  "indexed_stored_and_decompressed_representations_verified": 72,
+  "external_channels_checked": 2108,
+  "external_text_channels_verified": 1684,
+  "external_omitted_payload_channels_with_hash_references": 424,
+  "external_tar_entries": 643,
+  "source_paths_matched_to_corrected_revision": 8092,
+  "native_test_only_delta_verified": [
+    "test/archive_ntfs_reader_test.dart"
+  ],
+  "all_checks_passed": true
+}

@@ -1,0 +1,181 @@
+Dumping Inode 9 (0x9)
+Upd. Seq. Array Off.:	 48 (0x30)
+Upd. Seq. Array Count:	 3 (0x3)
+Upd. Seq. Number:	 2 (0x2)
+LogFile Seq. Number:	 0x0
+MFT Record Seq. Numb.:	 9 (0x9)
+Number of Hard Links:	 1 (0x1)
+Attribute Offset:	 56 (0x38)
+MFT Record Flags:	 IN_USE VIEW_INDEX 
+Bytes Used:		 680 (0x2a8) bytes
+Bytes Allocated:	 1024 (0x400) bytes
+Next Attribute Instance: 5 (0x5)
+MFT Padding:	00 00 
+Dumping attribute $STANDARD_INFORMATION (0x10) from mft record 9 (0x9)
+	Attribute length:	 96 (0x60)
+	Resident: 		 Yes
+	Name length:		 0 (0x0)
+	Name offset:		 24 (0x18)
+	Attribute flags:	 0x0000
+	Attribute instance:	 0 (0x0)
+	Data size:		 72 (0x48)
+	Data offset:		 24 (0x18)
+	Resident flags:		 0x00
+	ReservedR:		 0 (0x0)
+	File Creation Time:	 Thu Jan  1 00:00:00 1970 UTC
+	File Altered Time:	 Thu Jan  1 00:00:00 1970 UTC
+	MFT Changed Time:	 Thu Jan  1 00:00:00 1970 UTC
+	Last Accessed Time:	 Thu Jan  1 00:00:00 1970 UTC
+	File attributes:	 HIDDEN SYSTEM VIEW_INDEX (0x20000006)
+	Maximum versions:	 0 
+	Version number:		 0 
+	Class ID:		 0 
+	User ID:		 0 (0x0)
+	Security ID:		 257 (0x101)
+	Quota charged:		 0 (0x0)
+	Update Sequence Number:	 0 (0x0)
+Dumping attribute $FILE_NAME (0x30) from mft record 9 (0x9)
+	Attribute length:	 104 (0x68)
+	Resident: 		 Yes
+	Name length:		 0 (0x0)
+	Name offset:		 24 (0x18)
+	Attribute flags:	 0x0000
+	Attribute instance:	 1 (0x1)
+	Data size:		 80 (0x50)
+	Data offset:		 24 (0x18)
+	Resident flags:		 0x01
+	ReservedR:		 0 (0x0)
+	Parent directory:	 5 (0x5)
+	File Creation Time:	 Thu Jan  1 00:00:00 1970 UTC
+	File Altered Time:	 Thu Jan  1 00:00:00 1970 UTC
+	MFT Changed Time:	 Thu Jan  1 00:00:00 1970 UTC
+	Last Accessed Time:	 Thu Jan  1 00:00:00 1970 UTC
+	Allocated Size:		 0 (0x0)
+	Data Size:		 0 (0x0)
+	Filename Length:	 7 (0x7)
+	File attributes:	 HIDDEN SYSTEM VIEW_INDEX (0x20000006)
+	Namespace:		 Win32 & DOS
+	Filename:		 '$Secure'
+Dumping attribute $DATA (0x80) from mft record 9 (0x9)
+	Attribute length:	 80 (0x50)
+	Resident: 		 No
+	Name length:		 4 (0x4)
+	Name offset:		 64 (0x40)
+	Attribute name:		 '$SDS'
+	Attribute flags:	 0x0000
+	Attribute instance:	 2 (0x2)
+	Lowest VCN		 0 (0x0)
+	Highest VCN:		 64 (0x40)
+	Mapping pairs offset:	 72 (0x48)
+	Compression unit:	 0 (0x0)
+	Data size:		 262396 (0x400fc)
+	Allocated size:		 266240 (0x41000)
+	Initialized size:	 262396 (0x400fc)
+	Runlist:	VCN		LCN		Length
+			0x0		0x208		0x41
+Dumping attribute $INDEX_ROOT (0x90) from mft record 9 (0x9)
+	Attribute length:	 176 (0xb0)
+	Resident: 		 Yes
+	Name length:		 4 (0x4)
+	Name offset:		 24 (0x18)
+	Attribute name:		 '$SDH'
+	Attribute flags:	 0x0000
+	Attribute instance:	 3 (0x3)
+	Data size:		 144 (0x90)
+	Data offset:		 32 (0x20)
+	Resident flags:		 0x00
+	ReservedR:		 0 (0x0)
+	Indexed Attr Type:	 SECURE_SDH
+	Collation Rule:		 18 (0x12)
+	Index Block Size:	 4096 (0x1000)
+	Clusters Per Block:	 1 (0x1)
+	Entries Offset:		 16 (0x10)
+	Index Size:		 128 (0x80)
+	Allocated Size:		 128 (0x80)
+	Index header flags:	 0x00
+	Dumping index root:
+		Entry length:		 48 (0x30)
+		Key length:		 8 (0x8)
+		Index entry flags:	 0x00
+		Data offset:		 24 (0x18)
+		Data length:		 20 (0x14)
+		Key hash:		 0x00b32451
+		Key security id:	 257 (0x101)
+		Key Data:
+		Hash:			 0x00b32451
+		Security id:		 257 (0x101)
+		Offset in $SDS:		 128 (0x80)
+		Length in $SDS:		 124 (0x7c)
+		Unknown (padding):	 0x00490049
+
+		Entry length:		 48 (0x30)
+		Key length:		 8 (0x8)
+		Index entry flags:	 0x00
+		Data offset:		 24 (0x18)
+		Data length:		 20 (0x14)
+		Key hash:		 0xf80312f0
+		Key security id:	 256 (0x100)
+		Key Data:
+		Hash:			 0xf80312f0
+		Security id:		 256 (0x100)
+		Offset in $SDS:		 0 (0x0)
+		Length in $SDS:		 124 (0x7c)
+		Unknown (padding):	 0x00490049
+
+		Entry length:		 16 (0x10)
+		Key length:		 0 (0x0)
+		Index entry flags:	 0x02
+	End of index block reached
+	Index entries total:	 3
+Dumping attribute $INDEX_ROOT (0x90) from mft record 9 (0x9)
+	Attribute length:	 160 (0xa0)
+	Resident: 		 Yes
+	Name length:		 4 (0x4)
+	Name offset:		 24 (0x18)
+	Attribute name:		 '$SII'
+	Attribute flags:	 0x0000
+	Attribute instance:	 4 (0x4)
+	Data size:		 128 (0x80)
+	Data offset:		 32 (0x20)
+	Resident flags:		 0x00
+	ReservedR:		 0 (0x0)
+	Indexed Attr Type:	 SECURE_SII
+	Collation Rule:		 16 (0x10)
+	Index Block Size:	 4096 (0x1000)
+	Clusters Per Block:	 1 (0x1)
+	Entries Offset:		 16 (0x10)
+	Index Size:		 112 (0x70)
+	Allocated Size:		 112 (0x70)
+	Index header flags:	 0x00
+	Dumping index root:
+		Entry length:		 40 (0x28)
+		Key length:		 4 (0x4)
+		Index entry flags:	 0x00
+		Data offset:		 20 (0x14)
+		Data length:		 20 (0x14)
+		Key security id:	 256 (0x100)
+		Key Data:
+		Hash:			 0xf80312f0
+		Security id:		 256 (0x100)
+		Offset in $SDS:		 0 (0x0)
+		Length in $SDS:		 124 (0x7c)
+
+		Entry length:		 40 (0x28)
+		Key length:		 4 (0x4)
+		Index entry flags:	 0x00
+		Data offset:		 20 (0x14)
+		Data length:		 20 (0x14)
+		Key security id:	 257 (0x101)
+		Key Data:
+		Hash:			 0x00b32451
+		Security id:		 257 (0x101)
+		Offset in $SDS:		 128 (0x80)
+		Length in $SDS:		 124 (0x7c)
+
+		Entry length:		 16 (0x10)
+		Key length:		 0 (0x0)
+		Index entry flags:	 0x02
+	End of index block reached
+	Index entries total:	 3
+End of inode reached
+Total runs: 1 (fragments: 1)

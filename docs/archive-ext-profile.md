@@ -92,7 +92,7 @@ The existing FAT/HFS/UDF/ISO DMG profiles remain separate.
 | Streamed member | Existing maximum 8 GiB, further reduced by the caller's allowance. |
 
 Caller-supplied limits can only lower the profile ceilings. Multiple ext
-children share traversal allowances. Mixed FAT/ext disks spend one combined
+children share traversal allowances. Mixed FAT/ext/NTFS disks spend one combined
 cluster/block and extent allowance; failed child attempts retain their debit.
 The disk adapter additionally shares source-byte, entry and path budgets.
 

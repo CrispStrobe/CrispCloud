@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "source_revision": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+  "qualification": "Final 46-suite native storage gate: 1187 passed, zero failed, one existing opt-in >2 GiB TGZ skip. Isolated native optional ebook hook disabled; real catalogue Rust hook enabled. Original production manifests restored, lock unchanged, all 8092 bound source paths unchanged.",
+  "artifacts": [
+    {
+      "original_name": "ntfs-corrected-final-native.log",
+      "stored_name": "ntfs-corrected-final-native.log.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 244108,
+      "stored_bytes": 9087,
+      "original_sha256": "54a9281cad5ed20f733b58110cce237237f00ba8d55bab98d2303a7834597f98",
+      "stored_sha256": "ae3d57d4d9ee99e30f7fed1a48763feaa3a4eda13d4cf19d13c7a55b5864ec68"
+    },
+    {
+      "original_name": "ntfs-corrected-final-native-events.json",
+      "stored_name": "ntfs-corrected-final-native-events.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 614573,
+      "stored_bytes": 51355,
+      "original_sha256": "551895132697263dd9ed2b4d8370beffced9fe549a23574078b0b03887798b97",
+      "stored_sha256": "ffea46f599071ddcd700ac8f97cefaf892c004c506ecc5642d5a41bac0275c69"
+    },
+    {
+      "original_name": "ntfs-corrected-final-native-receipt.json",
+      "stored_name": "ntfs-corrected-final-native-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 3285,
+      "stored_bytes": 3285,
+      "original_sha256": "eb6786a6e67ad54f1d08e65fa1377cb116881da345e0fc9033ff9095e9d4d37c",
+      "stored_sha256": "eb6786a6e67ad54f1d08e65fa1377cb116881da345e0fc9033ff9095e9d4d37c"
+    },
+    {
+      "original_name": "ntfs-corrected-final-native-source-binding.json",
+      "stored_name": "ntfs-corrected-final-native-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1115934,
+      "stored_bytes": 384791,
+      "original_sha256": "af4ecdebf32ae5e668d18bd44513501453d3ade854550af548d0cb9b9ee477c9",
+      "stored_sha256": "38bec83edd6025cf4c208ddc581b118c44537e9eaf02aa2987f87512ce7010a3"
+    },
+    {
+      "original_name": "ntfs-corrected-final-native-summary.json",
+      "stored_name": "ntfs-corrected-final-native-summary.json",
+      "encoding": "identity",
+      "original_bytes": 5315,
+      "stored_bytes": 5315,
+      "original_sha256": "fd53906736bef18c42f17a9115385876eb5e7a35b0f1f60576d3ce27096e2f50",
+      "stored_sha256": "fd53906736bef18c42f17a9115385876eb5e7a35b0f1f60576d3ce27096e2f50"
+    },
+    {
+      "original_name": "ntfs-corrected-final-native-invocation.json",
+      "stored_name": "ntfs-corrected-final-native-invocation.json",
+      "encoding": "identity",
+      "original_bytes": 4787,
+      "stored_bytes": 4787,
+      "original_sha256": "43a0ee023e34e2185708b1593568b79da996b8b8aeb1489f39b691ece2f7653d",
+      "stored_sha256": "43a0ee023e34e2185708b1593568b79da996b8b8aeb1489f39b691ece2f7653d"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "label": "ntfs-integration-preliminary",
+  "passed": 50,
+  "failed": 0,
+  "skipped": 0,
+  "total": 50,
+  "files": [
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_member_index_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_recognition_test.dart"
+  ],
+  "failures": [],
+  "skips": [],
+  "run_success": true,
+  "events_sha256": "a8d486f7eb26bf9a7bc2ff1b8ae715b4a108ccb4477bce6758dbedafb75bf229"
+}

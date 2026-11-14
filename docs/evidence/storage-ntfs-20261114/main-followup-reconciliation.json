@@ -1,0 +1,59 @@
+{
+  "observed_at_utc": "2026-11-14T13:24:54Z",
+  "main_at_continuation_start": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+  "main_current": "70524c8141c7880c854ca7e58489f207ecf2085d",
+  "main_new_commits": [
+    "70524c8141c7880c854ca7e58489f207ecf2085d Add CSV spreadsheet imports and BASIC and XML content highlighting"
+  ],
+  "main_changed_paths": [
+    "README.md",
+    "cli/lib/entrypoint.dart",
+    "cli/pubspec.yaml",
+    "docs/apple-export-policy.json",
+    "docs/crypto-inventory.json",
+    "docs/csv-spreadsheet-import.md",
+    "lib/l10n/csv_spreadsheet_strings.dart",
+    "lib/services/csv_spreadsheet_import.dart",
+    "lib/services/internal_viewer_service.dart",
+    "lib/utils/file_editability.dart",
+    "lib/widgets/code_highlighting.dart",
+    "lib/widgets/csv_spreadsheet_import_action.dart",
+    "lib/widgets/csv_spreadsheet_import_dialog.dart",
+    "lib/widgets/file_editor_dialog.dart",
+    "lib/widgets/internal_viewer_dialog.dart",
+    "lib/widgets/preview_pane.dart",
+    "packages/quds_office_engine/lib/src/reports/report_data.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_power_query.dart",
+    "packages/quds_office_engine/test/csv_sheet_import_test.dart",
+    "pubspec.yaml",
+    "test/basic_highlighting_test.dart",
+    "test/csv_spreadsheet_import_test.dart",
+    "test/widget/csv_spreadsheet_import_dialog_test.dart",
+    "test/widget/editor_handoff_test.dart",
+    "test/widget/viewer_edit_action_test.dart",
+    "test/xml_content_types_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "ntfs_test_revision": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+  "ntfs_runtime_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "stacked_base_revision": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+  "stacked_base_branch": "integration/storage-ext-20261114",
+  "overlapping_ntfs_changed_paths": [
+    "lib/widgets/internal_viewer_dialog.dart"
+  ],
+  "qualification_scope": "The new main commit is retained on origin/main. It is not included in the NTFS source-pin qualification; neither main nor the ext base is rewritten.",
+  "read_only_merge_preview": {
+    "command": [
+      "git",
+      "merge-tree",
+      "--write-tree",
+      "--messages",
+      "70524c8141c7880c854ca7e58489f207ecf2085d",
+      "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b"
+    ],
+    "exit_code": 0,
+    "stdout": "4e8c7b5065c1d262b6ad3c41346d048817b18b9a\n\nAuto-merging lib/widgets/internal_viewer_dialog.dart\n",
+    "stderr": "",
+    "meaning": "Git reports a clean virtual merge. No branch, worktree or index was changed. The merged tree was not executed, analyzed or built and is not included in qualification."
+  }
+}

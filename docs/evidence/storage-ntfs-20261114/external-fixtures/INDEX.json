@@ -1,0 +1,379 @@
+{
+  "schema": 1,
+  "scope": "External fixture mastering, read-only oracle outputs, and exact reproduction. Not application-reader or Windows chkdsk qualification.",
+  "supported_image_count": 3,
+  "unsupported_image_count": 1,
+  "supported_regular_unnamed_path_instances": 143,
+  "unsupported_regular_unnamed_path_instances": 61,
+  "total_regular_unnamed_path_instances": 204,
+  "supported_named_stream_instances": 6,
+  "unsupported_named_stream_instances": 2,
+  "total_named_stream_instances": 8,
+  "external_version": "NTFS 3.1 only",
+  "preserved_reproduction_input_bindings": 54,
+  "inputs_still_match_when_packaged": true,
+  "fixture_manifest": {
+    "repository_path": "test/fixtures/archives/ntfs-reference-manifest.json",
+    "bytes": 419501,
+    "sha256": "c2b576f94a89f65fb5efad755ad07a1cd4e17ef8de9c743ff1d03e0027938163"
+  },
+  "files": [
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/external-fixture-reproduction-receipt.json",
+      "original": {
+        "bytes": 24871,
+        "sha256": "29a0d6af5a044ce4524f60fea550a7f8ffc0401f05de19ac47a137fb105019a3"
+      },
+      "stored_path": "external-fixtures/reproduction-receipt.json",
+      "stored": {
+        "bytes": 24871,
+        "sha256": "29a0d6af5a044ce4524f60fea550a7f8ffc0401f05de19ac47a137fb105019a3"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/external-final-reproduction.stdout.log",
+      "original": {
+        "bytes": 629,
+        "sha256": "ca9d6173eff92b2f107e1cdfee87a6bd6c5b19ffad3c9ab694d688a1de4feb42"
+      },
+      "stored_path": "external-fixtures/reproduction.stdout.log",
+      "stored": {
+        "bytes": 629,
+        "sha256": "ca9d6173eff92b2f107e1cdfee87a6bd6c5b19ffad3c9ab694d688a1de4feb42"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/external-final-reproduction.stderr.log",
+      "original": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stored_path": "external-fixtures/reproduction.stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/external-command-receipt.json",
+      "original": {
+        "bytes": 277421,
+        "sha256": "3de75eeef4862a808e0244e22d3aaf556db28dc21fc02a9fd7ce19dfece4d1d6"
+      },
+      "stored_path": "external-fixtures/final-commands.json.gz",
+      "stored": {
+        "bytes": 27048,
+        "sha256": "28bc6f9e31bf4cd1de8554171fdd4e46bed90da22054d8372d7b728e28191aa2"
+      },
+      "encoding": "gzip; empty filename; mtime=0; level=9"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/reproduction/external-command-receipt.json",
+      "original": {
+        "bytes": 281166,
+        "sha256": "b1190ca8809ea3b290ccde3cf802218bf9f6691f8ce0100a6e3473818c98a4f1"
+      },
+      "stored_path": "external-fixtures/reproduction-commands.json.gz",
+      "stored": {
+        "bytes": 27077,
+        "sha256": "b3167c28a24b00aaadd87944172092fde7dd5506a752be7d49774e04c2c87840"
+      },
+      "encoding": "gzip; empty filename; mtime=0; level=9"
+    }
+  ],
+  "corpus": [
+    {
+      "name": "ntfs31",
+      "supported_profile": true,
+      "unsupported_reason": null,
+      "regular_unnamed_paths": 61,
+      "named_streams": 2,
+      "source_images": [
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31.img",
+          "original": {
+            "bytes": 16777216,
+            "sha256": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        },
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/reproduction/ntfs31.img",
+          "original": {
+            "bytes": 16777216,
+            "sha256": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        }
+      ]
+    },
+    {
+      "name": "ntfs31-small",
+      "supported_profile": true,
+      "unsupported_reason": null,
+      "regular_unnamed_paths": 61,
+      "named_streams": 2,
+      "source_images": [
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31-small.img",
+          "original": {
+            "bytes": 16777216,
+            "sha256": "3186351ffea391d40e77796a38c64a415c41ba775de7c47b524d771f142eee99"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        },
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/reproduction/ntfs31-small.img",
+          "original": {
+            "bytes": 16777216,
+            "sha256": "3186351ffea391d40e77796a38c64a415c41ba775de7c47b524d771f142eee99"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        }
+      ]
+    },
+    {
+      "name": "ntfs31-4k",
+      "supported_profile": true,
+      "unsupported_reason": null,
+      "regular_unnamed_paths": 21,
+      "named_streams": 2,
+      "source_images": [
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31-4k.img",
+          "original": {
+            "bytes": 33554432,
+            "sha256": "9e6bdecb5c610e5b2edc356ae87912553732b0eee5a3b233088b34020601a4df"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        },
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/reproduction/ntfs31-4k.img",
+          "original": {
+            "bytes": 33554432,
+            "sha256": "9e6bdecb5c610e5b2edc356ae87912553732b0eee5a3b233088b34020601a4df"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        }
+      ]
+    },
+    {
+      "name": "ntfs31-4k-attrlist",
+      "supported_profile": false,
+      "unsupported_reason": "directory ATTRIBUTE_LIST",
+      "regular_unnamed_paths": 61,
+      "named_streams": 2,
+      "source_images": [
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31-4k-attrlist.img",
+          "original": {
+            "bytes": 33554432,
+            "sha256": "6688866a63976df0a81bb2c69c888437b192fc24c36059be851a835696b90cb5"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        },
+        {
+          "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/reproduction/ntfs31-4k-attrlist.img",
+          "original": {
+            "bytes": 33554432,
+            "sha256": "6688866a63976df0a81bb2c69c888437b192fc24c36059be851a835696b90cb5"
+          },
+          "storage": "omitted; reproducible complete fixture bytes"
+        }
+      ]
+    }
+  ],
+  "external_text_archive": {
+    "stored_path": "external-fixtures/external-text-logs.tar.gz",
+    "stored": {
+      "bytes": 106012,
+      "sha256": "a06e4cbe2fd31c586681379a224233a4df8812f57535f6f2953cafe005b5b01e"
+    },
+    "uncompressed_tar": {
+      "bytes": 2641920,
+      "sha256": "4acf6a2038b25b42fed04d8b2c143daa747cac13b2f6a8022c6722b4b59c57fc"
+    },
+    "entries": 643,
+    "tar_metadata": "USTAR, sorted relative paths, mode0644, uid/gid0, empty owner/group, mtime0",
+    "gzip_metadata": "empty filename, mtime0, level9"
+  },
+  "external_channel_index": {
+    "stored_path": "external-fixtures/external-channel-index.json.gz",
+    "original": {
+      "bytes": 1347374,
+      "sha256": "aa653f48bc3f5179ba519bfcd0deb149cb4514d119b325c072dc93a233acfdc5"
+    },
+    "stored": {
+      "bytes": 68846,
+      "sha256": "3f1550c78ff561fcda68665a445cbd361413f210bc2fe3a6e68047f0987eff5f"
+    }
+  },
+  "channel_counts": {
+    "final": {
+      "existing_saved_text_channels": 312,
+      "digest_verified_recovered_text_channels": 9,
+      "empty_text_channels": 521,
+      "omitted_payload_channels": 212
+    },
+    "reproduction": {
+      "existing_saved_text_channels": 312,
+      "digest_verified_recovered_text_channels": 9,
+      "empty_text_channels": 521,
+      "omitted_payload_channels": 212
+    }
+  },
+  "security_descriptor_inspection_limitation": {
+    "utility": "ntfsinfo -v -i9",
+    "reported_exit_code": 0,
+    "stderr_verbatim": "Corrupt attribute 0x80 in inode 9\nFailed to read $SDS attribute: Value too large for defined data type\n",
+    "status": "Security-descriptor content inspection incomplete.",
+    "fresh_unpopulated_control_has_same_diagnostic": true,
+    "direct_ntfscat_sds_extraction_equal_before_and_after_helper_population": true,
+    "direct_ntfscat_sds": {
+      "bytes": 262396,
+      "sha256": "95aefacfebf228fd2c9e150a86b0eb1a3924fb25b0995c6e0e7c34feeade0a76"
+    },
+    "does_not_establish": "Security-descriptor semantic validity or complete filesystem consistency.",
+    "files": [
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/diagnostic-receipt.json",
+        "original": {
+          "bytes": 7954,
+          "sha256": "bbb73ae6a0e296748f809825d433635760b908429d667c5d38ff2ead3b57fff7"
+        },
+        "stored_path": "external-fixtures/sds-diagnostic-receipt.json",
+        "stored": {
+          "bytes": 7954,
+          "sha256": "bbb73ae6a0e296748f809825d433635760b908429d667c5d38ff2ead3b57fff7"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-format.stderr.log",
+        "original": {
+          "bytes": 142,
+          "sha256": "fb23245d0dbf368cc3abca520866c866832bee6765164a2444c28a09f13432a2"
+        },
+        "stored_path": "external-fixtures/sds-fresh-format.stderr.log",
+        "stored": {
+          "bytes": 142,
+          "sha256": "fb23245d0dbf368cc3abca520866c866832bee6765164a2444c28a09f13432a2"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-format.stdout.log",
+        "original": {
+          "bytes": 81,
+          "sha256": "191bb9241247e0c361edeff5d047ad95274bcfdab694ae927f108d39d1f01f0e"
+        },
+        "stored_path": "external-fixtures/sds-fresh-format.stdout.log",
+        "stored": {
+          "bytes": 81,
+          "sha256": "191bb9241247e0c361edeff5d047ad95274bcfdab694ae927f108d39d1f01f0e"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfscat.stderr.log",
+        "original": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stored_path": "external-fixtures/sds-fresh-unpopulated-ntfscat.stderr.log",
+        "stored": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfsinfo.stderr.log",
+        "original": {
+          "bytes": 103,
+          "sha256": "28c30373e05a7089c599e0e797bb80b109747719aa2aff5b292795cc54b390d3"
+        },
+        "stored_path": "external-fixtures/sds-fresh-unpopulated-ntfsinfo.stderr.log",
+        "stored": {
+          "bytes": 103,
+          "sha256": "28c30373e05a7089c599e0e797bb80b109747719aa2aff5b292795cc54b390d3"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfsinfo.stdout.log",
+        "original": {
+          "bytes": 5139,
+          "sha256": "8b42b3af3a6425b60517d6277b5d2aad24fa06131006cf8fdfe6ac3e2ef9bfac"
+        },
+        "stored_path": "external-fixtures/sds-fresh-unpopulated-ntfsinfo.stdout.log",
+        "stored": {
+          "bytes": 5139,
+          "sha256": "8b42b3af3a6425b60517d6277b5d2aad24fa06131006cf8fdfe6ac3e2ef9bfac"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfscat.stderr.log",
+        "original": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stored_path": "external-fixtures/sds-qualified-populated-ntfscat.stderr.log",
+        "stored": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfsinfo.stderr.log",
+        "original": {
+          "bytes": 103,
+          "sha256": "28c30373e05a7089c599e0e797bb80b109747719aa2aff5b292795cc54b390d3"
+        },
+        "stored_path": "external-fixtures/sds-qualified-populated-ntfsinfo.stderr.log",
+        "stored": {
+          "bytes": 103,
+          "sha256": "28c30373e05a7089c599e0e797bb80b109747719aa2aff5b292795cc54b390d3"
+        },
+        "encoding": "identity"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfsinfo.stdout.log",
+        "original": {
+          "bytes": 5139,
+          "sha256": "8b42b3af3a6425b60517d6277b5d2aad24fa06131006cf8fdfe6ac3e2ef9bfac"
+        },
+        "stored_path": "external-fixtures/sds-qualified-populated-ntfsinfo.stdout.log",
+        "stored": {
+          "bytes": 5139,
+          "sha256": "8b42b3af3a6425b60517d6277b5d2aad24fa06131006cf8fdfe6ac3e2ef9bfac"
+        },
+        "encoding": "identity"
+      }
+    ],
+    "omitted_binary_outputs": [
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfscat.stdout.bin",
+        "original": {
+          "bytes": 262396,
+          "sha256": "95aefacfebf228fd2c9e150a86b0eb1a3924fb25b0995c6e0e7c34feeade0a76"
+        },
+        "storage": "omitted binary system stream; exact hash retained"
+      },
+      {
+        "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfscat.stdout.bin",
+        "original": {
+          "bytes": 262396,
+          "sha256": "95aefacfebf228fd2c9e150a86b0eb1a3924fb25b0995c6e0e7c34feeade0a76"
+        },
+        "storage": "omitted binary system stream; exact hash retained"
+      }
+    ]
+  },
+  "stored_representations_verified": true
+}

@@ -63,7 +63,9 @@ Future<ViewerArchive> openViewerArchiveFile(
     try {
       final prefix = await source.read(
         0,
-        source.length < 8 ? source.length : 8,
+        source.length < streamedArchiveViewerSignatureBytes
+            ? source.length
+            : streamedArchiveViewerSignatureBytes,
       );
       check();
       if (matchesStreamedArchiveViewerSignature(name, prefix)) {

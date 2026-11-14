@@ -1455,7 +1455,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               isStreamedArchiveViewerName(name) &&
                   matchesStreamedArchiveViewerSignature(
                     name,
-                    await borrowed.read(0, source.size < 8 ? source.size : 8),
+                    await borrowed.read(
+                      0,
+                      source.size < streamedArchiveViewerSignatureBytes
+                          ? source.size
+                          : streamedArchiveViewerSignatureBytes,
+                    ),
                   ));
       if (streamed) {
         try {

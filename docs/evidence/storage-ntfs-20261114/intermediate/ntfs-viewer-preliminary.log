@@ -1,0 +1,37 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart
+00:00 +0: buffered NTFS opens in Archive and previews a regular file
+00:00 +1: NTFS named streams remain visible metadata in browse and check
+00:01 +2: native NTFS named large.ntfs uses one bounded streaming source
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ side=PanelSide.local
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ (web=false)
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ") returned 1 entities
+00:10 +3: native NTFS named misnamed.zip uses one bounded streaming source
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI side=PanelSide.local
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI (web=false)
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI") returned 1 entities
+00:19 +4: leaving NTFS Archive cancels a queued member preview
+00:19 +5: closing NTFS during access acquisition releases the late source
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX side=PanelSide.local
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX (web=false)
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX") returned 1 entities
+00:19 +6: All tests passed!

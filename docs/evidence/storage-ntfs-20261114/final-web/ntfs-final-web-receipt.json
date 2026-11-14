@@ -1,0 +1,67 @@
+{
+  "source_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "cwd": "/workspace/scratch/4f6714f1660a/runtime-setup/app-release-dec983b2fcb7",
+  "app_version": "1.3.0+23",
+  "source_paths": 8092,
+  "source_binding_sha256": "2add0a9c6f0157c7475020cefc39c9b8ff0155394048a0528a11df4f4ab67330",
+  "profile": "Original production manifests; production JavaScript release; no native-test hook override.",
+  "production_manifest_sha256": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "started_at_utc": "2026-11-14T13:16:54Z",
+  "commands": [
+    {
+      "command": [
+        "flutter",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "exit_code": 0,
+      "log": "ntfs-final-web-0.log",
+      "log_sha256": "7ea6420080612359408d030ddc1bf7e73bc45b9b20046d4293f6015c61d6fa55"
+    },
+    {
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub",
+        "--no-wasm-dry-run",
+        "--dart-define=APP_VERSION=1.3.0+23",
+        "--dart-define=GIT_HASH=dec983b2fcb71dea7f90e1020c5d73e3f926a3f6"
+      ],
+      "exit_code": 0,
+      "log": "ntfs-final-web-1.log",
+      "log_sha256": "f13ba257a07e5083fcac0c008be19adbd513fce2d60a693a754efea49b37f21d"
+    }
+  ],
+  "outputs": {
+    "main.dart.js": {
+      "bytes": 27800833,
+      "sha256": "4c49751b9b5b2884fbfd48668516f1b4cba07eae70353e3d71d59a9a474f6d8f"
+    },
+    "flutter_bootstrap.js": {
+      "bytes": 13091,
+      "sha256": "ef6d3f6939fa67e0eb3a34d8669545074a3e6efe1e669b119162e78dea6f2ccf"
+    },
+    "index.html": {
+      "bytes": 2346,
+      "sha256": "30a0f3c562c65352e1cb8eab221a162351964b383ac08ba5eeddb0a476dbb7be"
+    },
+    "assets/packages/apple_lzfse/LICENSE": {
+      "bytes": 1514,
+      "sha256": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32"
+    }
+  },
+  "revision_stamp_present": true,
+  "app_version_present": true,
+  "apple_lzfse_license_present": true,
+  "exit_code": 0,
+  "manifests_unchanged": true,
+  "source_drift_after": [],
+  "finished_at_utc": "2026-11-14T13:19:58Z"
+}

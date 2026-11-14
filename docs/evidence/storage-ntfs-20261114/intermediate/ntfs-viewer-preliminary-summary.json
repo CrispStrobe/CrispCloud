@@ -1,0 +1,14 @@
+{
+  "label": "ntfs-viewer-preliminary",
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "total": 6,
+  "files": [
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"
+  ],
+  "failures": [],
+  "skips": [],
+  "run_success": true,
+  "events_sha256": "40e0b5355b9582f02241dfef1ea0bbb09b0b5b8128768fdf9b9b67746c30508d"
+}

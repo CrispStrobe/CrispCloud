@@ -257,7 +257,9 @@ class ArchiveService {
       // policy as pane navigation and batch extraction. Generic archive formats
       // retain the strict special-entry refusal below.
       final members =
-          archive.formatName == 'ext' || archive.formatName == 'disk-image'
+          archive.formatName == 'ext' ||
+              archive.formatName == 'ntfs' ||
+              archive.formatName == 'disk-image'
           ? ArchiveMemberIndex(archive).members.values
           : archive.members;
       for (final entry in members) {

@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "qualification_source_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+  "result": "passed",
+  "scope": "Read-only NTFS filesystem and Microsoft Basic Data/MBR partition-image portable acceptance. Fresh VM, dart2js -O2 compilation, and actual Node execution from the original primary checkout package map.",
+  "executions_at_this_source": true,
+  "groups_per_target": 18,
+  "checks_per_target": 2037,
+  "all_output_fields_compared": true,
+  "serialized_stdout_equal": true,
+  "source_paths": 5048,
+  "dart_paths": 4988,
+  "actual_compiler_inputs": 606,
+  "source_inventory_unchanged": true,
+  "compiler_input_inventory_unchanged": true,
+  "source_and_dependency_bindings_verified": true,
+  "complete_command_logs_verified": true,
+  "supported_images": 3,
+  "unsupported_control_images": 1,
+  "supported_regular_unnamed_path_instances": 143,
+  "external_corpus_total_regular_unnamed_path_instances": 204,
+  "native_test_counts_are_separate": true,
+  "files": [
+    {
+      "path": "ntfs-final-portable-commands.json",
+      "stored": {
+        "bytes": 4517,
+        "sha256": "0b6d0d1369768e3ee31a07dec1016a5475297edf778847fdbe0af34a0f2fea4a"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-compile-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-compile.log",
+      "stored": {
+        "bytes": 111,
+        "sha256": "2c9dbdbc7e578754db9c862690a60f964aad30b77be0c941f990c383ebaddf08"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-compiler-inputs.json.gz",
+      "stored": {
+        "bytes": 32705,
+        "sha256": "09a53a94f9c9947fb7110ecea5fdec52d714f24ee361c706c9c3185dd7d08735"
+      },
+      "encoding": "gzip",
+      "uncompressed": {
+        "bytes": 165845,
+        "sha256": "d98b34325ed7a5b5d1fead713fc071375fe089d1ea3bacdfddb71fd11e1320cb"
+      }
+    },
+    {
+      "path": "ntfs-final-portable-dart-version-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-dart-version.log",
+      "stored": {
+        "bytes": 82,
+        "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-dependency-paths.log.gz",
+      "stored": {
+        "bytes": 4212,
+        "sha256": "aaf3258ed80e4e1caf441c8659166debba51d2a32673b1a2e81efa012bc746fe"
+      },
+      "encoding": "gzip",
+      "uncompressed": {
+        "bytes": 59021,
+        "sha256": "515aa7ed61e79098121e04673ce9387fa171756a934c0ce65d82d0e2337773f2"
+      }
+    },
+    {
+      "path": "ntfs-final-portable-js-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-js.json",
+      "stored": {
+        "bytes": 2595,
+        "sha256": "baccf1e0eb86c57f276085fba97d66999c046e268777097662318cdabc77c77d"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-js.log",
+      "stored": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-node-version-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-node-version.log",
+      "stored": {
+        "bytes": 9,
+        "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-preflight-inputs.json.gz",
+      "stored": {
+        "bytes": 431435,
+        "sha256": "75e7f90322d3056c5a974ffe9a73e8e17b89603f7e008f002ce7578cf6dc543c"
+      },
+      "encoding": "gzip",
+      "uncompressed": {
+        "bytes": 1338284,
+        "sha256": "8acc448dcfb6eb102a6a0d7974bb5cf44cd67888eb3e4b17c5d85427f8299577"
+      }
+    },
+    {
+      "path": "ntfs-final-portable-receipt.json",
+      "stored": {
+        "bytes": 25708,
+        "sha256": "68d373c5db3d1d16c84c399cffc8bd57afde3ca3c9037ada484aff20079951cd"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-source-binding.json.gz",
+      "stored": {
+        "bytes": 404311,
+        "sha256": "32392068b0e30ced0225047c07882e88f2032f344f2cf18981cd77e7eec30dcd"
+      },
+      "encoding": "gzip",
+      "uncompressed": {
+        "bytes": 1566347,
+        "sha256": "8f7e94f7d11cd83546a3ef3620d8f7594b6a1dd5bbe47a1bc21572b0b8089683"
+      }
+    },
+    {
+      "path": "ntfs-final-portable-vm-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-vm.json",
+      "stored": {
+        "bytes": 2595,
+        "sha256": "baccf1e0eb86c57f276085fba97d66999c046e268777097662318cdabc77c77d"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "ntfs-final-portable-vm.log",
+      "stored": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "encoding": "identity"
+    },
+    {
+      "path": "runtime-equivalence-dec983b2-to-c2c17f7.json",
+      "stored": {
+        "bytes": 39960,
+        "sha256": "f857ea8aa3820822787cdc2856ec98c44440e81e37303b875966a7d083e81902"
+      },
+      "encoding": "identity"
+    }
+  ],
+  "native_test_correction_equivalence": {
+    "path": "runtime-equivalence-dec983b2-to-c2c17f7.json",
+    "bytes": 39960,
+    "sha256": "f857ea8aa3820822787cdc2856ec98c44440e81e37303b875966a7d083e81902",
+    "actual_portable_execution_revision": "dec983b2fcb71dea7f90e1020c5d73e3f926a3f6",
+    "equivalent_compiler_runtime_revision": "c2c17f7a273c45760fd54b9e5a8fe3cd57b0d51b",
+    "all_606_actual_inputs_unchanged": true,
+    "portable_execution_at_later_revision_claimed": false
+  }
+}
