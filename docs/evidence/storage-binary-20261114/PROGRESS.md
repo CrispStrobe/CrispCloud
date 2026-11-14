@@ -1,6 +1,6 @@
 # Binary comparison continuation — recoverable progress
 
-## Integration acceptance
+## Acceptance recorded by the concurrent main integration
 
 Checkpoint `542c1c8b` is included in the coordinated Office/storage integration.
 On macOS with Flutter 3.47.8 / Dart 3.13.7, the combined native comparison and
@@ -13,6 +13,10 @@ chunks and keeping cancellation detached from stalled upstream cleanup.
 Account-scope retention, Stop during navigation, disposal, empty/short streams
 and retry ownership are covered. Existing queued release runs were left alone;
 these local checks do not establish all-platform release acceptance.
+
+This section was imported from main `202c0c94`. Its independently reported
+198/27 results belong to that integration and do not qualify the later
+continuation source. The source-bound Linux receipts below remain separate.
 
 ## Preserved starting state
 
@@ -173,3 +177,20 @@ work and its own direct-iterator capture correction. This checkpoint preserves
 the e52ea1f9 evidence before reconciling that main advancement. The continuation
 will retain both histories, preserve the raw-stream fix and new regressions,
 and qualify the resulting saved merge source separately.
+
+## Reconciliation of concurrent main work
+
+`26b5db21` preserves the complete e52ea1f9 evidence on the remote branch before
+integration. The next two-parent checkpoint incorporates main `202c0c94`,
+including its Office changes and comparison test setup, without rewriting
+either history. The sole runtime conflict is the alternative capture input
+adapter. This continuation retains synchronous cancellation-wrapper delivery:
+it preserves direct pull backpressure while delivering an original read error
+promptly even when a provider's cancellation cleanup stalls. Direct
+`StreamIterator(stream)` can wait for that upstream cleanup before reporting
+the error. Both capture passes now have explicit regressions for this case.
+
+The portable cohort now has 21 tests, plus the 10 raw-limit tests configured
+for Chrome. No new browser launch is attempted in the blocked environment.
+The combined native cohort and strict analysis will run again against the
+saved integration source; earlier receipts remain pinned to e52ea1f9.
