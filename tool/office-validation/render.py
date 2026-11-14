@@ -42,6 +42,10 @@ SOFFICE_SIGKILL_RETURN_CODE = -int(signal.SIGKILL) if hasattr(signal, 'SIGKILL')
 # Do not infer that other "cloned", "edited", or "frame" series are unchanged.
 # The directory and Office format are part of this specific corpus contract.
 REQUIRED_SERIES_BASELINES = {
+    ('fidelity-schema', 'namespace-style.xlsx'): 'namespace-style-reference.xlsx',
+    ('fidelity-host', 'native-word.docx'): 'reference/native-word-expected.docx',
+    ('fidelity-host', 'native-sheet.xlsx'): 'reference/native-sheet-expected.xlsx',
+    ('fidelity-host', 'native-slide.pptx'): 'reference/native-slide-expected.pptx',
     ('fidelity-bookmarks', 'cloned.docx'): 'source.docx',
     ('fidelity-frame-wrap', 'none.docx'): 'none-source.docx',
     ('fidelity-frame-wrap', 'square.docx'): 'square-source.docx',
@@ -738,7 +742,7 @@ def cycle_coverage(files, records, *, root=None):
             if required_grid_baseline is not None:
                 candidates = [required_grid_baseline]
             elif required_baseline is not None:
-                candidates = [case.with_name(required_baseline).as_posix()]
+                candidates = [(case.parent / required_baseline).as_posix()]
             elif case.stem == 'roundtrip':
                 candidates = [case.with_name('edited' + case.suffix).as_posix()]
             elif case.stem in ('unchanged', 'imported'):

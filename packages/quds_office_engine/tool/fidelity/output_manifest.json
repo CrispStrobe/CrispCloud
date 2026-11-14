@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 346,
+  "expected_file_count": 350,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
     {
@@ -921,6 +921,15 @@
         3
       ],
       "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-schema/namespace-style-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_style_namespace_fidelity_test.dart"
     }
   ],
   "standalone": [
@@ -1083,6 +1092,10 @@
     {
       "path": "fidelity-table-widths/expected-unmerge.docx",
       "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-schema/namespace-style-reference.xlsx",
+      "producer": "test/sheet_style_namespace_fidelity_test.dart"
     }
   ]
 }

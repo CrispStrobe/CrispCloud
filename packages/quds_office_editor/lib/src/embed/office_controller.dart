@@ -476,9 +476,6 @@ class WordEditorController extends OfficeController {
       !document.protectionHasPassword;
 
   @override
-  OfficeSurfaceConfig get config => super.config;
-
-  @override
   set config(OfficeSurfaceConfig value) {
     _requestedMode = value.mode;
     super.config = _effectiveConfig(value);
@@ -11811,6 +11808,7 @@ class _SheetGridSnap {
             horizontalAlign: cell.horizontalAlign,
             fillRgb: cell.fillRgb,
             fontRgb: cell.fontRgb,
+            hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
             fontBold: cell.fontBold,
             fontSize: cell.fontSize,
           ),
@@ -11849,6 +11847,7 @@ class _SheetGridSnap {
         ..horizontalAlign = cell.horizontalAlign
         ..fillRgb = cell.fillRgb
         ..fontRgb = cell.fontRgb
+        ..hasExplicitFontColorEdit = cell.hasExplicitFontColorEdit
         ..fontBold = cell.fontBold
         ..fontSize = cell.fontSize;
     }

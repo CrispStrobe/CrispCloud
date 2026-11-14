@@ -10,7 +10,8 @@ All notable changes to `quds_office_engine` are documented here.
   genuine formula errors and cycles distinguishable.
 - Preserve native SpreadsheetML namespaces, foreign extensions and unedited
   style properties when formatting cells. Horizontal alignment no longer adds
-  vertical centering.
+  vertical centering. Clearing the last direct format now reaches the saved
+  workbook, including resets of bold, font size/colors, fill and alignment.
 - Preserve all native Word protection edit modes and password/hash metadata.
   Expose native formatting restrictions so hosts can enforce them conservatively.
 - Refuse signed spreadsheet and presentation import/export for editing when
