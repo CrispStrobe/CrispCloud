@@ -1,0 +1,56 @@
+{
+  "source_bindings": [
+    {
+      "receipt": "native-gate-source-binding.json",
+      "revision": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+      "source_hashes_checked": 50,
+      "passed": true
+    },
+    {
+      "receipt": "hardening-gate-source-binding.json",
+      "revision": "20798b39a0c792e533a5c785294417f26db03272",
+      "source_hashes_checked": 40,
+      "passed": true
+    },
+    {
+      "receipt": "portable-validation-receipt.json",
+      "revision": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+      "source_hashes_checked": 11,
+      "passed": true
+    },
+    {
+      "receipt": "udf-core-sdk-node-receipt.json",
+      "revision": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+      "source_hashes_checked": 4,
+      "passed": true
+    },
+    {
+      "receipt": "udf-path-budget-portable-receipt.json",
+      "revision": "20798b39a0c792e533a5c785294417f26db03272",
+      "source_hashes_checked": 6,
+      "passed": true
+    },
+    {
+      "receipt": "udf-zip-final-analysis-receipt.json",
+      "revision": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+      "source_hashes_checked": 38,
+      "passed": true
+    },
+    {
+      "receipt": "udf-zip-hardening-analysis-receipt.json",
+      "revision": "20798b39a0c792e533a5c785294417f26db03272",
+      "source_hashes_checked": 38,
+      "passed": true
+    }
+  ],
+  "referenced_log_hashes_checked": 12,
+  "passed": true,
+  "method": "Recompute SHA-256 from git show <qualified-revision>:<path> for every listed source and from exact raw bytes for every referenced log; assert each successful command exited zero.",
+  "production_web": {
+    "revision": "20798b39a0c792e533a5c785294417f26db03272",
+    "non_document_source_hashes_checked": 116,
+    "output_hashes_checked": 4,
+    "primary_and_validation_manifest_hashes_match": true,
+    "passed": true
+  }
+}

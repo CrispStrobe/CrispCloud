@@ -1,0 +1,92 @@
+{
+  "qualified_revision": "20798b39a0c792e533a5c785294417f26db03272",
+  "started_at_utc": "2026-11-14T08:23:43.688299+00:00",
+  "cwd": "/workspace/scratch/52be1abfc881/runtime-setup/app-validation",
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "node": "v24.22.1",
+  "source_sha256": {
+    "lib/services/archive_types.dart": "08072e27d01fdd4794ddebab21ca943e650c0e9a09a004a651b2da984a4f8e86",
+    "lib/services/archive_udf_reader.dart": "be1f8971b884d6f87443ec8a86111ad9ad60823ed03506bf7e38c41dda7876dc",
+    "test/support/archive_udf_fixture.dart": "3052f095bebba3a2acf34f3ab0c0461e897be97e3c4b77abfebf0e87ee41cbb6",
+    "test/support/archive_udf_reference_data.dart": "cca79fd23033594ab788fb498ecbbcf6ef3fa390afbab72618190aa3d69dae4e",
+    "test/support/archive_udf_web_acceptance.dart": "fff74e85a96b75abfefab7bb5958797e91849cb22da436f64183272db1222150",
+    "test/fixtures/archives/udf-reference-manifest.json": "b63bc2b15f1b8a272e86d60193ab411ba4ea4366b2ff25ae14459e523674a47f"
+  },
+  "commands": [
+    {
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "test/support/archive_udf_web_acceptance.dart"
+      ],
+      "exit_code": 0,
+      "log": "udf-path-budget-vm-acceptance.log",
+      "log_sha256": "8e3eff3eccb6104e5be01d5a3e97e3690fa408a964978d0e0605841fe7e98b54"
+    },
+    {
+      "command": [
+        "/workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "-O2",
+        "test/support/archive_udf_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/52be1abfc881/runtime-setup/udf-path-budget-acceptance.js"
+      ],
+      "exit_code": 0,
+      "log": "udf-path-budget-js-compile.log",
+      "log_sha256": "45e9f3037984a8dcc211e70536a16a33a0dea8dff46f10ddfbbe6545128a716f"
+    },
+    {
+      "command": [
+        "node",
+        "-e",
+        "globalThis.self = globalThis; require(process.argv[1]);",
+        "/workspace/scratch/52be1abfc881/runtime-setup/udf-path-budget-acceptance.js"
+      ],
+      "exit_code": 0,
+      "log": "udf-path-budget-js-acceptance.log",
+      "log_sha256": "8e3eff3eccb6104e5be01d5a3e97e3690fa408a964978d0e0605841fe7e98b54"
+    }
+  ],
+  "results": {
+    "groups": 26,
+    "checks": 500,
+    "independentImages": {
+      "mastered-bridge": {
+        "caf\u00e9-\u96ea.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+        "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+        "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+      },
+      "derived-udf-only": {
+        "caf\u00e9-\u96ea.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+        "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+        "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+      },
+      "derived-fragmented": {
+        "caf\u00e9-\u96ea.txt": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f",
+        "empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hello.txt": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594",
+        "nested/payload.bin": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+      }
+    },
+    "malformedIndependentImagesRejected": 5,
+    "sourceOwnership": true,
+    "offsetViewsAndInputPreservation": true,
+    "cancelledStreamPrefixBytes": 128,
+    "syntheticRevisionAllocationProfiles": 12,
+    "syntheticPhysicalOffset": 6144000040960,
+    "syntheticLogicalSize": 8589934592,
+    "syntheticSparsePrefixBytes": 17,
+    "aggregateFullPathBudgetBytes": 396,
+    "aggregateFullPathBudgetRejectsOneByteShort": true
+  },
+  "vm_equals_javascript": true,
+  "javascript": {
+    "bytes": 205711,
+    "sha256": "407109826cb26b589eb5cc719f7146b160a41370a7feae8af9a8d6c0a75c19b9"
+  },
+  "source_unchanged_and_primary_matches": true,
+  "finished_at_utc": "2026-11-14T08:23:58.555704+00:00"
+}

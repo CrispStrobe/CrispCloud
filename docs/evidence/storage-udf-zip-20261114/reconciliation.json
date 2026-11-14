@@ -1,6 +1,6 @@
 {
-  "checked_at_utc": "2026-11-14T08:18:30.624346+00:00",
-  "checkpoint": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+  "checked_at_utc": "2026-11-14T08:25:26.129882+00:00",
+  "checkpoint": "20798b39a0c792e533a5c785294417f26db03272",
   "main": "14e022eb51c417803a1913131e78912a8a19b3be",
   "branches": 11,
   "pull_request_heads": 91,
@@ -53,7 +53,7 @@
     },
     {
       "ref": "refs/remotes/origin/integration/storage-capabilities-20261114",
-      "sha": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+      "sha": "20798b39a0c792e533a5c785294417f26db03272",
       "reachable_from_checkpoint": true
     },
     {
@@ -73,7 +73,7 @@
     },
     {
       "ref": "refs/remotes/pull/101",
-      "sha": "b07b7b738a261cc79bffe5f47c3881e2412da2cd",
+      "sha": "20798b39a0c792e533a5c785294417f26db03272",
       "reachable_from_checkpoint": true
     },
     {
