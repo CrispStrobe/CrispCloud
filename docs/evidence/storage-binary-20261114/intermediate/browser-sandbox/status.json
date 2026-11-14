@@ -1,0 +1,31 @@
+{
+  "status": "browser_not_executed_environment_blocked",
+  "source_revision": "e52ea1f9399c2547978bb497073adcee5022cc81",
+  "source_tree": "b9a1a837770bb6087fcbe500d9429af5cfff2f84",
+  "source_paths_before_launch": 8111,
+  "browser_test_session_started": false,
+  "test_cases_executed": 0,
+  "test_cases_started": 0,
+  "test_cases_failed": 0,
+  "expected_test_cases": {
+    "binary_comparison_portable_test.dart": 19,
+    "binary_comparison_limits_test.dart": 10,
+    "total": 29,
+    "basis": "Static registration count, including parameterized loops; not executed browser coverage"
+  },
+  "suite_loading_attempts": 2,
+  "suite_loading_errors": 1,
+  "completed_test_runner_done_event": false,
+  "startup_failure": "Chromium process_singleton_posix socket() returned EPERM (Operation not permitted) before a browser test session was established.",
+  "termination": "The parent stopped the stalled test process with Ctrl-C after repeated browser startup failures.",
+  "observed_exit_code": 130,
+  "completed_gate_receipt": false,
+  "after_inventory_completed": false,
+  "source_attribution": "The saved pre-run inventory is byte-identical to final-native-source.json.gz for e52ea1f9. The interrupted runner did not complete its after-inventory or write a qualification receipt.",
+  "elevated_retry": {
+    "status": "rejected_before_execution",
+    "command_started": false,
+    "note": "The environment did not permit elevated execution. No alternate route or permission change was attempted."
+  },
+  "interpretation": "This is an environment-blocked browser launch, not a failing binary-comparison test result. Browser runtime qualification remains pending."
+}

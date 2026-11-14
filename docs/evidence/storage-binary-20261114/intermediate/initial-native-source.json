@@ -1,0 +1,15 @@
+{
+  "revision": "ae30d225cffcda535ec896156b3b2ba68784a14a",
+  "files": {
+    "lib/services/binary_comparison_source.dart": "538986980236eae44cb7f51ce36dbc2111eb318de952af5a977960e331a518c6",
+    "lib/services/file_comparison_service.dart": "9fc48745b99ec943678025fc9977def99e8d3c4e203bddec9d2132c4fedb0389",
+    "test/binary_comparison_source_test.dart": "072e0f0d9a6cedbf63cdcd9519f17342450fde8a99d6181981659b5b19f20938",
+    "test/binary_comparison_limits_test.dart": "a63697ef3c9e305a98b76a55fc9b9cec24bfa149594f590f099b0c598bd0aceb",
+    "test/binary_comparison_navigation_test.dart": "ace14b2ce9f7fc8b6cecd69e33595753b6d99af0037837e22616453aea6a2443",
+    "test/file_comparison_service_test.dart": "7c2adcb14087df0eef265a87d5a824bb268d253dfc814262aa482d86e5cd76de"
+  },
+  "manifests": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  }
+}

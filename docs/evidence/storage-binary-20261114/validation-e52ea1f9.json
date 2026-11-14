@@ -1,0 +1,50 @@
+{
+  "source_revision": "e52ea1f9399c2547978bb497073adcee5022cc81",
+  "source_tree": "b9a1a837770bb6087fcbe500d9429af5cfff2f84",
+  "classification": "Native and scoped analysis pass; browser runtime qualification blocked",
+  "native": {
+    "passed": 92,
+    "failed": 0,
+    "skipped": 0,
+    "receipt": "final-native-receipt.json",
+    "summary": "native-summary.json"
+  },
+  "analysis": {
+    "changed_dart_files": 10,
+    "result": "No issues found",
+    "exit_code": 0,
+    "receipt": "final-analysis-receipt.json"
+  },
+  "completed_gate_source_paths": 8111,
+  "completed_gate_source_unchanged": true,
+  "package_map_unchanged": true,
+  "production_manifests": {
+    "pubspec.yaml": {
+      "sha256": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+      "unchanged_from_baseline": true
+    },
+    "pubspec.lock": {
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "unchanged_from_baseline": true
+    }
+  },
+  "browser": {
+    "status": "browser_not_executed_environment_blocked",
+    "intended_cases": 29,
+    "executed_cases": 0,
+    "details": "intermediate/browser-sandbox/README.md",
+    "after_inventory_receipt": false,
+    "retry_started": false
+  },
+  "hosted_ci": {
+    "status": "queued_at_observation",
+    "details": "hosted-ci-status.json"
+  },
+  "limitations": [
+    "Not an atomic or simultaneous provider snapshot",
+    "Requires pause-respecting input producers",
+    "Linux native/widget qualification only; no all-platform release claim",
+    "Largest physical comparison fixture is 9 MiB; not an end-to-end ceiling-size qualification",
+    "Browser and hosted CI pass not claimed"
+  ]
+}

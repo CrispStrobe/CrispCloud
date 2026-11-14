@@ -74,7 +74,7 @@ that original content stays unchanged after the capture was verified.
 | Recent resolved ranges | At most 128 |
 | Overall opening work | 30 minutes across capture, verification, scan and final checks |
 | Individual source inactivity | 30 seconds; empty chunks do not count as progress |
-| Cooperative scheduling | Yield after at most 64 input chunks or 1 MiB of byte work |
+| Cooperative scheduling | Yield when 64 input chunks or 1 MiB of byte work has accumulated; byte checks occur after parts of at most 64 KiB |
 
 The browser byte ceilings bound retained input payloads, not the process heap.
 Consolidating accumulated chunks can temporarily require an additional
