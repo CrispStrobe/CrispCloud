@@ -1,0 +1,22 @@
+[
+  "test/archive_udf_reader_test.dart",
+  "test/archive_udf_reader_review_test.dart",
+  "test/archive_udf_integration_test.dart",
+  "test/archive_zip_recovery_service_test.dart",
+  "test/archive_zip_recovery_review_test.dart",
+  "test/archive_zip_recovery_workflow_test.dart",
+  "test/archive_zip_recovery_queue_test.dart",
+  "test/widget/archive_zip_recovery_dialog_test.dart",
+  "test/widget/archive_container_viewer_test.dart",
+  "test/archive_job_queue_test.dart",
+  "test/archive_job_recovery_test.dart",
+  "test/widget/archive_job_recovery_dialog_test.dart",
+  "test/archive_format_registry_test.dart",
+  "test/archive_container_dispatch_test.dart",
+  "test/archive_iso_reader_test.dart",
+  "test/archive_iso_streamed_test.dart",
+  "test/archive_iso_multiextent_test.dart",
+  "test/archive_dmg_reader_test.dart",
+  "test/archive_dmg_rewrite_test.dart",
+  "test/browser_menu_layout_test.dart"
+]

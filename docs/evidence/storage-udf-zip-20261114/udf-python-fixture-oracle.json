@@ -1,0 +1,680 @@
+{
+  "schema": 1,
+  "oracle": "Python binascii.crc_hqx with initial remainder0; fixed external-master descriptor inventory",
+  "cases": [
+    {
+      "name": "mastered-bridge",
+      "image_sha256": "4a78c55c4471871b9dac6dfb885388102028e6296158d3345d304724e3532fba",
+      "descriptor_checks": [
+        {
+          "byte_offset": 65536,
+          "identifier": 1,
+          "location": 32,
+          "crc_bytes": 496,
+          "crc16": 59258
+        },
+        {
+          "byte_offset": 67584,
+          "identifier": 4,
+          "location": 33,
+          "crc_bytes": 496,
+          "crc16": 49123
+        },
+        {
+          "byte_offset": 69632,
+          "identifier": 5,
+          "location": 34,
+          "crc_bytes": 496,
+          "crc16": 21836
+        },
+        {
+          "byte_offset": 71680,
+          "identifier": 6,
+          "location": 35,
+          "crc_bytes": 430,
+          "crc16": 15156
+        },
+        {
+          "byte_offset": 73728,
+          "identifier": 7,
+          "location": 36,
+          "crc_bytes": 8,
+          "crc16": 3949
+        },
+        {
+          "byte_offset": 75776,
+          "identifier": 8,
+          "location": 37,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 98304,
+          "identifier": 1,
+          "location": 48,
+          "crc_bytes": 496,
+          "crc16": 59258
+        },
+        {
+          "byte_offset": 100352,
+          "identifier": 4,
+          "location": 49,
+          "crc_bytes": 496,
+          "crc16": 49123
+        },
+        {
+          "byte_offset": 102400,
+          "identifier": 5,
+          "location": 50,
+          "crc_bytes": 496,
+          "crc16": 21836
+        },
+        {
+          "byte_offset": 104448,
+          "identifier": 6,
+          "location": 51,
+          "crc_bytes": 430,
+          "crc16": 15156
+        },
+        {
+          "byte_offset": 106496,
+          "identifier": 7,
+          "location": 52,
+          "crc_bytes": 8,
+          "crc16": 3949
+        },
+        {
+          "byte_offset": 108544,
+          "identifier": 8,
+          "location": 53,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 131072,
+          "identifier": 9,
+          "location": 64,
+          "crc_bytes": 118,
+          "crc16": 40923
+        },
+        {
+          "byte_offset": 133120,
+          "identifier": 8,
+          "location": 65,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 524288,
+          "identifier": 2,
+          "location": 256,
+          "crc_bytes": 496,
+          "crc16": 55041
+        },
+        {
+          "byte_offset": 892928,
+          "identifier": 2,
+          "location": 436,
+          "crc_bytes": 496,
+          "crc16": 55041
+        },
+        {
+          "byte_offset": 526336,
+          "identifier": 256,
+          "location": 0,
+          "crc_bytes": 496,
+          "crc16": 33955
+        },
+        {
+          "byte_offset": 528384,
+          "identifier": 8,
+          "location": 1,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 530432,
+          "identifier": 261,
+          "location": 2,
+          "crc_bytes": 168,
+          "crc16": 37916
+        },
+        {
+          "byte_offset": 534528,
+          "identifier": 261,
+          "location": 4,
+          "crc_bytes": 168,
+          "crc16": 28123
+        },
+        {
+          "byte_offset": 538624,
+          "identifier": 261,
+          "location": 6,
+          "crc_bytes": 168,
+          "crc16": 52495
+        },
+        {
+          "byte_offset": 540672,
+          "identifier": 261,
+          "location": 7,
+          "crc_bytes": 160,
+          "crc16": 59561
+        },
+        {
+          "byte_offset": 542720,
+          "identifier": 261,
+          "location": 8,
+          "crc_bytes": 168,
+          "crc16": 60088
+        },
+        {
+          "byte_offset": 544768,
+          "identifier": 261,
+          "location": 9,
+          "crc_bytes": 168,
+          "crc16": 29597
+        },
+        {
+          "byte_offset": 532480,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 24,
+          "crc16": 25159
+        },
+        {
+          "byte_offset": 532520,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 44,
+          "crc16": 65077
+        },
+        {
+          "byte_offset": 532580,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 65057
+        },
+        {
+          "byte_offset": 532628,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 61999
+        },
+        {
+          "byte_offset": 532676,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 64215
+        },
+        {
+          "byte_offset": 536576,
+          "identifier": 257,
+          "location": 5,
+          "crc_bytes": 24,
+          "crc16": 25159
+        },
+        {
+          "byte_offset": 536616,
+          "identifier": 257,
+          "location": 5,
+          "crc_bytes": 36,
+          "crc16": 29757
+        }
+      ],
+      "descriptor_count": 31
+    },
+    {
+      "name": "derived-udf-only",
+      "image_sha256": "9b9433bac37ae9e81a94a17edd7f51a255362f4d6d91209f17cfa21288ce4f3c",
+      "descriptor_checks": [
+        {
+          "byte_offset": 65536,
+          "identifier": 1,
+          "location": 32,
+          "crc_bytes": 496,
+          "crc16": 59258
+        },
+        {
+          "byte_offset": 67584,
+          "identifier": 4,
+          "location": 33,
+          "crc_bytes": 496,
+          "crc16": 49123
+        },
+        {
+          "byte_offset": 69632,
+          "identifier": 5,
+          "location": 34,
+          "crc_bytes": 496,
+          "crc16": 21836
+        },
+        {
+          "byte_offset": 71680,
+          "identifier": 6,
+          "location": 35,
+          "crc_bytes": 430,
+          "crc16": 15156
+        },
+        {
+          "byte_offset": 73728,
+          "identifier": 7,
+          "location": 36,
+          "crc_bytes": 8,
+          "crc16": 3949
+        },
+        {
+          "byte_offset": 75776,
+          "identifier": 8,
+          "location": 37,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 98304,
+          "identifier": 1,
+          "location": 48,
+          "crc_bytes": 496,
+          "crc16": 59258
+        },
+        {
+          "byte_offset": 100352,
+          "identifier": 4,
+          "location": 49,
+          "crc_bytes": 496,
+          "crc16": 49123
+        },
+        {
+          "byte_offset": 102400,
+          "identifier": 5,
+          "location": 50,
+          "crc_bytes": 496,
+          "crc16": 21836
+        },
+        {
+          "byte_offset": 104448,
+          "identifier": 6,
+          "location": 51,
+          "crc_bytes": 430,
+          "crc16": 15156
+        },
+        {
+          "byte_offset": 106496,
+          "identifier": 7,
+          "location": 52,
+          "crc_bytes": 8,
+          "crc16": 3949
+        },
+        {
+          "byte_offset": 108544,
+          "identifier": 8,
+          "location": 53,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 131072,
+          "identifier": 9,
+          "location": 64,
+          "crc_bytes": 118,
+          "crc16": 40923
+        },
+        {
+          "byte_offset": 133120,
+          "identifier": 8,
+          "location": 65,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 524288,
+          "identifier": 2,
+          "location": 256,
+          "crc_bytes": 496,
+          "crc16": 55041
+        },
+        {
+          "byte_offset": 892928,
+          "identifier": 2,
+          "location": 436,
+          "crc_bytes": 496,
+          "crc16": 55041
+        },
+        {
+          "byte_offset": 526336,
+          "identifier": 256,
+          "location": 0,
+          "crc_bytes": 496,
+          "crc16": 33955
+        },
+        {
+          "byte_offset": 528384,
+          "identifier": 8,
+          "location": 1,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 530432,
+          "identifier": 261,
+          "location": 2,
+          "crc_bytes": 168,
+          "crc16": 37916
+        },
+        {
+          "byte_offset": 534528,
+          "identifier": 261,
+          "location": 4,
+          "crc_bytes": 168,
+          "crc16": 28123
+        },
+        {
+          "byte_offset": 538624,
+          "identifier": 261,
+          "location": 6,
+          "crc_bytes": 168,
+          "crc16": 52495
+        },
+        {
+          "byte_offset": 540672,
+          "identifier": 261,
+          "location": 7,
+          "crc_bytes": 160,
+          "crc16": 59561
+        },
+        {
+          "byte_offset": 542720,
+          "identifier": 261,
+          "location": 8,
+          "crc_bytes": 168,
+          "crc16": 60088
+        },
+        {
+          "byte_offset": 544768,
+          "identifier": 261,
+          "location": 9,
+          "crc_bytes": 168,
+          "crc16": 29597
+        },
+        {
+          "byte_offset": 532480,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 24,
+          "crc16": 25159
+        },
+        {
+          "byte_offset": 532520,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 44,
+          "crc16": 65077
+        },
+        {
+          "byte_offset": 532580,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 65057
+        },
+        {
+          "byte_offset": 532628,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 61999
+        },
+        {
+          "byte_offset": 532676,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 64215
+        },
+        {
+          "byte_offset": 536576,
+          "identifier": 257,
+          "location": 5,
+          "crc_bytes": 24,
+          "crc16": 25159
+        },
+        {
+          "byte_offset": 536616,
+          "identifier": 257,
+          "location": 5,
+          "crc_bytes": 36,
+          "crc16": 29757
+        }
+      ],
+      "descriptor_count": 31
+    },
+    {
+      "name": "derived-fragmented",
+      "image_sha256": "995e912555642f1ef40ac77490003912788778ea2716d6d13831ea021e0a765a",
+      "descriptor_checks": [
+        {
+          "byte_offset": 65536,
+          "identifier": 1,
+          "location": 32,
+          "crc_bytes": 496,
+          "crc16": 59258
+        },
+        {
+          "byte_offset": 67584,
+          "identifier": 4,
+          "location": 33,
+          "crc_bytes": 496,
+          "crc16": 49123
+        },
+        {
+          "byte_offset": 69632,
+          "identifier": 5,
+          "location": 34,
+          "crc_bytes": 496,
+          "crc16": 21836
+        },
+        {
+          "byte_offset": 71680,
+          "identifier": 6,
+          "location": 35,
+          "crc_bytes": 430,
+          "crc16": 15156
+        },
+        {
+          "byte_offset": 73728,
+          "identifier": 7,
+          "location": 36,
+          "crc_bytes": 8,
+          "crc16": 3949
+        },
+        {
+          "byte_offset": 75776,
+          "identifier": 8,
+          "location": 37,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 98304,
+          "identifier": 1,
+          "location": 48,
+          "crc_bytes": 496,
+          "crc16": 59258
+        },
+        {
+          "byte_offset": 100352,
+          "identifier": 4,
+          "location": 49,
+          "crc_bytes": 496,
+          "crc16": 49123
+        },
+        {
+          "byte_offset": 102400,
+          "identifier": 5,
+          "location": 50,
+          "crc_bytes": 496,
+          "crc16": 21836
+        },
+        {
+          "byte_offset": 104448,
+          "identifier": 6,
+          "location": 51,
+          "crc_bytes": 430,
+          "crc16": 15156
+        },
+        {
+          "byte_offset": 106496,
+          "identifier": 7,
+          "location": 52,
+          "crc_bytes": 8,
+          "crc16": 3949
+        },
+        {
+          "byte_offset": 108544,
+          "identifier": 8,
+          "location": 53,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 131072,
+          "identifier": 9,
+          "location": 64,
+          "crc_bytes": 118,
+          "crc16": 40923
+        },
+        {
+          "byte_offset": 133120,
+          "identifier": 8,
+          "location": 65,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 524288,
+          "identifier": 2,
+          "location": 256,
+          "crc_bytes": 496,
+          "crc16": 55041
+        },
+        {
+          "byte_offset": 892928,
+          "identifier": 2,
+          "location": 436,
+          "crc_bytes": 496,
+          "crc16": 55041
+        },
+        {
+          "byte_offset": 526336,
+          "identifier": 256,
+          "location": 0,
+          "crc_bytes": 496,
+          "crc16": 33955
+        },
+        {
+          "byte_offset": 528384,
+          "identifier": 8,
+          "location": 1,
+          "crc_bytes": 496,
+          "crc16": 0
+        },
+        {
+          "byte_offset": 530432,
+          "identifier": 261,
+          "location": 2,
+          "crc_bytes": 168,
+          "crc16": 37916
+        },
+        {
+          "byte_offset": 534528,
+          "identifier": 261,
+          "location": 4,
+          "crc_bytes": 168,
+          "crc16": 28123
+        },
+        {
+          "byte_offset": 538624,
+          "identifier": 261,
+          "location": 6,
+          "crc_bytes": 168,
+          "crc16": 52495
+        },
+        {
+          "byte_offset": 540672,
+          "identifier": 261,
+          "location": 7,
+          "crc_bytes": 160,
+          "crc16": 59561
+        },
+        {
+          "byte_offset": 542720,
+          "identifier": 261,
+          "location": 8,
+          "crc_bytes": 168,
+          "crc16": 60088
+        },
+        {
+          "byte_offset": 544768,
+          "identifier": 261,
+          "location": 9,
+          "crc_bytes": 184,
+          "crc16": 15602
+        },
+        {
+          "byte_offset": 532480,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 24,
+          "crc16": 25159
+        },
+        {
+          "byte_offset": 532520,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 44,
+          "crc16": 65077
+        },
+        {
+          "byte_offset": 532580,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 65057
+        },
+        {
+          "byte_offset": 532628,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 61999
+        },
+        {
+          "byte_offset": 532676,
+          "identifier": 257,
+          "location": 3,
+          "crc_bytes": 32,
+          "crc16": 64215
+        },
+        {
+          "byte_offset": 536576,
+          "identifier": 257,
+          "location": 5,
+          "crc_bytes": 24,
+          "crc16": 25159
+        },
+        {
+          "byte_offset": 536616,
+          "identifier": 257,
+          "location": 5,
+          "crc_bytes": 36,
+          "crc16": 29757
+        }
+      ],
+      "descriptor_count": 31
+    }
+  ],
+  "passed": 3,
+  "descriptor_crc_checks": 93
+}

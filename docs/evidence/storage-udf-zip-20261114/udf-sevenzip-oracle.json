@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "oracle": {
+    "binary_sha256": "f94066e93f9a807547a3bff1021b3ec79d5ea4f57dfead018e9698182ad283b5",
+    "version": "7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06"
+  },
+  "fixture_source_sha256": "cca79fd23033594ab788fb498ecbbcf6ef3fa390afbab72618190aa3d69dae4e",
+  "cases": [
+    {
+      "name": "mastered-bridge",
+      "image_sha256": "4a78c55c4471871b9dac6dfb885388102028e6296158d3345d304724e3532fba",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 894976 bytes (874 KiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/runtime-setup/tmp/crisp-udf-oracle-qorx2xnu/mastered-bridge.iso\n--\nPath = /workspace/scratch/52be1abfc881/runtime-setup/tmp/crisp-udf-oracle-qorx2xnu/mastered-bridge.iso\nType = Udf\nPhysical Size = 894976\nVersion = 1.02\nCluster Size = 2048\nSector Size = 2048\nCreated = 2000-01-01 01:00:00.000000\nModified = 2000-01-01 01:00:00.000000\nComment = \n{\nPrimary Volumes:\n  PrimaryVolumeDescriptorNumber: 0\n  VolumeSequenceNumber: 1\n  VolumeId: CRISP_UDF_REF\n  VolumeSetId: CRISPCLOUD-REFERENCE\n  ApplicationId: \n  ImplementationId: *genisoimage\nPartitions:\n  PartitionIndex: 0\n  PartitionNumber: 0\n  ContentsId: +NSR02\n  ImplementationId: *genisoimage\n  AccessType: Read-Only\n  Size: 61440\n  Pos: 526336\nLogical Volumes:\n  Id: CRISP_UDF_REF\n  BlockSize: 2048\n  DomainId: *OSTA UDF Compliant::1.02\n  ImplementationId: *genisoimage\n  Partition Maps:\n    PartitionMap: 0\n    Type: 1\n    VolumeSequenceNumber: 1\n    PartitionNumber: 0\n  File Sets:\n    FileSetNumber: 0\n    FileSetDescNumber: 0\n    LogicalVolumeId: CRISP_UDF_REF\n    Id: CRISP_UDF_REF\n    CopyrightId: \n    AbstractId: \n    DomainId: *OSTA UDF Compliant::1.02\n}\n\nEverything is Ok\n\nFolders: 1\nFiles: 4\nSize:       8250\nCompressed: 894976\n",
+      "stderr": "",
+      "files": {
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "hello.txt": {
+          "bytes": 37,
+          "sha256": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594"
+        },
+        "café-雪.txt": {
+          "bytes": 20,
+          "sha256": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        }
+      },
+      "exact_payloads_match": true
+    },
+    {
+      "name": "derived-udf-only",
+      "image_sha256": "9b9433bac37ae9e81a94a17edd7f51a255362f4d6d91209f17cfa21288ce4f3c",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 894976 bytes (874 KiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/runtime-setup/tmp/crisp-udf-oracle-qorx2xnu/derived-udf-only.iso\n--\nPath = /workspace/scratch/52be1abfc881/runtime-setup/tmp/crisp-udf-oracle-qorx2xnu/derived-udf-only.iso\nType = Udf\nPhysical Size = 894976\nVersion = 1.02\nCluster Size = 2048\nSector Size = 2048\nCreated = 2000-01-01 01:00:00.000000\nModified = 2000-01-01 01:00:00.000000\nComment = \n{\nPrimary Volumes:\n  PrimaryVolumeDescriptorNumber: 0\n  VolumeSequenceNumber: 1\n  VolumeId: CRISP_UDF_REF\n  VolumeSetId: CRISPCLOUD-REFERENCE\n  ApplicationId: \n  ImplementationId: *genisoimage\nPartitions:\n  PartitionIndex: 0\n  PartitionNumber: 0\n  ContentsId: +NSR02\n  ImplementationId: *genisoimage\n  AccessType: Read-Only\n  Size: 61440\n  Pos: 526336\nLogical Volumes:\n  Id: CRISP_UDF_REF\n  BlockSize: 2048\n  DomainId: *OSTA UDF Compliant::1.02\n  ImplementationId: *genisoimage\n  Partition Maps:\n    PartitionMap: 0\n    Type: 1\n    VolumeSequenceNumber: 1\n    PartitionNumber: 0\n  File Sets:\n    FileSetNumber: 0\n    FileSetDescNumber: 0\n    LogicalVolumeId: CRISP_UDF_REF\n    Id: CRISP_UDF_REF\n    CopyrightId: \n    AbstractId: \n    DomainId: *OSTA UDF Compliant::1.02\n}\n\nEverything is Ok\n\nFolders: 1\nFiles: 4\nSize:       8250\nCompressed: 894976\n",
+      "stderr": "",
+      "files": {
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "hello.txt": {
+          "bytes": 37,
+          "sha256": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594"
+        },
+        "café-雪.txt": {
+          "bytes": 20,
+          "sha256": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        }
+      },
+      "exact_payloads_match": true
+    },
+    {
+      "name": "derived-fragmented",
+      "image_sha256": "995e912555642f1ef40ac77490003912788778ea2716d6d13831ea021e0a765a",
+      "exit_code": 0,
+      "stdout": "\n7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06\n 64-bit locale=C.UTF-8 Threads:9 OPEN_MAX:16384 temp_path:./, ASM\n\nScanning the drive for archives:\n1 file, 894976 bytes (874 KiB)\n\nExtracting archive: /workspace/scratch/52be1abfc881/runtime-setup/tmp/crisp-udf-oracle-qorx2xnu/derived-fragmented.iso\n--\nPath = /workspace/scratch/52be1abfc881/runtime-setup/tmp/crisp-udf-oracle-qorx2xnu/derived-fragmented.iso\nType = Udf\nPhysical Size = 894976\nVersion = 1.02\nCluster Size = 2048\nSector Size = 2048\nCreated = 2000-01-01 01:00:00.000000\nModified = 2000-01-01 01:00:00.000000\nComment = \n{\nPrimary Volumes:\n  PrimaryVolumeDescriptorNumber: 0\n  VolumeSequenceNumber: 1\n  VolumeId: CRISP_UDF_REF\n  VolumeSetId: CRISPCLOUD-REFERENCE\n  ApplicationId: \n  ImplementationId: *genisoimage\nPartitions:\n  PartitionIndex: 0\n  PartitionNumber: 0\n  ContentsId: +NSR02\n  ImplementationId: *genisoimage\n  AccessType: Read-Only\n  Size: 61440\n  Pos: 526336\nLogical Volumes:\n  Id: CRISP_UDF_REF\n  BlockSize: 2048\n  DomainId: *OSTA UDF Compliant::1.02\n  ImplementationId: *genisoimage\n  Partition Maps:\n    PartitionMap: 0\n    Type: 1\n    VolumeSequenceNumber: 1\n    PartitionNumber: 0\n  File Sets:\n    FileSetNumber: 0\n    FileSetDescNumber: 0\n    LogicalVolumeId: CRISP_UDF_REF\n    Id: CRISP_UDF_REF\n    CopyrightId: \n    AbstractId: \n    DomainId: *OSTA UDF Compliant::1.02\n}\n\nEverything is Ok\n\nFolders: 1\nFiles: 4\nSize:       8250\nCompressed: 894976\n",
+      "stderr": "",
+      "files": {
+        "empty.bin": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "hello.txt": {
+          "bytes": 37,
+          "sha256": "cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594"
+        },
+        "café-雪.txt": {
+          "bytes": 20,
+          "sha256": "e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f"
+        },
+        "nested/payload.bin": {
+          "bytes": 8193,
+          "sha256": "6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88"
+        }
+      },
+      "exact_payloads_match": true
+    }
+  ],
+  "passed": 3
+}

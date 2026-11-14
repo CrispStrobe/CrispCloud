@@ -1,0 +1,38 @@
+{
+  "profile": "Supplemental original UDF synthetic unit suite on Dart VM and compiled JavaScript/Node",
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "node": "v24.22.1",
+  "test_package": "1.33.0",
+  "passed": {
+    "vm": 60,
+    "node_dart2js": 60
+  },
+  "failed": 0,
+  "skipped": 0,
+  "test_adaptation": "Only in isolated scratch harness: replace package:flutter_test/flutter_test.dart import with package:test/test.dart. Production reader/types/fixture and all test bodies copied byte-for-byte. This is not a Flutter/widget gate.",
+  "coverage": [
+    "four admitted revisions and short/long/embedded allocations",
+    "FE/EFE and embedded directories",
+    "nonascending and repeated extents",
+    "short/long allocation continuation with both allowed CRC coverages",
+    "zero extents and sparse 8 GiB bounded prefix",
+    "exact physical offsets above 4 TiB",
+    "long allocations across two physical partitions",
+    "source ownership, cancel, source preservation, limits, malformed structures"
+  ],
+  "source_sha256": {
+    "lib/services/archive_udf_reader.dart": "61fd60b23337d46ea16252961348abf767890ff738c4528ac7eea7c52516320a",
+    "lib/services/archive_types.dart": "08072e27d01fdd4794ddebab21ca943e650c0e9a09a004a651b2da984a4f8e86",
+    "test/support/archive_udf_fixture.dart": "3052f095bebba3a2acf34f3ab0c0461e897be97e3c4b77abfebf0e87ee41cbb6",
+    "test/archive_udf_reader_test.dart": "aa48cd1afae88a2cc05d724e00bc16c08531893573cd4de7382d7e39f99c5418"
+  },
+  "logs_sha256": {
+    "udf-core-sdk-gate.log": "909e01180ad1d44e9543d8f2e536072d485eb4009dc118b0be652f1a84e219a4",
+    "udf-core-node-gate.log": "5f5b06316282463446614ef60f9a9069042e212f9e06a0de8c33d1836c00453c"
+  },
+  "commands": [
+    "dart --packages=.dart_tool/package_config.json /workspace/scratch/52be1abfc881/runtime-setup/pub-cache/hosted/pub.dev/test-1.33.0/bin/test.dart test/archive_udf_reader_test.dart --reporter expanded",
+    "dart --packages=.dart_tool/package_config.json /workspace/scratch/52be1abfc881/runtime-setup/pub-cache/hosted/pub.dev/test-1.33.0/bin/test.dart test/archive_udf_reader_test.dart --platform node --compiler dart2js --reporter expanded"
+  ],
+  "count_note": "The same 60 cases run on both backends; counts are not additive. Large logical and physical-position checks use sparse synthetic sources and bounded prefixes, not complete physical extraction."
+}

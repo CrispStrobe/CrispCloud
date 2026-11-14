@@ -1,0 +1,62 @@
+00:00 +0: loading test/archive_udf_reader_test.dart
+00:00 +0: bounded UDF reader revision 102 short reads exact Unicode member
+00:00 +1: bounded UDF reader revision 102 long reads exact Unicode member
+00:00 +2: bounded UDF reader revision 102 embedded reads exact Unicode member
+00:00 +3: bounded UDF reader revision 150 short reads exact Unicode member
+00:00 +4: bounded UDF reader revision 150 long reads exact Unicode member
+00:00 +5: bounded UDF reader revision 150 embedded reads exact Unicode member
+00:00 +6: bounded UDF reader revision 200 short reads exact Unicode member
+00:00 +7: bounded UDF reader revision 200 long reads exact Unicode member
+00:00 +8: bounded UDF reader revision 200 embedded reads exact Unicode member
+00:00 +9: bounded UDF reader revision 201 short reads exact Unicode member
+00:00 +10: bounded UDF reader revision 201 long reads exact Unicode member
+00:00 +11: bounded UDF reader revision 201 embedded reads exact Unicode member
+00:00 +12: bounded UDF reader ordinary FE remains supported in a UDF 2.01 volume
+00:00 +13: bounded UDF reader embedded directory uses the owning ICB tag location
+00:00 +14: bounded UDF reader zero-length short file reads and streams empty contents
+00:00 +15: bounded UDF reader zero-length long file reads and streams empty contents
+00:00 +16: bounded UDF reader zero-length embedded file reads and streams empty contents
+00:00 +17: bounded UDF reader nonascending repeated allocations preserve logical descriptor order
+00:00 +18: bounded UDF reader final allocated block padding is excluded from contents
+00:00 +19: bounded UDF reader allocation continuation chain supports complete CRC coverage
+00:00 +20: bounded UDF reader allocation continuation chain supports fixed CRC coverage
+00:00 +21: bounded UDF reader long allocation continuation keeps partition-reference semantics
+00:00 +22: bounded UDF reader allocated and unallocated sparse extents return zero without reading stale sectors
+00:00 +23: bounded UDF reader sparse 8 GiB logical file lists and streams a bounded prefix
+00:00 +24: bounded UDF reader physical offsets above 4 TiB stay exact without full allocation
+00:00 +25: bounded UDF reader source closes on success and member identity remains enforced
+00:00 +26: bounded UDF reader stream cancellation avoids reading the next data extent
+00:00 +27: bounded UDF reader recognized special entries never become readable regular files
+00:00 +28: bounded UDF reader an open integrity state is disclosed without mutation
+00:00 +29: bounded UDF reader invalid calendar date is omitted rather than normalized
+00:00 +30: bounded UDF reader probe is non-owning and stops after unrelated first descriptor
+00:00 +31: bounded UDF reader buffer slices are accepted without changing original input
+00:00 +32: bounded UDF reader rejects a continuation loop
+00:00 +33: bounded UDF reader rejects allocations outside their partition
+00:00 +34: bounded UDF reader rejects short allocations that do not cover information length
+00:00 +35: bounded UDF reader rejects nonfinal allocations lacking block alignment
+00:00 +36: bounded UDF reader rejects unallocated extents that still name a physical block
+00:00 +37: bounded UDF reader rejects 64-bit information length before precision loss or allocation
+00:00 +38: bounded UDF reader rejects EFE in a pre-2.00 domain
+00:00 +39: bounded UDF reader rejects transformed file data
+00:00 +40: bounded UDF reader rejects named streams on an extended file entry
+00:00 +41: bounded UDF reader rejects unsafe component ..
+00:00 +42: bounded UDF reader rejects unsafe component .
+00:00 +43: bounded UDF reader rejects unsafe component ../escape
+00:00 +44: bounded UDF reader rejects unsafe component a/b
+00:00 +45: bounded UDF reader rejects unsafe component a\b
+00:00 +46: bounded UDF reader rejects duplicate resulting paths
+00:00 +47: bounded UDF reader rejects a directory cycle rather than traversing indefinitely
+00:00 +48: bounded UDF reader caller entry allowance bounds listing before extra ICB reads
+00:00 +49: bounded UDF reader caller metadata allowance stops before over-budget source reads
+00:00 +50: bounded UDF reader caller directory and allocation allowances reject explicitly
+00:00 +51: bounded UDF reader invalid caller limits still release owned source
+00:00 +52: bounded UDF reader lists nested and empty directories with exact child paths
+00:00 +53: bounded UDF reader caller depth limit bounds nested directories
+00:00 +54: bounded UDF reader rejects prohibited Unicode byte-order marks
+00:00 +55: bounded UDF reader rejects reserved long allocation flags
+00:00 +56: bounded UDF reader accepts erased flag only for allocated unrecorded extent
+00:00 +57: bounded UDF reader rejects malformed strategy-4 parameters
+00:00 +58: bounded UDF reader rejects partial FID implementation identifier
+00:00 +59: bounded UDF reader long allocations can cross two independently mapped physical partitions
+00:00 +60: All tests passed!
