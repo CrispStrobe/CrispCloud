@@ -3,8 +3,8 @@
 // One compact command row per panel. It unifies the former source selector,
 // path toolbar, volume bar, and breadcrumb row:
 //
-//   [source] [back] [forward] [home/volumes] [breadcrumbs ...] [browse]
-//   [flat] [...] [edit]
+//   [source/volumes] [back] [forward] [up] [history] [breadcrumbs ...]
+//   [browse] [flat] [...]
 //
 // The "..." menu also carries the application toolbar actions when the top
 // toolbar is collapsed.
@@ -65,8 +65,6 @@ class PanelHeader extends ConsumerStatefulWidget {
 class _PanelHeaderState extends ConsumerState<PanelHeader> {
   final TextEditingController _pathController = TextEditingController();
   _HeaderLocation? _pathEditLocation;
-  _HeaderLocation? _volumeMenuLocation;
-  bool Function()? _locationMenuIsCurrent;
 
   @override
   void dispose() {
@@ -192,11 +190,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     }
     final root = paths.normalize(origin.storageReference.root);
     return contains(root) ? root : current;
-  }
-
-  void _clearLocationMenu() {
-    _volumeMenuLocation = null;
-    _locationMenuIsCurrent = null;
   }
 
   void _closePathEditor(
@@ -377,6 +370,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                 constraints: const BoxConstraints(maxWidth: 132),
                 child: PanelSourceSelector(
                   side: widget.side,
+                  locations: _sourceLocations(panel, location),
                   currentSource: panel.directorySource,
                   currentStorage: storage,
                   currentLabel: storage == null
@@ -434,7 +428,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                   : null,
             ),
             PanelHistoryButton(panel: panel, compact: true),
-            _volumeButton(panel, isLocal, location),
+            _navButton(
+              icon: Icons.arrow_upward,
+              tooltip: context.commanderTr("Up"),
+              onPressed: panel.navigateUp,
+            ),
             if (panel.isInArchive)
               _navButton(
                 icon: Icons.close,
@@ -473,23 +471,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                 onPressed: panel.toggleFlatView,
               ),
             _moreButton(context, panel, isLocal),
-            _navButton(
-              icon: Icons.edit,
-              tooltip: context.commanderTr("Edit path"),
-              onPressed: location == null
-                  ? null
-                  : () {
-                      if (!location.isCurrent) return;
-                      ref.read(activePanelProvider.notifier).state =
-                          widget.side;
-                      _pathController.text = location.origin.source.currentPath;
-                      _pathController.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: _pathController.text.length,
-                      );
-                      setState(() => _pathEditLocation = location);
-                    },
-            ),
             const SizedBox(width: 2),
           ],
         ),
@@ -667,153 +648,100 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     );
   }
 
-  Widget _volumeButton(
+  List<PanelSourceLocation> _sourceLocations(
     PanelNotifier panel,
-    bool isLocal,
     _HeaderLocation? location,
   ) {
-    final ThemeData theme = Theme.of(context);
+    final side = widget.side;
+    final sessionIsCurrent = panel.captureOperationSession();
+    bool isCurrent() => mounted && widget.side == side && sessionIsCurrent();
+    final drives = ref.watch(drivesProvider);
+    final bookmarks = ref.watch(bookmarksProvider);
     final m = BrowserMenuStrings(context);
-    if (!isLocal) {
-      final bookmarks = ref.watch(bookmarksProvider);
-      return PopupMenuButton<Bookmark>(
-        tooltip: context.commanderTr("Bookmarks"),
-        padding: EdgeInsets.zero,
-        onCanceled: _clearLocationMenu,
-        onSelected: (Bookmark bookmark) {
-          final isCurrent = _locationMenuIsCurrent;
-          _clearLocationMenu();
-          if (isCurrent?.call() != true) return;
-          openBookmark(context, ref, bookmark, side: widget.side);
-        },
-        itemBuilder: (BuildContext context) {
-          final side = widget.side;
-          final sessionIsCurrent = panel.captureOperationSession();
-          _locationMenuIsCurrent = () =>
-              mounted && widget.side == side && sessionIsCurrent();
-          return <PopupMenuEntry<Bookmark>>[
-            for (final bookmark in bookmarks.bookmarks)
-              PopupMenuItem<Bookmark>(
-                value: bookmark,
-                child: Row(
-                  children: <Widget>[
-                    const Icon(Icons.bookmark_outline, size: 17),
-                    const SizedBox(width: 8),
-                    Text(bookmark.name),
-                  ],
-                ),
+    final entries = kIsWeb
+        ? <DriveEntry>[
+            if (location != null && location.origin.source.isLocal)
+              DriveEntry(
+                path: location.root,
+                label: location.paths.basename(location.root),
+                icon: Icons.folder_open,
               ),
-          ];
-        },
-        child: _homeVisual(theme, true),
+          ]
+        : drives.maybeWhen(
+            data: (value) => value,
+            orElse: () => [
+              DriveEntry(
+                path: Platform.environment['HOME'] ?? '/',
+                label: 'Home',
+                icon: Icons.home,
+              ),
+            ],
+          );
+    Future<void> navigate(String path) async {
+      if (!isCurrent()) return;
+      if (location != null && location.origin.source.isLocal) {
+        if (location.isCurrent) {
+          _navigateLocation(panel, location, path, keepGrant: false);
+        }
+        return;
+      }
+      final origin = panel.resolveStorageReference(
+        storageReferenceForSource(LocalPanelSource(path)),
+        path,
       );
+      if (origin != null && origin.isCurrent) {
+        ref.read(activePanelProvider.notifier).state = side;
+        try {
+          await panel.navigateToPath(path, origin: origin);
+        } catch (error) {
+          if (isCurrent()) {
+            ref.read(errorProvider).addError(error.toString(), cause: error);
+          }
+        }
+      }
     }
 
-    final drives = ref.watch(drivesProvider);
-    return PopupMenuButton<DriveEntry>(
-      tooltip: context.commanderTr("Volumes"),
-      padding: EdgeInsets.zero,
-      enabled: location != null,
-      onCanceled: _clearLocationMenu,
-      onSelected: (DriveEntry entry) {
-        final owner = _volumeMenuLocation;
-        final isCurrent = _locationMenuIsCurrent;
-        _clearLocationMenu();
-        if (owner == null ||
-            !owner.origin.source.isLocal ||
-            isCurrent?.call() != true) {
-          return;
-        }
-        _navigateLocation(panel, owner, entry.path, keepGrant: false);
-      },
-      itemBuilder: (BuildContext context) {
-        _volumeMenuLocation = location;
-        _locationMenuIsCurrent = () => mounted && location?.isCurrent == true;
-        final List<DriveEntry> entries = kIsWeb
-            ? [
-                DriveEntry(
-                  path: location!.root,
-                  label: location.paths.basename(location.root),
-                  icon: Icons.folder_open,
-                ),
-              ]
-            : drives.maybeWhen(
-                data: (List<DriveEntry> value) => value,
-                orElse: () => <DriveEntry>[
-                  DriveEntry(
-                    path: kIsWeb
-                        ? location?.root ?? '/'
-                        : Platform.environment['HOME'] ?? '/',
-                    label: m.text('Home'),
-                    icon: Icons.home,
-                  ),
-                ],
-              );
-        return <PopupMenuEntry<DriveEntry>>[
-          for (final DriveEntry entry in entries)
-            PopupMenuItem<DriveEntry>(
-              value: entry,
-              child: Row(
-                children: <Widget>[
-                  Icon(entry.icon, size: 17),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      entry.icon == Icons.home && entry.label == 'Home'
-                          ? m.text('Home')
-                          : entry.label,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (!kIsWeb) const PopupMenuDivider(),
-          if (!kIsWeb)
-            PopupMenuItem<DriveEntry>(
-              value: DriveEntry(
-                path: location == null
-                    ? p.rootPrefix(panel.currentPath)
-                    : location.paths.rootPrefix(
-                        location.origin.source.currentPath,
-                      ),
-                label: location?.root ?? '/',
-                icon: Icons.computer,
-              ),
-              child: Row(
-                children: <Widget>[
-                  const Icon(Icons.computer, size: 17),
-                  const SizedBox(width: 8),
-                  Text(context.commanderTr("Computer")),
-                ],
-              ),
-            ),
-        ];
-      },
-      child: _homeVisual(theme, drives.isLoading),
-    );
-  }
-
-  Widget _homeVisual(ThemeData theme, bool loading) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(
-            Icons.home,
-            size: 17,
-            color: theme.colorScheme.onPrimaryContainer,
-          ),
-          Icon(
-            Icons.arrow_drop_down,
-            size: 15,
-            color: theme.colorScheme.onPrimaryContainer.withValues(
-              alpha: loading ? 0.4 : 0.9,
-            ),
-          ),
-        ],
-      ),
-    );
+    return [
+      for (final entry in entries)
+        PanelSourceLocation(
+          key: 'drive:${entry.path}',
+          label: entry.icon == Icons.home && entry.label == 'Home'
+              ? m.text('Home')
+              : entry.label,
+          icon: entry.icon,
+          onSelected: () {
+            // A volume can be removed while this menu is open.
+            if (!isCurrent()) return;
+            final live = ref.read(drivesProvider);
+            if (!kIsWeb &&
+                live.hasValue &&
+                !live.requireValue.any((drive) => drive.path == entry.path)) {
+              return;
+            }
+            navigate(entry.path);
+          },
+        ),
+      if (!kIsWeb)
+        PanelSourceLocation(
+          key: 'computer',
+          label: context.commanderTr('Computer'),
+          icon: Icons.computer,
+          onSelected: () =>
+              navigate(p.rootPrefix(Platform.environment['HOME'] ?? p.current)),
+        ),
+      for (final bookmark in bookmarks.bookmarks)
+        PanelSourceLocation(
+          key: 'bookmark:${bookmark.name}:${bookmark.path}',
+          label: bookmark.name,
+          icon: Icons.bookmark_outline,
+          onSelected: () {
+            if (isCurrent() &&
+                ref.read(bookmarksProvider).bookmarks.contains(bookmark)) {
+              openBookmark(context, ref, bookmark, side: side);
+            }
+          },
+        ),
+    ];
   }
 
   Widget _moreButton(BuildContext context, PanelNotifier panel, bool isLocal) {

@@ -1971,7 +1971,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     if (!_nativeToolbar.supported) return;
     final l = AppLocalizations.of(context)!;
     final active = ModalRoute.of(context)?.isCurrent != false;
-    final terminalVisible = ref.watch(showTerminalProvider);
     final dual = ref.watch(showDualPanelProvider);
     final tree = ref.watch(showTreeSidebarProvider);
     final preview = ref.watch(showPreviewProvider);
@@ -1981,7 +1980,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     final compact =
         ref.watch(panelViewModeProvider(side)) == PanelViewMode.full;
-    final sync = ref.watch(synchronizedBrowsingProvider).enabled;
     Map<String, Object> item(
       String id,
       String label,
@@ -1996,18 +1994,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     };
     final items = [
       item('swap', l.swapPanels, 'arrow.left.arrow.right'),
-      item(
-        'synchronized',
-        SynchronizedBrowsingStrings(context).text(sync ? 'stop' : 'start'),
-        'link',
-        sync,
-      ),
-      item(
-        'terminal',
-        terminalVisible ? l.hideTerminal : l.showTerminal,
-        'terminal',
-        terminalVisible,
-      ),
       item(
         'dual',
         dual ? l.singlePanel : l.dualPanel,
@@ -2136,22 +2122,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         icon: const Icon(Icons.swap_horiz, size: 20),
         tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
         onPressed: () => _swapPanels(),
-      ),
-      const SynchronizedBrowsingButton(),
-      // Browsers use an explicit WebSocket gateway for SSH.
-      Consumer(
-        builder: (ctx, cref, _) {
-          final showTerminal = cref.watch(showTerminalProvider);
-          return IconButton(
-            icon: Icon(
-              Icons.terminal,
-              size: 20,
-              color: showTerminal ? Theme.of(ctx).colorScheme.primary : null,
-            ),
-            tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
-            onPressed: () => setTerminalVisible(cref, !showTerminal),
-          );
-        },
       ),
       // Toggle: dual panel ↔ single panel
       Consumer(

@@ -18,8 +18,23 @@ import '../services/storage_identity.dart';
 // PanelSourceSelector widget
 // ---------------------------------------------------------------------------
 
+/// A location offered alongside connected storage accounts.
+class PanelSourceLocation {
+  const PanelSourceLocation({
+    required this.key,
+    required this.label,
+    required this.icon,
+    required this.onSelected,
+  });
+  final String key;
+  final String label;
+  final IconData icon;
+  final VoidCallback onSelected;
+}
+
 class PanelSourceSelector extends ConsumerWidget {
   final PanelSide side;
+  final List<PanelSourceLocation> locations;
 
   /// A panel header can provide its actual requested/listed storage. Keeping
   /// this projection optional avoids starting a panel just to render a picker.
@@ -32,6 +47,7 @@ class PanelSourceSelector extends ConsumerWidget {
   const PanelSourceSelector({
     super.key,
     required this.side,
+    this.locations = const [],
     this.currentSource,
     this.currentStorage,
     this.currentLabel,
@@ -57,8 +73,13 @@ class PanelSourceSelector extends ConsumerWidget {
       currentIsLocal: currentStorage?.isLocal ?? source?.isLocal ?? false,
       currentAvailable: currentAvailable,
       available: availableSources,
+      locations: locations,
       onSelect: (entry) {
         if (!context.mounted) return;
+        if (entry.location case final location?) {
+          location.onSelected();
+          return;
+        }
         // A menu can remain open across a connection change. Revalidate the
         // selected entry by its key and exact source, never by provider label.
         for (final live in ref.read(availableSourcesProvider)) {
@@ -84,13 +105,13 @@ class PanelSourceSelector extends ConsumerWidget {
 
 bool _sameSource(PanelSource first, PanelSource second) => switch (first) {
   LocalPanelSource _ => second is LocalPanelSource,
-  RemotePanelSource source =>
+  final RemotePanelSource source =>
     second is RemotePanelSource && identical(source.client, second.client),
-  ArchivePanelSource source =>
+  final ArchivePanelSource source =>
     second is ArchivePanelSource &&
         source.archivePath == second.archivePath &&
         _sameSource(source.parent, second.parent),
-  ContainerPanelSource source =>
+  final ContainerPanelSource source =>
     second is ContainerPanelSource &&
         source.containerPath == second.containerPath &&
         identical(source.unlockSession, second.unlockSession) &&
@@ -99,14 +120,14 @@ bool _sameSource(PanelSource first, PanelSource second) => switch (first) {
 
 bool _sourceAvailable(PanelSource source) => switch (source) {
   LocalPanelSource _ => true,
-  RemotePanelSource source => source.client.isAuthenticated,
-  ArchivePanelSource source => _sourceAvailable(source.parent),
-  ContainerPanelSource source => _sourceAvailable(source.parent),
+  final RemotePanelSource source => source.client.isAuthenticated,
+  final ArchivePanelSource source => _sourceAvailable(source.parent),
+  final ContainerPanelSource source => _sourceAvailable(source.parent),
 };
 
 StorageReference _sourceStorage(PanelSource source) => switch (source) {
-  ArchivePanelSource source => _sourceStorage(source.parent),
-  ContainerPanelSource source => _sourceStorage(source.parent),
+  final ArchivePanelSource source => _sourceStorage(source.parent),
+  final ContainerPanelSource source => _sourceStorage(source.parent),
   _ => storageReferenceForSource(source),
 };
 
@@ -118,6 +139,7 @@ class _SourceOption {
     required this.enabled,
     this.source,
     this.storage,
+    this.location,
   });
 
   final String key;
@@ -126,6 +148,7 @@ class _SourceOption {
   final bool enabled;
   final PanelSource? source;
   final StorageReference? storage;
+  final PanelSourceLocation? location;
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +161,7 @@ class _SourceDropdown extends StatefulWidget {
   final bool currentIsLocal;
   final bool currentAvailable;
   final List<AvailableSource> available;
+  final List<PanelSourceLocation> locations;
   final void Function(_SourceOption entry) onSelect;
 
   const _SourceDropdown({
@@ -146,6 +170,7 @@ class _SourceDropdown extends StatefulWidget {
     required this.currentIsLocal,
     required this.currentAvailable,
     required this.available,
+    required this.locations,
     required this.onSelect,
   });
 
@@ -196,7 +221,7 @@ class _SourceDropdownState extends State<_SourceDropdown> {
       }
       if (selected == null) {
         for (final entry in entries) {
-          if (_sameSource(entry.source!, current)) {
+          if (entry.source != null && _sameSource(entry.source!, current)) {
             selected = entry;
             break;
           }
@@ -225,9 +250,24 @@ class _SourceDropdownState extends State<_SourceDropdown> {
       entries.add(selected);
     }
 
+    entries.addAll(
+      widget.locations.map(
+        (location) => _SourceOption(
+          key: 'location:${location.key}',
+          label: location.label,
+          icon: location.icon,
+          enabled: true,
+          location: location,
+        ),
+      ),
+    );
+    final currentEntry = selected;
     Widget label(_SourceOption entry, {bool selected = false}) {
       final text = Text(
-        entry.label,
+        selected && entry.label.characters.length > 15
+            ? '${entry.label.characters.take(14)}…'
+            : entry.label,
+        maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: selected
             ? theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)
@@ -258,7 +298,8 @@ class _SourceDropdownState extends State<_SourceDropdown> {
       icon: const Icon(Icons.arrow_drop_down, size: 18),
       style: theme.textTheme.bodySmall,
       isDense: true,
-      isExpanded: true,
+      isExpanded: false,
+      menuWidth: MediaQuery.sizeOf(context).width.clamp(0, 360).toDouble(),
       items: entries.map((entry) {
         return DropdownMenuItem<String>(
           value: entry.key,
@@ -280,14 +321,17 @@ class _SourceDropdownState extends State<_SourceDropdown> {
         _menuSelect = null;
         if (key == null || openedEntries == null || select == null) return;
         for (final entry in openedEntries) {
-          if (entry.key == key && entry.enabled && entry.source != null) {
+          if (entry.key == key &&
+              entry.enabled &&
+              (entry.source != null || entry.location != null)) {
             select(entry);
             return;
           }
         }
       },
       selectedItemBuilder: (context) => [
-        for (final entry in entries) label(entry, selected: true),
+        for (var i = 0; i < entries.length; i++)
+          label(currentEntry, selected: true),
       ],
     );
   }

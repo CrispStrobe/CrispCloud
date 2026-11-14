@@ -159,6 +159,7 @@ void main() {
   Future<void> mount(
     WidgetTester tester, {
     PanelSide side = PanelSide.remote,
+    bool showSource = false,
   }) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -167,7 +168,11 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: PanelHeader(side: side, isActive: true, showSource: false),
+            body: PanelHeader(
+              side: side,
+              isActive: true,
+              showSource: showSource,
+            ),
           ),
         ),
       ),
@@ -417,7 +422,8 @@ void main() {
     tester,
   ) async {
     await mount(tester);
-    await tester.tap(find.byTooltip('Edit path'));
+    await pathMenu(tester);
+    await choosePathAction(tester, 'edit');
     await tester.pump();
     final submitted = tester.widget<TextField>(editor()).onSubmitted!;
     await panel.openSavedLocation({
@@ -434,7 +440,8 @@ void main() {
 
   testWidgets('Escape cancels path editing without navigating', (tester) async {
     await mount(tester);
-    await tester.tap(find.byTooltip('Edit path'));
+    await pathMenu(tester);
+    await choosePathAction(tester, 'edit');
     await tester.pump();
     await tester.enterText(editor(), '/account/changed');
     cloud.reads.clear();
@@ -449,7 +456,8 @@ void main() {
     'typed cloud paths stay in the captured root and accept relative locations',
     (tester) async {
       await mount(tester);
-      await tester.tap(find.byTooltip('Edit path'));
+      await pathMenu(tester);
+      await choosePathAction(tester, 'edit');
       await tester.pump();
       await tester.enterText(editor(), '../../../../outside');
       cloud.reads.clear();
@@ -473,7 +481,8 @@ void main() {
       await openLocal();
       await mount(tester);
       final onTap = tester.widget<InkWell>(crumb('/Photos')).onTap!;
-      await tester.tap(find.byTooltip('Edit path'));
+      await pathMenu(tester);
+      await choosePathAction(tester, 'edit');
       await tester.pump();
       final submitted = tester.widget<TextField>(editor()).onSubmitted!;
       local.token = Object();
@@ -498,7 +507,8 @@ void main() {
       expect(crumb('/'), findsNothing);
       expect(crumb('/older'), findsNothing);
       expect(crumb('/older/location'), findsOneWidget);
-      await tester.tap(find.byTooltip('Edit path'));
+      await pathMenu(tester);
+      await choosePathAction(tester, 'edit');
       await tester.pump();
       await tester.enterText(editor(), '/account');
       cloud.reads.clear();
@@ -544,7 +554,8 @@ void main() {
       expect(origin, isNotNull);
       await panel.navigateToPath('/', origin: origin!);
       await mount(tester);
-      await tester.tap(find.byTooltip('Edit path'));
+      await pathMenu(tester);
+      await choosePathAction(tester, 'edit');
       await tester.pump();
       final submitted = tester.widget<TextField>(editor()).onSubmitted!;
       local.reads.clear();
@@ -571,7 +582,8 @@ void main() {
   ) async {
     await openLocal();
     await mount(tester);
-    await tester.tap(find.byTooltip('Edit path'));
+    await pathMenu(tester);
+    await choosePathAction(tester, 'edit');
     await tester.pump();
     await tester.enterText(editor(), '../Sibling');
     local.reads.clear();
@@ -588,7 +600,8 @@ void main() {
     await openLocal();
     await mount(tester);
     local.nextGrant = '/External';
-    await tester.tap(find.byTooltip('Edit path'));
+    await pathMenu(tester);
+    await choosePathAction(tester, 'edit');
     await tester.pump();
     await tester.enterText(editor(), '/External/Reports');
     local.reads.clear();
@@ -607,7 +620,8 @@ void main() {
       await openLocal();
       local.extraGrants['/External'] = Object();
       await mount(tester);
-      await tester.tap(find.byTooltip('Edit path'));
+      await pathMenu(tester);
+      await choosePathAction(tester, 'edit');
       await tester.pump();
       await tester.enterText(editor(), '/External/Reports');
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -627,12 +641,45 @@ void main() {
     },
   );
 
+  testWidgets('Up navigates to the parent on either pane', (tester) async {
+    for (final side in PanelSide.values) {
+      final target = container.read(panelProvider(side));
+      await target.refresh();
+      const source = LocalPanelSource('/Photos/Projects/Deep');
+      final origin = target.resolveStorageReference(
+        storageReferenceForSource(source),
+        source.currentPath,
+      )!;
+      await target.navigateToPath(source.currentPath, origin: origin);
+      await mount(tester, side: side, showSource: true);
+      expect(find.byTooltip('Volumes'), findsNothing);
+      expect(find.byTooltip('Edit path'), findsNothing);
+      await tester.tap(find.byTooltip('Up'));
+      await tester.pumpAndSettle();
+      expect(target.currentPath, '/Photos/Projects');
+    }
+  });
+
+  testWidgets('source selector includes and opens local volumes', (
+    tester,
+  ) async {
+    await openLocal();
+    await mount(tester, showSource: true);
+    local.nextGrant = '/External';
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    expect(find.text('Computer'), findsOneWidget);
+    await tester.tap(find.text('External drive'));
+    await tester.pumpAndSettle();
+    expect(panel.currentPath, '/External');
+  });
+
   testWidgets('an open volume menu cannot redirect a different local tab', (
     tester,
   ) async {
     await openLocal();
-    await mount(tester);
-    await tester.tap(find.byTooltip('Volumes'));
+    await mount(tester, showSource: true);
+    await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
     await panel.openSavedLocation({
       'path': '/Photos/Other',

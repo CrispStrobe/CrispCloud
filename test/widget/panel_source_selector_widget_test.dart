@@ -150,6 +150,54 @@ void main() {
   // Basic rendering
   // -------------------------------------------------------------------------
 
+  testWidgets('closed selector stays compact despite long menu labels', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const PanelSourceSelector(side: PanelSide.local),
+        overrides: [
+          availableSourcesProvider.overrideWithValue([
+            ..._localOnlySources(),
+            const AvailableSource(
+              key: 'long',
+              label: 'A very long storage account name',
+              source: LocalPanelSource('/long'),
+            ),
+          ]),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(find.byType(DropdownButton<String>)).width,
+      lessThan(100),
+    );
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    expect(find.text('A very long storage account name'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('closed account name is limited to fifteen characters', (
+    tester,
+  ) async {
+    final client = _Cloud('long');
+    final entry = _remoteEntry(client, 'long', '12345678901234567890');
+    await tester.pumpWidget(
+      _wrap(
+        PanelSourceSelector(side: PanelSide.local, currentSource: entry.source),
+        overrides: [
+          availableSourcesProvider.overrideWithValue([entry]),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('12345678901234…'), findsOneWidget);
+    expect(find.byTooltip('12345678901234567890'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
   group('PanelSourceSelector rendering', () {
     testWidgets('renders a DropdownButton', (tester) async {
       await tester.pumpWidget(

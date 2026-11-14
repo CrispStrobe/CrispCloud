@@ -440,7 +440,9 @@ void main() {
     // body using try/finally, because _verifyInvariants() runs INSIDE
     // binding.runTest() — before any tearDown callbacks.
 
-    testWidgets('shows terminal toggle on desktop platform', (tester) async {
+    testWidgets('keeps terminal out of the desktop top toolbar', (
+      tester,
+    ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       try {
         await tester.pumpWidget(
@@ -448,8 +450,9 @@ void main() {
         );
         await tester.pump();
 
-        // On desktop, a terminal toggle button is shown directly in the wide toolbar.
-        expect(find.byTooltip('Show Terminal'), findsOneWidget);
+        // Terminal remains reachable through F9 and the overflow menu.
+        expect(find.byTooltip('Show Terminal'), findsNothing);
+        expect(find.byTooltip('Start synchronized browsing'), findsNothing);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
@@ -477,7 +480,7 @@ void main() {
       }
     });
 
-    testWidgets('opens the SSH terminal from the mobile toolbar', (
+    testWidgets('opens the SSH terminal from the mobile overflow menu', (
       tester,
     ) async {
       // android is the default in flutter_test, but be explicit.
@@ -488,12 +491,16 @@ void main() {
         );
         await tester.pump();
 
-        // Mobile exposes the SSH terminal without offering a local shell.
-        expect(find.byTooltip('Show Terminal'), findsOneWidget);
-        expect(find.byTooltip('Hide Terminal'), findsNothing);
-        await tester.tap(find.byTooltip('Show Terminal'));
+        // Touch devices retain a menu route without needing a function key.
+        expect(find.byTooltip('Show Terminal'), findsNothing);
+        await tester.tap(find.byTooltip('More actions'));
         await tester.pump(const Duration(milliseconds: 300));
-        expect(find.byTooltip('Hide Terminal'), findsOneWidget);
+        await Scrollable.ensureVisible(
+          tester.element(find.text('Show Terminal')),
+        );
+        await tester.tap(find.text('Show Terminal'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byTooltip('Hide Terminal'), findsNothing);
         expect(find.byTooltip('Connect via SSH'), findsOneWidget);
       } finally {
         debugDefaultTargetPlatformOverride = null;
