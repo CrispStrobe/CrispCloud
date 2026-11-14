@@ -542,7 +542,7 @@ class _DiskImageReader {
         );
       }
       for (final notice in child.notices) {
-        _notice('$prefix: $notice');
+        _notice('$prefix: $notice', exact: child.formatName == 'ntfs');
       }
     }
     await source.validate();
@@ -620,13 +620,21 @@ class _DiskImageReader {
     _targets.add(target);
   }
 
-  void _notice(String message) {
+  void _notice(String message, {bool exact = false}) {
+    // NTFS alternate-stream notices are the only representation of their
+    // original names and sizes. Do not silently shorten or omit that metadata.
+    if (exact &&
+        (message.length > 8192 || _notices.length >= _maxNotices - 1)) {
+      _limit('The disk-wide exact NTFS metadata notice limit was exceeded.');
+    }
     if (_notices.length >= _maxNotices - 1) {
       _omittedNotices++;
       return;
     }
     _notices.add(
-      message.length <= 1024 ? message : '${message.substring(0, 1023)}…',
+      exact || message.length <= 1024
+          ? message
+          : '${message.substring(0, 1023)}…',
     );
   }
 

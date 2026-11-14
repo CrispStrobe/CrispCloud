@@ -1,6 +1,9 @@
 import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
 
+/// Includes NTFS's eight-byte OEM field starting at byte three.
+const int streamedArchiveViewerSignatureBytes = 11;
+
 /// The native viewer can stream these containers and inspected data images.
 /// Other profiles retain their existing bounded browsing readers.
 bool isStreamedArchiveViewerName(String name) {
@@ -38,14 +41,28 @@ bool isStreamedArchiveViewerName(String name) {
 /// Filename routing must not remove the viewer's content-sniffing behavior.
 /// This is only a cheap hint; the chosen reader still validates all metadata.
 bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
-  bool startsWith(List<int> signature) {
-    if (prefix.length < signature.length) return false;
+  bool startsWith(List<int> signature, {int offset = 0}) {
+    if (prefix.length < offset + signature.length) return false;
     for (var index = 0; index < signature.length; index++) {
-      if (prefix[index] != signature[index]) return false;
+      if (prefix[offset + index] != signature[index]) return false;
     }
     return true;
   }
 
+  // A recognized volume owns the subsequent streamed attempt even when a
+  // misleading suffix would otherwise select a writable archive codec.
+  if (startsWith(const [
+    0x4e,
+    0x54,
+    0x46,
+    0x53,
+    0x20,
+    0x20,
+    0x20,
+    0x20,
+  ], offset: 3)) {
+    return true;
+  }
   final lower = name.toLowerCase();
   if (lower.endsWith('.zip') || lower.endsWith('.cbz')) {
     return prefix.length >= 4 && startsWith(const [0x50, 0x4b]);

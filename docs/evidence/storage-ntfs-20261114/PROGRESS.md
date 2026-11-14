@@ -63,6 +63,9 @@ No final NTFS qualification has run at this checkpoint.
 
 - `e237cdc5`: preserved ext qualification, current remote reference ancestry
   and the separate hosted-CI state before new implementation work.
+- `6593fe0f`: saved the fail-closed public contract and initial shared routing.
+- Draft review: [PR #103](https://github.com/CrispStrobe/CrispCloud/pull/103),
+  stacked on the preserved ext branch/PR #102.
 - The next checkpoint adds the public NTFS reader contract and shared
   recognition, read-only policy, streaming and MBR/GPT integration. The initial
   reader remains explicitly unsupported until its bounded parser is complete;
@@ -75,3 +78,28 @@ No final NTFS qualification has run at this checkpoint.
   selectable files with an explicit notice while validating/reserving their
   allocations. Alternate stream notices retain exact names and sizes and state
   that those streams are not read, tested or extracted.
+
+## First functional checkpoint
+
+The full original reader now smoke-opens all three independently mastered
+positive images (`ntfs31`, `ntfs31-small`, `ntfs31-4k`) and rejects the separate
+real 4 KiB-sector image that requires an unsupported attribute list. The
+positive corpus contains 143 regular unnamed file path instances; the
+unsupported control contains 61 additional instances and is not counted as
+supported extraction. All four complete images reproduce exactly. Separate
+external tools extracted and hashed 204 unnamed path instances and eight named
+streams without changing the source images. Final app/VM/JavaScript results
+remain pending and will retain their actual source bindings.
+
+Native recognition now honors the NTFS OEM signature before suffix-specific
+dispatch. The F3/native file hint reads all 11 required prefix bytes; a renamed
+`.zip` image can use the same bounded streaming path. Explicit NTFS child
+notices are retained without shortening their original ADS names, within a
+fixed notice allowance; overflow is refused explicitly.
+
+The first standalone native viewer snapshot passed six tests, with no failures
+or skips, including buffered preview, exact ADS notices, native 80 MiB `.ntfs`
+and renamed `.zip` inputs, Hex/Archive transitions, cancellation, source
+preservation and one access release. This snapshot is an intermediate result,
+not a qualification claim for a later commit. Focused app and core adversarial
+tests are still being completed.

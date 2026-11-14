@@ -163,8 +163,9 @@ Future<InternalViewerAction> showInternalViewer(
     side: side,
     origin: origin,
     bytesOverride: bytesOverride,
-  ))
+  )) {
     return InternalViewerAction.close;
+  }
   if (!context.mounted) return InternalViewerAction.close;
   final result = await showDialog<InternalViewerAction>(
     context: context,
@@ -1451,7 +1452,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               isStreamedArchiveViewerName(name) &&
                   matchesStreamedArchiveViewerSignature(
                     name,
-                    await borrowed.read(0, source.size < 8 ? source.size : 8),
+                    await borrowed.read(
+                      0,
+                      source.size < streamedArchiveViewerSignatureBytes
+                          ? source.size
+                          : streamedArchiveViewerSignatureBytes,
+                    ),
                   ));
       if (streamed) {
         try {
