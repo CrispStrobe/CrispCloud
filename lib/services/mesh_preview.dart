@@ -286,8 +286,9 @@ PreviewMesh _threeMf(Uint8List bytes) {
           .map(
             (t) => ['v1', 'v2', 'v3'].map((a) {
               final index = _id(t.getAttribute(a));
-              if (index >= vertices.length)
+              if (index >= vertices.length) {
                 _invalid('Invalid 3MF triangle index.');
+              }
               return index;
             }).toList(),
           )
