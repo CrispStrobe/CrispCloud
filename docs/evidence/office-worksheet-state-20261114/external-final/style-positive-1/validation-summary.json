@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "artifact_root": "build/office-style-history-acceptance",
+  "validated_directory": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts",
+  "validation_source": "frozen_host_capture",
+  "validation_scope": "schema_only",
+  "started_utc": "2026-11-14T20:11:25.641366+00:00",
+  "completed_utc": "2026-11-14T20:11:28.414412+00:00",
+  "test_sources": [
+    {
+      "path": "test/widget/office_native_workflow_test.dart",
+      "sha256": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe"
+    }
+  ],
+  "host_records": [
+    {
+      "source_path": "build/office-sheet-state-provenance/style-positive-1/inputs.json",
+      "sha256": "5e3217a1fee96392a1d44c1e2368dc7ff56159b932343a8aecd262ec1e3d7497",
+      "evidence_copy_sha256": "5e3217a1fee96392a1d44c1e2368dc7ff56159b932343a8aecd262ec1e3d7497",
+      "compression": null,
+      "evidence_copy": "host-records/00-inputs.json"
+    },
+    {
+      "source_path": "build/office-sheet-state-provenance/style-positive-1/artifact-manifest.json",
+      "sha256": "4a4da5db52edf82eba3a9dc5441771d80d69a4a4bbcd0163301adb803b439a02",
+      "evidence_copy_sha256": "4a4da5db52edf82eba3a9dc5441771d80d69a4a4bbcd0163301adb803b439a02",
+      "compression": null,
+      "evidence_copy": "host-records/01-artifact-manifest.json"
+    },
+    {
+      "source_path": "build/office-sheet-state-provenance/style-positive-1/source-snapshot-before.json.gz",
+      "sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad",
+      "evidence_copy_sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad",
+      "compression": null,
+      "evidence_copy": "host-records/02-source-snapshot-before.json.gz"
+    },
+    {
+      "source_path": "build/office-style-history-coverage-style-positive-1/collection-receipt.json",
+      "sha256": "ef818347e645dc7714d16c98a6a1d069f0d26b7dae5be60bf58605bddd23922f",
+      "evidence_copy_sha256": "21b25624632d13e2a275559ede4a1640e4f7a3f3b3924052d2544346994db3f5",
+      "compression": "gzip",
+      "evidence_copy": "host-records/03-collection-receipt.json.gz"
+    }
+  ],
+  "manifest_at_execution_sha256": "aabbd75793f0468f5e0ba8a25bcfc5ab2944fb194fb515ab026e788fc848b6e0",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "validator_assembly_sha256": "8910f715c4d47f7b4834e3c3638d8272f21e57d3e269f080343846b353a61f05",
+  "validator_provenance_sha256": "f8a6f4bab517eb5fd0e18809a4fe121820ceab6524bcb112a34c3d94f3d22a68",
+  "sdk": "8.0.428",
+  "runtime": "8.0.34",
+  "openxml": "3.3.0",
+  "format_target": "Office2019",
+  "files": 6,
+  "schema_failures": 0,
+  "schema_exit_code": 0,
+  "self_test_exit_code": 0,
+  "authored_inputs": 1,
+  "actual_uploads": 5,
+  "hashes_match_host_before_during_after_and_copies": true,
+  "collector_sha256": "14132d2e851cbbb677fa3f14395dfd6e36a892bc0c141d5d9924af2973ef95ae",
+  "inventory": [
+    {
+      "file": "cross-sheet-applied.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/cross-sheet-applied.xlsx",
+      "role": "host_output",
+      "sha256": "13ce6b4a944a6ceff5be01dfdeccea252d8515dea7d2a992f507b9c44b6fade9",
+      "bytes": 22048,
+      "evidence_copy": "artifacts/cross-sheet-applied.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "cross-sheet-redo.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/cross-sheet-redo.xlsx",
+      "role": "host_output",
+      "sha256": "42d5e99ea62f71bb21d224dcbf8f3d01d50a8b4efe6708a1e22cb4879e195320",
+      "bytes": 37543,
+      "evidence_copy": "artifacts/cross-sheet-redo.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "cross-sheet-undo.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/cross-sheet-undo.xlsx",
+      "role": "host_output",
+      "sha256": "ced9964b03209251f9340dbd013542bddfe4c5ea716636c1a147bec0d9df4c92",
+      "bytes": 37467,
+      "evidence_copy": "artifacts/cross-sheet-undo.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "native-redo.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/native-redo.xlsx",
+      "role": "host_output",
+      "sha256": "c53d0bbd6fdadde71ad9b6d22fb4bb116ca559728f8e192ffa1c7bf3bf19b2a6",
+      "bytes": 22049,
+      "evidence_copy": "artifacts/native-redo.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "native-undo.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/native-undo.xlsx",
+      "role": "host_output",
+      "sha256": "5373043e5820419a4be3ab01eeb4ba049458f46e48390c206e40d2da0ba69016",
+      "bytes": 21975,
+      "evidence_copy": "artifacts/native-undo.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "source.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/source.xlsx",
+      "role": "authored_input",
+      "sha256": "a7169355e89a1e5f232a407652adf4a5bed20bd0ddfbf8390f152f9ebb230107",
+      "bytes": 5333,
+      "evidence_copy": "artifacts/source.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    }
+  ]
+}

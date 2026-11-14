@@ -82,3 +82,28 @@ A fresh remote audit found that main and the Office recovery branch advanced
 during this work, and PR #106 was merged. Their new commits will be reconciled
 before qualification; the original ref receipt remains an accurate record of
 the initial fetch.
+
+## Refreshed integration checkpoint
+
+The provenance and documentation fixes were saved remotely at
+`7910e93970fcb02ec6aaefd5d54dddeaeea769d7`. This checkpoint then incorporates
+main `2e5eced96a05e13be09144091454f55fca327e35` and Office recovery
+`f974b9911b1547c806279279a87f2b21a1ac4357`, preserving their ancestry. Main's
+17 newly observed commits include portable STL/3MF previews, production-part
+3MF handling, content detection, pane path menus and their existing validation
+evidence. The new recovery commit adds evidence without changing runtime
+sources. PR #106 is now merged upstream. The refreshed
+[complete remote receipt](reconciliation-refresh.json) records all current
+heads and the removed branches' retained history.
+
+The only merge conflicts were the managed Office controller and manifest.
+Both retain the combined canonical source `cb42ef232e5794ac4c147ef1992133cf8710ab01`,
+which already includes main's older canonical pin. All 2,185 managed files
+verify after the merge. The incoming dependency manifest adds only the
+Brickwright license asset; the dependency lock is unchanged.
+
+Review additionally refused percent-containing and oversized S3 delta keys
+before remote requests, covering URI escape/dot-segment aliases. The fixed
+[43-suite native cohort](native-suites.txt) is ready for qualification of delta,
+provider and staging behavior, imported bandwidth behavior, Office host
+workflows and portable mesh previews. No result is claimed before execution.

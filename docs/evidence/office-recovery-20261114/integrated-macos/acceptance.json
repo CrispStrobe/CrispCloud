@@ -34,10 +34,48 @@
   ],
   "reports": {
     "native-render-report.json": "68e5b1b8114a51d90910fd54574e7dc041193691ec32d6031beb3d626c9246f0",
-    "browser-copy-receipt.json": "131c3a304eb62169f42d6be53ed7232b3bc9e662fdf3b151c42062c8b80c7345"
+    "browser-copy-receipt.json": "131c3a304eb62169f42d6be53ed7232b3bc9e662fdf3b151c42062c8b80c7345",
+    "fill-native-render-report.json": "1f9fa8237c4ac2275c72a50cf2ad03cf86968c4a040f7c0a34549857219a06db",
+    "fill-browser-copy-receipt.json": "14b8320d303bbe61bfb844a4649e89bc95cfa8f8d8578fb4fff18ad5ac20adb7"
   },
   "latest_browser_comparison_cohort": {
     "passed": 29,
     "browser": "installed Chrome"
-  }
+  },
+  "final_fill_qualification": {
+    "host_checkpoint": "022ac6c91ccaa86f1d36a4d8cc1b20733037a67d",
+    "quds_source_commit": "6ed4ebe047912ecd1756e6335068c9828d9fe68a",
+    "engine_passed": 1736,
+    "engine_conditional_skips": 3,
+    "editor_history_cohort_passed": 19,
+    "host_native_reference_ribbon_csv_cohort_passed": 23,
+    "managed_office_files": 2171,
+    "native_render": {
+      "files": 12,
+      "pages": 12,
+      "cycle_groups": 3,
+      "baseline_comparisons": 3,
+      "failures": []
+    },
+    "source_analysis": "clean"
+  },
+  "read_error_followup": {
+    "checkpoint": "1ba3d652",
+    "native_passed": 156,
+    "chrome_passed": 31
+  },
+  "macos_renderer": {
+    "setting": {
+      "FLTEnableImpeller": false
+    },
+    "reason": "Intermittent Impeller raster-thread SIGSEGV after credential preflight",
+    "prototype_startup_seconds": [
+      30,
+      30
+    ],
+    "rebuilt_2316efe6_startup_seconds": 45,
+    "credential_preflight": "ready",
+    "signature_verification": "passed"
+  },
+  "final_macos_build_receipt": "macos-build-022ac6c9.json"
 }

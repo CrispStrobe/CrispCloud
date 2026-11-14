@@ -1,0 +1,25 @@
+{
+  "label": "native-fill-positive-1",
+  "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "artifact_root": "build/office-fill-host-acceptance",
+  "artifact_directory": "build/office-sheet-state-provenance/native-fill-positive-1/artifacts",
+  "expected_count": 4,
+  "artifact_sha256": {
+    "saved-1.xlsx": "ea5e97d9ae84f3154dd3c988cdc22e698e2c2943dab21794920032a246735b34",
+    "saved-2.xlsx": "75e07a5251268202c476185af42afd743267860881ce63373c1b9c506fd661c6",
+    "saved-3.xlsx": "6faa91997796ad163b35324aeaebd66d2a2ddd3099aac7b9aa44694fb3e831bc",
+    "source.xlsx": "46e2283f807e8776e8d6a6413f43ab06d87c61ce52ec0aa4a171e4aae4eceacb"
+  },
+  "test_sources": [
+    "test/widget/office_native_workflow_test.dart"
+  ],
+  "host_records": [
+    "build/office-sheet-state-provenance/native-fill-positive-1/inputs.json",
+    "build/office-sheet-state-provenance/native-fill-positive-1/artifact-manifest.json",
+    "build/office-sheet-state-provenance/native-fill-positive-1/source-snapshot-before.json.gz",
+    "build/office-native-fill-coverage-native-fill-positive-1/collection-receipt.json"
+  ],
+  "host_artifact_manifest_sha256": "7cfaeb955619be89fb8cf8239e22d304bdfda26d72af1eac9a71bf79aa39b2ec",
+  "host_collection_receipt_sha256": "8d52e73c0ea482e7e93e42f16e3f30e7a88f981e4322f31f84a6f4f75279bd0c",
+  "host_collection_returncode": 0
+}

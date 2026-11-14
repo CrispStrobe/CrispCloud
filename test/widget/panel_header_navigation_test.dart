@@ -11,6 +11,7 @@ import 'package:crisp_cloud/widgets/drive_bar.dart';
 import 'package:crisp_cloud/widgets/panel_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -155,19 +156,18 @@ void main() {
 
   tearDown(() => container.dispose());
 
-  Future<void> mount(WidgetTester tester) async {
+  Future<void> mount(
+    WidgetTester tester, {
+    PanelSide side = PanelSide.remote,
+  }) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(
+        child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: PanelHeader(
-              side: PanelSide.remote,
-              isActive: true,
-              showSource: false,
-            ),
+            body: PanelHeader(side: side, isActive: true, showSource: false),
           ),
         ),
       ),
@@ -188,6 +188,167 @@ void main() {
     expect(origin, isNotNull);
     await panel.navigateToPath(source.currentPath, origin: origin!);
   }
+
+  Future<void> pathMenu(
+    WidgetTester tester, {
+    PanelSide side = PanelSide.remote,
+  }) async {
+    await tester.tap(
+      find.byKey(ValueKey('panel-path-context-${side.name}')),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('panel-path-action-copy')),
+      findsOneWidget,
+    );
+  }
+
+  Future<void> choosePathAction(WidgetTester tester, String action) async {
+    await tester.tap(find.byKey(ValueKey('panel-path-action-$action')));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'path context menus copy the full current path from either pane',
+    (tester) async {
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData')
+            copied = (call.arguments as Map)['text'] as String;
+          return null;
+        },
+      );
+      for (final side in PanelSide.values) {
+        final shown = container.read(panelProvider(side));
+        await shown.refresh();
+        await mount(tester, side: side);
+        final before = shown.currentPath;
+        await pathMenu(tester, side: side);
+        expect(find.text('Open in other pane'), findsOneWidget);
+        await choosePathAction(tester, 'copy');
+        expect(copied, before);
+        expect(shown.currentPath, before);
+      }
+    },
+  );
+
+  testWidgets(
+    'path context favorites retain their cloud account and can be removed',
+    (tester) async {
+      await mount(tester);
+      await pathMenu(tester);
+      await choosePathAction(tester, 'favorite');
+      final bookmarks = container.read(bookmarksProvider);
+      expect(bookmarks.bookmarks, hasLength(1));
+      expect(bookmarks.bookmarks.single.path, '/account/projects/deep');
+      expect(
+        bookmarks.bookmarks.single.storage,
+        storageReferenceForClient(cloud),
+      );
+      await pathMenu(tester);
+      expect(find.text('Remove from favorites'), findsOneWidget);
+      await choosePathAction(tester, 'favorite');
+      expect(bookmarks.bookmarks, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'open in other pane switches to the exact cloud account and keeps this pane',
+    (tester) async {
+      final other = container.read(panelProvider(PanelSide.local));
+      await other.refresh();
+      await mount(tester);
+      await pathMenu(tester);
+      await choosePathAction(tester, 'other');
+      expect(other.currentPath, '/account/projects/deep');
+      expect(
+        (other.captureCurrentOrigin().source as RemotePanelSource).client,
+        same(cloud),
+      );
+      expect(panel.currentPath, '/account/projects/deep');
+    },
+  );
+
+  testWidgets(
+    'a local directory in the right pane can also open in the left pane',
+    (tester) async {
+      final other = container.read(panelProvider(PanelSide.local));
+      await other.refresh();
+      await openLocal();
+      await mount(tester);
+      await pathMenu(tester);
+      await choosePathAction(tester, 'other');
+      expect(other.currentPath, '/Photos/Projects/Deep');
+      expect(other.captureCurrentOrigin().source.isLocal, isTrue);
+      expect(panel.currentPath, '/Photos/Projects/Deep');
+    },
+  );
+
+  testWidgets('the current path menu swaps both actual pane locations', (
+    tester,
+  ) async {
+    final other = container.read(panelProvider(PanelSide.local));
+    await other.refresh();
+    final oldLeft = other.currentPath;
+    await mount(tester);
+    await pathMenu(tester);
+    await choosePathAction(tester, 'swap');
+    expect(other.currentPath, '/account/projects/deep');
+    expect(panel.currentPath, oldLeft);
+    expect(panel.captureCurrentOrigin().source.isLocal, isTrue);
+    expect(
+      (other.captureCurrentOrigin().source as RemotePanelSource).client,
+      same(cloud),
+    );
+  });
+
+  testWidgets('a path menu does not bookmark a replacement directory', (
+    tester,
+  ) async {
+    await mount(tester);
+    await pathMenu(tester);
+    await panel.navigateToPath(
+      '/account',
+      origin: panel.captureCurrentOrigin(),
+    );
+    await tester.pumpAndSettle();
+    await choosePathAction(tester, 'favorite');
+    expect(container.read(bookmarksProvider).bookmarks, isEmpty);
+  });
+
+  testWidgets('open in other pane does not replace a newer other-pane choice', (
+    tester,
+  ) async {
+    final other = container.read(panelProvider(PanelSide.local));
+    await other.refresh();
+    await mount(tester);
+    await pathMenu(tester);
+    await other.navigateToPath(
+      '/Photos/Elsewhere',
+      origin: other.captureCurrentOrigin(),
+    );
+    await tester.pumpAndSettle();
+    await choosePathAction(tester, 'other');
+    expect(other.currentPath, '/Photos/Elsewhere');
+  });
+
+  testWidgets('touch long press on the current breadcrumb opens its menu', (
+    tester,
+  ) async {
+    await mount(tester);
+    await tester.longPress(crumb('/account/projects/deep'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('panel-path-action-copy')),
+      findsOneWidget,
+    );
+    expect(container.read(bookmarksProvider).bookmarks, isEmpty);
+    await tester.tapAt(const Offset(2, 600));
+    await tester.pumpAndSettle();
+  });
 
   testWidgets(
     'cloud breadcrumbs start at the configured root and keep their account',

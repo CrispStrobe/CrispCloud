@@ -1,0 +1,59 @@
+{
+  "captured_at": "2026-11-14 20:10:10 UTC",
+  "scope": "Latest inspected fidelity runs for the validated implementation sources; queued jobs are neither passing nor failing test evidence.",
+  "repositories": [
+    {
+      "repository": "CrispStrobe/quds_office_suite",
+      "run_id": 43635432260,
+      "run_url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43635432260",
+      "source_commit": "0f935a6f24ae11aa9851a5cc3498808554194446",
+      "workflow": ".github/workflows/office-fidelity.yml",
+      "status": "queued",
+      "conclusion": null,
+      "created_at": "2026-11-14T20:03:36Z",
+      "updated_at": "2026-11-14T20:03:37Z",
+      "jobs": [
+        {
+          "id": 132571081211,
+          "name": "office-fidelity",
+          "status": "queued",
+          "conclusion": null,
+          "runner_id": 0,
+          "runner_name": "",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "repository": "CrispStrobe/CrispCloud",
+      "run_id": 43635792974,
+      "run_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43635792974",
+      "source_commit": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "workflow": ".github/workflows/office-fidelity.yml",
+      "status": "queued",
+      "conclusion": null,
+      "created_at": "2026-11-14T20:07:29Z",
+      "updated_at": "2026-11-14T20:07:30Z",
+      "jobs": [
+        {
+          "id": 132572182878,
+          "name": "Office recovery copy in Chromium",
+          "status": "queued",
+          "conclusion": null,
+          "runner_id": 0,
+          "runner_name": "",
+          "steps": []
+        },
+        {
+          "id": 132572183011,
+          "name": "host-roundtrip",
+          "status": "queued",
+          "conclusion": null,
+          "runner_id": 0,
+          "runner_name": "",
+          "steps": []
+        }
+      ]
+    }
+  ]
+}

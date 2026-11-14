@@ -1,0 +1,326 @@
+{
+  "file_count": 64,
+  "total_size_bytes": 2043212,
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 3588,
+      "sha256": "5fa4c9c7e101f86b58be8ef98a3e7dedd617dbd5323497d8e2bd97f74fc51147"
+    },
+    {
+      "path": "native-fill-positive-1/artifact-inventory.json",
+      "size_bytes": 1626,
+      "sha256": "1525f750f376b9b3d503deb1290d2945d1432d7441e501ec9b174b3f948045d9"
+    },
+    {
+      "path": "native-fill-positive-1/artifacts/saved-1.xlsx",
+      "size_bytes": 21674,
+      "sha256": "ea5e97d9ae84f3154dd3c988cdc22e698e2c2943dab21794920032a246735b34"
+    },
+    {
+      "path": "native-fill-positive-1/artifacts/saved-2.xlsx",
+      "size_bytes": 21674,
+      "sha256": "75e07a5251268202c476185af42afd743267860881ce63373c1b9c506fd661c6"
+    },
+    {
+      "path": "native-fill-positive-1/artifacts/saved-3.xlsx",
+      "size_bytes": 21673,
+      "sha256": "6faa91997796ad163b35324aeaebd66d2a2ddd3099aac7b9aa44694fb3e831bc"
+    },
+    {
+      "path": "native-fill-positive-1/artifacts/source.xlsx",
+      "size_bytes": 4839,
+      "sha256": "46e2283f807e8776e8d6a6413f43ab06d87c61ce52ec0aa4a171e4aae4eceacb"
+    },
+    {
+      "path": "native-fill-positive-1/commands.json",
+      "size_bytes": 888,
+      "sha256": "35b05c44c67ab7a6f7ddfa47deecf536d0790e194f8f2484ff77d3de23fab949"
+    },
+    {
+      "path": "native-fill-positive-1/host-records/00-inputs.json",
+      "size_bytes": 2929,
+      "sha256": "f167dafd3646a4fc8fcd490a6c2a9fe262105174bc1b384d4e54c6be56a6f549"
+    },
+    {
+      "path": "native-fill-positive-1/host-records/01-artifact-manifest.json",
+      "size_bytes": 505,
+      "sha256": "7cfaeb955619be89fb8cf8239e22d304bdfda26d72af1eac9a71bf79aa39b2ec"
+    },
+    {
+      "path": "native-fill-positive-1/host-records/02-source-snapshot-before.json.gz",
+      "size_bytes": 221812,
+      "sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad"
+    },
+    {
+      "path": "native-fill-positive-1/host-records/03-collection-receipt.json.gz",
+      "size_bytes": 222964,
+      "sha256": "885980eff3eb92cd5cd42d33927e55995d28e3e5fd83832e3a27e86daee17d7f"
+    },
+    {
+      "path": "native-fill-positive-1/run-config.json",
+      "size_bytes": 1351,
+      "sha256": "f0dbe0ef65719af39eb900c77a7980ce559f20095c45e19431c491ee2aeda180"
+    },
+    {
+      "path": "native-fill-positive-1/schema-report.json",
+      "size_bytes": 1083,
+      "sha256": "81abfb6610c6d952145819e17aab077dd3bbb119b650cc828994348e8eb9e6a1"
+    },
+    {
+      "path": "native-fill-positive-1/schema.log",
+      "size_bytes": 583,
+      "sha256": "a2d3016eeab3b849064f92f1613c5c96870a2cf5f4b2d773627600d3ff847b3b"
+    },
+    {
+      "path": "native-fill-positive-1/self-test.log",
+      "size_bytes": 110,
+      "sha256": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56"
+    },
+    {
+      "path": "native-fill-positive-1/validation-summary.json",
+      "size_bytes": 4759,
+      "sha256": "9ec8c5e85c5c48107f02d1e1e157a6f2241ae15940fe98ba01b32efbd9d7b578"
+    },
+    {
+      "path": "style-positive-1/artifact-inventory.json",
+      "size_bytes": 2516,
+      "sha256": "ee7e6fd3958f69ab97f64caa5cb74eab611905e3090ca229f898d908511b8d54"
+    },
+    {
+      "path": "style-positive-1/artifacts/cross-sheet-applied.xlsx",
+      "size_bytes": 22048,
+      "sha256": "13ce6b4a944a6ceff5be01dfdeccea252d8515dea7d2a992f507b9c44b6fade9"
+    },
+    {
+      "path": "style-positive-1/artifacts/cross-sheet-redo.xlsx",
+      "size_bytes": 37543,
+      "sha256": "42d5e99ea62f71bb21d224dcbf8f3d01d50a8b4efe6708a1e22cb4879e195320"
+    },
+    {
+      "path": "style-positive-1/artifacts/cross-sheet-undo.xlsx",
+      "size_bytes": 37467,
+      "sha256": "ced9964b03209251f9340dbd013542bddfe4c5ea716636c1a147bec0d9df4c92"
+    },
+    {
+      "path": "style-positive-1/artifacts/native-redo.xlsx",
+      "size_bytes": 22049,
+      "sha256": "c53d0bbd6fdadde71ad9b6d22fb4bb116ca559728f8e192ffa1c7bf3bf19b2a6"
+    },
+    {
+      "path": "style-positive-1/artifacts/native-undo.xlsx",
+      "size_bytes": 21975,
+      "sha256": "5373043e5820419a4be3ab01eeb4ba049458f46e48390c206e40d2da0ba69016"
+    },
+    {
+      "path": "style-positive-1/artifacts/source.xlsx",
+      "size_bytes": 5333,
+      "sha256": "a7169355e89a1e5f232a407652adf4a5bed20bd0ddfbf8390f152f9ebb230107"
+    },
+    {
+      "path": "style-positive-1/commands.json",
+      "size_bytes": 876,
+      "sha256": "edb72d682d9883c82e960e4f3ec3b3cf86f115b94705d0cc739b05a851016c25"
+    },
+    {
+      "path": "style-positive-1/host-records/00-inputs.json",
+      "size_bytes": 2860,
+      "sha256": "5e3217a1fee96392a1d44c1e2368dc7ff56159b932343a8aecd262ec1e3d7497"
+    },
+    {
+      "path": "style-positive-1/host-records/01-artifact-manifest.json",
+      "size_bytes": 795,
+      "sha256": "4a4da5db52edf82eba3a9dc5441771d80d69a4a4bbcd0163301adb803b439a02"
+    },
+    {
+      "path": "style-positive-1/host-records/02-source-snapshot-before.json.gz",
+      "size_bytes": 221812,
+      "sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad"
+    },
+    {
+      "path": "style-positive-1/host-records/03-collection-receipt.json.gz",
+      "size_bytes": 222930,
+      "sha256": "21b25624632d13e2a275559ede4a1640e4f7a3f3b3924052d2544346994db3f5"
+    },
+    {
+      "path": "style-positive-1/run-config.json",
+      "size_bytes": 1535,
+      "sha256": "99c122d3e4924bbd10e680e8f497b2bdf7a4dda5d13f493e33c24572a4e191b4"
+    },
+    {
+      "path": "style-positive-1/schema-report.json",
+      "size_bytes": 1601,
+      "sha256": "ac3b6b5e70a4adec28bd571b87579fc78c314b46fb4ba6002e1c37fe5c05fcd7"
+    },
+    {
+      "path": "style-positive-1/schema.log",
+      "size_bytes": 877,
+      "sha256": "aa627258b41b3aca447c95a5816cb1ba8d322ecb14ea3b2d110880393c8d8027"
+    },
+    {
+      "path": "style-positive-1/self-test.log",
+      "size_bytes": 110,
+      "sha256": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56"
+    },
+    {
+      "path": "style-positive-1/validation-summary.json",
+      "size_bytes": 5665,
+      "sha256": "4e65f86d0fae0e34156ed8bcb64f1ae6c3d1a81cd17e26cadd4b6cda18c9be60"
+    },
+    {
+      "path": "summary.json",
+      "size_bytes": 2846,
+      "sha256": "4b8d91d2d46ebf0b66f634849c200b00002d0ac6af44bfc349a75514b724e44d"
+    },
+    {
+      "path": "validate_acceptance_run.py",
+      "size_bytes": 8097,
+      "sha256": "14132d2e851cbbb677fa3f14395dfd6e36a892bc0c141d5d9924af2973ef95ae"
+    },
+    {
+      "path": "validator-provenance.json",
+      "size_bytes": 5604,
+      "sha256": "f8a6f4bab517eb5fd0e18809a4fe121820ceab6524bcb112a34c3d94f3d22a68"
+    },
+    {
+      "path": "worksheet-positive-1/artifact-inventory.json",
+      "size_bytes": 7245,
+      "sha256": "5f823c8076a53c6a63fee0bbe7fdcb952b39a46e4c75097f12c107464becab8d"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-cleared.xlsx",
+      "size_bytes": 23095,
+      "sha256": "c307a2ca52886b5e0fffad2da136efbbc0f6517a3ea57689247e3ff386c99f64"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-first-column.xlsx",
+      "size_bytes": 23197,
+      "sha256": "ec57207a43121933a0972ee8f834a4cf7c33c65db0e4d7305bc784f50fd0ee7e"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-redo.xlsx",
+      "size_bytes": 23207,
+      "sha256": "7561d981c08a2bcd541008761b16a7e90af0d41f619c9ca43be5bdbe6c0fdb99"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-selection.xlsx",
+      "size_bytes": 23207,
+      "sha256": "3f6524c5428379a06a4bbe67330885268c3bc86c512c8a4b0af7e2374344a6d7"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-top-row.xlsx",
+      "size_bytes": 23198,
+      "sha256": "cfc6040f3e80d8add30ac5e72c79023197a4c1b18363a257a511aa2f7e5703de"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-undo.xlsx",
+      "size_bytes": 23096,
+      "sha256": "c48e09f35aee6856407e0d108f2a8dc9dae82b692b838865017bbee0fbc6e5a0"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-upload-after.xlsx",
+      "size_bytes": 23183,
+      "sha256": "d49a4b0acfa2deb4352d3777eeb90d1d759aa40227dad88fbc2922e9bda27d3d"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/freeze-upload-before.xlsx",
+      "size_bytes": 23081,
+      "sha256": "b103790ba5bf4ef00b51ea1091837303b22d71ac80ae0ba6d0e39fd9efee48e4"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/grid-delete.xlsx",
+      "size_bytes": 23095,
+      "sha256": "df56aa65eee738e522431d60b37a84367f798f61ae48244a4443412be6a154e6"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/grid-redo-other-sheet.xlsx",
+      "size_bytes": 39139,
+      "sha256": "17267b213c567e223b2e36b8e46a08870f9b14a2761c84dc449f41ecac818f1f"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/grid-undo-other-sheet.xlsx",
+      "size_bytes": 39462,
+      "sha256": "4578d4151984bb4dd034b00a6c91b3b96d3086eb71a8e12aa425e4d50efc5264"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/rtl-enabled.xlsx",
+      "size_bytes": 23137,
+      "sha256": "36ddd27594ce7d37e56e1b0faa1fd4cfb0459b69f91a326d4b2d217ab0c3d777"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/rtl-redo.xlsx",
+      "size_bytes": 23136,
+      "sha256": "4edb724c9948ea12fa7b575df82317ce4324493b6bc97e4eaba0bcc34311bcbb"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/rtl-undo.xlsx",
+      "size_bytes": 23096,
+      "sha256": "1ec0badf0eeeb108315327847ed374c2883c9d4465837079b018cd326f7cbf83"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/rtl-upload-after.xlsx",
+      "size_bytes": 23122,
+      "sha256": "33f2a66d8e40daec9db2877db85ea328ec03e4890e5c0862207c85a812733bd1"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/rtl-upload-before.xlsx",
+      "size_bytes": 23080,
+      "sha256": "a2701ad25e797ebfb8a85e8e31ef8f582c9e22ea871b42c1eb59c49ea931bca3"
+    },
+    {
+      "path": "worksheet-positive-1/artifacts/source.xlsx",
+      "size_bytes": 5602,
+      "sha256": "ea001af95d00b2a64d657bbc430ee75b0ba5fc10ce84456b9b39863b643dcabd"
+    },
+    {
+      "path": "worksheet-positive-1/commands.json",
+      "size_bytes": 884,
+      "sha256": "229699d95b4ba257ddfbb0465d3682b3fad7759ddf9bb0dbc6372854226070e1"
+    },
+    {
+      "path": "worksheet-positive-1/host-records/00-inputs.json",
+      "size_bytes": 2898,
+      "sha256": "f1e94522772b666b99acac37a0dc1f764eefc9b61a5221f1ae2fca3841967ab7"
+    },
+    {
+      "path": "worksheet-positive-1/host-records/01-artifact-manifest.json",
+      "size_bytes": 2268,
+      "sha256": "35f894fca91242ac9de0eccb5564dbe838758bf742bd5d2bee7186e37b2f7c70"
+    },
+    {
+      "path": "worksheet-positive-1/host-records/02-source-snapshot-before.json.gz",
+      "size_bytes": 221812,
+      "sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad"
+    },
+    {
+      "path": "worksheet-positive-1/host-records/03-collection-receipt.json.gz",
+      "size_bytes": 222911,
+      "sha256": "7cb7ee43323ad49400b5ac72640d7f3bb8b772ddc033a40236b1bfdbbe94be26"
+    },
+    {
+      "path": "worksheet-positive-1/run-config.json",
+      "size_bytes": 2616,
+      "sha256": "297a428657f8b8e8009e05c0854209d1e8d3d03eaaca07076f6756eb9ab790c1"
+    },
+    {
+      "path": "worksheet-positive-1/schema-report.json",
+      "size_bytes": 4529,
+      "sha256": "5e5d2d2408eb2346ac004f3ed6bccfed8c6c01b881665598f42f662da28f353c"
+    },
+    {
+      "path": "worksheet-positive-1/schema.log",
+      "size_bytes": 2572,
+      "sha256": "d5d3ca7c1595ffe8291cb15a9812b7072418370282adb7bccc7c3bd229e59571"
+    },
+    {
+      "path": "worksheet-positive-1/self-test.log",
+      "size_bytes": 110,
+      "sha256": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56"
+    },
+    {
+      "path": "worksheet-positive-1/validation-summary.json",
+      "size_bytes": 10637,
+      "sha256": "433b47e4eba82540a4737f38c7c437f3cb60e69c792d405f36b5508760785a4f"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "artifact_root": "build/office-fill-host-acceptance",
+  "validated_directory": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts",
+  "validation_source": "frozen_host_capture",
+  "validation_scope": "schema_only",
+  "started_utc": "2026-11-14T20:12:45.696803+00:00",
+  "completed_utc": "2026-11-14T20:12:47.777700+00:00",
+  "test_sources": [
+    {
+      "path": "test/widget/office_native_workflow_test.dart",
+      "sha256": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe"
+    }
+  ],
+  "host_records": [
+    {
+      "source_path": "build/office-sheet-state-provenance/native-fill-positive-1/inputs.json",
+      "sha256": "f167dafd3646a4fc8fcd490a6c2a9fe262105174bc1b384d4e54c6be56a6f549",
+      "evidence_copy_sha256": "f167dafd3646a4fc8fcd490a6c2a9fe262105174bc1b384d4e54c6be56a6f549",
+      "compression": null,
+      "evidence_copy": "host-records/00-inputs.json"
+    },
+    {
+      "source_path": "build/office-sheet-state-provenance/native-fill-positive-1/artifact-manifest.json",
+      "sha256": "7cfaeb955619be89fb8cf8239e22d304bdfda26d72af1eac9a71bf79aa39b2ec",
+      "evidence_copy_sha256": "7cfaeb955619be89fb8cf8239e22d304bdfda26d72af1eac9a71bf79aa39b2ec",
+      "compression": null,
+      "evidence_copy": "host-records/01-artifact-manifest.json"
+    },
+    {
+      "source_path": "build/office-sheet-state-provenance/native-fill-positive-1/source-snapshot-before.json.gz",
+      "sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad",
+      "evidence_copy_sha256": "ebb30759303659ce170a6665ce57b08ff35d8174412c9311c06e320bc88a04ad",
+      "compression": null,
+      "evidence_copy": "host-records/02-source-snapshot-before.json.gz"
+    },
+    {
+      "source_path": "build/office-native-fill-coverage-native-fill-positive-1/collection-receipt.json",
+      "sha256": "8d52e73c0ea482e7e93e42f16e3f30e7a88f981e4322f31f84a6f4f75279bd0c",
+      "evidence_copy_sha256": "885980eff3eb92cd5cd42d33927e55995d28e3e5fd83832e3a27e86daee17d7f",
+      "compression": "gzip",
+      "evidence_copy": "host-records/03-collection-receipt.json.gz"
+    }
+  ],
+  "manifest_at_execution_sha256": "aabbd75793f0468f5e0ba8a25bcfc5ab2944fb194fb515ab026e788fc848b6e0",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "validator_assembly_sha256": "8910f715c4d47f7b4834e3c3638d8272f21e57d3e269f080343846b353a61f05",
+  "validator_provenance_sha256": "f8a6f4bab517eb5fd0e18809a4fe121820ceab6524bcb112a34c3d94f3d22a68",
+  "sdk": "8.0.428",
+  "runtime": "8.0.34",
+  "openxml": "3.3.0",
+  "format_target": "Office2019",
+  "files": 4,
+  "schema_failures": 0,
+  "schema_exit_code": 0,
+  "self_test_exit_code": 0,
+  "authored_inputs": 1,
+  "actual_uploads": 3,
+  "hashes_match_host_before_during_after_and_copies": true,
+  "collector_sha256": "14132d2e851cbbb677fa3f14395dfd6e36a892bc0c141d5d9924af2973ef95ae",
+  "inventory": [
+    {
+      "file": "saved-1.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/saved-1.xlsx",
+      "role": "host_output",
+      "sha256": "ea5e97d9ae84f3154dd3c988cdc22e698e2c2943dab21794920032a246735b34",
+      "bytes": 21674,
+      "evidence_copy": "artifacts/saved-1.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "saved-2.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/saved-2.xlsx",
+      "role": "host_output",
+      "sha256": "75e07a5251268202c476185af42afd743267860881ce63373c1b9c506fd661c6",
+      "bytes": 21674,
+      "evidence_copy": "artifacts/saved-2.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "saved-3.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/saved-3.xlsx",
+      "role": "host_output",
+      "sha256": "6faa91997796ad163b35324aeaebd66d2a2ddd3099aac7b9aa44694fb3e831bc",
+      "bytes": 21673,
+      "evidence_copy": "artifacts/saved-3.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    },
+    {
+      "file": "source.xlsx",
+      "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/source.xlsx",
+      "role": "authored_input",
+      "sha256": "46e2283f807e8776e8d6a6413f43ab06d87c61ce52ec0aa4a171e4aae4eceacb",
+      "bytes": 4839,
+      "evidence_copy": "artifacts/source.xlsx",
+      "schema_errors": 0,
+      "exception": null
+    }
+  ]
+}

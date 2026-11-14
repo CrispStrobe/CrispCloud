@@ -312,12 +312,31 @@ void main() {
     }),
   );
 
+  test(
+    'oversized object path is refused before remote I/O',
+    () => inServer(() async {
+      await expectLater(
+        adapter.seedDeltaBlockMap(
+          '/${'a' * 8193}',
+          cacheDir: directory.path,
+          blockSize: _block,
+        ),
+        throwsArgumentError,
+      );
+      expect(server.heads, 0);
+      expect(server.ranges, isEmpty);
+    }),
+  );
+
   for (final path in [
     '//image.bin',
     '/a/../image.bin',
     '/a/./image.bin',
     '/a//image.bin',
     '/a\\image.bin',
+    '/a/%2e%2e/image.bin',
+    '/%41/image.bin',
+    '/image%2fbin',
   ]) {
     test(
       'ambiguous object path $path is refused before remote I/O',

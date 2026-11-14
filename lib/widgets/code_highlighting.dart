@@ -1,9 +1,9 @@
 // lib/widgets/code_highlighting.dart
 //
-// Shared extension/shebang → highlight.js language mapping for the file
-// editor (F4) and the internal viewer (F3). `package:highlight` is a pure-Dart
-// port of highlight.js (MIT); the language identifier names below match the
-// registerLanguages set bundled with highlight 0.7.0 exactly.
+// Shared filename and bounded-content language hints for F3, F4 and previews.
+// Language identifiers match the maintained re_highlight engine.
+
+import 'dart:convert';
 
 /// Lower-case basename without any leading path, mapped to highlight.js
 /// language names (e.g. Dockerfile, Makefile, CMakeLists.txt).
@@ -314,3 +314,73 @@ String? highlightLanguageForShebang(String decodedText) {
   }
   return null;
 }
+
+/// Conservative content hints shared by F3, F4 and the preview pane.
+/// Only a bounded prefix is inspected; arbitrary prose stays plain text.
+String? highlightLanguageForContent(String content) {
+  final text = (content.length > 32768 ? content.substring(0, 32768) : content)
+      .replaceFirst('\uFEFF', '');
+  if (text.contains('\u0000') || text.startsWith('bplist00')) return null;
+  final shebang = highlightLanguageForShebang(text);
+  if (shebang != null && shebang != 'plaintext') return shebang;
+  var prefix = text.trimLeft();
+  // Skip leading C/XML comments, preserving quoted comment-like strings.
+  for (var i = 0; i < 32; i++) {
+    if (prefix.startsWith('/*')) {
+      final end = prefix.indexOf('*/', 2);
+      if (end < 0) return null;
+      prefix = prefix.substring(end + 2).trimLeft();
+    } else if (prefix.startsWith('//')) {
+      final end = prefix.indexOf('\n');
+      if (end < 0) return null;
+      prefix = prefix.substring(end + 1).trimLeft();
+    } else if (prefix.startsWith('<!--')) {
+      final end = prefix.indexOf('-->', 4);
+      if (end < 0) return null;
+      prefix = prefix.substring(end + 3).trimLeft();
+    } else {
+      break;
+    }
+  }
+  if (RegExp(
+    r'^<!doctype\s+html\b|^<html(?:\s|>)',
+    caseSensitive: false,
+  ).hasMatch(prefix)) {
+    return 'xml';
+  }
+  if (prefix.startsWith('<?xml') ||
+      RegExp(r'^<([A-Za-z_][\w:.-]*)(?:\s[^<>]*?)?>[\s\S]*</\1\s*>')
+          .hasMatch(prefix)) {
+    return 'xml';
+  }
+  if ((prefix.startsWith('{') || prefix.startsWith('[')) &&
+      content.length <= 32768) {
+    try {
+      final value = jsonDecode(prefix);
+      if (value is Map || value is List) return 'json';
+    } on FormatException {
+      /* Incomplete or ordinary prose. */
+    }
+  }
+  // OpenStep/Apple localization strings: C comments, quoted key=value pairs.
+  final pair = RegExp(
+    r'^[ \t]*"(?:[^"\\]|\\.)*"\s*=\s*"(?:[^"\\]|\\.)*"\s*;',
+    multiLine: true,
+  );
+  if (pair.allMatches(prefix).take(2).length == 2) return 'objectivec';
+  if (RegExp(
+        r'^[ \t]*\[[A-Za-z_][^\]\r\n]*\]\s*$',
+        multiLine: true,
+      ).hasMatch(prefix) &&
+      RegExp(
+            r'^[ \t]*[A-Za-z_][\w.-]*\s*=.+$',
+            multiLine: true,
+          ).allMatches(prefix).take(2).length ==
+          2) {
+    return 'ini';
+  }
+  return null;
+}
+
+String? highlightLanguageForDocument(String filename, String content) =>
+    highlightLanguageForContent(content) ?? highlightLanguageFor(filename);

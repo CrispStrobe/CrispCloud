@@ -23,9 +23,9 @@ String? editorLanguageForFile(String filename) {
   return normalizeEditorLanguage(highlightLanguageFor(filename));
 }
 
-/// Return the highlight.js language for a shebang in [content], or null.
+/// Return a conservative highlight.js language from bounded text content.
 String? editorLanguageForContent(String content) {
-  return normalizeEditorLanguage(highlightLanguageForShebang(content));
+  return normalizeEditorLanguage(highlightLanguageForContent(content));
 }
 
 /// Map a highlight.js language name to one re_highlight knows, or null.

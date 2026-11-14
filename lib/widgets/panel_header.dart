@@ -445,7 +445,15 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             Expanded(
               child: _pathEditLocation != null
                   ? _pathEditor(panel, _pathEditLocation!)
-                  : _breadcrumbs(context, panel, path, location),
+                  : GestureDetector(
+                      key: ValueKey('panel-path-context-${widget.side.name}'),
+                      behavior: HitTestBehavior.opaque,
+                      onSecondaryTapDown: (details) =>
+                          _showPathMenu(panel, details.globalPosition),
+                      onLongPressStart: (details) =>
+                          _showPathMenu(panel, details.globalPosition),
+                      child: _breadcrumbs(context, panel, path, location),
+                    ),
             ),
             if (isLocal)
               _navButton(
@@ -620,6 +628,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                     ),
                   ),
                 Tooltip(
+                  triggerMode: TooltipTriggerMode.manual,
                   message: crumbs[i].path,
                   child: InkWell(
                     key: ValueKey(
@@ -633,11 +642,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                             crumbs[i].path,
                             keepGrant: true,
                           ),
-                    onLongPress: () {
-                      if (location!.isCurrent) {
-                        _toggleBookmark(panel, crumbs[i].path, crumbs[i].label);
-                      }
-                    },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 4,
@@ -1042,6 +1046,126 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       path: path,
       label: label.isEmpty ? '/' : label,
     );
+  }
+
+  Future<void> _showPathMenu(PanelNotifier panel, Offset position) async {
+    final location = _captureLocation(panel);
+    if (location == null || !location.isCurrent) return;
+    final side = widget.side;
+    final otherProvider = panelProvider(oppositePanel(side));
+    final other = ref.exists(otherProvider) ? ref.read(otherProvider) : null;
+    final otherIsCurrent = other?.captureOperationSession();
+    bool canUseOther() => otherIsCurrent?.call() ?? !ref.exists(otherProvider);
+    final bookmarks = ref.read(bookmarksProvider);
+    await bookmarks.ready;
+    if (!mounted || !location.isCurrent) return;
+    final directory = !panel.isInArchive && !panel.showingSearchResults;
+    final archive = panel.archiveSource;
+    String archiveFilePath(ArchivePanelSource source) {
+      final parent = source.parent;
+      return parent is ArchivePanelSource
+          ? '${archiveFilePath(parent)}!/${source.archivePath.replaceFirst(RegExp(r'^/+'), '')}'
+          : source.archivePath;
+    }
+
+    final path = archive == null
+        ? location.origin.source.currentPath
+        : '${archiveFilePath(archive)}!/${archive.innerPath}';
+    final bookmarked =
+        directory &&
+        bookmarks.isBookmarked(
+          path,
+          side,
+          storage: location.origin.storageReference,
+        );
+    final overlay =
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final anchor = overlay.globalToLocal(position);
+    final strings = PanelHeaderStrings(context);
+    final action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(anchor.dx, anchor.dy, 0, 0),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Tooltip(
+            message: path,
+            child: Text(path, maxLines: 2, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        const PopupMenuDivider(),
+        for (final item in [
+          ('copy', 'Copy full path', Icons.copy, !panel.showingSearchResults),
+          (
+            'favorite',
+            bookmarked ? 'Remove from favorites' : 'Add to favorites',
+            bookmarked ? Icons.star : Icons.star_border,
+            directory,
+          ),
+          (
+            'other',
+            'Open in other pane',
+            Icons.drive_file_move_outline,
+            directory,
+          ),
+          ('swap', 'Swap panels', Icons.swap_horiz, true),
+          ('edit', 'Edit path', Icons.edit_outlined, directory),
+          ('refresh', 'Refresh', Icons.refresh, true),
+        ])
+          PopupMenuItem<String>(
+            key: ValueKey('panel-path-action-${item.$1}'),
+            value: item.$1,
+            enabled: item.$4,
+            child: Row(
+              children: [
+                Icon(item.$3, size: 18),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    strings.text(item.$2) == item.$2
+                        ? context.commanderTr(item.$2)
+                        : strings.text(item.$2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+    if (!mounted || action == null || !location.isCurrent) return;
+    try {
+      switch (action) {
+        case 'copy':
+          await Clipboard.setData(ClipboardData(text: path));
+        case 'favorite':
+          _toggleBookmark(panel, path, location.paths.basename(path));
+        case 'other':
+          if (!canUseOther()) return;
+          final PanelNotifier target =
+              other ?? ref.read<PanelNotifier>(otherProvider);
+          await target.openSavedLocation({
+            'path': path,
+            'storage': location.origin.storageReference.toJson(),
+          });
+        case 'swap':
+          if (!canUseOther()) return;
+          await swapPanelSources(ref);
+        case 'edit':
+          setState(() {
+            _pathEditLocation = location;
+            _pathController.text = path;
+          });
+        case 'refresh':
+          await panel.refresh();
+      }
+    } catch (error) {
+      if (mounted) {
+        ref.read(errorProvider).addError(error.toString(), cause: error);
+      }
+    }
   }
 }
 

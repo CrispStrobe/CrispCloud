@@ -103,8 +103,10 @@ The [S3 adapter](../lib/services/s3_client_adapter.dart) exposes this sequence:
 1. **Capture the object.** An authenticated native adapter obtains an exact
    length and a strong, quoted ETag from `HEAD`. SSE-C is refused for this
    profile. The admitted object path must have an unambiguous spelling;
-   repeated leading slashes, empty or dot/dot-dot segments, and backslashes are
-   rejected instead of being normalized into another object's identity.
+   repeated leading slashes, empty or dot/dot-dot segments, backslashes and
+   percent-containing keys are rejected instead of being normalized into
+   another object's identity. Percent-containing keys need a separately
+   reviewed URI representation before this profile can admit them.
 2. **Seed deliberately.** `seedDeltaBlockMap` reads every block through
    conditional ranges and computes its hashes. It rechecks the remote identity
    before persisting the map and recording its private receipt. Seeding costs

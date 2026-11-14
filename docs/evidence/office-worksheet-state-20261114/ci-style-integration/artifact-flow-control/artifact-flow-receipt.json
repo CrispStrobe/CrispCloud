@@ -1,0 +1,117 @@
+{
+  "scope": "Synthetic OPC integrity/CLI/staging controls only. No SDK, host-run, or rendering result is claimed.",
+  "app_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "source_sha256": {
+    ".github/workflows/office-fidelity.yml": "09c7b8a25926d4f589613eabd494f3172b76121c11baf0ae00fb60d25b246d16",
+    "tool/office_host_evidence.py": "4325ea8adc13eb7cbf087fe2b0ebe01eb6fc8168a3abc427c78a660d05c53401",
+    "tool/office_host_evidence.json": "aabbd75793f0468f5e0ba8a25bcfc5ab2944fb194fb515ab026e788fc848b6e0",
+    "tool/test_office_host_evidence.py": "393dbdbd130c20fe8ca9bd630f442f220480a399a56aaefba6949eba5d70642e"
+  },
+  "source_inputs_unchanged": true,
+  "pyyaml_version": "6.0.3",
+  "positive_inventory_expected": 176,
+  "positive_inventory_verified": 176,
+  "render_staging_files": 149,
+  "render_staging_exactly_matches_legacy_manifest": true,
+  "all_staged_bytes_match_inventory": true,
+  "schema_only_files_validated_by_inventory": 27,
+  "schema_only_roots_in_upload": [
+    "build/office-fill-host-acceptance",
+    "build/office-sheet-state-acceptance",
+    "build/office-style-history-acceptance"
+  ],
+  "missing_controls": [
+    {
+      "root": "build/office-fill-host-acceptance",
+      "missing_files": 4,
+      "exit_code": 1,
+      "failures": 4
+    },
+    {
+      "root": "build/office-sheet-state-acceptance",
+      "missing_files": 17,
+      "exit_code": 1,
+      "failures": 17
+    },
+    {
+      "root": "build/office-style-history-acceptance",
+      "missing_files": 6,
+      "exit_code": 1,
+      "failures": 6
+    }
+  ],
+  "workflow_stage_script_sha256": "d40dc294688434dbf753d63ba1fe821de838ccc40431893617edd5a4e6a92c5f",
+  "collector_sha256": "8d208e97feeaa9656c3b2bbbab5af6bc712d23735144684abd33628e9f145e2b",
+  "commands": [
+    {
+      "label": "complete-inventory",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/build/external/host-inventory.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control",
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "workflow-render-stage",
+      "command": [
+        "bash",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/workflow-render-stage.sh"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control",
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "missing-office-fill-host-acceptance",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/missing-office-fill-host-acceptance.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    },
+    {
+      "label": "missing-office-sheet-state-acceptance",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/missing-office-sheet-state-acceptance.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    },
+    {
+      "label": "missing-office-style-history-acceptance",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/missing-office-style-history-acceptance.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+Office host coverage: 478/3006 instrumented lines (15.9%); 8 native files absent from instrumentation; 1 browser sources reported separately.

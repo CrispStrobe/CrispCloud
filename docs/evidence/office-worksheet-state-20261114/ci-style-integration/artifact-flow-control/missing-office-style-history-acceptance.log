@@ -1,0 +1,7 @@
+build/office-style-history-acceptance/source.xlsx: expected one file, found 0
+build/office-style-history-acceptance/cross-sheet-applied.xlsx: expected one file, found 0
+build/office-style-history-acceptance/cross-sheet-undo.xlsx: expected one file, found 0
+build/office-style-history-acceptance/cross-sheet-redo.xlsx: expected one file, found 0
+build/office-style-history-acceptance/native-undo.xlsx: expected one file, found 0
+build/office-style-history-acceptance/native-redo.xlsx: expected one file, found 0
+Host inventory: 170/176 verified; 6 failures; receipt /workspace/scratch/f035141943c7/ci-style-history-integration/artifact-flow-control/missing-office-style-history-acceptance.json

@@ -2020,7 +2020,9 @@ class S3ClientAdapter extends CloudStorageClient
   String _deltaObjectKey(String remotePath) {
     final key = _pathToKey(remotePath);
     if (key.isEmpty ||
+        key.length > 8192 ||
         key.contains('\\') ||
+        key.contains('%') ||
         RegExp(r'[\x00-\x1f\x7f]').hasMatch(key) ||
         utf8.decode(utf8.encode(key)) != key ||
         key

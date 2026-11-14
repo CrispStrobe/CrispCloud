@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-11-14T20:11:08.557839+00:00",
+  "runtime_commit": "0972abd00703277b64d46d8e9ec2715a416a8894",
+  "app_version": "1.3.2",
+  "app_build": "25",
+  "application_path": "/Users/christianstrobele/Applications/CrispCloud 1.3.2 (0972abd0).app",
+  "signature_verified_deep_strict": true,
+  "startup_seconds": 45,
+  "credential_policy_ready": true,
+  "impeller_enabled": false,
+  "runner_sha256": "420f066f9b069cdbb3582ee0cb9bbff5893a7fde774dd8271962cc9976d21028",
+  "aot_sha256": "e52e874da310e70d3fcd7aa50ac1d9b515e3e8eca5e31a47ef29f41054ff3561",
+  "runner_architectures": [
+    "x86_64",
+    "arm64"
+  ],
+  "aot_architectures": [
+    "x86_64",
+    "arm64"
+  ],
+  "office": {
+    "source_commit": "4bdb70c9d86fd1ee09ed99d3114b178e965cfa01",
+    "managed_files_verified": 2182,
+    "requested_quds_checkpoint_included": "2d2a7be4",
+    "requested_host_checkpoint_included": "a3897dfb",
+    "standalone_parser": {
+      "packages/legacy_doc_parser": {
+        "repository": "CrispStrobe/legacy-doc-parser",
+        "commit": "544a50e7f8ad095a618b6206ccece7e0cb335f4b"
+      }
+    },
+    "legacy_checkpoint_included": "94294e1be87ddfb3c9e4aef6d341955329985b11"
+  },
+  "tests": {
+    "native_mesh_content_rendering": 48,
+    "chrome_mesh_rendering_bandwidth": 48,
+    "full_transfer_bandwidth_regression": 314,
+    "journal_pinned_sdk": 22,
+    "host_office_path_earlier_cohort": 108,
+    "path_navigation": 22,
+    "quds_engine_focused": 13,
+    "quds_editor_focused": 16
+  },
+  "test_counts_overlap": true,
+  "complete_office_suite_rerun": false,
+  "live_model_read_only_imports": {
+    "models": 4,
+    "triangle_counts": [
+      1140,
+      1140,
+      1140,
+      3456
+    ],
+    "third_party_model_bytes_committed": false
+  },
+  "portability": {
+    "dart_vm": true,
+    "actual_javascript_node": true,
+    "production_package_parts": true
+  },
+  "offline_apple_artifact": {
+    "build": "25",
+    "bundle_id": "com.CrispStrobe.cloud",
+    "bytes": 104268939,
+    "compliance_code": null,
+    "info_plist_member": "CrispCloud 1.3.2 (0972abd0).app/Contents/Info.plist",
+    "info_plist_sha256": "8e21d2a74eae993512245773b7a1442cd46a29eeea2bd63d9b55d5bad88f2b97",
+    "name": "CrispCloud-1.3.2-0972abd0-macos-local.zip",
+    "platform": "macos",
+    "sha256": "60bec453a8ae7a9b0bba84bf999dde14e5adc3e862ef0538ab2b6da71751d653",
+    "uses_non_exempt_encryption": false,
+    "version": "1.3.2"
+  },
+  "live_store_submission_checked": false,
+  "existing_github_release_jobs_untouched": true
+}

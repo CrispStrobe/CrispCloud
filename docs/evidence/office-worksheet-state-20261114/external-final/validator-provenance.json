@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "sdk": {
+    "release_metadata_url": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/8.0/releases.json",
+    "release_date": "2026-11-10",
+    "sdk": "8.0.428",
+    "runtime": "8.0.34",
+    "official_url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.428/dotnet-sdk-8.0.428-linux-x64.tar.gz",
+    "archive_sha512": "33212bb99a2bf003973d41106c7e8fe94208a12958ff601d4a476be379403c85a7dc9183a6ec64dfb44ded7102965be09f35add1758e68e9251bae7891d7b7bf",
+    "archive_size_bytes": 217266728
+  },
+  "build": {
+    "source": "/workspace/scratch/f035141943c7/CrispCloud/tool/office-validation/Program.cs",
+    "source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+    "sdk": "8.0.428",
+    "runtime": "8.0.34",
+    "dependencies_sha256": {
+      "documentformat.openxml.3.3.0.nupkg": "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7",
+      "DocumentFormat.OpenXml.dll": "72e8f6e3e3527d7e6ee29f2f9182ef1b39a4de6da355a33013c0940efb24d87e",
+      "documentformat.openxml.framework.3.3.0.nupkg": "5f539f1602b642198ec6ed3ec567eac3fff62309f6ec65e28db2751a488ec30d",
+      "DocumentFormat.OpenXml.Framework.dll": "5b8c2b9ca1aa70539af0b8054d649bd09fdce4dec812b263ab511b13789c8589",
+      "system.io.packaging.8.0.1.nupkg": "c5fd0101fa90bc84e89a906cbdfa7188bb6cffab11404cdd8cd0377ffabfbd8e",
+      "System.IO.Packaging.dll": "12ddc8bff279fad856551a74894dc52b80fa437d5d2b32722e70ae6899217b7c"
+    },
+    "assembly_sha256": "8910f715c4d47f7b4834e3c3638d8272f21e57d3e269f080343846b353a61f05"
+  },
+  "project": {
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/tool/office-validation/OfficeValidation.csproj",
+    "sha256": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27"
+  },
+  "build_script": {
+    "original_repository_path": "/workspace/scratch/f035141943c7/CrispCloud/docs/evidence/office-fidelity-followup-20261112/resumed-host/runtime/validator/build_validator.py",
+    "executed_path": "/workspace/scratch/f035141943c7/toolchain/office-validation/build_validator.py",
+    "sha256": "f4af656d4c2c0a6149b6fe8b38476c92f9aae80896a1eceb1dfa7594524dce19"
+  },
+  "compilation_method": "Official .NET Roslyn csc.dll and net8.0 reference pack; unchanged repository validator and existing builder; exact declared NuGet packages. This matches the documented prior restricted-host setup and does not use the .NET restore migration path.",
+  "environment": {
+    "DOTNET_ROOT": "/workspace/scratch/f035141943c7/toolchain/dotnet",
+    "DOTNET_CLI_HOME": "/workspace/scratch/f035141943c7/toolchain/office-validation/dotnet-home",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1",
+    "TMPDIR": "/workspace/scratch/f035141943c7/toolchain/tmp"
+  },
+  "commands": [
+    {
+      "label": "validator-build",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/build_validator.py",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office-validation/Program.cs"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+      "exit_code": 0,
+      "log": "validator-build.log"
+    },
+    {
+      "label": "validator-self-test",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "--self-test"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+      "exit_code": 0,
+      "log": "validator-self-test.log"
+    }
+  ],
+  "unchanged_validator_source": true,
+  "package_hashes_match_prior_receipt": true,
+  "app_commit_at_build": "aa37bf6a62e8011dc12db928bd25185763ff9be3",
+  "package_sources": [
+    {
+      "name": "documentformat.openxml",
+      "version": "3.3.0",
+      "official_url": "https://api.nuget.org/v3-flatcontainer/documentformat.openxml/3.3.0/documentformat.openxml.3.3.0.nupkg",
+      "archive_sha256": "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7",
+      "nuspec_file": "documentformat.openxml.3.3.0.nupkg.nuspec",
+      "nuspec_sha256": "9dc604b472113af2d2ac57444c2f8444fdaa2f74990144ad8d7fc202c29caa0f",
+      "net8_dependencies": [
+        {
+          "id": "DocumentFormat.OpenXml.Framework",
+          "version": "3.3.0",
+          "exclude": "Build,Analyzers"
+        }
+      ]
+    },
+    {
+      "name": "documentformat.openxml.framework",
+      "version": "3.3.0",
+      "official_url": "https://api.nuget.org/v3-flatcontainer/documentformat.openxml.framework/3.3.0/documentformat.openxml.framework.3.3.0.nupkg",
+      "archive_sha256": "5f539f1602b642198ec6ed3ec567eac3fff62309f6ec65e28db2751a488ec30d",
+      "nuspec_file": "documentformat.openxml.framework.3.3.0.nupkg.nuspec",
+      "nuspec_sha256": "3c39b72acae02e81a505534759551b2c7c58b1f0324e68ba6fa5da80769e6fdf",
+      "net8_dependencies": [
+        {
+          "id": "System.IO.Packaging",
+          "version": "8.0.1",
+          "exclude": "Build,Analyzers"
+        }
+      ]
+    },
+    {
+      "name": "system.io.packaging",
+      "version": "8.0.1",
+      "official_url": "https://api.nuget.org/v3-flatcontainer/system.io.packaging/8.0.1/system.io.packaging.8.0.1.nupkg",
+      "archive_sha256": "c5fd0101fa90bc84e89a906cbdfa7188bb6cffab11404cdd8cd0377ffabfbd8e",
+      "nuspec_file": "system.io.packaging.8.0.1.nupkg.nuspec",
+      "nuspec_sha256": "28198c2ab50ffecd09b1403ad7315bf0406d98cab8a69258ce6a6ca2d6479c62",
+      "net8_dependencies": []
+    }
+  ]
+}
