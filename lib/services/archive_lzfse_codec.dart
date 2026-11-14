@@ -116,8 +116,9 @@ class _LzfseDecoder {
       final magic = u32(at);
       if (magic == 0x24787662) {
         at += 4;
-        if (at != input.length)
+        if (at != input.length) {
           _badLzfse('Trailing bytes after the end marker.');
+        }
         if (written != output.length) {
           _badLzfse('Decoded length does not match the block map.');
         }

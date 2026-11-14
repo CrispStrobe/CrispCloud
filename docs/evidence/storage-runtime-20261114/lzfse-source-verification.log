@@ -1,0 +1,5 @@
+$ python3 tool/verify_lzfse_sources.py
+Verified seven pinned BSD-3-Clause LZFSE files, Dart attribution and imports.
+Scope: selected LZFSE source only; no native library or new Pub dependency.
+
+exit_code=0

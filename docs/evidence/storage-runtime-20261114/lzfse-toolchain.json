@@ -1,0 +1,14 @@
+{
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "node": "v24.22.1",
+  "cc": "cc (Debian 14.2.0-19) 14.2.0",
+  "python": "Python 3.12.14",
+  "apple_reference_revision": "e634ca58b4821d9f3d560cdc6df5dec02ffc93fd",
+  "sevenzip_release_url": "https://github.com/ip7z/7zip/releases/tag/26.06",
+  "sevenzip_archive_url": "https://github.com/ip7z/7zip/releases/download/26.06/7z2606-linux-x64.tar.xz",
+  "sevenzip_archive_sha256": "2b539cf067b2ad48e1baa5093dbaa8818b73542d1222a0ffde9dc5f2922ea62e",
+  "sevenzip_binary_sha256": "f94066e93f9a807547a3bff1021b3ec79d5ea4f57dfead018e9698182ad283b5",
+  "sevenzip_source_url": "https://raw.githubusercontent.com/ip7z/7zip/26.06/CPP/7zip/Compress/LzfseDecoder.cpp",
+  "sevenzip_source_sha256": "f36f1eeb892053a8083d2f2fbfe3d045d959890dc69828b2c89a968101a51f8f",
+  "sevenzip_version": "7-Zip (z) 26.06 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-11-06"
+}

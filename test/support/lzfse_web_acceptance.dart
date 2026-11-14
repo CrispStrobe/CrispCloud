@@ -3,6 +3,9 @@
 //   dart test/support/lzfse_web_acceptance.dart
 //   dart compile js -O2 test/support/lzfse_web_acceptance.dart -o /tmp/lzfse.js
 //   node /tmp/lzfse.js
+// Direct source imports keep this SDK-only driver independent of pub resolution;
+// stdout is its machine-readable acceptance result.
+// ignore_for_file: avoid_relative_lib_imports, avoid_print
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -18,8 +21,9 @@ void _equal(List<int> actual, List<int> expected, String name) {
     );
   }
   for (var i = 0; i < expected.length; i++) {
-    if (actual[i] != expected[i])
+    if (actual[i] != expected[i]) {
       throw StateError('$name: byte mismatch at $i');
+    }
   }
 }
 

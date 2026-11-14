@@ -32,7 +32,10 @@ a separate test environment; the generated data is described with the fixtures.
 The maintained derivative is
 [`lib/services/archive_lzfse_codec.dart`](../../lib/services/archive_lzfse_codec.dart).
 It supports raw blocks, LZVN, LZFSE v1 and LZFSE v2 with a mandatory outer end
-marker and exact input/output completion. Each call accepts at most 16 MiB of
+marker and exact input/output completion. V2 blocks may reuse validated tables
+from an earlier v1/v2 block, including across intervening raw or LZVN blocks.
+An omitted table without a validated predecessor is rejected.
+Each call accepts at most 16 MiB of
 input and 16 MiB of declared output, with at most 4,096 blocks. FSE tables and
 literal/match counts are bounded; matches must refer to already decoded bytes.
 Byte-based arithmetic avoids relying on 64-bit bitwise operations on the web.

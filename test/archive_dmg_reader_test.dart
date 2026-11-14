@@ -218,6 +218,69 @@ void main() {
     },
   );
 
+  test(
+    'raw, Apple LZFSE and zlib chunks share one partition and CRC',
+    () async {
+      final plain = lzfseV2Fixture.plain;
+      final logical = Uint8List.fromList([...plain, ...plain, ...plain]);
+      final fixture = DmgFixture(logical, chunkBytes: plain.length);
+      final pieces = <Uint8List>[
+        plain,
+        lzfseV2Fixture.packed,
+        DmgFixture(
+          plain,
+          method: 0x80000005,
+          chunkBytes: plain.length,
+        ).packedBytes,
+      ];
+      final packed = BytesBuilder(copy: false);
+      const methods = [1, 0x80000007, 0x80000005];
+      for (var i = 0; i < pieces.length; i++) {
+        final record = 204 + i * 40;
+        fixture.tableData.setUint32(record, methods[i]);
+        fixture.tableData.setUint64(record + 24, packed.length);
+        fixture.tableData.setUint64(record + 32, pieces[i].length);
+        packed.add(pieces[i]);
+      }
+      fixture.packedBytes = packed.takeBytes();
+      fixture.rebuild();
+      final archive = await open(fixture);
+      addTearDown(archive.close);
+      expect(await archive.readMember(archive.members.single), logical);
+      final streamed = BytesBuilder();
+      await for (final bytes in archive.openMember(
+        archive.members.single,
+        chunkSize: 8191,
+      )) {
+        streamed.add(bytes);
+      }
+      expect(streamed.takeBytes(), logical);
+    },
+  );
+
+  test('cancelling LZFSE extraction stops before the next chunk', () async {
+    final logical = Uint8List.fromList(List.generate(16384, (i) => i % 251));
+    final fixture = DmgFixture(logical, method: 0x80000007);
+    final secondOffset = fixture.tableData.getUint64(244 + 24);
+    final source = _TrackingSource(fixture.bytes);
+    final archive = await openDmgArchive(
+      source,
+      maxMemberBytes: kArchiveReadLimit,
+    );
+    addTearDown(archive.close);
+    final prefix = await archive
+        .openMember(archive.members.single, chunkSize: 137)
+        .take(1)
+        .toList();
+    expect(prefix.single, logical.sublist(0, 137));
+    expect(source.reads.where((read) => read.$1 == secondOffset), isEmpty);
+    expect(source.closes, 0);
+    // Cancelling one extraction leaves the same archive available to the pane.
+    expect(await archive.readMember(archive.members.single), logical);
+    await archive.close();
+    expect(source.closes, 1);
+  });
+
   for (final method in [0x80000004, 0x80000007, 0x80000008]) {
     for (final name in ['image.dmg', 'misleading.xz', 'download']) {
       test('new method $method keeps UDIF routing for $name', () async {
@@ -448,12 +511,17 @@ class _TrackingSource implements koni.ByteSource {
   final koni.MemoryByteSource inner;
   bool closed = false;
   int closes = 0;
+  final reads = <(int, int)>[];
   @override
   String? get name => inner.name;
   @override
   int get length => inner.length;
   @override
-  Future<Uint8List> read(int offset, int length) => inner.read(offset, length);
+  Future<Uint8List> read(int offset, int length) {
+    reads.add((offset, length));
+    return inner.read(offset, length);
+  }
+
   @override
   Future<void> close() async {
     closed = true;

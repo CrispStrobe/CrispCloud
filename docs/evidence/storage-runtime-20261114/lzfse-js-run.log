@@ -1,0 +1,4 @@
+$ node /workspace/scratch/52be1abfc881/lzfse-fixture-work/lzfse_web_acceptance_3.13.7.js
+{"result":"passed","reference_fixtures":12,"reference_output_bytes":489825,"malformed_and_profile_cases":76,"truncated_prefixes":2660,"offset_view_and_input_preservation":"passed","block_and_memory_budgets":"passed"}
+
+exit_code=0

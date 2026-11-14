@@ -1,0 +1,4 @@
+$ /workspace/scratch/52be1abfc881/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart compile js -O2 test/support/lzfse_web_acceptance.dart -o /workspace/scratch/52be1abfc881/lzfse-fixture-work/lzfse_web_acceptance_3.13.7.js
+Compiled 10,879,195 input bytes (5,459,765 characters source) to 181,513 characters JavaScript in 0.70 seconds
+
+exit_code=0

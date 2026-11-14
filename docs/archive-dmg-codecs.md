@@ -15,7 +15,8 @@ partition CRC is checked when the complete raw partition is extracted.
 
 ULFO blocks use a bounded Dart adaptation of Apple's BSD-3-Clause decoder,
 pinned at `e634ca58b4821d9f3d560cdc6df5dec02ffc93fd`. It reads raw, LZVN, LZFSE
-v1 and LZFSE v2 blocks, including mixed streams and matches across blocks. It
+v1 and LZFSE v2 blocks, including mixed streams, matches across blocks and v2
+frequency-table reuse after a validated v1/v2 block. It
 requires exact declared output, a complete `bvx$` end marker and complete input
 consumption. A full output buffer alone is not treated as successful decoding.
 The decoder checks frequency totals, states, match history, bit consumption and
