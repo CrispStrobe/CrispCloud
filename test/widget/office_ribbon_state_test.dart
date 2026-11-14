@@ -8,9 +8,14 @@ import 'package:quds_office_editor/quds_office_editor.dart';
 WordEditorController _controller({
   bool tracking = false,
   bool viewing = false,
+  bool protected = false,
+  bool passwordProtected = false,
 }) {
   final document = WmlDocument.empty(text: 'Review state');
-  document.trackRevisions = tracking;
+  document
+    ..trackRevisions = tracking
+    ..restrictEditing = protected
+    ..protectionHasPassword = passwordProtected;
   final controller = WordEditorController(
     document: document,
     config: OfficeSurfaceConfig(
@@ -147,6 +152,57 @@ void main() {
     expect(find.text('Protected'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  for (final passwordProtected in [false, true]) {
+    testWidgets(
+      'initial protected state ${passwordProtected ? 'disables password removal' : 'can unprotect and undo'}',
+      (tester) async {
+        final controller = _controller(
+          tracking: true,
+          protected: true,
+          passwordProtected: passwordProtected,
+        );
+        await tester.pumpWidget(_host(_ribbon(controller)));
+        await _review(tester);
+        expect(find.text('Protected'), findsOneWidget);
+        expect(_button(tester, 'Tracking on').onTap, isNull);
+        expect(controller.config.allowsMutation, isFalse);
+        if (passwordProtected) {
+          expect(_button(tester, 'Protected').onTap, isNull);
+          controller.syncConfig(
+            controller.config.copyWith(mode: OfficeInteractionMode.editing),
+          );
+          await tester.pump();
+          expect(_button(tester, 'Protected').onTap, isNull);
+          expect(controller.config.allowsMutation, isFalse);
+          await tester.tap(find.text('Tools'));
+          await tester.pump();
+          final remove = tester.widget<MenuItemButton>(
+            find.ancestor(
+              of: find.text('Unprotect document'),
+              matching: find.byType(MenuItemButton),
+            ),
+          );
+          expect(remove.onPressed, isNull);
+          expect(controller.isDirty, isFalse);
+        } else {
+          expect(_button(tester, 'Protected').onTap, isNotNull);
+          await tester.tap(find.text('Protected'));
+          await tester.pump();
+          expect(controller.document.restrictEditing, isFalse);
+          expect(controller.config.allowsMutation, isTrue);
+          expect(controller.isDirty, isTrue);
+          expect(find.text('Protect'), findsOneWidget);
+          controller.undo();
+          await tester.pump();
+          expect(controller.document.restrictEditing, isTrue);
+          expect(controller.config.allowsMutation, isFalse);
+          expect(find.text('Protected'), findsOneWidget);
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
 
   testWidgets(
     'pending protect confirmation cannot change a replacement document',
