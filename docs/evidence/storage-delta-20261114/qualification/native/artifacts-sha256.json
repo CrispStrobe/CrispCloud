@@ -1,0 +1,34 @@
+{
+  "command.json": {
+    "sha256": "3a53d7a0879fabcdb11d787dad12ed4ad729e6a10ba43d2d61c13ef69dd914e9",
+    "size": 3889
+  },
+  "inputs-after.json.gz": {
+    "sha256": "13d6a5ea4092869614daeec1b9c5a95fe0f29983006a1d39b0be6c38e81792af",
+    "size": 440236
+  },
+  "inputs-before.json.gz": {
+    "sha256": "55b09998fa9104408d13552fbc94d9704a67c16cabfce8d74055dba3cd1d4164",
+    "size": 440235
+  },
+  "metadata.json": {
+    "sha256": "209dcebc5735d89df8140b500a7bd5feeb62363575da9c6db6bd39d907fd2aaa",
+    "size": 3163
+  },
+  "stderr.log": {
+    "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+    "size": 117
+  },
+  "stdout.jsonl": {
+    "sha256": "7ed63e995c106cb24017c6a4f1d8d441772cb187b7ea59388188380c615b9582",
+    "size": 478226
+  },
+  "suites-manifest.original": {
+    "sha256": "df99d8086c5258e0f72559a661b3803400ad53db980ee93171ccf68af9882362",
+    "size": 1631
+  },
+  "summary.json": {
+    "sha256": "b7b09339f9b4d991e55c9b3f875f8b85a583ca68359ec9aeeb07fbbb87880693",
+    "size": 10845
+  }
+}

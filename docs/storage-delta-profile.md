@@ -1,8 +1,9 @@
 # Bounded native delta downloads
 
-Status: implemented on `integration/storage-delta-20261114`; runtime
-qualification is pending. Initial scoped static analysis of the core, S3
-adapter and provider admission changes passed. The
+Status: implemented on `integration/storage-delta-20261114` and qualified on
+Linux at `331981649872e363253aef13f57a638e5747b8e5`: 790 native tests passed
+across 43 suites, with no failures or skips. Strict scoped analysis passed.
+S3 transport evidence includes mocks and a real loopback HTTP server. The
 [continuation receipt](evidence/storage-delta-20261114/PROGRESS.md) records the
 saved checkpoints and subsequent validation. Earlier storage, bandwidth and
 Office receipts retain their own source revisions and scopes.
@@ -209,13 +210,28 @@ also keeps its original revision and observations.
 
 ## Qualification
 
-Runtime results are pending in the
-[new continuation receipt](evidence/storage-delta-20261114/PROGRESS.md). Runtime
-acceptance must cover malformed plans/maps, length changes, range and hash
-failures, cache provenance, source/account changes, staged-candidate
-verification, cancellation timing and rejection of legacy remote mutations.
-The receipt must identify the executed core, S3 and provider suites, exact
-source revision, results and limitations before they are treated as acceptance.
+The [continuation receipt](evidence/storage-delta-20261114/PROGRESS.md) and
+[complete qualification](evidence/storage-delta-20261114/qualification/README.md)
+bind the run to source `331981649872e363253aef13f57a638e5747b8e5` and tree
+`6ec8e483ff2c597c145dfcff4e3f75331ad9faae`. All 8,382 recorded tracked/generated
+inputs and the clean Git state remained unchanged during the run.
+
+The core suites passed 114 cases, the S3 profile 36, and provider admission 9.
+The combined 790-case cohort also covers existing adapters, localized settings,
+the imported bandwidth/queue behavior, local staging, Office host workflows
+and portable mesh previews. These counts exclude hidden framework setup tests.
+The S3 suite uses both mock failure injection and a real signed loopback HTTP
+sequence with exact conditional ranges and complete output comparison.
+
+The tests cover malformed plans/maps, length changes, range and hash failures,
+cache provenance, source/account changes, staged-candidate verification,
+cancellation timing and rejection of legacy remote mutations. Fifty Python
+sync/evidence tests also passed, and 2,185 managed Office hashes verify. The
+separate canonical Office receipt covers 115 cases at its own exact source.
+
+Ten historical Nextcloud/ownCloud live mutation scenarios remain explicitly
+skipped in their opt-in suites; those suites were not part of this native
+cohort. They are not counted among the 790 passes or treated as qualified.
 
 Static analysis alone does not establish runtime behavior. This document makes
 no browser, mobile packaging, live-S3 interoperability, external desktop-fork,

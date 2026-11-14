@@ -39,7 +39,7 @@ favorite, open it in the other pane, or swap pane locations.
 | **SFTP** | Native streaming, key auth |
 | **WebDAV** | Standard operations |
 | **SMB / NAS** | Native SMB2/3 browsing, streaming reads/writes, file operations, signed connections and required SMB3 encryption by default |
-| **S3** | Presigned URLs, SSE-S3/KMS/C, 8 storage classes; explicit [bounded native delta-download API](docs/storage-delta-profile.md) with qualification pending |
+| **S3** | Presigned URLs, SSE-S3/KMS/C, 8 storage classes; explicit [bounded native delta-download API](docs/storage-delta-profile.md) qualified on Linux with mock and loopback transports |
 | **FTP/FTPS** | Standard + TLS |
 | **Google Drive** | OAuth2, shared drives, starred files, file versions, Google Docs export (6 formats) |
 | **OneDrive / SharePoint** | Graph API, change tracking (delta API), shared libraries (SharePoint sites + drives) |
@@ -70,7 +70,9 @@ profile. Upload execution and the legacy pCloud/Nextcloud delta orchestration
 decline until they have separately qualified staging and publication contracts.
 Normal transfers continue through their existing paths.
 
-Runtime qualification is pending. See the [delta profile](docs/storage-delta-profile.md)
+The combined Linux native cohort passed 790 tests across 43 suites, including
+real loopback HTTP reconstruction and the delta failure cases. See the
+[delta profile](docs/storage-delta-profile.md)
 for exact API, identity, publication and platform boundaries, and the
 [continuation receipt](docs/evidence/storage-delta-20261114/PROGRESS.md) for
 saved source checkpoints and validation results. Changed-block estimates do

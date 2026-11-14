@@ -1,5 +1,16 @@
 # Storage delta continuation — 2026-11-14
 
+## Current result
+
+The combined continuation is qualified at
+`331981649872e363253aef13f57a638e5747b8e5`: **790 native Linux tests passed
+across 43 suites, with zero failures or skips**, and all 8,382 captured inputs
+remained unchanged. Strict analysis passed with no issues. Fifty Python
+sync/evidence tests passed, and all 2,185 managed Office files verify against
+the combined canonical source. The [complete qualification](qualification/README.md)
+retains commands, raw logs, source inventories, prior attempts and 54 fresh
+Office artifacts. Subsequent changes only describe and preserve these results.
+
 ## Reconciled inputs
 
 Before new storage implementation, fetched all five remote branch heads, all
@@ -40,7 +51,7 @@ Ordinary journaled transfers continue through their existing paths. This work
 does not activate automatic delta transfers in the queue or qualify physical
 disk repair, filesystem writes, VM images, carving, or broader provider deltas.
 
-## Verification status
+## Initial integration verification status
 
 At this integration checkpoint the canonical hash verification passed. Runtime
 validation of the combined baseline and storage implementation follows in later
@@ -107,3 +118,32 @@ before remote requests, covering URI escape/dot-segment aliases. The fixed
 [43-suite native cohort](native-suites.txt) is ready for qualification of delta,
 provider and staging behavior, imported bandwidth behavior, Office host
 workflows and portable mesh previews. No result is claimed before execution.
+
+## Qualified checkpoint
+
+The refreshed integration was published at
+`9d4197f4cedc4279f3c7f1b83148c2a43bebc882`. Strict analysis additionally exposed
+eight pre-existing style infos in two retained live-test fixtures; those
+mechanical corrections were saved at
+`331981649872e363253aef13f57a638e5747b8e5` before the frozen native run.
+
+The 43-suite run passed all 790 cases, including 114 core/safety cases, 36 S3
+profile cases, 9 provider-admission cases, imported bandwidth/queue regressions,
+61 Office host cases, 40 mesh cases and the existing local publication gates.
+The native run and strict analysis used the exact qualified source and
+unchanged inputs. The Python gate's separate receipt explicitly records its
+overlap with the unrelated live-fixture formatting checkpoint; every Python
+input was stable and every gate passed.
+
+The companion source/evidence branch has draft
+[quds_office_suite PR #12](https://github.com/CrispStrobe/quds_office_suite/pull/12).
+Current canonical main has incorporated the shared recovery implementation;
+our remaining contribution there is the combined sorting/history regression
+and its source-bound evidence. CrispCloud keeps the exact qualified source pin
+instead of importing unrelated newer Word work into this qualification.
+
+The [post-qualification remote observation](remote-refresh-after-qualification.json)
+at 20:54:46 UTC found another main advance to
+`2c373371973b2506fc4fc03e599ef093d14a4be1` and one additional tag. All 96 PR
+heads remain incorporated. The completed qualification is saved before that
+new input is inspected and reconciled; its source pin above is unchanged.

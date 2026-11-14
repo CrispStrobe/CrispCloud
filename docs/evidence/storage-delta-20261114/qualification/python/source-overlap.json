@@ -1,0 +1,59 @@
+{
+  "scope": "Supplement for parent-authorized unrelated live-test lint checkpoint during the Python gate run. Original receipt and logs remain unchanged.",
+  "source_head_before": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+  "source_head_after": "b4d961fd51412037dfd163aa7c28f99dc73fd87c",
+  "changes_between_heads": [
+    {
+      "status": "M",
+      "paths": [
+        "test/nextcloud_adapter_delta_live_test.dart"
+      ]
+    },
+    {
+      "status": "M",
+      "paths": [
+        "test/owncloud_adapter_delta_live_test.dart"
+      ]
+    }
+  ],
+  "changed_paths_intersect_recorded_python_inputs": [],
+  "all_recorded_input_hashes_unchanged": true,
+  "quds_state_unchanged": true,
+  "working_tree_status_before": "",
+  "working_tree_status_after": "",
+  "gate_exit_codes": {
+    "verify-office-fidelity": 0,
+    "sync-office-fidelity": 0,
+    "sync-legacy-doc-parser": 0,
+    "office-host-evidence": 0
+  },
+  "unit_tests_passed": 50,
+  "verified_office_files": 2185,
+  "orchestration_exit_code": 1,
+  "orchestration_exit_reason": "All four subprocess gates exited0. The original runner also required unchanged HEAD/tree/status and returned1 because the parent published an unrelated lint checkpoint during the host-evidence gate.",
+  "qualification": "Four passing Python gates over unchanged recorded input bytes. This receipt does not claim an unchanged complete repository tree across the entire run or any Flutter/native/browser qualification.",
+  "logs_rechecked": [
+    {
+      "path": "verify-office-fidelity.log",
+      "sha256": "cf69a8a7e6153f7df159952217ce99cbfe5c4b241e270bafbcac0c15d430c3fc",
+      "bytes": 203
+    },
+    {
+      "path": "sync-office-fidelity.log",
+      "sha256": "2efed999d8b22fd8938403530ae0e2dcb7e28531432fa6cae59bce9e31562a85",
+      "bytes": 106
+    },
+    {
+      "path": "sync-legacy-doc-parser.log",
+      "sha256": "77fee9f764b68eb802e0515efd1c8786dbd5a78e2d2a76a244365306cfa1f701",
+      "bytes": 118
+    },
+    {
+      "path": "office-host-evidence.log",
+      "sha256": "d0154340b7ec2b9a214e4cbca2b0bbd0d34866f192d8229d8b75e1aa952e7392",
+      "bytes": 123
+    }
+  ],
+  "receipt_sha256": "20ff8ef03866a8f87e3682deafbf44106445c8764251748bb942c5f641a994cc",
+  "runner_sha256": "e76055a53a326bf41f6a406d7d0c3597948a1be29b94314a988d62c655c8ee12"
+}

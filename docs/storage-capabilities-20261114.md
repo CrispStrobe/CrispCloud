@@ -565,8 +565,11 @@ Small files can use the explicit S3 API when its requirements hold, without the
 historical 10 MiB heuristic becoming automatic admission.
 
 The [new evidence](evidence/storage-delta-20261114/PROGRESS.md) records incremental
-remote checkpoints and scoped static analysis; runtime qualification is
-pending. The original
+remote checkpoints, clean strict analysis, and 790 passed tests across 43 Linux
+native suites at source `331981649872e363253aef13f57a638e5747b8e5`, with no failures
+or skips. All 8,382 captured inputs remained unchanged. The S3 evidence uses
+mock and real loopback HTTP transports, not a live-provider interoperability
+claim. The original
 [pinned investigation note](evidence/storage-capabilities-20261114/delta-source-review.txt)
 retains its source hashes, reachability uncertainty and historical observations
 about missing version checks, in-place writes and size-only changes. Those

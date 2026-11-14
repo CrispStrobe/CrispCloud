@@ -1,0 +1,61 @@
+{
+  "purpose": "Scratch validation toolchain setup; smoke commands did not reach Dart tests",
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/209f165653d7/toolchain/flutter"
+  },
+  "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+  "cargo": "1.100.0 (3acc79c0c 2026-11-05)",
+  "clang": "Debian 19.1.7 (3+b1)",
+  "standalone_dart_archive_sha256": "eb99aed266efbcb615c6ae21c12f52cfe935b9f208bccc5fea7f64c21e867229",
+  "manifest_before": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "manifest_after": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "manifests_unchanged": true,
+  "package_config_sha256": "ffc5871dc0a749e542dbcfb57c6a6783281027f1a292e0d29e755ecb6368ab41",
+  "launcher": "/workspace/scratch/209f165653d7/toolchain/run",
+  "native_hook_outputs": [
+    "crisp_catalog",
+    "crisp_ebook_conversion",
+    "crisp_storage",
+    "dart_smb2",
+    "objective_c",
+    "sqlite3"
+  ],
+  "scratch_configuration": [
+    "PUB_CACHE",
+    "CARGO_HOME",
+    "RUSTUP_HOME",
+    "TMPDIR",
+    "PATH",
+    "LD_LIBRARY_PATH",
+    "CI=true",
+    "FLUTTER_SUPPRESS_ANALYTICS=true",
+    "cargo wrapper for hook-filtered Rust locations",
+    "clang wrapper for scratch shared libraries",
+    "system libsqlite3.so symlink; no root pubspec override"
+  ],
+  "notes": [
+    "No repository source edits by setup agent",
+    "Locked dependency resolution succeeded using direct Dart pub get with FLUTTER_ROOT",
+    "Initial engine download 403 was resolved by independently running official Flutter command from another agent",
+    "Root smoke built real Rust/ebook hooks, then stopped before tests because Clang was missing",
+    "Actual scratch Clang C compile/run probe passed; repository native validation handed to root"
+  ]
+}

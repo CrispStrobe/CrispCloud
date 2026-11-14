@@ -19,7 +19,8 @@ revision; a private receipt on the same adapter instance is also required for
 cache reuse. Restart or adapter recreation requires a fresh seed. The new
 profile does not inherit the old 10 MiB activation description, provide durable
 resume/path reservations, or claim an atomic compare-and-swap against external
-local writers. Runtime qualification remains pending in the
+local writers. The combined Linux native cohort passed 790 tests across 43
+suites; its exact source and mock/loopback transport boundaries are recorded in the
 [continuation receipt](../evidence/storage-delta-20261114/PROGRESS.md).
 
 The separate Nextcloud/ownCloud desktop clients and companion server retain

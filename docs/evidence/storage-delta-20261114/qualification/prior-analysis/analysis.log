@@ -1,0 +1,12 @@
+Analyzing delta_sync_service.dart, s3_client_adapter.dart, pcloud_client_adapter.dart, nextcloud_client_adapter.dart, bounded_http_transfer.dart, delta_sync_provider.dart, settings_dialog.dart, settings_strings.dart, delta_sync_test.dart, delta_sync_safety_test.dart, delta_provider_admission_test.dart, s3_delta_download_test.dart, pcloud_adapter_test.dart, nextcloud_adapter_test.dart, s3_adapter_test.dart, settings_dialog_i18n_test.dart, nextcloud_adapter_delta_live_test.dart, owncloud_adapter_delta_live_test.dart...
+
+   info - test/nextcloud_adapter_delta_live_test.dart:71:18 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - test/nextcloud_adapter_delta_live_test.dart:71:26 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - test/nextcloud_adapter_delta_live_test.dart:418:43 - Statements in a for should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - test/nextcloud_adapter_delta_live_test.dart:432:59 - Statements in a for should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - test/owncloud_adapter_delta_live_test.dart:71:18 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - test/owncloud_adapter_delta_live_test.dart:71:26 - Unnecessary braces in a string interpolation. Try removing the braces. - unnecessary_brace_in_string_interps
+   info - test/owncloud_adapter_delta_live_test.dart:418:43 - Statements in a for should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - test/owncloud_adapter_delta_live_test.dart:432:59 - Statements in a for should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+
+8 issues found.
