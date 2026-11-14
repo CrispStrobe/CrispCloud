@@ -1,0 +1,11 @@
+{
+  "classification": "intermediate working-tree result; final candidate qualification remains separate",
+  "exitCode": 0,
+  "success": true,
+  "passed": 52,
+  "failed": 0,
+  "skipped": 0,
+  "logSha256": "04485e9e4e900895414ef9cd006a2d448cd5c9082d729240af54217699849526",
+  "eventsSha256": "c6425fa5c86bb50b8dac8643192f94bdf62704ea9f4be9794a77334f180e029f",
+  "observedRevisionAfterRun": "ac2044e8e548f9fc575e1e9acffc883e4753324f"
+}

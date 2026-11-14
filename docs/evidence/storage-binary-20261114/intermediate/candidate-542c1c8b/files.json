@@ -1,0 +1,79 @@
+{
+  "classification": "Failed saved candidate; not a passing qualification",
+  "candidate": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+  "mapping": "Receipts retain their original log/inventory filenames. Resolve those filenames through original_file -> file below. Both source inventories share one byte-identical stored file. Compressed logs/events restore their original bytes after gzip decompression.",
+  "files": [
+    {
+      "original_file": "final-native.log",
+      "original_source": "build/storage-binary-validation/final-native.log",
+      "original_bytes": 15980,
+      "original_sha256": "f13df43e15dd923601e0ece9563fc83074a13bac9d27374fb0d387cd2cdb50df",
+      "file": "final-native.log.gz",
+      "storage": "gzip; mtime=0; no filename header",
+      "bytes": 2637,
+      "sha256": "963c1a4d0c9df5ca7e395fd9d75b9c5f706b3ce574e45b98e31f38d59c040a1f"
+    },
+    {
+      "original_file": "final-native-events.json",
+      "original_source": "build/storage-binary-validation/final-native-events.json",
+      "original_bytes": 44149,
+      "original_sha256": "e31ea10a446934b3e7e30251eb95d9803bdd60749345f5e3f2457f3825085df8",
+      "file": "final-native-events.json.gz",
+      "storage": "gzip; mtime=0; no filename header",
+      "bytes": 5336,
+      "sha256": "cd00df54f18f739217307e45d6a55c56238b4d60f9c3189a80926e6b7b106683"
+    },
+    {
+      "original_file": "final-native-receipt.json",
+      "original_source": "build/storage-binary-validation/final-native-receipt.json",
+      "original_bytes": 1767,
+      "original_sha256": "e92362b2e7f231accef2d038a815ecdd90085c5d953341feb8a23cba3cbe8033",
+      "file": "final-native-receipt.json",
+      "storage": "unchanged original bytes",
+      "bytes": 1767,
+      "sha256": "e92362b2e7f231accef2d038a815ecdd90085c5d953341feb8a23cba3cbe8033"
+    },
+    {
+      "original_file": "final-native-source.json.gz",
+      "original_source": "build/storage-binary-validation/final-native-source.json.gz",
+      "original_bytes": 630035,
+      "original_sha256": "f1d11b12ef4f42116cb674d39360a6e5f0c313da43fae6e8ec9b4e8aea6c4900",
+      "file": "source.json.gz",
+      "storage": "unchanged gzip inventory; shared by both gates",
+      "bytes": 630035,
+      "sha256": "f1d11b12ef4f42116cb674d39360a6e5f0c313da43fae6e8ec9b4e8aea6c4900",
+      "inventory_uncompressed_sha256": "04e9240101a3ce85538f78865cf5d7201846d0417ac570bfbcbf16b68214cb6c"
+    },
+    {
+      "original_file": "final-analysis.log",
+      "original_source": "build/storage-binary-validation/final-analysis.log",
+      "original_bytes": 531,
+      "original_sha256": "1ecba3c9d7d9f94860415b149bcb1f80a1a0638d38abe2ce4240cf8788d66a3a",
+      "file": "final-analysis.log.gz",
+      "storage": "gzip; mtime=0; no filename header",
+      "bytes": 262,
+      "sha256": "4d207b841bb737d45c456aec77913c0a5e36129e38e34378dab19ef8448acbcf"
+    },
+    {
+      "original_file": "final-analysis-receipt.json",
+      "original_source": "build/storage-binary-validation/final-analysis-receipt.json",
+      "original_bytes": 1684,
+      "original_sha256": "48cd151d4a7c4a9efa7628e834c91de5ce0e60986ae22d986102307e7394cab0",
+      "file": "final-analysis-receipt.json",
+      "storage": "unchanged original bytes",
+      "bytes": 1684,
+      "sha256": "48cd151d4a7c4a9efa7628e834c91de5ce0e60986ae22d986102307e7394cab0"
+    },
+    {
+      "original_file": "final-analysis-source.json.gz",
+      "original_source": "build/storage-binary-validation/final-analysis-source.json.gz",
+      "original_bytes": 630035,
+      "original_sha256": "f1d11b12ef4f42116cb674d39360a6e5f0c313da43fae6e8ec9b4e8aea6c4900",
+      "file": "source.json.gz",
+      "storage": "unchanged gzip inventory; shared by both gates",
+      "bytes": 630035,
+      "sha256": "f1d11b12ef4f42116cb674d39360a6e5f0c313da43fae6e8ec9b4e8aea6c4900",
+      "inventory_uncompressed_sha256": "04e9240101a3ce85538f78865cf5d7201846d0417ac570bfbcbf16b68214cb6c"
+    }
+  ]
+}

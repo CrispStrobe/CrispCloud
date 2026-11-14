@@ -146,3 +146,30 @@ pause now reaches the producer before its next yield. All other queue callers
 retain the previous default. Capture and direct raw-stream reuse regressions
 now pass in a focused 28-test native run; full saved-source native and browser
 qualification will use the following corrected checkpoint.
+
+## Corrected saved-source qualification
+
+`e52ea1f9399c2547978bb497073adcee5022cc81` saves the corrected pull boundaries
+and expanded regressions, including reused buffers larger than the internal
+copy part, a delayed second stream and read errors during either capture pass.
+The complete native comparison/UI cohort passes **92 tests**, with no failures
+or skips, and strict analysis of all **10 changed Dart files** reports no issues.
+Both completed gates bind **8,111 unchanged tracked non-document paths** and
+the same unchanged package map. Production dependency manifests remain exact.
+The [qualification index](README.md) and [machine-readable result](validation-e52ea1f9.json)
+retain the saved source, commands, raw output and complete source inventories.
+
+The actual Chrome attempt could not launch Chromium because its required local
+socket was denied by the workspace. No browser test executed. The waiting run
+was interrupted with exit 130, without an after-inventory receipt; an explicit
+permission-escalation retry was rejected before it could start. The attempt is
+preserved separately. The configured Chrome gate contains 29 tests; neither
+native execution nor compilation is presented as a browser pass. Hosted source-
+head workflows were queued at the recorded observation.
+
+GitHub independently merged PR #104 at `542c1c8b` while this qualification was
+running. Main subsequently advanced to `202c0c94`, bringing coordinated Office
+work and its own direct-iterator capture correction. This checkpoint preserves
+the e52ea1f9 evidence before reconciling that main advancement. The continuation
+will retain both histories, preserve the raw-stream fix and new regressions,
+and qualify the resulting saved merge source separately.

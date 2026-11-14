@@ -1,0 +1,28 @@
+{
+  "classification": "Passing native gate bound to the saved source revision below",
+  "source_revision": "e52ea1f9399c2547978bb497073adcee5022cc81",
+  "source_tree": "b9a1a837770bb6087fcbe500d9429af5cfff2f84",
+  "source_paths": 8111,
+  "source_unchanged": true,
+  "package_map_unchanged": true,
+  "exit_code": 0,
+  "passed": 92,
+  "failed": 0,
+  "skipped": 0,
+  "done": {
+    "success": true,
+    "type": "done",
+    "time": 18396
+  },
+  "receipt_file": "final-native-receipt.json",
+  "receipt_sha256": "cb08845be03963a6d64e74f7fe6fed05679bdf43c574f0b34e573fd5e7ccba23",
+  "log_file": "final-native.log",
+  "log_sha256": "eba4da755072fe56c8af63ffa10c428f1c6d0db5d9db679f75f94124fb0c05fe",
+  "events_original_file": "final-native-events.json",
+  "events_original_bytes": 45444,
+  "events_original_sha256": "a9db32a3c33130a37a64dc6685e680c4c6a4c2f9e05d522d7ad19526d3f6071a",
+  "events_stored_file": "final-native-events.json.gz",
+  "events_stored_bytes": 5343,
+  "events_stored_sha256": "1e2fd7c346649a26b8e264a402fd577f8ada71efcbc7b947e0cb9ef97e311960",
+  "events_compression": "gzip compression level 9; mtime=0; no filename header; decompression restores original JSON event bytes"
+}

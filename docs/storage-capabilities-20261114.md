@@ -13,8 +13,12 @@ The [first runtime evidence](evidence/storage-runtime-20261114)
 and [UDF/ZIP evidence](evidence/storage-udf-zip-20261114) retain their separate
 qualified revisions. The [FAT and partition-image qualification](evidence/storage-fat-20261114)
 records this continuation, including external fixtures and native/JavaScript
-source bindings. Later stages remain proposals; the initial assessment's
-documentation-only receipt stays preserved with its original source revision.
+source bindings. The [binary comparison continuation](binary-comparison-profile.md)
+now binds the existing same-offset comparison and Hex navigation to verified,
+bounded captures; its [qualification record](evidence/storage-binary-20261114/)
+distinguishes native results from pending browser execution. Other unimplemented
+profiles remain proposals. The initial assessment's documentation-only receipt
+stays preserved with its original source revision.
 
 Completed prior increment: [merged PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
 The [ext continuation record](evidence/storage-ext-20261114/PROGRESS.md) starts from
