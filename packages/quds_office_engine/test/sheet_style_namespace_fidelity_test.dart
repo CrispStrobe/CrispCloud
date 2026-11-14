@@ -67,6 +67,75 @@ String _nativeStyles({
       '</${tag}styleSheet>';
 }
 
+// This reference is authored from the source before any style edit/save.
+// The expected font/XF and cell style index are explicit OOXML, independent
+// of SmlStyleSheet.xfFor/toXml and the result being checked.
+String _referenceStyles() {
+  const font =
+      '<s:font><s:b/><s:i/><s:u val="double"/>'
+      '<e:b val="extension-bold"/><s:sz val="18.0" e:val="extension-size"/>'
+      '<s:color theme="4" tint="0.25"/><s:name val="Cambria"/>'
+      '<s:family val="2"/><s:charset val="1"/><s:scheme val="minor"/>'
+      '<e:sz val="extension-size"/></s:font>';
+  const format =
+      '<s:xf e:fontId="extension-font" fontId="1" fillId="0" '
+      'numFmtId="164" borderId="1" xfId="0" applyAlignment="1" '
+      'e:applyAlignment="extension-alignment" quotePrefix="1" applyFont="1">'
+      '<e:alignment horizontal="extension-horizontal"/>'
+      '<s:alignment horizontal="center" vertical="bottom" wrapText="1" '
+      'textRotation="15" indent="2" shrinkToFit="1" readingOrder="2"/>'
+      '<s:protection locked="0" hidden="1"/>'
+      '<s:extLst><s:ext uri="example"><e:xf fontId="88"/>'
+      '</s:ext></s:extLst></s:xf>';
+  return _nativeStyles(prefix: 's', foreignDefault: true)
+      .replaceFirst(
+        '<s:fonts e:count="extension-count" count="1">',
+        '<s:fonts e:count="extension-count" count="2">',
+      )
+      .replaceFirst('</s:fonts>', '$font</s:fonts>')
+      .replaceFirst('<s:cellXfs count="1">', '<s:cellXfs count="2">')
+      .replaceFirst('</s:cellXfs>', '$format</s:cellXfs>');
+}
+
+SmlWorkbook _blackThemeWorkbook() {
+  final book = SmlWorkbook();
+  book.firstSheet.cellA1('A1').value = 'Header';
+  book.firstSheet.cellA1('A2').value = 2;
+  book.firstSheet.cellA1('A3').value = 1;
+  final package = SheetSerializer().write(book);
+  package
+      .createPart('/xl/styles.xml', OfficeContentTypes.sheetStyles)
+      .writeText(
+        _nativeStyles(prefix: 's').replaceFirst(
+          '<s:color theme="4" tint="0.25"/>',
+          '<s:color theme="1"/>',
+        ),
+      );
+  package
+      .relationshipsFor('/xl/workbook.xml')
+      .add(type: RelationshipTypes.styles, target: 'styles.xml');
+  return SheetDeserializer().read(package);
+}
+
+XmlElement _savedCellColor(OpcPackage package, String ref) {
+  final sheet = XmlDocument.parse(
+    package.getPart('/xl/worksheets/sheet1.xml')!.readText(),
+  ).root!;
+  final cell = sheet
+      .firstChild('sheetData', namespaceUri: _x)!
+      .childrenNamed('row', namespaceUri: _x)
+      .expand((row) => row.childrenNamed('c', namespaceUri: _x))
+      .singleWhere((cell) => cell.getAttribute('r', namespaceUri: '') == ref);
+  final styles = XmlDocument.parse(
+    package.getPart('/xl/styles.xml')!.readText(),
+  ).root!;
+  final style = _style(
+    styles,
+    int.parse(cell.getAttribute('s', namespaceUri: '') ?? '0'),
+  );
+  return _font(styles, style).firstChild('color', namespaceUri: _x)!;
+}
+
 List<XmlElement> _entries(XmlElement root, String container, String entry) =>
     root
         .firstChild(container, namespaceUri: _x)!
@@ -359,6 +428,55 @@ void main() {
     },
   );
 
+  test(
+    'explicit equal RGB replaces native theme without style growth on repeated save',
+    () {
+      final book = _blackThemeWorkbook();
+      final cell = book.firstSheet.cellA1('A1');
+      expect(cell.fontRgb, '000000');
+      expect(cell.hasExplicitFontColorEdit, isFalse);
+      cell.fontRgb = '000000';
+      expect(cell.hasExplicitFontColorEdit, isTrue);
+      for (var cycle = 0; cycle < 3; cycle++) {
+        final saved = SheetSerializer().write(book);
+        final color = _savedCellColor(saved, 'A1');
+        expect(color.getAttribute('rgb', namespaceUri: ''), 'FF000000');
+        expect(color.getAttribute('theme', namespaceUri: ''), isNull);
+        final styles = XmlDocument.parse(
+          saved.getPart('/xl/styles.xml')!.readText(),
+        ).root!;
+        expect(_entries(styles, 'fonts', 'font'), hasLength(2));
+        expect(_entries(styles, 'cellXfs', 'xf'), hasLength(2));
+        expect(_savedCellColor(saved, 'A2').getAttribute('theme'), '1');
+      }
+    },
+  );
+
+  test('explicit equal RGB intent survives isolate serialization', () async {
+    final book = _blackThemeWorkbook();
+    book.firstSheet.cellA1('A1').fontRgb = '000000';
+    final saved = OpcPackage.openBytes(await OfficeIsolateSave.workbook(book));
+    expect(_savedCellColor(saved, 'A1').getAttribute('rgb'), 'FF000000');
+    expect(_savedCellColor(saved, 'A1').getAttribute('theme'), isNull);
+    expect(_savedCellColor(saved, 'A2').getAttribute('theme'), '1');
+  });
+
+  test('sorting keeps explicit color intent with the originating cell', () {
+    final book = _blackThemeWorkbook();
+    book.firstSheet.cellA1('A2').fontRgb = '000000';
+    SmlAnalysis.sort(book.firstSheet, SmlRange.parse('A1:A3'), [
+      const SmlSortKey(column: 0),
+    ]);
+    expect(book.firstSheet.cellA1('A2').value, 1);
+    expect(book.firstSheet.cellA1('A2').hasExplicitFontColorEdit, isFalse);
+    expect(book.firstSheet.cellA1('A3').value, 2);
+    expect(book.firstSheet.cellA1('A3').hasExplicitFontColorEdit, isTrue);
+    final saved = SheetSerializer().write(book);
+    expect(_savedCellColor(saved, 'A2').getAttribute('theme'), '1');
+    expect(_savedCellColor(saved, 'A3').getAttribute('rgb'), 'FF000000');
+    expect(_savedCellColor(saved, 'A3').getAttribute('theme'), isNull);
+  });
+
   test('clearing the last direct style properties survives workbook saves', () {
     final workbook = SmlWorkbook();
     workbook.firstSheet.cellA1('A1')
@@ -403,6 +521,21 @@ void main() {
       package
           .relationshipsFor('/xl/workbook.xml')
           .add(type: RelationshipTypes.styles, target: 'styles.xml');
+      final evidence = Directory('build/fidelity-schema')
+        ..createSync(recursive: true);
+      final reference = OpcPackage.openBytes(package.save());
+      reference.getPart('/xl/styles.xml')!.writeText(_referenceStyles());
+      final referenceSheet = reference.getPart('/xl/worksheets/sheet1.xml')!;
+      final referenceXml = XmlDocument.parse(referenceSheet.readText());
+      referenceXml.root!
+          .firstChild('sheetData', namespaceUri: _x)!
+          .firstChild('row', namespaceUri: _x)!
+          .firstChild('c', namespaceUri: _x)!
+          .setAttribute('s', '1');
+      referenceSheet.writeText(referenceXml.toXmlString());
+      File(
+        '${evidence.path}/namespace-style-reference.xlsx',
+      ).writeAsBytesSync(reference.save());
       var reopened = SheetDeserializer().read(package);
       reopened.firstSheet.cellA1('A1')
         ..fontBold = true
@@ -410,6 +543,9 @@ void main() {
         ..horizontalAlign = SmlHAlign.center;
       for (var cycle = 0; cycle < 3; cycle++) {
         final saved = SheetSerializer().writeBytes(reopened);
+        File(
+          '${evidence.path}/namespace-style-${cycle + 1}.xlsx',
+        ).writeAsBytesSync(saved);
         final root = XmlDocument.parse(
           OpcPackage.openBytes(saved).getPart('/xl/styles.xml')!.readText(),
         ).root!;

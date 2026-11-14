@@ -1,7 +1,7 @@
 name: Office fidelity integration
 on:
   push:
-    branches: [main, 'feature/office-fidelity-*', 'feature/legacy-doc-fidelity-*']
+    branches: [main, 'feature/office-fidelity-*', 'feature/legacy-doc-fidelity-*', 'codex/office-recovery-*']
   pull_request:
     paths:
       - 'packages/quds_office_engine/**'

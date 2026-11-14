@@ -4,7 +4,7 @@ import 'formula_ast.dart';
 import 'formula_eval.dart';
 import 'formula_functions.dart';
 
-/// Dependency graph with topological recalculation and cycle detection.
+/// Dependency-aware recalculation with typed results and runtime cycle checks.
 class FormulaDepGraph {
   /// FormulaDepGraph API.
   FormulaDepGraph(this.workbook);

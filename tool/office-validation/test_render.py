@@ -1251,5 +1251,36 @@ class KilledConversionRetryTests(unittest.TestCase):
                 render.compare_records(expected, actual)
 
 
+class NativeHostReferenceTests(unittest.TestCase):
+    def cases(self):
+        for name, extension in (('word', 'docx'), ('sheet', 'xlsx'), ('slide', 'pptx')):
+            base = f'build/fidelity-host/native-{name}'
+            files = [f'{base}-{cycle}.{extension}' for cycle in (1, 2, 3)]
+            reference = f'build/fidelity-host/reference/native-{name}-expected.{extension}'
+            yield files, reference
+
+    def test_each_native_host_first_save_requires_its_independent_reference(self):
+        for files, reference in self.cases():
+            with self.subTest(reference=reference):
+                records = {name: record(name) for name in [*files, reference]}
+                result = render.cycle_coverage([*files, reference], records)
+                self.assertEqual(result['failures'], [])
+                self.assertEqual(result['baseline_comparisons'], 1)
+                self.assertEqual(result['cycle_comparisons'][0]['baseline'], reference)
+                missing = render.cycle_coverage(files, records)
+                self.assertTrue(missing['failures'])
+                self.assertIn('Missing required native baseline', missing['failures'][0]['error'])
+
+    def test_identical_loss_in_all_three_host_saves_is_rejected(self):
+        for files, reference in self.cases():
+            with self.subTest(reference=reference):
+                records = {name: record(name, text='Same lost text', pixels=['2' * 64])
+                           for name in files}
+                records[reference] = record(reference)
+                result = render.cycle_coverage([*files, reference], records)
+                self.assertTrue(result['failures'])
+                self.assertFalse(result['cycle_comparisons'][0]['passed'])
+
+
 if __name__ == '__main__':
     unittest.main()

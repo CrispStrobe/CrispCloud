@@ -61,3 +61,29 @@ waits for actual route disposal in the clean/Discard navigation tests.
 REC-07 has source synchronization and local regression evidence; REC-08's
 independent first-save/schema/native-render acceptance remains open. These
 tests do not certify cryptographic Office signatures or physical-device use.
+
+## Expanded checkpoint acceptance
+
+The later host checkpoint `d6013345` and Quds implementation `36e65201` are also
+integrated, together with the canonical source receipts in `ac4889d`. Quds main
+is `f9512763347f1fea56462c29d10e78d69d606419`; all **2,168 managed Office files**
+match that source. Explicit spreadsheet font-colour intent now survives cloning,
+history and saves. Read-only imported Word restrictions and pending-copy chrome
+have additional host controls.
+
+Fresh local gates: **1,731 engine passes** with three conditional skips;
+**522 editor passes**, one conditional skip and the same 17 baseline golden
+failures; **55 host passes**, two platform skips. The latest arrival-specific
+comparison/ribbon/file-operation cohort passes **173 tests**. Coverage/evidence
+guards pass **17 and 16 Python tests**; render controls pass **72**. Cohorts
+overlap and are not additive.
+
+Independently authored Word/XLSX/PPTX references and actual host saves were
+rendered by LibreOffice 26.8.2.2: **12 files, 12 pages, three save-cycle groups,
+three baseline comparisons, zero failures**. The real browser copy adapter also
+compiled and executed in installed Chrome: its downloaded bytes and filename,
+anchor cleanup and delayed object-URL revocation passed. The
+[retained acceptance receipt](evidence/office-recovery-20261114/integrated-macos/acceptance.json)
+links exact render and browser receipts. The native probe did not run a fresh
+schema validator. Wider REC-08 coverage and physical-platform acceptance remain
+separate work.

@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "generator": "test/fixtures/office_native_workflows/generate.py",
+  "authorship": "Raw WordprocessingML, openpyxl and python-pptx; never derived from a Quds export.",
+  "tools": {
+    "openpyxl": "3.1.5",
+    "python-pptx": "1.0.2",
+    "lxml": "6.1.1"
+  },
+  "cases": [
+    {
+      "id": "native-word",
+      "format": "docx",
+      "expected_semantics": {
+        "paragraphs": [
+          "Reviewed: Native workflow report",
+          "Reference paragraph remains unchanged."
+        ],
+        "first_paragraph_bold": true,
+        "first_paragraph_left_twips": 480,
+        "first_paragraph_after_twips": 360
+      },
+      "source": "native-word-source.docx",
+      "source_sha256": "824365f3aef2925bd80dcd76e8f91c3aa63291f5e5eff6052e2e8251783ecee9",
+      "expected": "native-word-expected.docx",
+      "expected_sha256": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3"
+    },
+    {
+      "id": "native-sheet",
+      "format": "xlsx",
+      "expected_semantics": {
+        "A2": "Approved travel",
+        "B2": 135.5,
+        "B3": 300,
+        "B4_formula": "SUM(B2:B3)",
+        "B4_cache": 435.5,
+        "A2_bold": true,
+        "A2_italic": true,
+        "A2_horizontal": "center",
+        "A2_vertical": "bottom",
+        "A5_horizontal": "center",
+        "A5_vertical": null,
+        "merge": "A5:B5"
+      },
+      "source": "native-sheet-source.xlsx",
+      "source_sha256": "548cf28efce66d0b4e3b9abb5a4f7f24f282ecadd7749cd65a5afa6ed0b5ba49",
+      "expected": "native-sheet-expected.xlsx",
+      "expected_sha256": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3"
+    },
+    {
+      "id": "native-slide",
+      "format": "pptx",
+      "expected_semantics": {
+        "texts": [
+          "Reviewed slide title",
+          "Reference body remains unchanged."
+        ],
+        "notes": "Reviewed notes\nDecision: approved\nReference retained."
+      },
+      "source": "native-slide-source.pptx",
+      "source_sha256": "048c0939a1b5c53f08503092fa8b4176df532be75bf4d87f5e4e8242a4ac04c2",
+      "expected": "native-slide-expected.pptx",
+      "expected_sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1"
+    }
+  ]
+}

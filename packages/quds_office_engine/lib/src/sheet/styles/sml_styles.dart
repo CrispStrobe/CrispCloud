@@ -39,15 +39,15 @@ class SmlColumnMetrics {
 }
 
 /// Return null when the requested font cannot be resolved reliably.
-typedef SmlColumnMetricsResolver = SmlColumnMetrics? Function(
-  SmlNormalFont normalFont,
-);
+typedef SmlColumnMetricsResolver =
+    SmlColumnMetrics? Function(SmlNormalFont normalFont);
 
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
   XmlDocument? _source;
   List<XmlElement>? _sourceFonts;
   final Map<int, int> _fontBases = {};
+  final Set<int> _explicitFontColors = {};
   final Map<int, int> _xfBases = {};
 
   /// SmlStyleSheet API.
@@ -190,9 +190,9 @@ class SmlStyleSheet {
 
   /// Reads the Latin major/minor theme faces used for the ten ASCII digits.
   static Map<String, String> parseThemeFontFamilies(String xml) {
-    final scheme = XmlDocument.parse(xml).root
-        ?.firstChild('themeElements')
-        ?.firstChild('fontScheme');
+    final scheme = XmlDocument.parse(
+      xml,
+    ).root?.firstChild('themeElements')?.firstChild('fontScheme');
     return <String, String>{
       for (final kind in ['major', 'minor'])
         if (scheme
@@ -453,6 +453,7 @@ class SmlStyleSheet {
     SmlHAlign align = SmlHAlign.general,
     String fillRgb = '',
     String fontRgb = '',
+    bool fontColorExplicit = false,
     bool bold = false,
     double size = 11,
     int? baseStyleIndex,
@@ -477,7 +478,12 @@ class SmlStyleSheet {
             baseStyleIndex < cellXfsAlign.length
         ? baseStyleIndex
         : null;
+    final explicitColor =
+        base != null &&
+        fontColorExplicit &&
+        !_hasDirectFontColor(base, normalizeRgb(fontRgb));
     if (base != null &&
+        !explicitColor &&
         alignAt(base) == align &&
         fillAt(base) == normalizeRgb(fillRgb) &&
         fontAt(base) == normalizeRgb(fontRgb) &&
@@ -491,7 +497,8 @@ class SmlStyleSheet {
     final int? baseFont = base == null ? null : cellXfsFontId[base];
     final int fontId;
     if (baseFont != null &&
-        (fontRgbs[baseFont] != font ||
+        (explicitColor ||
+            fontRgbs[baseFont] != font ||
             fontBolds[baseFont] != bold ||
             fontSizes[baseFont] != size)) {
       fontId = fontRgbs.length;
@@ -499,6 +506,7 @@ class SmlStyleSheet {
       fontBolds.add(bold);
       fontSizes.add(size);
       _fontBases[fontId] = baseFont;
+      if (explicitColor) _explicitFontColors.add(fontId);
     } else {
       fontId = baseFont ?? _fontId(rgb: font, bold: bold, size: size);
     }
@@ -519,6 +527,35 @@ class SmlStyleSheet {
     cellXfsFillId.add(fillId);
     cellXfsFontId.add(fontId);
     return cellXfsAlign.length - 1;
+  }
+
+  bool _hasDirectFontColor(int styleIndex, String rgb) {
+    var id = cellXfsFontId[styleIndex];
+    while (_fontBases.containsKey(id)) {
+      final base = _fontBases[id]!;
+      if (_explicitFontColors.contains(id) || fontRgbs[id] != fontRgbs[base]) {
+        return fontRgbs[id] == rgb;
+      }
+      id = base;
+    }
+    final root = _source?.root;
+    final fonts = root
+        ?.firstChild('fonts', namespaceUri: root.namespaceUri)
+        ?.childrenNamed('font', namespaceUri: root.namespaceUri);
+    // Newly authored fonts are already written using direct colors.
+    if (fonts == null || id < 0 || id >= fonts.length) return true;
+    final color = fonts[id].firstChild(
+      'color',
+      namespaceUri: root!.namespaceUri,
+    );
+    if (color == null) return rgb.isEmpty;
+    if (_attribute(color, 'theme') != null ||
+        _attribute(color, 'indexed') != null ||
+        _attribute(color, 'tint') != null ||
+        _attribute(color, 'auto') != null) {
+      return false;
+    }
+    return normalizeRgb(_attribute(color, 'rgb') ?? '') == rgb;
   }
 
   int _fontId({required String rgb, required bool bold, required double size}) {
@@ -702,7 +739,9 @@ class SmlStyleSheet {
             final changed = <String>[
               if (fontBolds[i] != fontBolds[base]) 'b',
               if (fontSizes[i] != fontSizes[base]) 'sz',
-              if (fontRgbs[i] != fontRgbs[base]) 'color',
+              if (_explicitFontColors.contains(i) ||
+                  fontRgbs[i] != fontRgbs[base])
+                'color',
             ];
             for (final key in changed) {
               final previous = template.firstChild(
@@ -998,9 +1037,9 @@ class SmlStyleSheet {
     }
 
     final int v = int.parse(rgb, radix: 16);
-    final String r = channel((v >> 16) & 0xFF)
-        .toRadixString(16)
-        .padLeft(2, '0');
+    final String r = channel(
+      (v >> 16) & 0xFF,
+    ).toRadixString(16).padLeft(2, '0');
     final String g = channel((v >> 8) & 0xFF).toRadixString(16).padLeft(2, '0');
     final String b = channel(v & 0xFF).toRadixString(16).padLeft(2, '0');
     return '$r$g$b'.toUpperCase();

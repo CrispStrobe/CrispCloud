@@ -56,6 +56,15 @@
     "build/fidelity-host/margins-noop-1.docx",
     "build/fidelity-host/margins-noop-2.docx",
     "build/fidelity-host/margins-noop-3.docx",
+    "build/fidelity-host/native-sheet-1.xlsx",
+    "build/fidelity-host/native-sheet-2.xlsx",
+    "build/fidelity-host/native-sheet-3.xlsx",
+    "build/fidelity-host/native-slide-1.pptx",
+    "build/fidelity-host/native-slide-2.pptx",
+    "build/fidelity-host/native-slide-3.pptx",
+    "build/fidelity-host/native-word-1.docx",
+    "build/fidelity-host/native-word-2.docx",
+    "build/fidelity-host/native-word-3.docx",
     "build/fidelity-host/paragraph-edit-1.docx",
     "build/fidelity-host/paragraph-edit-2.docx",
     "build/fidelity-host/paragraph-edit-3.docx",
@@ -138,5 +147,22 @@
     "build/fidelity-host/word-picture-square-2.docx",
     "build/fidelity-host/word-picture-square-3.docx",
     "build/fidelity/unchanged-controller.docx"
+  ],
+  "references": [
+    {
+      "path": "build/fidelity-host/reference/native-word-expected.docx",
+      "fixture": "test/fixtures/office_native_workflows/native-word-expected.docx",
+      "sha256": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3"
+    },
+    {
+      "path": "build/fidelity-host/reference/native-sheet-expected.xlsx",
+      "fixture": "test/fixtures/office_native_workflows/native-sheet-expected.xlsx",
+      "sha256": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3"
+    },
+    {
+      "path": "build/fidelity-host/reference/native-slide-expected.pptx",
+      "fixture": "test/fixtures/office_native_workflows/native-slide-expected.pptx",
+      "sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1"
+    }
   ]
 }

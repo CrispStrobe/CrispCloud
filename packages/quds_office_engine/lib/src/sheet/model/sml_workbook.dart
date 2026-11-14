@@ -195,7 +195,8 @@ class SmlCell {
     this.hasExplicitStyleIndex = false,
     this.horizontalAlign = SmlHAlign.general,
     this.fillRgb = '',
-    this.fontRgb = '',
+    this._fontRgb = '',
+    this.hasExplicitFontColorEdit = false,
     this.fontBold = false,
     this.fontSize = 11,
     this.borderRgb = '',
@@ -228,8 +229,20 @@ class SmlCell {
   /// Solid fill as `RRGGBB`; empty means no fill.
   String fillRgb;
 
+  String _fontRgb;
+
   /// Font color as `RRGGBB`; empty means the theme default.
-  String fontRgb;
+  /// Assigning it explicitly replaces a native theme/indexed color even when
+  /// its currently resolved RGB is equal to the requested color.
+  String get fontRgb => _fontRgb;
+  set fontRgb(String value) {
+    _fontRgb = value;
+    hasExplicitFontColorEdit = true;
+  }
+
+  /// Whether the color was explicitly assigned after import. Importers and
+  /// history/copy operations restore this provenance along with [fontRgb].
+  bool hasExplicitFontColorEdit;
 
   /// fontBold API.
   bool fontBold;

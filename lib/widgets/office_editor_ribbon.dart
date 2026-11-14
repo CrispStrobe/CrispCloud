@@ -182,7 +182,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     if (widget.kind == OfficeEditorKind.word)
       _menuItem('Page setup…', _pageSetupMenu, icon: Icons.tune),
     const Divider(height: 1),
-    _menuItem('Close editor', widget.onClose, icon: Icons.close),
+    _menuItem(
+      'Close editor',
+      widget.saving ? null : widget.onClose,
+      icon: Icons.close,
+    ),
   ];
 
   List<Widget> _editMenu(ThemeData theme) => <Widget>[
@@ -655,7 +659,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-            onPressed: widget.onClose,
+            onPressed: widget.saving ? null : widget.onClose,
             icon: const Icon(Icons.close),
           ),
           if (widget.onSaveCopy != null)

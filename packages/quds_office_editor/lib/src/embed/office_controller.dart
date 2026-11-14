@@ -11811,6 +11811,7 @@ class _SheetGridSnap {
             horizontalAlign: cell.horizontalAlign,
             fillRgb: cell.fillRgb,
             fontRgb: cell.fontRgb,
+            hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
             fontBold: cell.fontBold,
             fontSize: cell.fontSize,
           ),
@@ -11849,6 +11850,7 @@ class _SheetGridSnap {
         ..horizontalAlign = cell.horizontalAlign
         ..fillRgb = cell.fillRgb
         ..fontRgb = cell.fontRgb
+        ..hasExplicitFontColorEdit = cell.hasExplicitFontColorEdit
         ..fontBold = cell.fontBold
         ..fontSize = cell.fontSize;
     }

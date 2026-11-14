@@ -52,3 +52,17 @@ Open PR review found only CrispCloud #104, whose `542c1c8b` head is included.
 
 No additional PRs or release tags were created. Recent topic branches were not
 deleted, and existing queued release builds were not cancelled or restarted.
+
+Subsequent arrivals were integrated too: binary comparison `e52ea1f9`, host
+Office `d6013345`, and canonical Office evidence `ac4889d`. Quds main is now
+`f9512763`. The final arrival-specific native cohort passes 173 tests, including
+reusable-buffer scans, protected imports, ribbon state and queued file
+operations. The expanded Office record retains independent LibreOffice and
+actual browser-download acceptance. GitHub marked PR #104 merged when its head
+became an ancestor of main; its branch was retained.
+
+The final remote-head check at **17:49 UTC** also found and incorporated Office
+`1945a513` and binary comparison `26b5db21`. These retain the final fixture
+corrections and source-bound validation records. The expanded comparison cohort
+passes **29 tests in installed Chrome**. All other audited repositories still
+have the main checkpoints listed above; no additional branches were deleted.
