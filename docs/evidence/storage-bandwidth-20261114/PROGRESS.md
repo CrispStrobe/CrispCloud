@@ -53,3 +53,18 @@ unchanged original lockfile.
 Every coherent increment is saved remotely as an ordinary descendant commit.
 This initial checkpoint contains the scope and prior hosted evidence only;
 no new bandwidth implementation or passing gate is claimed yet.
+
+## Implementation checkpoint
+
+The allocator, captured queue context, finalized HTTP request and response
+hooks, persistent policy owner, Network settings and Activity controls are now
+implemented. The independent allocator driver has passed 24 deterministic
+cases on Dart VM and the same 24 cases after actual JavaScript compilation and
+execution. Scoped analysis is clean for the allocator and UI-owned files.
+These are working-tree development checks; source-bound qualification follows
+a saved implementation revision.
+
+The restored native toolchain has completed a 22-case queue/control/logical
+limiter warmup. The new queue, HTTP and widget cohorts are still being checked;
+this checkpoint does not claim their acceptance. Native HTTP tests and the
+final coverage document will be saved in a subsequent checkpoint.

@@ -49,6 +49,7 @@ import '../utils/async_lock.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'panel_provider.dart';
+import 'transfer_bandwidth_provider.dart';
 import '../services/provider_workflow_failure.dart';
 
 class TransferNotifier extends ChangeNotifier {
@@ -60,7 +61,7 @@ class TransferNotifier extends ChangeNotifier {
     if (!_disposed) super.notifyListeners();
   }
 
-  final TransferQueue _queue = TransferQueue();
+  late final TransferQueue _queue;
   final List<OperationProgress> _operations = [];
   final Map<String, FileOperationControl> _fileOperationControls = {};
   final Map<String, StreamSubscription<void>> _controlSubscriptions = {};
@@ -83,6 +84,11 @@ class TransferNotifier extends ChangeNotifier {
 
   TransferNotifier(this._ref) {
     _journal = _ref.read(transferJournalProvider);
+    final bandwidth = _ref.read(transferBandwidthProvider);
+    _queue = TransferQueue(
+      bandwidth: bandwidth.allocator,
+      bandwidthReady: () => bandwidth.ready,
+    );
     _queue.addListener(_queueChanged);
     ready = _restore();
   }

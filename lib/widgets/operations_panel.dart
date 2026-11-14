@@ -16,6 +16,7 @@ import 'transfer_history_dialog.dart';
 import 'archive_job_recovery_dialog.dart';
 import 'transfer_file_details.dart';
 import 'transfer_schedule_dialog.dart';
+import 'transfer_bandwidth_dialog.dart';
 
 enum _QueueFilter { active, queued, attention, finished, all }
 
@@ -333,6 +334,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                           for (final operation in operations)
                             if (_canCancel(states[operation.id]!)) operation.id,
                         ]),
+                        const TransferBandwidthTrafficSummary(),
                         const SizedBox(height: 4),
                         _buildFilters(context, operations, states, order),
                         const SizedBox(height: 6),
@@ -557,6 +559,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
         icon: const Icon(Icons.history),
         label: Text(context.commanderTr('History and recovery')),
       ),
+      const TransferBandwidthActionButton(),
       Wrap(
         spacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,

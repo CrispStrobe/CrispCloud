@@ -1,8 +1,12 @@
 import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/models/transfer_queue_summary.dart';
 import 'package:crisp_cloud/providers/transfer_provider.dart';
+import 'package:crisp_cloud/providers/transfer_bandwidth_provider.dart';
+import 'package:crisp_storage/crisp_storage.dart'
+    show TransferBandwidthAllocator, TransferBandwidthDirection;
 import 'package:crisp_cloud/services/file_operation_options.dart';
 import 'package:crisp_cloud/utils/formatters.dart' show formatBytes;
 import 'package:crisp_cloud/widgets/operations_panel.dart';
@@ -192,15 +196,36 @@ void main() {
     WidgetTester tester,
     _Transfers transfers, {
     Size size = const Size(1100, 1000),
+    TransferBandwidthController? bandwidth,
+    String language = 'en',
+    double textScale = 1,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final policy =
+        bandwidth ??
+        TransferBandwidthController(readSettings: () async => null);
+    addTearDown(policy.dispose);
+    await policy.ready;
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [transferProvider.overrideWith((ref) => transfers)],
-        child: const MaterialApp(home: Scaffold(body: OperationsPanel())),
+        overrides: [
+          transferProvider.overrideWith((ref) => transfers),
+          transferBandwidthProvider.overrideWith((ref) => policy),
+        ],
+        child: MaterialApp(
+          locale: Locale(language),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: const Scaffold(body: OperationsPanel()),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -636,4 +661,116 @@ void main() {
     expect(transfers.queuePaused, isFalse);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'covered HTTP counters stay separate from logical queue progress',
+    (tester) async {
+      var now = Duration.zero;
+      final allocator = TransferBandwidthAllocator(clock: () => now);
+      final policy = TransferBandwidthController(
+        allocator: allocator,
+        readSettings: () async => null,
+      );
+      await policy.ready;
+      final job = allocator.openContext('payload');
+      addTearDown(job.close);
+      await job
+          .bind(
+            Stream.value(List<int>.filled(1024, 1)),
+            direction: TransferBandwidthDirection.upload,
+          )
+          .drain<void>();
+      await job
+          .bind(
+            Stream.value(List<int>.filled(2048, 2)),
+            direction: TransferBandwidthDirection.download,
+          )
+          .drain<void>();
+      job.markUnsupported(TransferBandwidthDirection.upload);
+      final transfers = _Transfers(
+        rows: [_operation('running')],
+        running: {'running'},
+        summary: const TransferQueueSummary(
+          running: 1,
+          totalBytes: 100,
+          transferredBytes: 25,
+          bytesPerSecond: 999,
+        ),
+      );
+      await show(tester, transfers, bandwidth: policy);
+      now = const Duration(milliseconds: 250);
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.byKey(const ValueKey('queue-bandwidth')), findsOneWidget);
+      expect(find.byKey(const ValueKey('queue-byte-summary')), findsOneWidget);
+      expect(find.text('25 B / 100 B'), findsOneWidget);
+      expect(find.byKey(const ValueKey('queue-speed-summary')), findsOneWidget);
+      final up = tester
+          .widget<Text>(find.byKey(const ValueKey('queue-http-upload')))
+          .data!;
+      final down = tester
+          .widget<Text>(find.byKey(const ValueKey('queue-http-download')))
+          .data!;
+      expect(up, contains(formatBytes(1024)));
+      expect(down, contains(formatBytes(2048)));
+      expect(up, contains('this session'));
+      expect(
+        find.byKey(const ValueKey('queue-http-unsupported')),
+        findsOneWidget,
+      );
+      now = const Duration(seconds: 3);
+      await tester.pump(const Duration(seconds: 2));
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('queue-http-upload')))
+            .data,
+        startsWith('Upload: 0 B/s'),
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('queue-http-download')))
+            .data,
+        startsWith('Download: 0 B/s'),
+      );
+      expect(policy.snapshot.uploadBytes, 1024);
+      expect(policy.snapshot.downloadBytes, 2048);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final language in ['de', 'ar']) {
+    testWidgets(
+      'covered HTTP summary stays scrollable in narrow enlarged $language Activity',
+      (tester) async {
+        final policy = TransferBandwidthController(
+          readSettings: () async => null,
+          writeSettings: (_) async => true,
+        );
+        await policy.ready;
+        await policy.updateLimits(
+          const TransferBandwidthLimits(
+            uploadBytesPerSecond: 1024,
+            downloadBytesPerSecond: 2048,
+          ),
+        );
+        await show(
+          tester,
+          _Transfers(rows: [_operation('running')], running: {'running'}),
+          bandwidth: policy,
+          language: language,
+          textScale: 2,
+          size: const Size(320, 800),
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('queue-http-traffic')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('queue-http-upload')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('queue-http-download')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }
