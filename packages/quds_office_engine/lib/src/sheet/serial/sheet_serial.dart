@@ -32,6 +32,7 @@ class SheetDeserializer {
 
   /// read API.
   SmlWorkbook read(OpcPackage package) {
+    package.assertUnsignedForEditing();
     final SharedStringTable sst =
         package.getPart('/xl/sharedStrings.xml') == null
         ? SharedStringTable()
@@ -674,6 +675,7 @@ class SheetSerializer {
 
   /// write API.
   OpcPackage write(SmlWorkbook book, {bool recalculate = true}) {
+    book.package?.assertUnsignedForEditing();
     book.applyResolvedColumnMetrics();
     if (recalculate) {
       FormulaDepGraph(book).recalculate();
@@ -892,13 +894,9 @@ class SheetSerializer {
     final SmlStyleSheet styles = book.styles ?? SmlStyleSheet();
     for (final SmlWorksheet sheet in book.sheets) {
       for (final SmlCell cell in sheet.allCells) {
-        if (cell.horizontalAlign == SmlHAlign.general &&
-            cell.fillRgb.isEmpty &&
-            cell.fontRgb.isEmpty &&
-            !cell.fontBold &&
-            cell.fontSize == 11) {
-          continue;
-        }
+        // Defaults can be an intentional edit away from an imported style.
+        // xfFor returns the original index when the modeled properties match,
+        // retaining explicit style presence and native inherited properties.
         cell.styleIndex = styles.xfFor(
           baseStyleIndex: cell.styleIndex,
           align: cell.horizontalAlign,

@@ -39,8 +39,9 @@ class SmlColumnMetrics {
 }
 
 /// Return null when the requested font cannot be resolved reliably.
-typedef SmlColumnMetricsResolver =
-    SmlColumnMetrics? Function(SmlNormalFont normalFont);
+typedef SmlColumnMetricsResolver = SmlColumnMetrics? Function(
+  SmlNormalFont normalFont,
+);
 
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
@@ -189,9 +190,9 @@ class SmlStyleSheet {
 
   /// Reads the Latin major/minor theme faces used for the ten ASCII digits.
   static Map<String, String> parseThemeFontFamilies(String xml) {
-    final scheme = XmlDocument.parse(
-      xml,
-    ).root?.firstChild('themeElements')?.firstChild('fontScheme');
+    final scheme = XmlDocument.parse(xml).root
+        ?.firstChild('themeElements')
+        ?.firstChild('fontScheme');
     return <String, String>{
       for (final kind in ['major', 'minor'])
         if (scheme
@@ -221,104 +222,80 @@ class SmlStyleSheet {
       themeColors: themeColors,
       themeFontFamilies: themeFontFamilies,
     );
-    final XmlPullReader reader = XmlPullReader(xml);
-    var inCellXfs = false;
-    var inCellStyleXfs = false;
-    var inFills = false;
-    var inFonts = false;
-    var currentFill = '';
-    var currentFont = '';
-    var currentBold = false;
-    var currentSize = 11.0;
-    while (reader.next()) {
-      if (reader.eventType == XmlEventType.endElement) {
-        if (reader.localName == 'cellXfs') {
-          inCellXfs = false;
-        } else if (reader.localName == 'cellStyleXfs') {
-          inCellStyleXfs = false;
-        } else if (reader.localName == 'fills') {
-          inFills = false;
-        } else if (reader.localName == 'fonts') {
-          inFonts = false;
-        } else if (reader.localName == 'fill' && inFills) {
-          sheet.fillRgbs.add(currentFill);
-          currentFill = '';
-        } else if (reader.localName == 'font' && inFonts) {
-          sheet.fontRgbs.add(currentFont);
-          sheet.fontBolds.add(currentBold);
-          sheet.fontSizes.add(currentSize);
-          currentFont = '';
-          currentBold = false;
-          currentSize = 11;
-        }
-        continue;
-      }
-      if (reader.eventType != XmlEventType.startElement) {
-        continue;
-      }
-      if (reader.localName == 'cellStyleXfs') {
-        inCellStyleXfs = true;
-      } else if (reader.localName == 'cellXfs') {
-        inCellXfs = !inCellStyleXfs;
-      } else if (reader.localName == 'fills') {
-        inFills = true;
-      } else if (reader.localName == 'fonts') {
-        inFonts = true;
-      } else if (reader.localName == 'numFmt') {
-        final int id = int.parse(reader.getAttribute('numFmtId') ?? '0');
-        sheet.numFmts[id] = reader.getAttribute('formatCode') ?? 'General';
-      } else if (inFills && reader.localName == 'fill') {
-        currentFill = '';
-      } else if (inFills &&
-          (reader.localName == 'fgColor' || reader.localName == 'bgColor')) {
-        final String resolved = resolveColor(
-          rgb: reader.getAttribute('rgb'),
-          theme: reader.getAttribute('theme'),
-          indexed: reader.getAttribute('indexed'),
-          tint: reader.getAttribute('tint'),
-          themeColors: sheet.themeColors,
-        );
-        if (resolved.isNotEmpty &&
-            (reader.localName == 'fgColor' || currentFill.isEmpty)) {
-          currentFill = resolved;
-        }
-      } else if (inFonts && reader.localName == 'font') {
-        currentFont = '';
-        currentBold = false;
-        currentSize = 11;
-      } else if (inFonts && reader.localName == 'b') {
-        final String? val = reader.getAttribute('val');
-        currentBold = val == null || val == '1' || val.toLowerCase() == 'true';
-      } else if (inFonts && reader.localName == 'sz') {
-        currentSize = double.tryParse(reader.getAttribute('val') ?? '') ?? 11;
-      } else if (inFonts && reader.localName == 'color') {
-        currentFont = resolveColor(
-          rgb: reader.getAttribute('rgb'),
-          theme: reader.getAttribute('theme'),
-          indexed: reader.getAttribute('indexed'),
-          tint: reader.getAttribute('tint'),
-          themeColors: sheet.themeColors,
-        );
-      } else if (inCellXfs && reader.localName == 'xf') {
-        sheet.cellXfsNumFmt.add(
-          int.parse(reader.getAttribute('numFmtId') ?? '0'),
-        );
-        sheet.cellXfsAlign.add(SmlHAlign.general);
-        sheet.cellXfsFillId.add(
-          int.tryParse(reader.getAttribute('fillId') ?? '0') ?? 0,
-        );
-        sheet.cellXfsFontId.add(
-          int.tryParse(reader.getAttribute('fontId') ?? '0') ?? 0,
-        );
-      } else if (inCellXfs &&
-          reader.localName == 'alignment' &&
-          sheet.cellXfsAlign.isNotEmpty) {
-        sheet.cellXfsAlign[sheet.cellXfsAlign.length - 1] = parseHAlign(
-          reader.getAttribute('horizontal'),
-        );
+    // The source tree is retained for lossless merging, so read the modeled
+    // subset from that same tree. Only direct SpreadsheetML children are
+    // indices; extension elements with familiar local names are not styles.
+    final source = XmlDocument.parse(xml);
+    sheet._source = source;
+    final root = source.root;
+    if (root == null) return sheet;
+    final namespace = root.namespaceUri;
+    Iterable<XmlElement> entries(String container, String name) =>
+        root
+            .firstChild(container, namespaceUri: namespace)
+            ?.childrenNamed(name, namespaceUri: namespace) ??
+        const <XmlElement>[];
+
+    String color(XmlElement? element) => resolveColor(
+      rgb: element == null ? null : _attribute(element, 'rgb'),
+      theme: element == null ? null : _attribute(element, 'theme'),
+      indexed: element == null ? null : _attribute(element, 'indexed'),
+      tint: element == null ? null : _attribute(element, 'tint'),
+      themeColors: sheet.themeColors,
+    );
+
+    for (final format in entries('numFmts', 'numFmt')) {
+      final id = int.tryParse(_attribute(format, 'numFmtId') ?? '');
+      if (id != null) {
+        sheet.numFmts[id] = _attribute(format, 'formatCode') ?? 'General';
       }
     }
-    sheet._source = XmlDocument.parse(xml);
+    for (final fill in entries('fills', 'fill')) {
+      final pattern = fill.firstChild('patternFill', namespaceUri: namespace);
+      final foreground = color(
+        pattern?.firstChild('fgColor', namespaceUri: namespace),
+      );
+      sheet.fillRgbs.add(
+        foreground.isNotEmpty
+            ? foreground
+            : color(pattern?.firstChild('bgColor', namespaceUri: namespace)),
+      );
+    }
+    for (final font in entries('fonts', 'font')) {
+      final bold = font.firstChild('b', namespaceUri: namespace);
+      final enabled = bold == null ? null : _attribute(bold, 'val');
+      final size = font.firstChild('sz', namespaceUri: namespace);
+      sheet.fontRgbs.add(
+        color(font.firstChild('color', namespaceUri: namespace)),
+      );
+      sheet.fontBolds.add(
+        bold != null &&
+            (enabled == null ||
+                enabled == '1' ||
+                enabled.toLowerCase() == 'true'),
+      );
+      sheet.fontSizes.add(
+        double.tryParse(size == null ? '' : _attribute(size, 'val') ?? '') ??
+            11,
+      );
+    }
+    for (final format in entries('cellXfs', 'xf')) {
+      sheet.cellXfsNumFmt.add(
+        int.tryParse(_attribute(format, 'numFmtId') ?? '') ?? 0,
+      );
+      final alignment = format.firstChild('alignment', namespaceUri: namespace);
+      sheet.cellXfsAlign.add(
+        parseHAlign(
+          alignment == null ? null : _attribute(alignment, 'horizontal'),
+        ),
+      );
+      sheet.cellXfsFillId.add(
+        int.tryParse(_attribute(format, 'fillId') ?? '') ?? 0,
+      );
+      sheet.cellXfsFontId.add(
+        int.tryParse(_attribute(format, 'fontId') ?? '') ?? 0,
+      );
+    }
     return sheet;
   }
 
@@ -673,7 +650,7 @@ class SmlStyleSheet {
       if (align != SmlHAlign.general) {
         buf.write(
           ' applyAlignment="1">'
-          '<alignment horizontal="${hAlignName(align)}" vertical="center"/>'
+          '<alignment horizontal="${hAlignName(align)}"/>'
           '</xf>',
         );
       } else {
@@ -687,80 +664,231 @@ class SmlStyleSheet {
       return generated.toXmlString();
     }
     final result = XmlDocument.parse(_source!.toXmlString());
-    for (final name in ['fonts', 'fills', 'cellXfs']) {
-      final old = result.root!.firstChild(name);
-      final fresh = generated.root!.firstChild(name)!;
+    final root = result.root!;
+    final namespace = root.namespaceUri;
+    for (final (name, entryName) in [
+      ('fonts', 'font'),
+      ('fills', 'fill'),
+      ('cellXfs', 'xf'),
+    ]) {
+      final old = root.firstChild(name, namespaceUri: namespace);
+      final fresh = generated.root!.firstChild(
+        name,
+        namespaceUri: generated.root!.namespaceUri,
+      )!;
       if (old == null) {
-        result.root!.addChild(fresh.copy());
+        _insertStyleCollection(root, _generatedCopy(fresh, namespace));
         continue;
       }
-      final count = old.childElements.length;
-      final generatedEntries = fresh.childElements.toList();
-      for (int i = count; i < generatedEntries.length; i++) {
-        XmlElement entry = generatedEntries[i].copy();
+      final oldEntries = old
+          .childrenNamed(entryName, namespaceUri: namespace)
+          .toList();
+      final generatedEntries = fresh.childrenNamed(
+        entryName,
+        namespaceUri: fresh.namespaceUri,
+      );
+      for (int i = oldEntries.length; i < generatedEntries.length; i++) {
+        XmlElement entry = _generatedCopy(generatedEntries[i], namespace);
         final base = name == 'fonts'
             ? _fontBases[i]
             : name == 'cellXfs'
             ? _xfBases[i]
             : null;
-        if (base != null && base < old.childElements.length) {
-          final template = old.childElements.elementAt(base).copy();
+        if (base != null && base >= 0 && base < oldEntries.length) {
+          final template = oldEntries[base].copy();
           if (name == 'fonts') {
-            for (final key in ['b', 'sz', 'color']) {
-              template.children.removeWhere(
-                (n) => n is XmlElement && n.localName == key,
+            // A bold edit must not materialize a theme color as fixed RGB or
+            // replace an imported size/property which the user did not edit.
+            final changed = <String>[
+              if (fontBolds[i] != fontBolds[base]) 'b',
+              if (fontSizes[i] != fontSizes[base]) 'sz',
+              if (fontRgbs[i] != fontRgbs[base]) 'color',
+            ];
+            for (final key in changed) {
+              final previous = template.firstChild(
+                key,
+                namespaceUri: namespace,
               );
-              for (final child in entry.childrenNamed(key)) {
-                template.addChild(child.copy());
+              final replacement = entry.firstChild(
+                key,
+                namespaceUri: namespace,
+              );
+              if (previous != null && (replacement != null || key == 'b')) {
+                // Preserve extension attributes and children attached to the
+                // property which is changing, as well as unrelated properties.
+                final attributes = key == 'color'
+                    ? const ['rgb', 'theme', 'indexed', 'tint', 'auto']
+                    : const ['val'];
+                previous.attributes.removeWhere(
+                  (attribute) =>
+                      attribute.prefix.isEmpty &&
+                      attribute.namespaceUri.isEmpty &&
+                      attributes.contains(attribute.localName),
+                );
+                if (replacement == null) {
+                  _setAttribute(previous, 'val', '0');
+                } else {
+                  for (final attribute in replacement.attributes) {
+                    if (attribute.prefix.isEmpty &&
+                        attribute.namespaceUri.isEmpty &&
+                        attributes.contains(attribute.localName)) {
+                      _setAttribute(
+                        previous,
+                        attribute.localName,
+                        attribute.value,
+                      );
+                    }
+                  }
+                }
+              } else if (replacement != null) {
+                template.addChild(_generatedCopy(replacement, namespace));
+              } else {
+                template.children.remove(previous);
               }
             }
             _orderFontChildren(template);
           } else {
-            for (final key in [
-              'fontId',
-              'fillId',
-              'numFmtId',
-              'applyFont',
-              'applyFill',
-              'applyAlignment',
-            ]) {
-              final value = entry.getAttribute(key);
-              if (value != null) template.setAttribute(key, value);
+            if (cellXfsFontId[i] != cellXfsFontId[base]) {
+              _setAttribute(template, 'fontId', '${cellXfsFontId[i]}');
+              _setAttribute(template, 'applyFont', '1');
             }
-            final alignment = template.firstChild('alignment');
-            final generatedAlignment = entry.firstChild('alignment');
-            if (alignment != null) {
-              alignment.setAttribute(
-                'horizontal',
-                generatedAlignment?.getAttribute('horizontal') ?? 'general',
+            if (cellXfsFillId[i] != cellXfsFillId[base]) {
+              _setAttribute(template, 'fillId', '${cellXfsFillId[i]}');
+              _setAttribute(template, 'applyFill', '1');
+            }
+            if (cellXfsAlign[i] != cellXfsAlign[base]) {
+              _setAttribute(template, 'applyAlignment', '1');
+              final alignment = template.firstChild(
+                'alignment',
+                namespaceUri: namespace,
               );
-            } else if (generatedAlignment != null) {
-              template.addChild(generatedAlignment.copy());
+              if (alignment != null) {
+                _setAttribute(
+                  alignment,
+                  'horizontal',
+                  hAlignName(cellXfsAlign[i]),
+                );
+              } else {
+                final alignment = _generatedCopy(
+                  XmlElement(localName: 'alignment', namespaceUri: namespace),
+                  namespace,
+                );
+                _setAttribute(
+                  alignment,
+                  'horizontal',
+                  hAlignName(cellXfsAlign[i]),
+                );
+                // CT_Xf places alignment before protection and extLst.
+                final after = template.children.indexWhere(
+                  (node) =>
+                      node is XmlElement &&
+                      node.namespaceUri == namespace &&
+                      (node.localName == 'protection' ||
+                          node.localName == 'extLst'),
+                );
+                alignment.parent = template;
+                template.children.insert(
+                  after < 0 ? template.children.length : after,
+                  alignment,
+                );
+              }
             }
           }
           entry = template;
         }
         old.addChild(entry);
+        oldEntries.add(entry);
       }
-      old.setAttribute('count', '${old.childElements.length}');
+      _setAttribute(old, 'count', '${oldEntries.length}');
     }
     _orderFonts(result);
     return result.toXmlString();
   }
 
+  // XmlElement's convenience accessor also matches foreign attributes unless
+  // a namespace is supplied. Require an unprefixed name for native attributes;
+  // namespace declarations themselves are not SpreadsheetML attributes.
+  static String? _attribute(XmlElement element, String name) {
+    for (final attribute in element.attributes) {
+      if (attribute.localName == name &&
+          attribute.prefix.isEmpty &&
+          attribute.namespaceUri.isEmpty) {
+        return attribute.value;
+      }
+    }
+    return null;
+  }
+
+  static void _setAttribute(XmlElement element, String name, String value) {
+    for (final attribute in element.attributes) {
+      if (attribute.localName == name &&
+          attribute.prefix.isEmpty &&
+          attribute.namespaceUri.isEmpty) {
+        attribute.value = value;
+        return;
+      }
+    }
+    element.attributes.add(XmlAttribute(localName: name, value: value));
+  }
+
+  // The XML writer emits lexical names, not namespaceUri. A generated subtree
+  // needs its own default binding when inserted into a prefixed source or a
+  // source whose default namespace was rebound by an extension. Binding at
+  // the inserted root leaves the original prefix scopes untouched.
+  static XmlElement _generatedCopy(XmlElement source, String namespace) {
+    final copy = source.copy();
+    void bind(XmlElement element) {
+      element
+        ..prefix = ''
+        ..namespaceUri = namespace;
+      for (final child in element.childElements) {
+        bind(child);
+      }
+    }
+
+    bind(copy);
+    _setAttribute(copy, 'xmlns', namespace);
+    return copy;
+  }
+
+  static void _insertStyleCollection(XmlElement root, XmlElement collection) {
+    const order = [
+      'numFmts',
+      'fonts',
+      'fills',
+      'borders',
+      'cellStyleXfs',
+      'cellXfs',
+      'cellStyles',
+      'dxfs',
+      'tableStyles',
+      'colors',
+      'extLst',
+    ];
+    final rank = order.indexOf(collection.localName);
+    final after = root.children.indexWhere(
+      (node) =>
+          node is XmlElement &&
+          node.namespaceUri == root.namespaceUri &&
+          order.indexOf(node.localName) > rank,
+    );
+    collection.parent = root;
+    root.children.insert(after < 0 ? root.children.length : after, collection);
+  }
+
   // Some import producers emit the same properties in a non-schema order.
-  // Normalize their sequence without changing the properties themselves.
+  // Normalize native properties without rewriting foreign extension nodes.
   static void _orderFonts(XmlDocument document) {
+    final root = document.root!;
     for (final font
-        in document.root!.firstChild('fonts')?.childrenNamed('font') ??
+        in root
+                .firstChild('fonts', namespaceUri: root.namespaceUri)
+                ?.childrenNamed('font', namespaceUri: root.namespaceUri) ??
             <XmlElement>[]) {
       _orderFontChildren(font);
     }
   }
 
-  // CT_Font is an ordered sequence. Updating only the supported properties
-  // must retain imported family/charset/italic/underline/scheme properties
-  // while inserting b, color and sz at their schema positions.
   static void _orderFontChildren(XmlElement font) {
     const order = <String>[
       'b',
@@ -779,19 +907,26 @@ class SmlStyleSheet {
       'charset',
       'scheme',
     ];
-    int rank(XmlNode node) {
-      final index = node is XmlElement ? order.indexOf(node.localName) : -1;
+    int rank(XmlElement node) {
+      final index = order.indexOf(node.localName);
       return index < 0 ? order.length : index;
     }
 
-    final children = font.children.indexed.toList()
-      ..sort((a, b) {
-        final compared = rank(a.$2).compareTo(rank(b.$2));
-        return compared == 0 ? a.$1.compareTo(b.$1) : compared;
-      });
-    font.children
-      ..clear()
-      ..addAll(children.map((entry) => entry.$2));
+    final slots = <int>[
+      for (var i = 0; i < font.children.length; i++)
+        if (font.children[i] case final XmlElement child)
+          if (child.namespaceUri == font.namespaceUri) i,
+    ];
+    final children =
+        <(int, XmlElement)>[
+          for (final i in slots) (i, font.children[i] as XmlElement),
+        ]..sort((a, b) {
+          final compared = rank(a.$2).compareTo(rank(b.$2));
+          return compared == 0 ? a.$1.compareTo(b.$1) : compared;
+        });
+    for (var i = 0; i < slots.length; i++) {
+      font.children[slots[i]] = children[i].$2;
+    }
   }
 
   /// resolveColor API.
@@ -863,9 +998,9 @@ class SmlStyleSheet {
     }
 
     final int v = int.parse(rgb, radix: 16);
-    final String r = channel(
-      (v >> 16) & 0xFF,
-    ).toRadixString(16).padLeft(2, '0');
+    final String r = channel((v >> 16) & 0xFF)
+        .toRadixString(16)
+        .padLeft(2, '0');
     final String g = channel((v >> 8) & 0xFF).toRadixString(16).padLeft(2, '0');
     final String b = channel(v & 0xFF).toRadixString(16).padLeft(2, '0');
     return '$r$g$b'.toUpperCase();

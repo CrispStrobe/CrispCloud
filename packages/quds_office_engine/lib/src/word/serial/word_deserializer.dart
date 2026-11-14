@@ -2632,7 +2632,10 @@ class WordDeserializer {
     final settings = WordSettingsIo.read(part.readText());
     document
       ..trackRevisions = settings.tracking
-      ..restrictEditing = settings.protection;
+      ..restrictEditing = settings.protection
+      ..restrictMode = settings.restrictMode
+      ..protectionHasPassword = settings.protectionHasPassword
+      ..protectionFormattingRestricted = settings.protectionFormattingRestricted;
     for (final section in document.sections) {
       section.differentOddEven = settings.oddEven;
     }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/file_comparison_service.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
@@ -28,6 +29,9 @@ class _ObservedLocal extends LocalOperationBackend {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   test(
     'cloud navigation bounds a fallback range stream and closes at EOF',
     () async {

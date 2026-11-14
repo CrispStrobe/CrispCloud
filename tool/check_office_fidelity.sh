@@ -30,7 +30,9 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/recursive_search_service_test.dart \
   test/office_pdf_service_test.dart \
   test/widget/office_editor_dialog_test.dart \
+  test/widget/office_editor_lifecycle_test.dart \
   test/widget/office_editor_ribbon_test.dart \
+  test/widget/office_ribbon_state_test.dart \
   test/widget/office_paragraph_dialog_test.dart \
   test/widget/office_paragraph_fidelity_test.dart \
   test/widget/office_font_fidelity_test.dart \

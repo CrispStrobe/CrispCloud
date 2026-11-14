@@ -9,6 +9,7 @@ dart test \
   test/legacy_word_document_test.dart test/bounded_cfb_reader_test.dart \
   test/legacy_word_conversion_test.dart test/opc_word_kind_test.dart \
   test/word_package_preservation_test.dart test/zip_bounded_read_test.dart \
+  test/office_signed_package_guard_test.dart test/word_protection_mode_test.dart \
   test/drawing_line_style_test.dart \
   test/table_grid_steps_test.dart test/xml_namespace_capture_test.dart \
   test/word_contained_text_wrap_test.dart \
@@ -22,8 +23,10 @@ dart test \
   test/sheet_rename_fidelity_test.dart test/sheet_qualified_names_test.dart test/sheet_qualified_name_error_test.dart \
   test/sheet_rename_adversarial_test.dart \
   test/sheet_formula_cache_fidelity_test.dart \
+  test/sheet_formula_dependency_cache_test.dart \
   test/sheet_normal_font_metrics_test.dart \
   test/sheet_explicit_style_fidelity_test.dart \
+  test/sheet_style_namespace_fidelity_test.dart \
   test/style_cascade_test.dart test/story_media_fidelity_test.dart \
   test/word_part_routing_test.dart test/sheet_schema_fidelity_test.dart \
   test/slide_text_fidelity_test.dart test/word_compatibility_fidelity_test.dart \

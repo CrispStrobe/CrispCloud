@@ -98,6 +98,7 @@ void main() {
         throw TimeoutException(reason);
       }
     } while (!await complete());
+    // Stalled-source cases deliberately keep an animated progress indicator.
     if (settle) await tester.pumpAndSettle();
   }
 

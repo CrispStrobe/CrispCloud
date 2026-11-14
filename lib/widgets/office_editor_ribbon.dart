@@ -51,6 +51,7 @@ class OfficeEditorRibbon extends StatefulWidget {
     required this.kind,
     required this.config,
     required this.onSave,
+    this.onSaveCopy,
     required this.onClose,
     required this.onConfigChanged,
     required this.onFind,
@@ -63,6 +64,7 @@ class OfficeEditorRibbon extends StatefulWidget {
   final OfficeEditorKind kind;
   final OfficeSurfaceConfig config;
   final VoidCallback onSave;
+  final VoidCallback? onSaveCopy;
   final VoidCallback onClose;
   final ValueChanged<OfficeSurfaceConfig> onConfigChanged;
   final VoidCallback onFind;
@@ -77,24 +79,16 @@ class OfficeEditorRibbon extends StatefulWidget {
 class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   int _tab = 0;
   bool _collapsed = false;
-  bool _trackChanges = false;
-  bool _wordProtected = false;
+  bool _protectionPending = false;
   bool _lineNumbers = false;
   bool _transitionAll = false;
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.kind == OfficeEditorKind.word) {
-      final WordEditorController word =
-          widget.controller as WordEditorController;
-      _trackChanges = word.document.trackRevisions;
-      _wordProtected = word.document.restrictEditing;
-    }
-  }
-
   OfficeController get _c => widget.controller;
   WordEditorController get _word => _c as WordEditorController;
+  bool get _trackChanges => _word.document.trackRevisions;
+  bool get _wordProtected => _word.document.restrictEditing;
+  bool get _canChangeProtection =>
+      !_protectionPending && _word.canChangeProtection;
   SheetEditorController get _sheet => _c as SheetEditorController;
   SlideEditorController get _slides => _c as SlideEditorController;
 
@@ -174,7 +168,17 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   List<Widget> _fileMenu(ThemeData theme) => <Widget>[
-    _menuItem('Save', widget.onSave, icon: Icons.save_outlined),
+    _menuItem(
+      'Save',
+      widget.saving ? null : widget.onSave,
+      icon: Icons.save_outlined,
+    ),
+    if (widget.onSaveCopy != null)
+      _menuItem(
+        'Save a copy',
+        widget.saving ? null : widget.onSaveCopy,
+        icon: Icons.save_as_outlined,
+      ),
     if (widget.kind == OfficeEditorKind.word)
       _menuItem('Page setup…', _pageSetupMenu, icon: Icons.tune),
     const Divider(height: 1),
@@ -463,13 +467,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _menuItem('Word count…', _wordCount, icon: Icons.analytics_outlined),
           _menuItem(
             _trackChanges ? 'Stop tracking changes' : 'Track changes',
-            _toggleTrackChanges,
+            _canMutate ? _toggleTrackChanges : null,
             icon: Icons.track_changes,
           ),
           const Divider(height: 1),
           _menuItem(
             _wordProtected ? 'Unprotect document' : 'Protect document',
-            _toggleProtect,
+            _canChangeProtection ? _toggleProtect : null,
             icon: Icons.lock_outline,
           ),
           _menuItem(
@@ -555,7 +559,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-            onPressed: widget.onClose,
+            onPressed: widget.saving ? null : widget.onClose,
             icon: const Icon(Icons.arrow_back_ios_new),
           ),
           if (widget.title.isNotEmpty)
@@ -654,6 +658,15 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             onPressed: widget.onClose,
             icon: const Icon(Icons.close),
           ),
+          if (widget.onSaveCopy != null)
+            IconButton(
+              tooltip: context.tr('Save a copy'),
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+              onPressed: widget.saving ? null : widget.onSaveCopy,
+              icon: const Icon(Icons.save_as_outlined),
+            ),
           const SizedBox(width: 2),
         ],
       ),
@@ -1068,6 +1081,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               _trackChanges ? 'Tracking on' : 'Track changes',
               _toggleTrackChanges,
               active: _trackChanges,
+              enabled: _canMutate,
             ),
           ]),
           _group('Protect', <Widget>[
@@ -1076,6 +1090,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               _wordProtected ? 'Protected' : 'Protect',
               _toggleProtect,
               active: _wordProtected,
+              enabled: _canChangeProtection,
             ),
           ]),
           _group('Language', <Widget>[
@@ -3183,25 +3198,39 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _toggleTrackChanges() {
-    setState(() => _trackChanges = !_trackChanges);
-    _word.setTrackRevisions(_trackChanges);
+    if (!_canMutate) return;
+    _word.setTrackRevisions(!_word.document.trackRevisions);
   }
 
   void _toggleProtect() async {
-    if (_wordProtected) {
-      _word.setRestrictEditing(false);
-      setState(() => _wordProtected = false);
+    if (!_canChangeProtection) return;
+    final controller = _word;
+    if (controller.document.restrictEditing) {
+      controller.setRestrictEditing(false);
       return;
     }
-    final bool confirmed = await showOfficeConfirm(
-      context,
-      title: context.tr('Protect document'),
-      message: context.tr('Prevent further edits to this document?'),
-      confirmLabel: context.tr('Protect'),
-    );
-    if (!confirmed) return;
-    _word.setRestrictEditing(true);
-    setState(() => _wordProtected = true);
+    if (!_canMutate) return;
+    final revision = controller.contentRevision;
+    setState(() => _protectionPending = true);
+    try {
+      final bool confirmed = await showOfficeConfirm(
+        context,
+        title: context.tr('Protect document'),
+        message: context.tr('Prevent further edits to this document?'),
+        confirmLabel: context.tr('Protect'),
+      );
+      if (!confirmed ||
+          !mounted ||
+          !identical(widget.controller, controller) ||
+          controller.contentRevision != revision ||
+          !controller.canChangeProtection ||
+          !controller.config.allowsMutation) {
+        return;
+      }
+      controller.setRestrictEditing(true);
+    } finally {
+      if (mounted) setState(() => _protectionPending = false);
+    }
   }
 
   void _spellCheck() {

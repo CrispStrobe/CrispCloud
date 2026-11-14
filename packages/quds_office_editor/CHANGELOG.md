@@ -4,6 +4,13 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Make Word protection changes undoable and revision-tracked. Host configuration
+  updates retain native document restrictions, and protection history can undo
+  its own read-only transition without allowing ordinary document edits.
+  Password-protected imports cannot be unprotected without verification;
+  comments/forms/tracked-only restrictions remain conservatively read-only.
+  Loading another Word document clears history belonging to the previous one.
+
 - Expose worksheet renaming through shared atomic reference rewriting and one
   undo/redo command. Commit pending drafts before planning, retain later edits
   through save/undo, and keep read-only, unchanged and rejected operations out

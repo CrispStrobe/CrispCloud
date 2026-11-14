@@ -31,6 +31,21 @@ class CommandPipeline {
   /// canRedo API.
   bool get canRedo => _redo.isNotEmpty;
 
+  /// Next history command, allowing a controller to gate restricted history.
+  OfficeCommand? get nextUndoCommand => _undo.isEmpty ? null : _undo.last;
+
+  /// Next redo command, without executing it.
+  OfficeCommand? get nextRedoCommand => _redo.isEmpty ? null : _redo.last;
+
+  /// Discards history when replacing the document it belongs to.
+  void clear() {
+    _undo.clear();
+    _redo.clear();
+    _batch.clear();
+    _batching = false;
+    _notify();
+  }
+
   /// addListener API.
   void addListener(void Function() listener) => _listeners.add(listener);
 

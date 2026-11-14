@@ -284,6 +284,53 @@ void main() {
     },
   );
 
+  for (final phase in [1, 2]) {
+    test(
+      'read errors in capture pass $phase do not await provider cleanup',
+      () async {
+        final backend = _PortableBackend([1, 2, 3, 4]);
+        final failure = StateError('portable read failure in pass $phase');
+        final cleanup = Completer<void>();
+        var cancellationRequested = false;
+        late final StreamController<List<int>> input;
+        input = StreamController<List<int>>(
+          onListen: () {
+            scheduleMicrotask(() {
+              input.add([1, 2]);
+              input.addError(failure);
+            });
+          },
+          onCancel: () {
+            cancellationRequested = true;
+            return cleanup.future;
+          },
+        );
+        backend.onRead = (call) =>
+            call == phase ? input.stream : Stream.value([1, 2, 3, 4]);
+        final pending = BinaryComparisonSnapshot.capture(backend, backend.item);
+        try {
+          await expectLater(
+            pending.timeout(const Duration(seconds: 3)),
+            throwsA(same(failure)),
+          );
+          expect(cancellationRequested, isTrue);
+          expect(cleanup.isCompleted, isFalse);
+          expect(backend.reads, phase);
+          expect(backend.writes, 0);
+        } finally {
+          cleanup.complete();
+          await input.close();
+          // Also settle an unexpectedly successful or timed-out capture so a
+          // failed regression cannot leave its owned copy or timer behind.
+          await pending.then<void>(
+            (snapshot) => snapshot.close(),
+            onError: (Object _, StackTrace _) {},
+          );
+        }
+      },
+    );
+  }
+
   test(
     'unknown-size verification cannot accept a shorter second pass',
     () async {

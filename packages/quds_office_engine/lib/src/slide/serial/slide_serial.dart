@@ -25,6 +25,7 @@ import 'slide_section_io.dart';
 class SlideDeserializer {
   /// read API.
   PmlPresentation read(OpcPackage package) {
+    package.assertUnsignedForEditing();
     final PmlPresentation pres = PmlPresentation(
       package: package,
       slides: <PmlSlide>[],
@@ -513,6 +514,7 @@ class SlideSerializer {
 
   /// write API.
   OpcPackage write(PmlPresentation pres) {
+    pres.package?.assertUnsignedForEditing();
     SlideSectionXml.validateForWrite(pres);
     for (final slide in pres.slides) {
       PmlArrange.validateGrouping(slide.shapes);

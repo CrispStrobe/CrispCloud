@@ -27,10 +27,11 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/captured_file_target.dart';
+import '../services/office_device_export.dart';
 import '../services/log_service.dart';
 import '../l10n/file_bytes_error_strings.dart';
-import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_recovery_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
@@ -85,6 +86,7 @@ Future<void> showOfficeEditorDialog(
   PanelSide side, {
   Uint8List? bytesOverride,
   CapturedFileTarget? targetOverride,
+  OfficeDeviceExporter copyExporter = exportOfficeCopy,
 }) {
   return showDialog<void>(
     context: context,
@@ -95,6 +97,7 @@ Future<void> showOfficeEditorDialog(
         side: side,
         bytesOverride: bytesOverride,
         targetOverride: targetOverride,
+        copyExporter: copyExporter,
       ),
     ),
   );
@@ -111,12 +114,16 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
   /// to its original storage even if the invoking pane has changed.
   final CapturedFileTarget? targetOverride;
 
+  /// Independent device-copy export; never changes the original save target.
+  final OfficeDeviceExporter copyExporter;
+
   const OfficeEditorDialog({
     super.key,
     required this.file,
     required this.side,
     this.bytesOverride,
     this.targetOverride,
+    this.copyExporter = exportOfficeCopy,
   });
 
   @override
@@ -131,6 +138,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   WordPackagePreservation? _wordPreservation;
   bool _loading = true;
   bool _saving = false;
+  bool _exporting = false;
+  bool _closing = false;
   bool _dirty = false;
   String? _error;
   final FocusNode _focusNode = FocusNode(debugLabel: 'QudsOfficeEditor');
@@ -221,11 +230,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       if (!mounted) return;
 
+      // Retain an immutable original even if safe-edit admission rejects it.
+      // Recovery must never run a refused package through a serializer.
+      _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
+
       final kind = _kindFor(widget.file.name);
       if (kind == OfficeEditorKind.unsupported) {
         setState(() {
           _loading = false;
-          _loadedBytes = bytes;
           _kind = kind;
         });
         return;
@@ -265,7 +277,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         controller.syncConfig(_config);
       }
       setState(() {
-        _loadedBytes = bytes;
         _controller = controller;
         _kind = kind;
         _dirty = controller?.isDirty ?? false;
@@ -279,7 +290,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _loading = false;
         _error =
             '${context.tr('Could not open this document')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedFileBytesError(context, e)}';
+            '${_localizedError(e)}';
       });
     }
   }
@@ -291,13 +302,18 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     setState(() => _dirty = dirty);
   }
 
+  String _localizedError(Object error) {
+    final locale = Localizations.localeOf(context);
+    return OfficeRecoveryStrings.error(locale.languageCode, error) ??
+        WordFormatStrings(locale).translate(error.toString()) ??
+        localizedFileBytesError(context, error);
+  }
+
   Future<void> _save({bool popAfter = false}) async {
     final controller = _controller;
-    if (controller == null || _saving) return;
+    if (controller == null || _saving || _exporting) return;
     setState(() => _saving = true);
     try {
-      await _saveSnapshot();
-      if (!mounted) return;
       // Serialization captures this document revision. Editing remains enabled
       // while encoding/uploading, so completing this write cannot clean a newer
       // revision or dismiss it through Save and Close.
@@ -307,6 +323,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
       await _wordPreservation?.validateSaved(bytes);
+      await _saveSnapshot(bytes);
+      if (!mounted) return;
       final target = _target;
       if (target == null) {
         throw StateError(
@@ -319,7 +337,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           'A copy was downloaded. The original is unchanged.',
         );
       }
-      _loadedBytes = bytes;
+      _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
       if (!mounted) return;
       if (controller.contentRevision == savedRevision) controller.markClean();
       setState(() {
@@ -339,56 +357,121 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         SnackBar(
           content: Text(
             '${context.tr('Save failed')}: '
-            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
+            '${_localizedError(e)}',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
+          action: SnackBarAction(
+            label: context.tr('Save a copy'),
+            onPressed: () => unawaited(_saveCopy()),
+          ),
         ),
       );
     }
   }
 
   Future<void> _close() async {
-    if (_saving) return;
-    // Pending inline drafts participate in the controller's dirty state. Keep
-    // them pending until Save so Cancel and Discard also work for invalid input.
-    if (!(_controller?.isDirty ?? _dirty)) {
-      Navigator.of(context).pop();
-      return;
-    }
-    final action = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.tr('Unsaved changes')),
-        content: Text(
-          '${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}',
+    if (_saving || _exporting || _closing) return;
+    _closing = true;
+    try {
+      // Pending inline drafts participate in the controller's dirty state. Keep
+      // them pending until Save so Cancel and Discard also work for invalid input.
+      if (!(_controller?.isDirty ?? _dirty)) {
+        Navigator.of(context).pop();
+        return;
+      }
+      final action = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.tr('Unsaved changes')),
+          content: Text(
+            '${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'cancel'),
+              child: Text(context.tr('Cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'discard'),
+              child: Text(context.tr('Discard')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, 'save'),
+              child: Text(context.tr('Save')),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'cancel'),
-            child: Text(context.tr('Cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, 'discard'),
-            child: Text(context.tr('Discard')),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, 'save'),
-            child: Text(context.tr('Save')),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) return;
-    if (action == 'save') {
-      await _save(popAfter: true);
-    } else if (action == 'discard') {
-      Navigator.of(context).pop();
+      );
+      if (!mounted) return;
+      if (action == 'save') {
+        await _save(popAfter: true);
+      } else if (action == 'discard') {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      _closing = false;
     }
   }
 
-  Future<void> _saveSnapshot() async {
-    final bytes = _loadedBytes;
-    if (bytes == null || kIsWeb) return;
+  Future<void> _saveCopy({bool original = false}) async {
+    if (_saving || _exporting) return;
+    final controller = _controller;
+    if ((!original && controller == null) ||
+        (original && _loadedBytes == null)) {
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      final Uint8List bytes;
+      if (original) {
+        bytes = _loadedBytes!;
+      } else {
+        controller!.commitPendingEdits();
+        bytes = await controller.saveBytesAsync();
+        await _wordPreservation?.validateSaved(bytes);
+      }
+      if (bytes.length > kOfficeCopyOutputLimitBytes) {
+        throw FileTargetTooLarge(kOfficeCopyOutputLimitBytes);
+      }
+      if (!mounted) return;
+      final outcome = await widget.copyExporter(
+        Uint8List.fromList(bytes).asUnmodifiableView(),
+        officeCopyName(widget.file.name),
+        context.tr(original ? 'Export original' : 'Save a copy'),
+      );
+      if (!mounted || outcome == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr(
+              outcome == OfficeCopyOutcome.savedCopy
+                  ? 'Copy saved. The original is unchanged.'
+                  : 'Copy download started. The original is unchanged.',
+            ),
+          ),
+        ),
+      );
+      // Exporting a copy does not mark the original clean, replace its loaded
+      // bytes, or close the editor. New edits made during the picker stay live.
+    } catch (e, st) {
+      _log.warn('office copy export failed', e, st);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${context.tr('Could not save a copy')}: '
+            '${_localizedError(e)}',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _saveSnapshot(Uint8List bytes) async {
+    if (kIsWeb) return;
     try {
       final support = await getApplicationSupportDirectory();
       final dir = Directory('${support.path}/editor_snapshots');
@@ -442,48 +525,56 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () =>
-            unawaited(_save()),
-        const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
-            unawaited(_save()),
-        const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true):
-            _requestFind,
-        const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
-            _requestFind,
-        const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
-            _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
-        const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () =>
-            _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
-        const SingleActivator(LogicalKeyboardKey.keyI, control: true): () =>
-            _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
-        const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () =>
-            _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
-        const SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
-            _wordShortcut(
-              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
-                  ? WmlUnderline.single
-                  : WmlUnderline.none,
-            ),
-        const SingleActivator(LogicalKeyboardKey.keyU, meta: true): () =>
-            _wordShortcut(
-              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
-                  ? WmlUnderline.single
-                  : WmlUnderline.none,
-            ),
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
-            _controller?.undo(),
-        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () =>
-            _controller?.undo(),
-        const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
-            _controller?.redo(),
-        const SingleActivator(LogicalKeyboardKey.keyY, meta: true): () =>
-            _controller?.redo(),
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) unawaited(_close());
       },
-      child: Scaffold(
-        body: SafeArea(top: true, bottom: false, child: _buildBody(theme)),
+      child: CallbackShortcuts(
+        bindings: <ShortcutActivator, VoidCallback>{
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () =>
+              unawaited(_save()),
+          const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
+              unawaited(_save()),
+          const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true):
+              _requestFind,
+          const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
+              _requestFind,
+          const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
+              _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
+          const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () =>
+              _wordShortcut((WmlRunProps p) => p.bold = !p.bold),
+          const SingleActivator(LogicalKeyboardKey.keyI, control: true): () =>
+              _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
+          const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () =>
+              _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
+          const SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
+              _wordShortcut(
+                (WmlRunProps p) =>
+                    p.underline = p.underline == WmlUnderline.none
+                    ? WmlUnderline.single
+                    : WmlUnderline.none,
+              ),
+          const SingleActivator(LogicalKeyboardKey.keyU, meta: true): () =>
+              _wordShortcut(
+                (WmlRunProps p) =>
+                    p.underline = p.underline == WmlUnderline.none
+                    ? WmlUnderline.single
+                    : WmlUnderline.none,
+              ),
+          const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
+              _controller?.undo(),
+          const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () =>
+              _controller?.undo(),
+          const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
+              _controller?.redo(),
+          const SingleActivator(LogicalKeyboardKey.keyY, meta: true): () =>
+              _controller?.redo(),
+        },
+        child: Scaffold(
+          body: SafeArea(top: true, bottom: false, child: _buildBody(theme)),
+        ),
       ),
     );
   }
@@ -544,12 +635,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           kind: _kind,
           config: _config,
           onSave: () => unawaited(_save()),
+          onSaveCopy: () => unawaited(_saveCopy()),
           onClose: () => unawaited(_close()),
           onConfigChanged: _onConfigChanged,
           onFind: _requestFind,
           title: widget.file.name,
           dirty: _dirty,
-          saving: _saving,
+          saving: _saving || _exporting,
         ),
         Expanded(child: editor),
       ],
@@ -579,8 +671,18 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
               ),
             ),
             const SizedBox(height: 16),
+            if (_loadedBytes != null) ...[
+              OutlinedButton.icon(
+                onPressed: _exporting
+                    ? null
+                    : () => unawaited(_saveCopy(original: true)),
+                icon: const Icon(Icons.file_download_outlined),
+                label: Text(context.tr('Export original')),
+              ),
+              const SizedBox(height: 8),
+            ],
             OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _exporting ? null : () => unawaited(_close()),
               child: Text(context.tr('Close')),
             ),
           ],
