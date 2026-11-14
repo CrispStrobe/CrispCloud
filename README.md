@@ -239,6 +239,8 @@ to trash. Existing files and personal-account credentials are unused. On
 
 ## Local and hosted release checks
 
+The macOS app selects Skia Metal with the pinned Flutter SDK. Local acceptance caught an intermittent Impeller raster-thread crash with texture-size/resolve errors; two 30-second Skia Metal startup probes passed. The startup smoke check rejects those renderer errors even if the process remains alive. Requalify Impeller before enabling it again.
+
 For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the current source revision. `bash tool/sign_macos_local.sh` uses the installed development profile, and `bash tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 10` checks startup. The desktop integration harness exercises real temporary ext/NTFS images, CSV-to-XLSX publication and collision recovery, and offline CAF import/search/folder navigation through the native Rust-backed GUI:
 
 ```sh

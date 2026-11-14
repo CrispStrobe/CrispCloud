@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- The pinned SDK's Impeller Metal surface can crash during startup.
+	     Keep GPU rendering via Skia Metal until Impeller is requalified. -->
+	<key>FLTEnableImpeller</key>
+	<false/>
 	<!-- Export compliance: intended outside-France/no-documentation route.
 	     The app includes third-party and published legacy cryptography; it is
 	     not OS-only. False is conditional on the complete encryption assessment,
