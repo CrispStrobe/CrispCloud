@@ -6,7 +6,6 @@
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/archive_dmg_reader.dart';
-import 'package:crisp_cloud/services/archive_types.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;

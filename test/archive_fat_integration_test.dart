@@ -344,8 +344,9 @@ class _ObservedSource implements koni.ByteSource {
   @override
   Future<Uint8List> read(int offset, int count) async {
     onRead?.call(offset, count);
-    if (failure != null && (failWhen?.call(offset, count) ?? true))
+    if (failure != null && (failWhen?.call(offset, count) ?? true)) {
       throw failure!;
+    }
     return Uint8List.sublistView(bytes, offset, offset + count);
   }
 

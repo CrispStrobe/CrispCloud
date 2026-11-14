@@ -712,7 +712,7 @@ Future<ViewerArchive> openDmgArchive(
           pendingChild = filesystem;
           var addedPathBytes = 0;
           for (final member in filesystem.members) {
-            input.check();
+            await input.checkpoint();
             final fullPath = 'files/$stem/${member.name}';
             // Both the child reader and composite archive retain their names.
             addedPathBytes += (member.name.length + fullPath.length) * 2;
@@ -770,7 +770,7 @@ Future<ViewerArchive> openDmgArchive(
           notices.add('$stem: $notice');
         }
         for (final member in opened.members) {
-          input.check();
+          await input.checkpoint();
           // Links remain visible only in the raw image, never as fake files.
           // In particular DMGs routinely contain an /Applications symlink.
           if (member.isSpecial || member.pathEscapedRoot) {
@@ -835,6 +835,7 @@ class _DmgOpenSource implements koni.ByteSource {
   Object? _failure;
   StackTrace? _failureStack;
   Future<void>? _closing;
+  int _work = 0;
   _DmgFatMetadataBudget? fatListingBudget;
 
   T _provider<T>(T Function() operation) {
@@ -873,6 +874,14 @@ class _DmgOpenSource implements koni.ByteSource {
     return false;
   }
 
+  Future<void> checkpoint() async {
+    check();
+    if (++_work % 128 == 0) {
+      await Future<void>.delayed(Duration.zero);
+      check();
+    }
+  }
+
   void reserveExpansion(int count) => fatListingBudget?.reserveExpanded(count);
 
   @override
@@ -900,8 +909,8 @@ class _DmgOpenSource implements koni.ByteSource {
 }
 
 class _DmgFatBudgetException extends ArchiveViewException {
-  const _DmgFatBudgetException(String detail)
-    : super(detail, code: ArchiveMessageCode.archiveLimit);
+  const _DmgFatBudgetException(super.message)
+    : super(code: ArchiveMessageCode.archiveLimit);
 }
 
 /// Counts logical metadata, physical input and actual cache-miss expansion
