@@ -49,3 +49,20 @@ initial checkpoint records the plan only and claims no new passing checks.
 2. Read this record and the eventual binary comparison profile.
 3. Preserve failed/intermediate attempts separately from final receipts.
 4. Continue pushing concrete increments; do not rewrite checkpoint history.
+
+## Initial implementation checkpoint
+
+The first implementation owns two captured sources, checks each against a
+second bounded SHA-256 read, and uses only those copies for the existing
+sparse-index scan and Hex windows. Source/account changes, declared-length
+mismatches, byte/chunk/empty-chunk limits, inactivity and elapsed-work limits,
+cancellation, and failed-open cleanup have explicit handling and regression
+tests. Viewer loads and navigation have generation ownership, with cleanup on
+reload, swap, Stop, failure and disposal. The UI labels captured-copy semantics
+and the applicable per-input limit in all eight existing locales.
+
+The exact Flutter 3.47.8 / Dart 3.13.7 SDK has been downloaded and its archive
+hash verified. Original locked dependencies are still being prepared at this
+checkpoint. The new code has been formatted and whitespace checked, but no
+new runtime test pass is claimed yet. This checkpoint is recoverable work in
+progress; subsequent commits will preserve corrections and actual results.
