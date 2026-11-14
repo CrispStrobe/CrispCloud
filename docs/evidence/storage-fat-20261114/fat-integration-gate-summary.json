@@ -1,0 +1,32 @@
+{
+  "files": {
+    "archive_container_viewer_test.dart": {
+      "success": 28
+    },
+    "archive_dmg_fat_failure_test.dart": {
+      "success": 3
+    },
+    "archive_dmg_fat_provider_test.dart": {
+      "success": 24
+    },
+    "archive_fat_integration_test.dart": {
+      "success": 16
+    },
+    "archive_fat_reader_review_test.dart": {
+      "success": 14
+    },
+    "archive_fat_workspace_test.dart": {
+      "success": 2
+    },
+    "archive_format_registry_test.dart": {
+      "success": 71
+    },
+    "disk_partition_viewer_test.dart": {
+      "success": 9
+    }
+  },
+  "total": {
+    "success": 167
+  },
+  "success": true
+}

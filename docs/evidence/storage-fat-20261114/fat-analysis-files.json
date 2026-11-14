@@ -12,6 +12,8 @@
   "lib/widgets/disk_partition_dialog.dart",
   "lib/widgets/internal_viewer_dialog.dart",
   "test/archive_disk_image_reader_test.dart",
+  "test/archive_dmg_fat_failure_test.dart",
+  "test/archive_dmg_fat_provider_test.dart",
   "test/archive_fat_integration_test.dart",
   "test/archive_fat_reader_review_test.dart",
   "test/archive_fat_reader_test.dart",
