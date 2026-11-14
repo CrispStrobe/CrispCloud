@@ -1,5 +1,19 @@
 # Binary comparison continuation — recoverable progress
 
+## Integration acceptance
+
+Checkpoint `542c1c8b` is included in the coordinated Office/storage integration.
+On macOS with Flutter 3.47.8 / Dart 3.13.7, the combined native comparison and
+Office lifecycle/ribbon cohort passes **198 tests**, and the portable capture
+and limits cohort passes **27 tests in actual Chrome**. These counts overlap.
+Changed-source analysis is clean. The regression for reused provider buffers
+exposed corruption in the asynchronous stream forwarding path; the integrator
+fixed it by preserving direct iterator backpressure while copying captured
+chunks and keeping cancellation detached from stalled upstream cleanup.
+Account-scope retention, Stop during navigation, disposal, empty/short streams
+and retry ownership are covered. Existing queued release runs were left alone;
+these local checks do not establish all-platform release acceptance.
+
 ## Preserved starting state
 
 - Baseline: `15a389f57e3a8fe9837f786407ce787fe198386f` on `main`.

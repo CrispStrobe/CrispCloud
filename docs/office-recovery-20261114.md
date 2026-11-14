@@ -32,3 +32,32 @@ Remote commits are incremental backups; they are not a merge or deployment.
 ## Checkpoints
 
 - Recovery plan and remote baselines recorded before implementation.
+
+## Integrated acceptance on macOS
+
+The integrator brought host checkpoint `9c1eae58` together with canonical Quds
+`7d5f8dac922f2771b1ac767f835a3e1d8d536ade`, using Flutter 3.47.8 / Dart 3.13.7.
+All **2,167 managed Office files** match the canonical sources; the standalone
+legacy parser remains pinned at `544a50e7`.
+
+REC-05 and REC-06 now have executed host regression coverage: unsaved system
+Back/Close, Cancel/Discard/Save, pending uploads, disconnected originals,
+copy-export cancellation/failure/retry, edits during export, controller
+replacement, protection confirmation races, and tracking/protection undo/redo.
+Refused signed XLSX/PPTX packages can export their exact original bytes.
+The copy action never marks an unsaved original clean.
+
+- Office host/save/formatting/CSV cohort: **46 passed**.
+- Latest combined Office lifecycle/ribbon and comparison cohort: **198 passed**.
+  These cohorts overlap and their counts must not be added.
+- Canonical engine suite: **1,728 passed**, three conditional skips.
+- Canonical editor suite: **520 passed**, one conditional skip, 17 pre-existing
+  macOS golden failures. The previous main fails the same 17 tests, and all
+  27 retained actual golden PNGs match the integration byte for byte. No golden
+  references were updated to hide these failures.
+
+Integration also corrected a missing import in the incoming ribbon tests and
+waits for actual route disposal in the clean/Discard navigation tests.
+REC-07 has source synchronization and local regression evidence; REC-08's
+independent first-save/schema/native-render acceptance remains open. These
+tests do not certify cryptographic Office signatures or physical-device use.

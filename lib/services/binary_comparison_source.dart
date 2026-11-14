@@ -365,8 +365,9 @@ class _MemoryCaptureSource implements HexByteSource {
   @override
   Future<Uint8List> read(int offset, int count) async {
     final bytes = _bytes;
-    if (bytes == null)
+    if (bytes == null) {
       throw StateError('The captured memory source is closed.');
+    }
     if (offset < 0 || count < 0 || offset > length || count > length - offset) {
       throw RangeError('Invalid captured memory byte range.');
     }
