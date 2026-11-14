@@ -90,22 +90,29 @@ revisions and build graphs must be selected before integration.
 
 | Candidate | License and primary evidence | Role in CrispCloud | Material boundary |
 | --- | --- | --- | --- |
-| Apple lzfse | [BSD-3-Clause](https://github.com/lzfse/lzfse/blob/master/LICENSE); [project](https://github.com/lzfse/lzfse) | Decode missing LZFSE/LZVN blocks behind the current DMG reader | Codec only: no DMG encryption, APFS or partition parsing. Native C and browser implementations need separate qualification. |
+| Apple lzfse | [BSD-3-Clause](https://github.com/lzfse/lzfse/blob/master/LICENSE); [project](https://github.com/lzfse/lzfse) | Decode LZFSE-compressed DMG blocks behind the current DMG reader | Codec only: no DMG encryption, APFS or partition parsing. Native C and browser implementations need separate qualification. |
 | minizip-ng | [zlib](https://github.com/zlib-ng/minizip-ng/blob/develop/LICENSE); [features and options](https://github.com/zlib-ng/minizip-ng) | Recover a damaged/missing ZIP central directory into a fresh verified output; investigate split-ZIP profiles | Directory recovery cannot restore missing payload bytes. Disable automatic dependency fetching; explicitly choose codecs, crypto and character conversion. |
 | libarchive | [Mostly BSD-2-Clause, with documented exceptions](https://github.com/libarchive/libarchive/blob/master/COPYING); [formats](https://github.com/libarchive/libarchive/wiki/LibarchiveFormats) | Optional uncommon-format backend or independent verification oracle | Much of its coverage is already present. It is a streaming reader/writer, not an in-place editor or replacement for current encrypted 7z/RAR handling. |
 | libzip | [BSD-3-Clause](https://libzip.org/license/); [API](https://libzip.org/documentation/libzip/) | Alternative transactional ZIP backend if a concrete gap warrants it | Existing ZIP editing and publication already cover the core use case. Do not add a second editing engine merely for its format list. |
 | liblzma / LZMA SDK | [liblzma 0BSD](https://github.com/tukaani-project/xz/blob/master/COPYING); [SDK public domain](https://www.7-zip.org/sdk.html) | Selected codec implementation or native acceleration if needed | Existing XZ/LZMA coverage already ships. liblzma is not the whole XZ source tree; the SDK is not the whole 7-Zip distribution. |
 
-For libarchive, keep the GPL LZO dependency disabled and constrain external
-filter execution; its format documentation describes fallbacks to installed
-programs. Its COPYING file distinguishes source-file licenses from varying
-build-script licenses. Select the Apache-2.0 or CC0 grant where the BLAKE2
-sources offer alternatives. Preserve per-file attribution.
+For libarchive, keep ENABLE_LZO and ENABLE_NETTLE disabled and make an explicit
+decision about ENABLE_ICONV and its implementation. Constrain external filter
+execution; its format documentation describes fallbacks to installed programs.
+Its COPYING file distinguishes source-file licenses from varying build-script
+licenses. Select the Apache-2.0 or CC0 grant where the BLAKE2 sources offer
+alternatives. Preserve per-file attribution.
 
 For minizip-ng, the upstream build exposes MZ_ICONV, crypto backends and
 MZ_FETCH_LIBS. A zlib top-level license does not establish the license of the
 chosen iconv implementation or every fetched library. Configure a reproducible,
 explicit build; do not import the default dependency graph without checking it.
+
+If libzip is selected, disable its currently default-on ENABLE_GNUTLS under this
+conservative policy and choose a reviewed platform/OpenSSL configuration. Its
+current LIMIT_LZMA_WINDOW option defaults off: set a deliberate decoder window
+bound or disable that compression method. An archive output-size cap does not
+automatically cap a codec's internal allocation.
 
 ### Partition, filesystem and disk-image engines
 
@@ -117,7 +124,7 @@ explicit build; do not import the default dependency graph without checking it.
 | ext4-view | MIT OR Apache-2.0; [source and licenses](https://github.com/nicholasbishop/ext4-view-rs) | Read-only ext2/ext3/ext4 access through a supplied reader | Useful for browsing/extraction. Unsupported incompatibility features and corruption must be distinct outcomes. No repair/write claim. |
 | ColinFinck/ntfs | MIT OR Apache-2.0; [features and exclusions](https://github.com/ColinFinck/ntfs) | Read-only NTFS metadata, directory traversal, attributes, sparse data and alternate streams | Upstream excludes writes, compression, encryption, journaling, reparse points and security descriptors. Do not silently flatten unsupported cases. |
 | DiscUtils | [MIT](https://github.com/DiscUtils/DiscUtils/blob/develop/LICENSE.txt); [scope](https://github.com/DiscUtils/DiscUtils) | UDF/ISO/FAT/NTFS and VM containers such as VHD/VHDX/VDI/VMDK/XVA | C#/.NET helper or reviewed port, not a Dart package. Select modules; verify read/create/edit separately for every format. |
-| go-diskfs | [MIT](https://github.com/diskfs/go-diskfs/blob/master/LICENSE); [current API](https://github.com/diskfs/go-diskfs) | MBR/GPT, FAT, ISO9660, SquashFS, ext4 and a limited read-only EROFS profile | Go helper alternative. ISO/SquashFS creation uses finalization, not arbitrary editing afterward. No QCOW support merely because it appears on a roadmap. |
+| go-diskfs | [MIT](https://github.com/diskfs/go-diskfs/blob/master/LICENSE); [current API](https://github.com/diskfs/go-diskfs) | MBR/GPT, FAT32, ISO9660, SquashFS, ext4 and a limited read-only EROFS profile | Go helper alternative. ISO/SquashFS creation uses finalization, not arbitrary editing afterward. No QCOW support merely because it appears on a roadmap. |
 | go-apfs | [Apache-2.0](https://github.com/blacktop/go-apfs/blob/main/LICENSE); [project](https://github.com/blacktop/go-apfs) | Experimental APFS listing and extraction | Research only: upstream labels it WIP. Current go.mod includes lzfse-cgo; do not assume a pure-Go/Wasm build or encrypted APFS support. |
 
 The smaller Rust components give a controlled native scope and can reuse the
@@ -159,7 +166,7 @@ remote writes and network access should be separate capabilities.
 | BLAKE3 | [Apache-2.0 option](https://github.com/BLAKE3-team/BLAKE3/blob/master/LICENSE_A2) | Strong extent hashes, diff caches and optional fast verification | Preserve SHA-256 compatibility in existing journals; benchmark before changing algorithms. |
 | xxHash library | [BSD-2-Clause](https://github.com/Cyan4973/xxHash/blob/dev/LICENSE) | Fast candidate filtering before strong comparison | Noncryptographic. Its [CLI has GPL terms](https://github.com/Cyan4973/xxHash/blob/dev/cli/COPYING), so select only the intended library. |
 | rclone | [MIT](https://github.com/rclone/rclone/blob/master/COPYING); [RC API](https://rclone.org/rc/) | Optional native provider bridge and supported server-side operations | Keep CrispCloud's durable journal authoritative. rclone does not supply universal partial-file resumption or binary deltas. |
-| Xdelta 3, Apache branch | [Current upstream licensing](https://github.com/jmacd/xdelta) | VCDIFF patch export/application for large images | Choose the Apache source branch, not xdelta-gpl or historic releases. Bind base and result hashes and apply to staging. |
+| Xdelta 3, Apache branch | [Current upstream licensing](https://github.com/jmacd/xdelta) | VCDIFF patch export/application for large images | Choose a reviewed Apache source branch, not xdelta-gpl or Xdelta 1. Bind base and result hashes and apply to staging. |
 | openrsync | [ISC](https://github.com/kristapsdz/openrsync/blob/master/LICENSE.md); [scope](https://github.com/kristapsdz/openrsync) | Optional Unix/SSH delta transfer | Protocol 27 and a subset of rsync behavior; not a universal Flutter or Windows backend. |
 | restic / Kopia | [restic BSD-2-Clause](https://github.com/restic/restic/blob/master/LICENSE), [Kopia Apache-2.0](https://github.com/kopia/kopia/blob/master/LICENSE) | A future versioned, deduplicated backup product feature | Backup repositories, retention and restore are separate semantics from ordinary copy/move. Choose one after a restore requirement is defined. |
 
@@ -187,7 +194,8 @@ after integration encountered memory leaks and that official releases are not
 being produced. Its stock Windows package includes LGPL pthreads and TRE
 dependencies. Evaluate only an audited source subset with suitable dependencies
 and resource limits; do not approve the distribution as-is. The different
-Scalpel3 project is GPL and is excluded.
+[Scalpel3 project](https://github.com/nolaforensix/scalpel3-release) is GPL and
+is excluded.
 
 An original bounded carver for a small set of formats may be easier to maintain.
 Begin with validated JPEG/PNG/PDF/ZIP-family candidates, chunk-boundary-safe
@@ -227,3 +235,247 @@ LGPL libfuse headers and libsmb2 notices, and an optional separately installed
 FUSE-T path gated on noncommercial use. The FUSE runtimes are not bundled by
 that build script. This study does not establish that the existing application
 is GPL/LGPL/NC-free and does not silently change those profiles.
+
+## Integration design
+
+### Reuse the current source and publication contracts
+
+The proposed layering is a design, not a report of implemented filesystem
+support:
+
+```mermaid
+flowchart TD
+  S["Captured byte source"] --> C["Container decoders"]
+  S --> H["Hex and structure inspection"]
+  C --> P["Partition slices"]
+  P --> F["Filesystem readers"]
+  C --> V["Virtual entries"]
+  F --> V
+  V --> Q["Existing operation queue"]
+  Q --> W["Stage, verify and publish"]
+  H --> R["Diagnostics and recovery report"]
+  R --> Q
+```
+
+The existing koni ByteSource already has length, positional reads and close
+semantics. ArchiveSliceSource bounds a child region; ArchiveCheckpointSource
+provides awaited operation checks. Keep these as the adapter boundary.
+The shared [archive viewer dispatch](../lib/services/archive_viewer_service.dart)
+can return [ViewerArchive](../lib/services/archive_types.dart) for new readers,
+so panes, F3, search and extraction use the established route.
+
+Native adapters must bridge asynchronous Dart sources to any synchronous C/Rust
+reader without blocking the UI or silently downloading an unbounded image.
+A worker/helper with explicit range requests or a reviewed bounded local spool
+are possible implementations. Benchmark actual seeks and reads; API similarity
+alone does not resolve the asynchronous I/O boundary.
+
+Every opened root must retain its account, path, exact length and available
+version identity. All child ranges inherit it. A cloud ETag is not universally
+a content hash, and an unpinned sequence of HTTP ranges is not a snapshot.
+Where the provider cannot supply stable conditional reads, use the existing
+verified snapshot path or disclose that the requested profile is unavailable.
+Cancellation, revoked access and a changed root invalidate its descendants.
+
+Keep logical and physical offsets separate. A filesystem file can have several
+extents; a VM disk may be sparse or backed by parent images; compressed bytes do
+not have a one-to-one decoded offset. Structure nodes should link to the
+appropriate source region or block map and label the coordinate system.
+Never present a decoded offset as a direct patch location in the outer file.
+Parent-image paths and links inside an image are untrusted metadata and must
+not silently open unrelated host files.
+
+### Declare each operation and profile independently
+
+Capability records should cover detect, list, read-range, extract, verify,
+recover-to-new, create, rebuild and in-place-write separately. They also need
+target availability, source requirements, encryption state, unsupported flags,
+resource limits and metadata preservation policy. Recognition of an APFS or
+UDF signature must not enable write controls.
+
+Reuse [ArchiveEndpointPolicy](../lib/services/archive_endpoint_policy.dart),
+[ArchiveWorkspace](../lib/services/archive_workspace.dart) and
+[ArchiveContainerPublisher](../lib/services/archive_container_publisher.dart).
+New readers remain read-only until their writer profile has its own proof.
+Recovery should normally publish a new artifact through a private
+[ArchiveOutputSpool](../lib/services/archive_output_spool.dart), rather than
+promoting damaged input into a writable workspace.
+
+Distinguish corruption, unsupported features, password needed, source changed,
+read error, cancelled and resource limit. A corrupt-input or cancellation result
+must not cause an automatic fallback that discards those guarantees. Successful
+enumeration is not verification of every member, and a valid CRC is not
+authentication of a package or publisher.
+
+The current 64 MiB buffered-member limit, eligible 8 GiB native streamed
+profiles, separate browser/container limits and nested-wrapper bounds remain
+separate contracts. New decompression and metadata parsers also need internal
+allocation, recursion, directory-entry, extent-count and elapsed-work budgets.
+Do not raise existing operation ceilings simply because a library accepts
+64-bit offsets.
+
+### Platform scope
+
+| Target | Initial design scope | Additional qualification |
+| --- | --- | --- |
+| Desktop | Existing user-selected files and images; C/Rust FFI or a confined helper where justified | Package exact binaries and notices; validate short reads, cancellation, crash isolation and file identity |
+| Mobile | App-visible files/images through granted handles; selected packaged native modules | Platform packaging, scoped access, memory pressure and foreground/background behavior |
+| Browser | User-granted files and supported cloud ranges; current Dart parsers and separately qualified Wasm modules | Integer precision, memory growth, workers, async I/O, CSP and cancellation |
+| Physical devices | A future native broker with explicitly scoped access | OS-specific device identity, permissions, geometry, mounted-volume handling and interruption behavior |
+
+Physical partition editing is a later feature with materially different
+failure modes. Start with image-only diagnostics and edits to a new image or
+overlay. Updating a GPT boundary cannot stand in for moving filesystem extents
+or resizing allocation structures. There is no evidence in this study for
+general safe APFS repair, arbitrary filesystem resizing or a universal fsck.
+
+## Delivery sequence and acceptance
+
+These are scoped implementation proposals, not estimated delivery dates.
+
+### 1. Disk structures in the current viewer
+
+Add lazy GPT/MBR headers and entries, boot sectors, filesystem superblocks and
+container block maps to the current structure view. Selecting a field should
+select its bytes in Hex. Display types, endianness, GUIDs, sector sizes, offsets,
+primary/backup discrepancies, CRC errors and out-of-range/overlapping spans.
+Use bounded structure expansion rather than increasing the current prefix
+buffer to the size of a disk.
+
+Acceptance needs 512/4096-byte sectors, malformed lengths/counts, backup GPT,
+large offsets, EBR loops where supported, partition overlap, truncated input,
+source replacement and cancel during expansion. Findings must distinguish a
+damaged table from a recognized but unsupported structure.
+
+### 2. LZFSE DMGs
+
+Extend the current DMG block-decoder boundary and retain its HFS+/HFSX/ISO/raw
+partition views. Apple's public lzfse_decode_buffer can return the output-buffer
+size when the buffer fills without establishing a complete decode. Allocating
+the declared output length and checking that return value alone is insufficient.
+Use a bounded reviewed shim/port that confirms a successful end condition,
+exact decoded length and allowed input consumption/padding for the chosen
+profile.
+
+Test independently produced fixtures, exact-boundary and overlong output,
+truncation, malformed block tables, mixed compression types and cancellation.
+Compare extracted file hashes using an independent implementation. Keep
+encrypted DMGs, APFS and DMG writer support outside this increment.
+
+### 3. UDF reading
+
+Define supported UDF revisions, descriptor types, allocation forms and partition
+maps before implementation. A first profile can deliberately omit virtual,
+sparable and metadata partition forms until qualified. Recognize UDF-only and
+bridge images without assuming that an ISO writer may rebuild them.
+
+Evaluate a selected DiscUtils reader module against real UDF-only media, then
+choose a native helper or a separately attributed Dart port according to browser
+needs. Verify multi-extent files, large logical offsets, descriptor checks,
+loops, invalid allocation ranges and explicit unsupported cases. Reuse the
+existing safe-member and extraction policies.
+
+### 4. ZIP salvage
+
+Give recovery its own scan/recover/verify/publish queue phases and a reviewable
+entry report. Work from captured input; write a new archive. Reopen the candidate
+with the existing independent ZIP reader and verify recovered members before
+publication.
+
+Fixtures should cover a missing directory, truncated members, incorrect sizes,
+duplicate names, overlapping regions, data descriptors, encrypted entries and
+incomplete split sets. Recovery may report partial results, but ambiguous
+boundaries cannot be silently guessed. Passwords stay outside ordinary durable
+job records. Preserve the input even if the candidate fails to reopen.
+
+### 5. Filesystems and containers
+
+Add FAT, ext and NTFS reading through a selected adapter stack. Connect each
+partition to the existing virtual-entry route. Preserve alternate-stream names,
+sparse semantics, timestamps and unsupported metadata notices where available.
+Then add UDF/VM families or offline OCI semantics according to actual demand.
+
+Cross-check representative extraction hashes with independent tools. Exercise
+fragmented files, extent loops, sparse/unallocated ranges, huge declared sizes,
+dirty volumes, unsupported feature flags and truncated metadata. A
+filesystem reader must not perform write-side journal replay merely to list
+files. VM fixtures must include missing/changed parents and unsupported
+compression or encryption.
+
+### 6. Recovery and binary comparison
+
+Add bounded same-offset byte comparison and changed-range navigation first.
+Xdelta patch files are a later export format; bind their expected base and
+result identities, limit work, apply to a private candidate and verify before
+publication. Retain the original if a patch fails.
+
+Carving and rescue imaging should be separate operation types with distinct
+reports. Test signatures across chunk boundaries, fragmented/truncated data,
+false positives, overlapping candidates, unreadable ranges and restart with
+changed source identity. A rescue extent-map checkpoint is only durable when
+the associated output data has reached the required durability boundary.
+
+### 7. Complete transfer gaps
+
+The existing [G29 bandwidth design](file-manager-gaps/transfer-bandwidth-design.md)
+already scopes aggregate upload/download allocation. Implement it at actual
+stream boundaries, with fair admission and permit release on pause, cancellation
+and failure. This delivers user value without another copy engine.
+
+The source review also found incomplete delta-transfer entry points worth
+hardening before wider exposure. The S3 cached block map lacks the version
+comparison described by its comment; direct delta application lacks staging,
+strict per-block result checks and final-length handling; shrink-only updates
+can evade a changed-block test. pCloud delta upload modifies an existing remote
+file directly. Ordinary queue caller wiring was not established by the search.
+
+These are source-level observations and hypotheses, not reproduced production
+failures or a finding that ordinary journaled copy is broken. The
+[pinned investigation note](evidence/storage-capabilities-20261114/delta-source-review.txt)
+records locations, source hashes, reachability uncertainty and the required
+reproductions. A future fix should use identity-bound block maps, strict range
+and digest checks, explicit final size, private staging and the existing
+publication/recovery contracts.
+
+## Source admission and evidence
+
+Reuse the repository's existing verification patterns:
+
+- [Selected binary-parser imports](../tool/verify_file_viewer_binary.py) and
+  [provenance definitions](../tool/file_viewer_provenance.py): exact upstream
+  commit, allowlisted sources, Git blob IDs, SHA-256, modification records and
+  attribution.
+- [Hex vendor verification](../tool/verify_hex_vendor.py): keep canonical fork
+  identity distinct from the application's local snapshot.
+- [Document-runtime verification](../tool/verify_document_runtime.py): bind
+  compiled assets, source inventories, notices and overlays.
+- [Rust license checking](../packages/crisp_storage/tool/check_rust_licenses.py):
+  resolve the locked selected graph, review exact SPDX expressions and record
+  the chosen permissible license alternative.
+- [Binary-parser license registration](../lib/services/file_viewer_binary_license.dart):
+  make distributed notices reachable in the app.
+
+Before adding a dependency, pin a reviewed source/release, select build features
+explicitly, review the actual runtime graph and shipped binaries, preserve
+notices and source obligations, and qualify the intended operations separately
+on each target. A license/hash check is evidence of source identity, not proof
+of parser correctness or platform support.
+
+The [evidence directory](evidence/storage-capabilities-20261114) preserves three
+candidate ledgers: archive/container, filesystem/recovery, and hex/copy.
+Together they record **27 entries including an explicit lwext4 exclusion**,
+with **63 pinned source files, including 33 license files**. Exact byte lengths,
+SHA-256 values and Git blob identities were independently rechecked against the
+retrieved bytes. No third-party runtime code was imported.
+
+The immutable URLs in those ledgers govern this research snapshot; general
+project links above may continue to change. Observed upstream branch heads are
+not approved dependency pins or qualified releases. The ledger checks are
+recorded in [evidence-validation.json](evidence/storage-capabilities-20261114/evidence-validation.json).
+The [ancestry receipt](evidence/storage-capabilities-20261114/ancestry.json)
+preserves every original remote branch and PR head from this pass.
+
+The new branch is an evaluated roadmap and supporting evidence. Application
+source, dependency manifests and runtime capability declarations are unchanged.
+Consequently this pass has no new app, native, browser or device test results;
+the previous session's receipts remain attached to their original source.
