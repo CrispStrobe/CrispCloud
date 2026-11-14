@@ -185,12 +185,18 @@ const udfReferenceImages = <String, String>{
 };
 
 Uint8List udfReferenceBytes(String name) => Uint8List.fromList(
-  const archive.GZipDecoder().decodeBytes(base64Decode(udfReferenceImages[name]!)),
+  const archive.GZipDecoder().decodeBytes(
+    base64Decode(udfReferenceImages[name]!),
+  ),
 );
 
 const udfReferencePayloads = <String, String>{
-  "hello.txt": 'cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594',
-  "empty.bin": 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-  "café-雪.txt": 'e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f',
-  "nested/payload.bin": '6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88',
+  "hello.txt":
+      'cbc59a34ae3353991db4169f3092ae5e825a0ce34962a90c6c351d63363c4594',
+  "empty.bin":
+      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  "café-雪.txt":
+      'e8950e9e434853a4ef54e936944e31d1facc300793c0edcd9bd31dd8a363f33f',
+  "nested/payload.bin":
+      '6d47eb9a7f55723c1c9f233d30cab08d1ea2359da38cf0ec6f318817ab9d0e88',
 };

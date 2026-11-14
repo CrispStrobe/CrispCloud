@@ -122,16 +122,6 @@ jobs:
             test/widget/binary_structure_viewer_test.dart \
             test/widget/disk_partition_viewer_test.dart \
             2>&1 | tee build/storage-ci/native.log
-      - name: Reproduce pinned external FAT reference images
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --location --retry 2 https://elm-chan.org/fsw/ff/arc/ff16.zip -o "$RUNNER_TEMP/storage-ff16.zip"
-          python3 test/support/generate_fat_reference.py \
-            --fatfs-zip "$RUNNER_TEMP/storage-ff16.zip" \
-            --output-dir "$RUNNER_TEMP/storage-fat-reference" \
-            --cc cc --dart "$(command -v dart)" --check \
-            | tee build/storage-ci/fat-reference.log
       - name: Run portable FAT, UDF and ZIP recovery on VM and JavaScript
         shell: bash
         run: |
@@ -143,6 +133,35 @@ jobs:
           done
           dart --packages=.dart_tool/package_config.json test/support/archive_zip_recovery_web_acceptance.dart --emit-candidates > build/storage-ci/zip-recovery-candidates.json
           python3 test/support/check_archive_zip_recovery.py --candidates build/storage-ci/zip-recovery-candidates.json --report build/storage-ci/zip-recovery-python.json | tee build/storage-ci/zip-recovery-python.log
+      - name: Restore hash-pinned external FAT reference source
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/storage-ff16.zip
+          key: fatfs-r016-99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e
+      - name: Reproduce pinned external FAT reference images
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/storage-ff16.zip"
+          digest=99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e
+          verified() { printf '%s  %s\n' "$digest" "$1" | sha256sum --check --status; }
+          if ! verified "$archive"; then
+            for source in https://elm-chan.org/fsw/ff/arc/ff16.zip http://elm-chan.org/fsw/ff/arc/ff16.zip; do
+              if curl --fail --location --connect-timeout 15 --max-time 60 \
+                --max-filesize 16777216 "$source" -o "$archive.download" \
+                && verified "$archive.download"; then
+                mv "$archive.download" "$archive"
+                break
+              fi
+            done
+            rm -f "$archive.download"
+          fi
+          verified "$archive"
+          python3 test/support/generate_fat_reference.py \
+            --fatfs-zip "$RUNNER_TEMP/storage-ff16.zip" \
+            --output-dir "$RUNNER_TEMP/storage-fat-reference" \
+            --cc cc --dart "$(command -v dart)" --check \
+            | tee build/storage-ci/fat-reference.log
       - name: Verify production manifests were restored
         if: always()
         shell: bash

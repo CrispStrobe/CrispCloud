@@ -111,7 +111,8 @@ def main():
         dart.append("  '" + name + "': " + json.dumps(expected, ensure_ascii=False) + ",")
     dart += ["};", "", "const zipRecoveryReferencePayloadHashes = <String, String>{"]
     for name, data in {**payloads, "safe.txt": b"safe", "rollover.bin": rollover}.items():
-        dart.append("  " + json.dumps(name, ensure_ascii=False) + ": '" + sha(data) + "',")
+        dart.append("  " + json.dumps(name, ensure_ascii=False) + ":")
+        dart.append("      '" + sha(data) + "',")
     dart += ["};", ""]
     outputs = {"archive_zip_recovery_reference_data.dart": "\n".join(dart).encode(), "zip-recovery-reference-manifest.json": (json.dumps(manifest, indent=2, ensure_ascii=False) + "\n").encode()}
     args.output_dir.mkdir(parents=True, exist_ok=True)

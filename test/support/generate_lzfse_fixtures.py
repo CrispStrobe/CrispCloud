@@ -205,8 +205,13 @@ def dart_data(fixtures: dict[str, tuple[bytes, bytes]]) -> str:
     for name, (_, packed) in fixtures.items():
         if name in ("mixed", "v2_reused_tables", "v1_lzvn_reused_tables"):
             continue  # The Dart helper joins the original constituent blocks.
+        encoded = base64.b64encode(packed).decode("ascii")
+        single = f"  '{name}': '{encoded}',"
+        if len(single) <= 80:
+            lines.append(single)
+            continue
         lines.append(f"  '{name}':")
-        chunks = textwrap.wrap(base64.b64encode(packed).decode("ascii"), 76)
+        chunks = textwrap.wrap(encoded, 76)
         for index, chunk in enumerate(chunks):
             lines.append(f"      '{chunk}'" + ("," if index == len(chunks) - 1 else ""))
     return "\n".join([*lines, "};", ""])

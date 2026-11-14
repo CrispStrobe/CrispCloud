@@ -453,7 +453,8 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           icon: Icons.healing_outlined,
           keywords: 'zip recover salvage repair damaged truncated archive',
           enabled: canRecoverArchiveZipSelection(ref),
-          action: () => showArchiveZipRecoveryForSelection(widget.parentContext, ref),
+          action: () =>
+              showArchiveZipRecoveryForSelection(widget.parentContext, ref),
         ),
       _Command(
         id: 'archive-test-selected',
