@@ -12,6 +12,7 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 import 'support/archive_iso_fixtures.dart';
 import 'support/dmg_fixture.dart';
 import 'support/hfs_fixture.dart';
+import 'support/lzfse_fixture.dart';
 
 void main() {
   Future<ViewerArchive> open(
@@ -21,7 +22,14 @@ void main() {
       openDmgArchive(koni.MemoryByteSource(fixture.bytes), maxMemberBytes: cap);
   final content = Uint8List.fromList(List.generate(1024, (i) => i % 251));
 
-  for (final method in [1, 0x80000004, 0x80000005, 0x80000006, 0x80000008]) {
+  for (final method in [
+    1,
+    0x80000004,
+    0x80000005,
+    0x80000006,
+    0x80000007,
+    0x80000008,
+  ]) {
     test('UDIF method $method extracts exact partition bytes', () async {
       final fixture = DmgFixture(content, method: method);
       final archive = await open(fixture);
@@ -164,7 +172,53 @@ void main() {
     expect(source.closes, 1);
   });
 
-  for (final method in [0x80000004, 0x80000008]) {
+  for (final sample in [lzfseV1Fixture, lzfseV2Fixture, lzfseLzvnFixture]) {
+    test(
+      'Apple ${sample.name} decodes through ULFO and streamed partition CRC',
+      () async {
+        final plain = sample.plain;
+        final fixture = DmgFixture(
+          plain,
+          method: 0x80000007,
+          chunkBytes: plain.length,
+        )..packedBytes = sample.packed;
+        fixture.tableData.setUint64(204 + 32, fixture.packedBytes.length);
+        fixture.rebuild();
+        final archive = await open(fixture);
+        addTearDown(archive.close);
+        expect(await archive.readMember(archive.members.single), plain);
+        final streamed = BytesBuilder();
+        await for (final bytes in archive.openMember(
+          archive.members.single,
+          chunkSize: 137,
+        )) {
+          streamed.add(bytes);
+        }
+        expect(streamed.takeBytes(), plain);
+        expect(
+          archive.notices.join(' '),
+          contains('ADC and LZFSE have no embedded checksum'),
+        );
+      },
+    );
+  }
+
+  test(
+    'corrupt LZFSE during filesystem probing closes the image source',
+    () async {
+      final fixture = DmgFixture(HfsFixture().bytes, method: 0x80000007);
+      fixture.packedBytes[0] = 0;
+      fixture.rebuild();
+      final source = _TrackingSource(fixture.bytes);
+      await expectLater(
+        openDmgArchive(source, maxMemberBytes: kArchiveReadLimit),
+        throwsA(isA<ArchiveViewException>()),
+      );
+      expect(source.closes, 1);
+    },
+  );
+
+  for (final method in [0x80000004, 0x80000007, 0x80000008]) {
     for (final name in ['image.dmg', 'misleading.xz', 'download']) {
       test('new method $method keeps UDIF routing for $name', () async {
         final archive = await openViewerArchive(
@@ -349,7 +403,7 @@ void main() {
     'wrong table version': (d) => d.setUint32(4, 0),
     'partition past disk': (d) => d.setUint64(8, 2),
     'invalid run count': (d) => d.setUint32(200, 0xffffffff),
-    'unsupported LZFSE': (d) => d.setUint32(204, 0x80000007),
+    'unsupported compression method': (d) => d.setUint32(204, 0x80000009),
     'missing extent': (d) => d.setUint64(204 + 8, 1),
     'size mismatch': (d) => d.setUint64(204 + 32, 1),
     'data outside fork': (d) => d.setUint64(204 + 24, 100000),

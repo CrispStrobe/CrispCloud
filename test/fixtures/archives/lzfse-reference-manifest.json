@@ -1,0 +1,278 @@
+{
+  "source": "https://github.com/lzfse/lzfse",
+  "revision": "e634ca58b4821d9f3d560cdc6df5dec02ffc93fd",
+  "license": "BSD-3-Clause",
+  "license_sha256": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32",
+  "generator": "test/support/generate_lzfse_fixtures.py",
+  "v1_method": "Original Apple v2 header expansion; original coded payload retained",
+  "multiblock_second_block_requires_history": true,
+  "fixtures": [
+    {
+      "name": "empty",
+      "plain_bytes": 0,
+      "packed_bytes": 12,
+      "plain_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packed_sha256": "9502b7226136d6e97cbe78c04ac9ea572595fc7b25ae1394759d45a1796b86ff",
+      "blocks": [
+        {
+          "magic": "bvx-",
+          "offset": 0,
+          "raw_bytes": 0,
+          "header_bytes": 8,
+          "payload_bytes": 0
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "raw",
+      "plain_bytes": 7,
+      "packed_bytes": 19,
+      "plain_sha256": "57355ac3303c148f11aef7cb179456b9232cde33a818dfda2c2fcb9325749a6b",
+      "packed_sha256": "661c79e1e5cdf4174de439120e728d228b4a18e44675e2cfb5dd452ee7469877",
+      "blocks": [
+        {
+          "magic": "bvx-",
+          "offset": 0,
+          "raw_bytes": 7,
+          "header_bytes": 8,
+          "payload_bytes": 7
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "lzvn",
+      "plain_bytes": 1024,
+      "packed_bytes": 73,
+      "plain_sha256": "bb83efae658823375a3c325485eaf2db90a602ce344f0c2e7f2e6b138840c58e",
+      "packed_sha256": "fb69f21bbab5039d2ad1bde43015506d74944182e7ae09ebb05dee1f2714d751",
+      "blocks": [
+        {
+          "magic": "bvxn",
+          "offset": 0,
+          "raw_bytes": 1024,
+          "header_bytes": 12,
+          "payload_bytes": 57
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "v2",
+      "plain_bytes": 32768,
+      "packed_bytes": 1009,
+      "plain_sha256": "c49bf2197c4b63cbd46bb279119fc33cf4b7c5267a969b2426b9e6c09a80d8ee",
+      "packed_sha256": "7a399b7dfafbf12574fbba869fa33e09cdb303fe9736326b869990228b9daf98",
+      "blocks": [
+        {
+          "magic": "bvx2",
+          "offset": 0,
+          "raw_bytes": 32768,
+          "header_bytes": 222,
+          "payload_bytes": 783
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "v2_zero",
+      "plain_bytes": 8192,
+      "packed_bytes": 151,
+      "plain_sha256": "9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47",
+      "packed_sha256": "df88cf659792aaea93a24ec3f2b407a2d27cd9da16050282f058a80d83c898fe",
+      "blocks": [
+        {
+          "magic": "bvx2",
+          "offset": 0,
+          "raw_bytes": 8192,
+          "header_bytes": 132,
+          "payload_bytes": 15
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "distance",
+      "plain_bytes": 116384,
+      "packed_bytes": 8569,
+      "plain_sha256": "ef517066e5d4dde927e566162df04a6308f079396233df5fc520c73f0d21950b",
+      "packed_sha256": "9c92435519fb30fc9cd3b2f10ac2a43f98d9de719b8c5285e4ca3eb64f43d5be",
+      "blocks": [
+        {
+          "magic": "bvx2",
+          "offset": 0,
+          "raw_bytes": 116384,
+          "header_bytes": 206,
+          "payload_bytes": 8359
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "multiblock",
+      "plain_bytes": 100000,
+      "packed_bytes": 50733,
+      "plain_sha256": "adfd405352c4ea7741c9b278fa9c5c8ef8c3eb4647a5742873868c18cdf3391d",
+      "packed_sha256": "521feb781d9172d080929e2a10ec31c83128b3d260796bbd04a159f775e04c6c",
+      "blocks": [
+        {
+          "magic": "bvx2",
+          "offset": 0,
+          "raw_bytes": 39690,
+          "header_bytes": 220,
+          "payload_bytes": 39859
+        },
+        {
+          "magic": "bvx2",
+          "offset": 40079,
+          "raw_bytes": 60310,
+          "header_bytes": 211,
+          "payload_bytes": 10439
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "v1",
+      "plain_bytes": 32768,
+      "packed_bytes": 1559,
+      "plain_sha256": "c49bf2197c4b63cbd46bb279119fc33cf4b7c5267a969b2426b9e6c09a80d8ee",
+      "packed_sha256": "bb57a6b6d569adbb46115370a35487f0946864bb6a25c5af7c66881edba5633c",
+      "blocks": [
+        {
+          "magic": "bvx1",
+          "offset": 0,
+          "raw_bytes": 32768,
+          "header_bytes": 772,
+          "payload_bytes": 783
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "mixed",
+      "plain_bytes": 66567,
+      "packed_bytes": 2648,
+      "plain_sha256": "20c0c33385eb7748a69b681d829a81326a31fc1a7d9f536d4571af73ed4bf6e3",
+      "packed_sha256": "431a348ce805cb264bcf68f136648f74298c6d90af8535968d5a2ecc71b3dc54",
+      "blocks": [
+        {
+          "magic": "bvx-",
+          "offset": 0,
+          "raw_bytes": 7,
+          "header_bytes": 8,
+          "payload_bytes": 7
+        },
+        {
+          "magic": "bvxn",
+          "offset": 15,
+          "raw_bytes": 1024,
+          "header_bytes": 12,
+          "payload_bytes": 57
+        },
+        {
+          "magic": "bvx2",
+          "offset": 84,
+          "raw_bytes": 32768,
+          "header_bytes": 222,
+          "payload_bytes": 783
+        },
+        {
+          "magic": "bvx1",
+          "offset": 1089,
+          "raw_bytes": 32768,
+          "header_bytes": 772,
+          "payload_bytes": 783
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "v2_reused_tables",
+      "plain_bytes": 65542,
+      "packed_bytes": 1838,
+      "plain_sha256": "f79d24bb90f9dc9f215914ecbfd43d6683ce41770e17f55990ed2e7aa5a5f486",
+      "packed_sha256": "87beb8a0df2f89d8370c8c840460431faa8c9d1f12c9956a8fd792392f0e337d",
+      "blocks": [
+        {
+          "magic": "bvx2",
+          "offset": 0,
+          "raw_bytes": 32768,
+          "header_bytes": 222,
+          "payload_bytes": 783
+        },
+        {
+          "magic": "bvx-",
+          "offset": 1005,
+          "raw_bytes": 6,
+          "header_bytes": 8,
+          "payload_bytes": 6
+        },
+        {
+          "magic": "bvx2",
+          "offset": 1019,
+          "raw_bytes": 32768,
+          "header_bytes": 32,
+          "payload_bytes": 783
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "v1_lzvn_reused_tables",
+      "plain_bytes": 66560,
+      "packed_bytes": 2443,
+      "plain_sha256": "e3e9286d09dd7e74536719539aca1b33afb99136b8cab30098516d5b302435bd",
+      "packed_sha256": "dd05ed441fe80700b1b19c7c429b28c469f6a357c6f688d04587626c256d214e",
+      "blocks": [
+        {
+          "magic": "bvx1",
+          "offset": 0,
+          "raw_bytes": 32768,
+          "header_bytes": 772,
+          "payload_bytes": 783
+        },
+        {
+          "magic": "bvxn",
+          "offset": 1555,
+          "raw_bytes": 1024,
+          "header_bytes": 12,
+          "payload_bytes": 57
+        },
+        {
+          "magic": "bvx2",
+          "offset": 1624,
+          "raw_bytes": 32768,
+          "header_bytes": 32,
+          "payload_bytes": 783
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    },
+    {
+      "name": "cross_block_lzvn",
+      "plain_bytes": 13,
+      "packed_bytes": 37,
+      "plain_sha256": "9f28aa191a2438a9f82b5cf6d3d7280a87b117e7db2895db0bc4e6a7be063f78",
+      "packed_sha256": "696932262e529cc3d014dcc189e7e76bd77acc70147cdb9b1874d290098ea7b9",
+      "blocks": [
+        {
+          "magic": "bvx-",
+          "offset": 0,
+          "raw_bytes": 3,
+          "header_bytes": 8,
+          "payload_bytes": 3
+        },
+        {
+          "magic": "bvxn",
+          "offset": 11,
+          "raw_bytes": 10,
+          "header_bytes": 12,
+          "payload_bytes": 10
+        }
+      ],
+      "reference_exact_output_eos_and_consumption": true
+    }
+  ]
+}

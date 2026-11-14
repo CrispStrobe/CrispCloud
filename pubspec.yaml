@@ -280,6 +280,7 @@ flutter:
     - assets/licenses/pdf_fonts/
     - assets/licenses/terminal/
     - packages/file_viewer_binary/LICENSE
+    - packages/apple_lzfse/LICENSE
     - packages/file_viewer_lrc/LICENSE
     - packages/legacy_doc_parser/UPSTREAM.json
     - packages/legacy_doc_parser/NOTICE

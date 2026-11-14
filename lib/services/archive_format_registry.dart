@@ -291,7 +291,7 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     canCreate: true,
     canModify: true,
     notes:
-        'Unencrypted UDIF images with raw, zero, ADC, zlib, bzip2 or XZ/LZMA blocks. '
+        'Unencrypted UDIF images with raw, zero, ADC, zlib, bzip2, LZFSE or XZ/LZMA blocks. '
         'Create HFSX data-volume DMGs up to 8 GiB on native local storage. Rewrite fully inspected CrispCloud single-volume data profiles; other filesystem layouts remain read-only. APFS files are unavailable.',
   ),
   ArchiveFormatCapability(

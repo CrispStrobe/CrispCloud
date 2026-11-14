@@ -11,6 +11,7 @@ import 'archive_adc_codec.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_iso_reader.dart';
+import 'archive_lzfse_codec.dart';
 import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
@@ -463,7 +464,7 @@ class _CheckedDmgSource implements koni.ByteSource {
 }
 
 /// Reads unencrypted, single-segment UDIF disk images without mounting them.
-/// Raw/zero/ADC/zlib/bzip2/XZ blocks form bounded positional partition sources.
+/// Raw/zero/ADC/zlib/bzip2/LZFSE/XZ blocks form bounded positional sources.
 /// Supported HFS+/HFSX or ISO files are exposed under `files/`; raw partition
 /// images are independently available under `partitions/`.
 Future<ViewerArchive> openDmgArchive(
@@ -555,8 +556,8 @@ Future<ViewerArchive> openDmgArchive(
     final notices = <String>[
       'Read-only disk image. Files are data forks; filesystem permissions, '
           'resource forks and extended attributes are not restored.',
-      'Present compression checksums are checked on read; ADC has no embedded '
-          'checksum. Partition CRCs are checked on full partition extraction. '
+      'Present compression checksums are checked on read; ADC and LZFSE have '
+          'no embedded checksum. Partition CRCs are checked on full partition extraction. '
           'Whole-image checksums and publisher signatures are not verified.',
     ];
     void add(
@@ -843,12 +844,10 @@ _DmgPartition _partition(
       0x80000004,
       0x80000005,
       0x80000006,
+      0x80000007,
       0x80000008,
     ].contains(type)) {
-      _bad(
-        'Compression method 0x${type.toRadixString(16)} is unavailable '
-        '(LZFSE and unknown methods are not supported).',
-      );
+      _bad('Compression method 0x${type.toRadixString(16)} is unavailable.');
     }
     _range(sectorCount, start, sectors);
     if (sectors <= 0 || start != endSector) {
@@ -995,6 +994,10 @@ class _DmgPartition implements koni.ByteSource {
                 packed,
                 verify: true,
                 maxOutputSize: chunk.length,
+              ),
+              0x80000007 => decodeArchiveLzfse(
+                packed,
+                expectedBytes: chunk.length,
               ),
               // ULMO uses an XZ stream, not an LZMA-alone byte stream.
               0x80000008 => ar.XZDecoder(

@@ -25,6 +25,7 @@ class DmgFixture {
         0x80000004 => _adcLiterals(raw),
         0x80000005 => Uint8List.fromList(const ZLibEncoder().encode(raw)),
         0x80000006 => Uint8List.fromList(BZip2Encoder().encode(raw)),
+        0x80000007 => _lzfseRawBlock(raw),
         0x80000008 => Uint8List.fromList(XZEncoder().encode(raw)),
         _ => raw,
       };
@@ -114,4 +115,15 @@ Uint8List _adcLiterals(Uint8List input) {
     output.add(Uint8List.sublistView(input, at, end));
   }
   return output.takeBytes();
+}
+
+// LZFSE's raw framing wraps arbitrary filesystem data for workflow tests.
+// Compressed FSE/LZVN blocks come from the separate Apple reference fixtures.
+Uint8List _lzfseRawBlock(Uint8List input) {
+  final output = Uint8List(input.length + 12)
+    ..setAll(0, ascii.encode('bvx-'))
+    ..setAll(8, input)
+    ..setAll(input.length + 8, ascii.encode('bvx\u0024'));
+  ByteData.sublistView(output).setUint32(4, input.length, Endian.little);
+  return output;
 }

@@ -34,7 +34,7 @@ metadata, protection or filesystem structures cannot be preserved.
 | DEB / UDEB | AR wrapper and nested TAR members | No package builder | Coordinated prebuilt payload replacement | Exact original three-member wrapper/order; required control fields and present md5sums are checked. Replace prepared control/data payloads together. Nested in-app package edits are disabled. |
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge, including bounded regular-file multi-extent chains | Data ISO | Inspected data-only, single-extent profiles | Native creation/editing uses an 8 GiB image budget; each written member must be smaller than 4 GiB. Reader chains can represent logical members up to 8 GiB within existing operation limits. Retains inspected volume/root/Rock Ridge/Joliet metadata. Multi-extent files, boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
-| DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
+| DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/LZFSE/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
 | RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
@@ -183,7 +183,7 @@ recorded order. The reader bounds section counts and combined logical size;
 existing preview/extraction limits still apply. Multi-extent images remain
 read-only. See [ISO section-chain support](archive-iso-multiextent.md).
 
-Supported DMG compression includes ADC (UDCO) and XZ-wrapped LZMA (ULMO), with
+Supported DMG compression includes ADC (UDCO), LZFSE (ULFO) and XZ-wrapped LZMA (ULMO), with
 strict chunk-length checks and a 16 MiB compressed-chunk/dictionary ceiling.
 These added codecs are read-only; see [DMG codec profiles](archive-dmg-codecs.md)
 for integrity boundaries and independently generated verification inputs.
@@ -361,8 +361,8 @@ content checksums from publisher authentication.
   Each compressed chunk is limited to 16 MiB. One shared chunk cache avoids
   retaining an expanded buffer per partition. Declared disk geometry is
   bounded separately from allocatable memory.
-- DMG compression checksums, when present, are checked when decoded. ADC has
-  no embedded checksum. A raw partition's
+- DMG compression checksums, when present, are checked when decoded. ADC and
+  LZFSE have no embedded checksum. A raw partition's
   CRC is checked when that whole partition is extracted; UDIF ignore blocks
   do not contribute to the CRC. Partial file browsing does not verify the
   whole-image checksum or any publisher signature.
