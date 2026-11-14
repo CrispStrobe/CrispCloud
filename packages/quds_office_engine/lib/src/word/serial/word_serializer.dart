@@ -796,6 +796,14 @@ class WordSerializer {
             _writeTrackedRun(w, paragraph, inline, offset);
           }
           offset += inline.text.length;
+        case WmlOpaqueInline():
+          w.writeStartElement('r', prefix: 'w');
+          final rPr = inline.runPropertiesXml;
+          if (rPr != null && rPr.isNotEmpty) {
+            XmlDocument.parse(rPr).root!.writeTo(w);
+          }
+          WordOpaqueIo.write(w, inline.content, _package!, _activePartUri);
+          w.writeEndElement();
         case WmlBreak():
           w.writeStartElement('r', prefix: 'w');
           w.writeStartElement('br', prefix: 'w');

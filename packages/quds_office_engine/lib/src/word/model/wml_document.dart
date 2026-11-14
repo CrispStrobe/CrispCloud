@@ -141,6 +141,20 @@ final class WmlBookmarkBoundary extends WmlInline {
   final String? sourceXml;
 }
 
+/// Inline content the model does not interpret, kept verbatim with the
+/// provenance of the relationships it references — e.g. legacy VML
+/// pictures, shapes and horizontal rules (`w:pict`). Without it such content
+/// vanished on the first save.
+final class WmlOpaqueInline extends WmlInline {
+  WmlOpaqueInline({required this.content, this.runPropertiesXml});
+
+  /// The preserved element and its relationship provenance.
+  final WmlOpaqueBlock content;
+
+  /// The enclosing run's `w:rPr`, written back around the content.
+  final String? runPropertiesXml;
+}
+
 /// Class WmlRun.
 class WmlRun extends WmlInline {
   /// WmlRun API.

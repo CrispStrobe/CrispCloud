@@ -1261,6 +1261,8 @@ void main() {
       expect(cloud.files['/target/one.txt'], utf8.encode('existing'));
       expect(cloud.files.containsKey('/target/two.bin'), isFalse);
       expect(cloud.uploads, isEmpty);
+      // The completed transfer's rate window decays before the fixture ends.
+      await tester.pump(const Duration(seconds: 2));
       expect(tester.takeException(), isNull);
       // Cancel the externally owned bandwidth timer before widget invariants.
       await tester.pumpWidget(const SizedBox());

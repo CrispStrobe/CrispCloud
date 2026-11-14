@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-11-12",
+  "review_date": "2026-11-14",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
   "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
   "required_providers": [
@@ -435,6 +435,19 @@
         "lib/widgets/ebook_editor_dialog.dart"
       ],
       "note": "The four ebook dependencies resolve to one immutable crisperbooks Git revision. The manifest covers every tracked upstream file and verification checks the actual Pub-resolved bytes, Git identities and package roots. Shared APIs retain the existing cryptographic behavior documented above. Foreground speech uses platform/browser voices and sends no book bytes to a new application network endpoint; voice implementation and availability remain platform-dependent. This source refresh does not change distribution declarations or territory decisions."
+    },
+    {
+      "name": "Verified native S3 block reuse and delta staging",
+      "algorithms": [
+        "SHA-256 block and candidate integrity checks",
+        "Adler-32 planning checksum (not authentication)"
+      ],
+      "implementations": [
+        "lib/services/delta_sync_service.dart",
+        "lib/services/s3_client_adapter.dart",
+        "lib/services/file_operation_content_strategy.dart"
+      ],
+      "note": "Explicit native S3 download-to-local copy profile. Source versions, local baseline provenance and a complete private candidate are revalidated before publication. ETags identify revisions; they are not treated as SHA-256 content hashes. This is an integrity/transfer feature and adds no new encryption algorithm or credential storage."
     }
   ],
   "reviewed_files": [
@@ -591,6 +604,7 @@
     "lib/services/background_sync_mobile.dart",
     "lib/services/backup_service.dart",
     "lib/services/bcrypt_aesgcm.dart",
+    "lib/services/bounded_http_transfer.dart",
     "lib/services/captured_file_target.dart",
     "lib/services/cert_pinning_service.dart",
     "lib/services/conditional_file_publication.dart",
@@ -604,6 +618,7 @@
     "lib/services/cryptography_crypto_provider.dart",
     "lib/services/cryptomator_service.dart",
     "lib/services/csv_spreadsheet_import.dart",
+    "lib/services/delta_sync_service.dart",
     "lib/services/document_fonts.dart",
     "lib/services/document_preview_source.dart",
     "lib/services/dropbox_file_publication.dart",
@@ -619,6 +634,8 @@
     "lib/services/external_editor_service.dart",
     "lib/services/external_remote_editing_service.dart",
     "lib/services/file_bytes_loader.dart",
+    "lib/services/file_operation_content_strategy.dart",
+    "lib/services/file_operation_options.dart",
     "lib/services/file_pointer_modifiers.dart",
     "lib/services/file_viewer_documents_license.dart",
     "lib/services/filen_client_adapter.dart",
@@ -648,11 +665,13 @@
     "lib/services/nextcloud_client_adapter.dart",
     "lib/services/office_css_font.dart",
     "lib/services/openssl_aesgcm.dart",
+    "lib/services/pcloud_client_adapter.dart",
     "lib/services/pdf_file_store.dart",
     "lib/services/plugin_service.dart",
     "lib/services/private_tool_staging_io.dart",
     "lib/services/proxy_service.dart",
     "lib/services/rust_cloud_delegate.dart",
+    "lib/services/s3_client_adapter.dart",
     "lib/services/save_coordinator.dart",
     "lib/services/secure_storage_file.dart",
     "lib/services/secure_storage_file_io.dart",

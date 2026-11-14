@@ -877,6 +877,24 @@ class WordDeserializer {
         } else {
           run.text += '\n';
         }
+      } else if (reader.localName == 'pict' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        if (run.text.isNotEmpty) {
+          inlines.add(
+            WmlRun(
+              text: run.text,
+              properties: run.properties.copy(),
+              commentIds: List<int>.of(_openCommentIds),
+            ),
+          );
+          run.text = '';
+        }
+        inlines.add(
+          WmlOpaqueInline(
+            content: WordOpaqueIo.read(reader, package, docUri),
+            runPropertiesXml: run.properties.sourcePropertiesXml,
+          ),
+        );
       } else if (reader.localName == 'object' ||
           reader.localName == 'drawing' ||
           reader.localName == 'OLEObject') {

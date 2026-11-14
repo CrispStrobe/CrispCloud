@@ -4,8 +4,8 @@
 
 Local, cloud and network storage. Automated unit, widget and native protocol tests. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
-Each pane has a visible Up button and one compact storage selector for connected
-accounts, local volumes, Home, Computer and bookmarks. The closed selector shows
+Each pane has a visible Up button. On desktop, one compact storage selector
+combines connected accounts, local volumes, Home, Computer and bookmarks. The closed selector shows
 at most 15 characters; the menu and tooltip retain the full name. Edit a path
 through its context menu. Terminal remains on F9 and in More actions;
 synchronized browsing remains a menu command rather than a permanent toolbar button.
@@ -26,7 +26,9 @@ server CORS still needs configuration. See the [live verification and limits](do
 
 The current Office integration preserves authored spreadsheet number formats and
 includes Word media deduplication, supported symbol characters and independent
-sibling text boxes. Legacy DOC import offers explicit auxiliary-feature recovery
+sibling text boxes. Legacy VML pictures, shapes and rules retain their source
+content for export; their native rendering and editing remain unsupported.
+Legacy DOC import offers explicit auxiliary-feature recovery
 and exports canonical built-in style names. It also includes undoable worksheet direction, frozen panes,
 grid edits and selection formatting, plus more tolerant DOCX bookmark and measurement
 imports. Cell identity is retained across sorting and grid undo. Imported control-ID

@@ -6,9 +6,8 @@ CrispCloud for Word, Excel, PowerPoint and PDF handling.
 - Upstream: https://github.com/MohammedAsaadAsaad/quds_office_suite
 - Fork (canonical for our fixes): https://github.com/CrispStrobe/quds_office_suite, branch `main`
   (the old `crispcloud` branch is fully contained in it)
-- Current fidelity continuation in both repositories:
-  `feature/office-fidelity-completion-20261111`. The app's exact source pin below
-  is authoritative while this work is reviewed on feature branches.
+- Current integrated sources are pinned in `tool/office_fidelity_manifest.json`.
+  Feature acceptance records retain their original qualified source identities.
 
 ## Why we carry local copies
 
@@ -22,9 +21,19 @@ The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
 PowerPoint file, editing it and saving it must not silently change or lose
 content.
 
-## State (14 November 2026, spreadsheet fidelity)
+## Current integrated state (14 November 2026)
 
-- Pinned fork revision: `fad26db2d5054c48705d27b0fb4808ed63aada2f` (fork
+The app mirrors Quds main `5133ce0343cb7c9456f852a4e760c771294ae6de` and standalone
+legacy parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`; all 2,194 managed files
+verify. This includes authored number formats, shared history/sorting coverage,
+Word media deduplication, supported symbol characters and sibling text-box
+isolation. Legacy VML content retains its opaque source and relationship
+integrity through export without claiming full visual rendering. Legacy conversion exports canonical built-in style names and offers
+explicit auxiliary-feature recovery; strict parsing stays the default.
+
+## Spreadsheet audit checkpoint (14 November 2026)
+
+- Audited fork revision: `fad26db2d5054c48705d27b0fb4808ed63aada2f` (fork
   `main`), also containing the recovery checkpoint `2d2a7be4`.
 - Four spreadsheet defects found by the Excel fidelity audit are fixed and
   regression-tested:
