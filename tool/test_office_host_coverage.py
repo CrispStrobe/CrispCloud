@@ -2,7 +2,10 @@
 from pathlib import Path
 import tempfile
 import unittest
-from office_host_coverage import report_coverage, require_all_sources
+from office_host_coverage import (
+    BROWSER_COPY_SOURCE, COPY_TYPES_SOURCE, COPY_TYPE_DECLARATIONS,
+    report_coverage, require_all_sources,
+)
 
 
 class HostCoverageControls(unittest.TestCase):
@@ -125,6 +128,84 @@ class HostCoverageControls(unittest.TestCase):
         (self.root / helper).write_text('disclose differently\nconvert\nsave\n')
         changed = report_coverage(lcov, self.root)
         self.assertNotEqual(incomplete['source_tree_sha256'], changed['source_tree_sha256'])
+
+    def _copy_sources(self):
+        source = 'lib/services/office_device_export.dart'
+        (self.root / source).write_text(
+            "import 'office_device_export_native.dart'\n"
+            "    if (dart.library.html) 'office_device_export_web.dart' as platform;\n"
+            'void exportCopy() {}\n')
+        native = 'lib/services/office_device_export_native.dart'
+        (self.root / native).write_text('void exportCopy() {}\n')
+        (self.root / BROWSER_COPY_SOURCE).write_text('void browserCopy() {}\n')
+        (self.root / COPY_TYPES_SOURCE).write_text(COPY_TYPE_DECLARATIONS)
+        return ''.join(
+            f'SF:{name}\nDA:1,1\nLF:1\nLH:1\nend_of_record\n'
+            for name in ['lib/widgets/office_editor_dialog.dart',
+                         'lib/services/office_document_service.dart', source, native])
+
+    def test_platform_classification_keeps_all_hashes_without_claiming_browser_execution(self):
+        report = report_coverage(self._copy_sources(), self.root)
+        require_all_sources(report)
+        self.assertEqual(len(report['required_native_sources']), 4)
+        self.assertEqual(report['instrumented_lines'], 4)
+        self.assertEqual(len(report['source_sha256']), 6)
+        browser = report['browser_only_sources'][0]
+        self.assertEqual(browser['path'], BROWSER_COPY_SOURCE)
+        self.assertEqual(browser['status'], 'not_measured_by_native_run')
+        self.assertEqual(browser['source_sha256'], report['source_sha256'][BROWSER_COPY_SOURCE])
+        self.assertEqual(report['declaration_only_sources'][0]['path'], COPY_TYPES_SOURCE)
+
+    def test_native_copy_adapter_remains_mandatory(self):
+        lcov = self._copy_sources()
+        native = 'lib/services/office_device_export_native.dart'
+        lcov = lcov.replace(f'SF:{native}\nDA:1,1\nLF:1\nLH:1\nend_of_record\n', '')
+        report = report_coverage(lcov, self.root)
+        self.assertEqual(report['uninstrumented_files'], [native])
+        with self.assertRaisesRegex(ValueError, 'office_device_export_native.dart'):
+            require_all_sources(report)
+
+    def test_browser_or_declaration_changes_remain_in_source_fingerprint(self):
+        lcov = self._copy_sources()
+        before = report_coverage(lcov, self.root)
+        path = self.root / BROWSER_COPY_SOURCE
+        path.write_text(path.read_text() + '// changed browser implementation\n')
+        after = report_coverage(lcov, self.root)
+        self.assertNotEqual(before['source_tree_sha256'], after['source_tree_sha256'])
+        path = self.root / COPY_TYPES_SOURCE
+        path.write_text(path.read_text() + '// declaration documentation\n')
+        latest = report_coverage(lcov, self.root)
+        self.assertNotEqual(after['source_tree_sha256'], latest['source_tree_sha256'])
+
+    def test_executable_body_cannot_hide_in_declaration_only_filename(self):
+        lcov = self._copy_sources()
+        path = self.root / COPY_TYPES_SOURCE
+        for extra in ('int sideEffect() => 1;\n', 'final value = DateTime.now();\n'):
+            path.write_text(COPY_TYPE_DECLARATIONS + extra)
+            with self.subTest(extra=extra), self.assertRaisesRegex(ValueError, 'Declaration-only'):
+                report_coverage(lcov, self.root)
+
+    def test_unconditional_browser_adapter_cannot_be_exempted_as_browser_only(self):
+        lcov = self._copy_sources()
+        (self.root / 'lib/services/office_device_export.dart').write_text(
+            "import 'office_device_export_web.dart' as platform;\nvoid exportCopy() {}\n")
+        with self.assertRaisesRegex(ValueError, 'conditional import'):
+            report_coverage(lcov, self.root)
+
+    def test_new_web_named_source_does_not_automatically_escape_native_inventory(self):
+        lcov = self._copy_sources()
+        extra = 'lib/services/office_other_web.dart'
+        (self.root / extra).write_text('void unchecked() {}\n')
+        with self.assertRaisesRegex(ValueError, 'office_other_web.dart'):
+            require_all_sources(report_coverage(lcov, self.root))
+
+    def test_additional_browser_import_cannot_hide_behind_a_valid_conditional_import(self):
+        lcov = self._copy_sources()
+        # This intentionally sits outside the Office filename globs.
+        (self.root / 'lib/bootstrap.dart').write_text(
+            "import 'services/office_device_export_web.dart';\n")
+        with self.assertRaisesRegex(ValueError, 'additional import/reference'):
+            report_coverage(lcov, self.root)
 
 
 if __name__ == '__main__':

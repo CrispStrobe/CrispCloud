@@ -74,16 +74,19 @@ class OfficeTestHarness {
     WidgetTester tester, {
     String name = 'report.docx',
     String fixture = 'word.docx',
+    Uint8List? initialBytes,
     Uint8List? bytesOverride,
     bool expectEditor = true,
     OfficeDeviceExporter copyExporter = exportOfficeCopy,
     Locale locale = const Locale('en'),
   }) async {
+    assert(initialBytes == null || bytesOverride == null);
     SharedPreferences.setMockInitialValues({});
     final cloud = OfficeTestCloud()
       ..put(
         '/$name',
-        bytesOverride ??
+        initialBytes ??
+            bytesOverride ??
             File('packages/quds_office_engine/test/fixtures/fidelity/$fixture')
                 .readAsBytesSync(),
       );

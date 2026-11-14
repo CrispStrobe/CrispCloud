@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import posixpath
+import re
 from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree as ET
 from zipfile import BadZipFile, ZipFile
@@ -33,6 +34,33 @@ for extension, content_type in {
 OFFICE = set(MAIN_TYPES)
 
 
+def reference_entries():
+    """Immutable independent expectations, distinct from actual host uploads."""
+    data = json.loads(MANIFEST.read_text())
+    entries = data.get('references', []) if isinstance(data, dict) else []
+    if not isinstance(entries, list):
+        raise ValueError('Host references must be a list')
+    seen = set()
+    for entry in entries:
+        if (not isinstance(entry, dict) or set(entry) != {'path', 'fixture', 'sha256'}
+                or any(not isinstance(value, str) for value in entry.values())
+                or not re.fullmatch(r'[0-9a-f]{64}', entry['sha256'])):
+            raise ValueError('Host reference requires a path, source fixture and SHA-256')
+        path = PurePosixPath(entry['path'])
+        fixture = PurePosixPath(entry['fixture'])
+        for name in (path, fixture):
+            if (name.is_absolute() or '..' in name.parts or '\\' in str(name)
+                    or name.suffix not in OFFICE):
+                raise ValueError('Invalid host reference path')
+        if (str(path) != entry['path'] or str(fixture) != entry['fixture']
+                or path.parts[:3] != ('build', 'fidelity-host', 'reference')
+                or fixture.parts[:3] != ('test', 'fixtures', 'office_native_workflows')
+                or path.name != fixture.name or entry['path'] in seen):
+            raise ValueError('Host reference must identify its exact independent fixture')
+        seen.add(entry['path'])
+    return entries
+
+
 def expected_paths():
     data = json.loads(MANIFEST.read_text())
     paths = data.get('outputs') if isinstance(data, dict) else None
@@ -48,7 +76,10 @@ def expected_paths():
                 or path.parts[:2] not in (('build', 'fidelity-host'), ('build', 'fidelity'),
                                           ('build', 'fidelity-custom-tabs'))):
             raise ValueError(f'Invalid host evidence path: {name}')
-    return paths
+    references = [entry['path'] for entry in reference_entries()]
+    if set(paths) & set(references):
+        raise ValueError('A reference cannot also be an actual host output')
+    return [*paths, *references]
 
 
 def inspect_package(file):
@@ -123,6 +154,7 @@ def clean(root):
 def inspect(root):
     root = root.resolve()
     expected = expected_paths()
+    references = {entry['path']: entry for entry in reference_entries()}
     # GitHub artifact downloads may add a directory around the original tree.
     # Match the complete build/... suffix, never a filename from engine output.
     bases = {
@@ -150,11 +182,18 @@ def inspect(root):
         except (BadZipFile, OSError, ValueError, ET.ParseError, KeyError) as error:
             failures.append(f'{name}: invalid Office package: {error}')
             continue
+        sha256 = hashlib.sha256(content).hexdigest()
+        reference = references.get(name)
+        if reference is not None and sha256 != reference['sha256']:
+            failures.append(f'{name}: independent reference SHA-256 mismatch')
+            continue
         files.append({
             'path': name,
             'file': str(file.relative_to(root)),
             'bytes': len(content),
-            'sha256': hashlib.sha256(content).hexdigest(),
+            'sha256': sha256,
+            'role': 'independent_reference' if reference else 'host_output',
+            **({'source_fixture': reference['fixture']} if reference else {}),
             'format': file.suffix.lower()[1:],
             'main_part': main_part,
         })
@@ -170,6 +209,10 @@ def inspect(root):
     return {
         'expected': len(expected),
         'verified': len(files),
+        'expected_host_outputs': len(expected) - len(references),
+        'verified_host_outputs': sum(entry['role'] == 'host_output' for entry in files),
+        'expected_references': len(references),
+        'verified_references': sum(entry['role'] == 'independent_reference' for entry in files),
         'manifest_sha256': hashlib.sha256(MANIFEST.read_bytes()).hexdigest(),
         'files': files,
         'failures': failures,
