@@ -1,0 +1,5 @@
+build/office-fill-host-acceptance/source.xlsx: expected one file, found 0
+build/office-fill-host-acceptance/saved-1.xlsx: expected one file, found 0
+build/office-fill-host-acceptance/saved-2.xlsx: expected one file, found 0
+build/office-fill-host-acceptance/saved-3.xlsx: expected one file, found 0
+Host inventory: 166/170 verified; 4 failures; receipt /workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/missing-office-fill-host-acceptance.json

@@ -15,7 +15,12 @@ The existing native-fill capture directory was absent from the CI upload and
 inventory routes. The new routing declares 21 exact schema artifacts: two
 authored inputs and 19 actual host outputs across the native-fill and
 worksheet-state directories. The existing 146 rendered outputs and three pinned
-references remain unchanged. Focused inventory controls are pending.
+references remain unchanged. All 23 focused inventory controls pass at
+`4518e771`. The actual inventory CLI also verifies a complete 170-file control
+tree; the workflow's staging code copies exactly the original 149 rendered files.
+Removing either new acceptance directory fails the check. The
+[CI integration receipt](evidence/office-worksheet-state-20261114/ci-integration/README.md)
+keeps the synthetic integrity controls separate from actual host/schema evidence.
 
 Five new host cases reproduce missing close prompts for RTL/freeze changes,
 missing revision tracking during delayed uploads, and wrong-sheet grid history

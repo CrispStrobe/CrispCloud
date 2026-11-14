@@ -1,0 +1,12 @@
+{
+  "baseline_host_head": "5454096520802adac784282ee3d4d06d77564ba5",
+  "baseline_host_input_tree_sha256": "a9642bb7776a7166206c49cffd41284c4f21c0f86b48195287babeca0f128d5b",
+  "baseline_host_source_snapshot_sha256": "a9e18c1b6056cb9932f349aeed19beb1290ac551449cb8686accf95ba4f1ca0a",
+  "host_test_source": "test/widget/office_sheet_state_workflow_test.dart",
+  "host_test_sha256": "0ada99c43f88d5c4062dcade0726be7ee3b671be27341c49ecf62b80814a5974",
+  "test_bytes_identical_to_published_4518e771": true,
+  "baseline_capture_sha256": "49c9f1a3ab13574f34f304400014bf5277f72787b5e5899cc4e8f80476415c5c",
+  "note": "The baseline ran with the recorded worktree snapshots. Publication at 4518e771 preserves the same host test bytes; this does not relabel the baseline execution as a run at that commit.",
+  "published_test_commit": "4518e7719e6d4a78c19386ea4f9dd30933bd6931",
+  "published_test_sha256": "0ada99c43f88d5c4062dcade0726be7ee3b671be27341c49ecf62b80814a5974"
+}

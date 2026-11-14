@@ -1,0 +1,16 @@
+{
+  "head": "4518e7719e6d4a78c19386ea4f9dd30933bd6931",
+  "started_utc": "2026-11-14T19:41:40.620273+00:00",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "inputs_sha256": {
+    ".github/workflows/office-fidelity.yml": "a0cb0032f3a4b41c951de46cb7b247f18fde771df3b04571a6e4020a527243f9",
+    "tool/check_office_fidelity.sh": "fc6f2524b81055080c432412e07c29c462def8306b443ffa0f6a1581a5676647",
+    "tool/office_host_evidence.json": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c",
+    "tool/office_host_evidence.py": "8e38bded2fe04c6155ebf69fbcac36a4843bc8ee09d706206aa7aba9920545b8",
+    "tool/test_office_host_evidence.py": "f735e56e3e100168d127b4ee6b7b357cfc44f9475d0785dfd9232e2bd62d5b48",
+    "test/widget/office_sheet_state_workflow_test.dart": "0ada99c43f88d5c4062dcade0726be7ee3b671be27341c49ecf62b80814a5974",
+    "test/fixtures/office_native_workflows/native-word-expected.docx": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+    "test/fixtures/office_native_workflows/native-sheet-expected.xlsx": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+    "test/fixtures/office_native_workflows/native-slide-expected.pptx": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1"
+  }
+}

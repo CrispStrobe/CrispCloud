@@ -1,0 +1,95 @@
+{
+  "scope": "Synthetic OPC integrity/CLI/staging controls only. No SDK, host-run, or rendering result is claimed.",
+  "app_head": "4518e7719e6d4a78c19386ea4f9dd30933bd6931",
+  "source_sha256": {
+    ".github/workflows/office-fidelity.yml": "a0cb0032f3a4b41c951de46cb7b247f18fde771df3b04571a6e4020a527243f9",
+    "tool/office_host_evidence.py": "8e38bded2fe04c6155ebf69fbcac36a4843bc8ee09d706206aa7aba9920545b8",
+    "tool/office_host_evidence.json": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c",
+    "tool/test_office_host_evidence.py": "f735e56e3e100168d127b4ee6b7b357cfc44f9475d0785dfd9232e2bd62d5b48"
+  },
+  "source_inputs_unchanged": true,
+  "pyyaml_version": "6.0.3",
+  "positive_inventory_expected": 170,
+  "positive_inventory_verified": 170,
+  "render_staging_files": 149,
+  "render_staging_exactly_matches_legacy_manifest": true,
+  "all_staged_bytes_match_inventory": true,
+  "schema_only_files_validated_by_inventory": 21,
+  "schema_only_roots_in_upload": [
+    "build/office-fill-host-acceptance",
+    "build/office-sheet-state-acceptance"
+  ],
+  "missing_controls": [
+    {
+      "root": "build/office-fill-host-acceptance",
+      "missing_files": 4,
+      "exit_code": 1,
+      "failures": 4
+    },
+    {
+      "root": "build/office-sheet-state-acceptance",
+      "missing_files": 17,
+      "exit_code": 1,
+      "failures": 17
+    }
+  ],
+  "workflow_stage_script_sha256": "d52a40ad311a64fa6177c6d6b88e09d2717b1dc733e765a20713264ff69712d3",
+  "collector_sha256": "8271743a1d8970dca3bcafca4e9a2d45215035a036a5868c2677aeb165df161d",
+  "commands": [
+    {
+      "label": "complete-inventory",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/build/external/host-inventory.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control",
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "workflow-render-stage",
+      "command": [
+        "bash",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/workflow-render-stage.sh"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control",
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "missing-office-fill-host-acceptance",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/missing-office-fill-host-acceptance.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    },
+    {
+      "label": "missing-office-sheet-state-acceptance",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/f035141943c7/CrispCloud/tool/office_host_evidence.py",
+        "verify",
+        "--root",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/evidence",
+        "--report",
+        "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/missing-office-sheet-state-acceptance.json"
+      ],
+      "cwd": "/workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    }
+  ]
+}
