@@ -60,6 +60,19 @@ positional integer offsets. Images must fit the exact JavaScript integer range,
 at most `2^53 - 1` bytes. Partition ranges must remain within the actual source.
 No invalid or guessed partition range is turned into a raw member.
 
+The direct reader's positional range is wider than the current host profile.
+Native F3 and streamed workspace opens retain the existing 8 GiB input-image
+ceiling for this increment. Sparse multi-terabyte service tests establish exact
+offset handling; they do not qualify native F3 browsing of multi-terabyte image
+files. Buffered and browser workflows retain their existing smaller input and
+preview limits.
+
+The native archive workspace also retains its existing 8 GiB aggregate member
+size allowance. It counts the visible raw partition entries and filesystem
+files, including their overlapping content. A disk image below the input-size
+ceiling can therefore exceed the workspace's aggregate allowance. Direct
+service/F3 browsing and individual extraction have their own operation limits.
+
 The non-owning `diskImageAnalysisSupportsBrowsing` helper uses these same
 admission rules with the default 32-partition ceiling. It performs no payload
 read. A positive inspection result is not an identity lock: the Archive open

@@ -417,6 +417,7 @@ class _FatReader {
       members: _members,
       notices: _notices.toList(growable: false),
       read: (member, requested) async {
+        _checkCancelled();
         final limit = requested < maxMemberBytes ? requested : maxMemberBytes;
         if (member.size > limit || member.size > kArchiveReadLimit) {
           _limit(
@@ -629,6 +630,7 @@ class _FatReader {
     var remaining = logicalSize;
     final trimmed = <_FatExtent>[];
     for (final extent in extents) {
+      await _checkpoint();
       final length = extent.length < remaining ? extent.length : remaining;
       if (length > 0) trimmed.add(_FatExtent(extent.offset, length));
       remaining -= length;
@@ -897,6 +899,7 @@ class _FatReader {
   }
 
   Stream<List<int>> _stream(_FatFile file, int requestedChunk) async* {
+    _checkCancelled();
     if (file.size > maxMemberBytes) _limit('Member streaming allowance.');
     final chunk = requestedChunk < _readBytes ? requestedChunk : _readBytes;
     for (final extent in file.extents) {
@@ -905,6 +908,7 @@ class _FatReader {
         yield await _read(extent.offset + at, count, metadata: false);
       }
     }
+    _checkCancelled();
   }
 }
 

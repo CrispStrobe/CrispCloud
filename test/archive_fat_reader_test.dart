@@ -1152,6 +1152,31 @@ void main() {
       );
       expect(source.reads, isEmpty);
     });
+
+    test(
+      'cancellation also covers empty-file read and stream operations',
+      () async {
+        var cancelled = false;
+        final source = FatFixture(fileData: []).source();
+        final archive = await openFatArchive(
+          source,
+          maxMemberBytes: 100,
+          isCancelled: () => cancelled,
+        );
+        addTearDown(archive.close);
+        source.reads.clear();
+        cancelled = true;
+        await expectLater(
+          archive.readMember(archive.members.single),
+          throwsA(isA<ArchiveFatCancelledException>()),
+        );
+        await expectLater(
+          archive.openMember(archive.members.single).toList(),
+          throwsA(isA<ArchiveFatCancelledException>()),
+        );
+        expect(source.reads, isEmpty);
+      },
+    );
   });
 }
 
