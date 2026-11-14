@@ -1165,3 +1165,14 @@ technical source-binding fingerprints are refreshed; no release action is taken.
 ```
 
 The 1.2.7 snapshot adds UNIX compress output and archive move dependency records. Destination verification uses the existing SHA-256 and persistent storage authority checks; the versioned records contain no passwords. The complete archive publication/model/dialog surface is included in the reviewed inventory. No new encryption primitive or credential destination is introduced.
+
+### 2026-11-14: standalone local disk-usage command
+
+The CLI adds a metadata-only `du` command and promotes the already locked
+`collection` 1.19.1 dependency to direct use for bounded top-N ranking. No
+transport, credential persistence, encryption primitive or dependency version
+changes. The reviewed-source fingerprint is refreshed solely for the CLI
+pubspec/lockfile changes. Classification, territory and TestFlight group policy
+remain as previously recorded. CLI validation: 140 tests passed, five existing
+conditional skips; the 11 new disk-usage cases passed. The native macOS bundle
+built and scanned successfully without reading cloud configuration.
