@@ -31,7 +31,7 @@ class BinaryComparisonLimits {
   final Duration overallTimeout, inactivityTimeout;
 
   void validate() {
-    final ceiling = kIsWeb
+    const ceiling = kIsWeb
         ? kBinaryComparisonWebInputLimit
         : kBinaryComparisonNativeInputLimit;
     if (maxBytes < 1 || maxBytes > ceiling) {
@@ -540,8 +540,9 @@ class _ComparisonGuard {
             check();
             completed.completeError(error, stack);
           } catch (halted, haltedStack) {
-            if (!completed.isCompleted)
+            if (!completed.isCompleted) {
               completed.completeError(halted, haltedStack);
+            }
           }
         },
       ),

@@ -1671,6 +1671,7 @@ class WordSerializer {
       package.getPart(uri)?.readText(),
       tracking: document.trackRevisions,
       protection: document.restrictEditing,
+      restrictMode: document.restrictMode,
       oddEven: document.sections.any((s) => s.differentOddEven),
     );
     if (xml == null) return;

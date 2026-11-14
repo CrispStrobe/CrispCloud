@@ -10,6 +10,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_cache_service.dart';
+import 'package:crisp_cloud/services/office_device_export.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 import 'package:file_picker/file_picker.dart';
@@ -120,6 +121,7 @@ Future<WordEditorController> _open(
   WidgetTester tester,
   _DelayedCloud cloud, {
   bool keepExisting = false,
+  OfficeDeviceExporter copyExporter = exportOfficeCopy,
 }) async => await _openFixture(
   tester,
   cloud,
@@ -127,6 +129,7 @@ Future<WordEditorController> _open(
   fixture: 'word.docx',
   editorType: QudsWordEditor,
   keepExisting: keepExisting,
+  copyExporter: copyExporter,
 ) as WordEditorController;
 
 Future<OfficeController> _openFixture(
@@ -136,6 +139,7 @@ Future<OfficeController> _openFixture(
   required String fixture,
   required Type editorType,
   bool keepExisting = false,
+  OfficeDeviceExporter copyExporter = exportOfficeCopy,
 }) async {
   SharedPreferences.setMockInitialValues({});
   if (!keepExisting) {
@@ -169,8 +173,11 @@ Future<OfficeController> _openFixture(
             body: ElevatedButton(
               onPressed: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
-                  builder: (_) =>
-                      OfficeEditorDialog(file: file, side: PanelSide.remote),
+                  builder: (_) => OfficeEditorDialog(
+                    file: file,
+                    side: PanelSide.remote,
+                    copyExporter: copyExporter,
+                  ),
                 ),
               ),
               child: const Text('Open fixture'),
@@ -1159,4 +1166,144 @@ void main() {
     });
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'system Back guards unsaved edits and Cancel permits a later close',
+    (tester) async {
+      await tester.runAsync(() async {
+        final cloud = _DelayedCloud();
+        final controller = await _open(tester, cloud);
+        final original = Uint8List.fromList(cloud.files['/report.docx']!);
+        controller.insertText('Keep this edit ');
+        await tester.pump();
+        await tester.binding.handlePopRoute();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text('Unsaved changes'), findsOneWidget);
+        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.byType(OfficeEditorDialog), findsOneWidget);
+        expect(controller.isDirty, isTrue);
+        expect(
+          controller.document.paragraphs.first.text,
+          contains('Keep this edit'),
+        );
+      await tester.tap(find.byTooltip('Close').first);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text('Unsaved changes'), findsOneWidget);
+        await tester.tap(find.widgetWithText(TextButton, 'Discard'));
+        await _pumpUntil(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+          'Discard did not close the guarded route.',
+        );
+        expect(cloud.files['/report.docx'], original);
+        expect(cloud.writes, isEmpty);
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'copy export survives failure and cancellation without cleaning the original',
+    (tester) async {
+      await tester.runAsync(() async {
+        final cloud = _DelayedCloud();
+        var attempts = 0;
+        Uint8List? exported;
+        final controller = await _open(
+          tester,
+          cloud,
+          copyExporter: (bytes, name, title) async {
+            expect(name, 'report.docx');
+            expect(title, 'Save a copy');
+            attempts++;
+            if (attempts == 1) {
+              throw StateError('Simulated unavailable destination');
+            }
+            if (attempts == 2) return null;
+            exported = Uint8List.fromList(bytes);
+            return OfficeCopyOutcome.savedCopy;
+          },
+        );
+        final original = Uint8List.fromList(cloud.files['/report.docx']!);
+        controller.insertText('Recovered edits ');
+        await tester.pump();
+        for (var attempt = 1; attempt <= 3; attempt++) {
+          await tester.tap(find.byTooltip('Save a copy'));
+          await _pumpUntil(
+            tester,
+            () => attempts == attempt && !_ribbon(tester).saving,
+            'Recovery export did not finish attempt $attempt.',
+          );
+          expect(controller.isDirty, isTrue);
+          expect(_ribbon(tester).dirty, isTrue);
+          expect(find.byType(OfficeEditorDialog), findsOneWidget);
+          expect(cloud.files['/report.docx'], original);
+          expect(cloud.writes, isEmpty);
+        }
+        expect(
+          _text(_part(exported!, 'word/document.xml')),
+          contains('Recovered edits'),
+        );
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'pending copy export blocks Back and retains edits made during export',
+    (tester) async {
+      await tester.runAsync(() async {
+        final cloud = _DelayedCloud();
+        final release = Completer<OfficeCopyOutcome?>();
+        Uint8List? captured;
+        final controller = await _open(
+          tester,
+          cloud,
+          copyExporter: (bytes, name, title) {
+            captured = Uint8List.fromList(bytes);
+            return release.future;
+          },
+        );
+        controller.insertText('Captured edit ');
+        await tester.pump();
+        await tester.tap(find.byTooltip('Save a copy'));
+        await _pumpUntil(
+          tester,
+          () => captured != null,
+          'The export did not start.',
+        );
+        await tester.binding.handlePopRoute();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text('Unsaved changes'), findsNothing);
+        expect(find.byType(OfficeEditorDialog), findsOneWidget);
+        controller.insertText('Later edit ');
+        release.complete(OfficeCopyOutcome.savedCopy);
+        await _pumpUntil(
+          tester,
+          () => !_ribbon(tester).saving,
+          'The export stayed busy.',
+        );
+        expect(
+          _text(_part(captured!, 'word/document.xml')),
+          contains('Captured edit'),
+        );
+        expect(
+          _text(_part(captured!, 'word/document.xml')),
+          isNot(contains('Later edit')),
+        );
+        expect(
+          controller.document.paragraphs.first.text,
+          contains('Later edit'),
+        );
+        expect(controller.isDirty, isTrue);
+        expect(cloud.writes, isEmpty);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

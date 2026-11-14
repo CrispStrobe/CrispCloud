@@ -168,11 +168,17 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   List<Widget> _fileMenu(ThemeData theme) => <Widget>[
-    _menuItem('Save', widget.saving ? null : widget.onSave,
-        icon: Icons.save_outlined),
+    _menuItem(
+      'Save',
+      widget.saving ? null : widget.onSave,
+      icon: Icons.save_outlined,
+    ),
     if (widget.onSaveCopy != null)
-      _menuItem('Save a copy', widget.saving ? null : widget.onSaveCopy,
-          icon: Icons.save_as_outlined),
+      _menuItem(
+        'Save a copy',
+        widget.saving ? null : widget.onSaveCopy,
+        icon: Icons.save_as_outlined,
+      ),
     if (widget.kind == OfficeEditorKind.word)
       _menuItem('Page setup…', _pageSetupMenu, icon: Icons.tune),
     const Divider(height: 1),

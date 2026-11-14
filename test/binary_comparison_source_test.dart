@@ -79,7 +79,7 @@ void main() {
   });
 
   Future<T> captured<T>(Future<T> Function() action) =>
-      IOOverrides.runZoned(action, getSystemTemp: () => temporary);
+      IOOverrides.runZoned(action, getSystemTempDirectory: () => temporary);
 
   test(
     'verified copies retain exact hashes, owned windows and read-only input',

@@ -428,6 +428,8 @@ class WordEditorController extends OfficeController {
   /// WordEditorController API.
   WordEditorController({WmlDocument? document, super.config, this.layoutEngine})
     : document = document ?? WmlDocument.empty() {
+    _requestedMode = _config.mode;
+    _config = _effectiveConfig(_config);
     relayout();
     input = OfficeInputBridge(
       onValue: _onIme,
@@ -453,6 +455,65 @@ class WordEditorController extends OfficeController {
 
   /// document API.
   WmlDocument document;
+
+  // Keep the host's requested interaction mode separate from document
+  // restrictions so a rebuild cannot bypass protection or undo enable edits
+  // in an intentionally read-only host.
+  late OfficeInteractionMode _requestedMode;
+
+  OfficeSurfaceConfig _effectiveConfig(OfficeSurfaceConfig value) =>
+      document.restrictEditing &&
+          (document.restrictMode != WmlRestrictMode.none ||
+              document.protectionFormattingRestricted) &&
+          value.allowsMutation
+      ? value.copyWith(mode: OfficeInteractionMode.viewing)
+      : value;
+
+  /// Whether the host can change Word protection without password verification.
+  bool get canChangeProtection =>
+      !_disposed &&
+      _requestedMode == OfficeInteractionMode.editing &&
+      !document.protectionHasPassword;
+
+  @override
+  OfficeSurfaceConfig get config => super.config;
+
+  @override
+  set config(OfficeSurfaceConfig value) {
+    _requestedMode = value.mode;
+    super.config = _effectiveConfig(value);
+    if (!config.allowsMutation) detachInput();
+  }
+
+  @override
+  void syncConfig(OfficeSurfaceConfig value) {
+    _requestedMode = value.mode;
+    super.syncConfig(_effectiveConfig(value));
+    if (!config.allowsMutation) detachInput();
+  }
+
+  @override
+  void setMode(OfficeInteractionMode mode) {
+    _requestedMode = mode;
+    super.setMode(_effectiveConfig(_config.copyWith(mode: mode)).mode);
+  }
+
+  void _syncProtectionMode() {
+    _config = _effectiveConfig(_config.copyWith(mode: _requestedMode));
+    if (!config.allowsMutation) detachInput();
+  }
+
+  @override
+  bool get canUndo => config.allowsMutation
+      ? super.canUndo
+      : canChangeProtection &&
+            commands.nextUndoCommand is _WordProtectionCommand;
+
+  @override
+  bool get canRedo => config.allowsMutation
+      ? super.canRedo
+      : canChangeProtection &&
+            commands.nextRedoCommand is _WordProtectionCommand;
 
   /// documentLaidOut API.
   late LaidOutDocument documentLaidOut;
@@ -837,6 +898,9 @@ class WordEditorController extends OfficeController {
 
   void _acceptOpenedWord(WmlDocument opened) {
     document = opened;
+    commands.clear();
+    _noteEditStart.clear();
+    _syncProtectionMode();
     _editingComment = false;
     documentCaret.paragraphIndex = 0;
     documentCaret.logicalIndex = 0;
@@ -3715,9 +3779,8 @@ class WordEditorController extends OfficeController {
           WmlRunEdit.replaceRange(last, 0, to, '');
           WordRevisions.joinParagraphs(document, first, last);
           first.inlines.addAll(
-            _cloneInlinesFrom(
-              last.inlines,
-            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(last.inlines)
+                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(first);
           parent.removeRange(range.startPara + 1, range.endPara + 1);
@@ -4334,9 +4397,8 @@ class WordEditorController extends OfficeController {
             ..addAll(_cloneInlinesFrom(keepInlines));
           WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
-            _cloneInlinesFrom(
-              dropInlines,
-            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(dropInlines)
+                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(keep);
           parent.remove(drop);
@@ -4442,9 +4504,8 @@ class WordEditorController extends OfficeController {
             ..addAll(_cloneInlinesFrom(keepInlines));
           WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
-            _cloneInlinesFrom(
-              dropInlines,
-            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(dropInlines)
+                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(keep);
           parent.remove(drop);
@@ -6736,16 +6797,29 @@ class WordEditorController extends OfficeController {
 
   /// setRestrictEditing API.
   void setRestrictEditing(bool value, {WmlRestrictMode? mode}) {
-    document.restrictEditing = value;
-    if (mode != null) {
-      document.restrictMode = mode;
+    if (!canChangeProtection) return;
+    final target = document;
+    final before = target.restrictEditing;
+    final beforeMode = target.restrictMode;
+    final nextMode =
+        mode ??
+        (value && beforeMode == WmlRestrictMode.none
+            ? WmlRestrictMode.readOnly
+            : beforeMode);
+    if (before == value && beforeMode == nextMode) return;
+    commitPendingEdits();
+    void apply(bool enabled, WmlRestrictMode restriction) {
+      target.restrictEditing = enabled;
+      target.restrictMode = restriction;
+      _syncProtectionMode();
     }
-    if (!value) {
-      setMode(OfficeInteractionMode.editing);
-    } else if (document.restrictMode == WmlRestrictMode.readOnly) {
-      setMode(OfficeInteractionMode.viewing);
-    }
-    notifyListeners();
+
+    commands.commit(
+      _WordProtectionCommand(
+        executeFn: () => apply(value, nextMode),
+        undoFn: () => apply(before, beforeMode),
+      ),
+    );
   }
 
   /// previewMailMerge API.
@@ -7041,9 +7115,9 @@ class WordEditorController extends OfficeController {
     if (!config.allowsMutation || WordNotes.editableText(note) == text) {
       return;
     }
-    final beforeText = WordNotes.editableParagraphs(
-      note,
-    ).map((paragraph) => paragraph.text).toList();
+    final beforeText = WordNotes.editableParagraphs(note)
+        .map((paragraph) => paragraph.text)
+        .toList();
     final paragraphs = note.allParagraphs.toList();
     final hasInlineControls = paragraphs.any(
       WordContentControls.hasInlineControls,
@@ -7092,9 +7166,9 @@ class WordEditorController extends OfficeController {
     WordNotes.editText(note, text);
     if (listEquals(
       beforeText,
-      WordNotes.editableParagraphs(
-        note,
-      ).map((paragraph) => paragraph.text).toList(),
+      WordNotes.editableParagraphs(note)
+          .map((paragraph) => paragraph.text)
+          .toList(),
     )) {
       return;
     }
@@ -7118,8 +7192,25 @@ class WordEditorController extends OfficeController {
   @override
   /// Commits a pending notes-pane edit first, so it is the step undone.
   void undo() {
-    commitNoteEdits();
-    super.undo();
+    if (config.allowsMutation) {
+      commitNoteEdits();
+      super.undo();
+    } else if (config.enableUndo && canUndo) {
+      beforeHistoryChange();
+      commands.undo();
+      afterHistoryChange();
+    }
+  }
+
+  @override
+  void redo() {
+    if (config.allowsMutation) {
+      super.redo();
+    } else if (config.enableUndo && canRedo) {
+      beforeHistoryChange();
+      commands.redo();
+      afterHistoryChange();
+    }
   }
 
   /// Records the edit started by [setNoteText] as one undoable command.
@@ -11769,6 +11860,12 @@ class _SheetGridSnap {
       ..clear()
       ..addAll(merges.map((SmlMerge merge) => merge.copy()));
   }
+}
+
+// Only this command may cross an otherwise read-only protection boundary.
+// Ordinary document commands remain blocked until protection is undone.
+class _WordProtectionCommand extends _CallbackCommand {
+  _WordProtectionCommand({required super.executeFn, required super.undoFn});
 }
 
 class _CallbackCommand implements OfficeCommand {

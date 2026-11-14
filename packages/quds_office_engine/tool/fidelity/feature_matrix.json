@@ -441,7 +441,8 @@
       "tests": [
         "test/sheet_rename_fidelity_test.dart",
         "test/sheet_rename_adversarial_test.dart",
-        "test/sheet_formula_cache_fidelity_test.dart"
+        "test/sheet_formula_cache_fidelity_test.dart",
+        "test/sheet_formula_dependency_cache_test.dart"
       ],
       "scripts": [],
       "oracles": [

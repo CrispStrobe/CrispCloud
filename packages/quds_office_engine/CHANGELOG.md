@@ -4,6 +4,19 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve imported typed formula caches through unsupported dependencies,
+  including cross-sheet and runtime references. Resolve recalculations before
+  writing caches, retain unsupported provenance through nested values, and keep
+  genuine formula errors and cycles distinguishable.
+- Preserve native SpreadsheetML namespaces, foreign extensions and unedited
+  style properties when formatting cells. Horizontal alignment no longer adds
+  vertical centering.
+- Preserve all native Word protection edit modes and password/hash metadata.
+  Expose native formatting restrictions so hosts can enforce them conservatively.
+- Refuse signed spreadsheet and presentation import/export for editing when
+  OPC signature paths, content types or relationships are present. This detects
+  signature markers; it does not verify cryptographic validity.
+
 - Use the pure-Dart `characters` package for Unicode 16 extended grapheme
   boundaries. Indic conjuncts, spacing marks and other previously omitted
   clusters retain their original UTF-16 ownership during constrained wrapping

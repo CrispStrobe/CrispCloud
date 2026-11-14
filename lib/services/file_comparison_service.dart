@@ -528,7 +528,7 @@ Future<BinaryComparison> _scanBinaryStreams(
         final rightByte = b.ended ? null : b.chunk[b.index + i];
         if ((leftByte != null && (leftByte < 0 || leftByte > 255)) ||
             (rightByte != null && (rightByte < 0 || rightByte > 255))) {
-          throw FormatException(
+          throw const FormatException(
             'Binary comparison input contains a non-byte value.',
           );
         }

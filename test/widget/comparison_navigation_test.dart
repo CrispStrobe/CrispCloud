@@ -97,7 +97,9 @@ void main() {
         throw TimeoutException(reason);
       }
     } while (!await complete());
-    await tester.pumpAndSettle();
+    // Stalled-source cases intentionally keep an indeterminate progress
+    // indicator alive. Only settle finite route transitions here.
+    await tester.pump(const Duration(milliseconds: 400));
   }
 
   Future<void> finishComparison(WidgetTester tester) => pumpUntil(
