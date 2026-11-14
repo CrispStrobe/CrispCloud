@@ -270,7 +270,7 @@ List<(int, Uint8List)> fatReferenceRanges(String name) => [
     (
       range.$1,
       Uint8List.fromList(
-        archive.GZipDecoder().decodeBytes(base64Decode(range.$2)),
+        const archive.GZipDecoder().decodeBytes(base64Decode(range.$2)),
       ),
     ),
 ];
@@ -311,8 +311,9 @@ class FatReferenceSource implements koni.ByteSource {
       final end = offset + count < at + data.length
           ? offset + count
           : at + data.length;
-      if (end > start)
+      if (end > start) {
         out.setRange(start - offset, end - offset, data, start - at);
+      }
     }
     return out;
   }
