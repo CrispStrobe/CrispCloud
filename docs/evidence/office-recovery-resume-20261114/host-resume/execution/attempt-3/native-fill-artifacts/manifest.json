@@ -1,0 +1,18 @@
+{
+  "saved-1.xlsx": {
+    "sha256": "6c5d72466efcf72823e605ffb8c80fc8a61e73e466294bfeb19037bb40ce48c8",
+    "bytes": 21674
+  },
+  "saved-2.xlsx": {
+    "sha256": "f0082d65160634491318cbc462cebcc727060182689bb7ee26b6c1f1d824fe95",
+    "bytes": 21674
+  },
+  "saved-3.xlsx": {
+    "sha256": "4256287299bafb51fc7271ffb2fa77b2fcd165ca3f36975e29b6d4b0bb220ac9",
+    "bytes": 21674
+  },
+  "source.xlsx": {
+    "sha256": "f5ce92914660d846682688046f843d6fad26e8206201e10ac305ad05cfb16f97",
+    "bytes": 4839
+  }
+}

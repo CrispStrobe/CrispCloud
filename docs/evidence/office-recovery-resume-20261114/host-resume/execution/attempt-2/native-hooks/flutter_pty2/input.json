@@ -1,0 +1,21 @@
+{
+  "assets": {},
+  "config": {
+    "build_asset_types": [
+      "code_assets/code"
+    ],
+    "extensions": {
+      "code_assets": {
+        "link_mode_preference": "dynamic",
+        "target_architecture": "x64",
+        "target_os": "linux"
+      }
+    },
+    "linking_enabled": false
+  },
+  "out_dir_shared": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/flutter_pty2/build/",
+  "out_file": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/flutter_pty2/6b4ebf10e7/output.json",
+  "package_name": "flutter_pty2",
+  "package_root": "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/",
+  "user_defines": {}
+}

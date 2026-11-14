@@ -1,0 +1,11 @@
+{
+  "Files": 1,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/f035141943c7/external-fill-validation/font-order-diagnostic/input/source-reordered.xlsx",
+      "Sha256": "9fb2573a847601c0414d5c60a8868ce2df0f38980873f5173db57557fbb26bc0",
+      "Errors": []
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "status": "complete",
+  "started_at": "2026-11-14T19:11:00.499412+00:00",
+  "source_head": "9101520b12b7a9f17af10757775b9f6e98cbc4bf",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/collect_office_host_coverage.py",
+    "--flutter",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "build/office-fill-host-coverage-3",
+    "--",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--plain-name",
+    "native fills survive unrelated formatting through three host uploads",
+    "test/widget/office_native_workflow_test.dart"
+  ],
+  "completed_at": "2026-11-14T19:11:41.983916+00:00",
+  "returncode": 0,
+  "input_tree_sha256_after": "0a56df1bab59319843a561937d044f89d59289f01b32181e73dd56ef9e91c90e",
+  "changed_inputs": [],
+  "pubspec_restored": true,
+  "receipt_matches_expected_active_inputs": true,
+  "receipt_sha256": "aad5ea35f568457a4c207092ff4d32ec01178ecef98e1f59caa2a7e370c3a276",
+  "host_tests_log_sha256": "9e83c37c79d8fd71999aefaf203073c44e58a12200f165de513a8ca155c60d25"
+}

@@ -1,0 +1,33 @@
+{
+  "assets": [
+    {
+      "encoding": {
+        "file": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/crisp_catalog/build/6b4ebf10e7/libcrisp_catalog_bridge.so",
+        "id": "package:crisp_catalog/crisp_catalog_bridge",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      },
+      "type": "code_assets/code"
+    }
+  ],
+  "assets_for_linking": {},
+  "dependencies": [
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/Cargo.toml",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/Cargo.lock",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/src/jobs.rs",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/src/lib.rs",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/LICENSE",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/Cargo.toml",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/Cargo.lock",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/VALIDATION.md",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/src/caf.rs",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/src/lib.rs",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/src/index.rs",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/UPSTREAM.json",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/README.md",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format/LICENSE"
+  ],
+  "status": "success",
+  "timestamp": "2026-11-14 19:59:58.000"
+}

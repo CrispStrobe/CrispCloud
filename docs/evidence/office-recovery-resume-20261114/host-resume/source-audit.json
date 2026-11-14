@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "audited_at": "2026-11-14T19:13:28.891500+00:00",
+  "measured_source_commit": "31838929276690e2804231c7928ddd8f1e46811c",
+  "measured_source_tree": "0abef4c23994bb67abbe481ca655b618766b3a1e",
+  "evidence_directory": "docs/evidence/office-recovery-resume-20261114/host-resume",
+  "method": "Compare all retained before-input hashes against Git blobs at the measured source commit or exact decompressed generated snapshots, then bind the collected map allowing only its retained system-SQLite pubspec view; independently hash raw LCOV. No execution reruns, source edits, or per-path audit duplication.",
+  "passed": true,
+  "checks": {
+    "recorded_source_matches_requested_commit": true,
+    "all_three_recorded_counts_equal_4739": true,
+    "source_snapshot_bytes_hash_matches": true,
+    "before_tree_hash_matches": true,
+    "collected_tree_hash_matches": true,
+    "tracked_before_inputs_match_git": true,
+    "all_recorded_inputs_recoverable": true,
+    "all_generated_snapshot_checks_pass": true,
+    "before_and_collected_keys_identical": true,
+    "only_expected_collected_difference": true,
+    "only_expected_collected_git_difference": true,
+    "saved_committed_pubspec_matches_git": true,
+    "saved_committed_pubspec_hashes_match": true,
+    "saved_collected_pubspec_hashes_match": true,
+    "collected_pubspec_is_exact_helper_append": true,
+    "collection_completed_successfully": true,
+    "raw_lcov_matches_collection_receipt": true,
+    "raw_lcov_matches_retention_metadata": true,
+    "raw_receipt_matches_retention_metadata": true,
+    "coverage_report_binds_receipt_and_tree": true,
+    "coverage_scoped_source_hashes_match": true,
+    "evidence_artifacts_unchanged_during_audit": true
+  },
+  "input_coverage": {
+    "before_entries": 4739,
+    "collected_entries": 4739,
+    "tracked_before_entries": 4737,
+    "tracked_before_git_matches": 4737,
+    "collected_entries_matching_git_directly": 4736,
+    "retained_collected_pubspec_exception": 1,
+    "generated_entries_recovered": 2,
+    "tracked_entries_by_top_level": {
+      ".fvmrc": 1,
+      "analysis_options.yaml": 1,
+      "assets": 27,
+      "dart_test.yaml": 1,
+      "l10n.yaml": 1,
+      "lib": 1072,
+      "packages": 2475,
+      "pubspec.lock": 1,
+      "pubspec.yaml": 1,
+      "test": 1134,
+      "tool": 23
+    },
+    "generated_snapshot_files_verified": 3,
+    "git_tracked_inputs_with_redundant_snapshot": 1
+  },
+  "unexpected_git_mismatches": [],
+  "unrecoverable_recorded_inputs": [],
+  "before_collected_key_differences": [],
+  "before_collected_changed_paths": [
+    "pubspec.yaml"
+  ],
+  "changed_evidence_during_audit": [],
+  "generated_inputs": {
+    ".dart_tool/package_config.json": {
+      "snapshot": "inputs/generated-inputs/.dart_tool/package_config.json.gz",
+      "bytes": 59152,
+      "sha256": "aa58115c4865438d8d6e0eb72bf03ca946c055be3f5b56b24191896549a29f58",
+      "metadata_raw_hash_matches": true,
+      "metadata_raw_length_matches": true,
+      "metadata_gzip_hash_matches": true,
+      "before_hash_matches": true,
+      "collected_hash_matches": true
+    },
+    ".dart_tool/package_graph.json": {
+      "snapshot": "inputs/generated-inputs/.dart_tool/package_graph.json.gz",
+      "bytes": 52197,
+      "sha256": "69488b6c4ddb9676ade466539d5f9b6926f604991757f33490ad79b4b3a6ab75",
+      "metadata_raw_hash_matches": true,
+      "metadata_raw_length_matches": true,
+      "metadata_gzip_hash_matches": true,
+      "before_hash_matches": true,
+      "collected_hash_matches": true
+    },
+    "pubspec.lock": {
+      "snapshot": "inputs/generated-inputs/pubspec.lock.gz",
+      "already_bound_to_git": true,
+      "bytes": 63283,
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "metadata_raw_hash_matches": true,
+      "metadata_raw_length_matches": true,
+      "metadata_gzip_hash_matches": true,
+      "before_hash_matches": true,
+      "collected_hash_matches": true
+    }
+  },
+  "pubspec_transition": {
+    "committed_sha256": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "collected_sha256": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf",
+    "retained_committed": "inputs/pubspec-committed.yaml",
+    "retained_collected": "inputs/pubspec-expected-collected.yaml",
+    "operation": "Append exactly the committed CI helper system-SQLite hook after normalizing terminal CR/LF to one LF; no other content changes.",
+    "hook": "\nhooks:\n  user_defines:\n    sqlite3:\n      source: system\n      name_windows: winsqlite3\n"
+  },
+  "raw_lcov": {
+    "bytes": 617045,
+    "sha256": "9746805d9a50ea3f69802c57074a219336e6ea2f18a8ffb79a5253cf9c11a322",
+    "matches_collection_receipt": true
+  },
+  "source_snapshot_uncompressed_sha256": "98493af28157d33e85f953102bdbbeb23508915b64fa1788f1a0bba7d434c81f",
+  "collection_receipt_uncompressed_sha256": "9f8ae82d78dd1e071142c6fcf9c7b89a3d43ae5d4f1393d921f2ef3cd024e363",
+  "before_input_tree_sha256": "085d605d4d8924d21dffcff01b1137b0ccae9abe972bb8b41db94bea46a035ef",
+  "collected_input_tree_sha256": "4b36dfb2098a8af66192ffc104148a70705f4abb08b64a427fc614003f6d26e8",
+  "artifact_sha256": {
+    "coverage/collection-receipt.json.gz": "5497af66306abd2356c2b86434f72a4f2f9b868b100c697a2215d5cd7ac24fc9",
+    "coverage/coverage-report.json": "e09758d0374e64e7a362059983065a50544da8be5a516995ae28703d90cd2aae",
+    "coverage/lcov.info.gz": "0637d87d88eadeae1da7f3030b5b2b9c16fd69a5a9ae78968b5f397a29d0a730",
+    "coverage/retained-bytes.json": "9850ba203092b456f87baed0daca27845af011999a7c194bd85582ffee716d05",
+    "inputs/generated-inputs.json": "9a88838feac2acd450e6fe3996c3b29093a1457e42634412d9a82b1339c87fe3",
+    "inputs/generated-inputs/.dart_tool/package_config.json.gz": "dcb325cd411a3c3e059ad7174785694c50d153c4e8549f8b89600a178a075c36",
+    "inputs/generated-inputs/.dart_tool/package_graph.json.gz": "57b8fae4a03e1e1e62dfdc09260dc6213d34022416391445fe8debda2b1e458e",
+    "inputs/inputs.json": "27a4a8b105c8fe37d6c091d7568a6b3dcc8b17077e4cd1dcaaf6612d8a84cf14",
+    "inputs/pubspec-committed.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "inputs/pubspec-expected-collected.yaml": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf",
+    "inputs/source-snapshot-before.json.gz": "21ac06162785cf18777e800b90b2aaf775a3087b2a36c39a066ce63838528dc2",
+    "inputs/generated-inputs/pubspec.lock.gz": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b"
+  },
+  "dependency_resolution_counts": {
+    "pub_cache_packages": 243,
+    "workspace_or_other_packages": 24,
+    "flutter_sdk_packages": 8
+  },
+  "scope_limits": [
+    "All 4739 recorded entries are bound by this audit. Dependency lock/config/graph snapshots describe resolved dependencies but do not archive external pub-cache package payloads.",
+    "Flutter/Dart and native compiler, Rust, SQLite/system-library and generated native binary payloads are outside this 4739-entry source map. Retained runtime/setup and hook metadata do not make those payloads recoverable from this evidence directory alone.",
+    "The raw LCOV hash is bound to the retained collection receipt. This audit does not rerun the 52-test cohort or independently prove runtime execution beyond retained evidence."
+  ]
+}

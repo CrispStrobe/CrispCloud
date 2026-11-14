@@ -1,0 +1,17 @@
+{
+  "returncode": 0,
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/office_host_coverage.py",
+    "build/office-fill-host-coverage-2/lcov.info",
+    "--output",
+    "build/office-fill-host-coverage-2/coverage-report.json",
+    "--require-receipt"
+  ],
+  "completed_at": "2026-11-14T19:07:48.860610+00:00",
+  "pubspec_restored": true,
+  "changed_inputs": [],
+  "input_tree_sha256_after": "085d605d4d8924d21dffcff01b1137b0ccae9abe972bb8b41db94bea46a035ef"
+}

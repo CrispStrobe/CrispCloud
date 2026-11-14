@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/f035141943c7/external-fill-validation/validate_fill_outputs.py",
+    "--workspace",
+    "/workspace/scratch/f035141943c7",
+    "--test-file",
+    "test/widget/office_native_workflow_test.dart",
+    "--host-inputs",
+    "build/office-fill-host-provenance/attempt-3/inputs.json",
+    "--label",
+    "attempt-2"
+  ],
+  "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+  "exit_code": 0,
+  "expected_artifact_hashes_from_host": {
+    "source.xlsx": "f5ce92914660d846682688046f843d6fad26e8206201e10ac305ad05cfb16f97",
+    "saved-1.xlsx": "6c5d72466efcf72823e605ffb8c80fc8a61e73e466294bfeb19037bb40ce48c8",
+    "saved-2.xlsx": "f0082d65160634491318cbc462cebcc727060182689bb7ee26b6c1f1d824fe95",
+    "saved-3.xlsx": "4256287299bafb51fc7271ffb2fa77b2fcd165ca3f36975e29b6d4b0bb220ac9"
+  }
+}

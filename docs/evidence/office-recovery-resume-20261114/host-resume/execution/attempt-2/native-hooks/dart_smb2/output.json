@@ -1,0 +1,17 @@
+{
+  "assets": [
+    {
+      "encoding": {
+        "file": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/dart_smb2/build/6b4ebf10e7/libdart_smb2.so",
+        "id": "package:dart_smb2/libsmb2",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      },
+      "type": "code_assets/code"
+    }
+  ],
+  "assets_for_linking": {},
+  "status": "success",
+  "timestamp": "2026-11-14 19:59:57.000"
+}

@@ -1,0 +1,176 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/f035141943c7/CrispCloud/test/office_device_export_test.dart
+00:00 +0: /workspace/scratch/f035141943c7/CrispCloud/test/office_device_export_test.dart: native Office copy cancellation preserves extension and localized title
+00:00 +1: /workspace/scratch/f035141943c7/CrispCloud/test/office_device_export_test.dart: native Office export owns bytes during the picker and stages the exact path
+00:00 +2: /workspace/scratch/f035141943c7/CrispCloud/test/office_device_export_test.dart: native Office write failure never reports an exported copy
+00:02 +3: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart
+00:30 +3: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: system Back prompts once and Cancel retains unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:34 +4: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: system Back discards only after explicit confirmation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:36 +5: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: system Back closes a clean document without a prompt
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:36 +6: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: system Back Save writes the captured original before closing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +7: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: Back and Close cannot discard an in-flight save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:39 +8: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: Back Save keeps later edits open until their own save
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:42 +9: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: disconnected original can export edited copy without cleaning
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: The original storage is disconnected or changed. Reopen the file before saving.
+00:43 +10: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: copy cancel retains edits and permits a successful retry
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:43 +11: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: copy error retains edits and permits a successful retry
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office copy export failed
+  Error: Bad state: Destination full
+00:45 +12: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: copy picker owns one revision while newer edits remain unsaved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:45 +13: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: copying an unchanged document leaves it clean
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:46 +14: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending cell text after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:47 +15: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: recovery copy commits pending slide text after disconnect
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:48 +16: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: refused input exports its captured original without reserializing
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: Invalid Word package ZIP: Buffer is too small to be a ZIP archive
+00:48 +17: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: signed-marker xlsx refusal retains an exact original copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.
+00:48 +18: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: signed-marker pptx refusal retains an exact original copy
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor load failed
+  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.
+00:48 +19: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: copy completion after host disposal has no late UI callbacks
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:49 +20: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: protection changed during upload remains dirty until saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:50 +21: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_editor_lifecycle_test.dart: Track Changes follows save, undo and redo in actual host bytes
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:58 +22: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart
+01:01 +22: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: Track Changes renders imported state and follows undo and redo
+01:04 +23: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: reused ribbon reads the replacement controller review state
+01:04 +24: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: viewing cannot toggle Track Changes or document protection
+01:04 +25: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: protection controls reflect the document after undo and redo
+01:05 +26: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: initial protected state can unprotect and undo
+01:05 +27: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: initial protected state disables password removal
+01:07 +28: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: pending protect confirmation cannot change a replacement document
+01:07 +29: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: pending protect confirmation rejects a changed document revision
+01:07 +30: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_ribbon_state_test.dart: pending protection confirmation handles ribbon disposal
+01:11 +31: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart
+01:13 +31: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native fills survive unrelated formatting through three host uploads
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:20 +32: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native-word rejects a substituted valid expected package
+01:20 +33: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native-word matches independent expectations through three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:23 +34: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native-sheet rejects a substituted valid expected package
+01:23 +35: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native-sheet matches independent expectations through three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:25 +36: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native-slide rejects a substituted valid expected package
+01:25 +37: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: native-slide matches independent expectations through three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:29 +38: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart
+01:30 +38: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: ribbon headings, paragraphs, notes and pictures survive three host saves
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:40 +39: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: new text, style, note and image edits stay dirty during upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:41 +40: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: Save and Close keeps newer edits open until they are saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:42 +41: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: pending note typing stays dirty until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:43 +42: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: Save and Close retains pending note typing until its next upload
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:44 +43: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:51 +44: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: pending cell typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+01:56 +45: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+02:02 +46: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: pending slide typing survives Save and Close uploads and retries
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+02:08 +47: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: selection changes during upload do not create unsaved edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+02:08 +48: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: failed upload preserves the original and retains dirty edits
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office editor save failed
+  Error: Bad state: Upload failed
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+02:09 +49: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: system Back guards unsaved edits and Cancel permits a later close
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+02:10 +50: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: copy export survives failure and cancellation without cleaning the original
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+⚠️ [OfficeEditor] office copy export failed
+  Error: Bad state: Simulated unavailable destination
+02:11 +51: /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_save_fidelity_test.dart: pending copy export blocks Back and retains edits made during export
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+02:13 +52: All tests passed!
+Sealed host LCOV against 4739 inputs: build/office-fill-host-coverage-2/collection-receipt.json

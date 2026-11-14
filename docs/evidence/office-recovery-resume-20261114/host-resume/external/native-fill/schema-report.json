@@ -1,0 +1,34 @@
+{
+  "Files": 4,
+  "Failures": 1,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-1.xlsx",
+      "Sha256": "2023689e8a70fae2b59008a5012c0b13457f38cedcf83fb77b0507d6eecefe67",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-2.xlsx",
+      "Sha256": "e1d7a525fcbed0d9edf76f4ca04f712710af13064ed54ce09d265d1613e394ea",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-3.xlsx",
+      "Sha256": "934523594a97e6d8b933d6a7fe8b103ec6ba35fd9a0a035a00a56ce7bf0b2840",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/source.xlsx",
+      "Sha256": "ec7108cc5fc40ea71a5d37e46b8f276e17483a81fab80198dac622c1cfda39ad",
+      "Errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element \u0027http://schemas.openxmlformats.org/spreadsheetml/2006/main:sz\u0027.",
+          "Type": "Schema",
+          "Part": "/xl/styles.xml",
+          "XPath": "/s:styleSheet[1]/s:fonts[1]/s:font[1]"
+        }
+      ]
+    }
+  ]
+}
