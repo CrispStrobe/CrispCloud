@@ -8,6 +8,10 @@ from zipfile import ZipFile
 
 import office_host_evidence as evidence
 
+ACCEPTANCE_DIRECTORIES = ('office-fill-host-acceptance',
+                          'office-sheet-state-acceptance',
+                          'office-style-history-acceptance')
+
 
 def package(file, extension=None, main=None):
     extension = extension or file.suffix
@@ -89,11 +93,15 @@ class HostEvidenceTest(unittest.TestCase):
                 self.assertEqual(item['validation_scope'], 'schema_only')
                 self.assertEqual(item['role'], scoped[item['path']]['role'])
         authored = sum(entry['role'] == 'authored_input' for entry in scoped.values())
+        self.assertEqual({entry['path'] for entry in scoped.values()
+                          if entry['role'] == 'authored_input'},
+                         {f'build/{directory}/source.xlsx'
+                          for directory in ACCEPTANCE_DIRECTORIES})
         self.assertEqual(report['expected_authored_inputs'], authored)
         self.assertEqual(report['verified_authored_inputs'], authored)
 
-    def test_omitting_either_acceptance_directory_from_upload_fails(self):
-        for directory in ('office-fill-host-acceptance', 'office-sheet-state-acceptance'):
+    def test_omitting_each_acceptance_directory_from_upload_fails(self):
+        for directory in ACCEPTANCE_DIRECTORIES:
             with self.subTest(directory=directory):
                 self.populate()
                 missing = [name for name in evidence.expected_paths()
@@ -107,9 +115,9 @@ class HostEvidenceTest(unittest.TestCase):
                 self.assertEqual(report['verified_rendered'], report['expected_rendered'])
                 self.assertLess(report['verified'], report['expected'])
 
-    def test_unexpected_office_file_in_either_acceptance_directory_fails(self):
+    def test_unexpected_office_file_in_each_acceptance_directory_fails(self):
         self.populate()
-        for directory in ('office-fill-host-acceptance', 'office-sheet-state-acceptance'):
+        for directory in ACCEPTANCE_DIRECTORIES:
             with self.subTest(directory=directory):
                 extra = self.root / 'build' / directory / 'unreviewed.docx'
                 package(extra)
@@ -120,20 +128,27 @@ class HostEvidenceTest(unittest.TestCase):
 
     def test_duplicate_acceptance_file_in_wrapper_without_legacy_root_fails(self):
         first = self.populate(self.root / 'first')
-        name = 'build/office-fill-host-acceptance/source.xlsx'
-        duplicate = self.root / 'second' / name
-        duplicate.parent.mkdir(parents=True)
-        duplicate.write_bytes((first / name).read_bytes())
-        report = evidence.inspect(self.root)
-        self.assertIn(f'{name}: expected one file, found 2', report['failures'])
+        for directory in ACCEPTANCE_DIRECTORIES:
+            with self.subTest(directory=directory):
+                name = f'build/{directory}/source.xlsx'
+                duplicate = self.root / 'second' / name
+                duplicate.parent.mkdir(parents=True, exist_ok=True)
+                duplicate.write_bytes((first / name).read_bytes())
+                report = evidence.inspect(self.root)
+                self.assertIn(f'{name}: expected one file, found 2', report['failures'])
+                duplicate.unlink()
 
     def test_unexpected_acceptance_file_in_separate_wrapper_fails(self):
         self.populate(self.root / 'complete')
-        name = 'build/office-sheet-state-acceptance/unreviewed.xlsx'
-        package(self.root / 'extra-wrapper' / name)
-        report = evidence.inspect(self.root)
-        self.assertEqual(report['verified'], report['expected'])
-        self.assertEqual(report['failures'], [f'Unexpected host Office output: {name}'])
+        for directory in ACCEPTANCE_DIRECTORIES:
+            with self.subTest(directory=directory):
+                name = f'build/{directory}/unreviewed.xlsx'
+                extra = self.root / 'extra-wrapper' / name
+                package(extra)
+                report = evidence.inspect(self.root)
+                self.assertEqual(report['verified'], report['expected'])
+                self.assertEqual(report['failures'], [f'Unexpected host Office output: {name}'])
+                extra.unlink()
 
     def test_rendered_output_or_pinned_reference_cannot_move_to_schema_only(self):
         original = evidence.json.loads(evidence.MANIFEST.read_text())

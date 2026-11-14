@@ -1,0 +1,557 @@
+{
+  "method": "Read-only ZIP/XML inspection of exact captured uploads; no Quds import/export.",
+  "files": {
+    "cross-sheet-applied.xlsx": {
+      "sha256": "a9d0e38c6e7f3844d36436bb3a7f2e056a329a84967cd8b7bcd6f9b3e6827cb6",
+      "sheets": {
+        "Budget": {
+          "A1": {
+            "style_attribute": "6",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:gradientFill degree=\"90\"><ns0:stop position=\"0\"><ns0:color rgb=\"FFFF0000\" /></ns0:stop><ns0:stop position=\"1\"><ns0:color rgb=\"FF0000FF\" /></ns0:stop></ns0:gradientFill></ns0:fill>\n    "
+          },
+          "B1": {
+            "style_attribute": "7",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"darkGrid\"><ns0:fgColor rgb=\"FF000000\" /><ns0:bgColor rgb=\"FFFFFFFF\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "8",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": "9",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        },
+        "Reference": {
+          "A1": {
+            "style_attribute": "3",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor indexed=\"2\" /></ns0:patternFill></ns0:fill>\n  "
+          },
+          "B1": {
+            "style_attribute": "4",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "5",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"gray125\" /></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": null,
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        }
+      }
+    },
+    "cross-sheet-undo.xlsx": {
+      "sha256": "c6ad8597f50d7e1bf66b23bf81df6ffe126aab4b49e48b57234b58dd62c6597f",
+      "sheets": {
+        "Budget": {
+          "A1": {
+            "style_attribute": "6",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:gradientFill degree=\"90\"><ns0:stop position=\"0\"><ns0:color rgb=\"FFFF0000\" /></ns0:stop><ns0:stop position=\"1\"><ns0:color rgb=\"FF0000FF\" /></ns0:stop></ns0:gradientFill></ns0:fill>\n    "
+          },
+          "B1": {
+            "style_attribute": "7",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"darkGrid\"><ns0:fgColor rgb=\"FF000000\" /><ns0:bgColor rgb=\"FFFFFFFF\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "8",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": "9",
+            "bold": true,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        },
+        "Reference": {
+          "A1": {
+            "style_attribute": "1606",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"none\" /></ns0:fill>\n    "
+          },
+          "B1": {
+            "style_attribute": "1607",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "1608",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": "1609",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        }
+      }
+    },
+    "native-undo.xlsx": {
+      "sha256": "11f7bbe6576be75f7dc39f266fbecdef50ef081c75fe2392812e40e49e149b19",
+      "sheets": {
+        "Budget": {
+          "A1": {
+            "style_attribute": "6",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"none\" /></ns0:fill>\n    "
+          },
+          "B1": {
+            "style_attribute": "7",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "8",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": "9",
+            "bold": false,
+            "font_color": {
+              "rgb": "FF7BA1CE"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        },
+        "Reference": {
+          "A1": {
+            "style_attribute": "3",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor indexed=\"2\" /></ns0:patternFill></ns0:fill>\n  "
+          },
+          "B1": {
+            "style_attribute": "4",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "5",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"gray125\" /></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": null,
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        }
+      }
+    },
+    "source.xlsx": {
+      "sha256": "ce064557d720146d4184e441e1c0d1aaa73ef05eb41964493cad660eb25ed466",
+      "sheets": {
+        "Budget": {
+          "A1": {
+            "style_attribute": "2",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:gradientFill degree=\"90\"><ns0:stop position=\"0\"><ns0:color rgb=\"FFFF0000\" /></ns0:stop><ns0:stop position=\"1\"><ns0:color rgb=\"FF0000FF\" /></ns0:stop></ns0:gradientFill></ns0:fill>\n    "
+          },
+          "B1": {
+            "style_attribute": "1",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"darkGrid\"><ns0:fgColor rgb=\"FF000000\" /><ns0:bgColor rgb=\"FFFFFFFF\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "0",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": null,
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        },
+        "Reference": {
+          "A1": {
+            "style_attribute": "3",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor indexed=\"2\" /></ns0:patternFill></ns0:fill>\n  "
+          },
+          "B1": {
+            "style_attribute": "4",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+          },
+          "C1": {
+            "style_attribute": "5",
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"gray125\" /></ns0:fill>\n    "
+          },
+          "D1": {
+            "style_attribute": null,
+            "bold": false,
+            "font_color": {
+              "theme": "4",
+              "tint": "0.25"
+            },
+            "fill_xml": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    "
+          }
+        }
+      }
+    }
+  },
+  "differences_from_authored_source": {
+    "cross-sheet-applied.xlsx": {
+      "Budget!A1": {
+        "style_attribute": {
+          "source": "2",
+          "saved": "6"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Budget!B1": {
+        "style_attribute": {
+          "source": "1",
+          "saved": "7"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Budget!C1": {
+        "style_attribute": {
+          "source": "0",
+          "saved": "8"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Budget!D1": {
+        "style_attribute": {
+          "source": null,
+          "saved": "9"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      }
+    },
+    "cross-sheet-undo.xlsx": {
+      "Budget!A1": {
+        "style_attribute": {
+          "source": "2",
+          "saved": "6"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Budget!B1": {
+        "style_attribute": {
+          "source": "1",
+          "saved": "7"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Budget!C1": {
+        "style_attribute": {
+          "source": "0",
+          "saved": "8"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Budget!D1": {
+        "style_attribute": {
+          "source": null,
+          "saved": "9"
+        },
+        "bold": {
+          "source": false,
+          "saved": true
+        }
+      },
+      "Reference!A1": {
+        "style_attribute": {
+          "source": "3",
+          "saved": "1606"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor indexed=\"2\" /></ns0:patternFill></ns0:fill>\n  ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"none\" /></ns0:fill>\n    "
+        }
+      },
+      "Reference!B1": {
+        "style_attribute": {
+          "source": "4",
+          "saved": "1607"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        }
+      },
+      "Reference!C1": {
+        "style_attribute": {
+          "source": "5",
+          "saved": "1608"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"gray125\" /></ns0:fill>\n    ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+        }
+      },
+      "Reference!D1": {
+        "style_attribute": {
+          "source": null,
+          "saved": "1609"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+        }
+      }
+    },
+    "native-undo.xlsx": {
+      "Budget!A1": {
+        "style_attribute": {
+          "source": "2",
+          "saved": "6"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:gradientFill degree=\"90\"><ns0:stop position=\"0\"><ns0:color rgb=\"FFFF0000\" /></ns0:stop><ns0:stop position=\"1\"><ns0:color rgb=\"FF0000FF\" /></ns0:stop></ns0:gradientFill></ns0:fill>\n    ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"none\" /></ns0:fill>\n    "
+        }
+      },
+      "Budget!B1": {
+        "style_attribute": {
+          "source": "1",
+          "saved": "7"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"darkGrid\"><ns0:fgColor rgb=\"FF000000\" /><ns0:bgColor rgb=\"FFFFFFFF\" /></ns0:patternFill></ns0:fill>\n    ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+        }
+      },
+      "Budget!C1": {
+        "style_attribute": {
+          "source": "0",
+          "saved": "8"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+        }
+      },
+      "Budget!D1": {
+        "style_attribute": {
+          "source": null,
+          "saved": "9"
+        },
+        "font_color": {
+          "source": {
+            "theme": "4",
+            "tint": "0.25"
+          },
+          "saved": {
+            "rgb": "FF7BA1CE"
+          }
+        },
+        "fill_xml": {
+          "source": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor theme=\"1\" /></ns0:patternFill></ns0:fill>\n    ",
+          "saved": "<ns0:fill xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><ns0:patternFill patternType=\"solid\"><ns0:fgColor rgb=\"FF000000\" /></ns0:patternFill></ns0:fill>\n    "
+        }
+      }
+    }
+  }
+}

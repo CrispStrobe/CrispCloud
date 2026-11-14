@@ -35,9 +35,10 @@ OFFICE = set(MAIN_TYPES)
 RENDERED_ROOTS = (('build', 'fidelity-host'), ('build', 'fidelity'),
                   ('build', 'fidelity-custom-tabs'))
 # These are declared validation scopes, not renderer import exceptions. Only
-# explicitly enumerated files in these two acceptance roots may be schema-only.
+# explicitly enumerated files in these acceptance roots may be schema-only.
 SCHEMA_ONLY_ROOTS = (('build', 'office-fill-host-acceptance'),
-                    ('build', 'office-sheet-state-acceptance'))
+                    ('build', 'office-sheet-state-acceptance'),
+                    ('build', 'office-style-history-acceptance'))
 
 
 def reference_entries():

@@ -7908,6 +7908,77 @@ class SheetEditorController extends OfficeController {
   /// fontRgb of the active cell.
   String get selectionFontRgb => sheet.cell(activeCell).fontRgb;
 
+  /// Sets bold on the selected cells as one reversible formatting command.
+  void setSelectionFontBold(bool bold) {
+    _applySelectionStyle(
+      (SmlCell cell) => cell.fontBold = bold,
+      needsChange: (SmlCell? cell) => (cell?.fontBold ?? false) != bold,
+    );
+  }
+
+  /// Sets a finite, positive font size in points on the selected cells.
+  void setSelectionFontSize(double size) {
+    if (!size.isFinite || size <= 0) {
+      return;
+    }
+    _applySelectionStyle(
+      (SmlCell cell) => cell.fontSize = size,
+      needsChange: (SmlCell? cell) => (cell?.fontSize ?? 11) != size,
+    );
+  }
+
+  /// Sets horizontal alignment on the selected cells.
+  void setSelectionHorizontalAlign(SmlHAlign align) {
+    _applySelectionStyle(
+      (SmlCell cell) => cell.horizontalAlign = align,
+      needsChange: (SmlCell? cell) =>
+          (cell?.horizontalAlign ?? SmlHAlign.general) != align,
+    );
+  }
+
+  /// Resets the host ribbon's six formatting fields: bold, size, horizontal
+  /// alignment, fill color, font color, and style index. Other modeled cell
+  /// properties are outside this command's scope. Clearing colors is explicit,
+  /// even when an imported native fill or font has an empty modeled RGB.
+  void clearSelectionFormatting() {
+    _applySelectionStyle((SmlCell cell) {
+      cell
+        ..fontBold = false
+        ..fontSize = 11
+        ..horizontalAlign = SmlHAlign.general
+        ..fillRgb = ''
+        ..fontRgb = ''
+        ..styleIndex = 0;
+    });
+  }
+
+  void _applySelectionStyle(
+    void Function(SmlCell) update, {
+    bool Function(SmlCell?)? needsChange,
+  }) {
+    if (!config.allowsMutation) {
+      return;
+    }
+    final SmlWorksheet target = sheet;
+    final SmlRange range = selection.range;
+    final bool hasChange = range.cells.any(
+      (SmlCellRef ref) =>
+          !target.isCovered(ref.col, ref.row) &&
+          (needsChange?.call(target.cellOrNull(ref)) ?? true),
+    );
+    if (!hasChange) {
+      return;
+    }
+    _mutateSheetGrid((SmlWorksheet owner) {
+      for (final SmlCellRef ref in range.cells) {
+        if (!owner.isCovered(ref.col, ref.row)) {
+          update(owner.cell(ref));
+        }
+      }
+    });
+    notifyListeners();
+  }
+
   /// setSelectionFillRgb API.
   void setSelectionFillRgb(String rgb) {
     if (!config.allowsMutation) {

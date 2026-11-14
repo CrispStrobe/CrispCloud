@@ -249,6 +249,30 @@
     {
       "path": "build/office-sheet-state-acceptance/grid-redo-other-sheet.xlsx",
       "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/source.xlsx",
+      "role": "authored_input"
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-applied.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-redo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/native-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/native-redo.xlsx",
+      "role": "host_output"
     }
   ]
 }

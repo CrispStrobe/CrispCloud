@@ -1,0 +1,40 @@
+{
+  "captured_at": "2026-11-14T20:06:14.734222+00:00",
+  "app_parent_commit": "bd910b1454e30afd1793ea20ae3977821bf5cdb2",
+  "canonical_commit": "0f935a6f24ae11aa9851a5cc3498808554194446",
+  "canonical_positive_tests": 100,
+  "canonical_analysis": "No issues found",
+  "canonical_completion_sha256": "948bb8d17e6a1106ff76b4133e359a484643d77973fb3119609dcda4bcecc1c6",
+  "managed_files": 2177,
+  "writes": [
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+    "packages/quds_office_editor/test/sheet_style_history_test.dart"
+  ],
+  "deletes": [],
+  "guarded_plan_equals_applied": true,
+  "source_and_git_index_verification_exit": 0,
+  "ribbon_routing_applied": true,
+  "ribbon_routes": [
+    "bold",
+    "font size",
+    "horizontal alignment",
+    "fill color",
+    "font color",
+    "six-field clear formatting"
+  ],
+  "host_positive_validation": "pending",
+  "file_sha256": {
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "ed3dff97e9a45e3f03e8bfb8d909ac8e7ce1a52ccc652024f772939453c142c1",
+    "packages/quds_office_editor/test/sheet_style_history_test.dart": "e67c3f37f388b8a5edb4598ecd5540a4f7e4a581c526ede10c5c5246eac2fb2e",
+    "tool/office_fidelity_manifest.json": "8484fd99a55cc9ef6cf81008e5ab195fb37c8198ec05d8b43076594894680d2a",
+    "lib/widgets/office_editor_ribbon.dart": "8c1954036e6ead90e0b7e49dcba467be5f7f9519bb81caab548b3b4f3e53f969",
+    "test/widget/office_native_workflow_test.dart": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe"
+  },
+  "evidence_sha256": {
+    "source-verification.log": "601c2877444e073f21f0d4ae49996344694d273dad7d40065e5356919d698aa5",
+    "ribbon-routing.patch": "e5082befa107eae9e38ab477832c7949ac0ca561ccd761a879e286ed1837f3cd",
+    "sync-applied.json": "db7eedc05d245c9486da6a2c4eda3abe2a3734230653b4e3decb01aa5594da1a",
+    "ribbon-routing-plan.json": "23ba90a9dc8377fed47a6c2eb702010d7942bdc1f247c2f0163dddec8c801aaa",
+    "sync-plan.json": "f7f12ca9f3021a121855302c9faa0bd56e6bd5f9254f3bfb8cab27ecad6c3d2b"
+  }
+}

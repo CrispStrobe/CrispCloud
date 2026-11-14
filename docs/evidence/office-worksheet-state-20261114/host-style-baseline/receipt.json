@@ -1,0 +1,70 @@
+{
+  "captured_at": "2026-11-14T20:01:26.506642+00:00",
+  "scope": "Two expected negative controls for the old app ribbon style command on the integrated A+B controller; no successful test or coverage claim.",
+  "head": "bd910b1454e30afd1793ea20ae3977821bf5cdb2",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/collect_office_host_coverage.py",
+    "--flutter",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "build/office-style-history-coverage-style-baseline-1",
+    "--",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--plain-name",
+    "ribbon style history",
+    "test/widget/office_native_workflow_test.dart"
+  ],
+  "input_files": 4742,
+  "input_tree_sha256": "999d25c7157d58ace3cadecbe5395a9cdaebe325f1e00093817e792063a47114",
+  "test_sha256": {
+    "test/widget/office_native_workflow_test.dart": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe"
+  },
+  "run_status": {
+    "started_at": "2026-11-14T19:58:36.137293+00:00",
+    "completed_at": "2026-11-14T19:59:11.496752+00:00",
+    "returncode": 1,
+    "pubspec_restored": true,
+    "changed_inputs": [],
+    "input_tree_sha256_after": "999d25c7157d58ace3cadecbe5395a9cdaebe325f1e00093817e792063a47114",
+    "artifacts": 4
+  },
+  "failed_collection_outputs": {
+    "lcov.info": {
+      "sha256": "47d1621c62710510e356a67eb446a1a5059eed83ec07b2869bea3ad253d3598f",
+      "bytes": 616901,
+      "snapshot": "attempt-1/failed-collection-output/lcov.info.gz"
+    }
+  },
+  "reached_assertion_failures": [
+    {
+      "case": "ribbon style history targets its owning worksheet after navigation",
+      "confirmed_action": "Actual Bold applied to Budget A1:D1; first toolbar Save passed all native assertions. Navigated to Reference through setActiveSheet, then actual Edit > Undo and toolbar Save completed.",
+      "expected": "Budget!A1 is no longer bold",
+      "actual": "Budget!A1 remains bold",
+      "limit": "Stopped before Redo and before later assertions about Reference native styles."
+    },
+    {
+      "case": "ribbon style history preserves native fill font and style provenance on undo",
+      "confirmed_action": "Actual Bold applied to Budget A1:D1. Actual Undo restored all four modeled bold flags to false. Toolbar Save completed before the native assertion.",
+      "expected": "Budget!A1 retains the authored 90-degree red/blue gradient",
+      "actual": "Budget!A1 was exported with patternType=none",
+      "limit": "Stopped at the native fill assertion, before subsequent font, style-presence and model-provenance assertions or Redo."
+    }
+  ],
+  "additional_observed_artifact_inspection": {
+    "method": "inspect_style_baseline.py reads the retained ZIP/XML bytes without Quds; native-inspection.json binds each input file hash.",
+    "cross-sheet-undo.xlsx": "Budget A1:D1 stay bold. Reference native style/fill/font values are changed instead; its theme/tint font colors become explicit RGB.",
+    "native-undo.xlsx": "Budget A1 gradient becomes no fill; B1 darkGrid becomes a solid black fill. All four Budget font colors change from theme=4/tint=0.25 to rgb=FF7BA1CE. C1 s=0 and D1 omitted s become generated style overrides s=8 and s=9.",
+    "style_provenance_limit": "The serialized overrides were observed directly, but this is not a separate claim that the hasExplicitStyleIndex model flag was corrupted. Those later test assertions were not reached."
+  },
+  "authoring": {
+    "seed": "test/fixtures/office_native_workflows/native-sheet-source.xlsx",
+    "native_style_fixture": "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml",
+    "source_sha256": "ce064557d720146d4184e441e1c0d1aaa73ef05eb41964493cad660eb25ed466",
+    "method": "Native seed and native fill definitions reused; theme/tint font metadata, explicit/implicit style-zero cells and the second worksheet authored directly as XML. No Quds writer produced the input."
+  },
+  "navigation_limit": "Only worksheet navigation uses public setActiveSheet; formatting, Undo/Redo and Save use actual ribbon/menu controls."
+}

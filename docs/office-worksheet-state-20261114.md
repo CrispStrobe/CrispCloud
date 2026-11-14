@@ -4,13 +4,13 @@ Starting app source: `a3897dfbe2d3721e0ec0756a1872132daf9f6b90`.
 Canonical starting source: `2d2a7be43e19b478c532025fe1f275ed7b00ef75`.
 Checkpoint branch: `codex/office-recovery-20261114` in both repositories.
 
-The next increment makes persisted worksheet RTL/frozen-pane settings participate
+This increment makes persisted worksheet RTL/frozen-pane settings participate
 in history, dirty state and save revisions. It also addresses grid history that
 can target the wrong sheet after navigation. Quds owns these controller fixes.
-The app now pins canonical implementation `30cb194a7275e3310d07b3bab185d81f79fc8c1c`
-through the guarded sync. All 2,176 managed files match their declared hashes
-and staged Git bytes. The canonical seven-file regression group passes all 80
-tests, with zero issues in the scoped analysis.
+The app now pins canonical implementation `0f935a6f24ae11aa9851a5cc3498808554194446`
+through the guarded sync. All 2,177 managed files match their declared hashes
+and staged Git bytes. The final canonical eight-file regression group passes all
+100 tests, with zero issues in the scoped analysis.
 
 Actual host acceptance will cover the ribbon/close path, a view change during
 an upload, and saved workbook contents after history across worksheet tabs.
@@ -24,6 +24,10 @@ tree; the workflow's staging code copies exactly the original 149 rendered files
 Removing either new acceptance directory fails the check. The
 [CI integration receipt](evidence/office-worksheet-state-20261114/ci-integration/README.md)
 keeps the synthetic integrity controls separate from actual host/schema evidence.
+The style-history extension adds six exact files in a third explicit acceptance
+root, bringing the current contract to 176 files: the unchanged 149 rendered
+artifacts plus 27 schema artifacts (three inputs and 24 uploads). Final controls
+for this extension are pending; the original 170-file evidence stays intact.
 
 Five new host cases reproduce missing close prompts for RTL/freeze changes,
 missing revision tracking during delayed uploads, and wrong-sheet grid history
@@ -38,10 +42,23 @@ of the authored input. Its final test source is committed at `4518e771`.
 
 The [integration receipt](evidence/office-worksheet-state-20261114/integration/receipt.json)
 retains the guarded plan, applied result and full source/index verification.
-Only the controller, its two new regression files and the source manifest change
-in this sync.
+That initial sync is followed by the
+[ribbon integration receipt](evidence/office-worksheet-state-20261114/integration-style/receipt.json),
+which records the final typed formatting APIs, third regression file and source
+pin. The app routes bold, font size, alignment, fill, font color and its existing
+six-field Clear formatting action through canonical Quds commands. The duplicate
+app `_CellStyleCommand` and its separate snapshot implementation are removed.
+
+The [style-history baseline](evidence/office-worksheet-state-20261114/host-style-baseline/README.md)
+retains two more actual host failures from the old ribbon command: wrong-sheet
+Bold undo and loss of an authored gradient after same-sheet Bold undo. It also
+keeps direct inspection of the saved native pattern, theme/tint and style-index
+changes separate from assertions that were reached. The exact authored source
+passed independent SDK validation. Positive acceptance will complete all eight
+selected host cases (five worksheet, two style and one native-fill overlap) and
+emit all 27 files against the final synced source.
 
 The previous 52-test host cohort, corrected fill rerun and independent four-file
 schema acceptance remain unchanged. New negative controls, implementation and
-execution results will be recorded separately. The remote CI jobs have not
-acquired runners; their queue is not treated as an executed failure or pass.
+execution results are recorded separately. Hosted CI acceptance will be recorded
+at completion; earlier queue observations retain their original source/time.

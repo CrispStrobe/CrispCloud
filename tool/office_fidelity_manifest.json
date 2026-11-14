@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/office-recovery-20261114",
-  "source_commit": "30cb194a7275e3310d07b3bab185d81f79fc8c1c",
+  "source_commit": "0f935a6f24ae11aa9851a5cc3498808554194446",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1744,7 +1744,7 @@
     "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "09a6554b609871ba9b530f7722ae83e5d47c0babce68a7f45e5892b28f9bf1e1",
     "packages/quds_office_editor/lib/src/editor_word/table_history.dart": "5bb83807c45fd62aa5e3ae55def7538fb5da904c7237f43c51311994fa0c8640",
     "packages/quds_office_editor/lib/src/embed/office_context_menu.dart": "6eefbfa5ef5cc9db6ad109c43271357797f22903bcd86351cc3e8e9a9ad55915",
-    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "90a843c324a40a799bffae06f3c01304ac460ca435d426ae4aa44016215d32a9",
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "ed3dff97e9a45e3f03e8bfb8d909ac8e7ce1a52ccc652024f772939453c142c1",
     "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart": "0f983d3bd127f986ff06c2e9ef0d836062e99262c72a3fa48d62b01061818a55",
     "packages/quds_office_editor/lib/src/embed/word_notes_pane.dart": "8311a405ec1bf8082284c4a79337d16abc96033bb78e7a789065805d0504b5b8",
     "packages/quds_office_editor/lib/src/embed/word_tab_stops_editor.dart": "7af38384bd4abec5163b257506a87fa889313acb911d1bcf0e2622710e7d05d5",
@@ -1800,6 +1800,7 @@
     "packages/quds_office_editor/test/sheet_normal_font_auto_test.dart": "c45e852cd7beb71eae5902f8ee3f016911880db2a554cd585d589f4b03be24c7",
     "packages/quds_office_editor/test/sheet_normal_font_metrics_test.dart": "d24cc9e8ebf8f799ca49d465929829ed8adc8c5cf7424babaf7d77ca974213af",
     "packages/quds_office_editor/test/sheet_rename_controller_test.dart": "be19241eee642af9840d872dfdf5992c1eed3e26c41dac4c6a4c743d1f886177",
+    "packages/quds_office_editor/test/sheet_style_history_test.dart": "e67c3f37f388b8a5edb4598ecd5540a4f7e4a581c526ede10c5c5246eac2fb2e",
     "packages/quds_office_editor/test/sheet_view_history_test.dart": "7846192a71ff8fca7dfffa25eac4249763fe79422275984dcbcc9bd78f092e17",
     "packages/quds_office_editor/test/slide_arrange_history_test.dart": "58db66ae020a48df80d15c9e4dd373223bfb4e58fb3ce2f0a83df5acf80eae81",
     "packages/quds_office_editor/test/slide_notes_history_test.dart": "6f8eaeb509b2e0d04f927667073ec4fc1df07f68dbf3a792a31c38f4a4187132",
