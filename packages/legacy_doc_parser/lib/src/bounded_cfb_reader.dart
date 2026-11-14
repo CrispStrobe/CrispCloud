@@ -2,7 +2,6 @@
 
 import 'dart:typed_data';
 
-import 'compound/cfbf_names.dart';
 import 'compound/cfbf_reader.dart'
     show CfbfDirectoryEntry, CfbfFile, CfbfObjectType;
 
@@ -40,79 +39,21 @@ class BoundedCfbReader {
         throw const FormatException('Compound stream exceeds its container');
       }
     }
-    _indexDirectory();
   }
 
   late final CfbfFile _file;
   final int maxStreamBytes;
   final int maxTotalReadBytes;
   int _readBytes = 0;
-  final Map<int, List<CfbfDirectoryEntry>> _children = {};
-  final Map<int, Map<String, CfbfDirectoryEntry>> _names = {};
 
   CfbfDirectoryEntry get root => _file.root;
 
   List<CfbfDirectoryEntry> childrenOf(CfbfDirectoryEntry parent) =>
-      _children[parent.index] ?? const [];
+      _file.childrenOf(parent);
 
   /// Looks only in this storage, never in an unrelated embedded message.
-  CfbfDirectoryEntry? child(CfbfDirectoryEntry parent, String name) {
-    return _names[parent.index]?[cfbfNameKey(name)];
-  }
-
-  /// Compound storages own disjoint sibling trees. Validate this once before
-  /// any consumer can repeatedly traverse them. Without global ownership, a
-  /// small malicious MSG could make thousands of recipients share one large
-  /// child tree and turn otherwise bounded property lookups into quadratic
-  /// work on the UI thread.
-  void _indexDirectory() {
-    const noStream = 0xffffffff;
-    final entries = _file.entries;
-    final rootEntry = root;
-    if (rootEntry.index != 0 ||
-        rootEntry.leftSibling != noStream ||
-        rootEntry.rightSibling != noStream) {
-      throw const FormatException('Invalid compound root storage');
-    }
-    final owners = <int, int>{rootEntry.index: -1};
-    final storages = <CfbfDirectoryEntry>[rootEntry];
-    for (var cursor = 0; cursor < storages.length; cursor++) {
-      final parent = storages[cursor];
-      final children = <CfbfDirectoryEntry>[];
-      final names = <String, CfbfDirectoryEntry>{};
-      final stack = <int>[parent.child];
-      while (stack.isNotEmpty) {
-        final index = stack.removeLast();
-        if (index == noStream) continue;
-        if (index < 0 || index >= entries.length || owners.containsKey(index)) {
-          throw const FormatException(
-            'Compound directory has a cycle or shared child',
-          );
-        }
-        owners[index] = parent.index;
-        final entry = entries[index];
-        final key = cfbfNameKey(entry.name);
-        if (entry.type == CfbfObjectType.empty ||
-            entry.type == CfbfObjectType.root ||
-            entry.name.isEmpty ||
-            names.containsKey(key)) {
-          throw const FormatException(
-            'Invalid or duplicate compound directory entry',
-          );
-        }
-        if (!entry.isStorage && entry.child != noStream) {
-          throw const FormatException('Compound stream cannot have children');
-        }
-        children.add(entry);
-        names[key] = entry;
-        if (entry.isStorage) storages.add(entry);
-        stack.add(entry.leftSibling);
-        stack.add(entry.rightSibling);
-      }
-      _children[parent.index] = List.unmodifiable(children);
-      _names[parent.index] = Map.unmodifiable(names);
-    }
-  }
+  CfbfDirectoryEntry? child(CfbfDirectoryEntry parent, String name) =>
+      _file.child(parent, name);
 
   Uint8List? readPath(String path) {
     final parts = path.split('/').where((part) => part.isNotEmpty).toList();

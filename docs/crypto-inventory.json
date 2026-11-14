@@ -1036,6 +1036,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_numbering.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_pattern_dib.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_revision_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_revisions.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_sprms.dart",
@@ -1054,6 +1055,7 @@
     "packages/legacy_doc_parser/lib/src/opc_package_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_comment_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_compatibility_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_compound_storage_validation.dart",
     "packages/legacy_doc_parser/lib/src/word_decoration_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart",
     "packages/legacy_doc_parser/lib/src/word_font_writer.dart",
@@ -1062,6 +1064,7 @@
     "packages/legacy_doc_parser/lib/src/word_media_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_officeart_position_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_ole_placeholder.dart",
     "packages/legacy_doc_parser/lib/src/word_revision_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_shape_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_story_writer.dart",
@@ -1113,7 +1116,8 @@
     "The final reader pin advances to 505d3d7 for synchronous selection-disposal cleanup. Split-archive password reopening retains the accepted handle while preserving generation, mode and source guards. These lifecycle changes do not add cryptography or change the export classification.",
     "Long in-memory text lines use bounded byte windows with 2 KiB unwrapped/1 KiB wrapped layout budgets and scalar-boundary preservation. Wrapped Find and Go To retain byte identity; wrap toggles retain the visible source location and full-file legacy encoding detection. Window indexing avoids repeated visible-row reconstruction. The change does not rewrite source bytes or add cryptography.",
     "Final concurrent-main reconciliation pins CrisperBooks a18b93c1, canonical legacy parser 0f9f085 and Quds 05a581d. Earlier real Chrome selection and fixed-layout bridge checks belong to CrisperBooks 3796381 and predate the final synchronous-disposal cleanup. ADC/XZ UDIF and ISO multi-extent decoding add bounded read-only compression/container parsing; independent 7-Zip 26.06 extraction verifies complete member bytes. Shared black syntax canvases, matching token colours, empty-directory parent navigation and capability-based image choices are presentation changes; cryptographic algorithms and distribution classification are unchanged.",
-    "The archive continuation and concurrent main are merged with both histories retained. The reviewed path set is the union of both source inventories, including both retained CFB-name and Word-font sources. Distribution declarations are unchanged. Encrypted split-7z lifetime fixes, bounded reader selections and explicit pane-source capture add no cipher, credential store or network destination. All original branch/PR heads and exact-source validation receipts remain reachable."
+    "The archive continuation and concurrent main are merged with both histories retained. The reviewed path set is the union of both source inventories, including both retained CFB-name and Word-font sources. Distribution declarations are unchanged. Encrypted split-7z lifetime fixes, bounded reader selections and explicit pane-source capture add no cipher, credential store or network destination. All original branch/PR heads and exact-source validation receipts remain reachable.",
+    "Final canonical parser pin 731e370 includes bounded CFB metadata and complete directory ownership, typed display-field evidence, explicit opt-in cached-result export and list visibility/formatting audits. Quds consumes it at 389e879. The combined parser passed 3406 Dart tests, 188 Python controls and actual JavaScript acceptance; Quds engine passed 1634 tests and the app legacy-Word cohort passed 35 tests. Changes add validation and document conversion, not encryption or activation of embedded objects."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

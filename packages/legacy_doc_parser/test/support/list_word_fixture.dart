@@ -77,6 +77,7 @@ Uint8List listWordFixture({
     0: WordFixtureStyle(name: 'Normal', builtinId: 0),
   },
   int listStyle = 0x0fff,
+  Map<int, List<int>> extraTablePairs = const {},
 }) {
   return StructuredWordFixture(
     pieces: [WordFixturePiece(text)],
@@ -94,6 +95,7 @@ Uint8List listWordFixture({
       ),
     ],
     extraTablePairs: {
+      ...extraTablePairs,
       73: listFixtureDefinitions(
         levels ?? [listFixtureLevel()],
         style: listStyle,

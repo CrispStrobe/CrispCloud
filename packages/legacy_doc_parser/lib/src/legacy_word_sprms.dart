@@ -46,6 +46,15 @@ class _Sprm {
   int get group => (code >> 10) & 7;
 }
 
+int _wordTwipMeasurement(int value, {bool nonNegative = false}) {
+  // MS-DOC XAS and LSPD are narrower than their signed 16-bit storage.
+  // Paragraph before/after spacing has the same upper bound, but is unsigned.
+  if (value < (nonNegative ? 0 : -31680) || value > 31680) {
+    throw const FormatException('Invalid Word twip measurement.');
+  }
+  return value;
+}
+
 List<_Sprm> _decodeSprms(
   Uint8List bytes,
   _Budget budget, {
@@ -340,7 +349,7 @@ void _applyCharacter(
         }
         output['kerning'] = threshold;
       case 0x8840:
-        output['spacing'] = data.i16(0);
+        output['spacing'] = _wordTwipMeasurement(data.i16(0));
       case 0x2a83:
         output['_oldCharacter'] = _boolean(data)
             ? _revisionSnapshot(output)
@@ -737,19 +746,22 @@ void _applyParagraph(
         output['tableOrigin'] = left - gap;
       case 0x840f:
       case 0x845e:
-        output['leftIndent'] = value.i16(0);
+        output['leftIndent'] = _wordTwipMeasurement(value.i16(0));
       case 0x840e:
       case 0x845d:
-        output['rightIndent'] = value.i16(0);
+        output['rightIndent'] = _wordTwipMeasurement(value.i16(0));
       case 0x8411:
       case 0x8460:
-        output['firstIndent'] = value.i16(0);
+        output['firstIndent'] = _wordTwipMeasurement(value.i16(0));
       case 0xa413:
-        output['before'] = value.u16(0);
+        output['before'] = _wordTwipMeasurement(
+          value.u16(0),
+          nonNegative: true,
+        );
       case 0xa414:
-        output['after'] = value.u16(0);
+        output['after'] = _wordTwipMeasurement(value.u16(0), nonNegative: true);
       case 0x6412:
-        output['lineSpacing'] = value.i16(0);
+        output['lineSpacing'] = _wordTwipMeasurement(value.i16(0));
         final multiple = value.u16(2);
         if (multiple > 1) {
           throw const FormatException('Invalid Word line-spacing value.');

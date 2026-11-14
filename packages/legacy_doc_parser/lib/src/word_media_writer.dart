@@ -960,6 +960,11 @@ extension _WordMedia on _StructuredWordWriter {
         });
       }
     }
+    if (_displayFieldRevisionRecords.values.any(
+      (record) => record['nativeHistoryAvailable'] != true,
+    )) {
+      limitations.add(LegacyWordConversionLimitation.revisions);
+    }
     if (_evidenceRecords.isEmpty) return;
     if (_evidenceRecords.length > 20000) _tooComplex();
     final sink = _BoundedEvidenceSink();

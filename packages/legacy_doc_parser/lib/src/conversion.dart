@@ -40,6 +40,19 @@ part 'word_table_text_writer.dart';
 /// DOCM is an explicit choice. The DOCX entry point never writes active VBA.
 enum LegacyWordOutputFormat { docx, docm }
 
+/// Whether converted fields remain editable or retain only their stored display.
+enum LegacyWordFieldMode {
+  /// Preserve supported complex fields with a lock and their cached results.
+  /// Importing applications can still recalculate fields despite that lock.
+  preserve,
+
+  /// Emit the existing result runs without active fields. Instructions, field
+  /// nesting, source positions, flags and cached text remain in inert evidence.
+  /// Formatting and other document structure use the ordinary bounded writer;
+  /// field editing/recalculation is intentionally unavailable in this mode.
+  cachedResults,
+}
+
 enum LegacyWordConversionLimitation {
   partialFormatting,
   images,
@@ -56,6 +69,7 @@ class LegacyWordStructuredConversion {
     required Uint8List bytes,
     required List<LegacyWordConversionLimitation> limitations,
     this.format = LegacyWordOutputFormat.docx,
+    this.fieldMode = LegacyWordFieldMode.preserve,
     Map<String, int> preservedCounts = const {},
     List<String> signatureEvidenceParts = const [],
   }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView(),
@@ -66,6 +80,7 @@ class LegacyWordStructuredConversion {
   final Uint8List bytes;
   final List<LegacyWordConversionLimitation> limitations;
   final LegacyWordOutputFormat format;
+  final LegacyWordFieldMode fieldMode;
   String get extension => format.name;
 
   /// Counts describe emitted package content, not complete source fidelity.
@@ -100,21 +115,29 @@ const int kLegacyWordPackageLimit = 64 * 1024 * 1024;
 
 /// Backwards-compatible, macro-free structured DOCX conversion.
 LegacyWordStructuredConversion convertLegacyWordToStructuredDocx(
-  Uint8List bytes,
-) => convertLegacyWord(bytes);
+  Uint8List bytes, {
+  LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
+}) => convertLegacyWord(bytes, fieldMode: fieldMode);
 
 /// Converts a separate copy. No source bytes, file paths, or applications are
 /// modified, and no fields, links, embedded objects, or macros are executed.
 LegacyWordStructuredConversion convertLegacyWord(
   Uint8List bytes, {
   LegacyWordOutputFormat format = LegacyWordOutputFormat.docx,
-}) => convertLegacyWordDocument(parseLegacyWordDocument(bytes), format: format);
+  LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
+}) => convertLegacyWordDocument(
+  parseLegacyWordDocument(bytes),
+  format: format,
+  fieldMode: fieldMode,
+);
 
 /// Serializes an already parsed document using the same bounded writer.
 LegacyWordStructuredConversion convertLegacyWordDocument(
   LegacyWordDocument document, {
   LegacyWordOutputFormat format = LegacyWordOutputFormat.docx,
-}) => _convertStructuredDocument(document, format: format);
+  LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
+}) =>
+    _convertStructuredDocument(document, format: format, fieldMode: fieldMode);
 
 /// Explicit text-only conversion, retained for callers that choose to omit
 /// structure and formatting. Referenced main-body text is read from the DOC.

@@ -44,7 +44,9 @@ LegacyWordDocument _document(
   fields: fields.toList(),
 );
 
-Map<String, Object?> verifyPublicFieldWebAcceptance() {
+Map<String, Object?> verifyPublicFieldWebAcceptance({
+  LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
+}) {
   const source =
       'A\x13 QUOTE "outer" \x14before\x13 PAGE \x142\x15after\x15'
       '\x13 PAGE \x143\x15Z\r';
@@ -92,7 +94,7 @@ Map<String, Object?> verifyPublicFieldWebAcceptance() {
   for (final entry in malformed.entries) {
     var rejected = false;
     try {
-      convertLegacyWordDocument(entry.value);
+      convertLegacyWordDocument(entry.value, fieldMode: fieldMode);
     } on FormatException {
       rejected = true;
     }
@@ -101,6 +103,7 @@ Map<String, Object?> verifyPublicFieldWebAcceptance() {
 
   final converted = convertLegacyWordDocument(
     _document(parsed, parsed.fields.reversed),
+    fieldMode: fieldMode,
   );
   final xml = XmlDocument.parse(
     utf8.decode(
@@ -136,7 +139,11 @@ Map<String, Object?> verifyPublicFieldWebAcceptance() {
       }
     }
   }
-  _check(fields == 3 && states.isEmpty, 'valid public field scopes changed');
+  final expectedFields = fieldMode == LegacyWordFieldMode.preserve ? 3 : 0;
+  _check(
+    fields == expectedFields && states.isEmpty,
+    'valid public field scopes changed',
+  );
   _check(
     visible.toString() == 'Abefore2after3Z',
     'valid public field results changed',

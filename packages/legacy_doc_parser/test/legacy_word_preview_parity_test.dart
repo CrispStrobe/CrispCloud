@@ -321,33 +321,32 @@ void main() {
     );
   });
 
-  test('does not reveal hidden list content or hidden marker text', () {
-    final hidden = _paragraph(
-      'secret-value',
-      style: const LegacyWordParagraphStyle(listId: 1),
-      character: const LegacyWordCharacterStyle(hidden: true),
-    );
-    final html = renderLegacyWordHtml(
-      [hidden],
-      numberingDefinitions: [_list('bullet', text: 'secret-label')],
-    );
-    expect(html, isNot(contains('secret-value')));
-    expect(html, isNot(contains('secret-label')));
-    expect(
-      _labels(
-        renderLegacyWordHtml(
-          [_item(0)],
+  test('body runs and list markers retain independent visibility', () {
+    // A marker has its own character properties; hiding the body does not
+    // make a separately visible marker hidden. Binary hidden-body/marker
+    // fixtures exercise the same contract in both Word output modes.
+    for (final hiddenBody in [false, true]) {
+      for (final hiddenMarker in [false, true]) {
+        final paragraph = _paragraph(
+          'body-value',
+          style: const LegacyWordParagraphStyle(listId: 1),
+          character: LegacyWordCharacterStyle(hidden: hiddenBody),
+        );
+        final html = renderLegacyWordHtml(
+          [paragraph],
           numberingDefinitions: [
             _list(
               'bullet',
-              text: 'hidden-marker',
-              style: const LegacyWordCharacterStyle(hidden: true),
+              text: 'marker-value',
+              style: LegacyWordCharacterStyle(hidden: hiddenMarker),
             ),
           ],
-        ),
-      ),
-      isEmpty,
-    );
+        );
+        expect(html.contains('body-value'), !hiddenBody);
+        expect(html.contains('marker-value'), !hiddenMarker);
+        expect(_labels(html), hiddenMarker ? isEmpty : ['marker-value']);
+      }
+    }
   });
 
   test(

@@ -8,23 +8,26 @@ part of 'conversion.dart';
 LegacyWordStructuredConversion _convertStructuredDocument(
   LegacyWordDocument document, {
   required LegacyWordOutputFormat format,
+  required LegacyWordFieldMode fieldMode,
 }) {
-  final writer = _StructuredWordWriter(document, format);
+  final writer = _StructuredWordWriter(document, format, fieldMode);
   final bytes = writer.convert();
   return LegacyWordStructuredConversion(
     bytes: bytes,
     limitations: writer.limitations.toList(),
     format: format,
+    fieldMode: fieldMode,
     preservedCounts: writer.counts,
     signatureEvidenceParts: writer.signatureEvidenceParts,
   );
 }
 
 class _StructuredWordWriter {
-  _StructuredWordWriter(this.document, this.format);
+  _StructuredWordWriter(this.document, this.format, this.fieldMode);
 
   final LegacyWordDocument document;
   final LegacyWordOutputFormat format;
+  final LegacyWordFieldMode fieldMode;
   var _xml = _BoundedWordXml();
   final _package = _OpcPackageWriter();
   var _part = 'word/document.xml';
@@ -46,11 +49,17 @@ class _StructuredWordWriter {
   final _numberingIds = <int>{};
   final _numberingReferences = <int, int>{};
   final _resolvedParagraphNumbering = <LegacyWordParagraph, int>{};
+  final _suppressedParagraphNumbering = <LegacyWordParagraph>{};
+  final _materializedParagraphNumbering =
+      <LegacyWordParagraph, _MaterializedNumberingLabel>{};
+  final _numberingTemplates = <(int, int), LegacyWordNumberingTemplate>{};
+  final _numberingActiveFields = <LegacyWordField, bool>{};
   final _numberingInstances = <int, _WordNumberingInstance>{};
   final _tableStyleDefinitions = <int, LegacyWordTableStyle>{};
   var _tableDepth = 0;
   final _fields = <int, LegacyWordField>{};
   final _fieldChildren = <int, List<LegacyWordField>>{};
+  final _displayFieldRevisionRecords = <int, Map<String, Object?>>{};
   final _fieldInstructions = <int, String>{};
   final _fieldBinaryData = <int, LegacyWordOpaqueArtifact?>{};
   final _mediaAssets = <String, LegacyWordImageAsset>{};
@@ -215,11 +224,7 @@ class _StructuredWordWriter {
     if (style.layout.spaceAfterAuto) _xml.add(' w:afterAutospacing="1"');
     final line = style.lineSpacingValue;
     if (line != null) {
-      final rule = style.lineSpacingMultiple
-          ? 'auto'
-          : line < 0
-          ? 'exact'
-          : 'atLeast';
+      final rule = _lineSpacingRule(style);
       _xml.add(' w:line="${line.abs()}" w:lineRule="$rule"');
     }
     _xml.add(
@@ -243,6 +248,7 @@ class _StructuredWordWriter {
     if (section != null) _section(section);
     _paragraphFormattingRevision(paragraph);
     _xml.add('</w:pPr>');
+    _materializedNumberingLabel(paragraph);
     _emitEventsThrough(paragraph.startCp);
     for (final run in paragraph.runs) {
       _run(run);
@@ -315,6 +321,7 @@ class _StructuredWordWriter {
     _BoundedWordXml xml, {
     bool Function(String)? include,
   }) {
+    _validateCharacterScalarProperties(style);
     final scripts = style.scriptFonts;
     final entries = [
       ('fontIndex', 'ascii', style.fontName),
@@ -338,6 +345,58 @@ class _StructuredWordWriter {
       xml.add('"');
     }
     xml.add('/>');
+  }
+
+  static void _validateCharacterScalarProperties(
+    LegacyWordCharacterStyle style,
+  ) {
+    // These are the same domains accepted by the binary SPRM decoder. A
+    // caller-built public style must not bypass them at a different writer
+    // entry point (list marker, paragraph mark, history, note or line style).
+    final size = style.fontSizeHalfPoints;
+    if (size != null && (size < 2 || size > 3276)) {
+      throw const FormatException('Invalid Word font size.');
+    }
+    final position = style.positionHalfPoints;
+    if (position != null && (position < -3168 || position > 3168)) {
+      throw const FormatException('Invalid Word text position.');
+    }
+    final spacing = style.spacingTwips;
+    if (spacing != null && (spacing < -31680 || spacing > 31680)) {
+      throw const FormatException('Invalid Word character spacing.');
+    }
+  }
+
+  static void _validateParagraphScalarProperties(
+    LegacyWordParagraphStyle style,
+  ) {
+    final heading = style.headingLevel;
+    if (heading != null && (heading < 1 || heading > 9)) {
+      throw const FormatException('Invalid Word heading level.');
+    }
+    for (final value in [style.spaceBeforeTwips, style.spaceAfterTwips]) {
+      if (value < 0 || value > 31680) {
+        throw const FormatException('Invalid Word paragraph spacing.');
+      }
+    }
+    for (final value in [
+      style.leftIndentTwips,
+      style.rightIndentTwips,
+      style.firstLineIndentTwips,
+      style.lineSpacingValue ?? 0,
+    ]) {
+      if (value < -31680 || value > 31680) {
+        throw const FormatException('Invalid Word paragraph measurement.');
+      }
+    }
+  }
+
+  static String _lineSpacingRule(LegacyWordParagraphStyle style) {
+    // MS-DOC LSPD: a negative dyaLine is exact spacing regardless of the
+    // stored fMultLinespace flag. Retain that flag in the model, but do not
+    // activate its multiplier semantics when translating a negative value.
+    if ((style.lineSpacingValue ?? 0) < 0) return 'exact';
+    return style.lineSpacingMultiple ? 'auto' : 'atLeast';
   }
 
   static int _kerningThreshold(LegacyWordCharacterStyle style) {

@@ -18,17 +18,25 @@ project with `dotnet publish`. The separate GitHub Actions job runs this gate
 without LibreOffice, Word, or Quds installed.
 
 The required DOC-to-DOCX inventory is defined by `EXPECTED_CASES` in
-`tool/fidelity/schema.py` and currently contains 279 conversions. It covers
+`tool/fidelity/schema.py` and currently contains 1,046 conversions. It covers
 table geometry and revisions, shapes, metafiles, media, ink, fields, list
 labels and sequences, section formatting, notes, headers, footers and textbox
 boundaries, alongside retained native DOC inputs. The generator calls the
 existing fixture producers and retains independently assembled binary inputs.
 The fixed inventory catches missing cases, duplicate output aliases, and
-unregistered Office files.
+unregistered Office files. The fifth audit adds generated Unicode/ASCII field
+trees, both field export modes, source field visibility, binary scalar bounds,
+literal list templates, sparse marker inheritance/reset properties and numbered
+paragraph visibility. Invalid binary controls remain retained source inputs;
+they do not count as successful conversions.
 
-The separate `public_metafile_fixture.dart` and `public_compound_fixture.dart`
-generators produce caller-built public-model controls for native image and
-OLE/VBA activation. These outputs are not binary-DOC-derived cases. Their raw
+Separate public-model generators produce 325 additional controls:
+`public_metafile_fixture.dart` (24), `public_compound_fixture.dart` (17),
+`public_formatting_fixture.dart` (106), `public_table_formatting_fixture.dart`
+(44), `cached_field_structure_fixture.dart` (88), and
+`display_field_evidence_fixture.dart` (46). They cover image/OLE/VBA activation,
+formatting, field-event structure and revision evidence. These outputs are not
+binary-DOC-derived cases. Their raw
 inputs and model descriptions must remain alongside the DOCX/DOCM outputs
 when validating them with the built validator. Package schema validation does
 not validate or execute the contents of an OLE object or a VBA project.

@@ -20,30 +20,37 @@ void main() {
   test('shared VM and JavaScript list metadata acceptance', () {
     expect(verifyListMetadataWebAcceptance(), {
       'cases': 21,
-      'supportedCases': 15,
-      'unsupportedLiteralLabelsRejected': 5,
+      'supportedCases': 20,
+      'materializedLiteralLabels': 5,
       'invalidNumberedRestartsRejected': 1,
       'literalLabelsPreserved': true,
       'sourceUnchanged': true,
     });
   });
 
-  for (final name in unsupportedListMetadataCases) {
-    test('declines an unrepresentable literal list label: $name', () {
-      final source = listMetadataFixture(name);
-      final before = source.toList();
-      expect(
-        () => parseLegacyWordDocument(source),
-        throwsA(
-          isA<FormatException>().having(
-            (error) => error.message,
-            'message',
-            contains('literal percent-number sequence'),
-          ),
-        ),
-      );
-      expect(source, before);
-    });
+  for (final name in materializedListMetadataCases) {
+    test(
+      'preserves an unrepresentable native label as disclosed text: $name',
+      () {
+        final source = listMetadataFixture(name);
+        final before = source.toList();
+        final document = parseLegacyWordDocument(source);
+        expect(_labels(document), [
+          name == 'literal-percent-nine'
+              ? '%9'
+              : name == 'mixed-literal-percent'
+              ? '7 literal %1'
+              : '%1',
+        ]);
+        final result = convertLegacyWordDocument(document);
+        expect(
+          result.limitations,
+          contains(LegacyWordConversionLimitation.fieldsLists),
+        );
+        expect(result.preservedCounts['materializedNumberingLabels'], 1);
+        expect(source, before);
+      },
+    );
   }
 
   for (final (name, labels) in [

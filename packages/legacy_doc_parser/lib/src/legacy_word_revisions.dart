@@ -139,6 +139,8 @@ extension _WordRevisions on _StructuredWordParser {
     _fieldIndicesByStart.clear();
     _activeFieldIndices.clear();
     _displayFieldRevisions.clear();
+    _hiddenFieldMarkers.clear();
+    _hiddenFieldInstructions.clear();
     for (var index = firstField; index < fields.length; index++) {
       _fieldIndicesByStart[fields[index].startCp] = index;
     }
@@ -151,6 +153,21 @@ extension _WordRevisions on _StructuredWordParser {
         throw const FormatException('Invalid Word revision field boundary.');
       }
       _activeFieldIndices.add(index);
+    }
+    // Capture the actual marker's resolved CHPX, paragraph, character-style
+    // and table context while visiting it. Cached result formatting cannot
+    // determine whether the original begin/separator/end marker was hidden.
+    if (hidden && (unit == 19 || unit == 20 || unit == 21)) {
+      final flag = switch (unit) {
+        19 => 1,
+        20 => 2,
+        _ => 4,
+      };
+      final index = _activeFieldIndices.last;
+      _hiddenFieldMarkers[index] = (_hiddenFieldMarkers[index] ?? 0) | flag;
+    }
+    if (unit != 19 && unit != 20 && unit != 21) {
+      _captureFieldInstructionVisibility(cp, hidden);
     }
     final data =
         properties['displayFieldRevision'] as _DisplayFieldRevisionData?;
@@ -192,15 +209,37 @@ extension _WordRevisions on _StructuredWordParser {
     }
   }
 
+  void _captureFieldInstructionVisibility(int cp, bool hidden) {
+    if (!hidden || _activeFieldIndices.isEmpty) return;
+    final index = _activeFieldIndices.last;
+    final field = fields[index];
+    if (cp >= (field.separatorCp ?? field.endCp - 1)) return;
+    final offset = cp - field.startCp - 1;
+    final ranges = _hiddenFieldInstructions.putIfAbsent(index, () => []);
+    if (ranges.isNotEmpty && ranges.last.$2 == offset) {
+      ranges[ranges.length - 1] = (ranges.last.$1, offset + 1);
+    } else {
+      if (++_hiddenFieldInstructionRangeCount > 200000) {
+        throw const FormatException('Word field visibility is too complex.');
+      }
+      ranges.add((offset, offset + 1));
+    }
+  }
+
   void _finishFieldRevisions() {
     if (_activeFieldIndices.isNotEmpty) {
       throw const FormatException('Unclosed Word revision field.');
     }
-    for (final entry in _displayFieldRevisions.entries) {
-      final field = fields[entry.key],
-          capture = entry.value,
-          data = capture.data;
-      fields[entry.key] = LegacyWordField(
+    for (final index in {
+      ..._displayFieldRevisions.keys,
+      ..._hiddenFieldMarkers.keys,
+      ..._hiddenFieldInstructions.keys,
+    }) {
+      final field = fields[index];
+      final capture = _displayFieldRevisions[index];
+      final markerFlags = _hiddenFieldMarkers[index] ?? 0;
+      final data = capture?.data;
+      fields[index] = LegacyWordField(
         id: field.id,
         storyId: field.storyId,
         startCp: field.startCp,
@@ -213,15 +252,25 @@ extension _WordRevisions on _StructuredWordParser {
         locked: field.locked,
         dirty: field.dirty,
         privateResult: field.privateResult,
-        displayRevision: LegacyWordDisplayFieldRevision(
-          original: data.original,
-          revision: _revisionInfo({
-            'displayAuthor': data.author,
-            'displayDate': data.date,
-          }, 'display'),
-          hidden: capture.hidden,
-          sourceRecord: data.source,
-        ),
+        beginHidden: field.beginHidden || markerFlags & 1 != 0,
+        separatorHidden: field.separatorHidden || markerFlags & 2 != 0,
+        endHidden: field.endHidden || markerFlags & 4 != 0,
+        instructionVisibility: _hiddenFieldInstructions.containsKey(index)
+            ? LegacyWordFieldInstructionVisibility(
+                _hiddenFieldInstructions[index]!,
+              )
+            : field.instructionVisibility,
+        displayRevision: data == null
+            ? field.displayRevision
+            : LegacyWordDisplayFieldRevision(
+                original: data.original,
+                revision: _revisionInfo({
+                  'displayAuthor': data.author,
+                  'displayDate': data.date,
+                }, 'display'),
+                hidden: capture!.hidden,
+                sourceRecord: data.source,
+              ),
       );
     }
   }

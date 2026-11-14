@@ -17,18 +17,63 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / "tool/office-validation"
 OFFICE_SUFFIXES = {".docx", ".docm", ".dotx", ".dotm", ".xlsx", ".pptx"}
+FIELD_VISIBILITY_CASES = (
+    "formula", "nested-results", "private-result", "private-instruction-result",
+    "unsupported-result", "instruction-whitespace", "nested-instruction-whitespace",
+    "cached-controls", "nested-cached-controls", "visible-result-child", "character-hidden-result",
+)
 EXPECTED_CASES = frozenset([
     "symbols/plain", "symbols/deleted",
     "font-charsets/symbol", "font-charsets/default", "font-charsets/default-symbol-alias",
     "font-charsets/conflict", "font-charsets/unknown",
     "font-charsets/empty-name",
+    *(f"field-visibility/{name}" for name in FIELD_VISIBILITY_CASES),
+    *(f"field-markers/marker-{mask}-mixed-result" for mask in range(8)),
+    *(f"field-markers/instruction-{name}" for name in (
+        "partial", "paragraph-control", "nested-ownership", "no-result",
+        "scalar-leading-style", "scalar-trailing-style")),
+    *(f"field-cache-import/{kind}-{context}" for kind in ("ref", "quote", "if")
+      for context in ("visible", "instruction-child", "result-child")),
+    "field-cache-import/ref-existing-bookmark",
+    *(f"generated-fields/generated-field-{seed:03d}" for seed in range(1, 97)),
+    *(f"ascii-fields/ascii-field-{seed:03d}-{mode}" for seed in range(1, 97)
+      for mode in ("preserve", "cachedResults")),
+    *(f"cached-fields/{name}" for name in FIELD_VISIBILITY_CASES),
+    *(f"cached-fields/generated-field-{seed:03d}" for seed in range(1, 97)),
+    *(f"scalar-sprms/{name}-{scope}-{value}" for name in (
+        "character-spacing", "left-97", "left", "right-97", "right", "first-97", "first",
+        "before", "after", "line-absolute", "line-multiple")
+      for scope in (("direct", "paragraph-style", "piece-prm", "character-style")
+                    if name == "character-spacing" else ("direct", "paragraph-style", "piece-prm"))
+      for value in ((0, 1, 31679, 31680) if name in ("before", "after")
+                    else (-31680, -31679, -1, 0, 1, 31679, 31680))),
+    *(f"list-literal/{name}" for name in (
+        *(f"literal-{number}" for number in range(1, 10)),
+        "mixed-decimal", "adjacent-placeholder", "percent-before-placeholder",
+        "supplementary-before-placeholder", "xml-and-tab", "upper-roman", "lower-roman",
+        "upper-letter", "lower-letter", "decimal-zero-legal", "hebrew-legal-decimal",
+        "hebrew-literal-only", "none-with-placeholder", "space-suffix", "nothing-suffix")),
+    *(f"list-marker-styles/{name}" for name in (
+        "inherited-nullable", "explicit-overrides", "explicit-resets", "native-all-properties",
+        "native-named-highlight", "native-hidden", "native-font-slots", "native-color-reset",
+        "native-mark-absent", "native-mark-0", "native-mark-1", "native-style-80", "native-style-81",
+        "literal-mark-absent", "literal-mark-0", "literal-mark-1", "literal-style-80", "literal-style-81")),
+    *(f"list-marker-styles/{kind}-sparse-{prop}-{state}" for kind in ("native", "literal")
+      for prop in ("allCaps", "smallCaps", "strike", "doubleStrike", "hidden", "underline", "verticalAlign", "kerning")
+      for state in ("absent", "reset", "set")),
+    *(f"list-visibility/{kind}-{case}" for kind in ("decimal", "literal") for case in (
+        "empty", "hidden-body", "hidden-marker", "empty-middle", "private-only",
+        "private-blank-middle", "instruction-blank-middle", "instruction-body-second",
+        "separator-at-start", "private-end-visible", "result-second")),
     "ink-budget/aggregate",
     *(f"list-metadata/{name}" for name in (
         "bullet-ignored-restart", "none-ignored-restart", "none-literal",
         "none-empty-placeholder", "none-ancestor-placeholder", "literal-percent-text",
         "percent-before-placeholder", "numbered-valid-restart", "numbered-inactive-restart",
         "uncommon-format-literal", "uncommon-format-ancestor", "uncommon-format-legal",
-        "literal-label-tab", "tab-before-placeholder", "none-label-tab")),
+        "literal-label-tab", "tab-before-placeholder", "none-label-tab",
+        "literal-percent-one", "literal-percent-nine", "mixed-literal-percent",
+        "override-literal-percent", "none-literal-percent")),
     *(f"nested-fields/{name}" for name in (
         "nested-results", "private-result", "private-instruction-result", "unsupported-result", "formula",
         "instruction-whitespace", "nested-instruction-whitespace", "cached-controls",

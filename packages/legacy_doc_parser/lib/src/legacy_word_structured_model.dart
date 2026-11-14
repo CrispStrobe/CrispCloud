@@ -368,6 +368,25 @@ class LegacyWordBookmark {
   final int? lastCell;
 }
 
+/// Hidden literal instruction spans, measured in UTF-16 offsets relative to
+/// [LegacyWordField.instruction]. Nested field source ranges belong to their
+/// own field, so they must not be included in a parent's spans.
+final class LegacyWordFieldInstructionVisibility {
+  LegacyWordFieldInstructionVisibility(List<(int, int)> hiddenRanges)
+    : hiddenRanges = _copy(hiddenRanges);
+
+  const LegacyWordFieldInstructionVisibility.empty() : hiddenRanges = const [];
+
+  final List<(int, int)> hiddenRanges;
+
+  static List<(int, int)> _copy(List<(int, int)> ranges) {
+    if (ranges.length > 200000) {
+      throw const FormatException('Word field visibility is too complex.');
+    }
+    return List.unmodifiable(ranges);
+  }
+}
+
 /// Original field syntax and cached display content. The library never
 /// evaluates a field, resolves a URL, or updates a TOC/REF from external data.
 class LegacyWordField {
@@ -384,6 +403,11 @@ class LegacyWordField {
     this.locked = false,
     this.dirty = false,
     this.privateResult = false,
+    this.beginHidden = false,
+    this.separatorHidden = false,
+    this.endHidden = false,
+    this.instructionVisibility =
+        const LegacyWordFieldInstructionVisibility.empty(),
     this.displayRevision,
   });
   final int id;
@@ -404,6 +428,18 @@ class LegacyWordField {
   final bool locked;
   final bool dirty;
   final bool privateResult;
+
+  /// Resolved character visibility at each original field marker. These flags
+  /// are independent of fPrivateResult and the formatting of cached text.
+  final bool beginHidden;
+  final bool separatorHidden;
+  final bool endHidden;
+  final LegacyWordFieldInstructionVisibility instructionVisibility;
+
+  /// Immutable, ordered, nonoverlapping hidden ranges in literal instruction
+  /// text. Each pair is an inclusive start and exclusive end UTF-16 offset.
+  List<(int, int)> get instructionHiddenRanges =>
+      instructionVisibility.hiddenRanges;
   final LegacyWordDisplayFieldRevision? displayRevision;
 }
 
@@ -434,6 +470,26 @@ class LegacyWordDisplayFieldRevision {
 }
 
 enum LegacyWordListSuffix { tab, space, nothing }
+
+/// Marker properties for which an explicitly supplied reset differs from
+/// the absence of an override on the paragraph mark's formatting.
+enum LegacyWordNumberingCharacterProperty {
+  bold,
+  italic,
+  strike,
+  doubleStrike,
+  smallCaps,
+  allCaps,
+  hidden,
+  underline,
+  verticalAlign,
+  kerning,
+  fontSize,
+  color,
+  highlight,
+  position,
+  spacing,
+}
 
 class LegacyWordNumberingDefinition {
   const LegacyWordNumberingDefinition({
@@ -466,12 +522,15 @@ class LegacyWordNumberingLevel {
     required this.level,
     required this.format,
     required this.text,
+    this.placeholderOffsets,
     this.startAt = 1,
     this.suffix = LegacyWordListSuffix.tab,
     this.legal = false,
     this.restartAfterLevel,
     this.paragraphStyle = const LegacyWordParagraphStyle(),
     this.characterStyle = const LegacyWordCharacterStyle(),
+    this.characterStyleOverrides = const {},
+    this.characterStyleIsSparse = false,
     this.markerAlignment = LegacyWordAlignment.left,
   });
   final int level;
@@ -479,8 +538,17 @@ class LegacyWordNumberingLevel {
   /// A supported OOXML number-format identifier, never an invented fallback.
   final String format;
 
-  /// %1..%9 placeholders; literal characters (including bullets) are retained.
+  /// The label template, with real placeholders represented as %1..%9.
+  /// Literal percent-number text remains unchanged. [placeholderOffsets]
+  /// distinguishes those literals from placeholders in parsed binary files.
   final String text;
+
+  /// Zero-based UTF-16 positions in [text] at which real %1..%9 placeholders
+  /// begin. An empty list means the entire label is literal. Null retains the
+  /// original public-model convention: every %1..%9 sequence is a placeholder
+  /// (except in bullet labels). Binary parsing always supplies explicit,
+  /// immutable offsets, so even an ordinary literal "%1" stays unambiguous.
+  final List<int>? placeholderOffsets;
   final int startAt;
   final LegacyWordListSuffix suffix;
   final bool legal;
@@ -491,6 +559,20 @@ class LegacyWordNumberingLevel {
   final LegacyWordAlignment markerAlignment;
   final LegacyWordParagraphStyle paragraphStyle;
   final LegacyWordCharacterStyle characterStyle;
+
+  /// Explicit character-property overrides from the LVL/linked
+  /// style. For example, explicit automatic color remains distinct from an
+  /// absent color that inherits the paragraph mark. Non-null values always
+  /// override; public models may leave this empty to retain null-as-unspecified
+  /// inheritance. Binary parsing preserves these keys as an immutable set.
+  final Set<LegacyWordNumberingCharacterProperty> characterStyleOverrides;
+
+  /// Parsed LVL formatting distinguishes absent defaults from explicit resets.
+  /// When true, absent false, baseline, and zero-kerning values inherit the
+  /// paragraph mark; nondefault values and keys in [characterStyleOverrides]
+  /// always override. The false default preserves public-model behavior in
+  /// which those default values reset ordinary materialized label formatting.
+  final bool characterStyleIsSparse;
 }
 
 sealed class LegacyWordBlock {
@@ -1055,8 +1137,9 @@ class LegacyWordParagraphStyle {
   final int spaceBeforeTwips;
   final int spaceAfterTwips;
 
-  /// For multiple=true, 240 denotes one line. Otherwise the absolute value is
-  /// twips, negative means exact spacing and positive means at least.
+  /// Negative values mean exact twip spacing regardless of
+  /// [lineSpacingMultiple]. For nonnegative values, true means 240ths of a
+  /// line and false means a minimum distance in twips.
   final int? lineSpacingValue;
   final bool lineSpacingMultiple;
   final bool keepNext;

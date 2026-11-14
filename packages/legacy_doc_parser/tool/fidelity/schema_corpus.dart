@@ -15,6 +15,16 @@ import 'list_metadata_fixture.dart' as list_metadata;
 import 'metafile_probe.dart' as metafiles;
 import 'media_review_fixture.dart' as media_reviews;
 import 'nested_field_fixture.dart' as nested_fields;
+import 'field_visibility_fixture.dart' as field_visibility;
+import 'field_marker_formatting_fixture.dart' as field_marker_formatting;
+import 'field_cache_import_fixture.dart' as field_cache_import;
+import 'generated_field_tree_fixture.dart' as generated_fields;
+import 'generated_field_ascii_fixture.dart' as generated_ascii_fields;
+import 'cached_field_fixture.dart' as cached_fields;
+import 'scalar_sprm_fixture.dart' as scalar_sprms;
+import 'list_literal_fixture.dart' as list_literal;
+import 'list_marker_style_fixture.dart' as list_marker_styles;
+import 'list_visibility_fixture.dart' as list_visibility;
 import 'note_boundary_fixture.dart' as note_boundaries;
 import 'note_format_fixture.dart' as note_formats;
 import 'packed_shape_probe.dart' as packed_shapes;
@@ -55,6 +65,90 @@ void main(List<String> arguments) {
       'output': output,
       'producer': producer,
     });
+  }
+
+  void recordFixtureCases(String prefix, String filename, String producer) {
+    final data = jsonDecode(
+      File('${root.path}/$prefix/$filename').readAsStringSync(),
+    );
+    final cases = (data is List ? data : (data as Map)['cases']) as List;
+    for (final item in cases.cast<Map>()) {
+      // Invalid binary-domain controls are retained as DOC inputs but must
+      // never acquire an Office output or enter the successful schema corpus.
+      if (!item.containsKey('output')) continue;
+      record(
+        '$prefix/${item['name']}',
+        '$prefix/${item['source'] ?? (item['sources'] as List).first}',
+        '$prefix/${item['output']}',
+        producer,
+      );
+    }
+  }
+
+  for (final (prefix, filename, producer, generate) in [
+    (
+      'field-visibility',
+      'cases.json',
+      'field_visibility_fixture.dart',
+      field_visibility.main,
+    ),
+    (
+      'field-markers',
+      'cases.json',
+      'field_marker_formatting_fixture.dart',
+      field_marker_formatting.main,
+    ),
+    (
+      'field-cache-import',
+      'cases.json',
+      'field_cache_import_fixture.dart',
+      field_cache_import.main,
+    ),
+    (
+      'generated-fields',
+      'cases.json',
+      'generated_field_tree_fixture.dart',
+      generated_fields.main,
+    ),
+    (
+      'ascii-fields',
+      'cases.json',
+      'generated_field_ascii_fixture.dart',
+      generated_ascii_fields.main,
+    ),
+    (
+      'cached-fields',
+      'cases.json',
+      'cached_field_fixture.dart',
+      cached_fields.main,
+    ),
+    (
+      'scalar-sprms',
+      'cases.json',
+      'scalar_sprm_fixture.dart',
+      scalar_sprms.main,
+    ),
+    (
+      'list-literal',
+      'manifest.json',
+      'list_literal_fixture.dart',
+      list_literal.main,
+    ),
+    (
+      'list-marker-styles',
+      'manifest.json',
+      'list_marker_style_fixture.dart',
+      list_marker_styles.main,
+    ),
+    (
+      'list-visibility',
+      'manifest.json',
+      'list_visibility_fixture.dart',
+      list_visibility.main,
+    ),
+  ]) {
+    generate(['${root.path}/$prefix']);
+    recordFixtureCases(prefix, filename, 'tool/fidelity/$producer');
   }
 
   ink_budget.main(['${root.path}/ink-budget']);

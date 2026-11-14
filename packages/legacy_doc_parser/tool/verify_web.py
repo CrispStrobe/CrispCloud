@@ -54,6 +54,27 @@ def main():
     public_fields_helper = (repository / "tool/public_field_web_acceptance.dart").as_uri()
     public_metafiles_helper = (repository / "tool/public_metafile_web_acceptance.dart").as_uri()
     public_compound_helper = (repository / "tool/public_compound_web_acceptance.dart").as_uri()
+    extra_helpers = [
+        ("Public note ownership", "public_note_reference_web_acceptance.dart", "verifyPublicNoteReferenceWebAcceptance"),
+        ("Compound generated matrix", "compound_property_acceptance.dart", "verifyCompoundPropertyAcceptance"),
+        ("Generated field trees", "generated_field_tree_web_acceptance.dart", "verifyGeneratedFieldTreeWebAcceptance"),
+        ("Public formatting", "public_formatting_web_acceptance.dart", "verifyPublicFormattingWebAcceptance"),
+        ("Public table formatting", "public_table_formatting_web_acceptance.dart", "verifyPublicTableFormattingWebAcceptance"),
+        ("Binary scalar domains", "scalar_sprm_web_acceptance.dart", "verifyScalarSprmWebAcceptance"),
+        ("Literal list labels", "list_literal_web_acceptance.dart", "verifyListLiteralWebAcceptance"),
+        ("List label visibility", "list_visibility_web_acceptance.dart", "verifyListVisibilityWebAcceptance"),
+        ("List marker formatting", "list_marker_style_web_acceptance.dart", "verifyListMarkerStyleWebAcceptance"),
+        ("Field visibility", "field_visibility_web_acceptance.dart", "verifyFieldVisibilityWebAcceptance"),
+        ("Cached field mode", "cached_field_web_acceptance.dart", "verifyCachedFieldWebAcceptance"),
+        ("Cached field structure", "cached_field_structure_web_acceptance.dart", "verifyCachedFieldStructureWebAcceptance"),
+        ("Display field revision evidence", "display_field_evidence_web_acceptance.dart", "verifyDisplayFieldEvidenceWebAcceptance"),
+        ("Source field marker formatting", "field_marker_formatting_web_acceptance.dart", "verifyFieldMarkerFormattingWebAcceptance"),
+        ("Source field instruction visibility", "field_instruction_visibility_web_acceptance.dart", "verifyFieldInstructionVisibilityWebAcceptance"),
+    ]
+    extra_imports = "".join(f"import {json.dumps((repository / 'tool' / path).as_uri())};\n"
+                            for _, path, _ in extra_helpers)
+    extra_calls = "".join(f"  print('{label} JavaScript acceptance passed: ${{jsonEncode({function}())}}');\n"
+                          for label, _, function in extra_helpers)
     ink_cases = []
     for source in sorted((repository / "test/fixtures/ink_wpf").glob("*/*.isf")):
         snapshot = source.with_name(source.name.replace(".roundtrip.isf", ".second-reloaded.json")
@@ -95,6 +116,7 @@ def main():
             f"import {json.dumps(public_fields_helper)};\n"
             f"import {json.dumps(public_metafiles_helper)};\n"
             f"import {json.dumps(public_compound_helper)};\n"
+            f"{extra_imports}"
             "void main() {\n"
             f"  final result = verifyWebConversion(base64Decode('{encoded}'));\n"
             "  print('Legacy DOC JavaScript acceptance passed: ${jsonEncode(result)}');\n"
@@ -109,6 +131,7 @@ def main():
             "  print('Public field JavaScript acceptance passed: ${jsonEncode(verifyPublicFieldWebAcceptance())}');\n"
             "  print('Public metafile JavaScript acceptance passed: ${jsonEncode(verifyPublicMetafileWebAcceptance())}');\n"
             "  print('Public compound JavaScript acceptance passed: ${jsonEncode(verifyPublicCompoundWebAcceptance())}');\n"
+            f"{extra_calls}"
             "  print('Ink budget JavaScript acceptance passed: ${jsonEncode(verifyInkBudgetWebAcceptance())}');\n"
             f"  final ink = verifyInkWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_ink}'))) as List);\n"
             "  print('Ink JavaScript acceptance passed: ${jsonEncode(ink)}');\n"

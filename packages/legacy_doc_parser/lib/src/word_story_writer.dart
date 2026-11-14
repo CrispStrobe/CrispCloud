@@ -240,6 +240,27 @@ extension _WordStories on _StructuredWordWriter {
     if (run.endCp - run.startCp != run.text.length) {
       throw const FormatException('Word run positions do not match text.');
     }
+    if (run.startCp < run.endCp) {
+      // The normalized public model contains display runs only: the parser
+      // flushes and skips instruction/private-result units. Recheck callers'
+      // spans against the merged field ranges before emitting any text or
+      // events. Checking only the start misses a run crossing a hidden range.
+      var low = 0, high = _hiddenContentRanges.length;
+      while (low < high) {
+        final middle = (low + high) ~/ 2;
+        if (_hiddenContentRanges[middle].$2 <= run.startCp) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+      if (low < _hiddenContentRanges.length &&
+          _hiddenContentRanges[low].$1 < run.endCp) {
+        throw const FormatException(
+          'Word display run overlaps field instructions or private results.',
+        );
+      }
+    }
     _emitEventsThrough(run.startCp);
     var position = run.startCp;
     final events = _events[_storyId] ?? const <_WordInlineEvent>[];
@@ -344,13 +365,26 @@ extension _WordStories on _StructuredWordWriter {
         closing: true,
       );
     }
+    final noteIds = <(bool, int)>{};
+    final noteStories = <String>{};
     for (final reference in document.noteReferences) {
       final story = _stories[reference.storyId];
       final kind = reference.endnote
           ? LegacyWordStoryKind.endnote
           : LegacyWordStoryKind.footnote;
-      if (reference.id < 1 || story == null || story.kind != kind) {
+      // Hidden notes still own their identity and source position. A shared
+      // story can otherwise be made inert after a visible reference has been
+      // queued, leaving an active reference with no corresponding note part.
+      if (reference.id < 1 ||
+          story == null ||
+          story.kind != kind ||
+          !noteIds.add((reference.endnote, reference.id)) ||
+          !noteStories.add(reference.storyId)) {
         throw const FormatException('Invalid Word note reference.');
+      }
+      final owner = _storyAt(reference.anchorCp);
+      if (owner == null) {
+        throw const FormatException('Invalid Word note anchor.');
       }
       if (!_displayPosition(reference.anchorCp) ||
           reference.presentation.hidden) {
@@ -358,10 +392,6 @@ extension _WordStories on _StructuredWordWriter {
             'note marker hidden or inside a private field';
         limitations.add(LegacyWordConversionLimitation.notesComments);
         continue;
-      }
-      final owner = _storyAt(reference.anchorCp);
-      if (owner == null) {
-        throw const FormatException('Invalid Word note anchor.');
       }
       final name = reference.endnote ? 'endnote' : 'footnote';
       _event(owner, reference.anchorCp, 30, () {
@@ -489,9 +519,17 @@ extension _WordStories on _StructuredWordWriter {
                       field.endCp > parent.separatorCp!))) {
         throw const FormatException('Invalid Word field nesting.');
       }
+      if (ancestors.length >= 64) _tooComplex();
       ancestors.add(field);
     }
+    var hiddenInstructionRanges = 0;
     for (final field in document.fields) {
+      hiddenInstructionRanges += _validateFieldInstructionVisibility(field);
+      if (hiddenInstructionRanges > 200000) _tooComplex();
+      if (fieldMode == LegacyWordFieldMode.cachedResults) {
+        _cachedFieldEvidence(field);
+        continue;
+      }
       // Every descendant of an instruction field is emitted while recursively
       // writing that instruction, including fields in its cached result.
       // Private ancestors suppress their entire result subtree. Scheduling
@@ -508,17 +546,67 @@ extension _WordStories on _StructuredWordWriter {
           field.storyId,
           field.separatorCp!,
           10,
-          () => _xml.add('<w:r><w:fldChar w:fldCharType="separate"/></w:r>'),
+          () => _fieldMarker(
+            'separate',
+            hidden: field.privateResult || field.separatorHidden,
+          ),
         );
       }
       _event(
         field.storyId,
         field.endCp - 1,
         5,
-        () => _xml.add('<w:r><w:fldChar w:fldCharType="end"/></w:r>'),
+        () =>
+            _fieldMarker('end', hidden: field.privateResult || field.endHidden),
       );
     }
     _prepareTextboxes();
+  }
+
+  int _validateFieldInstructionVisibility(LegacyWordField field) {
+    final ranges = field.instructionHiddenRanges;
+    if (ranges.length > 200000) _tooComplex();
+    final children = _fieldChildren[field.id] ?? const <LegacyWordField>[];
+    var previousEnd = 0, childIndex = 0;
+    bool splitsScalar(int offset) =>
+        offset > 0 &&
+        offset < field.instruction.length &&
+        field.instruction.codeUnitAt(offset) >= 0xdc00 &&
+        field.instruction.codeUnitAt(offset) <= 0xdfff;
+    for (final (start, end) in ranges) {
+      if (start < previousEnd ||
+          start < 0 ||
+          end <= start ||
+          end > field.instruction.length ||
+          splitsScalar(start) ||
+          splitsScalar(end)) {
+        throw const FormatException(
+          'Invalid Word instruction visibility range.',
+        );
+      }
+      final sourceStart = field.startCp + 1 + start;
+      final sourceEnd = field.startCp + 1 + end;
+      while (childIndex < children.length &&
+          children[childIndex].endCp <= sourceStart) {
+        childIndex++;
+      }
+      if (childIndex < children.length &&
+          children[childIndex].startCp < sourceEnd) {
+        throw const FormatException(
+          'Word instruction visibility crosses a nested field.',
+        );
+      }
+      for (var offset = start; offset < end; offset++) {
+        final unit = field.instruction.codeUnitAt(offset);
+        if (unit == 19 || unit == 20 || unit == 21) {
+          throw const FormatException(
+            'Word instruction visibility includes a field marker.',
+          );
+        }
+      }
+      previousEnd = end;
+    }
+    return ranges.length;
   }
 
   bool _fieldHandledByAncestor(LegacyWordField field) {
@@ -546,8 +634,47 @@ extension _WordStories on _StructuredWordWriter {
       'startCp': field.startCp,
       'endCp': field.endCp,
       'privateResult': field.privateResult,
+      if (field.displayRevision != null)
+        'displayRevision':
+            _displayFieldRevisionRecords[field.id]!['displayRevision'],
       'reason': 'inert; no external or unsupported field evaluation',
     });
+  }
+
+  void _cachedFieldEvidence(LegacyWordField field) {
+    if (_evidenceRecords.length >= 20000) _tooComplex();
+    limitations.add(LegacyWordConversionLimitation.fieldsLists);
+    _evidenceRecords.add({
+      'kind': 'cachedField',
+      'id': field.id,
+      'parentId': field.parentId,
+      'type': field.type,
+      'instruction': field.instruction,
+      'storedResult': field.storedResult,
+      'story': field.storyId,
+      'startCp': field.startCp,
+      'separatorCp': field.separatorCp,
+      'endCp': field.endCp,
+      'locked': field.locked,
+      'dirty': field.dirty,
+      'privateResult': field.privateResult,
+      'mode': 'cachedResults',
+      'beginHidden': field.beginHidden,
+      'separatorHidden': field.separatorHidden,
+      'endHidden': field.endHidden,
+      'instructionHiddenRanges': [
+        for (final (start, end) in field.instructionHiddenRanges) [start, end],
+      ],
+      if (field.displayRevision != null)
+        'displayRevision':
+            _displayFieldRevisionRecords[field.id]!['displayRevision'],
+      'automaticRecalculation': false,
+      'reason':
+          'Explicit stored-result export; field instructions and nesting are '
+          'inert evidence, and the original display runs retain their styling '
+          'and source positions. Field editing and recalculation are unavailable.',
+    });
+    _count('cachedResultFields');
   }
 
   static final _fieldKeyword = RegExp(r'^\s*([A-Za-z][A-Za-z0-9_]*|=)');
@@ -630,8 +757,29 @@ extension _WordStories on _StructuredWordWriter {
         .every((child) => _safeFieldTree(child, depth + 1));
   }
 
-  void _fieldBegin(LegacyWordField field, [int depth = 0]) {
+  void _fieldRunStart(bool hidden) {
+    // A field in an instruction never has a visible result in this story.
+    // Explicit run visibility prevents importers from exposing nested caches
+    // or private-field recalculation errors, while retaining every field and
+    // instruction. Preserve source marker/instruction visibility, explicitly
+    // resetting visible runs so a previous hidden run cannot leak its style.
+    _xml.add('<w:r><w:rPr>');
+    _bool('vanish', hidden);
+    _xml.add('</w:rPr>');
+  }
+
+  void _fieldMarker(String type, {required bool hidden}) {
+    _fieldRunStart(hidden);
+    _xml.add('<w:fldChar w:fldCharType="$type"/></w:r>');
+  }
+
+  void _fieldBegin(
+    LegacyWordField field, [
+    int depth = 0,
+    bool instructionContext = false,
+  ]) {
     if (depth > 64) _tooComplex();
+    final hidden = instructionContext || field.privateResult;
     final instruction = _fieldInstruction(field);
     if (instruction != field.instruction) {
       final reference = _referenceHyperlinkInstruction(field);
@@ -654,15 +802,16 @@ extension _WordStories on _StructuredWordWriter {
             '${reference?.$2 == true ? ' The reference-only extra zero UTF-16 terminator matches the native producer form.' : ''}',
       });
     }
-    _xml.add(
-      '<w:r><w:fldChar w:fldCharType="begin" w:fldLock="1" w:dirty="0">',
-    );
+    _fieldRunStart(hidden || field.beginHidden);
+    _xml.add('<w:fldChar w:fldCharType="begin" w:fldLock="1" w:dirty="0">');
     _displayFieldRevision(field);
     _xml.add('</w:fldChar></w:r>');
     final instructionStart = field.startCp + 1;
     final instructionEnd = field.separatorCp ?? field.endCp - 1;
     final children = (_fieldChildren[field.id] ?? const <LegacyWordField>[])
         .where((child) => child.startCp < instructionEnd);
+    final visibility = field.instructionHiddenRanges;
+    var visibilityIndex = 0;
     var position = instructionStart;
     void textUntil(int cp) {
       final start = position - instructionStart;
@@ -672,14 +821,29 @@ extension _WordStories on _StructuredWordWriter {
           'Word field instruction positions do not match text.',
         );
       }
-      final value = instruction.substring(start, end);
-      if (value.isNotEmpty) {
-        _xml.add('<w:r><w:instrText xml:space="preserve">');
+      var offset = start;
+      while (offset < end) {
+        while (visibilityIndex < visibility.length &&
+            visibility[visibilityIndex].$2 <= offset) {
+          visibilityIndex++;
+        }
+        final range = visibilityIndex < visibility.length
+            ? visibility[visibilityIndex]
+            : null;
+        final sourceHidden = range != null && range.$1 <= offset;
+        final boundary = range == null
+            ? end
+            : (sourceHidden ? range.$2 : range.$1);
+        final limit = boundary < end ? boundary : end;
+        final value = instruction.substring(offset, limit);
+        _fieldRunStart(hidden || sourceHidden);
+        _xml.add('<w:instrText xml:space="preserve">');
         // Whitespace can also occur inside quoted literals; replacing it with
         // spaces changes the retained instruction. XML character references
         // preserve it exactly. Nested field markers use their typed child.
         _xml.text(value, preserveWhitespace: true);
         _xml.add('</w:instrText></w:r>');
+        offset = limit;
       }
       position = cp;
     }
@@ -691,9 +855,9 @@ extension _WordStories on _StructuredWordWriter {
           'An unsupported nested Word instruction cannot be activated.',
         );
       }
-      _fieldBegin(child, depth + 1);
+      _fieldBegin(child, depth + 1, true);
       if (child.separatorCp != null) {
-        _xml.add('<w:r><w:fldChar w:fldCharType="separate"/></w:r>');
+        _fieldMarker('separate', hidden: true);
         _writeCachedFieldResult(
           child,
           field.instruction,
@@ -701,7 +865,7 @@ extension _WordStories on _StructuredWordWriter {
           depth + 1,
         );
       }
-      _xml.add('<w:r><w:fldChar w:fldCharType="end"/></w:r>');
+      _fieldMarker('end', hidden: true);
       position = child.endCp;
     }
     textUntil(instructionEnd);
@@ -760,7 +924,14 @@ extension _WordStories on _StructuredWordWriter {
       }
       final text = output.toString();
       if (text.isNotEmpty) {
-        _writeRun(LegacyWordRun(startCp: 0, endCp: text.length, text: text));
+        _writeRun(
+          LegacyWordRun(
+            startCp: 0,
+            endCp: text.length,
+            text: text,
+            style: const LegacyWordCharacterStyle(hidden: true),
+          ),
+        );
       }
       position = cp;
     }
@@ -773,9 +944,9 @@ extension _WordStories on _StructuredWordWriter {
       textUntil(child.startCp);
       final active = emitFields && _safeFieldTree(child);
       if (active) {
-        _fieldBegin(child, depth + 1);
+        _fieldBegin(child, depth + 1, true);
         if (child.separatorCp != null) {
-          _xml.add('<w:r><w:fldChar w:fldCharType="separate"/></w:r>');
+          _fieldMarker('separate', hidden: true);
         }
       } else if (emitFields) {
         _inertFieldEvidence(child);
@@ -788,7 +959,7 @@ extension _WordStories on _StructuredWordWriter {
         emitFields: active,
       );
       if (active) {
-        _xml.add('<w:r><w:fldChar w:fldCharType="end"/></w:r>');
+        _fieldMarker('end', hidden: true);
       }
       position = child.endCp;
     }

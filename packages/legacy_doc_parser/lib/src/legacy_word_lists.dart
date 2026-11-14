@@ -123,6 +123,7 @@ extension _WordLists on _StructuredWordParser {
               level: model.level,
               format: model.format,
               text: model.text,
+              placeholderOffsets: model.placeholderOffsets,
               startAt: startAt,
               suffix: model.suffix,
               legal: model.legal,
@@ -130,6 +131,8 @@ extension _WordLists on _StructuredWordParser {
               markerAlignment: model.markerAlignment,
               paragraphStyle: model.paragraphStyle,
               characterStyle: model.characterStyle,
+              characterStyleOverrides: model.characterStyleOverrides,
+              characterStyleIsSparse: model.characterStyleIsSparse,
             ),
             old.paragraph,
             old.styleIndex,
@@ -226,23 +229,14 @@ extension _WordLists on _StructuredWordParser {
       throw const FormatException('Invalid Word bullet label.');
     }
     final text = StringBuffer();
+    final placeholderOffsets = <int>[];
     for (var i = 0; i < template.length; i++) {
       final numberLevel = placeholders[i];
       if (numberLevel != null) {
+        placeholderOffsets.add(text.length);
         text.write('%${numberLevel + 1}');
       } else {
         final unit = template.codeUnitAt(i);
-        // Binary LVL placeholders are explicit character offsets. Both our
-        // public model and OOXML lvlText reserve %1..%9 and have no literal
-        // escape, so accepting this source text would change the label.
-        if (unit == 37 &&
-            i + 1 < template.length &&
-            template.codeUnitAt(i + 1) >= 49 &&
-            template.codeUnitAt(i + 1) <= 57) {
-          throw const FormatException(
-            'Unsupported Word list label with a literal percent-number sequence.',
-          );
-        }
         if (unit < 32 && unit != 9) {
           throw const FormatException(
             'Invalid control character in Word list label.',
@@ -275,6 +269,7 @@ extension _WordLists on _StructuredWordParser {
           level: level,
           format: format,
           text: text.toString(),
+          placeholderOffsets: List.unmodifiable(placeholderOffsets),
           startAt: hasNumberSequence ? start : 1,
           suffix: LegacyWordListSuffix.values[suffix],
           legal: (flags & 4) != 0,
@@ -291,6 +286,11 @@ extension _WordLists on _StructuredWordParser {
             characterProperties,
             useDocumentDefaultFont: styleIndex != null,
           ),
+          characterStyleOverrides: Set.unmodifiable({
+            for (final property in LegacyWordNumberingCharacterProperty.values)
+              if (characterProperties.containsKey(property.name)) property,
+          }),
+          characterStyleIsSparse: true,
         ),
         List.unmodifiable(paragraph),
         styleIndex,

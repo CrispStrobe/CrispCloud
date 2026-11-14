@@ -6,9 +6,9 @@ the explicitly unresolved floating-table geometry investigation remains separate
 
 ## Qualified source boundaries
 
-- Quds `05a581d`: shared font ownership, explicit unloaded-face fallbacks,
+- Quds `389e879`: shared font ownership, explicit unloaded-face fallbacks,
   restored list-label painting and bounded bilingual menus.
-- legacy-doc-parser `0f9f085`: fourth parser audit and all sealed independent
+- legacy-doc-parser `731e370`: fifth parser audit and all sealed independent
   acceptance records. Commit `94294e1` is an ancestor of this pin.
 - CrisperBooks `505d3d7`: bounded native selections and exact fixed-layout section
   identity, including synchronous disposal cleanup. All four app dependencies resolve to this immutable tree.
@@ -44,3 +44,10 @@ the explicitly unresolved floating-table geometry investigation remains separate
 See [cloud verification](cloud-issues-96-98-verification.md) and the retained
 canonical source reports for boundaries. Complete release, full-suite, signing,
 hosted CI and store acceptance must be recorded separately when they finish.
+
+Final parser refresh: **3,406 Dart tests**, **188 Python controls**, actual
+JavaScript acceptance and source analysis passed. Quds engine: **1,634 passed**,
+three conditional skips. App legacy-Word consumer cohort: **35 passed**.
+The local full-app debug crypto run was interrupted; full app acceptance is
+delegated to hosted CI. The Mac release compiles, while local signing and startup
+validation await an awake console session and an unlocked signing keychain.

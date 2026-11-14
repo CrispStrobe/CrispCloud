@@ -24,9 +24,14 @@ const listMetadataCases = [
   'literal-label-tab',
   'tab-before-placeholder',
   'none-label-tab',
+  'literal-percent-one',
+  'literal-percent-nine',
+  'mixed-literal-percent',
+  'override-literal-percent',
+  'none-literal-percent',
 ];
 
-const unsupportedListMetadataCases = [
+const materializedListMetadataCases = [
   'literal-percent-one',
   'literal-percent-nine',
   'mixed-literal-percent',

@@ -6,23 +6,53 @@ extension _WordRevisionWriter on _StructuredWordWriter {
   void _displayFieldRevisionEvidence(LegacyWordField field) {
     final change = field.displayRevision;
     if (change == null) return;
+    if (_evidenceRecords.length >= 20000) _tooComplex();
+    final detail = {
+      'original': change.original,
+      'hidden': change.hidden,
+      'revision': {
+        'author': change.revision.author,
+        'time': change.revision.time?.toIso8601String(),
+        'authorIndex': change.revision.authorIndex,
+        'rawDate': change.revision.rawDate,
+        'saveId': change.revision.saveId,
+        'reason': change.revision.reason,
+      },
+    };
+    final metadata = {
+      'fieldId': field.id,
+      'story': field.storyId,
+      'startCp': field.startCp,
+      'authorIndex': change.revision.authorIndex,
+      'rawDttm': change.revision.rawDate,
+      'privateResult': field.privateResult,
+      'hidden': change.hidden,
+      'displayRevision': detail,
+      'nativeHistoryAvailable': false,
+    };
     if (change.sourceRecord != null) {
       _preserveEvidence('displayFieldRevisionRecord', change.sourceRecord!, {
         'sourceStructure': 'DispFldRmOperand',
-        'fieldId': field.id,
-        'story': field.storyId,
-        'startCp': field.startCp,
-        'authorIndex': change.revision.authorIndex,
-        'rawDttm': change.revision.rawDate,
-        'privateResult': field.privateResult,
-        'hidden': change.hidden,
+        ...metadata,
       });
+      detail['sourceRecordPart'] = _evidenceRecords.last['part'] as String;
+    } else {
+      _evidenceRecords.add({'kind': 'displayFieldRevision', ...metadata});
     }
+    // Record every typed history before visibility or field-support filtering.
+    // Caller-built models need not have a binary DispFldRmOperand. Mark native
+    // availability only when the original is actually emitted: ancestors can
+    // suppress otherwise supported LISTNUM descendants.
+    _displayFieldRevisionRecords[field.id] = _evidenceRecords.last;
     if (field.type != 'LISTNUM' ||
         field.privateResult ||
         change.hidden ||
         !change.original.runes.every(
-          (rune) => rune >= 32 && rune != 0xfffe && rune != 0xffff,
+          (rune) =>
+              rune >= 32 &&
+              rune != 0xfffe &&
+              rune != 0xffff &&
+              !(rune >= 0xd800 && rune <= 0xdfff),
         )) {
       _incompleteRevision(
         'displayField',
@@ -55,6 +85,11 @@ extension _WordRevisionWriter on _StructuredWordWriter {
       empty: true,
       originalNumbering: safeOriginal ? change.original : null,
     );
+    if (safeOriginal &&
+        !_part.startsWith('word/inertStoryEvidence') &&
+        !_part.startsWith('word/textboxEvidence')) {
+      _displayFieldRevisionRecords[field.id]!['nativeHistoryAvailable'] = true;
+    }
     _count('displayFieldRevisions');
   }
 
@@ -65,6 +100,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     final numbered = listId != null && listId != 0;
     final outputId = _resolvedParagraphNumbering[paragraph];
     final supported = numbered && outputId != null;
+    final materialized = _materializedParagraphNumbering.containsKey(paragraph);
     if (change?.sourceRecord != null) {
       _preserveEvidence('numberingRevisionRecord', change!.sourceRecord!, {
         'cp': paragraph.startCp,
@@ -75,6 +111,64 @@ extension _WordRevisionWriter on _StructuredWordWriter {
         'authorIndex': change.revision.authorIndex,
         'rawDttm': change.revision.rawDate,
       });
+    }
+    if (_suppressedParagraphNumbering.contains(paragraph)) {
+      _xml.add('<w:numPr><w:numId w:val="0"/></w:numPr>');
+      if (change != null) {
+        _incompleteRevision(
+          'suppressedFieldNumberingRevision',
+          paragraph.startCp,
+          change.revision,
+          marked: true,
+          snapshot: change.original != null,
+        );
+        _evidenceRecords.last.addAll({
+          'originalNumbering': change.original,
+          'previouslyNumbered': change.previouslyNumbered,
+          'numberingInserted': change.inserted,
+          'revision': {
+            'author': change.revision.author,
+            'time': change.revision.time?.toIso8601String(),
+            'authorIndex': change.revision.authorIndex,
+            'rawDate': change.revision.rawDate,
+            'saveId': change.revision.saveId,
+            'reason': change.revision.reason,
+          },
+          'reason':
+              'Source-hidden label remains suppressed; original numbering '
+              'history is retained without activating its revision behavior',
+        });
+      }
+      return;
+    }
+    if (materialized) {
+      _xml.add('<w:numPr><w:numId w:val="0"/></w:numPr>');
+      if (change != null) {
+        _incompleteRevision(
+          'materializedNumbering',
+          paragraph.startCp,
+          change.revision,
+          marked: true,
+          snapshot: change.original != null,
+        );
+        _evidenceRecords.last.addAll({
+          'originalNumbering': change.original,
+          'previouslyNumbered': change.previouslyNumbered,
+          'numberingInserted': change.inserted,
+          'revision': {
+            'author': change.revision.author,
+            'time': change.revision.time?.toIso8601String(),
+            'authorIndex': change.revision.authorIndex,
+            'rawDate': change.revision.rawDate,
+            'saveId': change.revision.saveId,
+            'reason': change.revision.reason,
+          },
+          'reason':
+              'Literal label is retained as text; automatic numbering '
+              'revision accept/reject behavior cannot be reproduced',
+        });
+      }
+      return;
     }
     if (numbered && !supported) {
       limitations.add(LegacyWordConversionLimitation.fieldsLists);
@@ -339,7 +433,24 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     _bool('pageBreakBefore', style.pageBreakBefore);
     _bool('widowControl', style.layout.widowControl);
     final listId = style.listId?.abs();
-    if (listId != null && listId != 0 && _numberingIds.contains(listId)) {
+    final template = _numberingTemplates[(listId, style.listLevel ?? 0)];
+    if (template != null && !template.nativeRepresentable) {
+      _xml.add('<w:numPr><w:numId w:val="0"/></w:numPr>');
+      limitations.add(LegacyWordConversionLimitation.revisions);
+      limitations.add(LegacyWordConversionLimitation.fieldsLists);
+      if (_evidenceRecords.length >= 20000) _tooComplex();
+      _evidenceRecords.add({
+        'kind': 'previousLiteralNumbering',
+        'cp': cp,
+        'definition': listId,
+        'level': style.listLevel ?? 0,
+        'reason':
+            'Previous literal numbering template is retained in evidence; '
+            'rejecting the property change cannot restore an automatic label',
+      });
+    } else if (listId != null &&
+        listId != 0 &&
+        _numberingIds.contains(listId)) {
       _xml.add(
         '<w:numPr><w:ilvl w:val="${style.listLevel ?? 0}"/><w:numId w:val="${_numberingReferences[listId]}"/></w:numPr>',
       );
@@ -350,11 +461,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     _paragraphDecorations(style, _xml, cp);
     _paragraphLayoutBeforeSpacing(style.layout);
     final line = style.lineSpacingValue;
-    final rule = style.lineSpacingMultiple
-        ? 'auto'
-        : (line ?? 240) < 0
-        ? 'exact'
-        : 'atLeast';
+    final rule = _StructuredWordWriter._lineSpacingRule(style);
     _xml.add(
       '<w:spacing w:before="${style.spaceBeforeTwips}" w:after="${style.spaceAfterTwips}"',
     );

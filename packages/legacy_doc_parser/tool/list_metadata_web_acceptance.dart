@@ -58,6 +58,17 @@ Map<String, Object> verifyListMetadataWebAcceptance() {
     'literal-label-tab': (['A\tB'], 0, 'decimal', 'A\tB', null),
     'tab-before-placeholder': (['A\t7'], 0, 'decimal', 'A\t%1', null),
     'none-label-tab': (['A\tB'], 0, 'none', 'A\tB', null),
+    'literal-percent-one': (['%1'], 0, 'decimal', '%1', null),
+    'literal-percent-nine': (['%9'], 0, 'decimal', '%9', null),
+    'mixed-literal-percent': (
+      ['7 literal %1'],
+      0,
+      'decimal',
+      '%1 literal %1',
+      null,
+    ),
+    'override-literal-percent': (['%1'], 0, 'decimal', '%1', null),
+    'none-literal-percent': (['%1'], 0, 'none', '%1', null),
   };
   _check(
     expected.keys.join(',') == listMetadataCases.join(','),
@@ -92,9 +103,8 @@ Map<String, Object> verifyListMetadataWebAcceptance() {
       '$name unexpected incomplete numbering warning',
     );
 
-    final archive = ZipDecoder().decodeBytes(
-      convertLegacyWordDocument(document).bytes,
-    );
+    final result = convertLegacyWordDocument(document);
+    final archive = ZipDecoder().decodeBytes(result.bytes);
     final numbering = XmlDocument.parse(
       utf8.decode(archive.findFile('word/numbering.xml')!.content),
     );
@@ -107,35 +117,53 @@ Map<String, Object> verifyListMetadataWebAcceptance() {
         .getElement(element, namespace: _w)
         ?.getAttribute('val', namespace: _w);
     _check(value('numFmt') == format, '$name native number format');
-    _check(value('lvlText') == text, '$name native label template');
+    final materialized = materializedListMetadataCases.contains(name);
+    _check(
+      value('lvlText') == (materialized ? '' : text),
+      '$name native label template',
+    );
+    if (materialized) {
+      final main = XmlDocument.parse(
+        utf8.decode(archive.findFile('word/document.xml')!.content),
+      );
+      _check(
+        main.findAllElements('t', namespace: _w).first.innerText ==
+            labels.single,
+        '$name exact materialized label',
+      );
+      _check(
+        main
+                .findAllElements('numId', namespace: _w)
+                .single
+                .getAttribute('val', namespace: _w) ==
+            '0',
+        '$name native numbering disabled',
+      );
+      _check(
+        result.limitations.contains(LegacyWordConversionLimitation.fieldsLists),
+        '$name materialization disclosed',
+      );
+    }
     _check(value('lvlRestart') == restart?.toString(), '$name native restart');
     _unchanged(source, before, name);
   }
 
-  for (final name in [
-    ...unsupportedListMetadataCases,
-    ...invalidListMetadataCases,
-  ]) {
+  for (final name in invalidListMetadataCases) {
     final source = listMetadataFixture(name);
     final before = Uint8List.fromList(source);
     var rejected = false;
     try {
       parseLegacyWordDocument(source);
-    } on FormatException catch (error) {
-      rejected =
-          invalidListMetadataCases.contains(name) ||
-          error.message.contains('literal percent-number sequence');
+    } on FormatException {
+      rejected = true;
     }
     _check(rejected, '$name must not become a changed list label');
     _unchanged(source, before, name);
   }
   return {
-    'cases':
-        listMetadataCases.length +
-        unsupportedListMetadataCases.length +
-        invalidListMetadataCases.length,
+    'cases': listMetadataCases.length + invalidListMetadataCases.length,
     'supportedCases': listMetadataCases.length,
-    'unsupportedLiteralLabelsRejected': unsupportedListMetadataCases.length,
+    'materializedLiteralLabels': materializedListMetadataCases.length,
     'invalidNumberedRestartsRejected': invalidListMetadataCases.length,
     'literalLabelsPreserved': true,
     'sourceUnchanged': true,

@@ -35,6 +35,7 @@ extension _WordDecorations on _StructuredWordWriter {
     _BoundedWordXml xml,
     int? cp,
   ) {
+    _StructuredWordWriter._validateParagraphScalarProperties(style);
     final bar = style.borders[LegacyWordBorderSide.bar];
     if (bar != null) {
       // MS-DOC paragraph bar borders have no effect. Activating w:bar would

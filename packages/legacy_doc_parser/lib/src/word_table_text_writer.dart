@@ -49,6 +49,7 @@ extension _WordTableTextWriter on _StructuredWordWriter {
   ) {
     if (format.paragraphProperties.isNotEmpty) {
       final style = format.paragraph, layout = style.layout;
+      _StructuredWordWriter._validateParagraphScalarProperties(style);
       final mask = format.paragraphProperties;
       bool has(String key) => mask.any((property) => property.name == key);
       void flag(String key, String tag, bool? value) {
@@ -111,11 +112,7 @@ extension _WordTableTextWriter on _StructuredWordWriter {
         }
         if (has('lineSpacing') && style.lineSpacingValue != null) {
           final line = style.lineSpacingValue!;
-          final rule = style.lineSpacingMultiple
-              ? 'auto'
-              : line < 0
-              ? 'exact'
-              : 'atLeast';
+          final rule = _StructuredWordWriter._lineSpacingRule(style);
           xml.add(' w:line="${line.abs()}" w:lineRule="$rule"');
         }
         xml.add('/>');
