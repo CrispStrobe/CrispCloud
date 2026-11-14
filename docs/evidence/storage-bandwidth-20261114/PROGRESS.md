@@ -68,3 +68,28 @@ The restored native toolchain has completed a 22-case queue/control/logical
 limiter warmup. The new queue, HTTP and widget cohorts are still being checked;
 this checkpoint does not claim their acceptance. Native HTTP tests and the
 final coverage document will be saved in a subsequent checkpoint.
+
+## Transport and UI regression checkpoint
+
+Implementation checkpoint `35506118` is saved remotely. Subsequent review added
+closed-context rejection before HTTP send/finalization, including empty GET
+requests, and a narrow enlarged-text Activity layout that keeps the complete
+logical header inside its bounded scroll area.
+
+Working-tree development checks now include a passing 23-case HTTP/queue run,
+with real IOClient abort waits and a two-operation loopback echo sharing each
+direction's cap. The UI's five scoped suites have passing preliminary coverage
+across corrected attempts (47 distinct cases). Initial UI failures and their
+logs are retained: widget-clock/provider-ownership fixtures needed correction,
+and enlarged German Activity text exposed the layout issue fixed above. These
+runs are not substituted for the forthcoming single saved-source cohort.
+
+The new CI workflow pins Flutter/Dart, runs the pure allocator on VM and actual
+JavaScript, and checks a declared 28-suite native regression cohort plus a
+platform-neutral helper cohort in Chrome. The Chrome helper tests use a mock
+transport inside the actual browser runtime; they do not assert real-fetch or
+remote upload timing. Chrome qualification remains pending until observed.
+
+The [HTTP profile](../../file-manager-gaps/transfer-bandwidth-http-profile.md)
+records the actual hooked caller paths, buffering/accounting limits, persisted
+controls and remaining G29 scope. Original production manifests remain unchanged.

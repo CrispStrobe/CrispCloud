@@ -702,8 +702,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 250));
       expect(find.byKey(const ValueKey('queue-bandwidth')), findsOneWidget);
       expect(find.byKey(const ValueKey('queue-byte-summary')), findsOneWidget);
-      expect(find.text('25 B / 100 B'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('queue-byte-summary')))
+            .data,
+        '25 B / 100 B',
+      );
       expect(find.byKey(const ValueKey('queue-speed-summary')), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('queue-speed-summary')))
+            .data,
+        '999 B/s',
+      );
       final up = tester
           .widget<Text>(find.byKey(const ValueKey('queue-http-upload')))
           .data!;

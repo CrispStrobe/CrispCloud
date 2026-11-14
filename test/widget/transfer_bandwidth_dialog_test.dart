@@ -17,22 +17,24 @@ String _policy(int upload, int download) => jsonEncode({
 
 void main() {
   late TransferBandwidthController controller;
-  late ProviderContainer container;
   String? stored;
   Completer<String?>? pendingRead;
   Completer<bool>? pendingWrite;
   late List<String> writes;
-  late Completer<void> beginRead;
+  var created = false;
 
   setUp(() {
     stored = null;
     pendingRead = null;
     pendingWrite = null;
     writes = [];
-    beginRead = Completer<void>();
+    created = false;
+  });
+
+  void createController() {
+    created = true;
     controller = TransferBandwidthController(
       readSettings: () async {
-        await beginRead.future;
         return pendingRead == null ? stored : await pendingRead!.future;
       },
       writeSettings: (value) async {
@@ -44,15 +46,12 @@ void main() {
         return success;
       },
     );
-    container = ProviderContainer(
-      overrides: [transferBandwidthProvider.overrideWith((_) => controller)],
-    );
-  });
+  }
 
   tearDown(() {
-    if (!beginRead.isCompleted) beginRead.complete();
-    container.dispose();
-    controller.dispose();
+    if (created) {
+      controller.dispose();
+    }
   });
 
   Future<void> show(
@@ -62,7 +61,7 @@ void main() {
     bool browser = false,
     bool settle = true,
   }) async {
-    if (!beginRead.isCompleted) beginRead.complete();
+    createController();
     if (narrow) {
       tester.view.physicalSize = const Size(320, 800);
       tester.view.devicePixelRatio = 1;
@@ -70,8 +69,8 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
     }
     await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
+      ProviderScope(
+        overrides: [transferBandwidthProvider.overrideWith((_) => controller)],
         child: MaterialApp(
           locale: Locale(language),
           localizationsDelegates: AppLocalizations.localizationsDelegates,

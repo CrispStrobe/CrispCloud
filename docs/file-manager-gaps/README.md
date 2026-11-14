@@ -112,7 +112,7 @@ the existing size limits and does not claim immutable provider snapshots.
 | [G26](04-connections-and-transfers.md#g26) | Server-to-server FTP transfer | Scoped | G25 transfer evidence; server support |
 | [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Closed: native HTTP/HTTPS scope | Direct-protocol proxy work remains G28 |
 | [G28](04-connections-and-transfers.md#g28) | Direct-protocol proxy routing | Scoped | Per-protocol socket factories |
-| [G29](04-connections-and-transfers.md#g29) | Global transfer bandwidth limits | Scoped | Shared transfer scheduler |
+| [G29](04-connections-and-transfers.md#g29) | Global transfer bandwidth limits | Implementing foreground HTTP profile | Shared transfer scheduler |
 | [G30](04-connections-and-transfers.md#g30) | Network volume discovery | Scoped | Native discovery adapters |
 | [G31](04-connections-and-transfers.md#g31) | SCP provider | Scoped | SSH host verification; streaming adapters |
 | [G32](04-connections-and-transfers.md#g32) | AFP provider | Platform research | Permissive implementation; target server/OS |

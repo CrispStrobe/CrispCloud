@@ -1,0 +1,216 @@
+name: Shared HTTP transfer bandwidth
+
+on:
+  push:
+    branches: [main, integration/storage-bandwidth-20261114]
+    paths: &bandwidth_paths
+      - '.github/workflows/transfer-bandwidth.yml'
+      - '.github/actions/**'
+      - 'packages/crisp_storage/**'
+      - 'lib/models/operation_progress.dart'
+      - 'lib/providers/transfer*'
+      - 'lib/services/*transfer*'
+      - 'lib/services/*client_adapter.dart'
+      - 'lib/services/dropbox_file_publication.dart'
+      - 'lib/services/stream_rate_limiter.dart'
+      - 'lib/widgets/operations_panel.dart'
+      - 'lib/widgets/settings_dialog.dart'
+      - 'lib/widgets/transfer_bandwidth_dialog.dart'
+      - 'lib/l10n/transfer_bandwidth_strings.dart'
+      - 'test/**'
+      - 'tool/transfer_bandwidth_tests.txt'
+      - 'tool/with_ci_system_sqlite.py'
+      - 'docs/evidence/storage-binary-20261114/run_gate.py'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+  pull_request:
+    paths: *bandwidth_paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: transfer-bandwidth-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.8
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  portable:
+    name: Shared allocator on Dart VM and actual JavaScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.13.7
+      - name: Qualify saved allocator source in both runtimes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/bandwidth-ci
+          git rev-parse HEAD > build/bandwidth-ci/REVISION.txt
+          dart --version > build/bandwidth-ci/dart-version.txt 2>&1
+          python3 docs/evidence/storage-binary-20261114/run_gate.py \
+            --name allocator-vm --output build/bandwidth-ci -- \
+            dart test/support/transfer_bandwidth_acceptance.dart
+          python3 docs/evidence/storage-binary-20261114/run_gate.py \
+            --name allocator-js-compile --output build/bandwidth-ci -- \
+            dart compile js -O2 test/support/transfer_bandwidth_acceptance.dart \
+            -o build/bandwidth-ci/allocator.js
+          python3 docs/evidence/storage-binary-20261114/run_gate.py \
+            --name allocator-js --output build/bandwidth-ci -- \
+            node -e 'global.self=global; require("./build/bandwidth-ci/allocator.js")'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandwidth-portable-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/bandwidth-ci/
+          retention-days: 14
+
+  integration:
+    name: HTTP transport, queue lifecycle, policy and UI
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-ebook-rust
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Configure dependency access
+        env:
+          BANDWIDTH_DEPENDENCY_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: git config --global "url.https://x-access-token:${BANDWIDTH_DEPENDENCY_TOKEN}@github.com/.insteadOf" "https://github.com/"
+      - name: Install native test libraries
+        run: sudo apt-get update && sudo apt-get install -y clang libsqlite3-dev liblz4-1
+      - name: Resolve the unchanged locked dependency graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/bandwidth-ci
+          git rev-parse HEAD > build/bandwidth-ci/REVISION.txt
+          sha256sum pubspec.yaml pubspec.lock > build/bandwidth-ci/manifest-before.txt
+          flutter --version > build/bandwidth-ci/flutter-version.txt 2>&1
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+          versions = {name: subprocess.check_output([name, '--version'], text=True).strip()
+                      for name in ('rustc', 'cargo', 'clang')}
+          versions['runner'] = {key: os.environ.get(key) for key in
+                                ('RUNNER_OS', 'RUNNER_ARCH', 'ImageOS', 'ImageVersion')}
+          versions['sqlite_profile'] = 'CI-only system SQLite wrapper; production manifests restored'
+          Path('build/bandwidth-ci/native-toolchain.json').write_text(json.dumps(versions, indent=2) + '\n')
+          PY
+          flutter pub get --enforce-lockfile
+      - name: Analyze the bandwidth implementation and regression fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 docs/evidence/storage-binary-20261114/run_gate.py \
+            --name analysis --output build/bandwidth-ci -- \
+            dart analyze --fatal-infos \
+            packages/crisp_storage/lib/src/transfer_bandwidth.dart \
+            packages/crisp_storage/lib/src/transfer_scheduler.dart \
+            packages/crisp_storage/lib/src/cloud/transfer_bandwidth_http.dart \
+            packages/crisp_storage/lib/src/cloud/bounded_http_transfer.dart \
+            lib/models/operation_progress.dart lib/services/transfer_queue.dart \
+            lib/providers/transfer_provider.dart lib/providers/transfer_bandwidth_provider.dart \
+            lib/services/spooled_http_upload_web.dart \
+            lib/l10n/transfer_bandwidth_strings.dart lib/widgets/transfer_bandwidth_dialog.dart \
+            lib/widgets/operations_panel.dart lib/widgets/settings_dialog.dart \
+            test/transfer_bandwidth_http_test.dart test/transfer_bandwidth_browser_test.dart \
+            test/transfer_bandwidth_queue_test.dart test/transfer_bandwidth_provider_test.dart \
+            test/widget/transfer_bandwidth_dialog_test.dart test/widget/operations_panel_test.dart \
+            test/support/transfer_bandwidth_acceptance.dart test/support/transfer_bandwidth_test_clock.dart
+      - name: Run native transport and integration acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t bandwidth_tests < tool/transfer_bandwidth_tests.txt
+          cp tool/transfer_bandwidth_tests.txt build/bandwidth-ci/native-files.txt
+          python3 docs/evidence/storage-binary-20261114/run_gate.py \
+            --name native --output build/bandwidth-ci -- \
+            python3 tool/with_ci_system_sqlite.py flutter test --no-pub --reporter expanded \
+            --concurrency=4 --file-reporter json:build/bandwidth-ci/native-events.json \
+            "${bandwidth_tests[@]}"
+      - name: Qualify browser coverage and download consumption in Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' test/transfer_bandwidth_browser_test.dart > build/bandwidth-ci/browser-files.txt
+          python3 docs/evidence/storage-binary-20261114/run_gate.py \
+            --name browser --output build/bandwidth-ci -- \
+            flutter test --no-pub --platform chrome --concurrency=1 --reporter expanded \
+            --file-reporter json:build/bandwidth-ci/browser-events.json \
+            test/transfer_bandwidth_browser_test.dart
+      - name: Verify completed suites, no skipped cases and original manifests
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum --check build/bandwidth-ci/manifest-before.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          output = Path('build/bandwidth-ci')
+          summaries = {}
+          for name in ('native', 'browser'):
+              path = output / f'{name}-events.json'
+              tests, results, suites, errors = {}, {}, set(), []
+              completion = None
+              for number, line in enumerate(path.read_text().splitlines() if path.exists() else [], 1):
+                  try:
+                      event = json.loads(line)
+                  except ValueError:
+                      errors.append(number)
+                      continue
+                  if event.get('type') == 'suite':
+                      suites.add(str(event['suite'].get('path', '')).replace('\\', '/'))
+                  elif event.get('type') == 'testStart':
+                      tests[event['test']['id']] = event['test']['name']
+                  elif event.get('type') == 'testDone':
+                      results[event['testID']] = event
+                  elif event.get('type') == 'done':
+                      completion = event
+              cases = [dict(name=tests.get(i, str(i)), result=r['result'], skipped=r.get('skipped', False))
+                       for i, r in results.items() if not r.get('hidden', False)]
+              expected = output / f'{name}-files.txt'
+              missing = [p for p in expected.read_text().splitlines()
+                         if not any(s.endswith(p) for s in suites)] if expected.exists() else ['suite inventory absent']
+              counts = dict(passed=sum(t['result'] == 'success' and not t['skipped'] for t in cases),
+                            failed=sum(t['result'] != 'success' for t in cases),
+                            skipped=sum(t['skipped'] for t in cases))
+              verified = bool(completion and completion.get('success') is True and counts['passed'] > 0
+                              and counts['failed'] == counts['skipped'] == 0 and not missing and not errors)
+              summaries[name] = dict(verified=verified, counts=counts, missing_suites=missing,
+                                     malformed_lines=errors, completed=completion is not None, tests=cases)
+          (output / 'suite-summary.json').write_text(json.dumps(summaries, indent=2) + '\n')
+          print(json.dumps({k: dict(verified=v['verified'], counts=v['counts']) for k, v in summaries.items()}, indent=2))
+          if not all(v['verified'] for v in summaries.values()):
+              raise SystemExit(1)
+          PY
+      - name: Remove dependency authentication
+        if: always()
+        env:
+          BANDWIDTH_DEPENDENCY_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: git config --global --unset-all "url.https://x-access-token:${BANDWIDTH_DEPENDENCY_TOKEN}@github.com/.insteadOf" "https://github.com/" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandwidth-integration-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/bandwidth-ci/
+          retention-days: 14

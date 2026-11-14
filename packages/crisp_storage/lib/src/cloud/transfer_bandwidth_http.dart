@@ -18,7 +18,11 @@ const _browserTransport =
 http.BaseRequest bindHttpTransferBandwidth(
   http.BaseRequest request,
   TransferBandwidthContext? context,
-) => context == null ? request : _BandwidthRequest(request, context);
+) {
+  if (context == null) return request;
+  if (context.isCancelled) throw const TransferBandwidthCancelled();
+  return _BandwidthRequest(request, context);
+}
 
 class _BandwidthRequest extends http.BaseRequest implements http.Abortable {
   _BandwidthRequest(this._request, this._context)
@@ -49,6 +53,9 @@ class _BandwidthRequest extends http.BaseRequest implements http.Abortable {
 
   @override
   http.ByteStream finalize() {
+    // Fail before even an empty request when a client ignores Abortable or
+    // finalizes a previously captured request after its operation has ended.
+    if (_context.isCancelled) throw const TransferBandwidthCancelled();
     // MultipartRequest determines its boundary and headers during finalize.
     // Copy the finalized metadata before freezing this transport request.
     final body = _request.finalize();
