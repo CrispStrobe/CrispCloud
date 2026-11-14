@@ -24,6 +24,7 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 import 'archive_cab_reader.dart';
 import 'archive_disk_image_reader.dart';
 import 'archive_dmg_reader.dart';
+import 'archive_ext_reader.dart';
 import 'archive_fat_reader.dart';
 import 'archive_format_registry.dart';
 import 'archive_hfs_reader.dart';
@@ -72,7 +73,7 @@ Future<ViewerArchive> openViewerArchiveSource(
   String? password,
   int maxMemberBytes = kArchiveReadLimit,
   int maxBufferedContainerBytes = kArchiveReadLimit,
-  // Only direct FAT/partitioned-image readers receive this larger positional
+  // Only direct FAT/ext/partitioned-image readers receive this larger positional
   // allowance. Other codecs and decoded wrappers retain their existing caps.
   int? maxDiskImageMemberBytes,
   int? diskImageSectorBytes,
@@ -105,7 +106,9 @@ Future<ViewerArchive> openViewerArchiveSource(
     final note = archiveFormatForName(name)?.notes ?? '';
     if (note.isEmpty) return archive;
     final streamLimit =
-        archive.formatName == 'fat' || archive.formatName == 'disk-image'
+        archive.formatName == 'fat' ||
+            archive.formatName == 'ext' ||
+            archive.formatName == 'disk-image'
         ? maxDiskImageMemberBytes ?? maxMemberBytes
         : maxMemberBytes;
     return ViewerArchive.reader(
@@ -405,6 +408,9 @@ Future<ViewerArchive> _openSource(
         isCancelled: isCancelled,
       );
     }
+    // The two-byte ext marker can also occur in a GPT partition name.
+    // Disk recognition gives explicit GPT headers priority, while suppressing
+    // incidental MBR entries in a standalone ext volume's boot area.
     if (await hasDiskImagePartitionRecognition(source)) {
       return await openDiskImageArchive(
         source,
@@ -413,11 +419,25 @@ Future<ViewerArchive> _openSource(
         isCancelled: isCancelled,
       );
     }
+    if (await hasExtVolumeRecognition(source)) {
+      return await openExtArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        isCancelled: isCancelled,
+      );
+    }
     if (source.length >= 1026 && _isHfsMagic(await source.read(1024, 2))) {
       return await openHfsArchive(source, maxMemberBytes: maxMemberBytes);
     }
     final lower = name.toLowerCase();
     final descriptor = archiveFormatForName(name);
+    if (descriptor?.id == 'ext') {
+      return await openExtArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        isCancelled: isCancelled,
+      );
+    }
     if (descriptor?.id == 'fat') {
       return await openFatArchive(
         source,

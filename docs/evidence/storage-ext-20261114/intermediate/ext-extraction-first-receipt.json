@@ -1,0 +1,31 @@
+{
+  "command": [
+    "flutter",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "expanded",
+    "--file-reporter",
+    "json:/workspace/scratch/4f6714f1660a/runtime-setup/logs/ext-extraction-first-events.json",
+    "test/archive_ext_extraction_test.dart",
+    "test/archive_ext_recognition_test.dart"
+  ],
+  "cwd": "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation",
+  "native_ebook_hook_disabled": true,
+  "production_hashes": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "test_manifest_sha256": "9b13d439b8e6d16416a41ff255809d62353635810cf8ab897fcb34bd625e0119",
+  "source_head": "d5dbff96e295557df28ed99ac09917a737d55dae",
+  "verified_revision": null,
+  "source_paths": 8075,
+  "source_binding_sha256": "504a8d058c3d70a52db083fda32256fb03eb01f0b575de935cde00f8be0191ce",
+  "started_at_utc": "2026-11-14T12:20:32Z",
+  "lock_unchanged_during_test": true,
+  "exit_code": 1,
+  "manifests_restored": true,
+  "source_drift_after": [],
+  "finished_at_utc": "2026-11-14T12:20:43Z",
+  "log_sha256": "c623b0de3e97d53a5610e836b7174836ca8e42ffd8afc6ec9c154cf0c215aae6"
+}

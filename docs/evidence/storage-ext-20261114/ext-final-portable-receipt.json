@@ -1,0 +1,224 @@
+{
+  "schema": 1,
+  "result": "passed",
+  "started_at_utc": "2026-11-14T12:26:03.949522+00:00",
+  "completed_at_utc": "2026-11-14T12:26:25.616949+00:00",
+  "source_revision": "8bbdc25c7eca7598215bdc1053e8558ef3f5d643",
+  "head_before": "ebec52ecb4a1c51b71d56288ae971693c7770b56",
+  "head_after": "ebec52ecb4a1c51b71d56288ae971693c7770b56",
+  "head_is_descendant_with_documentation_only_changes": true,
+  "scope": "Read-only ext filesystem and Linux partition-image portable acceptance. Fresh VM, dart2js -O2 compilation, and actual Node execution from the original primary checkout package map.",
+  "targets": [
+    "Dart VM",
+    "dart2js JavaScript executed by Node"
+  ],
+  "groups_per_target": 19,
+  "checks_per_target": 3360,
+  "independently_mastered_images": 5,
+  "independent_regular_file_instances": 48,
+  "derived_partition_wrappers": 4,
+  "counts_are_not_additive_with_native_gate": true,
+  "full_json_equal": true,
+  "serialized_stdout_equal": true,
+  "excluded_comparison_fields": [],
+  "all_commands_succeeded": true,
+  "commands": [
+    {
+      "label": "dart-version",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:04.655076+00:00",
+      "completed_at_utc": "2026-11-14T12:26:04.659036+00:00",
+      "elapsed_seconds": 0.004,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-dart-version.log",
+      "stderr": "ext-final-portable-dart-version-stderr.log",
+      "stdout_file": {
+        "bytes": 82,
+        "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-version",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:04.659318+00:00",
+      "completed_at_utc": "2026-11-14T12:26:04.662799+00:00",
+      "elapsed_seconds": 0.003,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-node-version.log",
+      "stderr": "ext-final-portable-node-version-stderr.log",
+      "stdout_file": {
+        "bytes": 9,
+        "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "vm",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "test/support/archive_ext_web_acceptance.dart"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:04.663096+00:00",
+      "completed_at_utc": "2026-11-14T12:26:09.140066+00:00",
+      "elapsed_seconds": 4.477,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-vm.log",
+      "stderr": "ext-final-portable-vm-stderr.log",
+      "stdout_file": {
+        "bytes": 2938,
+        "sha256": "12eeddc14e18e37d10f54b84eeba4f2538d87ead35d163e5c92df41b28d2a431"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "compile",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "--packages=.dart_tool/package_config.json",
+        "-O2",
+        "test/support/archive_ext_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/4f6714f1660a/ext-reference-work/final-portable/archive_ext_acceptance.js"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:09.140961+00:00",
+      "completed_at_utc": "2026-11-14T12:26:11.565702+00:00",
+      "elapsed_seconds": 2.425,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-compile.log",
+      "stderr": "ext-final-portable-compile-stderr.log",
+      "stdout_file": {
+        "bytes": 111,
+        "sha256": "11b7be374e5930a7e36f3c65b8a0c8c4f7eabd56160782144fc54946c143e9ef"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "js",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "-e",
+        "global.self=global; require(\"/workspace/scratch/4f6714f1660a/ext-reference-work/final-portable/archive_ext_acceptance.js\")"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:11.588068+00:00",
+      "completed_at_utc": "2026-11-14T12:26:25.316970+00:00",
+      "elapsed_seconds": 13.729,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-js.log",
+      "stderr": "ext-final-portable-js-stderr.log",
+      "stdout_file": {
+        "bytes": 2938,
+        "sha256": "12eeddc14e18e37d10f54b84eeba4f2538d87ead35d163e5c92df41b28d2a431"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "tool_versions": {
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "node": "v24.22.1",
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41"
+  },
+  "executables": {
+    "dart": {
+      "path": "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "unchanged_after": true
+    },
+    "node": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "bytes": 126939688,
+      "sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d",
+      "unchanged_after": true
+    }
+  },
+  "source_binding": {
+    "path": "ext-final-portable-source-binding.json",
+    "count": 5032,
+    "all_matched_before_and_after": true,
+    "sha256": "1bffcac47e7e4ff65418d2b3e2e7ff1235b5cd5acf1952c3824accfb9358dca6"
+  },
+  "compiler_input_binding": {
+    "path": "ext-final-portable-compiler-inputs.json",
+    "count": 605,
+    "all_unchanged": true,
+    "sha256": "dc26ddd0db1451203af0e84f01ad3eb920c6c691755c0ccd2c61e8fd863b09d0"
+  },
+  "production_manifest_hashes": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "package_config": {
+    "path": ".dart_tool/package_config.json",
+    "bytes": 60164,
+    "sha256": "87c3272b582b225a29657fbafdbfdbfdfa8ebd06be7eceab7a1f78a409a3839b",
+    "unchanged_after": true
+  },
+  "compiled_output": {
+    "path": "/workspace/scratch/4f6714f1660a/ext-reference-work/final-portable/archive_ext_acceptance.js",
+    "bytes": 401886,
+    "sha256": "e1a987e43e974906321494bc6dbc4ae0c2ea33e545615c7af015b13ed2a0e80e"
+  },
+  "compiled_source_map": {
+    "bytes": 228811,
+    "sha256": "131e346a89923ff63acc294bc6f930ada19eaa6131ca7e5de152886b0736ec37"
+  },
+  "compiler_dependency_output": {
+    "path": "ext-final-portable-dependency-paths.log",
+    "bytes": 58930,
+    "sha256": "652e6feae46af545caf3cb7289ebc138cb4c6432ba63ca7c162b646d1db87515"
+  },
+  "outputs": {
+    "vm": {
+      "path": "ext-final-portable-vm.json",
+      "bytes": 3610,
+      "sha256": "72d23161e5f47e1b43d059b747f698f02465ae165befd1fbe4cca5351ec69eea"
+    },
+    "js": {
+      "path": "ext-final-portable-js.json",
+      "bytes": 3610,
+      "sha256": "72d23161e5f47e1b43d059b747f698f02465ae165befd1fbe4cca5351ec69eea"
+    }
+  },
+  "harness": {
+    "scratch_path": "/workspace/scratch/4f6714f1660a/ext-reference-work/run_final_portable.py",
+    "sha256": "d757b2298e15a26b69a64ff0108b47cd3dc001ef70c0794eac00d9af497a28bc",
+    "source": "from __future__ import annotations\n\nfrom datetime import datetime, timezone\nimport hashlib\nimport json\nfrom pathlib import Path\nimport platform\nimport shutil\nimport subprocess\nimport time\nimport traceback\nfrom urllib.parse import unquote, urlparse\n\nROOT = Path('/workspace/scratch/4f6714f1660a/crispcloud')\nSOURCE = '8bbdc25c7eca7598215bdc1053e8558ef3f5d643'\nOUT = ROOT / 'docs/evidence/storage-ext-20261114'\nWORK = Path('/workspace/scratch/4f6714f1660a/ext-reference-work/final-portable')\nDART = Path('/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart')\nNODE = Path(shutil.which('node'))\nSEED_DEPS = Path('/workspace/scratch/4f6714f1660a/ext-reference-work/portable-smoke/ext-final.js.deps')\nOUT.mkdir(parents=True, exist_ok=True)\nWORK.mkdir(parents=True, exist_ok=True)\nCOMMANDS = []\nSTART = datetime.now(timezone.utc).isoformat()\n\n\ndef now():\n    return datetime.now(timezone.utc).isoformat()\n\n\ndef digest(data):\n    return hashlib.sha256(data).hexdigest()\n\n\ndef file_record(path):\n    data = path.read_bytes()\n    return {'bytes': len(data), 'sha256': digest(data)}\n\n\ndef json_write(name, value):\n    (OUT / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\\n')\n\n\ndef git(*args):\n    return subprocess.check_output(['git', *args], cwd=ROOT)\n\n\ndef tree_entries():\n    selected = {}\n    for record in git('ls-tree', '-r', '-z', SOURCE).split(b'\\0'):\n        if not record:\n            continue\n        metadata, encoded_path = record.split(b'\\t', 1)\n        mode, kind, blob = metadata.decode().split()\n        path = encoded_path.decode()\n        if path.endswith('.dart') or Path(path).name in {'pubspec.yaml', 'pubspec.lock', 'analysis_options.yaml'} or path == 'test/fixtures/archives/ext-reference-manifest.json':\n            assert mode in ('100644', '100755'), (path, mode)\n            assert kind == 'blob'\n            selected[path] = blob\n    return selected\n\n\ndef source_snapshot(entries):\n    rows = {}\n    for name, expected_blob in sorted(entries.items()):\n        raw = (ROOT / name).read_bytes()\n        blob = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\\0' + raw).hexdigest()\n        if blob != expected_blob:\n            raise AssertionError('Source bytes do not match qualification commit: ' + name)\n        rows[name] = {'bytes': len(raw), 'sha256': digest(raw), 'git_blob': blob}\n    return rows\n\n\ndef dependency_paths(path):\n    results = []\n    for line in path.read_text().splitlines():\n        uri = urlparse(line.strip())\n        if not line.strip():\n            continue\n        if uri.scheme == 'org-dartlang-sdk' and not uri.netloc:\n            results.append((DART.parents[1] / unquote(uri.path).lstrip('/')).resolve())\n        else:\n            assert uri.scheme == 'file' and uri.netloc in ('', 'localhost'), line\n            results.append(Path(unquote(uri.path)).resolve())\n    return sorted(set(results))\n\n\ndef snapshot_dependencies(paths):\n    return {str(path): file_record(path) for path in paths}\n\n\ndef inventory_digest(values):\n    return digest(json.dumps(values, sort_keys=True, separators=(',', ':')).encode())\n\n\ndef run(label, args):\n    stdout_path = OUT / f'ext-final-portable-{label}.log'\n    stderr_path = OUT / f'ext-final-portable-{label}-stderr.log'\n    started = now()\n    begin = time.monotonic()\n    with stdout_path.open('wb') as stdout, stderr_path.open('wb') as stderr:\n        result = subprocess.run(args, cwd=ROOT, stdout=stdout, stderr=stderr, timeout=180, check=False)\n    record = {'label': label, 'argv': [str(x) for x in args], 'cwd': str(ROOT), 'started_at_utc': started,\n              'completed_at_utc': now(), 'elapsed_seconds': round(time.monotonic() - begin, 3),\n              'exit_code': result.returncode, 'stdout': stdout_path.name, 'stderr': stderr_path.name,\n              'stdout_file': file_record(stdout_path), 'stderr_file': file_record(stderr_path)}\n    COMMANDS.append(record)\n    json_write('ext-final-portable-commands.json', {'source_revision': SOURCE, 'commands': COMMANDS})\n    if result.returncode:\n        raise RuntimeError(f'{label} failed with exit {result.returncode}; see {stderr_path.name}')\n    return stdout_path.read_text(), stderr_path.read_text()\n\n\ntry:\n    head_before = git('rev-parse', 'HEAD').decode().strip()\n    git('merge-base', '--is-ancestor', SOURCE, head_before)\n    advanced_paths_before = git('diff', '--name-only', SOURCE, head_before).decode().splitlines()\n    assert all(path.startswith('docs/') for path in advanced_paths_before), 'Non-documentation HEAD change'\n    entries = tree_entries()\n    source_before = source_snapshot(entries)\n    predicted_paths = dependency_paths(SEED_DEPS)\n    dependencies_before = snapshot_dependencies(predicted_paths)\n    package_config = ROOT / '.dart_tool/package_config.json'\n    package_before = file_record(package_config)\n    executable_before = {'dart': file_record(DART), 'node': file_record(NODE.resolve())}\n    dart_stdout, dart_stderr = run('dart-version', [str(DART), '--version'])\n    node_stdout, node_stderr = run('node-version', [str(NODE), '--version'])\n    vm_stdout, vm_stderr = run('vm', [str(DART), '--packages=.dart_tool/package_config.json', 'test/support/archive_ext_web_acceptance.dart'])\n    compiled = WORK / 'archive_ext_acceptance.js'\n    run('compile', [str(DART), 'compile', 'js', '--packages=.dart_tool/package_config.json', '-O2', 'test/support/archive_ext_web_acceptance.dart', '-o', str(compiled)])\n    actual_paths = dependency_paths(Path(str(compiled) + '.deps'))\n    assert actual_paths == predicted_paths, 'Compiler dependency inventory changed; rerun with complete preflight inputs'\n    js_stdout, js_stderr = run('js', [str(NODE), '-e', 'global.self=global; require(' + json.dumps(str(compiled)) + ')'])\n    vm = json.loads(vm_stdout)\n    js = json.loads(js_stdout)\n    assert not vm_stderr.strip() and not js_stderr.strip(), 'Unexpected runtime stderr'\n    for label, result in [('vm', vm), ('js', js)]:\n        assert len(result['groups']) == 19 and result['checks'] == 3360, (label, result)\n        assert len(result['independent_reference_images']) == 5\n        assert len(result['derived_partition_wrappers']) == 4\n        assert result['all_payload_and_complete_image_hashes_match'] is True\n    assert vm == js, 'Full VM/JavaScript result JSON differs'\n    assert vm_stdout == js_stdout, 'Serialized JSON stdout differs'\n    source_after = source_snapshot(entries)\n    dependencies_after = snapshot_dependencies(actual_paths)\n    package_after = file_record(package_config)\n    executable_after = {'dart': file_record(DART), 'node': file_record(NODE.resolve())}\n    assert source_before == source_after\n    assert dependencies_before == dependencies_after\n    assert package_before == package_after\n    assert executable_before == executable_after\n    head_after = git('rev-parse', 'HEAD').decode().strip()\n    git('merge-base', '--is-ancestor', SOURCE, head_after)\n    advanced_paths_after = git('diff', '--name-only', SOURCE, head_after).decode().splitlines()\n    assert all(path.startswith('docs/') for path in advanced_paths_after), 'Non-documentation HEAD change'\n    source_records = {path: {**value, 'matched_commit_before': True, 'matched_commit_after': True} for path, value in source_before.items()}\n    source_digest_before = inventory_digest(source_before)\n    source_digest_after = inventory_digest(source_after)\n    binding = {\n        'schema': 1, 'qualification_source_revision': SOURCE,\n        'head_before': head_before, 'head_after': head_after,\n        'head_changes_are_documentation_only': True,\n        'documentation_paths_changed_since_source': advanced_paths_after,\n        'selection': \"Every tracked .dart file, every pubspec.yaml/pubspec.lock/analysis_options.yaml, and test/fixtures/archives/ext-reference-manifest.json.\",\n        'path_count': len(source_records), 'dart_paths': sum(path.endswith('.dart') for path in source_records),\n        'all_paths_match_commit_before_and_after': True, 'inventory_unchanged': True,\n        'inventory_sha256_before': source_digest_before, 'inventory_sha256_after': source_digest_after,\n        'manifest_bytes_are_original': True,\n        'files': source_records,\n    }\n    json_write('ext-final-portable-source-binding.json', binding)\n    dependency_binding = {\n        'schema': 1, 'qualification_source_revision': SOURCE,\n        'scope': 'Every source/config input listed by the actual dart2js dependency output, including SDK and resolved external package sources.',\n        'preflight_inventory': 'Path inventory from the earlier local compiler dependency output only; contents were freshly hashed before this qualification. The final compiler path inventory must match exactly.',\n        'inputs': len(actual_paths), 'actual_compiler_inventory_matched_preflight': True,\n        'inventory_sha256_before': inventory_digest(dependencies_before),\n        'inventory_sha256_after': inventory_digest(dependencies_after),\n        'all_input_bytes_unchanged': True,\n        'files': {path: {**row, 'checked_before_and_after': True} for path, row in dependencies_before.items()},\n        'package_config_before': package_before, 'package_config_after': package_after,\n    }\n    json_write('ext-final-portable-compiler-inputs.json', dependency_binding)\n    json_write('ext-final-portable-vm.json', vm)\n    json_write('ext-final-portable-js.json', js)\n    shutil.copyfile(Path(str(compiled) + '.deps'), OUT / 'ext-final-portable-dependency-paths.log')\n    receipts = {\n        'schema': 1, 'result': 'passed', 'started_at_utc': START, 'completed_at_utc': now(),\n        'source_revision': SOURCE, 'head_before': head_before, 'head_after': head_after,\n        'head_is_descendant_with_documentation_only_changes': True,\n        'scope': 'Read-only ext filesystem and Linux partition-image portable acceptance. Fresh VM, dart2js -O2 compilation, and actual Node execution from the original primary checkout package map.',\n        'targets': ['Dart VM', 'dart2js JavaScript executed by Node'],\n        'groups_per_target': 19, 'checks_per_target': 3360,\n        'independently_mastered_images': 5, 'independent_regular_file_instances': 48,\n        'derived_partition_wrappers': 4, 'counts_are_not_additive_with_native_gate': True,\n        'full_json_equal': vm == js, 'serialized_stdout_equal': vm_stdout == js_stdout,\n        'excluded_comparison_fields': [], 'all_commands_succeeded': all(row['exit_code'] == 0 for row in COMMANDS),\n        'commands': COMMANDS,\n        'tool_versions': {'dart': (dart_stdout + dart_stderr).strip(), 'node': (node_stdout + node_stderr).strip(), 'python': platform.python_version(), 'platform': platform.platform()},\n        'executables': {'dart': {'path': str(DART), **executable_before['dart'], 'unchanged_after': True}, 'node': {'path': str(NODE.resolve()), **executable_before['node'], 'unchanged_after': True}},\n        'source_binding': {'path': 'ext-final-portable-source-binding.json', 'count': len(entries), 'all_matched_before_and_after': True, 'sha256': digest((OUT/'ext-final-portable-source-binding.json').read_bytes())},\n        'compiler_input_binding': {'path': 'ext-final-portable-compiler-inputs.json', 'count': len(actual_paths), 'all_unchanged': True, 'sha256': digest((OUT/'ext-final-portable-compiler-inputs.json').read_bytes())},\n        'production_manifest_hashes': {name: source_before[name]['sha256'] for name in ['pubspec.yaml','pubspec.lock']},\n        'package_config': {'path': '.dart_tool/package_config.json', **package_before, 'unchanged_after': True},\n        'compiled_output': {'path': str(compiled), **file_record(compiled)},\n        'compiled_source_map': file_record(Path(str(compiled) + '.map')),\n        'compiler_dependency_output': {'path': 'ext-final-portable-dependency-paths.log', **file_record(OUT/'ext-final-portable-dependency-paths.log')},\n        'outputs': {'vm': {'path': 'ext-final-portable-vm.json', **file_record(OUT/'ext-final-portable-vm.json')}, 'js': {'path': 'ext-final-portable-js.json', **file_record(OUT/'ext-final-portable-js.json')}},\n        'harness': {'scratch_path': str(Path(__file__)), 'sha256': digest(Path(__file__).read_bytes()), 'source': Path(__file__).read_text()},\n        'limits': ['JavaScript executed in Node, not a browser engine or WebAssembly.', 'The >2 TiB partition case uses sparse positional ranges around a small original external volume, not a complete physical multi-terabyte extraction.', 'Corruption cases and partition wrappers are derived/synthetic and are not additional externally mastered filesystems.', 'This receipt does not claim native-device packaging or release deployment.'],\n    }\n    json_write('ext-final-portable-receipt.json', receipts)\n    print(json.dumps({'result': 'passed', 'source_revision': SOURCE, 'source_paths': len(entries), 'dart_paths': binding['dart_paths'], 'compiler_inputs': len(actual_paths), 'groups_per_target': 19, 'checks_per_target': 3360, 'exact_json_equal': True, 'receipt': str(OUT/'ext-final-portable-receipt.json')}), flush=True)\nexcept BaseException as error:\n    json_write('ext-final-portable-failure.json', {'schema':1,'source_revision':SOURCE,'started_at_utc':START,'failed_at_utc':now(),'error':repr(error),'traceback':traceback.format_exc(),'commands':COMMANDS})\n    raise\n"
+  },
+  "limits": [
+    "JavaScript executed in Node, not a browser engine or WebAssembly.",
+    "The >2 TiB partition case uses sparse positional ranges around a small original external volume, not a complete physical multi-terabyte extraction.",
+    "Corruption cases and partition wrappers are derived/synthetic and are not additional externally mastered filesystems.",
+    "This receipt does not claim native-device packaging or release deployment."
+  ]
+}

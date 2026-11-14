@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "qualified_source_revision": "8bbdc25c7eca7598215bdc1053e8558ef3f5d643",
+  "scope": "Final native host regression and production JavaScript release evidence. Other qualification is recorded independently.",
+  "compression": "Original artifacts larger than 20480 bytes are gzip-compressed with empty filename and mtime 0.",
+  "artifacts": [
+    {
+      "file": "ext-final-native-events.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-final-native-events.json",
+      "original_bytes": 520452,
+      "original_sha256": "a606137d4f20ae6f013a406913b06ea5a7fd8b21811da71ef982374f4c7d27e8",
+      "stored_bytes": 43384,
+      "stored_sha256": "b62b9e2d45ab4f6ec9dba7fe06bd79ca6ce201d15b266e7d813eddff83c0b5a8"
+    },
+    {
+      "file": "ext-final-native-files.json",
+      "encoding": "utf-8",
+      "original_file": "ext-final-native-files.json",
+      "original_bytes": 1628,
+      "original_sha256": "10af1bdc5c7206e21f50dd18b968827f8c9efc06927df22cb1641e880ec932a0",
+      "stored_bytes": 1628,
+      "stored_sha256": "10af1bdc5c7206e21f50dd18b968827f8c9efc06927df22cb1641e880ec932a0"
+    },
+    {
+      "file": "ext-final-native-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-final-native-receipt.json",
+      "original_bytes": 2857,
+      "original_sha256": "b6de19140487b12236703dab3a91be02839b12189cdc9acb869fbd783fd8a064",
+      "stored_bytes": 2857,
+      "stored_sha256": "b6de19140487b12236703dab3a91be02839b12189cdc9acb869fbd783fd8a064"
+    },
+    {
+      "file": "ext-final-native-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-final-native-source-binding.json",
+      "original_bytes": 1113785,
+      "original_sha256": "89f873021720771fe29e1e0fb78206c1d413716663e49ad9af93778897fc9c59",
+      "stored_bytes": 383934,
+      "stored_sha256": "a37f93bdece95e430bfd2dd97973c1927ca7cc94fbf2c1eaa3ff960d7fe349b5"
+    },
+    {
+      "file": "ext-final-native-summary.json",
+      "encoding": "utf-8",
+      "original_file": "ext-final-native-summary.json",
+      "original_bytes": 4338,
+      "original_sha256": "712e89b470101c017b4cb2710797541c2d5acf17f3f4da3e03e1f28f3dceccbe",
+      "stored_bytes": 4338,
+      "stored_sha256": "712e89b470101c017b4cb2710797541c2d5acf17f3f4da3e03e1f28f3dceccbe"
+    },
+    {
+      "file": "ext-final-native-sync.json",
+      "encoding": "utf-8",
+      "original_file": "ext-final-native-sync.json",
+      "original_bytes": 90,
+      "original_sha256": "6f340278b5a7bcdf78de69df88c1e29b99032c3b391d6a71a6186f8300d96c5a",
+      "stored_bytes": 90,
+      "stored_sha256": "6f340278b5a7bcdf78de69df88c1e29b99032c3b391d6a71a6186f8300d96c5a"
+    },
+    {
+      "file": "ext-final-native.log.gz",
+      "encoding": "gzip",
+      "original_file": "ext-final-native.log",
+      "original_bytes": 207828,
+      "original_sha256": "a755bf682901853604e3010c3a1592287359a06b627a12c11ff678436ffcbc71",
+      "stored_bytes": 8444,
+      "stored_sha256": "288b7c6d4c06642d1e1204d95e0fbaee725e5b171c74d891cc3b78c1327cf62e"
+    },
+    {
+      "file": "ext-final-web-0.log",
+      "encoding": "utf-8",
+      "original_file": "ext-final-web-0.log",
+      "original_bytes": 1661,
+      "original_sha256": "7ea6420080612359408d030ddc1bf7e73bc45b9b20046d4293f6015c61d6fa55",
+      "stored_bytes": 1661,
+      "stored_sha256": "7ea6420080612359408d030ddc1bf7e73bc45b9b20046d4293f6015c61d6fa55"
+    },
+    {
+      "file": "ext-final-web-1.log",
+      "encoding": "utf-8",
+      "original_file": "ext-final-web-1.log",
+      "original_bytes": 779,
+      "original_sha256": "18504751893148924962ba58907d6771d1b12513f3d8fb8687e2769e0e280acf",
+      "stored_bytes": 779,
+      "stored_sha256": "18504751893148924962ba58907d6771d1b12513f3d8fb8687e2769e0e280acf"
+    },
+    {
+      "file": "ext-final-web-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-final-web-receipt.json",
+      "original_bytes": 2208,
+      "original_sha256": "f16f81202957d85d3cbcf5cb600f3ac1421d4cc729b1b992d1d211a126831105",
+      "stored_bytes": 2208,
+      "stored_sha256": "f16f81202957d85d3cbcf5cb600f3ac1421d4cc729b1b992d1d211a126831105"
+    },
+    {
+      "file": "ext-final-web-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-final-web-source-binding.json",
+      "original_bytes": 1113760,
+      "original_sha256": "ae139cb246bda540cf6522dd7859fa5b1a03dd9bac4226505110101f55334dcb",
+      "stored_bytes": 383919,
+      "stored_sha256": "f5fd459248335a0a4c179c0b12bd19421e863f771bbea2e439963a80bf3fb867"
+    },
+    {
+      "file": "validation-host-environment.json",
+      "encoding": "utf-8",
+      "original_file": "environment.json",
+      "original_bytes": 4784,
+      "original_sha256": "4184c20cf58bc3a4a8e36a3c34d324f319fcd25d8c8af71b98ee6b4b6e875314",
+      "stored_bytes": 4784,
+      "stored_sha256": "4184c20cf58bc3a4a8e36a3c34d324f319fcd25d8c8af71b98ee6b4b6e875314"
+    },
+    {
+      "file": "validation-host-env.sh",
+      "encoding": "utf-8",
+      "original_file": "env.sh",
+      "original_bytes": 1038,
+      "original_sha256": "647cfe3bd02f59b0f0876b327531925c2b7e7b714b5c77157007969b9aa10313",
+      "stored_bytes": 1038,
+      "stored_sha256": "647cfe3bd02f59b0f0876b327531925c2b7e7b714b5c77157007969b9aa10313"
+    },
+    {
+      "file": "validation-run-native.py",
+      "encoding": "utf-8",
+      "original_file": "run_validation.py",
+      "original_bytes": 4490,
+      "original_sha256": "c8938569c4dee1f9a9542b349c95c3ce2a3b34082e80476db368e3afb1fabee1",
+      "stored_bytes": 4490,
+      "stored_sha256": "c8938569c4dee1f9a9542b349c95c3ce2a3b34082e80476db368e3afb1fabee1"
+    },
+    {
+      "file": "validation-sync-sources.py",
+      "encoding": "utf-8",
+      "original_file": "sync_validation_sources.py",
+      "original_bytes": 1501,
+      "original_sha256": "bca974b2f9247f6aadbf2a41cdc27e34f02a296e1f4b183e49810d3e523a6801",
+      "stored_bytes": 1501,
+      "stored_sha256": "bca974b2f9247f6aadbf2a41cdc27e34f02a296e1f4b183e49810d3e523a6801"
+    },
+    {
+      "file": "validation-run-release.py",
+      "encoding": "utf-8",
+      "original_file": "run_release.py",
+      "original_bytes": 4701,
+      "original_sha256": "34b97dfb03d235bb95c148da2bf27c77eb92ca3f873ac1be3933da9ff9558242",
+      "stored_bytes": 4701,
+      "stored_sha256": "34b97dfb03d235bb95c148da2bf27c77eb92ca3f873ac1be3933da9ff9558242"
+    },
+    {
+      "file": "validation-summarize-tests.py",
+      "encoding": "utf-8",
+      "original_file": "summarize_tests.py",
+      "original_bytes": 1329,
+      "original_sha256": "878434e36c3702c53cea12d7f14a333bfb7a1dcaf87a9a681a95bc75902ff0a4",
+      "stored_bytes": 1329,
+      "stored_sha256": "878434e36c3702c53cea12d7f14a333bfb7a1dcaf87a9a681a95bc75902ff0a4"
+    },
+    {
+      "file": "validation-cargo-launcher.sh",
+      "encoding": "utf-8",
+      "original_file": "cargo",
+      "original_bytes": 542,
+      "original_sha256": "f8bd05aa79488ddd397dd103a62128a595f9470be66c0b39f613b918e4728e73",
+      "stored_bytes": 542,
+      "stored_sha256": "f8bd05aa79488ddd397dd103a62128a595f9470be66c0b39f613b918e4728e73"
+    }
+  ]
+}

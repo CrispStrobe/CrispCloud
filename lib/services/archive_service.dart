@@ -252,7 +252,15 @@ class ArchiveService {
       final names = <String, bool>{};
       final protected = protectedSourcePaths.map(backend.pathKey).toSet();
       var totalBytes = 0;
-      for (final entry in archive.members) {
+      // Filesystem images retain links/devices as inspection metadata. Validate
+      // their complete namespace before omitting those records, using the same
+      // policy as pane navigation and batch extraction. Generic archive formats
+      // retain the strict special-entry refusal below.
+      final members =
+          archive.formatName == 'ext' || archive.formatName == 'disk-image'
+          ? ArchiveMemberIndex(archive).members.values
+          : archive.members;
+      for (final entry in members) {
         checkCancelled();
         final candidate = entry.name
             .replaceAll('\\', '/')

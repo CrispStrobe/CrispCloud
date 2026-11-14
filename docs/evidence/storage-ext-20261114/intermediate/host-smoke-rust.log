@@ -1,0 +1,35 @@
+Unhandled exception:
+Bad state: Catalogue Cargo build failed for x86_64-unknown-linux-gnu.
+
+error: rustup could not choose a version of cargo to run, because one wasn't specified explicitly, and no default is configured.
+help: run 'rustup default stable' to download the latest stable release of Rust and set it as your default toolchain.
+
+#0      main.<anonymous closure> (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:138:7)
+<asynchronous suspension>
+#1      build (package:hooks/src/api/build_and_link.dart:250:5)
+<asynchronous suspension>
+#2      main (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:6:3)
+<asynchronous suspension>
+
+  Building assets for package:crisp_catalog failed.
+  build.dart returned with exit code: 255.
+  To reproduce run:
+  (cd /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/; /workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart --packages=/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/package_config.json /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/hooks_runner/crisp_catalog/6b4ebf10e7/hook.dill --config=/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/hooks_runner/crisp_catalog/6b4ebf10e7/input.json )
+  stderr:
+  Unhandled exception:
+Bad state: Catalogue Cargo build failed for x86_64-unknown-linux-gnu.
+
+error: rustup could not choose a version of cargo to run, because one wasn't specified explicitly, and no default is configured.
+help: run 'rustup default stable' to download the latest stable release of Rust and set it as your default toolchain.
+
+#0      main.<anonymous closure> (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:138:7)
+<asynchronous suspension>
+#1      build (package:hooks/src/api/build_and_link.dart:250:5)
+<asynchronous suspension>
+#2      main (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:6:3)
+<asynchronous suspension>
+
+  stdout:
+
+
+Building native assets failed. See the logs for more details.

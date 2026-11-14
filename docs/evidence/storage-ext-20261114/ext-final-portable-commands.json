@@ -1,0 +1,123 @@
+{
+  "source_revision": "8bbdc25c7eca7598215bdc1053e8558ef3f5d643",
+  "commands": [
+    {
+      "label": "dart-version",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:04.655076+00:00",
+      "completed_at_utc": "2026-11-14T12:26:04.659036+00:00",
+      "elapsed_seconds": 0.004,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-dart-version.log",
+      "stderr": "ext-final-portable-dart-version-stderr.log",
+      "stdout_file": {
+        "bytes": 82,
+        "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-version",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--version"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:04.659318+00:00",
+      "completed_at_utc": "2026-11-14T12:26:04.662799+00:00",
+      "elapsed_seconds": 0.003,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-node-version.log",
+      "stderr": "ext-final-portable-node-version-stderr.log",
+      "stdout_file": {
+        "bytes": 9,
+        "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "vm",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "test/support/archive_ext_web_acceptance.dart"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:04.663096+00:00",
+      "completed_at_utc": "2026-11-14T12:26:09.140066+00:00",
+      "elapsed_seconds": 4.477,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-vm.log",
+      "stderr": "ext-final-portable-vm-stderr.log",
+      "stdout_file": {
+        "bytes": 2938,
+        "sha256": "12eeddc14e18e37d10f54b84eeba4f2538d87ead35d163e5c92df41b28d2a431"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "compile",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "compile",
+        "js",
+        "--packages=.dart_tool/package_config.json",
+        "-O2",
+        "test/support/archive_ext_web_acceptance.dart",
+        "-o",
+        "/workspace/scratch/4f6714f1660a/ext-reference-work/final-portable/archive_ext_acceptance.js"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:09.140961+00:00",
+      "completed_at_utc": "2026-11-14T12:26:11.565702+00:00",
+      "elapsed_seconds": 2.425,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-compile.log",
+      "stderr": "ext-final-portable-compile-stderr.log",
+      "stdout_file": {
+        "bytes": 111,
+        "sha256": "11b7be374e5930a7e36f3c65b8a0c8c4f7eabd56160782144fc54946c143e9ef"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "js",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "-e",
+        "global.self=global; require(\"/workspace/scratch/4f6714f1660a/ext-reference-work/final-portable/archive_ext_acceptance.js\")"
+      ],
+      "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+      "started_at_utc": "2026-11-14T12:26:11.588068+00:00",
+      "completed_at_utc": "2026-11-14T12:26:25.316970+00:00",
+      "elapsed_seconds": 13.729,
+      "exit_code": 0,
+      "stdout": "ext-final-portable-js.log",
+      "stderr": "ext-final-portable-js-stderr.log",
+      "stdout_file": {
+        "bytes": 2938,
+        "sha256": "12eeddc14e18e37d10f54b84eeba4f2538d87ead35d163e5c92df41b28d2a431"
+      },
+      "stderr_file": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ]
+}

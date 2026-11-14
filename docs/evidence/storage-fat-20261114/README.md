@@ -198,7 +198,9 @@ runtime addition is imported. Existing project licensing is unchanged.
 At the [latest recorded hosted check](hosted-ci-qualification.json), the
 qualified source had 35 canceled jobs and four queued jobs; the later evidence
 checkpoint had 34 queued jobs. Neither canceled nor queued jobs is a passing
-hosted qualification. Draft PR #101 remains open for review.
+hosted qualification. PR #101 was a draft at that recorded check; it was subsequently merged on
+2026-11-14. The [ext continuation](../storage-ext-20261114/PROGRESS.md) records
+the refreshed main baseline and later hosted CI follow-up.
 
 The remaining roadmap continues with separately reviewed ext/NTFS profiles,
 broader containers, binary comparison, carving/rescue and transfer improvements.

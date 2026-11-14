@@ -1417,45 +1417,81 @@ void showFileContextMenu(
     }
   }
 
-  if (origin.source is LocalPanelSource && isArchiveZipRecoverySelection(files)) {
-    items.add(PopupMenuItem(
-      child: ListTile(
-        leading: const Icon(Icons.healing_outlined),
-        title: Text(archiveZipRecoveryText(context, 'Recover ZIP to new file…')),
-      ),
-      onTap: () => Future<void>.delayed(Duration.zero, () async {
-        if (context.mounted) {
-          await showArchiveZipRecoveryForSelection(context, ref,
-            side: side, files: files, sourceOrigin: origin);
-        }
-      }),
-    ));
-  }
-
-  if (files.isNotEmpty && files.every((selected) => !selected.isFolder && selected.isSymlink != true && ArchiveService.isArchive(selected.name))) {
-    items.add(PopupMenuItem(
-      child: ListTile(
-        leading: const Icon(Icons.fact_check_outlined),
-        title: Text(archiveBatchIntegrityText(context, 'Test selected archives')),
-      ),
-      onTap: () => Future<void>.delayed(Duration.zero, () async {
-        if (context.mounted) {
-          await showArchiveBatchIntegrityForSelection(context, ref, side: side, files: files, sourceOrigin: origin);
-        }
-      }),
-    ));
-    if (!kIsWeb) {
-      items.add(PopupMenuItem(
+  if (origin.source is LocalPanelSource &&
+      isArchiveZipRecoverySelection(files)) {
+    items.add(
+      PopupMenuItem(
         child: ListTile(
-          leading: const Icon(Icons.drive_folder_upload_outlined),
-          title: Text(archiveBatchExtractionText(context, 'Extract selected archives')),
+          leading: const Icon(Icons.healing_outlined),
+          title: Text(
+            archiveZipRecoveryText(context, 'Recover ZIP to new file…'),
+          ),
         ),
         onTap: () => Future<void>.delayed(Duration.zero, () async {
           if (context.mounted) {
-            await showArchiveBatchExtractionForSelection(context, ref, side: side, files: files, sourceOrigin: origin);
+            await showArchiveZipRecoveryForSelection(
+              context,
+              ref,
+              side: side,
+              files: files,
+              sourceOrigin: origin,
+            );
           }
         }),
-      ));
+      ),
+    );
+  }
+
+  if (files.isNotEmpty &&
+      files.every(
+        (selected) =>
+            !selected.isFolder &&
+            selected.isSymlink != true &&
+            ArchiveService.isArchive(selected.name),
+      )) {
+    items.add(
+      PopupMenuItem(
+        child: ListTile(
+          leading: const Icon(Icons.fact_check_outlined),
+          title: Text(
+            archiveBatchIntegrityText(context, 'Test selected archives'),
+          ),
+        ),
+        onTap: () => Future<void>.delayed(Duration.zero, () async {
+          if (context.mounted) {
+            await showArchiveBatchIntegrityForSelection(
+              context,
+              ref,
+              side: side,
+              files: files,
+              sourceOrigin: origin,
+            );
+          }
+        }),
+      ),
+    );
+    if (!kIsWeb) {
+      items.add(
+        PopupMenuItem(
+          child: ListTile(
+            leading: const Icon(Icons.drive_folder_upload_outlined),
+            title: Text(
+              archiveBatchExtractionText(context, 'Extract selected archives'),
+            ),
+          ),
+          onTap: () => Future<void>.delayed(Duration.zero, () async {
+            if (context.mounted) {
+              await showArchiveBatchExtractionForSelection(
+                context,
+                ref,
+                side: side,
+                files: files,
+                sourceOrigin: origin,
+              );
+            }
+          }),
+        ),
+      );
     }
   }
 

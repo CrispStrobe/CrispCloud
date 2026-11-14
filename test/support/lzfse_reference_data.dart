@@ -3,10 +3,8 @@
 // Deterministic synthetic input; every stream independently decoded
 // to its exact bytes and terminal state by the original Apple decoder.
 const lzfseReferenceData = <String, String>{
-  'empty':
-      'YnZ4LQAAAABidngk',
-  'raw':
-      'YnZ4LQcAAAAAAQIDBAUGYnZ4JA==',
+  'empty': 'YnZ4LQAAAABidngk',
+  'raw': 'YnZ4LQcAAAAAAQIDBAUGYnZ4JA==',
   'lzvn':
       'YnZ4bgAEAAA5AAAA4BNDcmlzcENsb3VkIGFyY2hpdmUgTFpWTiByZWZlcmVuY2UuIDgj8P/w//D/'
       '8JXhdQYAAAAAAAAAYnZ4JA==',
@@ -1106,6 +1104,5 @@ const lzfseReferenceData = <String, String>{
       'xBQPeGKKBzxxigc8McUDnpjiAU+Y4gFPTPGAJ07xgCemeMATUzzgiSke8MQUD3hiihd4YooHPDHF'
       'A54wxQOemOIBT0zxAk9M8YAnpnjAE1M84IkpHvDEFA944hQPeGKKBzwxxQM8McUDnpjiAU+c4gFP'
       'TBljW7+agIoXMn0Vn0B+fWJ2eCQ=',
-  'cross_block_lzvn':
-      'YnZ4LQMAAABBQkNidnhuCgAAAAoAAAA4AwYAAAAAAAAAYnZ4JA==',
+  'cross_block_lzvn': 'YnZ4LQMAAABBQkNidnhuCgAAAAoAAAA4AwYAAAAAAAAAYnZ4JA==',
 };

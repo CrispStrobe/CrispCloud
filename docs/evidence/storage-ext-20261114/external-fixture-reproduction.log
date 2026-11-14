@@ -1,0 +1,3 @@
+Formatted /workspace/scratch/4f6714f1660a/ext-reference-work/reproduction/archive_ext_reference_data.dart
+Formatted 1 file (1 changed) in 0.03 seconds.
+{"images": 5, "regular_file_instances": 48, "special_entry_instances": 15, "external_consistency_checks_passed": 5, "reproduction_check": true, "image_sha256": {"ext2": "131644820a68bf38bdc6a411849c629bdd37f87132b696cbc3b0e05e1e8abc2f", "ext3": "959dede597098f26ac72778c4e3667b147be01f2d7cd89b7dc967608f94f6649", "ext4": "bbd786016de644a2cb9bd74035ac7651b9996b690de5b082e2ac2b43d7f2c6f2", "ext4-uuid": "588d465a8e7d3e8dcf0fa8609ca03d74f223da349bfca1ccfc7ee98e5e2efae6", "ext4-gdt": "9b99279b5275dcce45f0db5dfd09acdc20afb3a258ce93d5b3099a08ac38bca2"}}

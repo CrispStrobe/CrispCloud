@@ -216,6 +216,10 @@ class ArchiveWorkspace {
       '.fat12',
       '.fat16',
       '.fat32',
+      '.ext',
+      '.ext2',
+      '.ext3',
+      '.ext4',
       '.img',
       '.ima',
       '.dd',
@@ -441,6 +445,7 @@ class ArchiveWorkspace {
             (supportsStreamingArchiveWriting(result.policy.format) ||
                 (result.policy.format == ArchiveEndpointFormat.readOnly &&
                     (result.archive.formatName == 'fat' ||
+                        result.archive.formatName == 'ext' ||
                         result.archive.formatName == 'disk-image')))) {
           return ArchiveWorkspace._(
             source,

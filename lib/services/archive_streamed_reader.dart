@@ -72,6 +72,7 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
     );
     final descriptor = archiveFormatForName(name);
     if (descriptor?.id == 'fat' ||
+        descriptor?.id == 'ext' ||
         descriptor?.id == 'disk-image' ||
         diskImageSectorBytes != null) {
       inner = await openViewerArchiveSource(

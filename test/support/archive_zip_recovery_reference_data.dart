@@ -446,9 +446,14 @@ const zipRecoveryReferenceExpected = <String, List<String>>{
 };
 
 const zipRecoveryReferencePayloadHashes = <String, String>{
-  "stored.txt": '9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5',
-  "deflated.bin": '2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0',
-  "café-雪.txt": '04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660',
-  "safe.txt": '8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860',
-  "rollover.bin": 'c502520ea7243755a4935fc8824cd810b2a6ed734c68c443fec6914f1d559d26',
+  "stored.txt":
+      '9b252f450dc650c19cc5501fde202e7073858b3c952a37e5cb24814e65a13fa5',
+  "deflated.bin":
+      '2e8056633277f5743e92f85475e81c01e0d29cd2ec20a09d3bea3efb9ccfb5a0',
+  "café-雪.txt":
+      '04b1b8fd3d31a8debe04bc326979bf9fdb595d070103df13aaef79728d5f4660',
+  "safe.txt":
+      '8b3369944dd2a3fab39e32d1aeb1f763946a458ae3e6368a46432adc8f3a0860',
+  "rollover.bin":
+      'c502520ea7243755a4935fc8824cd810b2a6ed734c68c443fec6914f1d559d26',
 };

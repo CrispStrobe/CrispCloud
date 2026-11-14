@@ -477,6 +477,7 @@ void main() {
           'image.iso',
           'image.dmg',
           'volume.hfs',
+          'volume.ext4',
           'installer.pkg',
         ]) {
           final bytes = _packageZip();

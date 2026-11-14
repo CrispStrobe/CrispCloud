@@ -35,7 +35,8 @@ metadata, protection or filesystem structures cannot be preserved.
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge, including bounded regular-file multi-extent chains | Data ISO | Inspected data-only, single-extent profiles | Native creation/editing uses an 8 GiB image budget; each written member must be smaller than 4 GiB. Reader chains can represent logical members up to 8 GiB within existing operation limits. Retains inspected volume/root/Rock Ridge/Joliet metadata. Multi-extent files, boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
 | UDF / ISO-UDF bridge | UDF 1.02/1.50/2.00/2.01 physical Type 1 partitions, FE/EFE, bounded embedded/short/long allocations, ordered multi-extent and sparse regular files | No | No | 2048-byte blocks; metadata CRC/tag/location checks. Virtual, sparable and metadata partitions, chained volume/file-set sequences and filesystem repair remain unsupported. Bridge images expose the UDF namespace and never acquire ISO writer eligibility. |
 | FAT volume | FAT12/16/32, validated live chains, ASCII short names and checked UTF-16 long names | No | No | 512–4096-byte sectors, clusters through 32 KiB, bounded allocation and directory work. Dirty/active-table notices remain visible. No exFAT, OEM-only name decoding, deleted-file recovery or repair. |
-| Raw disk image | Unambiguous primary MBR or fully validated mirrored GPT; exact raw partition slices and eligible supported FAT filesystems | No | No | `.img`, `.ima`, `.dd`, `.raw`; `.fat`, `.fat12`, `.fat16`, `.fat32` name standalone volumes. Unknown partition types remain raw. No EBR, VM-container decoding, mounting or table writes. |
+| Linux ext volume | Bounded ext2/clean ext3/ext4 with classic/extent maps, sparse regular files and selected metadata checksums | No | No | 1/2/4 KiB blocks; strict UTF-8; regular hard-link paths, metadata-only links/specials. Indexed directories, external xattrs, journal recovery and unknown features are refused. See the [exact profile](archive-ext-profile.md). |
+| Raw disk image | Unambiguous primary MBR or fully validated mirrored GPT; exact raw partition slices and eligible supported FAT/ext filesystems | No | No | `.img`, `.ima`, `.dd`, `.raw`; `.fat`, `.fat12`, `.fat16`, `.fat32` name standalone volumes. Unknown partition types remain raw. No EBR, VM-container decoding, mounting or table writes. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
 | DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/LZFSE/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
 | RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
@@ -201,8 +202,8 @@ metadata, reports independent primary/backup CRC results and selects fields in
 Hex. For an admitted table, **Browse image** opens the
 [read-only image adapter](archive-disk-image-profile.md) and retains the chosen
 512/4096-byte sector size. The source and table are revalidated when opening.
-Each partition has `partition-<table-index>/raw.img`; eligible FAT partitions
-also expose `partition-<table-index>/files/…`. Standalone FAT volumes expose
+Each partition has `partition-<table-index>/raw.img`; eligible FAT/ext partitions
+also expose `partition-<table-index>/files/…`. Standalone FAT/ext volumes expose
 their own files directly. Neither path grants partition or filesystem writes.
 
 The first [FAT profile](archive-fat-profile.md) supports FAT12/16/32 with
@@ -210,6 +211,9 @@ validated chains, safe long names and bounded metadata work. MBR/GPT browsing
 requires an admitted table; damaged or conflicting copies stay in the
 inspection workflow. An unsupported or corrupt child filesystem remains raw
 with a notice. Source-access failures and cancellation stop the operation.
+The [ext profile](archive-ext-profile.md) adds Linux ext2/clean ext3/ext4 volumes
+through the same read-only route, with sparse/indirect/extent allocation and
+selected metadata-checksum validation.
 Native F3 and workspace input images retain the existing 8 GiB ceiling. A
 workspace also counts raw partitions and their file views in its aggregate
 8 GiB expanded-content allowance; selecting both copies their overlapping

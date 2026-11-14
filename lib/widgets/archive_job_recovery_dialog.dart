@@ -347,13 +347,22 @@ class _ArchiveJobRecoveryDialogState
                             ),
                           ],
                         ] else if (kind == 'zipRecovery') ...[
-                          Text(archiveZipRecoveryText(context,
-                            'Scan the original ZIP again after restart. Saved digests and output receipts remain available in this job.')),
+                          Text(
+                            archiveZipRecoveryText(
+                              context,
+                              'Scan the original ZIP again after restart. Saved digests and output receipts remain available in this job.',
+                            ),
+                          ),
                           SelectableText(job.entries.first.source.path ?? ''),
                           SelectableText(job.entries.first.destination),
-                          SelectableText('Source SHA-256: ${job.entries.first.recovery['sourceSha256'] ?? ''}'),
-                          if (job.entries.first.recovery['archivePublication'] case final Map receipt)
-                            SelectableText('Output SHA-256: ${receipt['packedSha256'] ?? ''}\nPhase: ${receipt['phase'] ?? ''}'),
+                          SelectableText(
+                            'Source SHA-256: ${job.entries.first.recovery['sourceSha256'] ?? ''}',
+                          ),
+                          if (job.entries.first.recovery['archivePublication']
+                              case final Map receipt)
+                            SelectableText(
+                              'Output SHA-256: ${receipt['packedSha256'] ?? ''}\nPhase: ${receipt['phase'] ?? ''}',
+                            ),
                         ] else if (kind == 'workspace') ...[
                           Text(
                             tr(

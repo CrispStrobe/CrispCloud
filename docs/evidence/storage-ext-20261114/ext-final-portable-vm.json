@@ -1,0 +1,104 @@
+{
+  "groups": [
+    "external-ext2",
+    "external-ext3",
+    "external-ext4",
+    "external-ext4-uuid",
+    "external-ext4-gdt",
+    "derived-checksum-corruptions-ext4",
+    "derived-checksum-corruptions-ext4-uuid",
+    "derived-legacy-group-checksum-corruption",
+    "derived-unsupported-profiles",
+    "derived-future-timestamp",
+    "derived-resize-allocation-alias",
+    "source-failure-short-read-and-cancellation",
+    "lazy-payload-failure",
+    "derived-linux-mbr",
+    "derived-linux-gpt-4096",
+    "derived-linux-gpt-above-2tib",
+    "derived-linux-gpt-ext-marker-name",
+    "derived-corrupt-gpt-ext-marker-name",
+    "derived-ext-with-mbr-boot-records"
+  ],
+  "checks": 3360,
+  "independent_reference_images": {
+    "ext2": {
+      "image_bytes": 8388608,
+      "image_sha256": "131644820a68bf38bdc6a411849c629bdd37f87132b696cbc3b0e05e1e8abc2f",
+      "block_bytes": 1024,
+      "regular_files": 9,
+      "special_entries": 3,
+      "directories": 3,
+      "listing_source_bytes": 293122
+    },
+    "ext3": {
+      "image_bytes": 16777216,
+      "image_sha256": "959dede597098f26ac72778c4e3667b147be01f2d7cd89b7dc967608f94f6649",
+      "block_bytes": 2048,
+      "regular_files": 9,
+      "special_entries": 3,
+      "directories": 3,
+      "listing_source_bytes": 312834
+    },
+    "ext4": {
+      "image_bytes": 33554432,
+      "image_sha256": "bbd786016de644a2cb9bd74035ac7651b9996b690de5b082e2ac2b43d7f2c6f2",
+      "block_bytes": 4096,
+      "regular_files": 10,
+      "special_entries": 3,
+      "directories": 3,
+      "listing_source_bytes": 579586
+    },
+    "ext4-uuid": {
+      "image_bytes": 16777216,
+      "image_sha256": "588d465a8e7d3e8dcf0fa8609ca03d74f223da349bfca1ccfc7ee98e5e2efae6",
+      "block_bytes": 1024,
+      "regular_files": 10,
+      "special_entries": 3,
+      "directories": 3,
+      "listing_source_bytes": 293378
+    },
+    "ext4-gdt": {
+      "image_bytes": 16777216,
+      "image_sha256": "9b99279b5275dcce45f0db5dfd09acdc20afb3a258ce93d5b3099a08ac38bca2",
+      "block_bytes": 2048,
+      "regular_files": 10,
+      "special_entries": 3,
+      "directories": 3,
+      "listing_source_bytes": 563202
+    }
+  },
+  "derived_partition_wrappers": {
+    "derived-linux-mbr": {
+      "classification": "Synthetic Linux partition table around an unchanged external ext volume.",
+      "logical_disk_bytes": 8527872,
+      "partition_start_bytes": 65536,
+      "regular_files": 9,
+      "raw_verification": "complete-image-sha256"
+    },
+    "derived-linux-gpt-4096": {
+      "classification": "Synthetic Linux partition table around an unchanged external ext volume.",
+      "logical_disk_bytes": 34668544,
+      "partition_start_bytes": 524288,
+      "regular_files": 10,
+      "raw_verification": "512-byte-prefix"
+    },
+    "derived-linux-gpt-above-2tib": {
+      "classification": "Synthetic Linux partition table around an unchanged external ext volume.",
+      "logical_disk_bytes": 2199040117248,
+      "partition_start_bytes": 2199023266304,
+      "regular_files": 10,
+      "raw_verification": "512-byte-prefix"
+    },
+    "derived-linux-gpt-ext-marker-name": {
+      "classification": "Synthetic Linux partition table around an unchanged external ext volume.",
+      "logical_disk_bytes": 8527872,
+      "partition_start_bytes": 65536,
+      "regular_files": 9,
+      "raw_verification": "512-byte-prefix"
+    }
+  },
+  "all_payload_and_complete_image_hashes_match": true,
+  "synthetic_successful_filesystems": 0,
+  "large_offset_scope": "Sparse positional addressing to the original small reference image, not complete multi-terabyte physical extraction."
+}

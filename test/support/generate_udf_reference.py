@@ -190,11 +190,12 @@ def main() -> None:
         for pos in range(0, len(encoded), 100):
             dart.append("      '" + encoded[pos : pos + 100] + "'")
         dart[-1] += ","
-    dart += ["};", "", "Uint8List udfReferenceBytes(String name) => Uint8List.fromList(", "  const archive.GZipDecoder().decodeBytes(base64Decode(udfReferenceImages[name]!)),", ");", "", "const udfReferencePayloads = <String, String>{"]
+    dart += ["};", "", "Uint8List udfReferenceBytes(String name) => Uint8List.fromList(", "  const archive.GZipDecoder().decodeBytes(", "    base64Decode(udfReferenceImages[name]!),", "  ),", ");", "", "const udfReferencePayloads = <String, String>{"]
     for name, payload in PAYLOADS.items():
         # Expected content patterns are generated independently in the driver;
         # only hashes are included here, keeping this fixture small.
-        dart.append("  " + json.dumps(name, ensure_ascii=False) + ": '" + sha(payload) + "',")
+        dart.append("  " + json.dumps(name, ensure_ascii=False) + ":")
+        dart.append("      '" + sha(payload) + "',")
     dart += ["};", ""]
     outputs["archive_udf_reference_data.dart"] = "\n".join(dart).encode()
     for name, data in outputs.items():

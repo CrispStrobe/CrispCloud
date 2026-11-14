@@ -1,0 +1,28 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/disk_partition_inspector_test.dart
+00:00 +0: independent fixture CRC has the IEEE check value
+00:00 +1: auto-detects 512-byte GPT and checks both independent mirrors
+00:00 +2: auto-detects 4096-byte GPT and checks both independent mirrors
+00:00 +3: 5 TiB sparse image reads only bounded metadata including physical tail
+00:00 +4: header and array CRC failures are reported independently
+00:00 +5: missing primary still inspects backup; missing checks stay unchecked
+00:00 +6: missing backup is not presented as verified
+00:00 +7: valid CRCs do not hide contradictory headers or different arrays
+00:00 +8: overlapping, reversed and out-of-range GPT records are disclosed
+00:00 +9: unsigned 64-bit malicious LBAs remain exact and never become read offsets
+00:00 +10: metadata pointing into usable sectors is not followed
+00:00 +11: huge entry count and size stop before array reads
+00:00 +12: invalid header sizes and unsupported revisions retain unchecked tables
+00:00 +13: finding count is capped with explicit omitted-findings notice
+00:00 +14: ambiguous sector signatures require explicit selection
+00:00 +15: MBR alone discloses assumed sector size and extended-chain limit
+00:00 +16: boot-sector signature alone does not identify a partitioned disk
+00:00 +17: truncated inputs produce diagnostics without speculative reads
+00:00 +18: snapshot validation brackets reads and rejects replaced sources
+00:00 +19: initial snapshot rejection performs no reads
+00:00 +20: short read is an IO failure, not a partially published analysis
+00:00 +21: cancellation is typed and yields the event loop before a sync read
+00:00 +22: cancellation after a bounded read prevents any later reads
+00:00 +23: invalid caller geometry is rejected before reads
+00:00 +24: All tests passed!

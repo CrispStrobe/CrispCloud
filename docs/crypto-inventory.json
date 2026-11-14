@@ -1125,7 +1125,8 @@
     "lib/l10n/csv_spreadsheet_strings.dart",
     "lib/services/csv_spreadsheet_import.dart",
     "lib/widgets/csv_spreadsheet_import_action.dart",
-    "lib/widgets/csv_spreadsheet_import_dialog.dart"
+    "lib/widgets/csv_spreadsheet_import_dialog.dart",
+    "lib/services/archive_ext_reader.dart"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",

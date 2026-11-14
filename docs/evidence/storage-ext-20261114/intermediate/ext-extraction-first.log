@@ -1,0 +1,15 @@
+Unhandled exception:
+Bad state: Hash of downloaded file libsqlite3.x64.linux.so is 9deff96f9b5925fa5081257849ace321304b382d64cfb67d90a21a3c7cbf2925, expected e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024.
+
+  Building assets for package:sqlite3 failed.
+  build.dart returned with exit code: 255.
+  To reproduce run:
+  (cd /workspace/scratch/4f6714f1660a/runtime-setup/pub-cache/hosted/pub.dev/sqlite3-3.3.3/; /workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart --packages=/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/package_config.json /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/hooks_runner/sqlite3/6b4ebf10e7/hook.dill --config=/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/hooks_runner/sqlite3/6b4ebf10e7/input.json )
+  stderr:
+  Unhandled exception:
+Bad state: Hash of downloaded file libsqlite3.x64.linux.so is 9deff96f9b5925fa5081257849ace321304b382d64cfb67d90a21a3c7cbf2925, expected e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024.
+
+  stdout:
+
+
+Building native assets failed. See the logs for more details.

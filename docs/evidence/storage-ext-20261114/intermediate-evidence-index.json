@@ -1,0 +1,147 @@
+{
+  "phase": "Intermediate source-hash-bound runs; superseded by the eventual pinned final gate",
+  "qualified_commit": null,
+  "source_binding": "ext-core-first-source-binding.json.gz",
+  "artifacts": [
+    {
+      "file": "ext-core-first.log",
+      "encoding": "utf-8",
+      "original_file": "ext-core-first.log",
+      "original_bytes": 14851,
+      "original_sha256": "ee836ce4ab015f3bc27d98a5d5bb93e36eda2532fd7db187b3ad360b05f94c7e"
+    },
+    {
+      "file": "ext-core-first-events.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-core-first-events.json",
+      "original_bytes": 33415,
+      "original_sha256": "0af9e7bec00ff41555eb706394f8d974aad7bc304246d0992bddea344b1503b6"
+    },
+    {
+      "file": "ext-core-first-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-core-first-source-binding.json",
+      "original_bytes": 1114046,
+      "original_sha256": "ba8c89e2d7483cba04211f0628a41c2f4fed5bde98e1cff3c724be2f78ed37a6"
+    },
+    {
+      "file": "ext-core-first-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-core-first-receipt.json",
+      "original_bytes": 1203,
+      "original_sha256": "5c83ad66dca9d740b7dd794cc69b552a3186721b05e98ba21e9cba01219b257e"
+    },
+    {
+      "file": "ext-core-first-summary.json",
+      "encoding": "utf-8",
+      "original_file": "ext-core-first-summary.json",
+      "original_bytes": 616,
+      "original_sha256": "1902bc1b9dd1815549bcdd39ba375de518c701fb8b20d2ab1975a5b56e438483"
+    },
+    {
+      "file": "ext-focused-first.log.gz",
+      "encoding": "gzip",
+      "original_file": "ext-focused-first.log",
+      "original_bytes": 104875,
+      "original_sha256": "629deea31b1472fb17ce1a92957ea24155c2cae4fce1ae93630878d36c8f68df"
+    },
+    {
+      "file": "ext-focused-first-events.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-focused-first-events.json",
+      "original_bytes": 247830,
+      "original_sha256": "61eaee6ce6ff974230a10823b0221fe04727d70706de33c76b8bb93180227729"
+    },
+    {
+      "file": "ext-focused-first-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-focused-first-source-binding.json",
+      "original_bytes": 1114046,
+      "original_sha256": "bbd0965ed7491c742b2cda138ba858f390bf4a35fdb23aa944530ceac6c6ae05"
+    },
+    {
+      "file": "ext-focused-first-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-focused-first-receipt.json",
+      "original_bytes": 1675,
+      "original_sha256": "175e536091200032d8c43555fd26b480c2d1ba335bb675883376916832e38a3c"
+    },
+    {
+      "file": "ext-focused-first-summary.json",
+      "encoding": "utf-8",
+      "original_file": "ext-focused-first-summary.json",
+      "original_bytes": 2027,
+      "original_sha256": "178e297641d20f160a58718fe2352c85202f0ed7fa0ec36a54b8b07ff770d5c6"
+    },
+    {
+      "file": "ext-core-followup.log",
+      "encoding": "utf-8",
+      "original_file": "ext-core-followup.log",
+      "original_bytes": 14259,
+      "original_sha256": "ef0dee9095a77137f1323b9038061292e831389da2bcac4028d1993d38c36526"
+    },
+    {
+      "file": "ext-core-followup-events.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-core-followup-events.json",
+      "original_bytes": 33493,
+      "original_sha256": "ecbc76c1b822188470cf66b2e4a954720266f8fbc1330d5c3be617093d8cd1a1"
+    },
+    {
+      "file": "ext-core-followup-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-core-followup-source-binding.json",
+      "original_bytes": 1113522,
+      "original_sha256": "8423cb0e25817e1b74ada70389349d0b51abf43ec87e987462e95a78aeae9e75"
+    },
+    {
+      "file": "ext-core-followup-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-core-followup-receipt.json",
+      "original_bytes": 1206,
+      "original_sha256": "97f2f1172e41c7378c45236676959a3fb524b558cbcfd054bc99a7f9207211a7"
+    },
+    {
+      "file": "ext-core-followup-summary.json",
+      "encoding": "utf-8",
+      "original_file": "ext-core-followup-summary.json",
+      "original_bytes": 449,
+      "original_sha256": "285e9bd2774e2e08173caa4a4fd35db8c35577a5bb320895006ea65672d29cb3"
+    },
+    {
+      "file": "ext-integration-fix.log.gz",
+      "encoding": "gzip",
+      "original_file": "ext-integration-fix.log",
+      "original_bytes": 41837,
+      "original_sha256": "92b463100d349c6749f1a37f1395b37abb46ea2e51ca181cb557ea5e868cab51"
+    },
+    {
+      "file": "ext-integration-fix-events.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-integration-fix-events.json",
+      "original_bytes": 99970,
+      "original_sha256": "82b0dfa76893f7896a35bf9a1d018b1011cf41a6f8a14ff2ae924ec92c2f19c0"
+    },
+    {
+      "file": "ext-integration-fix-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-integration-fix-source-binding.json",
+      "original_bytes": 1113896,
+      "original_sha256": "f6309219fc5fccfcdc41410b1023b758b9b78afa545d544b2d008adee05a6256"
+    },
+    {
+      "file": "ext-integration-fix-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-integration-fix-receipt.json",
+      "original_bytes": 1502,
+      "original_sha256": "e5cb4bfb57ffd5e68968233ffc46bd2793d2a980a227214092d34a1a5b164d61"
+    },
+    {
+      "file": "ext-integration-fix-summary.json",
+      "encoding": "utf-8",
+      "original_file": "ext-integration-fix-summary.json",
+      "original_bytes": 1113,
+      "original_sha256": "5381dc393e9f477127fe8349fa59118fb26016c2012ca544a0f0d58c8b6d91a8"
+    }
+  ]
+}

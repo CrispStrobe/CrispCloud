@@ -1,0 +1,35 @@
+Unhandled exception:
+ProcessException: No such file or directory
+  Command: cargo build --release --locked --manifest-path /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/native/Cargo.toml --target x86_64-unknown-linux-gnu
+#0      _ProcessImpl._start (dart:io-patch/process_patch.dart:411:33)
+#1      Process.start (dart:io-patch/process_patch.dart:42:20)
+#2      _runNonInteractiveProcess (dart:io-patch/process_patch.dart:613:18)
+#3      Process.run (dart:io-patch/process_patch.dart:56:12)
+#4      main.<anonymous closure> (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:128:34)
+#5      build (package:hooks/src/api/build_and_link.dart:250:18)
+#6      main (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:6:9)
+#7      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311:33)
+#8      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192:12)
+
+  Building assets for package:crisp_catalog failed.
+  build.dart returned with exit code: 255.
+  To reproduce run:
+  (cd /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/; /workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart --packages=/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/package_config.json /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/hooks_runner/crisp_catalog/6b4ebf10e7/hook.dill --config=/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/.dart_tool/hooks_runner/crisp_catalog/6b4ebf10e7/input.json )
+  stderr:
+  Unhandled exception:
+ProcessException: No such file or directory
+  Command: cargo build --release --locked --manifest-path /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/native/Cargo.toml --target x86_64-unknown-linux-gnu
+#0      _ProcessImpl._start (dart:io-patch/process_patch.dart:411:33)
+#1      Process.start (dart:io-patch/process_patch.dart:42:20)
+#2      _runNonInteractiveProcess (dart:io-patch/process_patch.dart:613:18)
+#3      Process.run (dart:io-patch/process_patch.dart:56:12)
+#4      main.<anonymous closure> (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:128:34)
+#5      build (package:hooks/src/api/build_and_link.dart:250:18)
+#6      main (file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/packages/crisp_catalog/hook/build.dart:6:9)
+#7      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311:33)
+#8      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192:12)
+
+  stdout:
+
+
+Building native assets failed. See the logs for more details.

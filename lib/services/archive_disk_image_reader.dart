@@ -25,6 +25,7 @@ import 'dart:typed_data';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_fat_reader.dart';
+import 'archive_ext_reader.dart';
 import 'archive_slice_source.dart';
 import 'archive_types.dart';
 import 'disk_partition_inspector.dart';
@@ -40,6 +41,7 @@ const int _maxExactOffset = 9007199254740991;
 const int _maxNotices = 128;
 const String _efiSystemGuid = 'C12A7328-F81F-11D2-BA4B-00A0C93EC93B';
 const String _basicDataGuid = 'EBD0A0A2-B9E5-4433-87C0-68B6B72699C7';
+const String _linuxFilesystemGuid = '0FC63DAF-8483-4772-8E79-3D69D8477DE4';
 
 class ArchiveDiskImageCancelledException extends ArchiveViewException {
   const ArchiveDiskImageCancelledException()
@@ -47,9 +49,13 @@ class ArchiveDiskImageCancelledException extends ArchiveViewException {
 }
 
 /// Non-owning recognition at fixed MBR/GPT positions, not a filesystem scan.
-/// A recognized FAT superfloppy takes precedence over apparent partition bytes
-/// in its boot code. An MBR boot signature alone is insufficient recognition.
-/// At most two 512-byte reads and four eight-byte GPT probes are requested.
+/// A recognized FAT volume takes precedence over apparent partition bytes in
+/// its boot code. Explicit GPT signatures precede the short ext marker: the
+/// first GPT partition name can contain that marker at the same byte offset.
+/// Ext volumes still precede apparent MBR entries in their unused boot area.
+/// An MBR boot signature alone is insufficient recognition.
+/// At most two 512-byte reads, one two-byte ext probe and four eight-byte GPT
+/// probes are requested.
 /// Recognition does not establish a valid or authoritative partition table.
 Future<bool> hasDiskImagePartitionRecognition(koni.ByteSource source) async {
   if (source.length < 512 || source.length > _maxExactOffset) return false;
@@ -75,6 +81,7 @@ Future<bool> hasDiskImagePartitionRecognition(koni.ByteSource source) async {
       if (_gptSignature(bytes)) return true;
     }
   }
+  if (await hasExtVolumeRecognition(source)) return false;
   if (prefix[510] != 0x55 || prefix[511] != 0xaa) return false;
   final data = ByteData.sublistView(prefix);
   var records = 0;
@@ -105,7 +112,7 @@ bool _gptSignature(Uint8List bytes) {
 }
 
 /// Browse validated primary MBR or mirrored GPT partitions as read-only entries.
-/// Each admitted partition has `partition-NNN/raw.img`; eligible FAT volumes
+/// Each admitted partition has `partition-NNN/raw.img`; eligible FAT/ext volumes
 /// also have `partition-NNN/files/...`. Names and numbers come from the chosen
 /// table's original indices, never from untrusted filesystem or volume labels.
 ///
@@ -170,6 +177,7 @@ Future<ViewerArchive> openDiskImageArchive(
         maxClusters: maxClusters,
         maxExtents: maxExtents,
       ),
+      ArchiveExtTraversalBudget(maxBlocks: maxClusters, maxExtents: maxExtents),
     );
     return await reader.open();
   } catch (error, stack) {
@@ -287,6 +295,7 @@ class _DiskImageReader {
     this.maxEntries,
     this.maxRetainedPathBytes,
     this.traversalBudget,
+    this.extTraversalBudget,
   );
 
   final _DiskImageSource source;
@@ -294,6 +303,7 @@ class _DiskImageReader {
   final int? logicalSectorBytes;
   final int maxPartitions, maxEntries, maxRetainedPathBytes;
   final ArchiveFatTraversalBudget traversalBudget;
+  final ArchiveExtTraversalBudget extTraversalBudget;
   final _members = <ViewerArchiveMember>[];
   final _targets = <_DiskImageTarget?>[];
   final _children = <ViewerArchive>[];
@@ -320,6 +330,12 @@ class _DiskImageReader {
       validateUnchanged: source.validate,
     );
     source.check();
+    if (analysis.scheme == DiskPartitionScheme.mbr &&
+        await hasExtVolumeRecognition(source)) {
+      _unsupported(
+        'This source is a standalone ext volume, not a partitioned disk.',
+      );
+    }
     final partitions = _admitDiskImageAnalysis(
       analysis,
       maxPartitions: maxPartitions,
@@ -354,7 +370,9 @@ class _DiskImageReader {
         true,
         target: _DiskImageTarget.raw(offset),
       );
-      if (!_fatType(partition, analysis.scheme)) {
+      final ext = _extType(partition, analysis.scheme);
+      final filesystemName = ext ? 'ext' : 'FAT';
+      if (!ext && !_fatType(partition, analysis.scheme)) {
         _notice(
           '$prefix: partition type ${partition.type} is exposed as raw bytes '
           'only. No filesystem, extended chain, dynamic disk or encryption '
@@ -371,9 +389,12 @@ class _DiskImageReader {
       );
       ViewerArchive? child;
       try {
-        if (!await hasFatVolumeRecognition(slice)) {
+        final recognized = ext
+            ? await hasExtVolumeRecognition(slice)
+            : await hasFatVolumeRecognition(slice);
+        if (!recognized) {
           _notice(
-            '$prefix: no supported FAT volume was recognized; raw bytes remain available.',
+            '$prefix: no supported $filesystemName volume was recognized; raw bytes remain available.',
           );
           await slice.close();
           continue;
@@ -385,23 +406,52 @@ class _DiskImageReader {
         final remainingEntries = maxEntries - _members.length - 1;
         final remainingPaths =
             maxRetainedPathBytes - _pathBytes - root.length * 2;
+        // Both filesystem kinds spend the same disk-wide allocation allowance.
+        // Failed children retain their debits; mixing formats cannot multiply
+        // the budget by giving each adapter a fresh full allocation allowance.
+        final remainingBlocks =
+            traversalBudget.maxClusters -
+            traversalBudget.clustersVisited -
+            extTraversalBudget.blocksVisited;
+        final remainingExtents =
+            traversalBudget.maxExtents -
+            traversalBudget.extentsCreated -
+            extTraversalBudget.extentsCreated;
         if (remainingEntries <= 0 ||
             remainingPaths <= 0 ||
+            remainingBlocks <= 0 ||
+            remainingExtents <= 0 ||
             source.metadataRemaining <= 0) {
           _limit('No listing budget remains for another filesystem.');
         }
-        child = await openFatArchive(
-          slice,
-          maxMemberBytes: maxMemberBytes,
-          maxEntries: remainingEntries,
-          maxMetadataBytes: source.metadataRemaining,
-          maxRetainedPathBytes: remainingPaths,
-          traversalBudget: traversalBudget,
-          isCancelled: () => source.cancelled,
-        );
+        child = ext
+            ? await openExtArchive(
+                slice,
+                maxMemberBytes: maxMemberBytes,
+                maxEntries: remainingEntries,
+                maxMetadataBytes: source.metadataRemaining,
+                maxRetainedPathBytes: remainingPaths,
+                maxBlocks: remainingBlocks,
+                maxExtents: remainingExtents,
+                traversalBudget: extTraversalBudget,
+                isCancelled: () => source.cancelled,
+              )
+            : await openFatArchive(
+                slice,
+                maxMemberBytes: maxMemberBytes,
+                maxEntries: remainingEntries,
+                maxMetadataBytes: source.metadataRemaining,
+                maxRetainedPathBytes: remainingPaths,
+                maxClusters: remainingBlocks,
+                maxExtents: remainingExtents,
+                traversalBudget: traversalBudget,
+                isCancelled: () => source.cancelled,
+              );
         _children.add(child);
         await source.validate();
       } on ArchiveFatCancelledException {
+        rethrow;
+      } on ArchiveExtCancelledException {
         rethrow;
       } on ArchiveViewException catch (error) {
         source.throwReadFailure();
@@ -417,7 +467,7 @@ class _DiskImageReader {
         }
         await slice.close();
         _notice(
-          '$prefix: FAT listing was refused: ${error.message} Raw bytes remain available.',
+          '$prefix: $filesystemName listing was refused: ${error.message} Raw bytes remain available.',
         );
         continue;
       }
@@ -485,6 +535,11 @@ class _DiskImageReader {
       '0xEF EFI system',
     }.contains(partition.type);
   }
+
+  bool _extType(DiskPartitionEntry partition, DiskPartitionScheme scheme) =>
+      scheme == DiskPartitionScheme.gpt
+      ? partition.type == _linuxFilesystemGuid
+      : partition.type == '0x83';
 
   void _add(
     String path,
