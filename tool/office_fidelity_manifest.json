@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "main",
-  "source_commit": "56ed6c8876d0a8cc8bad1f1d890325237f6cd32d",
+  "source_commit": "efa6d911fb5c670ff551f480884c3e7d44a9188c",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -923,7 +923,7 @@
     "packages/legacy_doc_parser/lib/src/compound/cfbf_names.dart": "113d3ef294e00f6a7e454eb6e15de4f27cd448b1e8df6fbe73d583406aa4bb4b",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_reader.dart": "668b5401cd185fa1077d0838d570924ede37f8c025699eb10641dfcaac53076b",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_writer.dart": "d3b27d1b4872274159678121a503e952b4f6e8b623d457a8c6bb69b74f34931a",
-    "packages/legacy_doc_parser/lib/src/conversion.dart": "18f1294c65fe6f605c0c1ce930fb1488dd14cde127f8329403135c41aec7210a",
+    "packages/legacy_doc_parser/lib/src/conversion.dart": "f897e73dca105cb346b0ffcf6723f4f2530873e83a683f92fe6794258d483740",
     "packages/legacy_doc_parser/lib/src/legacy_word_binary_source.dart": "1bf315fd5dc57a648071f6ecc6a51ee6d105267adceb89e0be2bf79e93cba876",
     "packages/legacy_doc_parser/lib/src/legacy_word_compatibility.dart": "a2b20b55fb0fcf7afbdc0c96f773a441d7ac44e24dc89c9517dc34ffc5639344",
     "packages/legacy_doc_parser/lib/src/legacy_word_compatibility_parser.dart": "166ab70cf56034d9bd614818552df0110d06a5e7c7335ea405bb92ad892f8940",
@@ -1539,7 +1539,7 @@
     "packages/legacy_doc_parser/test/legacy_word_wrap_distances_test.dart": "0a12364f08278d9ec7f75c6bb311782556f9916d02287c2c7a4b537be86b8dc6",
     "packages/legacy_doc_parser/test/paragraph_decoration_conversion_test.dart": "b49d67d2b6e103bdf82e359f04e2a0f54fb1c3dbc8edc3f325fda2a4dbeecef2",
     "packages/legacy_doc_parser/test/recover_comments_bookmarks_test.dart": "4e77ca151c625497da1810033bd31f9abaf2e3e2473f004eb8bd123fe8829222",
-    "packages/legacy_doc_parser/test/recovery_reconciliation_bounds_test.dart": "dfdc6295ab222f2103e9cd67e6ed4338f272f9a1e534f8d14e04d80ced0ebdd0",
+    "packages/legacy_doc_parser/test/recovery_reconciliation_bounds_test.dart": "1d352f6d9f3312e3a7f6db18c3c8e9f12bc93a06518b4169d0b2ea11becda12c",
     "packages/legacy_doc_parser/test/support/binary_property_contract_fixture.dart": "236d3017e2099192b7758ef2ded97deb5e1ecf208f27fe5e3160293a94dbf6a4",
     "packages/legacy_doc_parser/test/support/cached_field_structure_fixture.dart": "9f996e3967b024df3dc9b07288725964b4770b5cb57651d8dc5294dfd4a3e526",
     "packages/legacy_doc_parser/test/support/compound_allocation_fixture.dart": "5fdd710b43ed649a3de2a8cc3ce0d8262054c24371825601709cf9cd50de8c73",
@@ -2288,7 +2288,7 @@
   "standalone_sources": {
     "packages/legacy_doc_parser": {
       "repository": "CrispStrobe/legacy-doc-parser",
-      "commit": "97c930ba336f120863bb526f4796284aba344cca"
+      "commit": "ea82b13dcb0abbd151995cb7d2881789ed137286"
     }
   }
 }

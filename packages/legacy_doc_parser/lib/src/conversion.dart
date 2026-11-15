@@ -140,7 +140,8 @@ LegacyWordStructuredConversion convertLegacyWord(
   final LegacyWordDocument document;
   try {
     document = parseLegacyWordDocument(bytes, recover: recover);
-  } on FormatException {
+  } catch (error) {
+    if (error is! FormatException && error is! CfbfException) rethrow;
     // With [recover], a file whose compound directory is destroyed still
     // yields its text when the WordDocument stream itself is intact.
     if (!recover || format != LegacyWordOutputFormat.docx) rethrow;
@@ -166,8 +167,9 @@ LegacyWordStructuredConversion convertLegacyWord(
 String? _plainTextOrNull(Uint8List bytes) {
   try {
     return extractLegacyWordText(bytes);
-  } on FormatException {
-    return null;
+  } catch (error) {
+    if (error is FormatException || error is CfbfException) return null;
+    rethrow;
   }
 }
 
