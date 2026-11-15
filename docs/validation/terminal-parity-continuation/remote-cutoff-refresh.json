@@ -1,0 +1,4784 @@
+{
+  "as_of": "2026-11-15 22:36:34 UTC",
+  "repository": "CrispStrobe/CrispCloud",
+  "terminal_base": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+  "branches": [
+    {
+      "name": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+    },
+    {
+      "name": "codex/terminal-screen-workspace",
+      "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581"
+    },
+    {
+      "name": "codex/zotero-support-20261115",
+      "sha": "f0f3863604ba272149af3b00d165c41abae16521"
+    },
+    {
+      "name": "docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e"
+    },
+    {
+      "name": "docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03"
+    },
+    {
+      "name": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+    },
+    {
+      "name": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+    },
+    {
+      "name": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+    },
+    {
+      "name": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4"
+    },
+    {
+      "name": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+    },
+    {
+      "name": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+    },
+    {
+      "name": "docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+    },
+    {
+      "name": "docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277"
+    },
+    {
+      "name": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+    },
+    {
+      "name": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+    },
+    {
+      "name": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+    },
+    {
+      "name": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+    },
+    {
+      "name": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+    },
+    {
+      "name": "fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+    },
+    {
+      "name": "fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+    },
+    {
+      "name": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6"
+    },
+    {
+      "name": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01"
+    },
+    {
+      "name": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+    },
+    {
+      "name": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+    },
+    {
+      "name": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+    },
+    {
+      "name": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d"
+    },
+    {
+      "name": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+    },
+    {
+      "name": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+    },
+    {
+      "name": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12"
+    },
+    {
+      "name": "integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830"
+    },
+    {
+      "name": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c"
+    },
+    {
+      "name": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665"
+    },
+    {
+      "name": "main",
+      "sha": "d1add32cf5f4a14379ae35ca30b123e781558549"
+    }
+  ],
+  "pull_requests": [
+    {
+      "number": 140,
+      "title": "Extend terminal workspace with jump hosts, shell integration, session discovery and broadcast",
+      "state": "open",
+      "updated_at": "2026-11-15T22:36:19Z",
+      "merged_at": null,
+      "head": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "head_ref": "codex/terminal-screen-workspace",
+      "base": "main",
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/140"
+    },
+    {
+      "number": 149,
+      "title": "Add Zotero online and desktop libraries to the Word editor",
+      "state": "open",
+      "updated_at": "2026-11-15T22:33:05Z",
+      "merged_at": null,
+      "head": "f0f3863604ba272149af3b00d165c41abae16521",
+      "head_ref": "codex/zotero-support-20261115",
+      "base": "main",
+      "merge_commit_sha": "477f05cb61eef5cbb0201401cd4a8e6a7d18d1d7",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/149"
+    },
+    {
+      "number": 156,
+      "title": "Refresh verified snapshot in remaining-gaps doc",
+      "state": "closed",
+      "updated_at": "2026-11-15T22:23:46Z",
+      "merged_at": "2026-11-15T22:23:46Z",
+      "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "head_ref": "docs/remaining-gaps-link",
+      "base": "main",
+      "merge_commit_sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/156"
+    },
+    {
+      "number": 155,
+      "title": "Document the remaining Office format backlog",
+      "state": "closed",
+      "updated_at": "2026-11-15T22:21:17Z",
+      "merged_at": "2026-11-15T22:21:17Z",
+      "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "head_ref": "docs/remaining-gaps",
+      "base": "main",
+      "merge_commit_sha": "e52d1befb856f9d510cdaea887097759cf745828",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/155"
+    },
+    {
+      "number": 154,
+      "title": "Record conditional affix rules and current pin",
+      "state": "closed",
+      "updated_at": "2026-11-15T22:08:35Z",
+      "merged_at": "2026-11-15T22:08:34Z",
+      "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "head_ref": "docs/conditional-affix",
+      "base": "main",
+      "merge_commit_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/154"
+    },
+    {
+      "number": 153,
+      "title": "Vendor begins-with and ends-with conditions",
+      "state": "closed",
+      "updated_at": "2026-11-15T22:07:45Z",
+      "merged_at": "2026-11-15T22:07:45Z",
+      "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "head_ref": "fix/conditional-affix-vendor",
+      "base": "main",
+      "merge_commit_sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/153"
+    },
+    {
+      "number": 152,
+      "title": "Vendor the trailing content-control section break fix",
+      "state": "closed",
+      "updated_at": "2026-11-15T20:35:24Z",
+      "merged_at": "2026-11-15T20:35:24Z",
+      "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "head_ref": "integrate/sdt-section-break-20261115",
+      "base": "main",
+      "merge_commit_sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/152"
+    },
+    {
+      "number": 151,
+      "title": "Record between conditions and current Quds pin",
+      "state": "closed",
+      "updated_at": "2026-11-15T20:25:04Z",
+      "merged_at": "2026-11-15T20:25:04Z",
+      "head": "073713474ea62525d9f5832da918407de333cd03",
+      "head_ref": "docs/conditional-between",
+      "base": "main",
+      "merge_commit_sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/151"
+    },
+    {
+      "number": 150,
+      "title": "Vendor between conditional rules",
+      "state": "closed",
+      "updated_at": "2026-11-15T20:24:41Z",
+      "merged_at": "2026-11-15T20:24:41Z",
+      "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "head_ref": "fix/conditional-between-vendor",
+      "base": "main",
+      "merge_commit_sha": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/150"
+    },
+    {
+      "number": 148,
+      "title": "Document ODS list validations and current pin",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:20:05Z",
+      "merged_at": "2026-11-15T19:20:05Z",
+      "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "head_ref": "docs/ods-validations",
+      "base": "main",
+      "merge_commit_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/148"
+    },
+    {
+      "number": 147,
+      "title": "Vendor ODS list validations",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:19:44Z",
+      "merged_at": "2026-11-15T19:19:44Z",
+      "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "head_ref": "fix/ods-validations-vendor",
+      "base": "main",
+      "merge_commit_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/147"
+    },
+    {
+      "number": 146,
+      "title": "Document complete conditional format subset",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:16:04Z",
+      "merged_at": "2026-11-15T19:16:04Z",
+      "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "head_ref": "docs/conditional-complete",
+      "base": "main",
+      "merge_commit_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/146"
+    },
+    {
+      "number": 145,
+      "title": "Vendor contains-text and duplicate conditional rules",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:14:58Z",
+      "merged_at": "2026-11-15T19:14:58Z",
+      "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "head_ref": "fix/conditional-text-vendor",
+      "base": "main",
+      "merge_commit_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/145"
+    },
+    {
+      "number": 144,
+      "title": "Vendor conditional dxf styles",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:11:36Z",
+      "merged_at": "2026-11-15T19:11:36Z",
+      "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "head_ref": "fix/conditional-dxf-vendor",
+      "base": "main",
+      "merge_commit_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/144"
+    },
+    {
+      "number": 143,
+      "title": "Vendor the UTF-16 custom XML bibliography fix",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:08:32Z",
+      "merged_at": null,
+      "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "head_ref": "integrate/utf16-custom-xml-20261115",
+      "base": "main",
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/143"
+    },
+    {
+      "number": 142,
+      "title": "Document numeric ODS conditional formats",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:05:38Z",
+      "merged_at": "2026-11-15T19:05:37Z",
+      "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "head_ref": "docs/conditional-formats",
+      "base": "main",
+      "merge_commit_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/142"
+    },
+    {
+      "number": 141,
+      "title": "Vendor numeric conditional comparators",
+      "state": "closed",
+      "updated_at": "2026-11-15T19:03:37Z",
+      "merged_at": "2026-11-15T19:03:36Z",
+      "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "head_ref": "fix/conditional-operators-vendor",
+      "base": "main",
+      "merge_commit_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/141"
+    },
+    {
+      "number": 139,
+      "title": "Vendor ODS conditional formats",
+      "state": "closed",
+      "updated_at": "2026-11-15T18:59:38Z",
+      "merged_at": "2026-11-15T18:59:38Z",
+      "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "head_ref": "fix/ods-conditional-vendor",
+      "base": "main",
+      "merge_commit_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/139"
+    },
+    {
+      "number": 138,
+      "title": "Record ODS hidden-state and current Quds pin",
+      "state": "closed",
+      "updated_at": "2026-11-15T18:44:41Z",
+      "merged_at": "2026-11-15T18:44:41Z",
+      "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "head_ref": "docs/ods-hidden-state",
+      "base": "main",
+      "merge_commit_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/138"
+    },
+    {
+      "number": 137,
+      "title": "Hide hidden worksheets in the worksheet selector",
+      "state": "closed",
+      "updated_at": "2026-11-15T18:43:16Z",
+      "merged_at": "2026-11-15T18:43:15Z",
+      "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "head_ref": "feat/hidden-sheets-ui",
+      "base": "main",
+      "merge_commit_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/137"
+    },
+    {
+      "number": 136,
+      "title": "Extend SSH terminals with key authentication, tmux sessions and reconnect",
+      "state": "closed",
+      "updated_at": "2026-11-15T18:39:10Z",
+      "merged_at": "2026-11-15T18:39:10Z",
+      "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "head_ref": "codex/ssh-terminal-tmux",
+      "base": "main",
+      "merge_commit_sha": "6d90c7e02913d621382fb4ba856b968f1814758a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/136"
+    },
+    {
+      "number": 135,
+      "title": "Show ODT header and footer text",
+      "state": "closed",
+      "updated_at": "2026-11-15T16:55:33Z",
+      "merged_at": "2026-11-15T16:55:32Z",
+      "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "head_ref": "feat/odt-headers",
+      "base": "main",
+      "merge_commit_sha": "2e751f0a0e61f85684d8f7ea13da2e5ec1053fd6",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/135"
+    },
+    {
+      "number": 134,
+      "title": "Vendor ODS hidden row and column state",
+      "state": "closed",
+      "updated_at": "2026-11-15T16:52:30Z",
+      "merged_at": "2026-11-15T16:52:29Z",
+      "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "head_ref": "fix/hidden-state-vendor",
+      "base": "main",
+      "merge_commit_sha": "7a1360488b6869f25a3bf895b4700eb2b27c38a6",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/134"
+    },
+    {
+      "number": 133,
+      "title": "Vendor ODS default style and geometry fixes",
+      "state": "closed",
+      "updated_at": "2026-11-15T16:46:56Z",
+      "merged_at": "2026-11-15T16:46:55Z",
+      "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "head_ref": "fix/ods-default-geometry-vendor",
+      "base": "main",
+      "merge_commit_sha": "6642f7f93d49b3832dc6e0e338ad4826180dcefc",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/133"
+    },
+    {
+      "number": 132,
+      "title": "Vendor ODS default cell styles",
+      "state": "closed",
+      "updated_at": "2026-11-15T16:26:28Z",
+      "merged_at": "2026-11-15T16:26:28Z",
+      "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "head_ref": "fix/ods-default-style-vendor",
+      "base": "main",
+      "merge_commit_sha": "d88ad4c1840c74b5e4fc3aa61a0b7acd629bf72b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/132"
+    },
+    {
+      "number": 131,
+      "title": "Read ODT named styles from styles.xml",
+      "state": "closed",
+      "updated_at": "2026-11-15T15:40:31Z",
+      "merged_at": "2026-11-15T15:40:31Z",
+      "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "head_ref": "feat/odt-styles",
+      "base": "main",
+      "merge_commit_sha": "e2a39996fb23fe658a5f0cdb8ba143ff6061a54b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/131"
+    },
+    {
+      "number": 130,
+      "title": "Record the verified current Office source pin",
+      "state": "closed",
+      "updated_at": "2026-11-15T15:32:24Z",
+      "merged_at": "2026-11-15T15:32:24Z",
+      "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "head_ref": "docs/office-pin-20261115",
+      "base": "main",
+      "merge_commit_sha": "1ac50bf5db8ef9329513ebe081a7b76fcbe8c0fb",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/130"
+    },
+    {
+      "number": 123,
+      "title": "Sync Quds 6d7c696 and cover the new underline styles",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:43Z",
+      "merged_at": "2026-11-15T13:37:42Z",
+      "head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "head_ref": "integrate/quds-6d7c696-20261115",
+      "base": "main",
+      "merge_commit_sha": "3fc52c8ad50c1218825ffb732338ad0a9806aead",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/123"
+    },
+    {
+      "number": 119,
+      "title": "Vendor ODS style/date fixes and live ODF corpus coverage",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:43Z",
+      "merged_at": "2026-11-15T10:16:48Z",
+      "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "head_ref": "integrate/ods-style-20261115",
+      "base": "main",
+      "merge_commit_sha": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/119"
+    },
+    {
+      "number": 115,
+      "title": "Vendor host-specific selection golden references",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:43Z",
+      "merged_at": "2026-11-15T08:43:07Z",
+      "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "head_ref": "integrate/office-goldens-20261115",
+      "base": "main",
+      "merge_commit_sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/115"
+    },
+    {
+      "number": 112,
+      "title": "Vendor the current Quds Word fixes, including inline pictures",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:43Z",
+      "merged_at": "2026-11-15T07:18:17Z",
+      "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "head_ref": "integrate/word-inline-pictures-20261115",
+      "base": "main",
+      "merge_commit_sha": "5b7daacc3eaaed09670c105627af420caac5ebe2",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/112"
+    },
+    {
+      "number": 125,
+      "title": "Open ODS files in the Quds grid with a typed fallback",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:42Z",
+      "merged_at": "2026-11-15T13:52:03Z",
+      "head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "head_ref": "integrate/ods-grid-20261115",
+      "base": "main",
+      "merge_commit_sha": "1c31389a663e1b6136e0bc85f3e2324ec907e0ea",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/125"
+    },
+    {
+      "number": 122,
+      "title": "Show ODS in the Quds grid with a typed table fallback",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:42Z",
+      "merged_at": "2026-11-15T14:12:29Z",
+      "head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "head_ref": "fix/ods-grid-main",
+      "base": "main",
+      "merge_commit_sha": "21090ee7eb1809242c4a8eb216c1beb43ebd6343",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/122"
+    },
+    {
+      "number": 118,
+      "title": "Preserve ODS cell positions and cover ODS copy saves",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:42Z",
+      "merged_at": "2026-11-15T09:50:45Z",
+      "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "head_ref": "integrate/ods-fixes-20261115",
+      "base": "main",
+      "merge_commit_sha": "d1bf2e41652c15025ae1da0653d308fb4e00e2d3",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/118"
+    },
+    {
+      "number": 117,
+      "title": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:42Z",
+      "merged_at": "2026-11-15T09:24:04Z",
+      "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "head_ref": "integrate/odf-integration-20261115",
+      "base": "main",
+      "merge_commit_sha": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/117"
+    },
+    {
+      "number": 114,
+      "title": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:42Z",
+      "merged_at": "2026-11-15T08:38:34Z",
+      "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "head_ref": "integrate/legacy-xls-preview-20261115",
+      "base": "main",
+      "merge_commit_sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/114"
+    },
+    {
+      "number": 113,
+      "title": "Integrate the new document workspace and spreadsheet wrap-text",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:42Z",
+      "merged_at": null,
+      "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "head_ref": "integrate/consistency-20261115",
+      "base": "main",
+      "merge_commit_sha": "62a1c521030ce2eafbf71adaaac6bfd8b1bf7362",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/113"
+    },
+    {
+      "number": 124,
+      "title": "Edit macro-enabled and template spreadsheets",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:41Z",
+      "merged_at": "2026-11-15T14:12:33Z",
+      "head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "head_ref": "feat/xlsm-edit",
+      "base": "main",
+      "merge_commit_sha": "aa94ab21419187a67a21f0ea23a3b2efaca18e9b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/124"
+    },
+    {
+      "number": 121,
+      "title": "Extend bundled VeraCrypt and TrueCrypt browsing with PIM, keyfiles and native Argon2id",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:41Z",
+      "merged_at": "2026-11-15T14:58:33Z",
+      "head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "head_ref": "feature/veracrypt-compatibility-20261115",
+      "base": "main",
+      "merge_commit_sha": "1d53089fd5f48066833a983ae35338f38f106770",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/121"
+    },
+    {
+      "number": 120,
+      "title": "Vendor ODS date styles and comments",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:41Z",
+      "merged_at": "2026-11-15T11:49:21Z",
+      "head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "head_ref": "fix/ods-date-styles",
+      "base": "main",
+      "merge_commit_sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/120"
+    },
+    {
+      "number": 116,
+      "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:41Z",
+      "merged_at": null,
+      "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "head_ref": "fix/odf-final",
+      "base": "main",
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/116"
+    },
+    {
+      "number": 110,
+      "title": "Add draft-safe worksheet navigation and complete host validation",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:59:40Z",
+      "merged_at": "2026-11-15T14:58:33Z",
+      "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "head_ref": "codex/office-recovery-20261115",
+      "base": "main",
+      "merge_commit_sha": "362e0a42f5376403eafc8cee92ef0fbafeaf139e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/110"
+    },
+    {
+      "number": 111,
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:58:33Z",
+      "merged_at": "2026-11-15T14:58:33Z",
+      "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "head_ref": "integration/storage-carving-20261115",
+      "base": "main",
+      "merge_commit_sha": "678f397880f2cd7c2bbcddbc1d8b021a1d28fce5",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/111"
+    },
+    {
+      "number": 129,
+      "title": "Keep text-box labels in ODT previews",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:33:02Z",
+      "merged_at": "2026-11-15T14:33:02Z",
+      "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "head_ref": "feat/odt-textboxes",
+      "base": "main",
+      "merge_commit_sha": "29f02ca170d94587d01779d0d2c24ac406b25bbc",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/129"
+    },
+    {
+      "number": 128,
+      "title": "Render bounded ODT pictures inline",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:29:56Z",
+      "merged_at": "2026-11-15T14:29:56Z",
+      "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "head_ref": "feat/odt-images",
+      "base": "main",
+      "merge_commit_sha": "06dbac88b1a06517eb448ca9914ee5d082f6d763",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/128"
+    },
+    {
+      "number": 127,
+      "title": "Document ODS pictures and exact host goldens",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:19:25Z",
+      "merged_at": "2026-11-15T14:19:25Z",
+      "head": "128f55295107e3ada605b52d160165e03f726cb4",
+      "head_ref": "docs/ods-pictures",
+      "base": "main",
+      "merge_commit_sha": "1a75df641893a8e89f06227a0bd3e620d85aa3b9",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/127"
+    },
+    {
+      "number": 126,
+      "title": "Vendor ODS picture import",
+      "state": "closed",
+      "updated_at": "2026-11-15T14:12:16Z",
+      "merged_at": "2026-11-15T14:12:15Z",
+      "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "head_ref": "fix/ods-images-vendor",
+      "base": "main",
+      "merge_commit_sha": "355cec95f19f39b6865323e494324ad29b60d030",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/126"
+    },
+    {
+      "number": 108,
+      "title": "Open legacy .xls workbooks as XLSX",
+      "state": "closed",
+      "updated_at": "2026-11-15T08:54:45Z",
+      "merged_at": "2026-11-15T06:27:18Z",
+      "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "head_ref": "fix/excel-legacy-xls",
+      "base": "main",
+      "merge_commit_sha": "d764308cf77b535265a15c5065bbe4a0d66e227f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/108"
+    },
+    {
+      "number": 109,
+      "title": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+      "state": "closed",
+      "updated_at": "2026-11-15T06:29:51Z",
+      "merged_at": "2026-11-15T06:27:18Z",
+      "head": "1b7680583ac69649b17287ab68738288fec10f51",
+      "head_ref": "fix/legacy-doc-recover",
+      "base": "main",
+      "merge_commit_sha": "22f4d709dff82447ea80fe6bcdd2f10d076e0c93",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/109"
+    },
+    {
+      "number": 107,
+      "title": "feat(storage): add reviewed S3 block reuse to queued copies",
+      "state": "closed",
+      "updated_at": "2026-11-15T06:29:51Z",
+      "merged_at": "2026-11-14T22:32:06Z",
+      "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "head_ref": "integration/storage-delta-20261114",
+      "base": "main",
+      "merge_commit_sha": "1981907636f8bf59fc8a631cbc97d7950b8c1dd5",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/107"
+    },
+    {
+      "number": 106,
+      "title": "Add shared queued HTTP payload limits for G29",
+      "state": "closed",
+      "updated_at": "2026-11-14T20:37:33Z",
+      "merged_at": "2026-11-14T20:12:42Z",
+      "head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "head_ref": "integration/storage-bandwidth-20261114",
+      "base": "main",
+      "merge_commit_sha": "d40ca389c009803c1f811458215a1c7e8d6a0973",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/106"
+    },
+    {
+      "number": 103,
+      "title": "Add bounded read-only NTFS filesystem image browsing",
+      "state": "closed",
+      "updated_at": "2026-11-14T18:42:30Z",
+      "merged_at": null,
+      "head": "d504409acc779b670de482247f3231a7247dcd92",
+      "head_ref": "integration/storage-ntfs-20261114",
+      "base": "integration/storage-ext-20261114",
+      "merge_commit_sha": "3700b81fbc5562eb05c487abb18457c299511a7d",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/103"
+    },
+    {
+      "number": 105,
+      "title": "Preserve comparison backpressure and prompt read errors",
+      "state": "closed",
+      "updated_at": "2026-11-14T17:57:42Z",
+      "merged_at": "2026-11-14T17:55:45Z",
+      "head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "head_ref": "integration/storage-binary-20261114",
+      "base": "main",
+      "merge_commit_sha": "1ba3d652f931aed719c55e7afc37d006d9956bdf",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/105"
+    },
+    {
+      "number": 104,
+      "title": "Bind binary comparison navigation to verified bounded snapshots",
+      "state": "closed",
+      "updated_at": "2026-11-14T17:33:23Z",
+      "merged_at": "2026-11-14T17:33:23Z",
+      "head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "head_ref": "integration/storage-binary-20261114",
+      "base": "main",
+      "merge_commit_sha": "54605abbfc01fea25c153e4bece48122a0757895",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/104"
+    },
+    {
+      "number": 102,
+      "title": "Add bounded read-only ext filesystem image browsing",
+      "state": "closed",
+      "updated_at": "2026-11-14T14:07:52Z",
+      "merged_at": "2026-11-14T13:44:27Z",
+      "head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "head_ref": "integration/storage-ext-20261114",
+      "base": "main",
+      "merge_commit_sha": "4936c9cc65ea8dce32e8552f31d16b1c8771233f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/102"
+    },
+    {
+      "number": 101,
+      "title": "Add FAT/UDF image browsing, LZFSE, ZIP recovery and partition tools",
+      "state": "closed",
+      "updated_at": "2026-11-14T14:07:51Z",
+      "merged_at": "2026-11-14T11:37:29Z",
+      "head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "head_ref": "integration/storage-capabilities-20261114",
+      "base": "main",
+      "merge_commit_sha": "e14782e3cd6c2bdc7d4620319c485234a7e8c7c8",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/101"
+    },
+    {
+      "number": 100,
+      "title": "Integrate all saved branch work and extend archive/container support",
+      "state": "closed",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": "2026-11-13T22:13:16Z",
+      "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "head_ref": "integration/archive-containers-20261113",
+      "base": "main",
+      "merge_commit_sha": "81639c44da5c9c905e5bcbe8d04308fce7bda17a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/100"
+    },
+    {
+      "number": 97,
+      "title": "Expand Commander archive workflows on the shared operation queue",
+      "state": "closed",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": "2026-11-13T21:42:42Z",
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "head_ref": "feature/archive-commander-parity-20261113",
+      "base": "main",
+      "merge_commit_sha": "1918dfd665a1914150d23e49de10abccb6ddbb76",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/97"
+    },
+    {
+      "number": 95,
+      "title": "Improve document fonts, preview alternatives, and legacy DOC recovery",
+      "state": "closed",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": "2026-11-13T21:42:43Z",
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "head_ref": "feature/apache-file-viewer-20261113",
+      "base": "main",
+      "merge_commit_sha": "3d47583736eee67e5236f6c602c57846535ec54c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/95"
+    },
+    {
+      "number": 84,
+      "title": "Consolidate Linux ebook host readiness and platform parity recovery",
+      "state": "closed",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": null,
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "head_ref": "feature/ebook-parity-canary-20261112",
+      "base": "feature/ebook-reader-editor",
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/84"
+    },
+    {
+      "number": 94,
+      "title": "Retain final DOC fidelity receipts and verified source pins",
+      "state": "closed",
+      "updated_at": "2026-11-13T00:08:15Z",
+      "merged_at": "2026-11-12T21:21:51Z",
+      "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "main",
+      "merge_commit_sha": "7f8248de581856c53e022ac7e2ddbc91db9e3d54",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/94"
+    },
+    {
+      "number": 92,
+      "title": "Add reviewed archive copy, integrity reports and portable codecs",
+      "state": "closed",
+      "updated_at": "2026-11-12T21:23:27Z",
+      "merged_at": null,
+      "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "head_ref": "feature/archive-workflows-codecs-20261112",
+      "base": "feature/archive-package-readers-20261112",
+      "merge_commit_sha": "e9c8d83fc4f7154c0a3300f249e5a05d9f02b9e7",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/92"
+    },
+    {
+      "number": 93,
+      "title": "Archive member rearrangement and preserved legacy CPIO writing",
+      "state": "closed",
+      "updated_at": "2026-11-12T20:32:48Z",
+      "merged_at": null,
+      "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "head_ref": "feature/archive-rearrange-cpio-20261112",
+      "base": "feature/archive-workflows-codecs-20261112",
+      "merge_commit_sha": "34738b857ce24b31a39d0da84b823a898fce91ba",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/93"
+    },
+    {
+      "number": 90,
+      "title": "Browse RPM, CAB and Apple PBZX/portable CPIO payloads",
+      "state": "closed",
+      "updated_at": "2026-11-12T20:13:08Z",
+      "merged_at": null,
+      "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "head_ref": "feature/archive-package-readers-20261112",
+      "base": "feature/archive-writers-20261112",
+      "merge_commit_sha": "af4e74c835c2a6b8cd2cb30c53e04e937ea561ba",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/90"
+    },
+    {
+      "number": 91,
+      "title": "Integrate tested DOC fidelity fixes and complete source receipts",
+      "state": "closed",
+      "updated_at": "2026-11-12T20:12:46Z",
+      "merged_at": "2026-11-12T20:12:46Z",
+      "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "main",
+      "merge_commit_sha": "f9cc264c8030b713f9071522bf4ed74559576ffa",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/91"
+    },
+    {
+      "number": 89,
+      "title": "Expand writable archives and verified data-image creation",
+      "state": "closed",
+      "updated_at": "2026-11-12T19:17:00Z",
+      "merged_at": null,
+      "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "head_ref": "feature/archive-writers-20261112",
+      "base": "feature/archive-containers-20261112",
+      "merge_commit_sha": "f3955eca444d7cb48d0a0503447b48a6cba9c36a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/89"
+    },
+    {
+      "number": 87,
+      "title": "Integrate measured legacy DOC fidelity and preserve native review semantics",
+      "state": "closed",
+      "updated_at": "2026-11-12T18:33:10Z",
+      "merged_at": "2026-11-12T18:32:19Z",
+      "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "main",
+      "merge_commit_sha": "c2799b7208d7e5b466ad84da515be1ab28325d81",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/87"
+    },
+    {
+      "number": 88,
+      "title": "Integrate DOC fidelity parser and vector previews with verified source pins",
+      "state": "closed",
+      "updated_at": "2026-11-12T18:32:57Z",
+      "merged_at": "2026-11-12T18:21:06Z",
+      "head": "b100cd751688f13609a8829180b487b381588d14",
+      "head_ref": "feature/office-fidelity-oracles-20261112",
+      "base": "main",
+      "merge_commit_sha": "504101505a059c0956011cc16d5b22a93d1a5b3b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/88"
+    },
+    {
+      "number": 79,
+      "title": "Consume shared Office font, table and custom-tab improvements",
+      "state": "closed",
+      "updated_at": "2026-11-12T18:32:55Z",
+      "merged_at": "2026-11-12T15:38:50Z",
+      "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "head_ref": "feature/office-fidelity-followup-20261112",
+      "base": "main",
+      "merge_commit_sha": "3c5220d8c7e90c8f8e6cdb2b63f056b2cbae3d10",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/79"
+    },
+    {
+      "number": 85,
+      "title": "Consume expanded Office fidelity and recover font and picture workflows",
+      "state": "closed",
+      "updated_at": "2026-11-12T18:32:53Z",
+      "merged_at": null,
+      "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "head_ref": "feature/office-fidelity-expansion-20261112",
+      "base": "feature/office-fidelity-followup-20261112",
+      "merge_commit_sha": "9a7884cf0e7dae9bba3a8c5cca0f00c3f41fdf70",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/85"
+    },
+    {
+      "number": 86,
+      "title": "Add ISO/DMG and package archive readers with source-backed F3 browsing",
+      "state": "closed",
+      "updated_at": "2026-11-12T18:32:51Z",
+      "merged_at": "2026-11-12T18:21:06Z",
+      "head": "120f839ab9091bdbedf326621347ee737140e043",
+      "head_ref": "feature/archive-containers-20261112",
+      "base": "main",
+      "merge_commit_sha": "1569d49d4dc78da7b53100e525b89e7fa72aa515",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/86"
+    },
+    {
+      "number": 83,
+      "title": "Bound remote viewer preparation and temporary-copy cleanup",
+      "state": "closed",
+      "updated_at": "2026-11-12T16:00:17Z",
+      "merged_at": null,
+      "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "head_ref": "feature/viewer-spool-lifecycle-20261112",
+      "base": "feature/writable-archive-endpoints-20261112",
+      "merge_commit_sha": "332edff034987bf4a80d5eb1948fed143915e304",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/83"
+    },
+    {
+      "number": 81,
+      "title": "Add reviewed archive imports and verified native publication",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:52Z",
+      "merged_at": null,
+      "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "head_ref": "feature/writable-archive-endpoints-20261112",
+      "base": "feature/external-remote-editing-20261112",
+      "merge_commit_sha": "f5e4b2afeea2c4b32da35140605e0fc1f2617688",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/81"
+    },
+    {
+      "number": 75,
+      "title": "Add retained private staging for external tools",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:50Z",
+      "merged_at": null,
+      "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "head_ref": "feature/private-tool-staging-20261112",
+      "base": "feature/external-tools-archive-scope-20261112",
+      "merge_commit_sha": "efc05f6833fcd1d59906f6968311dfccbdf21f3a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/75"
+    },
+    {
+      "number": 68,
+      "title": "Consolidate Quds Office fidelity and captured legacy Word conversion",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:48Z",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "head_ref": "feature/office-fidelity-gap-closure-20261112",
+      "base": "main",
+      "merge_commit_sha": "4c9164d227f57b8e59beab6da8b59037965345ef",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/68"
+    },
+    {
+      "number": 82,
+      "title": "Use standalone MPL DOC parser and extend reviewed DOCX/DOCM preservation",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:46Z",
+      "merged_at": "2026-11-12T15:38:51Z",
+      "head": "085495527e0ab02f52eeded928d54cb766b79910",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "base": "main",
+      "merge_commit_sha": "21d3c51759b530624b88c03c8a34216b69bb5687",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/82"
+    },
+    {
+      "number": 80,
+      "title": "Add retained external editing with revision-guarded remote saves",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:44Z",
+      "merged_at": null,
+      "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "head_ref": "feature/external-remote-editing-20261112",
+      "base": "feature/archive-publication-recovery-20261112",
+      "merge_commit_sha": "9613144cfdcf202f79188aca9838a91acbaf422e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/80"
+    },
+    {
+      "number": 77,
+      "title": "Add reviewed external text and image comparison tools",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:42Z",
+      "merged_at": null,
+      "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "head_ref": "feature/external-comparison-tools-20261112",
+      "base": "feature/conditional-remote-publication-20261112",
+      "merge_commit_sha": "61b181994e78f4eb1b80d4a47d8ca0e1252d4027",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/77"
+    },
+    {
+      "number": 76,
+      "title": "Add conditional publication for retained remote edits",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:40Z",
+      "merged_at": null,
+      "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "head_ref": "feature/conditional-remote-publication-20261112",
+      "base": "feature/private-tool-staging-20261112",
+      "merge_commit_sha": "673f739adeb0ca80334a1a90f0be8e1e0ba3c325",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/76"
+    },
+    {
+      "number": 78,
+      "title": "Add verified archive publication and recovery foundation",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:39:39Z",
+      "merged_at": null,
+      "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "head_ref": "feature/archive-publication-recovery-20261112",
+      "base": "feature/external-comparison-tools-20261112",
+      "merge_commit_sha": "c25048576be6673105be97be32300389dd7b56d6",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/78"
+    },
+    {
+      "number": 53,
+      "title": "Harden ebook reader lifecycle and Linux startup recovery",
+      "state": "closed",
+      "updated_at": "2026-11-12T15:38:51Z",
+      "merged_at": "2026-11-12T15:38:51Z",
+      "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "head_ref": "feature/ebook-reader-editor",
+      "base": "main",
+      "merge_commit_sha": "911f87dfbeea2f527acbe59bdff844c67ca269c4",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/53"
+    },
+    {
+      "number": 55,
+      "title": "Extend file viewers, KeePass editing, Office conversion and path favorites",
+      "state": "closed",
+      "updated_at": "2026-11-12T14:35:04Z",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "base": "main",
+      "merge_commit_sha": "dae3374fe908010f1bbdc45fe81b377b2d975a0f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/55"
+    },
+    {
+      "number": 62,
+      "title": "CI: dart format for #56's adapters; resolve vendored office editor against vendored engine",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:56:06Z",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "head_ref": "fix/ci-format-analyze",
+      "base": "main",
+      "merge_commit_sha": "2a8a63470b9c3eb03d3f40e30ea0c837ea7b5d1d",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/62"
+    },
+    {
+      "number": 66,
+      "title": "Add SOCKS4 and SOCKS4a routing for native HTTP clients",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:56:05Z",
+      "merged_at": null,
+      "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "head_ref": "feature/socks4-http-routing-20261112",
+      "base": "feature/configurable-menus-20261112",
+      "merge_commit_sha": "f748371afe0bccbf3a901a6f3cf159cad57ac30b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/66"
+    },
+    {
+      "number": 57,
+      "title": "Rust Filen/Internxt engines, CLI support, reliable Internxt on both engines; fixes #44 #46 #48",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:56:00Z",
+      "merged_at": "2026-11-12T09:52:17Z",
+      "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "head_ref": "feature/rust-cloud-engines",
+      "base": "main",
+      "merge_commit_sha": "c33ddca4fcdb76d74ba2c44aa5b596fd4d9e2dbd",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/57"
+    },
+    {
+      "number": 63,
+      "title": "Open saved items directly with captured-source guards",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:58Z",
+      "merged_at": null,
+      "head": "baccf470e946fc86fde41c96443423006eac2be7",
+      "head_ref": "feature/quick-open-actions-20261112",
+      "base": "feature/incoming-drop-routing-20261112",
+      "merge_commit_sha": "6d37334b33ff49b4057657e167d602aafc15a025",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/63"
+    },
+    {
+      "number": 73,
+      "title": "Add maintained offline guides and localized help reader",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:50Z",
+      "merged_at": null,
+      "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "head_ref": "feature/localized-help-20261112",
+      "base": "feature/gathering-stack-20261112",
+      "merge_commit_sha": "22e77aa34a6d8281efcce526c8b49e5faed78a35",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/73"
+    },
+    {
+      "number": 61,
+      "title": "Route incoming drops through captured copy review",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:49Z",
+      "merged_at": null,
+      "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "head_ref": "feature/incoming-drop-routing-20261112",
+      "base": "feature/external-terminal-20261112",
+      "merge_commit_sha": "09bdaf62782a1e37f003aa1b16cdd1867029c150",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/61"
+    },
+    {
+      "number": 72,
+      "title": "Add persistent gathering stack with reviewed grouped transfers",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:47Z",
+      "merged_at": null,
+      "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "head_ref": "feature/gathering-stack-20261112",
+      "base": "feature/command-entry-20261112",
+      "merge_commit_sha": "440846b01325fcdc87ef449dc6c8eeccad042e45",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/72"
+    },
+    {
+      "number": 69,
+      "title": "Scope the next gathering, command, resume and help increments",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:45Z",
+      "merged_at": null,
+      "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "head_ref": "feature/gap-extension-scope-20261112",
+      "base": "feature/file-conversion-20261112",
+      "merge_commit_sha": "9122c5c9f6b980cf552d55fc54cbd83adc4cafd5",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/69"
+    },
+    {
+      "number": 64,
+      "title": "Close FTP transports during stalled TCP and TLS setup",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:44Z",
+      "merged_at": null,
+      "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "head_ref": "feature/ftp-transport-lifetime-20261112",
+      "base": "feature/quick-open-actions-20261112",
+      "merge_commit_sha": "9e62f1e3c50e4a1e7e7ffe9c7f00b820da5c6e54",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/64"
+    },
+    {
+      "number": 70,
+      "title": "Add verified FTP download resume and durable partial stages",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:42Z",
+      "merged_at": null,
+      "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "head_ref": "feature/ftp-download-resume-20261112",
+      "base": "feature/gap-extension-scope-20261112",
+      "merge_commit_sha": "e3089b3c3813e6f3104657da0262c4ecca63352b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/70"
+    },
+    {
+      "number": 40,
+      "title": "Improve file workspace workflows and directory scan performance",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:39Z",
+      "merged_at": "2026-11-11T21:35:22Z",
+      "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "head_ref": "feature/file-manager-ux-20261110",
+      "base": "main",
+      "merge_commit_sha": "d74c3aae56d9d628db0b71cbd3aae71469fece2c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/40"
+    },
+    {
+      "number": 58,
+      "title": "Scope remaining file manager gaps and acceptance lanes",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:37Z",
+      "merged_at": null,
+      "head": "9887b53272d5f747cae9f73b363748985937ad05",
+      "head_ref": "feature/file-manager-gap-closure-20261112",
+      "base": "feature/file-manager-capabilities-20261112",
+      "merge_commit_sha": "75ca73d766dccb48495cdb2f665d06ae49e14359",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/58"
+    },
+    {
+      "number": 54,
+      "title": "Add file manager workflow capabilities and document remaining gaps",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:35Z",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "head_ref": "feature/file-manager-capabilities-20261112",
+      "base": "main",
+      "merge_commit_sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/54"
+    },
+    {
+      "number": 67,
+      "title": "Add verified UUE, XXE and single-part MIME file conversion",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:33Z",
+      "merged_at": null,
+      "head": "403e942dc99779883210125a01841ef209e19d2e",
+      "head_ref": "feature/file-conversion-20261112",
+      "base": "feature/socks4-http-routing-20261112",
+      "merge_commit_sha": "c0308ec525a45a720f04f01903ffd3d2c132a28e",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/67"
+    },
+    {
+      "number": 74,
+      "title": "Scope external tools and writable archive endpoints",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:32Z",
+      "merged_at": null,
+      "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "head_ref": "feature/external-tools-archive-scope-20261112",
+      "base": "feature/localized-help-20261112",
+      "merge_commit_sha": "678709cbac61c7ec33ccdfdc339f38fd48c1b019",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/74"
+    },
+    {
+      "number": 60,
+      "title": "Configure reviewed external terminal launches",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:30Z",
+      "merged_at": null,
+      "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "head_ref": "feature/external-terminal-20261112",
+      "base": "feature/conflict-review-20261112",
+      "merge_commit_sha": "6c754800fa5ed31837ece4b6fffeff4bc7d0bbe7",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/60"
+    },
+    {
+      "number": 59,
+      "title": "Add bounded conflict previews and safe file details",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:28Z",
+      "merged_at": null,
+      "head": "132f70e746aa9815a51a046ab02e83393d084622",
+      "head_ref": "feature/conflict-review-20261112",
+      "base": "feature/file-manager-gap-closure-20261112",
+      "merge_commit_sha": "6004d2839aed99d301c91c3d14ed9e7beba07de1",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/59"
+    },
+    {
+      "number": 65,
+      "title": "Add configurable browser menus and protected recovery controls",
+      "state": "closed",
+      "updated_at": "2026-11-12T13:55:27Z",
+      "merged_at": null,
+      "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "head_ref": "feature/configurable-menus-20261112",
+      "base": "feature/ftp-transport-lifetime-20261112",
+      "merge_commit_sha": "d628a1e4ed00886ad45e7eb1fa7f344671b2798f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/65"
+    }
+  ],
+  "changed_head_comparisons": [
+    {
+      "branch": "main",
+      "repository_full_name": "CrispStrobe/CrispCloud",
+      "base": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "head": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "status": "diverged",
+      "ahead_by": 2,
+      "behind_by": 64,
+      "total_commits": 2,
+      "too_large": null,
+      "base_commit": {
+        "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      },
+      "merge_base_commit": {
+        "sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+      },
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 0,
+          "changes": 3,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-engine-strategy.md",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 0,
+          "changes": 6,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-remaining-gaps-20261115.md",
+          "status": "added",
+          "additions": 204,
+          "deletions": 0,
+          "changes": 204,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 1,
+          "changes": 9,
+          "previous_filename": null
+        }
+      ]
+    },
+    {
+      "branch": "codex/zotero-support-20261115",
+      "repository_full_name": "CrispStrobe/CrispCloud",
+      "base": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "head": "f0f3863604ba272149af3b00d165c41abae16521",
+      "status": "diverged",
+      "ahead_by": 6,
+      "behind_by": 2,
+      "total_commits": 6,
+      "too_large": null,
+      "base_commit": {
+        "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      },
+      "merge_base_commit": {
+        "sha": "bd086eea48525346216c59e0c899b4d33751029b",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/bd086eea48525346216c59e0c899b4d33751029b",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/bd086eea48525346216c59e0c899b4d33751029b"
+      },
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 0,
+          "changes": 3,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-engine-strategy.md",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 0,
+          "changes": 6,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-remaining-gaps-20261115.md",
+          "status": "added",
+          "additions": 204,
+          "deletions": 0,
+          "changes": 204,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/zotero.md",
+          "status": "modified",
+          "additions": 90,
+          "deletions": 19,
+          "changes": 109,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 14,
+          "changes": 37,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/CHANGELOG.md",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 0,
+          "changes": 5,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+          "status": "modified",
+          "additions": 230,
+          "deletions": 1,
+          "changes": 231,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+          "status": "modified",
+          "additions": 359,
+          "deletions": 64,
+          "changes": 423,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/test/word_zotero_citing_controller_test.dart",
+          "status": "added",
+          "additions": 655,
+          "deletions": 0,
+          "changes": 655,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart",
+          "status": "added",
+          "additions": 446,
+          "deletions": 0,
+          "changes": 446,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 0,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/CHANGELOG.md",
+          "status": "modified",
+          "additions": 9,
+          "deletions": 0,
+          "changes": 9,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 4,
+          "changes": 11,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+          "status": "modified",
+          "additions": 155,
+          "deletions": 29,
+          "changes": 184,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/model/word_zotero_data.dart",
+          "status": "modified",
+          "additions": 239,
+          "deletions": 11,
+          "changes": 250,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+          "status": "modified",
+          "additions": 128,
+          "deletions": 4,
+          "changes": 132,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+          "status": "modified",
+          "additions": 25,
+          "deletions": 5,
+          "changes": 30,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/zotero/zotero_citing.dart",
+          "status": "modified",
+          "additions": 34,
+          "deletions": 3,
+          "changes": 37,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 0,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/README.md",
+          "status": "added",
+          "additions": 63,
+          "deletions": 0,
+          "changes": 63,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/generate-fixtures.cjs",
+          "status": "added",
+          "additions": 163,
+          "deletions": 0,
+          "changes": 163,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json",
+          "status": "added",
+          "additions": 1371,
+          "deletions": 0,
+          "changes": 1371,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/protocol-contract.json",
+          "status": "added",
+          "additions": 195,
+          "deletions": 0,
+          "changes": 195,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/word_content_control_fidelity_test.dart",
+          "status": "modified",
+          "additions": 22,
+          "deletions": 3,
+          "changes": 25,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/word_zotero_citing_test.dart",
+          "status": "added",
+          "additions": 1444,
+          "deletions": 0,
+          "changes": 1444,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/word_zotero_document_data_test.dart",
+          "status": "modified",
+          "additions": 134,
+          "deletions": 0,
+          "changes": 134,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/zotero_citing_test.dart",
+          "status": "modified",
+          "additions": 197,
+          "deletions": 0,
+          "changes": 197,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 24,
+          "deletions": 17,
+          "changes": 41,
+          "previous_filename": null
+        }
+      ]
+    },
+    {
+      "branch": "docs/remaining-gaps",
+      "repository_full_name": "CrispStrobe/CrispCloud",
+      "base": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 64,
+      "total_commits": 1,
+      "too_large": null,
+      "base_commit": {
+        "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      },
+      "merge_base_commit": {
+        "sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+      },
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 0,
+          "changes": 3,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-engine-strategy.md",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 0,
+          "changes": 6,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-remaining-gaps-20261115.md",
+          "status": "added",
+          "additions": 204,
+          "deletions": 0,
+          "changes": 204,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 1,
+          "changes": 9,
+          "previous_filename": null
+        }
+      ]
+    },
+    {
+      "branch": "docs/remaining-gaps-link",
+      "repository_full_name": "CrispStrobe/CrispCloud",
+      "base": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "status": "diverged",
+      "ahead_by": 2,
+      "behind_by": 64,
+      "total_commits": 2,
+      "too_large": null,
+      "base_commit": {
+        "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      },
+      "merge_base_commit": {
+        "sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+        "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+      },
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 0,
+          "changes": 3,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-engine-strategy.md",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 0,
+          "changes": 6,
+          "previous_filename": null
+        },
+        {
+          "filename": "docs/office-remaining-gaps-20261115.md",
+          "status": "added",
+          "additions": 204,
+          "deletions": 0,
+          "changes": 204,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 1,
+          "changes": 9,
+          "previous_filename": null
+        }
+      ]
+    }
+  ],
+  "main_in_zotero": {
+    "repository_full_name": "CrispStrobe/CrispCloud",
+    "base": "d1add32cf5f4a14379ae35ca30b123e781558549",
+    "head": "f0f3863604ba272149af3b00d165c41abae16521",
+    "status": "ahead",
+    "ahead_by": 66,
+    "behind_by": 0,
+    "total_commits": 66,
+    "too_large": null,
+    "base_commit": {
+      "sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/d1add32cf5f4a14379ae35ca30b123e781558549",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/d1add32cf5f4a14379ae35ca30b123e781558549"
+    },
+    "merge_base_commit": {
+      "sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/d1add32cf5f4a14379ae35ca30b123e781558549",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/commit/d1add32cf5f4a14379ae35ca30b123e781558549"
+    },
+    "files": [
+      {
+        "filename": ".github/workflows/ci.yml",
+        "status": "modified",
+        "additions": 47,
+        "deletions": 0,
+        "changes": 47,
+        "previous_filename": null
+      },
+      {
+        "filename": "README.md",
+        "status": "modified",
+        "additions": 4,
+        "deletions": 0,
+        "changes": 4,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/office-remaining-gaps-20261115.md",
+        "status": "modified",
+        "additions": 38,
+        "deletions": 38,
+        "changes": 76,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/terminal-parity.md",
+        "status": "added",
+        "additions": 217,
+        "deletions": 0,
+        "changes": 217,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/terminal.md",
+        "status": "modified",
+        "additions": 329,
+        "deletions": 9,
+        "changes": 338,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/continuation-checks.json",
+        "status": "added",
+        "additions": 72,
+        "deletions": 0,
+        "changes": 72,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/frontend_without_sources.dart",
+        "status": "added",
+        "additions": 16,
+        "deletions": 0,
+        "changes": 16,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/integration-cutoff.json",
+        "status": "added",
+        "additions": 155,
+        "deletions": 0,
+        "changes": 155,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/integration-refresh.json",
+        "status": "added",
+        "additions": 561,
+        "deletions": 0,
+        "changes": 561,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/integration.json",
+        "status": "added",
+        "additions": 647,
+        "deletions": 0,
+        "changes": 647,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/runtime-attempts.json",
+        "status": "added",
+        "additions": 56,
+        "deletions": 0,
+        "changes": 56,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/runtime-attempts.md",
+        "status": "added",
+        "additions": 125,
+        "deletions": 0,
+        "changes": 125,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-20261115/source-review.json",
+        "status": "added",
+        "additions": 105,
+        "deletions": 0,
+        "changes": 105,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-parity-continuation/branch-pr-snapshot.json",
+        "status": "added",
+        "additions": 1987,
+        "deletions": 0,
+        "changes": 1987,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-parity-continuation/canonical-integration.json",
+        "status": "added",
+        "additions": 113,
+        "deletions": 0,
+        "changes": 113,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-parity-continuation/canonical-source-verification.json",
+        "status": "added",
+        "additions": 22,
+        "deletions": 0,
+        "changes": 22,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-parity-continuation/pr-head-ancestry.json",
+        "status": "added",
+        "additions": 805,
+        "deletions": 0,
+        "changes": 805,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/terminal-parity-continuation/ssh-config-openssh-oracle.json",
+        "status": "added",
+        "additions": 118,
+        "deletions": 0,
+        "changes": 118,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/SETUP.md",
+        "status": "added",
+        "additions": 170,
+        "deletions": 0,
+        "changes": 170,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/analysis-pubspec.lock",
+        "status": "added",
+        "additions": 747,
+        "deletions": 0,
+        "changes": 747,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/analysis-pubspec.yaml",
+        "status": "added",
+        "additions": 27,
+        "deletions": 0,
+        "changes": 27,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/branch-audit.json",
+        "status": "added",
+        "additions": 425,
+        "deletions": 0,
+        "changes": 425,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/final-integration.json",
+        "status": "added",
+        "additions": 29,
+        "deletions": 0,
+        "changes": 29,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/focused-pubspec.lock",
+        "status": "added",
+        "additions": 731,
+        "deletions": 0,
+        "changes": 731,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/focused-pubspec.yaml",
+        "status": "added",
+        "additions": 26,
+        "deletions": 0,
+        "changes": 26,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/host-zotero-analysis.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/host-zotero-tests.log",
+        "status": "added",
+        "additions": 18,
+        "deletions": 0,
+        "changes": 18,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/validation_receipt.json",
+        "status": "added",
+        "additions": 88,
+        "deletions": 0,
+        "changes": 88,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-20261115/vendor-guard.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-citing-20261115/branch-audit.json",
+        "status": "added",
+        "additions": 1520,
+        "deletions": 0,
+        "changes": 1520,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/REPRODUCE.md",
+        "status": "added",
+        "additions": 31,
+        "deletions": 0,
+        "changes": 31,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/SETUP.md",
+        "status": "added",
+        "additions": 72,
+        "deletions": 0,
+        "changes": 72,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/VENDOR.md",
+        "status": "added",
+        "additions": 23,
+        "deletions": 0,
+        "changes": 23,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/analysis.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/compiled-kernel-receipt.json",
+        "status": "added",
+        "additions": 14,
+        "deletions": 0,
+        "changes": 14,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/core-compile.log",
+        "status": "added",
+        "additions": 357,
+        "deletions": 0,
+        "changes": 357,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/core-tests.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/crispcloud-recent-audit.json",
+        "status": "added",
+        "additions": 865,
+        "deletions": 0,
+        "changes": 865,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/crispcloud-terminal-followup-tree-entries.json",
+        "status": "added",
+        "additions": 59,
+        "deletions": 0,
+        "changes": 59,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/crispcloud-terminal-tree-entries.json",
+        "status": "added",
+        "additions": 387,
+        "deletions": 0,
+        "changes": 387,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/dart-sdk-subset-provenance.json",
+        "status": "added",
+        "additions": 2928,
+        "deletions": 0,
+        "changes": 2928,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/dart-version.log",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/extract-host-transport.py",
+        "status": "added",
+        "additions": 110,
+        "deletions": 0,
+        "changes": 110,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/feature-source-receipt.json",
+        "status": "added",
+        "additions": 100,
+        "deletions": 0,
+        "changes": 100,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/final-integration.json",
+        "status": "added",
+        "additions": 154,
+        "deletions": 0,
+        "changes": 154,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/host-compile.log",
+        "status": "added",
+        "additions": 3,
+        "deletions": 0,
+        "changes": 3,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/host-tests.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/host-transport-extraction.json",
+        "status": "added",
+        "additions": 14,
+        "deletions": 0,
+        "changes": 14,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/pub-get.log",
+        "status": "added",
+        "additions": 53,
+        "deletions": 0,
+        "changes": 53,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/pubspec.lock",
+        "status": "added",
+        "additions": 405,
+        "deletions": 0,
+        "changes": 405,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/pubspec.yaml",
+        "status": "added",
+        "additions": 8,
+        "deletions": 0,
+        "changes": 8,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/quds-recent-audit.json",
+        "status": "added",
+        "additions": 187,
+        "deletions": 0,
+        "changes": 187,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/run-focused.sh",
+        "status": "added",
+        "additions": 34,
+        "deletions": 0,
+        "changes": 34,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/source-receipt.json",
+        "status": "added",
+        "additions": 23,
+        "deletions": 0,
+        "changes": 23,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/stream-verification.log",
+        "status": "added",
+        "additions": 59,
+        "deletions": 0,
+        "changes": 59,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/ui-syntax.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/validation-receipt.json",
+        "status": "added",
+        "additions": 174,
+        "deletions": 0,
+        "changes": 174,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/vendor-stream-receipt.json",
+        "status": "added",
+        "additions": 59,
+        "deletions": 0,
+        "changes": 59,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/vendor-verification.tar.gz",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-desktop-20261115/verify-stream.py",
+        "status": "added",
+        "additions": 161,
+        "deletions": 0,
+        "changes": 161,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-local-identity-20261115/REVIEW.md",
+        "status": "added",
+        "additions": 108,
+        "deletions": 0,
+        "changes": 108,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-local-identity-20261115/crispcloud-branch-audit.json",
+        "status": "added",
+        "additions": 1030,
+        "deletions": 0,
+        "changes": 1030,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-local-identity-20261115/feature-checkpoint.json",
+        "status": "added",
+        "additions": 103,
+        "deletions": 0,
+        "changes": 103,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-local-identity-20261115/final-integration.json",
+        "status": "added",
+        "additions": 19425,
+        "deletions": 0,
+        "changes": 19425,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-local-identity-20261115/recent-integration.json",
+        "status": "added",
+        "additions": 154,
+        "deletions": 0,
+        "changes": 154,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-local-identity-20261115/source-review.json",
+        "status": "added",
+        "additions": 125,
+        "deletions": 0,
+        "changes": 125,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/README.md",
+        "status": "added",
+        "additions": 85,
+        "deletions": 0,
+        "changes": 85,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/branch-audit.json",
+        "status": "added",
+        "additions": 283,
+        "deletions": 0,
+        "changes": 283,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-apply.json",
+        "status": "added",
+        "additions": 10,
+        "deletions": 0,
+        "changes": 10,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-c0a858ac/crisp-vendor-apply.json",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-c0a858ac/crisp-vendor-inventory.json",
+        "status": "added",
+        "additions": 30,
+        "deletions": 0,
+        "changes": 30,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-c0a858ac/crisp-vendor-inventory.json.gz",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-c0a858ac/crisp-vendor-plan.json",
+        "status": "added",
+        "additions": 20,
+        "deletions": 0,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-c0a858ac/crisp-vendor-verify-tracked.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-c0a858ac/crisp-vendor-verify.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-inventory.json",
+        "status": "added",
+        "additions": 31,
+        "deletions": 0,
+        "changes": 31,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-inventory.json.gz",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-plan.json",
+        "status": "added",
+        "additions": 10,
+        "deletions": 0,
+        "changes": 10,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-verify-tracked.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/crisp-vendor-verify.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/host-analysis-pub-get.log",
+        "status": "added",
+        "additions": 22,
+        "deletions": 0,
+        "changes": 22,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/host-analysis.log",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/host-pub-get.log",
+        "status": "added",
+        "additions": 22,
+        "deletions": 0,
+        "changes": 22,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/host-source-hashes.json",
+        "status": "added",
+        "additions": 1564,
+        "deletions": 0,
+        "changes": 1564,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/host-tests.log",
+        "status": "added",
+        "additions": 26,
+        "deletions": 0,
+        "changes": 26,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/host-validation-receipt.json",
+        "status": "added",
+        "additions": 160,
+        "deletions": 0,
+        "changes": 160,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/run-host-validation.py",
+        "status": "added",
+        "additions": 59,
+        "deletions": 0,
+        "changes": 59,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/shared-source-review.md",
+        "status": "added",
+        "additions": 66,
+        "deletions": 0,
+        "changes": 66,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/validation/zotero-rich-text-20261115/terminal-shell-smoke.log",
+        "status": "added",
+        "additions": 5,
+        "deletions": 0,
+        "changes": 5,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/zotero-validation.md",
+        "status": "added",
+        "additions": 276,
+        "deletions": 0,
+        "changes": 276,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/zotero.md",
+        "status": "added",
+        "additions": 248,
+        "deletions": 0,
+        "changes": 248,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/office_editor_strings.dart",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0,
+        "changes": 3,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/office_zotero_strings.dart",
+        "status": "added",
+        "additions": 61,
+        "deletions": 0,
+        "changes": 61,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/screen_terminal_strings.dart",
+        "status": "added",
+        "additions": 105,
+        "deletions": 0,
+        "changes": 105,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/ssh_config_import_strings.dart",
+        "status": "added",
+        "additions": 287,
+        "deletions": 0,
+        "changes": 287,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/ssh_jump_strings.dart",
+        "status": "added",
+        "additions": 154,
+        "deletions": 0,
+        "changes": 154,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/ssh_multiplexer_strings.dart",
+        "status": "added",
+        "additions": 212,
+        "deletions": 0,
+        "changes": 212,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/terminal_arrangement_strings.dart",
+        "status": "added",
+        "additions": 244,
+        "deletions": 0,
+        "changes": 244,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/terminal_broadcast_strings.dart",
+        "status": "added",
+        "additions": 87,
+        "deletions": 0,
+        "changes": 87,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/terminal_controls_strings.dart",
+        "status": "added",
+        "additions": 335,
+        "deletions": 0,
+        "changes": 335,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/terminal_search_strings.dart",
+        "status": "added",
+        "additions": 117,
+        "deletions": 0,
+        "changes": 117,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/l10n/terminal_shell_strings.dart",
+        "status": "added",
+        "additions": 198,
+        "deletions": 0,
+        "changes": 198,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/screen_session_options.dart",
+        "status": "added",
+        "additions": 127,
+        "deletions": 0,
+        "changes": 127,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/ssh_config_import.dart",
+        "status": "added",
+        "additions": 582,
+        "deletions": 0,
+        "changes": 582,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/ssh_jump_host.dart",
+        "status": "added",
+        "additions": 121,
+        "deletions": 0,
+        "changes": 121,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/ssh_multiplexer_session.dart",
+        "status": "added",
+        "additions": 259,
+        "deletions": 0,
+        "changes": 259,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/ssh_terminal_authentication.dart",
+        "status": "added",
+        "additions": 2,
+        "deletions": 0,
+        "changes": 2,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/ssh_terminal_config.dart",
+        "status": "modified",
+        "additions": 43,
+        "deletions": 1,
+        "changes": 44,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/ssh_terminal_profile.dart",
+        "status": "added",
+        "additions": 172,
+        "deletions": 0,
+        "changes": 172,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/terminal_arrangement.dart",
+        "status": "added",
+        "additions": 237,
+        "deletions": 0,
+        "changes": 237,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/models/terminal_pane_layout.dart",
+        "status": "added",
+        "additions": 289,
+        "deletions": 0,
+        "changes": 289,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/providers/ssh_terminal_profiles_provider.dart",
+        "status": "added",
+        "additions": 7,
+        "deletions": 0,
+        "changes": 7,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/providers/ssh_terminal_provider.dart",
+        "status": "modified",
+        "additions": 18,
+        "deletions": 2,
+        "changes": 20,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/providers/terminal_arrangements_provider.dart",
+        "status": "added",
+        "additions": 7,
+        "deletions": 0,
+        "changes": 7,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/office_zotero.dart",
+        "status": "added",
+        "additions": 90,
+        "deletions": 0,
+        "changes": 90,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/office_zotero_transport.dart",
+        "status": "added",
+        "additions": 254,
+        "deletions": 0,
+        "changes": 254,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/ssh_terminal_profiles.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/ssh_terminal_service.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_arrangements.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_broadcast.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_search.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_session.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_shell_integration.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_shell_setup.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/services/terminal_user_input.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/office_editor_dialog.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/office_editor_ribbon.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/ssh_config_import_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/ssh_multiplexer_sessions_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/ssh_terminal_connect_dialog.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/ssh_terminal_profiles_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_arrangements_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_broadcast_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_command_history_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_panel.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_search_bar.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_shell_setup_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "lib/widgets/terminal_tabs.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/QUDS_FORKS.md",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/CHANGELOG.md",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/lib/quds_office_editor.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/test/word_zotero_citing_controller_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/test/word_zotero_citing_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/test/word_zotero_controller_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_editor/test/word_zotero_format_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/CHANGELOG.md",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/quds_office_engine.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/word/model/word_zotero_data.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/zotero/zotero_citing.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/README.md",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/generate-fixtures.cjs",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/fixtures/zotero/citing/protocol-contract.json",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/fixtures/zotero/word_document.xml",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/word_content_control_fidelity_test.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/word_zotero_citing_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/word_zotero_document_data_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/word_zotero_formatted_bibliography_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/word_zotero_simple_field_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/word_zotero_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/zotero_citing_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/zotero_client_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/zotero_formatted_text_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/zotero_identity_client_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/office_zotero_citing_transport_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/office_zotero_ribbon_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/office_zotero_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/screen_session_command_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/screen_session_options_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_config_import_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_config_import_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_jump_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_jump_host_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_jump_transport_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_multiplexer_discovery_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_multiplexer_session_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_multiplexer_sessions_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_terminal_connect_dialog_test.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_terminal_profiles_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_terminal_profiles_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_terminal_reconnect_test.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/ssh_terminal_transport_test.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_arrangements_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_arrangements_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_arrangements_widget_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_broadcast_dialog_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_broadcast_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_pane_layout_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_panel_test.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_search_bar_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_search_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_shell_directory_labels_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_shell_integration_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_tabs_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_user_input_test.dart",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "test/terminal_widget_test.dart",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "tool/office_fidelity_manifest.json",
+        "status": "modified",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "tool/terminal_shell_setup_smoke.py",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      }
+    ]
+  },
+  "equivalence_commits": [
+    {
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+      "parents": [
+        "01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+      ],
+      "message": "Document the remaining Office format backlog"
+    },
+    {
+      "sha": "e52d1befb856f9d510cdaea887097759cf745828",
+      "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+      "parents": [
+        "01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+      ],
+      "message": "Document the remaining Office format backlog (#155)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+    },
+    {
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+      "parents": [
+        "e52d1befb856f9d510cdaea887097759cf745828"
+      ],
+      "message": "Refresh verified snapshot in remaining-gaps doc"
+    },
+    {
+      "sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+      "parents": [
+        "e52d1befb856f9d510cdaea887097759cf745828"
+      ],
+      "message": "Refresh verified snapshot in remaining-gaps doc (#156)\n\nCo-authored-by: CrispStrobe <crispstrobe@users.noreply.github.com>"
+    },
+    {
+      "sha": "f0f3863604ba272149af3b00d165c41abae16521",
+      "tree": "dc9aec861ca3cb7a4300bfc78ed7753ab9266cd2",
+      "parents": [
+        "b9c8ca907ebb7b9d5f36384eec7d99a93d6557bb",
+        "bd086eea48525346216c59e0c899b4d33751029b"
+      ],
+      "message": "Merge latest terminal workspace and OpenSSH import without losing Zotero work [skip ci]"
+    }
+  ],
+  "recommendation": "Integrate fetched Zotero 6a53294ad086e2a1c6475d888fbed7dcc2591449; it contains initial-cutoff Zotero f0f38636 and main d1add32c. PR155/156 branch trees equal their main squash commits; parent agent may record those equivalent branch heads as ancestry parents. Initial22:36:34UTC snapshot remains unchanged above.",
+  "initial_snapshot_delta": {
+    "unchanged_branch_count": 29,
+    "unchanged_pr_count": 96,
+    "new_or_advanced_branches": [
+      {
+        "name": "codex/terminal-screen-workspace",
+        "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      },
+      {
+        "name": "codex/zotero-support-20261115",
+        "sha": "f0f3863604ba272149af3b00d165c41abae16521"
+      },
+      {
+        "name": "docs/remaining-gaps",
+        "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+      },
+      {
+        "name": "docs/remaining-gaps-link",
+        "sha": "854d2ff6a20206434c64173ddca1152b079c8277"
+      },
+      {
+        "name": "main",
+        "sha": "d1add32cf5f4a14379ae35ca30b123e781558549"
+      }
+    ],
+    "new_or_advanced_pull_requests": [
+      {
+        "number": 140,
+        "title": "Extend terminal workspace with jump hosts, shell integration, session discovery and broadcast",
+        "state": "open",
+        "updated_at": "2026-11-15T22:36:19Z",
+        "merged_at": null,
+        "head": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "head_ref": "codex/terminal-screen-workspace",
+        "base": "main",
+        "merge_commit_sha": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/140"
+      },
+      {
+        "number": 149,
+        "title": "Add Zotero online and desktop libraries to the Word editor",
+        "state": "open",
+        "updated_at": "2026-11-15T22:33:05Z",
+        "merged_at": null,
+        "head": "f0f3863604ba272149af3b00d165c41abae16521",
+        "head_ref": "codex/zotero-support-20261115",
+        "base": "main",
+        "merge_commit_sha": "477f05cb61eef5cbb0201401cd4a8e6a7d18d1d7",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/149"
+      },
+      {
+        "number": 156,
+        "title": "Refresh verified snapshot in remaining-gaps doc",
+        "state": "closed",
+        "updated_at": "2026-11-15T22:23:46Z",
+        "merged_at": "2026-11-15T22:23:46Z",
+        "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+        "head_ref": "docs/remaining-gaps-link",
+        "base": "main",
+        "merge_commit_sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/156"
+      },
+      {
+        "number": 155,
+        "title": "Document the remaining Office format backlog",
+        "state": "closed",
+        "updated_at": "2026-11-15T22:21:17Z",
+        "merged_at": "2026-11-15T22:21:17Z",
+        "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+        "head_ref": "docs/remaining-gaps",
+        "base": "main",
+        "merge_commit_sha": "e52d1befb856f9d510cdaea887097759cf745828",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/155"
+      }
+    ]
+  },
+  "fetch_followup": {
+    "source": "Parent agent git fetch after cutoff; object inspected locally",
+    "zotero_head": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+    "parents": [
+      "f0f3863604ba272149af3b00d165c41abae16521",
+      "a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423"
+    ],
+    "terminal_head_at_verification": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+    "zotero_contains_main": true,
+    "zotero_contains_original_cutoff_head": true,
+    "canonical_source_commit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d"
+  },
+  "local_ancestry_against_integration_inputs": [
+    {
+      "kind": "branch",
+      "identifier": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "codex/terminal-screen-workspace",
+      "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "codex/zotero-support-20261115",
+      "sha": "f0f3863604ba272149af3b00d165c41abae16521",
+      "contained_by": [
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "contained_by": []
+    },
+    {
+      "kind": "branch",
+      "identifier": "docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "contained_by": []
+    },
+    {
+      "kind": "branch",
+      "identifier": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "branch",
+      "identifier": "main",
+      "sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "contained_by": [
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 140,
+      "sha": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 149,
+      "sha": "f0f3863604ba272149af3b00d165c41abae16521",
+      "contained_by": [
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 156,
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "contained_by": []
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 155,
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "contained_by": []
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 154,
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 153,
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 152,
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 151,
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 150,
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 148,
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 147,
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 146,
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 145,
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 144,
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 143,
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 142,
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 141,
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 139,
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 138,
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 137,
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 136,
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 135,
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 134,
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 133,
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 132,
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 131,
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 130,
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 123,
+      "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 119,
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 115,
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 112,
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 125,
+      "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 122,
+      "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 118,
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 117,
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 114,
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 113,
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 124,
+      "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 121,
+      "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 120,
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 116,
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 110,
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 111,
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 129,
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 128,
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 127,
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 126,
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 108,
+      "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 109,
+      "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 107,
+      "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 106,
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 103,
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 105,
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 104,
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 102,
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 101,
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 100,
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 97,
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 95,
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 84,
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 94,
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 92,
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 93,
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 90,
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 91,
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 89,
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 87,
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 88,
+      "sha": "b100cd751688f13609a8829180b487b381588d14",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 79,
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 85,
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 86,
+      "sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 83,
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 81,
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 75,
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 68,
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 82,
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 80,
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 77,
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 76,
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 78,
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 53,
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 55,
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 62,
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 66,
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 57,
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 63,
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 73,
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 61,
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 72,
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 69,
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 64,
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 70,
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 40,
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 58,
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 54,
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 67,
+      "sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 74,
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 60,
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 59,
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    },
+    {
+      "kind": "pull_request",
+      "identifier": 65,
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "contained_by": [
+        "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+        "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+      ]
+    }
+  ]
+}

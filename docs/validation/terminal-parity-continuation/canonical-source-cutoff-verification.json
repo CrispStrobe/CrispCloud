@@ -1,0 +1,26 @@
+{
+  "checked_at_utc": "2026-11-15T22:38:16.982907+00:00",
+  "status": "passed",
+  "incoming_app_commit": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+  "source_repository": "CrispStrobe/quds_office_suite",
+  "source_branch": "codex/zotero-support-20261115",
+  "source_commit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+  "source_tree": "580a083b2843459ab1991ea39d8c0dd39b5ec0ec",
+  "canonical_tree_truncated": false,
+  "canonical_tree_entries": 4801,
+  "manifest_sha256": "e8077ab0e707a98899c30ebb0ee2a80bdd038fc0ea07162251562bf852ca1f7a",
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "counts": {
+    "managed_sha256": 2391,
+    "quds_canonical_blobs": 534,
+    "legacy_sha256": 1857
+  },
+  "mismatches": [],
+  "scope": "All managed paths freshly SHA256 hashed in merged working tree. Every non-legacy managed Quds file compared by Git blob SHA1, file mode, and byte size with complete canonical recursive tree; staged blobs also match working files. Legacy standalone source pin recorded and all legacy file hashes checked. No runtime validation implied.",
+  "quds_source_inventory_sha256": "ceb929a8ff6a43c015145db0543f539e499745ae6b406eb99b88033711832c96"
+}

@@ -1,0 +1,137 @@
+{
+  "verified_at_utc": "2026-11-15T22:39:44.359369+00:00",
+  "fixture": "test/terminal_parity_visual_test.dart",
+  "opt_in_define": "TERMINAL_PARITY_VISUALS=true",
+  "pixel_ratio": 1,
+  "result": "4 widget scenarios passed; images individually inspected",
+  "saved_profiles_import_regression_result": "48 parser/store/profile/import widget tests passed after moving the Import action into scrollable profile content",
+  "head_at_evidence_save": "034208abd7e8e3fa94612a1cc7b4fb598f391a32",
+  "source_sha256_at_evidence_save": {
+    "test/terminal_parity_visual_test.dart": "6a7e89ea7e58943a3706e5186a86c8552036bfb42062da6683dce2241e164a0d",
+    "lib/widgets/terminal_tabs.dart": "280d0b75c6a5c06b5881260d4fca4f4bfe62e81cd435931c064d45efade93dcd",
+    "lib/widgets/terminal_panel.dart": "5e305c7e2cfb0422bfaa4b424cf346d43729e6985ad91d7c3ec9c0f83feee19f",
+    "lib/widgets/ssh_terminal_profiles_dialog.dart": "05f42ff29812cb7071fb4e547073161983b8e56c32309b3e125d1dd40790f151",
+    "lib/widgets/ssh_config_import_dialog.dart": "af429906dcd8a6cd18378b6e394f1d47690b7f58b9e9f87c25a97e3afb64a85f",
+    "lib/widgets/terminal_key_bindings_dialog.dart": "dbab8a3c035885ea3d72678e240bca7564ab10c6ff0383d335bc62bf4c6f035d"
+  },
+  "images": [
+    {
+      "name": "before-ssh-profiles-narrow.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 14999,
+      "sha256": "b1a34cdb722a8146115ea431029201294ef19247952a9e31091f5d69419d805a"
+    },
+    {
+      "name": "key-binding-editor-desktop.png",
+      "width": 1000,
+      "height": 900,
+      "bytes": 36359,
+      "sha256": "b1f5f3b24895cd1b3fe796c63559f807f8f41055d87979c83b908458c347460e"
+    },
+    {
+      "name": "key-binding-editor-narrow.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 30773,
+      "sha256": "6d7993b66aa79a2321e8f55675efd791fbf961deaab82d98d63050b049a431fb"
+    },
+    {
+      "name": "key-binding-key-action-narrow.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 32391,
+      "sha256": "f7b537a622533f306fede15a3b2986b0f63281c4f6e2c67f646887ec73ff4a44"
+    },
+    {
+      "name": "key-bindings-desktop.png",
+      "width": 1000,
+      "height": 900,
+      "bytes": 24480,
+      "sha256": "4bad24f895c123b478219925a77ff3dba7a4807cf963c49e7a29ee333580c495"
+    },
+    {
+      "name": "key-bindings-narrow.png",
+      "width": 320,
+      "height": 640,
+      "bytes": 19424,
+      "sha256": "033ee141e138feb8afe937e37c5c5e47d27cb55bf9b124304deaed2be1e2692a"
+    },
+    {
+      "name": "nested-pane-zoom.png",
+      "width": 1280,
+      "height": 960,
+      "bytes": 40575,
+      "sha256": "9afa153223ec9741c2f3281ab7aa0b6a91fa24661fb24152e1208160bcef92be"
+    },
+    {
+      "name": "nested-panes-desktop.png",
+      "width": 1280,
+      "height": 960,
+      "bytes": 75731,
+      "sha256": "c36357a1fcb2b12613d22da35e7c6330273c9dc015b2a1239a882dd60eb7f522"
+    },
+    {
+      "name": "nested-panes-narrow.png",
+      "width": 390,
+      "height": 720,
+      "bytes": 30651,
+      "sha256": "b0331b2892d8b8c6605d0d5aa9d4343f5fd5489ae2e1721efeb1cfba46909045"
+    },
+    {
+      "name": "nested-panes-restored.png",
+      "width": 1280,
+      "height": 960,
+      "bytes": 75731,
+      "sha256": "c36357a1fcb2b12613d22da35e7c6330273c9dc015b2a1239a882dd60eb7f522"
+    },
+    {
+      "name": "ssh-import-blocked-narrow.png",
+      "width": 390,
+      "height": 720,
+      "bytes": 41538,
+      "sha256": "cab35392d953c8004795bb52babbee10510bbc8741bb9e8caa644dfbd15e0ad2"
+    },
+    {
+      "name": "ssh-import-desktop.png",
+      "width": 1000,
+      "height": 960,
+      "bytes": 67099,
+      "sha256": "4e1e69e82d72f48091fba50b46bc28af85df3e6f48ec6df09931289bf5fcb54c"
+    },
+    {
+      "name": "ssh-import-narrow.png",
+      "width": 390,
+      "height": 720,
+      "bytes": 42675,
+      "sha256": "96f282fbf808db8ed076201f3a47079176a1d4ecc8acc200153d6db7032ad59b"
+    },
+    {
+      "name": "ssh-import-source-desktop.png",
+      "width": 1000,
+      "height": 960,
+      "bytes": 46636,
+      "sha256": "1633383664c8c22fb595f5235e305d41f2aa7c509ff0250d0473def912e19aec"
+    },
+    {
+      "name": "ssh-profiles-narrow.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 16511,
+      "sha256": "54d791bb853ab643af0b28378404f55f389a54b866d02b83d8d601554679dc0d"
+    },
+    {
+      "name": "ssh-profiles-scrolled-narrow.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 13269,
+      "sha256": "6b55677477dbe4a84b9d27aaa2fd8903d09a900bbc16de1157d25109c485a796"
+    }
+  ],
+  "limitations": [
+    "Synthetic connections and example.net endpoints. Terminal output is fixture text, not a test log or live SSH acceptance claim.",
+    "Actual production widgets in a MaterialApp/ProviderScope test host, not a capture of the complete desktop application.",
+    "Bundled Roboto test fonts omit Unicode arrow glyphs in the existing terminal shortcut row; system-font fallback and native input/device behavior are outside this fixture.",
+    "Source hashes identify files at evidence save; later commits can change sources. Re-run the opt-in fixture to refresh images."
+  ]
+}

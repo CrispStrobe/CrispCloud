@@ -1,0 +1,810 @@
+{
+  "integration_head": "454f8a4d7452303098b82992b73ee609b02b86f2",
+  "all_snapshot_heads_contained": true,
+  "checks": [
+    {
+      "kind": "branch",
+      "name": "codex/ssh-terminal-tmux",
+      "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "codex/terminal-screen-workspace",
+      "head": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "codex/zotero-support-20261115",
+      "head": "f0f3863604ba272149af3b00d165c41abae16521",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/conditional-affix",
+      "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/conditional-between",
+      "head": "073713474ea62525d9f5832da918407de333cd03",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/conditional-complete",
+      "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/conditional-formats",
+      "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/ods-hidden-state",
+      "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/ods-pictures",
+      "head": "128f55295107e3ada605b52d160165e03f726cb4",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/ods-validations",
+      "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/office-pin-20261115",
+      "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/remaining-gaps",
+      "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "docs/remaining-gaps-link",
+      "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "feat/hidden-sheets-ui",
+      "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "feat/odt-headers",
+      "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "feat/odt-images",
+      "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "feat/odt-styles",
+      "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "feat/odt-textboxes",
+      "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/conditional-affix-vendor",
+      "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/conditional-between-vendor",
+      "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/conditional-dxf-vendor",
+      "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/conditional-operators-vendor",
+      "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/conditional-text-vendor",
+      "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/hidden-state-vendor",
+      "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/ods-conditional-vendor",
+      "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/ods-default-geometry-vendor",
+      "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/ods-default-style-vendor",
+      "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/ods-images-vendor",
+      "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "fix/ods-validations-vendor",
+      "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "integrate/sdt-section-break-20261115",
+      "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "integrate/utf16-custom-xml-20261115",
+      "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "integration/storage-carving-20261115",
+      "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "integration/storage-carving-local-20261115124645",
+      "head": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "ancestor": true
+    },
+    {
+      "kind": "branch",
+      "name": "main",
+      "head": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 140,
+      "head": "67af17927d15d73ae192e1e7be4fbb84ff88b581",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 149,
+      "head": "f0f3863604ba272149af3b00d165c41abae16521",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 156,
+      "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 155,
+      "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 154,
+      "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 153,
+      "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 152,
+      "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 151,
+      "head": "073713474ea62525d9f5832da918407de333cd03",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 150,
+      "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 148,
+      "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 147,
+      "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 146,
+      "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 145,
+      "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 144,
+      "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 143,
+      "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 142,
+      "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 141,
+      "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 139,
+      "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 138,
+      "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 137,
+      "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 136,
+      "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 135,
+      "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 134,
+      "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 133,
+      "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 132,
+      "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 131,
+      "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 130,
+      "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 123,
+      "head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 119,
+      "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 115,
+      "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 112,
+      "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 125,
+      "head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 122,
+      "head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 118,
+      "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 117,
+      "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 114,
+      "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 113,
+      "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 124,
+      "head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 121,
+      "head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 120,
+      "head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 116,
+      "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 110,
+      "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 111,
+      "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 129,
+      "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 128,
+      "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 127,
+      "head": "128f55295107e3ada605b52d160165e03f726cb4",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 126,
+      "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 108,
+      "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 109,
+      "head": "1b7680583ac69649b17287ab68738288fec10f51",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 107,
+      "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 106,
+      "head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 103,
+      "head": "d504409acc779b670de482247f3231a7247dcd92",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 105,
+      "head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 104,
+      "head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 102,
+      "head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 101,
+      "head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 100,
+      "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 97,
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 95,
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 84,
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 94,
+      "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 92,
+      "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 93,
+      "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 90,
+      "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 91,
+      "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 89,
+      "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 87,
+      "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 88,
+      "head": "b100cd751688f13609a8829180b487b381588d14",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 79,
+      "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 85,
+      "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 86,
+      "head": "120f839ab9091bdbedf326621347ee737140e043",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 83,
+      "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 81,
+      "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 75,
+      "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 68,
+      "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 82,
+      "head": "085495527e0ab02f52eeded928d54cb766b79910",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 80,
+      "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 77,
+      "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 76,
+      "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 78,
+      "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 53,
+      "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 55,
+      "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 62,
+      "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 66,
+      "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 57,
+      "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 63,
+      "head": "baccf470e946fc86fde41c96443423006eac2be7",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 73,
+      "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 61,
+      "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 72,
+      "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 69,
+      "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 64,
+      "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 70,
+      "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 40,
+      "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 58,
+      "head": "9887b53272d5f747cae9f73b363748985937ad05",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 54,
+      "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 67,
+      "head": "403e942dc99779883210125a01841ef209e19d2e",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 74,
+      "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 60,
+      "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 59,
+      "head": "132f70e746aa9815a51a046ab02e83393d084622",
+      "ancestor": true
+    },
+    {
+      "kind": "pr",
+      "number": 65,
+      "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "ancestor": true
+    }
+  ]
+}
