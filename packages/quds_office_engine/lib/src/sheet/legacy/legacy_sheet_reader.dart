@@ -120,6 +120,23 @@ abstract final class LegacyHtmlSheetReader {
           : 'Sheet${index + 1}';
       final sheet = SmlWorksheet(name: name, sheetId: index + 1);
       var row = 0;
+      final table = tables[index].group(0)!;
+      final caption = RegExp(
+        r'<caption\b[^>]*>(.*?)</caption>',
+        caseSensitive: false,
+        dotAll: true,
+      ).firstMatch(table);
+      var captionColumns = 0;
+      if (caption != null) {
+        final text = _text(caption.group(1)!);
+        if (text.isNotEmpty) {
+          sheet
+              .cellA1('A1')
+            ..value = text
+            ..type = SmlCellType.string;
+          row = 1;
+        }
+      }
       for (final rowMatch in RegExp(
         r'<tr\b.*?</tr>',
         caseSensitive: false,
@@ -135,6 +152,10 @@ abstract final class LegacyHtmlSheetReader {
           final body = cellMatch.group(2)!;
           final rowspan = _span(attributes, 'rowspan');
           final colspan = _span(attributes, 'colspan');
+          final isHeader = cellMatch
+              .group(0)!
+              .toLowerCase()
+              .startsWith('<th');
           final numeric = RegExp(
             r'x:num\s*=\s*"([^"]*)"',
             caseSensitive: false,
@@ -151,6 +172,9 @@ abstract final class LegacyHtmlSheetReader {
               ..value = raw
               ..type = SmlCellType.string;
           }
+          if (isHeader) {
+            target.fontBold = true;
+          }
           if (rowspan > 1 || colspan > 1) {
             sheet.merges.add(
               SmlMerge(
@@ -162,8 +186,14 @@ abstract final class LegacyHtmlSheetReader {
             );
           }
           col += colspan;
+          if (col > captionColumns) captionColumns = col;
         }
         row++;
+      }
+      if (caption != null && captionColumns > 1) {
+        sheet.merges.add(
+          SmlMerge(c0: 0, r0: 0, c1: captionColumns - 1, r1: 0),
+        );
       }
       book.sheets.add(sheet);
     }
@@ -267,6 +297,9 @@ class _BiffWorkbookParser {
   final List<_BiffXf> _xfs = <_BiffXf>[];
   final List<String> _strings = <String>[];
   final List<_BoundSheet> _sheets = <_BoundSheet>[];
+  final List<List<String>> _supBooks = <List<String>>[];
+  final List<({int supBook, int first, int last})> _externSheets =
+      <({int supBook, int first, int last})>[];
   bool _sawGlobals = false;
   double? _defaultRowHeightPx;
 
@@ -309,6 +342,35 @@ class _BiffWorkbookParser {
           _formats[id] = _unicodeString(reader);
         case 0x00E0: // XF
           _xfs.add(_BiffXf.parse(record.data));
+        case 0x01AE: // SUPBOOK
+          final reader = _Reader(record.data);
+          if (reader.remaining >= 2) {
+            final ctab = reader.u16();
+            if (ctab == 0x0401) {
+              // Internal reference: ctab-1 sheet names follow.
+              final names = <String>[];
+              var count = ctab - 1;
+              while (count > 0 && !reader.done) {
+                names.add(_shortString(reader));
+                count--;
+              }
+              _supBooks.add(names);
+            } else {
+              _supBooks.add(<String>[]);
+            }
+          }
+        case 0x0017: // EXTERNSHEET
+          final reader = _Reader(record.data);
+          if (reader.remaining >= 2) {
+            final count = reader.u16();
+            for (var i = 0; i < count && reader.remaining >= 6; i++) {
+              _externSheets.add((
+                supBook: reader.u16(),
+                first: reader.u16(),
+                last: reader.u16(),
+              ));
+            }
+          }
         case 0x0031: // FONT
           _fonts.add(_BiffFont.parse(record.data));
         case 0x000A: // EOF
@@ -791,7 +853,7 @@ class _BiffWorkbookParser {
     try {
       return _FormulaDecoder(
         tokens,
-        _sheetNames,
+        _ixtiNames,
         originRow: origin?.row ?? 0,
         originCol: origin?.col ?? 0,
       ).decode();
@@ -870,7 +932,27 @@ class _BiffWorkbookParser {
     return letters;
   }
 
-  List<String> get _sheetNames => _sheets.map((sheet) => sheet.name).toList();
+  /// Resolve each EXTERNSHEET index to a sheet name (empty for external books).
+  List<String> get _ixtiNames {
+    final names = <String>[];
+    for (final entry in _externSheets) {
+      if (entry.supBook < 0 || entry.supBook >= _supBooks.length) {
+        names.add('');
+        continue;
+      }
+      final book = _supBooks[entry.supBook];
+      final index = entry.first;
+      if (book.isEmpty) {
+        // Internal SUPBOOK without embedded names: index the workbook's sheets.
+        names.add(
+          index >= 0 && index < _sheets.length ? _sheets[index].name : '',
+        );
+        continue;
+      }
+      names.add(index >= 0 && index < book.length ? book[index] : '');
+    }
+    return names;
+  }
 
   static String _errorText(int code) => switch (code) {
     0x00 => '#NULL!',
@@ -1264,6 +1346,30 @@ class _FormulaDecoder {
       case 0x63:
         _pos += 4;
         _push('#NAME?');
+      case 0x2A:
+      case 0x4A:
+      case 0x6A: // tRefErr
+        _pos += 4;
+        _push('#REF!');
+      case 0x2B:
+      case 0x4B:
+      case 0x6B: // tAreaErr
+        _pos += 8;
+        _push('#REF!');
+      case 0x3C:
+      case 0x5C:
+      case 0x7C: { // tRefErr3d
+        final ixti = tokens[_pos] | (tokens[_pos + 1] << 8);
+        _pos += 6;
+        _push('${_sheetPrefix(ixti)}#REF!');
+      }
+      case 0x3D:
+      case 0x5D:
+      case 0x7D: { // tAreaErr3d
+        final ixti = tokens[_pos] | (tokens[_pos + 1] << 8);
+        _pos += 10;
+        _push('${_sheetPrefix(ixti)}#REF!');
+      }
       case 0x2C:
       case 0x4C:
       case 0x6C: {
@@ -1312,11 +1418,18 @@ class _FormulaDecoder {
     return '${colAbs ? '\$' : ''}${_letters(col)}${rowAbs ? '\$' : ''}${row + 1}';
   }
 
+  String _sheetPrefix(int ixti) {
+    if (ixti < 0 || ixti >= sheetNames.length) return '';
+    final name = sheetNames[ixti];
+    if (name.isEmpty) return '';
+    return name.contains(' ') ? "'$name'!" : '$name!';
+  }
+
   String _cellRef3d(int ixti, int col, int row, int flags) {
     final ref = _cellRef(col, row, flags);
-    // ixti indexes EXTERNSHEET; sheet order is the best available fallback.
     if (ixti >= 0 && ixti < sheetNames.length) {
       final name = sheetNames[ixti];
+      if (name.isEmpty) return ref;
       return name.contains(' ') ? "'$name'!$ref" : '$name!$ref';
     }
     return ref;
