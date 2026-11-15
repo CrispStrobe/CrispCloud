@@ -571,8 +571,8 @@ void main() {
   // ---- ViewerMode enum completeness ----------------------------------------
 
   group('ViewerMode enum', () {
-    test('has 17 values including saved email and timed lyrics', () {
-      expect(ViewerMode.values.length, 17);
+    test('has 18 values including saved email, timed lyrics and 3D', () {
+      expect(ViewerMode.values.length, 18);
     });
 
     test('contains the original 7 modes plus the new lister modes', () {
@@ -583,6 +583,7 @@ void main() {
           'ascii',
           'hex',
           'image',
+          'model3d',
           'binary',
           'markdown',
           'pdf',

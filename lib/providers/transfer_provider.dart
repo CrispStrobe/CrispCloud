@@ -1130,6 +1130,11 @@ class TransferNotifier extends ChangeNotifier {
   }) async {
     final offsets = Set<int>.unmodifiable(selectedOffsets);
     await ready;
+    if (!destination.supportsGuardedStagedPublication) {
+      throw UnsupportedError(
+        'PNG carving requires guarded native publication.',
+      );
+    }
     if (!captured.isCurrent ||
         offsets.isEmpty ||
         !offsets.every(

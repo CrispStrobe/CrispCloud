@@ -347,7 +347,8 @@ class _ArchiveJobRecoveryDialogState
                               ),
                             ),
                           ],
-                        ] else if (kind == 'zipRecovery') ...[
+                        ] else if (kind == 'zipRecovery' ||
+                            kind == 'pngCarving') ...[
                           Text(
                             kind == 'pngCarving'
                                 ? archivePngCarvingText(

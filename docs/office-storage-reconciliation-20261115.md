@@ -43,7 +43,9 @@ layout.
 ## Qualification at the reconciliation checkpoint
 
 - The exact managed-source check passes for all 2,214 files.
-- Inventory controls are being rerun against the explicit layout modes.
+- All 25 inventory controls pass against the explicit layout modes; all eight
+  guarded-sync controls pass. These include rejection of missing current
+  outputs despite archived copies and duplicate downloaded artifact roots.
 - Runtime, rendering and external schema acceptance for this combined source
   are pending. Earlier test totals are not relabeled as current results.
 

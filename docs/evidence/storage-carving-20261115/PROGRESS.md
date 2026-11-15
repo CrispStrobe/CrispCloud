@@ -41,3 +41,26 @@ recorded with their exact source commit once completed.
 
 Pending test and platform work is not a passing claim. Linux local gates,
 hosted CI and other-platform/live-provider qualification remain distinct.
+
+## Remote checkpoints
+
+- `dad7a232d22a0bb3863feff4304eac249be943e6`: recovered PNG scanner,
+  workflow, queue/UI and initial tests. Development save; no qualification.
+- `c1494c40c8b0624b2ee1344b233c8128c54f5183`: merged the full Office
+  reconciliation at `59b6a50990c4a368e03cd4d03b8075248edc6ffb`, including
+  navigation `8c7f8ac7` and canonical Quds `01f167cc`. All observed app/PR
+  heads are contained in this merged history.
+
+The next implementation checkpoint adds independent fixtures/portable drivers,
+strict parser tests, native guard regression tests and a guard that rechecks
+identity/cancellation synchronously after the final asynchronous path read.
+A pause epoch comparison also detects pause-and-resume within that final read;
+publication repeats the full source/stage proof before continuing.
+
+Development evidence: eight independent source cases pass 248 assertions on
+Dart VM and actual compiled JavaScript; Python separately verifies eight ZIPs
+and ten PNGs. These observations precede final guard qualification and do not
+qualify the whole app. The initial scoped analysis reported 29 style infos,
+which were corrected. The first baseline native attempt passed 132 tests then
+hit an in-progress API mismatch while compiling the final UI suite; that suite
+will run again against the complete checkpoint.

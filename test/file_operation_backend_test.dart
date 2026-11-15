@@ -245,6 +245,211 @@ void main() {
         );
       }
 
+      Future<T> duringFinalDestinationProbe<T>(
+        String target,
+        bool Function() committing,
+        void Function() interrupt,
+        Future<T> Function() action,
+      ) {
+        final outer = Zone.current;
+        var interrupted = false;
+        return IOOverrides.runZoned(
+          action,
+          fseGetType: (path, followLinks) async {
+            final type = await outer.run(
+              () => FileSystemEntity.type(path, followLinks: followLinks),
+            );
+            if (!interrupted && path == target && committing()) {
+              interrupted = true;
+              interrupt();
+            }
+            return type;
+          },
+        );
+      }
+
+      for (final revoked in [false, true]) {
+        test(
+          'guarded publication stops ${revoked ? 'backend revocation' : 'cancellation'} during the final native probe',
+          () async {
+            final target = File(p.join(root.path, 'recovered.zip'));
+            final control = FileOperationControl();
+            final phases = <String>[];
+            var guardCalls = 0;
+            expect(backend.supportsGuardedStagedPublication, isTrue);
+            await expectLater(
+              duringFinalDestinationProbe(
+                target.path,
+                () => phases.contains('committing'),
+                () {
+                  if (revoked) {
+                    current = false;
+                  } else {
+                    control.cancel();
+                  }
+                },
+                () => backend.writeGuardedPreparedFile(
+                  target.path,
+                  Stream.value(utf8.encode('verified')),
+                  8,
+                  replace: false,
+                  checkpoint: (state) async {
+                    phases.add(state['phase'] as String);
+                    await control.checkpoint();
+                  },
+                  canInstall: () {
+                    guardCalls++;
+                    if (control.isCancelled) {
+                      throw const FileOperationCancelled();
+                    }
+                    return !control.isPaused;
+                  },
+                ),
+              ),
+              revoked
+                  ? throwsStateError
+                  : throwsA(isA<FileOperationCancelled>()),
+            );
+            expect(guardCalls, revoked ? 0 : 1);
+            expect(await target.exists(), isFalse);
+            expect(phases, isNot(contains('committed')));
+            await expectNoStages();
+          },
+        );
+      }
+
+      test(
+        'guarded publication repeats its proof checkpoint after a late pause',
+        () async {
+          final target = File(p.join(root.path, 'recovered.zip'));
+          final control = FileOperationControl();
+          final retry = Completer<void>();
+          var commitChecks = 0;
+          var guardCalls = 0;
+          final pending = duringFinalDestinationProbe(
+            target.path,
+            () => commitChecks == 1,
+            control.pause,
+            () => backend.writeGuardedPreparedFile(
+              target.path,
+              Stream.value(utf8.encode('verified')),
+              8,
+              replace: false,
+              checkpoint: (state) async {
+                if (state['phase'] == 'committing') {
+                  commitChecks++;
+                  if (commitChecks == 2) retry.complete();
+                }
+                await control.checkpoint();
+              },
+              canInstall: () {
+                guardCalls++;
+                if (control.isCancelled) {
+                  throw const FileOperationCancelled();
+                }
+                return !control.isPaused;
+              },
+              verifyStaged: (staged) async {
+                expect(await File(staged.path!).readAsString(), 'verified');
+              },
+            ),
+          );
+          await retry.future.timeout(const Duration(seconds: 10));
+          expect(control.isPaused, isTrue);
+          expect(await target.exists(), isFalse);
+          expect(guardCalls, 1);
+          control.resume();
+          await pending;
+          expect(commitChecks, 2);
+          expect(guardCalls, 2);
+          expect(await target.readAsString(), 'verified');
+          await expectNoStages();
+        },
+      );
+
+      test(
+        'guarded exclusive installation preserves a concurrent destination',
+        () async {
+          final target = File(p.join(root.path, 'recovered.zip'));
+          var committing = false;
+          await expectLater(
+            duringFinalDestinationProbe(
+              target.path,
+              () => committing,
+              () => target.writeAsStringSync('concurrent writer'),
+              () => backend.writeGuardedPreparedFile(
+                target.path,
+                Stream.value(utf8.encode('verified')),
+                8,
+                replace: false,
+                checkpoint: (state) async {
+                  if (state['phase'] == 'committing') committing = true;
+                },
+                canInstall: () => true,
+              ),
+            ),
+            throwsA(isA<FileSystemException>()),
+          );
+          expect(await target.readAsString(), 'concurrent writer');
+          await expectNoStages();
+        },
+      );
+
+      test('guarded installation reaches the filesystem before a queued cancellation', () async {
+        final target = File(p.join(root.path, 'recovered.zip'));
+        final control = FileOperationControl();
+        bool? installedBeforeCancellation;
+        final phases = <String>[];
+        await backend.writeGuardedPreparedFile(
+          target.path,
+          Stream.value(utf8.encode('verified')),
+          8,
+          replace: false,
+          checkpoint: (state) async {
+            phases.add(state['phase'] as String);
+          },
+          canInstall: () {
+            scheduleMicrotask(() {
+              installedBeforeCancellation = target.existsSync();
+              control.cancel();
+            });
+            return true;
+          },
+        );
+        expect(installedBeforeCancellation, isTrue);
+        expect(control.isCancelled, isTrue);
+        expect(phases.last, 'committed');
+        expect(await target.readAsString(), 'verified');
+        await expectNoStages();
+      });
+
+      test(
+        'guarded publication rejects replacement before consuming input',
+        () async {
+          final original = await existingFile();
+          var consumed = false;
+          Stream<List<int>> input() async* {
+            consumed = true;
+            yield [1];
+          }
+
+          await expectLater(
+            backend.writeGuardedPreparedFile(
+              original.path,
+              input(),
+              1,
+              replace: true,
+              checkpoint: (_) async {},
+              canInstall: () => true,
+            ),
+            throwsUnsupportedError,
+          );
+          expect(consumed, isFalse);
+          expect(await original.readAsString(), 'original');
+          await expectNoStages();
+        },
+      );
+
       test('stat is unaffected by unrelated siblings disappearing during enumeration', () async {
         final requested = await existingFile();
         final outer = Zone.current;
@@ -523,8 +728,9 @@ void main() {
               replace: true,
               retainPartialFileOnFailure: true,
               checkpoint: (state) async {
-                if (state['phase'] == 'staging')
+                if (state['phase'] == 'staging') {
                   stage = state['stagedPath'] as String;
+                }
               },
             ),
             throwsStateError,
@@ -807,6 +1013,30 @@ void main() {
     setUp(() {
       client = _CloudClient();
       backend = CloudOperationBackend(client, isCurrent: () => true);
+    });
+
+    test('cloud storage cannot fall back from guarded publication', () async {
+      var consumed = false;
+      Stream<List<int>> input() async* {
+        consumed = true;
+        yield [1];
+      }
+
+      expect(backend.supportsGuardedStagedPublication, isFalse);
+      await expectLater(
+        backend.writeGuardedPreparedFile(
+          '/target/recovered.zip',
+          input(),
+          1,
+          replace: false,
+          checkpoint: (_) async {},
+          canInstall: () => true,
+        ),
+        throwsUnsupportedError,
+      );
+      expect(consumed, isFalse);
+      expect(client.uploads, isEmpty);
+      expect(client.files, isEmpty);
     });
 
     test(

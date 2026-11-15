@@ -2,6 +2,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/panel_header_strings.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/widgets/panel_header.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -56,7 +57,20 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byTooltip('Zurück'), findsOneWidget);
-    expect(find.byTooltip('Pfad bearbeiten'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('panel-path-context-local')),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pfad bearbeiten'), findsOneWidget);
+    await tester.tap(find.text('Pfad bearbeiten'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('panel-path-editor-local')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byTooltip('Abbrechen'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Weitere Befehle'));
     await tester.pumpAndSettle();
     expect(find.text('Auswahl umkehren'), findsOneWidget);

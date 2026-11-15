@@ -155,10 +155,13 @@ Future<ArchiveCreationResult> publishArchivePngCarving({
   final selection = Set<int>.unmodifiable(selectedOffsets);
   ArchiveCreationOptions(name: outputName).validate();
   if (!destination.supportsStagedVerification ||
+      !destination.supportsGuardedStagedPublication ||
       !destination.paths.isAbsolute(destinationDirectory) ||
       destination.paths.normalize(destinationDirectory) !=
           destinationDirectory) {
-    throw StateError('PNG carving needs a destination with verified staging.');
+    throw StateError(
+      'PNG carving needs a destination with guarded verified staging.',
+    );
   }
   final identity = destination.identity;
   final storageId = destination.persistentStorageId;
@@ -170,6 +173,7 @@ Future<ArchiveCreationResult> publishArchivePngCarving({
   var committed = false;
   Object? warning;
   var pauseEpoch = 0;
+  var validatedPauseEpoch = -1;
   final subscription = control?.changes.listen((_) {
     if (control.isPaused) pauseEpoch++;
   });
@@ -183,6 +187,14 @@ Future<ArchiveCreationResult> publishArchivePngCarving({
         destination.persistentStorageId != storageId) {
       throw StateError('The captured recovery source or destination changed.');
     }
+  }
+
+  bool canInstall() {
+    available();
+    if (control?.isCancelled ?? false) throw const FileOperationCancelled();
+    // A new pause after the asynchronous proofs restarts the complete proof
+    // through the native writer's committing checkpoint, after Resume.
+    return !(control?.isPaused ?? false) && validatedPauseEpoch == pauseEpoch;
   }
 
   Future<void> check() async {
@@ -285,7 +297,10 @@ Future<ArchiveCreationResult> publishArchivePngCarving({
         }
       }
       await checkDestination();
-      if (epoch == pauseEpoch) return;
+      if (epoch == pauseEpoch) {
+        validatedPauseEpoch = epoch;
+        return;
+      }
     }
   }
 
@@ -346,11 +361,12 @@ Future<ArchiveCreationResult> publishArchivePngCarving({
       }
     }
 
-    await destination.writePreparedFile(
+    await destination.writeGuardedPreparedFile(
       output,
       outputBytes(),
       recovered.bytes.length,
       replace: false,
+      canInstall: canInstall,
       checkpoint: publicationCheckpoint,
       verifyStaged: (staged) async {
         verifiedStage = staged;

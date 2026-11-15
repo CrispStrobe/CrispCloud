@@ -59,6 +59,9 @@ class LocalOperationBackend extends FileOperationBackend {
   bool get supportsStagedVerification =>
       !kIsWeb || service is LocalTransferFileOperations;
   @override
+  bool get supportsGuardedStagedPublication =>
+      !kIsWeb && supportsNativeExclusiveRename;
+  @override
   bool get supportsRetainedStageCleanup => !kIsWeb;
   @override
   bool isRetainedStagePath(String stagePath, String destinationPath) {
@@ -414,6 +417,32 @@ class LocalOperationBackend extends FileOperationBackend {
   );
 
   @override
+  Future<void> writeGuardedPreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    required bool Function() canInstall,
+    required Future<void> Function(Map<String, dynamic> state) checkpoint,
+    Future<void> Function(FileItem staged)? verifyStaged,
+  }) async {
+    if (!supportsGuardedStagedPublication || replace) {
+      throw UnsupportedError(
+        'Guarded staged publication requires a new native destination.',
+      );
+    }
+    return _writePreparedFile(
+      path,
+      data,
+      length,
+      replace: false,
+      canInstall: canInstall,
+      verifyStaged: verifyStaged,
+      checkpoint: checkpoint,
+    );
+  }
+
+  @override
   Future<void> writeConfiguredFile(
     String path,
     Stream<List<int>> data,
@@ -475,6 +504,7 @@ class LocalOperationBackend extends FileOperationBackend {
     bool preallocate = false,
     bool retainPartialFileOnFailure = false,
     FileItem? cloneSource,
+    bool Function()? canInstall,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
   }) async {
@@ -707,33 +737,44 @@ class LocalOperationBackend extends FileOperationBackend {
         }
         _check();
         await verifyStaged?.call(await _nativeItem(staged.path));
-        await checkpoint?.call({
-          'phase': 'committing',
-          'destination': path,
-          'stagedPath': staged.path,
-          'stagingDirectory': staging.path,
-        });
-        final type = await FileSystemEntity.type(path, followLinks: false);
-        if (type == FileSystemEntityType.link ||
-            type == FileSystemEntityType.directory) {
-          throw FileSystemException(
-            'Destination changed to an incompatible type.',
-            path,
-          );
-        }
-        if (!replace) {
-          if (await moveNativeNoReplace(staged.path, path)) {
-            committed = true;
-            await checkpoint?.call({'phase': 'committed', 'destination': path});
-            return;
+        while (true) {
+          await checkpoint?.call({
+            'phase': 'committing',
+            'destination': path,
+            'stagedPath': staged.path,
+            'stagingDirectory': staging.path,
+          });
+          final type = await FileSystemEntity.type(path, followLinks: false);
+          _check();
+          if (type == FileSystemEntityType.link ||
+              type == FileSystemEntityType.directory) {
+            throw FileSystemException(
+              'Destination changed to an incompatible type.',
+              path,
+            );
           }
-          throw UnsupportedError(
-            'This volume cannot commit an exclusive copy safely.',
-          );
+          if (canInstall != null && !canInstall()) continue;
+          if (!replace) {
+            // moveNativeNoReplace executes its FFI rename synchronously before
+            // returning its Future. Keep every await above canInstall so a
+            // pause or authority revocation cannot slip past the last guard.
+            if (await moveNativeNoReplace(staged.path, path)) {
+              committed = true;
+              await checkpoint?.call({
+                'phase': 'committed',
+                'destination': path,
+              });
+              return;
+            }
+            throw UnsupportedError(
+              'This volume cannot commit an exclusive copy safely.',
+            );
+          }
+          await staged.rename(path);
+          committed = true;
+          await checkpoint?.call({'phase': 'committed', 'destination': path});
+          break;
         }
-        await staged.rename(path);
-        committed = true;
-        await checkpoint?.call({'phase': 'committed', 'destination': path});
       } finally {
         var keepPartial = false;
         if (journalOwnsStage && !committed) {

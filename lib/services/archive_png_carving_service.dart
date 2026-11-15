@@ -147,9 +147,8 @@ class ArchivePngCarvingReport {
     required this.scannedBytes,
     required this.stopReason,
     required List<ArchivePngCarvingCandidate> candidates,
-    required Uint8List snapshot,
-  }) : candidates = List.unmodifiable(candidates),
-       _snapshot = snapshot;
+    required this._snapshot,
+  }) : candidates = List.unmodifiable(candidates);
 
   final String? sourceName;
   final String sourceSha256;
@@ -417,12 +416,14 @@ Map<String, Object?> _reportJson(
   for (final candidate in report.candidates.where(
     (c) => selected.contains(c.offset),
   )) {
-    if (end < candidate.offset)
+    if (end < candidate.offset) {
       unclaimed.add({'start': end, 'endExclusive': candidate.offset});
+    }
     end = candidate.endOffset;
   }
-  if (end < report.sourceBytes)
+  if (end < report.sourceBytes) {
     unclaimed.add({'start': end, 'endExclusive': report.sourceBytes});
+  }
   return {
     'schema': 'crispcloud.png-carving.v1',
     'profile': 'png-8bit-noninterlaced-v1',
@@ -609,8 +610,9 @@ class _PngCandidateParser {
         if (length > 0x7fffffff || length > bytes.length - cursor - 12) {
           fail(ArchivePngCarvingReason.truncated);
         }
-        if (length + 12 > imageLimit - (cursor - start))
+        if (length + 12 > imageLimit - (cursor - start)) {
           fail(ArchivePngCarvingReason.limitExceeded);
+        }
         if (++chunks > 4096) fail(ArchivePngCarvingReason.limitExceeded);
         budget.charge(12, chunk: true);
         final kindBytes = Uint8List.sublistView(bytes, cursor + 4, cursor + 8);
@@ -632,14 +634,17 @@ class _PngCandidateParser {
         }
         if (crc != u32(end - 4)) fail(ArchivePngCarvingReason.checksumMismatch);
         cursor = end;
-        if (chunks == 1 && kind != 'IHDR')
+        if (chunks == 1 && kind != 'IHDR') {
           fail(ArchivePngCarvingReason.chunkOrder);
-        if (kind != 'IDAT' && kind != 'tEXt' && !seen.add(kind))
+        }
+        if (kind != 'IDAT' && kind != 'tEXt' && !seen.add(kind)) {
           fail(ArchivePngCarvingReason.chunkOrder);
+        }
         if (sawIdat && kind != 'IDAT') endedIdat = true;
         if (kind == 'IHDR') {
-          if (chunks != 1 || length != 13)
+          if (chunks != 1 || length != 13) {
             fail(ArchivePngCarvingReason.invalidHeader);
+          }
           _header(payload);
         } else if (kind == 'IDAT') {
           if (endedIdat) fail(ArchivePngCarvingReason.chunkOrder);
@@ -714,11 +719,13 @@ class _PngCandidateParser {
       4 => 2,
       _ => 4,
     };
-    if (width! > (imageLimit - 1) ~/ channels)
+    if (width! > (imageLimit - 1) ~/ channels) {
       fail(ArchivePngCarvingReason.limitExceeded);
+    }
     stride = width! * channels + 1;
-    if (height! > imageLimit ~/ stride)
+    if (height! > imageLimit ~/ stride) {
       fail(ArchivePngCarvingReason.limitExceeded);
+    }
     expandedSize = stride * height!;
   }
 
@@ -742,10 +749,12 @@ class _PngCandidateParser {
         if (color == 0 ||
             color == 4 ||
             seen.contains('bKGD') ||
-            seen.contains('tRNS'))
+            seen.contains('tRNS')) {
           fail(ArchivePngCarvingReason.chunkOrder);
-        if (length == 0 || length > 768 || length % 3 != 0)
+        }
+        if (length == 0 || length > 768 || length % 3 != 0) {
           fail(ArchivePngCarvingReason.invalidChunk);
+        }
         sawPalette = true;
       case 'gAMA':
         beforePalette();
@@ -755,8 +764,9 @@ class _PngCandidateParser {
         beforePalette();
         exact(32);
         for (var i = 0; i < 32; i += 8) {
-          if (u32(at + i) > 100000 || u32(at + i + 4) > 100000 - u32(at + i))
+          if (u32(at + i) > 100000 || u32(at + i + 4) > 100000 - u32(at + i)) {
             fail(ArchivePngCarvingReason.invalidChunk);
+          }
         }
       case 'sRGB':
         beforePalette();
@@ -771,8 +781,9 @@ class _PngCandidateParser {
           _ => 4,
         });
         for (var i = 0; i < length; i++) {
-          if (bytes[at + i] == 0 || bytes[at + i] > 8)
+          if (bytes[at + i] == 0 || bytes[at + i] > 8) {
             fail(ArchivePngCarvingReason.invalidChunk);
+          }
         }
       case 'pHYs':
         beforeData();
@@ -781,8 +792,9 @@ class _PngCandidateParser {
       case 'bKGD':
       case 'tRNS':
         beforeData();
-        if (kind == 'tRNS' && (color == 4 || color == 6))
+        if (kind == 'tRNS' && (color == 4 || color == 6)) {
           fail(ArchivePngCarvingReason.invalidChunk);
+        }
         exact(color == 0 || color == 4 ? 2 : 6);
         for (var i = 0; i < length; i += 2) {
           if (u16(at + i) > 255) fail(ArchivePngCarvingReason.invalidChunk);
@@ -799,26 +811,31 @@ class _PngCandidateParser {
             day > 31 ||
             bytes[at + 4] > 23 ||
             bytes[at + 5] > 59 ||
-            bytes[at + 6] > 60)
+            bytes[at + 6] > 60) {
           fail(ArchivePngCarvingReason.invalidChunk);
-        if (DateTime.utc(year, month, day).day != day)
+        }
+        if (DateTime.utc(year, month, day).day != day) {
           fail(ArchivePngCarvingReason.invalidChunk);
+        }
       case 'tEXt':
         final content = Uint8List.sublistView(bytes, at, at + length);
         final separator = content.indexOf(0);
         if (separator < 1 ||
             separator > 79 ||
             content[0] == 32 ||
-            content[separator - 1] == 32)
+            content[separator - 1] == 32) {
           fail(ArchivePngCarvingReason.invalidChunk);
+        }
         for (var i = 0; i < separator; i++) {
           final c = content[i];
           if (!(c >= 32 && c <= 126 || c >= 161) ||
-              c == 32 && i > 0 && content[i - 1] == 32)
+              c == 32 && i > 0 && content[i - 1] == 32) {
             fail(ArchivePngCarvingReason.invalidChunk);
+          }
         }
-        if (content.indexOf(0, separator + 1) != -1)
+        if (content.indexOf(0, separator + 1) != -1) {
           fail(ArchivePngCarvingReason.invalidChunk);
+        }
       default:
         fail(ArchivePngCarvingReason.unsupportedChunk);
     }
@@ -831,8 +848,9 @@ class _PngCandidateParser {
     if (cmf & 15 != 8 ||
         cmf >> 4 > 7 ||
         (cmf * 256 + flags) % 31 != 0 ||
-        flags & 32 != 0)
+        flags & 32 != 0) {
       fail(ArchivePngCarvingReason.invalidZlib);
+    }
     // RawInflater enforces the DEFLATE 32 KiB distance ceiling. A smaller
     // advertised zlib window needs a separate decoder contract and declines.
     if (cmf != 0x78) fail(ArchivePngCarvingReason.unsupportedCompression);
@@ -843,13 +861,15 @@ class _PngCandidateParser {
     final inflater = koni_codecs.RawInflater(
       onOutput: (chunk) {
         operation.check();
-        if (chunk.length > expandedSize - decoded)
+        if (chunk.length > expandedSize - decoded) {
           fail(ArchivePngCarvingReason.scanlineSize);
+        }
         budget.charge(chunk.length, expanded: chunk.length);
         for (var i = 0; i < chunk.length; i++) {
           final byte = chunk[i];
-          if ((decoded + i) % stride == 0 && byte > 4)
+          if ((decoded + i) % stride == 0 && byte > 4) {
             fail(ArchivePngCarvingReason.invalidFilter);
+          }
           adlerA = (adlerA + byte) % 65521;
           adlerB = (adlerB + adlerA) % 65521;
         }
@@ -865,8 +885,9 @@ class _PngCandidateParser {
         final used = inflater.addInput(
           Uint8List.sublistView(compressed, 2 + consumed, 2 + consumed + count),
         );
-        if (used <= 0 && !inflater.isFinished)
+        if (used <= 0 && !inflater.isFinished) {
           fail(ArchivePngCarvingReason.invalidZlib);
+        }
         consumed += used;
       }
       if (!inflater.isFinished) fail(ArchivePngCarvingReason.invalidZlib);
@@ -879,8 +900,9 @@ class _PngCandidateParser {
     if (decoded != expandedSize) fail(ArchivePngCarvingReason.scanlineSize);
     final checksum = ByteData.sublistView(compressed)
         .getUint32(compressed.length - 4, Endian.big);
-    if (adlerB * 65536 + adlerA != checksum)
+    if (adlerB * 65536 + adlerA != checksum) {
       fail(ArchivePngCarvingReason.invalidZlib);
+    }
   }
 }
 
@@ -910,8 +932,9 @@ Future<void> _verifyCandidate(
   koni.ArchiveReader? reader;
   try {
     final format = await koni.builtInFormats.detect(source);
-    if (format?.name != 'zip')
+    if (format?.name != 'zip') {
       throw const ArchiveViewException('The carved candidate is not a ZIP.');
+    }
     reader = await koni.builtInFormats.openReader(
       source,
       format: format!,
@@ -921,8 +944,9 @@ Future<void> _verifyCandidate(
         maxContainerDecodeSize: kArchiveReadLimit,
       ),
     );
-    if (reader.entries.length != expected.length)
+    if (reader.entries.length != expected.length) {
       throw const ArchiveViewException('The carved ZIP entry count changed.');
+    }
     for (var index = 0; index < expected.length; index++) {
       await operation.checkpoint();
       final captured = expected[index];
@@ -946,16 +970,18 @@ Future<void> _verifyCandidate(
       var count = 0;
       await for (final chunk in reader.openRead(entry)) {
         await operation.checkpoint();
-        if (chunk.length > captured.size - count)
+        if (chunk.length > captured.size - count) {
           throw const ArchiveViewException('The carved ZIP member grew.');
+        }
         count += chunk.length;
         hash.add(chunk);
       }
       hash.close();
-      if (count != captured.size || digest.value != captured.sha256)
+      if (count != captured.size || digest.value != captured.sha256) {
         throw const ArchiveViewException(
           'The carved ZIP content failed verification.',
         );
+      }
     }
     operation.progress(
       ArchivePngCarvingPhase.verifying,
@@ -983,10 +1009,11 @@ class _CarvingOutput extends codecs.OutputStream {
   int length = 0;
   void _allow(int count) {
     check();
-    if (count < 0 || count > limit - length)
+    if (count < 0 || count > limit - length) {
       throw const ArchiveViewException(
         'The carved ZIP exceeds its output limit.',
       );
+    }
     final required = length + count;
     if (required > _buffer.length) {
       final grown = _min(limit, _buffer.length * 2);

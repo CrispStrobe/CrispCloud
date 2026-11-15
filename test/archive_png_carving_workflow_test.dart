@@ -32,6 +32,12 @@ class _InvalidByteBackend extends RecoveryWorkflowBackend {
   }
 }
 
+class _UnguardedRecoveryBackend extends RecoveryWorkflowBackend {
+  _UnguardedRecoveryBackend() : super('unguarded');
+  @override
+  bool get supportsGuardedStagedPublication => false;
+}
+
 void main() {
   late RecoveryWorkflowBackend source, destination;
   late Uint8List original;
@@ -274,6 +280,178 @@ void main() {
       control.resume();
       await expectLater(pending, throwsStateError);
       expect(destination.writes, isEmpty);
+    },
+  );
+
+  test('guarded publication is required before preparing output', () async {
+    final captured = await capture();
+    destination = _UnguardedRecoveryBackend();
+    await expectLater(publish(captured), throwsStateError);
+    expect(destination.writes, isEmpty);
+    expect(destination.contents, isEmpty);
+  });
+
+  test('Stop after final asynchronous type check prevents install', () async {
+    final captured = await capture();
+    final control = FileOperationControl();
+    var boundaries = 0;
+    destination.afterFinalTypeCheck = () {
+      boundaries++;
+      control.cancel();
+    };
+    await expectLater(
+      publish(captured, control: control),
+      throwsA(isA<FileOperationCancelled>()),
+    );
+    expect(boundaries, 1);
+    expect(destination.writes, isEmpty);
+    expect(destination.contents, isEmpty);
+    expect(source.contents['/input/broken.zip'], original);
+  });
+
+  for (final revokeSource in [true, false]) {
+    test(
+      '${revokeSource ? 'source' : 'destination'} revocation after final type check prevents install',
+      () async {
+        final captured = await capture();
+        destination.afterFinalTypeCheck = () {
+          if (revokeSource) {
+            source.current = false;
+          } else {
+            destination.current = false;
+          }
+        };
+        await expectLater(publish(captured), throwsStateError);
+        expect(destination.writes, isEmpty);
+        expect(destination.contents, isEmpty);
+      },
+    );
+  }
+
+  test(
+    'pause after final type check repeats commit proof before installing',
+    () async {
+      final captured = await capture();
+      final control = FileOperationControl();
+      final paused = Completer<void>();
+      var committing = 0;
+      destination.afterFinalTypeCheck = () {
+        destination.afterFinalTypeCheck = null;
+        control.pause();
+        paused.complete();
+      };
+      final pending = publish(
+        captured,
+        control: control,
+        checkpoint: (event) async {
+          if (event['phase'] == 'committing') committing++;
+        },
+      );
+      await paused.future;
+      expect(destination.writes, isEmpty);
+      expect(committing, 1);
+      control.resume();
+      final result = await pending;
+      expect(committing, 2);
+      expect(result.path, '/output/recovered.zip');
+      expect(destination.writes, ['/output/recovered.zip']);
+    },
+  );
+
+  for (final transient in [false, true]) {
+    test(
+      '${transient ? 'transient pause and resume' : 'held pause'} after final type check cannot reuse old source proof',
+      () async {
+        final captured = await capture();
+        final control = FileOperationControl();
+        final paused = Completer<void>();
+        var committing = 0;
+        destination.afterFinalTypeCheck = () {
+          destination.afterFinalTypeCheck = null;
+          control.pause();
+          if (transient) {
+            // Same length/timestamp: only repeating the complete source hash
+            // catches this. The guard observes resumed state but a new epoch.
+            source.contents['/input/broken.zip']!.last ^= 1;
+            control.resume();
+          }
+          paused.complete();
+        };
+        final pending = publish(
+          captured,
+          control: control,
+          checkpoint: (event) async {
+            if (event['phase'] == 'committing') committing++;
+          },
+        );
+        final refused = expectLater(pending, throwsStateError);
+        await paused.future;
+        expect(destination.writes, isEmpty);
+        if (!transient) {
+          source.contents['/input/broken.zip']!.last ^= 1;
+          control.resume();
+        }
+        await refused;
+        expect(committing, 2);
+        expect(destination.writes, isEmpty);
+        expect(destination.contents, isEmpty);
+      },
+    );
+  }
+
+  test(
+    'transient pause after final type check also rehashes staged output',
+    () async {
+      final captured = await capture();
+      final control = FileOperationControl();
+      var committing = 0;
+      destination.afterFinalTypeCheck = () {
+        destination.afterFinalTypeCheck = null;
+        control.pause();
+        final stage = destination.contents.keys.single;
+        destination.contents[stage]!.last ^= 1;
+        control.resume();
+      };
+      await expectLater(
+        publish(
+          captured,
+          control: control,
+          checkpoint: (event) async {
+            if (event['phase'] == 'committing') committing++;
+          },
+        ),
+        throwsStateError,
+      );
+      expect(committing, 2);
+      expect(destination.writes, isEmpty);
+      expect(destination.contents, isEmpty);
+    },
+  );
+
+  test(
+    'exclusive install retains collision arriving after final type check',
+    () async {
+      final captured = await capture();
+      destination.afterFinalTypeCheck = () {
+        destination.put('/output/recovered.zip', [4, 5, 6]);
+      };
+      await expectLater(publish(captured), throwsStateError);
+      expect(destination.writes, isEmpty);
+      expect(destination.contents['/output/recovered.zip'], [4, 5, 6]);
+    },
+  );
+
+  test(
+    'late Stop after the guarded install retains successful output',
+    () async {
+      final captured = await capture();
+      final control = FileOperationControl();
+      destination.afterInstall = control.cancel;
+      final result = await publish(captured, control: control);
+      expect(result.path, '/output/recovered.zip');
+      expect(result.publicationWarning, isNull);
+      expect(destination.writes, ['/output/recovered.zip']);
+      expect(source.contents['/input/broken.zip'], original);
     },
   );
 
