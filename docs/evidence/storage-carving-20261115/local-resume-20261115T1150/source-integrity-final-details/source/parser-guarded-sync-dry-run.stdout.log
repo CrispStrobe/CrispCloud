@@ -1,0 +1,10 @@
+{
+  "from": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+  "to": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+  "write": [
+    "packages/legacy_doc_parser/UPSTREAM.json",
+    "pubspec.yaml"
+  ],
+  "delete": [],
+  "applied": false
+}

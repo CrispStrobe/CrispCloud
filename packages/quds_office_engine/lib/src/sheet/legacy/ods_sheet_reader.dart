@@ -450,7 +450,7 @@ abstract final class OdsSheetReader {
         // Retain the native Excel character units used by ODF producers so
         // an XLSX round trip does not apply a second pixel conversion.
         final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
-        final defaultChars =
+        const defaultChars =
             _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
         if ((chars - defaultChars).abs() > 0.05) {
           budget.dimensions(count);

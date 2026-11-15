@@ -1,0 +1,402 @@
+{
+  "recorded_at": "2026-11-15T12:44:44.735670+00:00",
+  "scope": "Native hook output inspection after the recorded bootstrap command; not additional runtime tests.",
+  "source_head": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "gate_qualification_success": true,
+  "gate_inputs_and_commit_stable": true,
+  "native_files_before": 0,
+  "native_files_after": 23,
+  "hooks": [
+    {
+      "package": "crisp_catalog",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 1
+    },
+    {
+      "package": "crisp_ebook_conversion",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 1
+    },
+    {
+      "package": "crisp_storage",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 0
+    },
+    {
+      "package": "dart_smb2",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 1
+    },
+    {
+      "package": "flutter_pty2",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 1
+    },
+    {
+      "package": "objective_c",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 0
+    },
+    {
+      "package": "sqlite3",
+      "configuration": "6b4ebf10e7",
+      "status": "success",
+      "asset_count": 1
+    }
+  ],
+  "runtime_assets": [
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_catalog/build/6b4ebf10e7/libcrisp_catalog_bridge.so",
+      "size": 3611160,
+      "sha256": "643476acd2cfaf05ef1b9cc67b321f410620f7bc38b292e390864c4a98407712",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62,
+      "id": "package:crisp_catalog/crisp_catalog_bridge",
+      "asset_type": "code_assets/code",
+      "link_mode": {
+        "type": "dynamic_loading_bundle"
+      },
+      "hook": {
+        "package": "crisp_catalog",
+        "configuration": "6b4ebf10e7",
+        "status": "success",
+        "asset_count": 1
+      },
+      "readelf_exit_code": 0,
+      "readelf_receipt": "crisp_catalog-libcrisp_catalog_bridge.so.readelf.txt"
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/6b4ebf10e7/libcrisp_kindling_bridge.so",
+      "size": 12175608,
+      "sha256": "2b0b79feb5d31276bc246a3f9ee8dc5d856bb0a0af74d5629eb535080eaec1f4",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62,
+      "id": "package:crisp_ebook_conversion/kindling_bridge",
+      "asset_type": "code_assets/code",
+      "link_mode": {
+        "type": "dynamic_loading_bundle"
+      },
+      "hook": {
+        "package": "crisp_ebook_conversion",
+        "configuration": "6b4ebf10e7",
+        "status": "success",
+        "asset_count": 1
+      },
+      "readelf_exit_code": 0,
+      "readelf_receipt": "crisp_ebook_conversion-libcrisp_kindling_bridge.so.readelf.txt"
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/dart_smb2/build/6b4ebf10e7/libdart_smb2.so",
+      "size": 294472,
+      "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62,
+      "id": "package:dart_smb2/libsmb2",
+      "asset_type": "code_assets/code",
+      "link_mode": {
+        "type": "dynamic_loading_bundle"
+      },
+      "hook": {
+        "package": "dart_smb2",
+        "configuration": "6b4ebf10e7",
+        "status": "success",
+        "asset_count": 1
+      },
+      "readelf_exit_code": 0,
+      "readelf_receipt": "dart_smb2-libdart_smb2.so.readelf.txt"
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/flutter_pty2/build/6b4ebf10e7/libflutter_pty2.so",
+      "size": 61776,
+      "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62,
+      "id": "package:flutter_pty2/flutter_pty2",
+      "asset_type": "code_assets/code",
+      "link_mode": {
+        "type": "dynamic_loading_bundle"
+      },
+      "hook": {
+        "package": "flutter_pty2",
+        "configuration": "6b4ebf10e7",
+        "status": "success",
+        "asset_count": 1
+      },
+      "readelf_exit_code": 0,
+      "readelf_receipt": "flutter_pty2-libflutter_pty2.so.readelf.txt"
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/sqlite3/build/download-4ee5242/libsqlite3.so",
+      "size": 1793240,
+      "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62,
+      "id": "package:sqlite3/src/ffi/libsqlite3.g.dart",
+      "asset_type": "code_assets/code",
+      "link_mode": {
+        "type": "dynamic_loading_bundle"
+      },
+      "hook": {
+        "package": "sqlite3",
+        "configuration": "6b4ebf10e7",
+        "status": "success",
+        "asset_count": 1
+      },
+      "readelf_exit_code": 0,
+      "readelf_receipt": "sqlite3-libsqlite3.so.readelf.txt"
+    }
+  ],
+  "all_generated_shared_libraries": [
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_catalog/build/6b4ebf10e7/libcrisp_catalog_bridge.so",
+      "size": 3611160,
+      "sha256": "643476acd2cfaf05ef1b9cc67b321f410620f7bc38b292e390864c4a98407712",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_catalog/build/cargo/release/build/serde_derive/84820fcd1513e1df/out/libserde_derive-84820fcd1513e1df.so",
+      "size": 3952344,
+      "sha256": "7d2043166edc50b95d15ff65641c0116c11639254476d0ae5d114eabcf3609ae",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_catalog/build/cargo/x86_64-unknown-linux-gnu/release/build/crisp_catalog_bridge/c8781658385bd035/out/libcrisp_catalog_bridge.so",
+      "size": 3611160,
+      "sha256": "643476acd2cfaf05ef1b9cc67b321f410620f7bc38b292e390864c4a98407712",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_catalog/build/cargo/x86_64-unknown-linux-gnu/release/libcrisp_catalog_bridge.so",
+      "size": 3611160,
+      "sha256": "643476acd2cfaf05ef1b9cc67b321f410620f7bc38b292e390864c4a98407712",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/6b4ebf10e7/libcrisp_kindling_bridge.so",
+      "size": 12175608,
+      "sha256": "2b0b79feb5d31276bc246a3f9ee8dc5d856bb0a0af74d5629eb535080eaec1f4",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/clap_derive/5d380f443617b8e8/out/libclap_derive-5d380f443617b8e8.so",
+      "size": 4071320,
+      "sha256": "74bb202cfe2162b204e9dd1d8dd6775c9830184374dd816b3c00021bfe39049b",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/const-str-proc-macro/6d5d1f1fd161f75a/out/libconst_str_proc_macro-6d5d1f1fd161f75a.so",
+      "size": 1939032,
+      "sha256": "9388491688ac9aff0cc416ae5abbb12848c38b612c399e8d2a9b4d320f29e041",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/cssparser-macros/421094514286cb60/out/libcssparser_macros-421094514286cb60.so",
+      "size": 3039696,
+      "sha256": "f2271c84527618a3b4f7cfcb4e86695bcdce4b6ecb2d00cdaca7b9c25c70d247",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/lightningcss-derive/8ae873a823ff91b1/out/liblightningcss_derive-8ae873a823ff91b1.so",
+      "size": 2814704,
+      "sha256": "16317b8463be81528220e4d7319ae3d4fb9daabd14448723ce1275e740792999",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/pastey/1b079700beb4cc7b/out/libpastey-1b079700beb4cc7b.so",
+      "size": 730808,
+      "sha256": "513fa26b3eb8a0edaa086c27a147a7a398db67cf054591e7b806acaf99c8238b",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/phf_macros/506178c0002d4670/out/libphf_macros-506178c0002d4670.so",
+      "size": 3143888,
+      "sha256": "5458a69cfaef70af6c200c4bae449a99273c0bf020e6e08b5aac520962accef2",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/release/build/serde_derive/ab49499abd288fd3/out/libserde_derive-ab49499abd288fd3.so",
+      "size": 4933848,
+      "sha256": "eed598e55c25296c3240c8cd06157799304f9bfcfa83e2ff8b0932189a19c968",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/x86_64-unknown-linux-gnu/release/build/crisp_kindling_bridge/02581d4147b47840/out/libcrisp_kindling_bridge.so",
+      "size": 12175608,
+      "sha256": "2b0b79feb5d31276bc246a3f9ee8dc5d856bb0a0af74d5629eb535080eaec1f4",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/cargo/x86_64-unknown-linux-gnu/release/libcrisp_kindling_bridge.so",
+      "size": 12175608,
+      "sha256": "2b0b79feb5d31276bc246a3f9ee8dc5d856bb0a0af74d5629eb535080eaec1f4",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/dart_smb2/build/4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577/libsmb2_linux-x86_64.so",
+      "size": 294472,
+      "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/dart_smb2/build/6b4ebf10e7/libdart_smb2.so",
+      "size": 294472,
+      "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/flutter_pty2/build/6b4ebf10e7/libflutter_pty2.so",
+      "size": 61776,
+      "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": ".dart_tool/hooks_runner/shared/sqlite3/build/download-4ee5242/libsqlite3.so",
+      "size": 1793240,
+      "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": "build/native_assets/linux/libcrisp_catalog_bridge.so",
+      "size": 3611160,
+      "sha256": "643476acd2cfaf05ef1b9cc67b321f410620f7bc38b292e390864c4a98407712",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": "build/native_assets/linux/libcrisp_kindling_bridge.so",
+      "size": 12175608,
+      "sha256": "2b0b79feb5d31276bc246a3f9ee8dc5d856bb0a0af74d5629eb535080eaec1f4",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": "build/native_assets/linux/libdart_smb2.so",
+      "size": 294472,
+      "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": "build/native_assets/linux/libflutter_pty2.so",
+      "size": 61776,
+      "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    },
+    {
+      "path": "build/native_assets/linux/libsqlite3.so",
+      "size": 1793240,
+      "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+      "elf": true,
+      "elf_class_bits": 64,
+      "elf_byte_order": "little",
+      "elf_type": 3,
+      "elf_machine": 62
+    }
+  ]
+}

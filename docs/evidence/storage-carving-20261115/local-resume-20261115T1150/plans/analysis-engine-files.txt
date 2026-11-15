@@ -13,3 +13,4 @@ packages/quds_office_engine/test/office_pdf_export_test.dart
 packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart
 packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
 packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart
+packages/quds_office_engine/test/sml_styles_date_test.dart

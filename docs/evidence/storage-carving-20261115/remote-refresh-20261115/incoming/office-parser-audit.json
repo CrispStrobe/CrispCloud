@@ -1,0 +1,591 @@
+{
+  "date": "2026-11-15",
+  "office": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "observedMain": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+    "branches": [
+      {
+        "name": "codex/office-recovery-20261115",
+        "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 94
+      },
+      {
+        "name": "feat/word-like-selection",
+        "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 97
+      },
+      {
+        "name": "fix/excel-legacy-import",
+        "sha": "b6d2c58783fd296103e8de5f1f5f089f2379bc1c",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 86
+      },
+      {
+        "name": "fix/linux-goldens",
+        "sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+        "status": "diverged",
+        "ahead": 2,
+        "behind": 39
+      },
+      {
+        "name": "fix/odf-legacy-spreadsheets",
+        "sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 39
+      },
+      {
+        "name": "fix/word-heading-like-word",
+        "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 97
+      },
+      {
+        "name": "fix/word-inline-pictures",
+        "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 64
+      },
+      {
+        "name": "fix/word-shape-no-textbox",
+        "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 97
+      },
+      {
+        "name": "fix/word-steps-vocabulary",
+        "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 47
+      },
+      {
+        "name": "integration/office-storage-reconcile-20261115",
+        "sha": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 69
+      },
+      {
+        "name": "integration/storage-carving-qualification-20261115",
+        "sha": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+        "status": "diverged",
+        "ahead": 2,
+        "behind": 24
+      },
+      {
+        "name": "integration/storage-odf-qualification-20261115",
+        "sha": "cb9f7a5793c9a4e7415cd9e52c91509ea3304252",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 46
+      },
+      {
+        "name": "main",
+        "sha": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+        "status": "main",
+        "ahead": 0,
+        "behind": 0
+      }
+    ],
+    "prs": [
+      {
+        "number": 27,
+        "title": "Fix the reviewed Word golden checks on Linux",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/linux-goldens",
+        "sha": "cde05b85bcd00c26d519d43283fcc6b55a1884e7"
+      },
+      {
+        "number": 26,
+        "title": "Declare archive for the ODS fixture builder",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/odf-legacy-spreadsheets",
+        "sha": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae"
+      },
+      {
+        "number": 25,
+        "title": "Accept OOXML step vocabulary, keep all Word underline styles, continue formatting after a split",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-steps-vocabulary",
+        "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8"
+      },
+      {
+        "number": 24,
+        "title": "Finish ODS fidelity: geometry and date formats",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/odf-legacy-spreadsheets",
+        "sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661"
+      },
+      {
+        "number": 23,
+        "title": "Read OpenDocument spreadsheets into the workbook model",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/odf-legacy-spreadsheets",
+        "sha": "e002b9584bead9761fac8c7cf818431966d1b1c3"
+      },
+      {
+        "number": 22,
+        "title": "Keep inline pictures inside their line of text",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-inline-pictures",
+        "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193"
+      },
+      {
+        "number": 21,
+        "title": "Apply headings the way Word does; shade theme colours in HSL",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-heading-like-word",
+        "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+      },
+      {
+        "number": 20,
+        "title": "Keep shapes without text free of empty text boxes on save",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-shape-no-textbox",
+        "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a"
+      },
+      {
+        "number": 19,
+        "title": "Word-like text selection in the Word editor",
+        "state": "closed",
+        "merged": true,
+        "head": "feat/word-like-selection",
+        "sha": "e8227569a3b90fb21db598483690bd13fe74ddef"
+      },
+      {
+        "number": 18,
+        "title": "Preserve cell drafts during worksheet and find navigation",
+        "state": "closed",
+        "merged": true,
+        "head": "codex/office-recovery-20261115",
+        "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0"
+      },
+      {
+        "number": 17,
+        "title": "Keep unmodelable header/footer parts verbatim instead of refusing documents",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-header-controls",
+        "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b"
+      },
+      {
+        "number": 16,
+        "title": "Import legacy .xls workbooks and harden spreadsheet saves",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/excel-legacy-import",
+        "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e"
+      },
+      {
+        "number": 15,
+        "title": "Make tracked-change import and save linear instead of quadratic",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-revision-quadratic",
+        "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05"
+      },
+      {
+        "number": 14,
+        "title": "Keep complex fields as spans instead of wrapping whole paragraphs",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-field-loss",
+        "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da"
+      },
+      {
+        "number": 13,
+        "title": "Preserve legacy VML content (w:pict) instead of dropping it on import",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-preserve-vml-pict",
+        "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e"
+      },
+      {
+        "number": 12,
+        "title": "test(office): preserve combined sorting and worksheet history regression",
+        "state": "closed",
+        "merged": true,
+        "head": "integration/crispcloud-storage-reconcile-20261114",
+        "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5"
+      },
+      {
+        "number": 11,
+        "title": "Reuse identical media payloads instead of storing a copy on every save",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-media-dedupe",
+        "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5"
+      },
+      {
+        "number": 10,
+        "title": "Stop text boxes anchored in one paragraph from nesting exponentially",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-textbox-nesting",
+        "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a"
+      },
+      {
+        "number": 9,
+        "title": "Keep symbol-font characters (w:sym) through import and save",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-sym-chars",
+        "sha": "58de54567d45e38c05dd77064b7607c577374b9d"
+      },
+      {
+        "number": 8,
+        "title": "Import real-world Word packages the importer used to refuse (17.3% → 3.3%)",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-block-bookmarks",
+        "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7"
+      },
+      {
+        "number": 7,
+        "title": "Resolve Office fonts consistently across layout and PDF export",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/document-fonts-20261113",
+        "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80"
+      },
+      {
+        "number": 6,
+        "title": "Pin canonical parser d14f03f and record complete workspace validation",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/legacy-doc-fidelity-continuation-20261112",
+        "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a"
+      },
+      {
+        "number": 5,
+        "title": "Continue legacy DOC fidelity integration from current main",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/legacy-doc-fidelity-continuation-20261112",
+        "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f"
+      },
+      {
+        "number": 4,
+        "title": "Update vendored legacy DOC parser fidelity checkpoint",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/legacy-doc-fidelity-20261112",
+        "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468"
+      },
+      {
+        "number": 3,
+        "title": "Expand shared Office fidelity and recover interrupted workflows",
+        "state": "closed",
+        "merged": false,
+        "head": "feature/office-fidelity-expansion-20261112",
+        "sha": "e550723b0f2a7cd849970f58820d260c36857502"
+      },
+      {
+        "number": 2,
+        "title": "Preserve spreadsheet font metrics and add Word grid and tab controls",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/office-fidelity-followup-20261112",
+        "sha": "08b09485588d2b6270f594a07c983689c087587d"
+      },
+      {
+        "number": 1,
+        "title": "Preserve worksheet cache types and add bounded legacy Word conversion",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/office-fidelity-gap-closure-20261112",
+        "sha": "54f0f8de01416640560519aa9d732f668f603709"
+      }
+    ],
+    "pendingCommits": [
+      {
+        "sha": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+        "message": "fix(sheet): index comment authors once during serialization [skip ci]"
+      },
+      {
+        "sha": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+        "message": "fix(sheet): declare default ODS column width as constant [skip ci]"
+      }
+    ],
+    "pendingPatches": [
+      {
+        "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "patch": "@@ -447,7 +447,7 @@ abstract final class OdsSheetReader {\n         // Retain the native Excel character units used by ODF producers so\n         // an XLSX round trip does not apply a second pixel conversion.\n         final chars = width * 96 / 72 / _odfMaxDigitWidthPx;\n-        final defaultChars =\n+        const defaultChars =\n             _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;\n         if ((chars - defaultChars).abs() > 0.05) {\n           budget.dimensions(count);"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "patch": "@@ -826,14 +826,14 @@ class SheetSerializer {\n       w.writeStartElement('comments');\n       // CT_Comments requires <authors> before <commentList>, and each comment's\n       // author is an index into that table (not a name attribute).\n-      final List<String> authors = <String>[];\n+      // Retain first-seen order while keeping large imported comment sets\n+      // linear; repeated list searches would make distinct authors quadratic.\n+      final Map<String, int> authors = <String, int>{};\n       for (final SmlComment comment in sheet.comments) {\n-        if (!authors.contains(comment.author)) {\n-          authors.add(comment.author);\n-        }\n+        authors.putIfAbsent(comment.author, () => authors.length);\n       }\n       w.writeStartElement('authors');\n-      for (final String author in authors) {\n+      for (final String author in authors.keys) {\n         w.writeStartElement('author');\n         w.writeText(author);\n         w.writeEndElement();\n@@ -843,7 +843,7 @@ class SheetSerializer {\n       for (final SmlComment comment in sheet.comments) {\n         w.writeStartElement('comment');\n         w.writeAttribute('ref', comment.ref.a1);\n-        w.writeAttribute('authorId', '${authors.indexOf(comment.author)}');\n+        w.writeAttribute('authorId', '${authors[comment.author]}');\n         w.writeStartElement('text');\n         w.writeText(comment.text);\n         w.writeEndElement();"
+      }
+    ],
+    "goldenSquashNote": "fix/linux-goldens has two non-ancestor commits but all 13 changed file blobs are exactly equal to current main (PR 27 squashed). No source import needed.",
+    "odsGeometryFix": "cd56ae1550f37367ef5ec921d124211c7d7e224b already in main history",
+    "parserPin": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "ea82b13dcb0abbd151995cb7d2881789ed137286",
+      "patches": [
+        "Workspace resolution and shared development constraints (lints 6, xml 7) only; parser sources and tests are unchanged."
+      ]
+    },
+    "agentsFiles": []
+  },
+  "parser": {
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "observedMain": "ea82b13dcb0abbd151995cb7d2881789ed137286",
+    "continuation": "integration/storage-carving-parser-20261115",
+    "continuationHead": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+    "branches": [
+      {
+        "name": "fix/accept-word98-mac-nfib",
+        "sha": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 17
+      },
+      {
+        "name": "fix/name-the-real-format",
+        "sha": "9f61e030d320c9086556d3368d6233d25574fdab",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 17
+      },
+      {
+        "name": "fix/recover-comments-bookmarks",
+        "sha": "89555522726432b1449f0d26e701376ec6f59a27",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 17
+      },
+      {
+        "name": "fix/recover-text-from-damaged-compound",
+        "sha": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 17
+      },
+      {
+        "name": "fix/word6-95-text-import",
+        "sha": "120a3cc93776263c37a501d78a9688c0f6d66932",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 16
+      },
+      {
+        "name": "fix/word-written-hyperlinks",
+        "sha": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+        "status": "behind",
+        "ahead": 0,
+        "behind": 18
+      },
+      {
+        "name": "integration/storage-carving-parser-20261115",
+        "sha": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "status": "diverged",
+        "ahead": 7,
+        "behind": 1
+      },
+      {
+        "name": "main",
+        "sha": "ea82b13dcb0abbd151995cb7d2881789ed137286",
+        "status": "main",
+        "ahead": 0,
+        "behind": 0
+      }
+    ],
+    "prs": [
+      {
+        "number": 18,
+        "title": "Import the text of Word 6.0/95 files; text-only fallback under recover",
+        "state": "open",
+        "merged": false,
+        "head": "fix/word6-95-text-import",
+        "sha": "120a3cc93776263c37a501d78a9688c0f6d66932"
+      },
+      {
+        "number": 17,
+        "title": "Recover: omit contradictory comments or bookmarks instead of refusing",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/recover-comments-bookmarks",
+        "sha": "89555522726432b1449f0d26e701376ec6f59a27"
+      },
+      {
+        "number": 16,
+        "title": "Read Word 98 for Mac files (nFib 0x00C2)",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/accept-word98-mac-nfib",
+        "sha": "3dc1a8578af290096c05fe6d428983eb1f82f19a"
+      },
+      {
+        "number": 15,
+        "title": "Recover the text of Word files whose compound directory is destroyed",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/recover-text-from-damaged-compound",
+        "sha": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8"
+      },
+      {
+        "number": 14,
+        "title": "Name the real format of files that are not compound documents",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/name-the-real-format",
+        "sha": "9f61e030d320c9086556d3368d6233d25574fdab"
+      },
+      {
+        "number": 13,
+        "title": "Keep hyperlinks that Word 2010+ writes with empty binary data",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/word-written-hyperlinks",
+        "sha": "d422fa99a3a84830794f0e2dc332d59f923779f7"
+      },
+      {
+        "number": 12,
+        "title": "Write canonical names for built-in styles instead of UI-language names",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/canonical-builtin-style-names",
+        "sha": "ed2a1c7f5571b7edc2ae5cc9f86859518b7ce0de"
+      },
+      {
+        "number": 11,
+        "title": "Opt-in recovery: damaged auxiliary features no longer refuse the whole document",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/degrade-instead-of-refusing",
+        "sha": "04c41d9db2fe6adf0c35c6c638d09565fb0cacb7"
+      },
+      {
+        "number": 10,
+        "title": "Fix legacy DOC property, ownership and export validation gaps",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/parser-audit-20261114",
+        "sha": "e986b77e47ccf54408f3f8305e5407cb8c28c9a0"
+      },
+      {
+        "number": 9,
+        "title": "Fix list-label preservation, text Unicode and native container validation",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/parser-audit-20261113",
+        "sha": "6385ca10e464a52cf5d8c3d29dedf61a3bc7cd5a"
+      },
+      {
+        "number": 8,
+        "title": "Audit and harden legacy DOC parsing and conversion",
+        "state": "closed",
+        "merged": true,
+        "head": "fix/parser-audit-20261113",
+        "sha": "105901f0bdb8b84e92f6242c827c2de9d295945b"
+      },
+      {
+        "number": 7,
+        "title": "Preserve bounded legacy DOC/DOT compatibility with current textbox and ink support",
+        "state": "closed",
+        "merged": false,
+        "head": "feature/file-viewer-compat-20261113",
+        "sha": "402b66de584fda5860c0dbeb7c370858e4568804"
+      },
+      {
+        "number": 6,
+        "title": "Retain completed native fidelity run and integrated acceptance",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/structured-doc-preservation-20261112",
+        "sha": "d14f03f198a9735c660d0f8ae18ba6fc316fcf25"
+      },
+      {
+        "number": 5,
+        "title": "Preserve note table boundaries and corroborated header textbox occurrences",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/structured-doc-preservation-20261112",
+        "sha": "59b51c49aa126232e180b6137c54a454f8516f71"
+      },
+      {
+        "number": 4,
+        "title": "Extend editable DOC fidelity and verify it with native oracles and RGB goldens",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/office-fidelity-oracles-20261112",
+        "sha": "34e14841ef679c6b480673ef5be354286dbd67dc"
+      },
+      {
+        "number": 3,
+        "title": "Extend DOC fidelity with independent Office corpus, oracles and native round trips",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/structured-doc-preservation-20261112",
+        "sha": "ec36636345bdd12e441435a542c021c2f820bc9e"
+      },
+      {
+        "number": 2,
+        "title": "Extend legacy DOC formatting, previews and portable package validation",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/structured-doc-preservation-20261112",
+        "sha": "80e9683c0d60553f7198ca89a64aa927d619c684"
+      },
+      {
+        "number": 1,
+        "title": "Extract MPL Dart DOC parser and extend structured preservation",
+        "state": "closed",
+        "merged": true,
+        "head": "feature/structured-doc-preservation-20261112",
+        "sha": "4dbb0e9581c1624f5b50691d9af002bd5a6b31ac"
+      }
+    ],
+    "pendingCommits": [
+      {
+        "sha": "2341b86397093a2f8d3efb23eb9a8b81006550c3",
+        "message": "test(parser): save all 4122 passing tests across 143 ordinary parser suites [skip ci]"
+      },
+      {
+        "sha": "d9d182c6b25544c3484f54a3d0f0e23810579cda",
+        "message": "test(parser): reproduce damaged-directory recovery and preserve refusal controls [skip ci]"
+      },
+      {
+        "sha": "ac4c88ca6f4d583d3e7f66cfe7f4ee797b1766b6",
+        "message": "test(parser): preserve raw compound-directory conversion failures before correction [skip ci]"
+      },
+      {
+        "sha": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+        "message": "fix(parser): include typed compound failures in explicit bounded DOCX recovery [skip ci]"
+      },
+      {
+        "sha": "fde5685965db83e9cfb6807ecba1205438d7e819",
+        "message": "test(parser): save corrected directory recovery and preservation checks [skip ci]"
+      },
+      {
+        "sha": "337b2fad504ce68f9e5e5053ae859bb5905f3dd8",
+        "message": "test(parser): save clean strict analysis of all 18 reconciled Dart files [skip ci]"
+      },
+      {
+        "sha": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "message": "test(parser): save all 4131 passing tests across 144 suites after directory recovery fix [skip ci]"
+      }
+    ],
+    "resolutionAdvice": "Start with continuation (7 commits ahead and 1 behind main at merge base 97c930ba). Keep its explicit FormatException/CfbfException shared recovery helper and nine added controls; retain main ea82b13d's extra recovery_reconciliation_bounds test. Both implement same intended compound recovery fix; no need to regress to catch-all form. Fresh focused qualification after merge is required because combined tests differ.",
+    "latestStatus": "# Corrected parser qualification\n\n## Current accepted source\n\nThe app-facing parser source pin is **`9bdcc7eba3f1ce80b7d834d7740895774eeca615`**. It retains all five incoming parser PRs and observed main `7df906d2643d1fec39c49fc795733316a49f3278`, the bounded recovery/Unicode/story-boundary corrections, and the subsequent typed compound-directory recovery correction. Later receipt commits leave production, tests and dependency declarations byte-identical to this pin.\n\nThe final correction is confined to `conversion.dart`: explicit `FormatException` and `CfbfException` branches share the same opt-in, DOCX-only bounded text recovery helper. If no text can be recovered, the original structural exception is rethrown. `_plainTextOrNull` recognizes those same two structural exception types. Unrelated exceptions and conversion-writer errors are not swallowed. Reader limits, encryption checks, structured parsing, and DOCM handling are unchanged.\n\n## Current completed gates\n\n| Gate | Recorded result | Exact saved head tested | Raw evidence |\n| --- | --- | --- | --- |\n| Host-shaped damaged-directory regression and controls | 9 passed; no failures, errors or skips | `9bdcc7eba3f1ce80b7d834d7740895774eeca615` | `directory-focused-fixed/` |\n| Strict analysis with fatal infos enabled | All 18 incoming/corrected Dart files; no issues | `fde5685965db83e9cfb6807ecba1205438d7e819` | `directory-strict-analysis/` |\n| Complete ordinary parser inventory | All 144 requested suites; 4,131 passed; no failures, errors, skips, missing or unexpected suites | `337b2fad504ce68f9e5e5053ae859bb5905f3dd8` | `directory-all-parser-final/` |\n\nEvery gate records unchanged before/after source bytes, commit identity, resolved package inputs and tool hashes. Exact commands, machine streams, per-suite results and input snapshots are retained. The complete inventory is `all-parser-directory-suites.txt`; the analysis inventory is `analysis-directory-files.txt`. The full run includes both the original 17 reconciliation regressions and the nine subsequent directory-recovery checks.\n\nThe damaged-directory fixture matches the host failure: allocation metadata and referenced WordDocument/CLX streams remain intact, while the first directory sector is zeroed. It verifies both recovery entry points, explicit text-only status and omission disclosure, source immutability, exclusion of unreferenced private bytes, strict/default refusal, DOCM refusal, encryption/obfuscation refusal, missing-FIB refusal and the 64 MiB input bound.\n\n## Preserved failure evidence and earlier gates\n\n`baseline/` records the original source reconciliation defects on saved regression head `c1559d9d2efa8651c0f9a7759473720e3155f9b5`: 16 tests, three controls passed and 13 failed. The bounded recovery, Word98 signature, Word6 Unicode/charset and following-story annotation corrections were then saved. `focused-fixed/` records 17 passing checks on `5ba4993c24c88eb366ffbb4f5e16b8da6b418064`, including an added positive en-US Windows1252 control.\n\n`strict-analysis/` and `all-parser-final/` preserve the earlier clean 17-file analysis and 143-suite/4,122-test run. Those receipts describe their original inventory and source; the later host gate exposed the separate typed compound exception gap. Observed main was consolidated at `09c8b3731edb60bf6e5309578260af36b9433570` without changing production/test/dependency bytes; `main-reconciliation.json` records the Git object identities.\n\n`directory-baseline/` reproduces the later host failure on saved regression head `d9d182c6b25544c3484f54a3d0f0e23810579cda`: nine tests, seven controls passed and two recovery entry points failed with `CfbfException: Invalid compound root directory`. Source, HEAD, package inputs and tools stayed unchanged. These raw failures were saved remotely at `ac4c88ca6f4d583d3e7f66cfe7f4ee797b1766b6` before production was corrected.\n\n## Scope and reproducibility\n\nThe standalone development graph uses archive 4.7.1, test 1.33.0 and XML 6.6.1. The host app's committed graph uses archive 4.6.0; host application acceptance is recorded separately on byte-matched managed parser source. No dependency declaration or committed host lock was changed.\n\nInput snapshots establish before/after equality, not a hermetic cache snapshot or proof against transient writes. These unit and analysis gates do not claim native Office rendering or broad schema acceptance. An independent read-only review of the earlier correction found no concrete defect in aggregate accounting, bounded views, UTF16 piece scaling/scalar validation, or the conservative charset profile.\n\nRaw package-snapshot bytes remain intact under mirror-safe evidence names. `dependency-setup/evidence-path-mapping.json` records the two renames; the original baseline snapshot index and original output index remain available. No generated-directory exclusion in the managed-mirror tool was weakened.\n\nNo GitHub Actions run was awaited or restarted. Each source, failing baseline and completed gate was saved to the remote integration branch before proceeding.\n",
+    "agentsFiles": []
+  }
+}

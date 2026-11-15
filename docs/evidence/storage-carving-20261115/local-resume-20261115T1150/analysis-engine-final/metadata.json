@@ -1,0 +1,73 @@
+{
+  "after_entries_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "after_git": {
+    "head": "91d8e8ba1331ecce1419b8fba61f92b72291fe60",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/analysis-engine-final/command.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/analysis-engine-final/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/analysis-engine-final/metadata.json\n",
+    "tree": "be214f615d748a7d84749de58e265ed8bf82a380",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-engine-files.txt": "5e39cc6dd12c9ba6d792757312cea389bf6cf885ec73eaa9572bb0e57a6837c9",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "before_entries_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "before_git": {
+    "head": "91d8e8ba1331ecce1419b8fba61f92b72291fe60",
+    "source_changes": [],
+    "status": "",
+    "tree": "be214f615d748a7d84749de58e265ed8bf82a380",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-engine-files.txt": "5e39cc6dd12c9ba6d792757312cea389bf6cf885ec73eaa9572bb0e57a6837c9",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "command": [
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "analyze",
+    "--fatal-infos",
+    "--fatal-warnings",
+    "packages/quds_office_engine/lib/quds_office_engine.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+    "packages/quds_office_engine/test/sheet_time_number_format_test.dart",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+    "packages/quds_office_engine/tool/fidelity/word_steps.dart",
+    "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+    "packages/quds_office_engine/test/office_pdf_export_test.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
+    "packages/quds_office_engine/test/sml_styles_date_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "elapsed_seconds": 3.373971506998714,
+  "finished_at": "2026-11-15T12:13:26.660449+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8588,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T12:13:23.284926+00:00",
+  "suite_count": null
+}

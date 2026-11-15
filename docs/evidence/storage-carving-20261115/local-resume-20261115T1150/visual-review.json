@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T12:35:00.970067+00:00",
+  "reviewer": "root assistant",
+  "review_head": "cc92423bb98789239380864d5e8343c19c25e815",
+  "production_source": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+  "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "method": "Direct visual inspection of both original retained PNGs; no redraw, image editing, or substituted rendering.",
+  "independent_numeric_font_and_source_verification": "navigation-independent-review-final-artifacts/verification.json",
+  "captures": [
+    {
+      "file": "rename-validation.png",
+      "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+      "width": 1600,
+      "height": 1000,
+      "locale": "en",
+      "font_assets_verified": 6,
+      "source_inputs_verified": 2,
+      "path": "navigation-independent-review-final-artifacts/previews/rename-validation.png",
+      "observations": [
+        "The complete centered Rename worksheet dialog is readable at 1600 by 1000 pixels.",
+        "The Reference input and complete red validation guidance are visible; guidance wraps within the dialog without clipping.",
+        "Cancel and Rename controls are fully visible, with the worksheet and bottom worksheet selector retained behind the modal."
+      ],
+      "blocking_visual_issue_in_assessed_controls": false
+    },
+    {
+      "file": "worksheet-arabic-narrow.png",
+      "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+      "width": 390,
+      "height": 1000,
+      "locale": "ar",
+      "font_assets_verified": 6,
+      "source_inputs_verified": 2,
+      "path": "navigation-independent-review-final-artifacts/previews/worksheet-arabic-narrow.png",
+      "observations": [
+        "Arabic menu and ribbon labels show joined Arabic glyphs at 390 by 1000 pixels.",
+        "The lower worksheet name/selector and rename pencil remain visible inside the narrow viewport.",
+        "The filename is ellipsized, and the grid has a horizontal scroll control; the capture does not claim that every wide ribbon control fits simultaneously.",
+        "Visible worksheet rows and cells remain legible and the bottom bar is not cut off."
+      ],
+      "blocking_visual_issue_in_assessed_controls": false
+    }
+  ],
+  "success": true,
+  "scope": "Readability and clipping of the captured duplicate-name dialog and narrow Arabic worksheet/navigation controls. Independent semantic/font/source checks are separate. This does not certify every viewport, translation, or native Office rendering."
+}

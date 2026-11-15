@@ -1,0 +1,804 @@
+{
+  "scope": "Closure of the saved finite observed incoming branch/PR batch; not a new remote refresh or runtime qualification.",
+  "result": "all_observed_relevant_heads_accounted_for",
+  "method": "Local immutable git merge-base --is-ancestor, tree/blob IDs and existing semantic supersession findings. GIT_NO_LAZY_FETCH=1 and GIT_OPTIONAL_LOCKS=0; no repo writes.",
+  "repositories": {
+    "app": {
+      "repository": "CrispStrobe/CrispCloud",
+      "final_commit": "48432b5d0eb22caf365e8659e44ab74cb6aa5a46",
+      "final_tree": "559bef602a3cfb800a15ee2c9fe9b38b0f55ba09",
+      "heads": [
+        {
+          "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+          "labels": [
+            "origin/codex/office-recovery-20261115",
+            "PR#110 codex/office-recovery-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "0c574677be7749969d5c9230a5c036fde95cd87e",
+          "labels": [
+            "origin/continuation/storage-qualification-20261115T1000"
+          ],
+          "inventory_files": [
+            "branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+          "labels": [
+            "origin/feature/new-documents-history-20261115"
+          ],
+          "inventory_files": [
+            "branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+          "labels": [
+            "origin/fix/excel-legacy-xls"
+          ],
+          "inventory_files": [
+            "branches.json"
+          ],
+          "disposition": "superseded",
+          "ancestry_exit_code": 1,
+          "proof": {
+            "kind": "reviewed_semantic_supersession_with_historical_blob_proof",
+            "finding_file": "README.md",
+            "exact_blob_proof_file": "superseded-path-lineage.json",
+            "changed_paths": 59,
+            "reverified_historically_imported_paths": 52,
+            "matching_revisions_are_final_ancestors": true,
+            "matching_revisions": [
+              "59466d8b48f329362ab88e9da5e195c849557069",
+              "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+              "c730957ba35d79fe9a43dbfef4edb7662945b033",
+              "db5e3f7516b1e6c08cc2926f6d5afdceba85792d"
+            ],
+            "remaining_paths": [
+              "lib/services/office_document_service.dart",
+              "lib/widgets/file_editor_dialog.dart",
+              "lib/widgets/internal_viewer_dialog.dart",
+              "lib/widgets/office_editor_dialog.dart",
+              "packages/QUDS_FORKS.md",
+              "test/office_document_service_test.dart",
+              "tool/office_fidelity_manifest.json"
+            ],
+            "remaining_finding": "Four shared app files and service tests have later combined implementations preserving ODS edit/copy-save, typed XLS grid/fallback and richer ODF extraction; vendor/fork pins are newer. Prior semantic review is retained in README.md and legacy-branch-app-feature.patch."
+          }
+        },
+        {
+          "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+          "labels": [
+            "origin/fix/odf-final",
+            "PR#116 fix/odf-final"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json",
+            "late-pr-metadata.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "labels": [
+            "origin/integrate/consistency-20261115",
+            "PR#113 integrate/consistency-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "superseded",
+          "ancestry_exit_code": 1,
+          "proof": {
+            "kind": "reviewed_semantic_supersession_with_historical_blob_proof",
+            "finding_file": "README.md",
+            "exact_blob_proof_file": "superseded-path-lineage.json",
+            "changed_paths": 21,
+            "reverified_historically_imported_paths": 20,
+            "matching_revisions_are_final_ancestors": true,
+            "matching_revisions": [
+              "59466d8b48f329362ab88e9da5e195c849557069",
+              "723ab5b43c88e96489a81c13bd427f7c404af87c",
+              "db5e3f7516b1e6c08cc2926f6d5afdceba85792d"
+            ],
+            "remaining_paths": [
+              "packages/QUDS_FORKS.md"
+            ],
+            "remaining_finding": "The sole unmatched path is QUDS_FORKS.md containing an older source pin; current source pins supersede it."
+          }
+        },
+        {
+          "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "labels": [
+            "origin/integrate/legacy-xls-preview-20261115",
+            "PR#114 integrate/legacy-xls-preview-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+          "labels": [
+            "origin/integrate/odf-integration-20261115",
+            "PR#117 integrate/odf-integration-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+          "labels": [
+            "origin/integrate/ods-fixes-20261115",
+            "PR#118 integrate/ods-fixes-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json",
+            "late-pr-metadata.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+          "labels": [
+            "origin/integrate/ods-style-20261115",
+            "PR#119 integrate/ods-style-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json",
+            "late-pr-metadata.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "labels": [
+            "origin/integrate/office-goldens-20261115",
+            "PR#115 integrate/office-goldens-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+          "labels": [
+            "origin/integrate/word-inline-pictures-20261115",
+            "PR#112 integrate/word-inline-pictures-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+          "labels": [
+            "origin/integration/office-reconcile-storage-20261115"
+          ],
+          "inventory_files": [
+            "branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "59466d8b48f329362ab88e9da5e195c849557069",
+          "labels": [
+            "origin/integration/storage-carving-20261115",
+            "PR#111 integration/storage-carving-20261115"
+          ],
+          "inventory_files": [
+            "branches.json",
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "dacd3e584abe885058f9dddbde8493976647e5d3",
+          "labels": [
+            "origin/integration/storage-carving-local-qualification-20261115"
+          ],
+          "inventory_files": [
+            "branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+          "labels": [
+            "origin/main"
+          ],
+          "inventory_files": [
+            "branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "labels": [
+            "PR#108 fix/excel-legacy-xls"
+          ],
+          "inventory_files": [
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "1b7680583ac69649b17287ab68738288fec10f51",
+          "labels": [
+            "PR#109 fix/legacy-doc-recover"
+          ],
+          "inventory_files": [
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "labels": [
+            "PR#107 integration/storage-delta-20261114"
+          ],
+          "inventory_files": [
+            "prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+          "labels": [
+            "PR#120 fix/ods-date-styles",
+            "fix/ods-date-styles final observed head"
+          ],
+          "inventory_files": [
+            "late-pr-metadata.json",
+            "late-refresh-audit.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "dca83f902dd92fd6338ded42394a2c37ccdc909a",
+          "labels": [
+            "PR#111 integration/storage-carving-20261115"
+          ],
+          "inventory_files": [
+            "late-pr-metadata.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "b0e0f1746e5042f9dfced8ab471222d33bcb63a0",
+          "labels": [
+            "fix/ods-date-styles initial late head"
+          ],
+          "inventory_files": [
+            "late-refresh-audit.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        }
+      ],
+      "counts": {
+        "observed_heads": 22,
+        "ancestors": 20,
+        "superseded": 2
+      }
+    },
+    "quds": {
+      "repository": "CrispStrobe/quds_office_suite",
+      "final_commit": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+      "final_tree": "29a6df12920174f8c7b926cf566e72add3d00fb2",
+      "heads": [
+        {
+          "head": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "labels": [
+            "refs/remotes/origin/codex/office-recovery-20261115",
+            "PR#18 codex/office-recovery-20261115"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "labels": [
+            "refs/remotes/origin/feat/word-like-selection",
+            "PR#19 feat/word-like-selection"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "b6d2c58783fd296103e8de5f1f5f089f2379bc1c",
+          "labels": [
+            "refs/remotes/origin/fix/excel-legacy-import"
+          ],
+          "inventory_files": [
+            "canonical-branches.json"
+          ],
+          "disposition": "superseded",
+          "ancestry_exit_code": 1,
+          "proof": {
+            "kind": "exact_feature_blob_equivalence_and_export_superset",
+            "matching_merged_pr": 23,
+            "matching_final_ancestor": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+            "file_proofs": [
+              {
+                "path": "packages/quds_office_engine/lib/quds_office_engine.dart",
+                "branch_blob": "313bd4fb15d71e986b08517de4672c02034cd8eb",
+                "pr23_blob": "d27f35c9ec530b0766ededba09def6893350ca11",
+                "same_as_pr23": false
+              },
+              {
+                "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "branch_blob": "23b3a201d9850c9074719087f9688ee942b6aec8",
+                "pr23_blob": "23b3a201d9850c9074719087f9688ee942b6aec8",
+                "same_as_pr23": true
+              },
+              {
+                "path": "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods",
+                "branch_blob": "6eab4ec418c58920b1b0696fa53c08f73459108e",
+                "pr23_blob": "6eab4ec418c58920b1b0696fa53c08f73459108e",
+                "same_as_pr23": true
+              },
+              {
+                "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+                "branch_blob": "a9387018cae1af3f2f817094b9d6d8e2b2a814ee",
+                "pr23_blob": "a9387018cae1af3f2f817094b9d6d8e2b2a814ee",
+                "same_as_pr23": true
+              }
+            ],
+            "export_file": "packages/quds_office_engine/lib/quds_office_engine.dart",
+            "export_file_only_additions_in_pr23": [
+              "export 'src/word/model/word_field_spans.dart';",
+              "export 'src/word/serial/word_heading_io.dart';"
+            ],
+            "all_old_exports_retained_in_final": true,
+            "finding_file": "README.md"
+          }
+        },
+        {
+          "head": "e033226bd2d53d1a818c6771ce347c23e6056857",
+          "labels": [
+            "refs/remotes/origin/fix/odf-legacy-spreadsheets",
+            "PR#24 fix/odf-legacy-spreadsheets"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "labels": [
+            "refs/remotes/origin/fix/word-heading-like-word",
+            "PR#21 fix/word-heading-like-word"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "labels": [
+            "refs/remotes/origin/fix/word-inline-pictures",
+            "PR#22 fix/word-inline-pictures"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "labels": [
+            "refs/remotes/origin/fix/word-shape-no-textbox",
+            "PR#20 fix/word-shape-no-textbox"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "labels": [
+            "refs/remotes/origin/fix/word-steps-vocabulary",
+            "PR#25 fix/word-steps-vocabulary"
+          ],
+          "inventory_files": [
+            "canonical-branches.json",
+            "canonical-prs.json",
+            "late-pr-metadata.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+          "labels": [
+            "refs/remotes/origin/integration/office-storage-reconcile-20261115"
+          ],
+          "inventory_files": [
+            "canonical-branches.json"
+          ],
+          "disposition": "superseded",
+          "ancestry_exit_code": 1,
+          "proof": {
+            "kind": "exact_entire_tree_equivalence",
+            "matching_final_ancestor": "afe8c511f835251d4aca740b89b650c0738bb898",
+            "identical_tree": "83d3afe9597bd5cad919f3acc34f8d80b78ba05d",
+            "finding_file": "README.md",
+            "unique_non_merge_commits": []
+          }
+        },
+        {
+          "head": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+          "labels": [
+            "refs/remotes/origin/integration/storage-carving-qualification-20261115"
+          ],
+          "inventory_files": [
+            "canonical-branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "cb9f7a5793c9a4e7415cd9e52c91509ea3304252",
+          "labels": [
+            "refs/remotes/origin/integration/storage-odf-qualification-20261115"
+          ],
+          "inventory_files": [
+            "canonical-branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
+          "labels": [
+            "refs/remotes/origin/main"
+          ],
+          "inventory_files": [
+            "canonical-branches.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+          "labels": [
+            "PR#23 fix/odf-legacy-spreadsheets"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "labels": [
+            "PR#16 fix/excel-legacy-import"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "labels": [
+            "PR#15 fix/word-revision-quadratic"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "labels": [
+            "PR#17 fix/word-header-controls"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "labels": [
+            "PR#14 fix/word-field-loss"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "labels": [
+            "PR#13 fix/word-preserve-vml-pict"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "labels": [
+            "PR#12 integration/crispcloud-storage-reconcile-20261114"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "labels": [
+            "PR#10 fix/word-textbox-nesting"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "labels": [
+            "PR#9 fix/word-sym-chars"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "labels": [
+            "PR#11 fix/word-media-dedupe"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "labels": [
+            "PR#8 fix/word-block-bookmarks"
+          ],
+          "inventory_files": [
+            "canonical-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+          "labels": [
+            "PR#24 fix/odf-legacy-spreadsheets",
+            "fix/odf-legacy-spreadsheets final observed head"
+          ],
+          "inventory_files": [
+            "late-pr-metadata.json",
+            "late-refresh-audit.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        }
+      ],
+      "counts": {
+        "observed_heads": 24,
+        "ancestors": 22,
+        "superseded": 2
+      }
+    },
+    "parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "final_commit": "09c8b3731edb60bf6e5309578260af36b9433570",
+      "final_tree": "199302bf3c50c95d66edabadc1263046a8e90765",
+      "heads": [
+        {
+          "head": "120a3cc93776263c37a501d78a9688c0f6d66932",
+          "labels": [
+            "PR#18 fix/word6-95-text-import"
+          ],
+          "inventory_files": [
+            "parser-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "89555522726432b1449f0d26e701376ec6f59a27",
+          "labels": [
+            "PR#17 fix/recover-comments-bookmarks",
+            "fix/recover-comments-bookmarks"
+          ],
+          "inventory_files": [
+            "parser-prs.json",
+            "parser-incoming.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
+          "labels": [
+            "PR#16 fix/accept-word98-mac-nfib",
+            "fix/accept-word98-mac-nfib"
+          ],
+          "inventory_files": [
+            "parser-prs.json",
+            "parser-incoming.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
+          "labels": [
+            "PR#15 fix/recover-text-from-damaged-compound",
+            "fix/recover-text-from-damaged-compound"
+          ],
+          "inventory_files": [
+            "parser-prs.json",
+            "parser-incoming.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "9f61e030d320c9086556d3368d6233d25574fdab",
+          "labels": [
+            "PR#14 fix/name-the-real-format",
+            "fix/name-the-real-format"
+          ],
+          "inventory_files": [
+            "parser-prs.json",
+            "parser-incoming.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+          "labels": [
+            "PR#13 fix/word-written-hyperlinks"
+          ],
+          "inventory_files": [
+            "parser-prs.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        },
+        {
+          "head": "7df906d2643d1fec39c49fc795733316a49f3278",
+          "labels": [
+            "main final observed head"
+          ],
+          "inventory_files": [
+            "late-refresh-audit.json"
+          ],
+          "disposition": "ancestor",
+          "ancestry_exit_code": 0
+        }
+      ],
+      "counts": {
+        "observed_heads": 7,
+        "ancestors": 7,
+        "superseded": 0
+      }
+    }
+  },
+  "totals": {
+    "observed_heads": 53,
+    "ancestors": 49,
+    "superseded": 4,
+    "unaccounted": 0
+  },
+  "cross_repository_binding": {
+    "app": "48432b5d0eb22caf365e8659e44ab74cb6aa5a46",
+    "office_manifest_commit": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+    "standalone_parser_commit": "09c8b3731edb60bf6e5309578260af36b9433570",
+    "parser_upstream_commit": "09c8b3731edb60bf6e5309578260af36b9433570",
+    "author_writer_blob_app_and_canonical": "e8eaba8e0ac388511bc282b6b913b127e1194e64"
+  },
+  "followup_pin_evidence": {
+    "prior_app_checkpoint": "fb109e8daeebdc5ecfe2f1b98dd05d2ff4dbcee9",
+    "prior_office_pin": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+    "prior_writer_blob": "c61bf75602b9e686ef6dfc8734afe31cc410ba1a",
+    "final_app_is_descendant": true,
+    "final_writer_pin_and_blob_match": true,
+    "reason": "Late feature merge preceded the linear author-table writer fix; final app follow-up is required and now included."
+  },
+  "original_user_handoff": {
+    "commit": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+    "ancestor_of_final_app": true
+  },
+  "inventory_sha256": {
+    "README.md": "7daaf5c7b6a77e2ee11f3a7f8bf4429e5531c67b387c50a00f5cd0322b5d4fb4",
+    "branches.json": "2c9f1fa327c11e535e47d2e9ca58e3c83c21bfcd679165d56674f3f5acb70ff7",
+    "canonical-branches.json": "00e02dd2b1f5eebc4b5934c6c1b18eae36070a1245d88d5b1bb0f49aa976768c",
+    "canonical-prs.json": "91b8be0a3ca5fad17ccc04c0dacbafd23baa0eb84f8b5e6257a8c7b9608de3e8",
+    "late-pr-metadata.json": "08e7071524bcc3a4c12703c1dee876a434fff948b5a01ac2b856e785d9cfc2e9",
+    "late-refresh-audit.json": "5b04ab27303cce3af73d62cc8591be949c71e9c1784a9dd6d9c85f56b3d980be",
+    "late-refresh-audit.md": "7094b71808fcf95fe91839b3884d009614563571fce790a5bf13400da525da96",
+    "legacy-branch-app-feature.patch": "96e84dd2aa497b95a867e4089cf015c0f75d1abc48c8106822c3a74553a5ab62",
+    "parser-incoming.json": "9859ac26dd838ea18230357f57f03c05dd6059421516165e840f12a636c330d7",
+    "parser-prs.json": "c6cfca3cc1567ade32dbf887b9d1d6f967fcca6a9c16a98b31a0b5f6407c31b2",
+    "prs.json": "b43f6bf5c41498bc78b690298d48af4018f3dcfc115cbae5293ae0cb34238cd2",
+    "superseded-path-lineage.json": "57f3ccf7b8fcd00291ffd5ec15e7f3a8d310988e7592fae460388c1d03ee7664"
+  },
+  "remote_refreshes": 0,
+  "repository_mutations": 0,
+  "ci_polls_or_waits": 0
+}

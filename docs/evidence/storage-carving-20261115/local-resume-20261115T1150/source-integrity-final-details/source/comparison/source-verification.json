@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-15T12:22:32.396836+00:00",
+  "canonical_managed_counts": {
+    "parser": 1807,
+    "quds": 496
+  },
+  "canonical_pins": {
+    "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+    "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+  },
+  "failure_count": 0,
+  "failures": [],
+  "managed_files_verified": 2303,
+  "manifest_sha256": "f734610dc8d741b8180c33d7d5fdba9eff288cca4c6f2dad73faf1c4c9242f54",
+  "schema": 1,
+  "scope": "Full committed checkout Git blob/mode integrity; every managed SHA-256, canonical Git blob/mode, exact parser inventory and pin declaration. Does not qualify runtime, rendering, native outputs or schemas.",
+  "source_commit": "cf5b50c6bcab5f9c69283ed8296ce100de912251",
+  "source_head_after": "cf5b50c6bcab5f9c69283ed8296ce100de912251",
+  "source_tree": "abb0c97c637c783934df62baed4edd520a37e809",
+  "success": true,
+  "tracked_files_verified": 11366
+}

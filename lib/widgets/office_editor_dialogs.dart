@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_ribbon_control_strings.dart';
 
 /// Office-like palette (RRGGBB, no leading '#').
 const List<String> kOfficePalette = <String>[
@@ -465,30 +466,18 @@ Future<WordFontChoice?> showWordFontDialog(
                       initialValue: underline,
                       isDense: true,
                       decoration: InputDecoration(
-                        labelText: ctx.tr('Underline style'),
+                        labelText: OfficeRibbonControlStrings(ctx)
+                            .text('Underline style'),
                         isDense: true,
                       ),
                       items: <DropdownMenuItem<WmlUnderline>>[
-                        DropdownMenuItem<WmlUnderline>(
-                          value: WmlUnderline.none,
-                          child: Text(ctx.tr('None')),
-                        ),
-                        DropdownMenuItem<WmlUnderline>(
-                          value: WmlUnderline.single,
-                          child: Text(ctx.tr('Single')),
-                        ),
-                        DropdownMenuItem<WmlUnderline>(
-                          value: WmlUnderline.double,
-                          child: Text(ctx.tr('Double')),
-                        ),
-                        DropdownMenuItem<WmlUnderline>(
-                          value: WmlUnderline.dotted,
-                          child: Text(ctx.tr('Dotted')),
-                        ),
-                        DropdownMenuItem<WmlUnderline>(
-                          value: WmlUnderline.wavy,
-                          child: Text(ctx.tr('Wavy')),
-                        ),
+                        for (final style in WmlUnderline.values)
+                          DropdownMenuItem<WmlUnderline>(
+                            value: style,
+                            child: Text(
+                              OfficeRibbonControlStrings(ctx).underline(style),
+                            ),
+                          ),
                       ],
                       onChanged: (WmlUnderline? value) {
                         if (value != null) {

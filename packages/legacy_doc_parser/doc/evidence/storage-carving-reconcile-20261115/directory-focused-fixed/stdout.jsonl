@@ -1,0 +1,25 @@
+{"protocolVersion":"0.1.1","runnerVersion":"1.33.0","pid":18,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"test/compound_directory_recovery_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading test/compound_directory_recovery_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"count":1,"time":6,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1233}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":9,"line":null,"column":null,"url":null},"type":"group","time":1236}
+{"test":{"id":3,"name":"a destroyed directory leaves only the referenced body recoverable","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":53,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1236}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1318}
+{"test":{"id":4,"name":"typed compound damage falls back to disclosed text-only DOCX","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":60,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1319}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1392}
+{"test":{"id":5,"name":"structured DOCX compatibility entry point retains recovery status","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":82,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1393}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1399}
+{"test":{"id":6,"name":"default and explicit strict conversion still refuse directory damage","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":91,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1399}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1406}
+{"test":{"id":7,"name":"damaged directory cannot use text fallback for DOCM output","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":107,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1407}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1410}
+{"test":{"id":8,"name":"damaged directory preserves encryption/obfuscation refusal 256","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":119,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1410}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1413}
+{"test":{"id":9,"name":"damaged directory preserves encryption/obfuscation refusal 32768","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":119,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1414}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1416}
+{"test":{"id":10,"name":"damaged directory without a valid FIB cannot recover stray strings","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":132,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1417}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1418}
+{"test":{"id":11,"name":"directory recovery does not bypass the 64 MiB input bound","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":144,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/compound_directory_recovery_test.dart"},"type":"testStart","time":1419}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1421}
+{"success":true,"type":"done","time":1429}

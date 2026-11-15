@@ -1,0 +1,10 @@
+{
+  "label": "analysis-app-final",
+  "qualification_success": true,
+  "returncode": 0,
+  "tested_head": "b99a31c5a8f92df48d52bb545c4d461d9e08afcd",
+  "source_resolution_digest": "fac95c4fce0b6e6265be9112571e03915253c2391df235d7f1beaec4f7a439b0",
+  "inputs_and_commit_stable": true,
+  "totals": null,
+  "suite_count": null
+}

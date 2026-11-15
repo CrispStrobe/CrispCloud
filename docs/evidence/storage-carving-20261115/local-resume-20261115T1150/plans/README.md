@@ -5,8 +5,8 @@ test overlay and manifests after reconciling the incoming application and
 canonical branches. Resolve dependencies with the pinned environment, preserve
 app and CLI locks, then save the complete source remotely before starting gates.
 
-The selected cohorts grow from 49/7/17 to **63 app / 9 editor / 20 engine suites**.
-Strict analysis covers **72 app / 15 engine / 4 editor / 1 CLI files**. The added
+The selected cohorts grow from 49/7/17 to **65 app / 9 editor / 22 engine suites**.
+Strict analysis covers **76 app / 16 engine / 4 editor / 1 CLI files**. The added
 files and concrete reasons are recorded in `gate-plan.json`. Two optional local
 corpus scanners are preserved as source but excluded from mandatory execution;
 their no-input behavior is not qualification evidence.
@@ -42,8 +42,7 @@ under the genuine pinned toolchain; native hooks remain enabled.
 | editor | `packages/quds_office_editor` | Same Flutter test command, converting all `editor-suites.txt` paths to absolute paths; recorder's suite manifest stays repository-relative |
 | engine | `packages/quds_office_engine` | `dart test --reporter json --concurrency=2` plus absolute paths from `engine-suites.txt` |
 | scripted-oracle | app | `python3 docs/evidence/storage-carving-20261115/local-resume-20261115T1010/run_scripted_oracle.py --repo REPO --output NEW_OUTPUT_DIR`; requires the engine gate's actual `build/fidelity-scripted` outputs and retains all 12 files plus 17 controls |
-| source-integrity | app | `python3 docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_only_controls.py --repo REPO --quds CANONICAL_REPO --parser PARSER_REPO --output NEW_OUTPUT_DIR`; verifies current pins/source/modes plus the existing 82 controls |
-| bundled-notices | app | `python3 tool/verify_bundled_notices.py`, then `python3 -m unittest discover -s tool -p test_bundled_notice_guards.py -v`; retain both commands and raw results, three positive/negative controls |
+| source-integrity | app | `python3 plans/run_source_and_notices.py --repo REPO --quds CANONICAL_REPO --parser PARSER_REPO --output NEW_OUTPUT_DIR`; verifies current pins/source/modes, the existing 82 controls, and all three bundled-notice controls (85 total) |
 | png-portable | app | `python3 docs/evidence/storage-carving-20261115/run_portable.py --repo REPO --launcher LAUNCHER --output NEW_OUTPUT_DIR`; launcher contract is `LAUNCHER dart ARGS...`; preserve real compiled JS, VM/JS payloads and both independent Python reports |
 | navigation-capture | app | `env OFFICE_NAVIGATION_PREVIEW=1 flutter --no-version-check --suppress-analytics test --no-pub --reporter json --concurrency=1 test/widget/office_sheet_navigation_workflow_test.dart`; recorder uses `navigation-suites.txt`; expect all 12 tests without errors/skips |
 
@@ -113,3 +112,30 @@ the final app cohort. The final 63-suite app run includes all six, so targeted
 counts must not be added to the acceptance total. The overlay adds generated
 fixtures and nine regression cases across existing suites, plus localization
 assertions; final counts come from raw machine events.
+
+## Current driver and retry binding
+
+Run one gate with `python3 plans/run_selected_gate.py NAME` from the repository
+using the saved toolchain environment. The driver launches the exact pinned
+Dart/Flutter executables; portable checks resolve and hash the actual Node binary.
+Nested evidence helpers and prerequisite receipts are included in tool hashes.
+
+For a retry, supply a fresh `--label NAME-retry-N`. All auxiliary artifact and
+prior-output directories follow that label. `scripted-oracle --engine-label LABEL`
+and `navigation-independent-review --capture-label LABEL` require a successful
+generator receipt on the identical current source/resolution digest. The driver
+retains prior build outputs before generation and records new output fingerprints
+immediately after it. The independent readers require those exact bytes. A
+postprocessing error explicitly fails the metadata and suite receipt.
+
+Current portable and scripted-oracle copies live in this plans directory; the
+historical evidence drivers remain unchanged. Portable output now has a complete
+recursive size/SHA-256 index. These provenance changes do not expand runtime
+cohorts or count prerequisite executions twice.
+
+The full app run exposed two integration defects: an expanded underline enum in
+existing host controls and a typed malformed-compound exception bypassing the
+parser recovery path. The updated cohort adds the ribbon localization/selection
+and imported/mixed font suites; both ribbon and Font dialog retain every style.
+The parser adds nine canonical admission/refusal controls and now has 144 suites.
+All accepted gates must follow the saved combined correction, with fresh labels.

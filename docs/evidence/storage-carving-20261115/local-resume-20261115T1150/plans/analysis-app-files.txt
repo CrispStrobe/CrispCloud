@@ -70,3 +70,7 @@ test/legacy_word_conversion_strings_test.dart
 test/word_conversion_inspection_test.dart
 test/widget/structured_legacy_word_conversion_dialog_test.dart
 test/support/legacy_word_recovery_fixture.dart
+lib/l10n/office_ribbon_control_strings.dart
+lib/widgets/office_editor_ribbon.dart
+lib/widgets/office_editor_dialogs.dart
+test/office_ribbon_controls_i18n_test.dart

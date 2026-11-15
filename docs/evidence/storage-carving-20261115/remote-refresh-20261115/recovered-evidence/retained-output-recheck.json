@@ -1,0 +1,191 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T12:35:07.037642+00:00",
+  "audited_commit": "cc92423bb98789239380864d5e8343c19c25e815",
+  "review_script_sha256": "595fdeccc1860913f929595244e379dc46cdf515458540d5a02648c4044aefa7",
+  "png_rechecks": {
+    "vm": {
+      "archives": 8,
+      "decoded_images": 10,
+      "wrong_expected_hash_rejected": true,
+      "report_sha256": "5fb233f76f1af59ccf759733471b3a91243cb1062c0de7d1a3fe48c41ee47a36",
+      "matches_original_report": true
+    },
+    "javascript": {
+      "archives": 8,
+      "decoded_images": 10,
+      "wrong_expected_hash_rejected": true,
+      "report_sha256": "5fb233f76f1af59ccf759733471b3a91243cb1062c0de7d1a3fe48c41ee47a36",
+      "matches_original_report": true
+    }
+  },
+  "office_output_oracle": {
+    "exports": 12,
+    "failures": []
+  },
+  "navigation_workbooks": [
+    {
+      "file": "source.xlsx",
+      "sha256": "19a8b07255128afefe545717e90d70ddd38056eaa5ded53f59dba94d9550022f",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "125.5",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "switched-draft.xlsx",
+      "sha256": "11784005a0f5e91b1fabcea81b3cbe68b39b104db8155499ba99b4f231eea22c",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "250",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "250",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rejected-draft-corrected.xlsx",
+      "sha256": "18d07e9def4ce64291b3f1ea1a8bd9bff55822143c427b00d4120ac777e3f540",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "300",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "300",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rename.xlsx",
+      "sha256": "6a6777a6ad4c6f21218a6ffebcf4386995e6b93fa35bd544abf717f56fb2c7af",
+      "sheets": [
+        "O'Brien 2026",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "'O''Brien 2026'!B2",
+      "reference_cache": "125.5",
+      "defined_name": "'O''Brien 2026'!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rename-undo.xlsx",
+      "sha256": "5cde1dd5efc2283fbbd47809a6baed5da5b1d800ec09e5e8b2adf01d95671e3f",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "125.5",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rename-redo.xlsx",
+      "sha256": "ce1668a7dcecaf0ada4a563e0b403d4c650f11569db84359ecc3d1628417ac16",
+      "sheets": [
+        "O'Brien 2026",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "'O''Brien 2026'!B2",
+      "reference_cache": "125.5",
+      "defined_name": "'O''Brien 2026'!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    }
+  ],
+  "images": [
+    {
+      "file": "rename-validation.png",
+      "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "locale": "en",
+      "fonts_verified": 6,
+      "capture_sources_verified": 2
+    },
+    {
+      "file": "worksheet-arabic-narrow.png",
+      "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+      "dimensions": [
+        390,
+        1000
+      ],
+      "locale": "ar",
+      "fonts_verified": 6,
+      "capture_sources_verified": 2
+    }
+  ],
+  "commands": [
+    {
+      "label": "vm-png-recheck",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/output-recheck-snapshot/test/support/check_archive_png_carving.py",
+        "--candidates",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/output-recheck-snapshot/vm-candidates.json",
+        "--report",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/rechecked-vm-png.json"
+      ],
+      "returncode": 0,
+      "stdout_sha256": "175795676818fb527a2316a9a63e4002d553e988f5c7bd4a3901e1cf82094e47",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "javascript-png-recheck",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/output-recheck-snapshot/test/support/check_archive_png_carving.py",
+        "--candidates",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/output-recheck-snapshot/javascript-candidates.json",
+        "--report",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/rechecked-javascript-png.json"
+      ],
+      "returncode": 0,
+      "stdout_sha256": "175795676818fb527a2316a9a63e4002d553e988f5c7bd4a3901e1cf82094e47",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "office-outputs-recheck",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/output-recheck-snapshot/packages/quds_office_engine/tool/fidelity/scripted_oracle.py",
+        "/workspace/scratch/0b93849cdeb9/audit-notes/output-recheck-snapshot/office-produced"
+      ],
+      "returncode": 0,
+      "stdout_sha256": "0aabba4868239dff77e796733b9b8d7b6cb40c716400deeb32e7fed42eea4a98",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "success": true,
+  "scope": "Fresh independent Python ZIP, XML, decimal, CRC and Pillow pixel checks over retained engine/VM/JavaScript output bytes. Exact generation receipt bindings retained. No regenerated Dart/Flutter outputs, new-source runtime claim, external application rendering or broad Open XML schema claim."
+}

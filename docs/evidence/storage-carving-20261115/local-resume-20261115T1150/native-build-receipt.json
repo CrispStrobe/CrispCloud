@@ -1,0 +1,80 @@
+{
+  "at": "2026-11-15T12:06:55.937838+00:00",
+  "app_gate": "app",
+  "gate_result": "rejected by host enum/compound-recovery defects; native build completed",
+  "manifest": {
+    "format-version": [
+      1,
+      0,
+      0
+    ],
+    "native-assets": {
+      "linux_x64": {
+        "package:dart_smb2/libsmb2": [
+          "absolute",
+          "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libdart_smb2.so"
+        ],
+        "package:sqlite3/src/ffi/libsqlite3.g.dart": [
+          "absolute",
+          "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libsqlite3.so"
+        ],
+        "package:crisp_catalog/crisp_catalog_bridge": [
+          "absolute",
+          "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libcrisp_catalog_bridge.so"
+        ],
+        "package:crisp_ebook_conversion/kindling_bridge": [
+          "absolute",
+          "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libcrisp_kindling_bridge.so"
+        ],
+        "package:flutter_pty2/flutter_pty2": [
+          "absolute",
+          "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libflutter_pty2.so"
+        ]
+      }
+    }
+  },
+  "manifest_sha256": "868bf8f85ae5929bebf0fca37b38b64663bbb51365668c7299c0b0de2197adb4",
+  "assets": {
+    "package:dart_smb2/libsmb2": {
+      "platform": "linux_x64",
+      "path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libdart_smb2.so",
+      "resolved_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libdart_smb2.so",
+      "size": 294472,
+      "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "elf_header_verified": true
+    },
+    "package:sqlite3/src/ffi/libsqlite3.g.dart": {
+      "platform": "linux_x64",
+      "path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libsqlite3.so",
+      "resolved_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libsqlite3.so",
+      "size": 1793240,
+      "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+      "elf_header_verified": true
+    },
+    "package:crisp_catalog/crisp_catalog_bridge": {
+      "platform": "linux_x64",
+      "path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libcrisp_catalog_bridge.so",
+      "resolved_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libcrisp_catalog_bridge.so",
+      "size": 3611208,
+      "sha256": "88583e9ac836df58cce3c36bd6f434b3ac15c1c3e10ee1f6b415e7746d6da857",
+      "elf_header_verified": true
+    },
+    "package:crisp_ebook_conversion/kindling_bridge": {
+      "platform": "linux_x64",
+      "path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libcrisp_kindling_bridge.so",
+      "resolved_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libcrisp_kindling_bridge.so",
+      "size": 12176240,
+      "sha256": "95ee0670f053b56c6acf15599c4d47b58c2b868c8394ad1660f91588da3b3df1",
+      "elf_header_verified": true
+    },
+    "package:flutter_pty2/flutter_pty2": {
+      "platform": "linux_x64",
+      "path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libflutter_pty2.so",
+      "resolved_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/build/native_assets/linux/libflutter_pty2.so",
+      "size": 61776,
+      "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+      "elf_header_verified": true
+    }
+  },
+  "scope": "Actual native hook output manifest and ELF identities from the first full app invocation; not a claim that every native API was exercised."
+}

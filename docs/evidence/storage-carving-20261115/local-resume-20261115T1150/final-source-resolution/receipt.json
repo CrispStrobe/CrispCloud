@@ -1,0 +1,45 @@
+{
+  "at": "2026-11-15T11:33:01.945255+00:00",
+  "commands": [
+    {
+      "name": "app",
+      "cwd": ".",
+      "command": [
+        "flutter",
+        "--no-version-check",
+        "--suppress-analytics",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "cli",
+      "cwd": "cli",
+      "command": [
+        "dart",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "returncode": 0
+    }
+  ],
+  "before": {
+    "pubspec.yaml": "f8c563d869495f705ed002929bcbd1f4a21561fcc560e5761780e03254be1339",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+    "cli/pubspec.yaml": "020ecde00135f4b734f97fc57c44a1471f984bc19df9c190cf9dce4e57d03289",
+    "cli/pubspec.lock": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89"
+  },
+  "after": {
+    "pubspec.yaml": "f8c563d869495f705ed002929bcbd1f4a21561fcc560e5761780e03254be1339",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+    "cli/pubspec.yaml": "020ecde00135f4b734f97fc57c44a1471f984bc19df9c190cf9dce4e57d03289",
+    "cli/pubspec.lock": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89"
+  },
+  "declarations_and_committed_locks_unchanged": true,
+  "success": true
+}

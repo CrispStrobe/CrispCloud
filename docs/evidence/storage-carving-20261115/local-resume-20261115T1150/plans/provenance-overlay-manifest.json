@@ -1,0 +1,32 @@
+[
+  {
+    "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_portable_current.py",
+    "sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+    "size": 4454,
+    "existing_source_sha256": null
+  },
+  {
+    "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py",
+    "sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+    "size": 4349,
+    "existing_source_sha256": null
+  },
+  {
+    "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py",
+    "sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "size": 12271,
+    "existing_source_sha256": "e6304df783419d63545691bfd8fab95e79510832ecca0e8c430393b1d6004071"
+  },
+  {
+    "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/toolchain_launcher.sh",
+    "sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+    "size": 203,
+    "existing_source_sha256": "5e150bb00a6dbede2015e7cbd8524b6122b468f7b6f9304aca13e51847be5b1b"
+  },
+  {
+    "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/verify_navigation_capture.py",
+    "sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+    "size": 7053,
+    "existing_source_sha256": "05e2f0aeb455f6ab7d03fb13a79b2e6e57c0ac375af60e843e71332ca4d1c644"
+  }
+]

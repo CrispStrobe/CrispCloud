@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T12:22:52.429658+00:00",
+  "commands": [
+    {
+      "name": "source-controls",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_only_controls.py",
+        "--repo",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+        "--quds",
+        "/workspace/scratch/1e19fe1d39ae/QudsCanonical",
+        "--parser",
+        "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+        "--output",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/source-integrity-final-details/source"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T12:22:28.875857+00:00",
+      "finished_at": "2026-11-15T12:22:52.242674+00:00",
+      "returncode": 0,
+      "unittest_count": null
+    },
+    {
+      "name": "bundled-notices",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_bundled_notices.py"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T12:22:52.243065+00:00",
+      "finished_at": "2026-11-15T12:22:52.299930+00:00",
+      "returncode": 0,
+      "unittest_count": null
+    },
+    {
+      "name": "bundled-notice-guards",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_bundled_notice_guards.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T12:22:52.300147+00:00",
+      "finished_at": "2026-11-15T12:22:52.429224+00:00",
+      "returncode": 0,
+      "unittest_count": 3
+    }
+  ],
+  "source_checks_passed": true,
+  "managed_files": 2303,
+  "tracked_files": 11366,
+  "source_commit": "cf5b50c6bcab5f9c69283ed8296ce100de912251",
+  "canonical_pins": {
+    "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+    "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+  },
+  "source_control_tests": 82,
+  "bundled_notice_control_tests": 3,
+  "total_python_controls": 85,
+  "expected_control_counts_match": true,
+  "success": true,
+  "scope": "Fresh full-checkout and managed SHA256/Git blob/mode checks against both canonical pins, guarded-sync dry runs, 82 source/inventory controls and 3 incoming notice guard controls. No native/runtime, external corpus, Office rendering or generated-document oracle claim."
+}

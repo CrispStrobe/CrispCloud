@@ -1,0 +1,293 @@
+{
+  "archive": {
+    "file": "artifacts.tar.xz",
+    "sha256": "54a21d3f2a55ed52700cc9349be27e98c56ec4f02eeddbe0e605e7f7a48afb5e",
+    "size": 833036
+  },
+  "every_member_reverified": true,
+  "file_count": 56,
+  "label": "Genuine native hook bootstrap on saved 41885d7d",
+  "members": {
+    "native-bootstrap-20261115-launch-failure/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "133c98d794bc58c25623055c642b23f51541c702181f8a5c3b7d1b4bfb63827f",
+      "size": 1004
+    },
+    "native-bootstrap-20261115-launch-failure/command.json": {
+      "mode": 420,
+      "sha256": "f575aeaf92de1094a26f60ef369c0742c79c1765536eb654c4f8f9b85c33637c",
+      "size": 479
+    },
+    "native-bootstrap-20261115-launch-failure/inputs-after.json.gz": {
+      "mode": 420,
+      "sha256": "2cceea24e64c3bcaff77090055544fb44f80e716f533742fa3d162708aa75fb3",
+      "size": 452345
+    },
+    "native-bootstrap-20261115-launch-failure/inputs-before.json.gz": {
+      "mode": 420,
+      "sha256": "620a33941655b808aaaf7b36e2986b15d824eb6edca61c2a4e0344a324770f36",
+      "size": 452345
+    },
+    "native-bootstrap-20261115-launch-failure/metadata.json": {
+      "mode": 420,
+      "sha256": "603cf5415db40c7bc0095fcc7b2852d570c530f859635e93f94df2a156768c2e",
+      "size": 25623
+    },
+    "native-bootstrap-20261115-launch-failure/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115-launch-failure/stdout.jsonl": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115-launch-failure/suites.txt": {
+      "mode": 420,
+      "sha256": "4b0c2459ab58eea94a1a83368665ab3cd25e174c421824c72e03884faee4ec05",
+      "size": 38
+    },
+    "native-bootstrap-20261115-launch-failure/summary.json": {
+      "mode": 420,
+      "sha256": "e43a9846f636d3d37c462ce901d975c83fff0485cbf752f618beab80345e3f29",
+      "size": 749
+    },
+    "native-bootstrap-20261115/README.md": {
+      "mode": 420,
+      "sha256": "247ad183bbf48870557a182be0d541879c698dca764766df97d4d7e54551d50b",
+      "size": 1065
+    },
+    "native-bootstrap-20261115/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "83d9bc3747973d9ce953c4ffeeeda70c2afa232cf6285f0077a8a3cec5aab3f6",
+      "size": 1270
+    },
+    "native-bootstrap-20261115/assets/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "39f931a45273b54cf8052f93d321b64555a31615e3806a59bf5fea884601e416",
+      "size": 5438
+    },
+    "native-bootstrap-20261115/assets/collect_native_bootstrap.py": {
+      "mode": 420,
+      "sha256": "e1a0277f860e3f1699a62b40765376bd237af6891a48c6180edc4c182322f40d",
+      "size": 4564
+    },
+    "native-bootstrap-20261115/assets/crisp_catalog-libcrisp_catalog_bridge.so.readelf.txt": {
+      "mode": 420,
+      "sha256": "33b25205be22816e6eb505299da7ddca182a44ce13cd5f320daa61ddfd237806",
+      "size": 1186
+    },
+    "native-bootstrap-20261115/assets/crisp_ebook_conversion-libcrisp_kindling_bridge.so.readelf.txt": {
+      "mode": 420,
+      "sha256": "5d45b4a5c7f4498bae60e2611b6d53abfdc87a88b144644afac761c7323a3166",
+      "size": 1187
+    },
+    "native-bootstrap-20261115/assets/dart_smb2-libdart_smb2.so.readelf.txt": {
+      "mode": 420,
+      "sha256": "de486c1e4656add3c1567c3bb743ac9f082ab2f9290f6ee7df6d91f6f60dbd6a",
+      "size": 1154
+    },
+    "native-bootstrap-20261115/assets/flutter_pty2-libflutter_pty2.so.readelf.txt": {
+      "mode": 420,
+      "sha256": "bce87168ac2abf699f47d016740ae28ab23f92e565fbb3a6ba47278edc346428",
+      "size": 1183
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_catalog/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "86d1691abbcc9d6c115a227c7b350994522e9dbe232f23f2f8932418644e84e1",
+      "size": 677
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_catalog/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "bf5949ec02835c791497f591f4e7db60a9d1409ec3ef262c217adc7972b20349",
+      "size": 1982
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_catalog/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_catalog/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "c87c974da162c73cc8a98f696f325b92a1df285c6ee67b532138849eff47374e",
+      "size": 1823
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_ebook_conversion/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "d65b3a456a2c18610a07044cba3dc65fa3dd58cc39d06cde98cce7da786705e2",
+      "size": 781
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_ebook_conversion/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "8e013abf012005ddd743982d1584f4c6126254abf471f66705771550001e46a8",
+      "size": 13004
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_ebook_conversion/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_ebook_conversion/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "9c1f1e996e3a3a81d8f25538f1501290f5c13fefa5490c93acfb47fcf3133e41",
+      "size": 1918
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_storage/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "a3ae58e2d804a09c4ba65abb87704ed7a2a19aa023ec5cd26ab63319ba18a1f8",
+      "size": 700
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_storage/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "80ada5844472e255d2584c8f1bfa38245696a7a54fc44e06bf9207ce2c6da72b",
+      "size": 95
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_storage/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115/assets/hooks/crisp_storage/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "9560378597ab77890487a1596c0ffbcb44c3a9c2f3115098a56d33458a59b14e",
+      "size": 1823
+    },
+    "native-bootstrap-20261115/assets/hooks/dart_smb2/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "5de70ca81c6ec329f0a790b710b654b9e7f5f2e0c09decee36114d69bacc9917",
+      "size": 661
+    },
+    "native-bootstrap-20261115/assets/hooks/dart_smb2/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "ea05388d83b48fb813cca1658914570b48458b7504cbaf679dddcc9437ede790",
+      "size": 443
+    },
+    "native-bootstrap-20261115/assets/hooks/dart_smb2/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115/assets/hooks/dart_smb2/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "55c74933b3aea92c503a4f40976f1e8a276730ae9b06a9fd13fcfebd054aa695",
+      "size": 1811
+    },
+    "native-bootstrap-20261115/assets/hooks/flutter_pty2/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "f0cc12ccbcece722f327801eec50a2c82fe1134b81aec31e09acbd3a2c52edd8",
+      "size": 673
+    },
+    "native-bootstrap-20261115/assets/hooks/flutter_pty2/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "2512e535945203f4893ac7d156f882551453a16a19a81c7ecd00b9c94283e3dd",
+      "size": 3279
+    },
+    "native-bootstrap-20261115/assets/hooks/flutter_pty2/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+      "size": 117
+    },
+    "native-bootstrap-20261115/assets/hooks/flutter_pty2/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "15ce18cf519d0f44d8175457cf29a8a34d832460212750c2ea40d689b5297ade",
+      "size": 3345
+    },
+    "native-bootstrap-20261115/assets/hooks/objective_c/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "05100aa953009d29db9fa7de2089ccc2d8b023fc6753e75a3637e634dcdf4e5d",
+      "size": 691
+    },
+    "native-bootstrap-20261115/assets/hooks/objective_c/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "760de71173c5b4db0e8ef24a1faba9bd25a11ce7c2895a20afc3bd6ca3360234",
+      "size": 95
+    },
+    "native-bootstrap-20261115/assets/hooks/objective_c/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115/assets/hooks/objective_c/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "ed0e2c4267d11e2c68a75693973ff6b36c6385ea635d8985416c9acba964bfc3",
+      "size": 1839
+    },
+    "native-bootstrap-20261115/assets/hooks/sqlite3/6b4ebf10e7/input.json": {
+      "mode": 420,
+      "sha256": "5010b63bdc189fe75c1a1934324074ec96d0c35fd2edb8f397cf5cee142ddcc5",
+      "size": 675
+    },
+    "native-bootstrap-20261115/assets/hooks/sqlite3/6b4ebf10e7/output.json": {
+      "mode": 420,
+      "sha256": "5742c713535cc5d6c0991ee360f90c46aace5916100a682f72bdff084a175161",
+      "size": 461
+    },
+    "native-bootstrap-20261115/assets/hooks/sqlite3/6b4ebf10e7/stderr.txt": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "native-bootstrap-20261115/assets/hooks/sqlite3/6b4ebf10e7/stdout.txt": {
+      "mode": 420,
+      "sha256": "cd972d27b1fcba44945f35f9fd68ae6168c0b77d9a311b8a80b3bbf70f0a6334",
+      "size": 1827
+    },
+    "native-bootstrap-20261115/assets/native-assets-before.json": {
+      "mode": 420,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "size": 3
+    },
+    "native-bootstrap-20261115/assets/native-assets.json": {
+      "mode": 420,
+      "sha256": "0f6ae3f90a687ac693d00cc645c487407a5af9e207817d7624c6686eb63b2d56",
+      "size": 13855
+    },
+    "native-bootstrap-20261115/assets/sqlite3-libsqlite3.so.readelf.txt": {
+      "mode": 420,
+      "sha256": "c8655b55458d4b38716546aa6807e78c1f5a3e0ed0e238d2cf63d72c31692704",
+      "size": 1185
+    },
+    "native-bootstrap-20261115/command.json": {
+      "mode": 420,
+      "sha256": "93e4cf7572d553f8323ed248fce65a894ed00054d4a950ad45bc57e701c5ab0e",
+      "size": 543
+    },
+    "native-bootstrap-20261115/inputs-after.json.gz": {
+      "mode": 420,
+      "sha256": "d510f9dbab59a54c23bdeaca98d4bf0a860588fda9badf3d112a872e10155969",
+      "size": 452345
+    },
+    "native-bootstrap-20261115/inputs-before.json.gz": {
+      "mode": 420,
+      "sha256": "7d7384f25bb8db103788ba3c55ab20d0f83b9845329d4f63964609fdf09cd35f",
+      "size": 452345
+    },
+    "native-bootstrap-20261115/metadata.json": {
+      "mode": 420,
+      "sha256": "a9054b0156f8ad19818f6ba2571b564743a08c99e227625cd59f01d98f4a3d0f",
+      "size": 19025
+    },
+    "native-bootstrap-20261115/stderr.log": {
+      "mode": 420,
+      "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+      "size": 117
+    },
+    "native-bootstrap-20261115/stdout.jsonl": {
+      "mode": 420,
+      "sha256": "a7d2cae0e30f2628e7471c61aa259b859947877f68b8d7b9fcef1e5514e4d2b7",
+      "size": 2102
+    },
+    "native-bootstrap-20261115/suites.txt": {
+      "mode": 420,
+      "sha256": "4b0c2459ab58eea94a1a83368665ab3cd25e174c421824c72e03884faee4ec05",
+      "size": 38
+    },
+    "native-bootstrap-20261115/summary.json": {
+      "mode": 420,
+      "sha256": "b68781f1e918b5d595904188952b82a28af7479bed5af10264bb7c9f7d456c10",
+      "size": 725
+    }
+  },
+  "schema": 1
+}

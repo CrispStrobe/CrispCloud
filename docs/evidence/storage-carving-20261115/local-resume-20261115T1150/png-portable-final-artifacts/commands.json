@@ -1,0 +1,77 @@
+[
+  {
+    "name": "fixture-reference",
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "test/support/generate_png_carving_reference.py",
+      "--check"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  },
+  {
+    "name": "vm-candidates",
+    "argv": [
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/toolchain_launcher.sh",
+      "dart",
+      "--packages=.dart_tool/package_config.json",
+      "test/support/archive_png_carving_web_acceptance.dart",
+      "--emit-candidates"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  },
+  {
+    "name": "javascript-compile",
+    "argv": [
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/toolchain_launcher.sh",
+      "dart",
+      "compile",
+      "js",
+      "--packages=.dart_tool/package_config.json",
+      "-O2",
+      "test/support/archive_png_carving_web_acceptance.dart",
+      "-o",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/png-portable-final-artifacts/png-carving.js"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  },
+  {
+    "name": "javascript-candidates",
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "-e",
+      "global.self=global; global.dartMainRunner=(main,args)=>main(['--emit-candidates']); require(process.argv[1]);",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/png-portable-final-artifacts/png-carving.js"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  },
+  {
+    "name": "vm-python",
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "test/support/check_archive_png_carving.py",
+      "--candidates",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/png-portable-final-artifacts/vm-candidates.json",
+      "--report",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/png-portable-final-artifacts/vm-python.json"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  },
+  {
+    "name": "javascript-python",
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "test/support/check_archive_png_carving.py",
+      "--candidates",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/png-portable-final-artifacts/javascript-candidates.json",
+      "--report",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/png-portable-final-artifacts/javascript-python.json"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  }
+]

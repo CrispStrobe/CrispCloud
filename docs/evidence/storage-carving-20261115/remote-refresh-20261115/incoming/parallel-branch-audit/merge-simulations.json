@@ -1,0 +1,97 @@
+[
+  {
+    "repository": "CrispCloud",
+    "ours": "7d0de79eeb5932e355e66af0be073d58f9fcf3c4",
+    "theirs": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+    "command": [
+      "git",
+      "-C",
+      "incoming-parallel-audit/CrispCloud.git",
+      "merge-tree",
+      "--write-tree",
+      "7d0de79eeb5932e355e66af0be073d58f9fcf3c4",
+      "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6"
+    ],
+    "returncode": 0,
+    "stdout": "040e0eb328c1940eb303c04ac0712e7f0f051307\n",
+    "stderr": "",
+    "merged_tree": "040e0eb328c1940eb303c04ac0712e7f0f051307",
+    "changes_against_ours": [
+      "M\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/README.md",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-acceptance.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/README.md",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/artifacts-sha256.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/audit_cross_bindings.py",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/cross-bindings.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/recorded-gates.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/concurrent-main-closure.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/concurrent-main-closure.md",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/final-closure-supplement.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/final-closure-supplement.md",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/visual-review.json",
+      "A\tdocs/evidence/storage-carving-20261115/local-resume-20261115T1150/visual-review.md"
+    ]
+  },
+  {
+    "repository": "quds_office_suite",
+    "ours": "9d1f6755a21c5d9936fd89532a4ebdbb510e9a2d",
+    "theirs": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "command": [
+      "git",
+      "-C",
+      "incoming-parallel-audit/quds_office_suite.git",
+      "merge-tree",
+      "--write-tree",
+      "9d1f6755a21c5d9936fd89532a4ebdbb510e9a2d",
+      "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8"
+    ],
+    "returncode": 0,
+    "stdout": "738187238b7144b45767f5c1ab3f77c02ac737a7\n",
+    "stderr": "",
+    "merged_tree": "738187238b7144b45767f5c1ab3f77c02ac737a7",
+    "changes_against_ours": [
+      "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart"
+    ]
+  },
+  {
+    "repository": "legacy-doc-parser",
+    "ours": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+    "theirs": "84264525417b924476af3a9c8cfa9bbe19b6437b",
+    "command": [
+      "git",
+      "-C",
+      "incoming-parallel-audit/legacy-doc-parser.git",
+      "merge-tree",
+      "--write-tree",
+      "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+      "84264525417b924476af3a9c8cfa9bbe19b6437b"
+    ],
+    "returncode": 0,
+    "stdout": "e1e5297d7d263515765358573e493179c89261cc\n",
+    "stderr": "",
+    "merged_tree": "e1e5297d7d263515765358573e493179c89261cc",
+    "changes_against_ours": [
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/README.md",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/artifacts-sha256.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/artifacts-sha256.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/command.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/inputs-after.json.gz",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/inputs-before.json.gz",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/metadata.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/stderr.log",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/stdout.jsonl",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/suites.txt",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/changed-suite/summary.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/observed-test-delta.patch",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/source-equivalence.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/artifacts-sha256.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/command.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/inputs-after.json.gz",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/inputs-before.json.gz",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/metadata.json",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/stderr.log",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/strict-analysis/stdout.log",
+      "A\tdoc/evidence/storage-carving-reconcile-20261115/observed-main-08296ed/tracked-git-objects.json.gz"
+    ]
+  }
+]

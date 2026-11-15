@@ -1,0 +1,26 @@
+{
+  "command.json": {
+    "sha256": "08fc49873377f7cb81d76892fc1195baf10394beaeb00c8eb42d377c53c278fd",
+    "size": 2552
+  },
+  "inputs-after.json.gz": {
+    "sha256": "ecc01d986a2a1e76fcd8eac7036dc32f4b86f2ac2b6e8bfe72170ce0c9e1325f",
+    "size": 449849
+  },
+  "inputs-before.json.gz": {
+    "sha256": "20f61a90c2340729071d3304dca6d6250945c38d723aa4603799306c88c7aa5c",
+    "size": 449850
+  },
+  "metadata.json": {
+    "sha256": "5e327dee51652c2662c9ec281c6d00ad53de78b0faaa472e0c1d34f5a162ea4f",
+    "size": 4832
+  },
+  "stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "stdout.log": {
+    "sha256": "f407c6b2b5e7984136e1de1fda4d54d3377b0e4b18d63faa822bda60f3a2acd7",
+    "size": 648
+  }
+}

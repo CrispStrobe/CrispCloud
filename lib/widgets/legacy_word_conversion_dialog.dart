@@ -271,15 +271,16 @@ class _LegacyWordConversionDialogState
       var recoveredTextOnly = false;
       List<LegacyWordConversionLimitation> limitations = const [];
       if (_structured || _sourceRecovery != null) {
-        final result =
-            _sourceRecovery ??
-            await compute<
-              ({Uint8List bytes, bool docm}),
-              LegacyWordStructuredConversion
-            >(_convertStructuredWord, (
-              bytes: widget.bytes,
-              docm: _output == InstalledOfficeOutput.docm,
-            ));
+        final recovery = _sourceRecovery;
+        final LegacyWordStructuredConversion result;
+        if (recovery != null) {
+          result = recovery;
+        } else {
+          result = await compute(_convertStructuredWord, (
+            bytes: widget.bytes,
+            docm: _output == InstalledOfficeOutput.docm,
+          ));
+        }
         if (!mounted) return;
         if (result.extension != extension) {
           throw const WordConversionInspectionException(

@@ -1,0 +1,357 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T12:35:00.970067+00:00",
+  "status": "PASS only for source20ee83ff and source-identical descendants through137c95de; superseded for current-branch acceptance",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch": "integration/storage-carving-20261115",
+  "pr": {
+    "number": 111,
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/111",
+    "draft": true
+  },
+  "production_source": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+  "last_runtime_receipt_head_and_independent_review_head": "cc92423bb98789239380864d5e8343c19c25e815",
+  "source_changes_after_production_checkpoint": false,
+  "canonical_pins": {
+    "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+    "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+  },
+  "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "source_and_resolution_input_count": 8588,
+  "accepted_host_gates": [
+    {
+      "label": "analysis-app-final",
+      "success": true,
+      "tested_head": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+      "receipt_commit": "91d8e8ba1331ecce1419b8fba61f92b72291fe60",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "9c649ae4717315820e295f36eb1d3ea5c7133f37a60b20211f4acfb753c77ea1",
+      "artifact_inventory_sha256": "7f1a048b78b99d9dab2f1cb7245406737521096dd5ddaf18de680a9f13ce983c",
+      "analyzed_files": 76
+    },
+    {
+      "label": "analysis-engine-final",
+      "success": true,
+      "tested_head": "91d8e8ba1331ecce1419b8fba61f92b72291fe60",
+      "receipt_commit": "5d6a9e32206bc39c7514b1863b9a96cc00c12099",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "7286328f8bb31b8a89a73836ff1fbb61c20e3e4f120234433fe8a2dfd2b46c23",
+      "artifact_inventory_sha256": "212fe2e67651c24c2fb4f19ece388bf64cd81a0e5bba0ee75315f47715341855",
+      "analyzed_files": 16
+    },
+    {
+      "label": "analysis-editor-final",
+      "success": true,
+      "tested_head": "5d6a9e32206bc39c7514b1863b9a96cc00c12099",
+      "receipt_commit": "1985e2113a1b61ac36315759f2061ad8d8ace8f3",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "e7f16cd659343f918111433eacdc911caada0a5491fcc3c09c67bb9fa1291dad",
+      "artifact_inventory_sha256": "560ad2f95e777de2acc8f1b79c6913f9d8fad8f33652fc932f5e4fe094e203fc",
+      "analyzed_files": 4
+    },
+    {
+      "label": "analysis-cli-final",
+      "success": true,
+      "tested_head": "1985e2113a1b61ac36315759f2061ad8d8ace8f3",
+      "receipt_commit": "5869f75908a4192ada1934a0f4cdcf16a526ef9e",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "162ea8b407dc13eb5f33dc46fcc11c8f57065ad9cb0e46961e63360abf030623",
+      "artifact_inventory_sha256": "a5f7524f646133c695ea996f72f346fdee87207386e3b2f93e952a9ca6566c8d",
+      "analyzed_files": 1
+    },
+    {
+      "label": "app-retry-1",
+      "success": true,
+      "tested_head": "5869f75908a4192ada1934a0f4cdcf16a526ef9e",
+      "receipt_commit": "50b493c0261436d4b36f2273e87004b4091f0de2",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "96e8fac6a365f9a29f82120ae67cb44e73e466b79e5901a1780c749bfa3af7ee",
+      "artifact_inventory_sha256": "352ccdb6a3e3cc579c9b1791564ef50133148db7598f2e88235a74cafdc9477c",
+      "tests": 903,
+      "suites": 65
+    },
+    {
+      "label": "engine-final",
+      "success": true,
+      "tested_head": "50b493c0261436d4b36f2273e87004b4091f0de2",
+      "receipt_commit": "d9e65ff1e8ee63b68087ea445408282e9e699584",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "989a609413b6726352b7ea4e4ab6a7142bb2e6cfb76ec903c34894ac2ec66725",
+      "artifact_inventory_sha256": "83be060f6ebbbaeaf5aac68eda627a7231bc37f5d076c122bd3dc917be9d1775",
+      "tests": 249,
+      "suites": 22
+    },
+    {
+      "label": "editor-final",
+      "success": true,
+      "tested_head": "d9e65ff1e8ee63b68087ea445408282e9e699584",
+      "receipt_commit": "231f3e6b267bc97aec63fd96a0a3234bd0887ea2",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "6b22f306628d40676d3c71bc3a3c0cb02c957f15673f9a6c489d227a75bd73e8",
+      "artifact_inventory_sha256": "2123319608579bf086d259c98651eefdb4f90489bff9bc430f9d3efffefd81c1",
+      "tests": 101,
+      "suites": 9
+    },
+    {
+      "label": "scripted-oracle-final",
+      "success": true,
+      "tested_head": "231f3e6b267bc97aec63fd96a0a3234bd0887ea2",
+      "receipt_commit": "cf5b50c6bcab5f9c69283ed8296ce100de912251",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "729bc374770c24424d58eb5fdd6f880198233e3852497150d2419d6859e8e96c",
+      "artifact_inventory_sha256": "d47b9271fd7501dd55af5546287ad6149f3ed18986316c46048fcec2877f76a3"
+    },
+    {
+      "label": "source-integrity-final",
+      "success": true,
+      "tested_head": "cf5b50c6bcab5f9c69283ed8296ce100de912251",
+      "receipt_commit": "a01995044a9ba7078d1d248e95aa684834afce2e",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "5f31d42a471b1c0771ecc867d725523819e0930da024c847b8b7d5b7235d09f7",
+      "artifact_inventory_sha256": "388bf7fc64d81e703a22c4876e792e261fa53f61b88a541577e4dc1b65d9dfce"
+    },
+    {
+      "label": "png-portable-final",
+      "success": true,
+      "tested_head": "a01995044a9ba7078d1d248e95aa684834afce2e",
+      "receipt_commit": "6fec638c9386be139c288e5bf07b020b71b24473",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "d0f29611bf37853b9e5c10825217a6a70b6a67241069513b6add97dea98a98b7",
+      "artifact_inventory_sha256": "475019303cc89b1c6e3a2595c20e404273700057dc9fbc4e09e1b7bacff45a0d"
+    },
+    {
+      "label": "navigation-capture-final",
+      "success": true,
+      "tested_head": "6fec638c9386be139c288e5bf07b020b71b24473",
+      "receipt_commit": "8c235f9e27d1086cdef177b93f6d0bf45f30e386",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "c608126fa0b5f2374308206381f4912f5d9f3b90e290795af29631c06d8d13d5",
+      "artifact_inventory_sha256": "d24d1492c869d5d957a30d9b5b99b7f5f887a1c8167521bed0d3cf7f02de0fc7",
+      "tests": 12,
+      "suites": 1
+    },
+    {
+      "label": "navigation-independent-review-final",
+      "success": true,
+      "tested_head": "8c235f9e27d1086cdef177b93f6d0bf45f30e386",
+      "receipt_commit": "cc92423bb98789239380864d5e8343c19c25e815",
+      "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "metadata_sha256": "1c0fd72d5ae42baa9fa70a905e48d31152de3440fa4a190429913a3dae550adb",
+      "artifact_inventory_sha256": "33ac25ba51ee5d7717e26c886953cfc1d68b66ea00e32b5263d77392fed38f60"
+    }
+  ],
+  "primary_host_office_runtime_totals": {
+    "tests": 1253,
+    "suites": 96,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "strict_host_analyzed_files": 97,
+  "canonical_parser": {
+    "app_link_report_sha256": "ddcddb85ea86ed38763feaa6358e32e12d85166fca0bbba46af94ed0b9519033",
+    "final_evidence_head": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+    "gates": [
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "0de0eb9dfe28575bfdd3f6cdf7196f3d56649ed4afbdbfc54df0ca25e7c0def4",
+        "current_source_and_declaration_inputs": 949,
+        "current_tools_verified": 5,
+        "errors": 0,
+        "hidden_success_events": 1,
+        "label": "directory-focused-fixed",
+        "recorded_input_count": 1819,
+        "recorded_input_digest": "5d03427cd02051507f614cbd4c44ce679d095d3244c5dfe11de7ba58d1c8b391",
+        "skipped": 0,
+        "source_identity_equal_to_app_pin": true,
+        "success": true,
+        "suites": 1,
+        "tested_head": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+        "tests": 9
+      },
+      {
+        "analyzed_files": 18,
+        "artifact_files": 6,
+        "artifact_index_sha256": "0d3dbd95a704f1081d6208d650a5b8ee676febfbc10e57781eba8d09024e3abf",
+        "current_source_and_declaration_inputs": 949,
+        "current_tools_verified": 4,
+        "fatal_infos_explicit": true,
+        "label": "directory-strict-analysis",
+        "no_analyzer_issues_reported": true,
+        "recorded_input_count": 1828,
+        "recorded_input_digest": "4785552882e3e2afcb2dfc09105ce14b0af871b8cc24c97fa9dc711a5b21c0e7",
+        "source_identity_equal_to_app_pin": true,
+        "success": true,
+        "tested_head": "fde5685965db83e9cfb6807ecba1205438d7e819"
+      },
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "a950c3f7b72f252b3acedea5748f487060f7ec136234ba93064e0b03ac817af3",
+        "current_source_and_declaration_inputs": 949,
+        "current_tools_verified": 5,
+        "errors": 0,
+        "hidden_success_events": 144,
+        "label": "directory-all-parser-final",
+        "recorded_input_count": 1835,
+        "recorded_input_digest": "6574327c24c222b3016eccec1e2de598b81acb4c1275a9383427ff5fadef6533",
+        "skipped": 0,
+        "source_identity_equal_to_app_pin": true,
+        "success": true,
+        "suites": 144,
+        "tested_head": "337b2fad504ce68f9e5e5053ae859bb5905f3dd8",
+        "tests": 4131
+      }
+    ],
+    "normalized_source_resolution_sha256": "6149dc897d58ac97384d135303acad721fbbfe24cf39dca2c92ef0cdcc577447",
+    "only_evidence_diffs_after_pin": true,
+    "scope": "Standalone parser development graph; host graph qualification remains the separate app/engine/editor gates.",
+    "source_git_entries": 937,
+    "source_pin": "9bdcc7eba3f1ce80b7d834d7740895774eeca615"
+  },
+  "scripted_office": {
+    "exports": 12,
+    "generation_binding_sha256": "1c7f27f99410c16bc90e7536614adb0ff316c7a41ae4fab421e75c5696e1597e",
+    "oracle_controls": 17,
+    "retained_and_live_output_hashes_match": true,
+    "semantic_report": {
+      "exports": 12,
+      "failures": []
+    }
+  },
+  "managed_source": {
+    "all_bytes_git_blobs_modes_match": true,
+    "by_canonical": {
+      "parser": 1807,
+      "quds": 496
+    },
+    "canonical_pins": {
+      "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+      "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+    },
+    "files": 2303,
+    "full_checkout_gate_tracked_files": 11366,
+    "manifest_sha256": "f734610dc8d741b8180c33d7d5fdba9eff288cca4c6f2dad73faf1c4c9242f54",
+    "source_controls": 85
+  },
+  "portable_png": {
+    "actual_node": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "compiled_js_sha256": "b41eeb4323d6a3b971c831730da18ac6edd4126536e048d2c6c2d35572a5603e",
+    "node_sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d",
+    "runtimes": {
+      "javascript": {
+        "assertions": 248,
+        "candidate_receipt_sha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+        "cases": 8,
+        "pngs": 10,
+        "wrong_hash_control": true,
+        "zips": 8
+      },
+      "vm": {
+        "assertions": 248,
+        "candidate_receipt_sha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+        "cases": 8,
+        "pngs": 10,
+        "wrong_hash_control": true,
+        "zips": 8
+      }
+    },
+    "vm_js_payload_identity": true
+  },
+  "navigation": {
+    "capture_tests_separate_from_host_total": 12,
+    "captures": [
+      {
+        "dimensions": [
+          1600,
+          1000
+        ],
+        "file": "rename-validation.png",
+        "fonts": 6,
+        "locale": "en",
+        "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+        "source_files": 2
+      },
+      {
+        "dimensions": [
+          390,
+          1000
+        ],
+        "file": "worksheet-arabic-narrow.png",
+        "fonts": 6,
+        "locale": "ar",
+        "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+        "source_files": 2
+      }
+    ],
+    "generator_binding_sha256": "dd2a92fda5a6c11f69d60c068fc0632b0fdad1a09d80a4c90e07593691cf617d",
+    "retained_and_live_output_hashes_match": true,
+    "visual_review": "visual-review.json",
+    "workbooks": 6,
+    "visual_review_success": true
+  },
+  "incoming_closure": {
+    "ancestors_independently_rechecked": 49,
+    "observed_heads": 53,
+    "scope": "Final immutable production-pin supplement to the same finite 53-head incoming audit; no new upstream observation or runtime claim.",
+    "superseded_with_separate_reviewed_equivalence_proofs": 4,
+    "supplement_sha256": "0ff4f18f2228deb2e5e692c31aed69b4563ef45380b429c29504b6a6097befb0",
+    "unaccounted": 0
+  },
+  "independent_review_files": {
+    "final-independent-review/README.md": "9c3739876104f5a8131057f1dfefbc8a507d6035a7037544ae5ecfffe7b94a60",
+    "final-independent-review/artifacts-sha256.json": "12bbb9409419807436d2373fe94845486bff9053fdf41ffd9cc082cc24a0d628",
+    "final-independent-review/audit_cross_bindings.py": "498ba9a7adf84d8011c73b3617cb164e629a0a76d4a89ccf3c3820cf2d95f1b5",
+    "final-independent-review/cross-bindings.json": "1b21b3b2eea9c3b116345f4e38fb1cbaf65c2b7cd5e4e4c6dc7634febbfcf9c4",
+    "final-independent-review/recorded-gates.json": "3e774566c64b0a01eb3e6f5baa5d0a49a06be3e5c9f24d876754a61603b109d0"
+  },
+  "visual_review_sha256": "1798bb282f1d5993db94889827e7d0d6f0082f39f942716ae0e0aa8b30aa515a",
+  "incoming_closure_files": {
+    "final-closure-supplement.json": "0ff4f18f2228deb2e5e692c31aed69b4563ef45380b429c29504b6a6097befb0",
+    "final-closure-supplement.md": "166113718633436073832950a245a2ef9f32368e844cd6740f11f31f68aa8c41",
+    "concurrent-main-closure.json": "5e66c96aab50f795e60c074470a50935a7146c225d7e3567b56a004c4465f293",
+    "concurrent-main-closure.md": "f0832de5c2ea5068d9e7792a122e2e99916d13b9c1fa8f0eec315457839b0a6c"
+  },
+  "counting_rules": [
+    "Only app-retry-1, engine-final, and editor-final contribute to the primary 1253-test host/Office total.",
+    "The separate navigation capture repeats existing coverage and is not added to the primary total.",
+    "The standalone parser is a separately resolved canonical scope; focused regressions are already included in its full 4131-test suite.",
+    "Failed runs, predecessor passing runs, hidden loading/setup events, and reruns do not inflate accepted totals."
+  ],
+  "remaining_required_local_qualification_gates": [],
+  "ci": {
+    "polled": false,
+    "awaited": false,
+    "restarted": false,
+    "checkpoint_commit_marker": "[skip ci]"
+  },
+  "qualification_limits": [
+    "Recorded Linux toolchain and selected host suites; complete standalone parser suite.",
+    "Before/after identity checks are not a hermetic cache snapshot or proof against transient writes.",
+    "No external Office rendering, broad Open XML schema certification, or other operating-system execution claim.",
+    "Optional HOME-scanning corpus harnesses were not executed or counted.",
+    "No main merge, release, or deployment claim."
+  ],
+  "remote_parent_at_final_evidence_save": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "concurrent_remote_advance": {
+    "observed_by": "expected-head guard before final evidence publication",
+    "previous_head": "cc92423bb98789239380864d5e8343c19c25e815",
+    "preserved_merge": "137c95de221a0e30b14b59613b2f23447dcc57da",
+    "new_main": "686318626e209220011f7da194cfe4e41ca4adeb",
+    "identical_complete_tree": "af9411791cbfb2081b7633e493dd8d61fea389cc",
+    "omitted_novel_source_files": 0,
+    "test_rerun_required": false,
+    "proof": "incoming/concurrent-main-closure.json",
+    "proof_sha256": "5e66c96aab50f795e60c074470a50935a7146c225d7e3567b56a004c4465f293",
+    "scope": "Separate immutable supplement to original finite 53-head closure. The new main matches the already integrated PR120 head except for one source_commit metadata field; all qualified production bytes remain unchanged."
+  },
+  "source_identity_claim_applies_through": "137c95de221a0e30b14b59613b2f23447dcc57da",
+  "later_source_change": {
+    "commit": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "current_branch_qualification": "pending fresh scoped qualification",
+    "evidence_directory": "../remote-refresh-20261115",
+    "production_change": "Bounded ODS import controls; new Linux golden coverage and additive parser regression. The older recorded source/resolution digest does not apply to this changed source."
+  },
+  "evidence_saved_on_branch": "integration/storage-carving-local-20261115124645"
+}

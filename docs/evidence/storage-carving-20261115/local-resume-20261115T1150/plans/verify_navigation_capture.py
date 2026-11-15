@@ -41,6 +41,14 @@ def main():
     spec.loader.exec_module(verifier)
     books = repo/'build/office-sheet-navigation-acceptance'
     images = repo/'build/office-sheet-navigation-preview'
+    generation_path = args.capture_receipt/'produced-files.json'
+    generation = json.loads(generation_path.read_text())
+    assert generation['tested_head'] == metadata['after_git']['head']
+    assert generation['source_resolution_sha256'] == metadata['after_entries_sha256']
+    actual_files = {str(path.relative_to(repo/'build')):
+                    {'sha256': digest(path), 'size': path.stat().st_size}
+                    for folder in (books, images) for path in folder.iterdir() if path.is_file()}
+    assert actual_files == generation['files'], 'Capture artifacts differ from the passed generator gate'
     assert {p.name for p in books.iterdir() if p.is_file()} == set(verifier.NAVIGATION)
     navigation = [verifier.semantic_workbook(books/name, *expectation)
                   for name, expectation in verifier.NAVIGATION.items()]
@@ -89,6 +97,8 @@ def main():
                 shutil.copyfile(path,output/folder/path.name)
     result={'schema':1,'at':datetime.now(timezone.utc).isoformat(),
             'capture_tested_head':metadata['before_git']['head'],
+            'capture_produced_files_receipt_sha256':digest(generation_path),
+            'capture_source_resolution_sha256':generation['source_resolution_sha256'],
             'review_head':subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True).strip(),
             'verifier_sha256':digest(Path(__file__)), 'semantic_helper_sha256':digest(helper),
             'capture_machine_tests':12,'navigation_workbooks':navigation,'captures':captures,

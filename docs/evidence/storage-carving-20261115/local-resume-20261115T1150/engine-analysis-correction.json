@@ -1,0 +1,12 @@
+{
+  "failed_gate": "analysis-engine",
+  "receipt_commit": "9e0ed55f78129d6991d7eb98023d3036e9b5280c",
+  "diagnostics": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 1
+  },
+  "canonical_correction": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+  "source_change": "Declare default ODS column width as const (same value/behavior).",
+  "source_scope": "Earlier passing app analysis is retained as predecessor; final app analysis will rerun after engine/editor/CLI strict checks so all accepted gates share one complete source digest."
+}

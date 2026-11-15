@@ -1,0 +1,5 @@
+Analyzing quds_office_engine.dart, ods_sheet_reader.dart, ods_sheet_reader_test.dart, sml_styles.dart, sheet_time_number_format_test.dart, office_pdf_export.dart, wml_properties.dart, word_deserializer.dart, word_serializer.dart, word_steps.dart, word_steps_vocabulary_test.dart, office_pdf_export_test.dart, sml_workbook.dart, sheet_serial.dart, sheet_normal_font_metrics_test.dart, sml_styles_date_test.dart...
+
+   info - packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart:450:9 - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const'. - prefer_const_declarations
+
+1 issue found.

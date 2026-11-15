@@ -1,0 +1,39 @@
+{
+  "done_events": [
+    {
+      "success": true,
+      "time": 19783,
+      "type": "done"
+    }
+  ],
+  "done_success": true,
+  "errors": [],
+  "hidden_test_done": 3,
+  "missing_suites": [],
+  "non_json_lines": 0,
+  "non_object_json_lines": 0,
+  "nonpassing_requested_suites": [],
+  "qualification_success": true,
+  "suites": [
+    {
+      "errors": 0,
+      "failed": 0,
+      "observed": true,
+      "other_results": 0,
+      "passed": 12,
+      "path": "test/widget/office_sheet_navigation_workflow_test.dart",
+      "result": "passed",
+      "skipped": 0,
+      "tests": 12
+    }
+  ],
+  "totals": {
+    "errors": 0,
+    "failed": 0,
+    "other_results": 0,
+    "passed": 12,
+    "skipped": 0,
+    "tests": 12
+  },
+  "unexpected_suites": []
+}
