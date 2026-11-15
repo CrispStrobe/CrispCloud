@@ -249,8 +249,9 @@ final class ZoteroFormattedText {
     if (classes.contains('csl-right-inline')) return _Role.inline;
     if (classes.contains('csl-block') ||
         classes.contains('csl-entry') ||
-        classes.contains('csl-indent'))
+        classes.contains('csl-indent')) {
       return _Role.block;
+    }
     return const <String>{
           'div',
           'p',
@@ -548,8 +549,9 @@ final class _TextBuilder {
   }
 
   List<ZoteroTextSpan> finish() {
-    if (_explicitBreak)
+    if (_explicitBreak) {
       _append('\n' * _pendingBreaks, _style ?? const _Style());
+    }
     _flush();
     return _spans;
   }

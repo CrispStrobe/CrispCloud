@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/zotero-support-20261115",
-  "source_commit": "c0a858ac62afe41bcc68633c24ae1b29053001c6",
+  "source_commit": "f40aa887325982ea70c8285b25f8ff5b92a46eb9",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -2063,7 +2063,7 @@
     "packages/quds_office_engine/lib/src/xml/xml_node.dart": "911378e591f1092b51cce5cba72aeede115dceb06e1a3e5171687bad56a7408c",
     "packages/quds_office_engine/lib/src/xml/xml_reader.dart": "1a41c5f8e7b9c90fc9bd1759ca86f729cb28a8398b7833eff92b8a68c96e98c3",
     "packages/quds_office_engine/lib/src/zotero/zotero_client.dart": "64319faf2def8458e8c613b216c6c22cbfddb7dcbc81838fc5fc9ea3aa2c847a",
-    "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart": "ed13f6c682e52f6423d2b06699311db58e4b066b28b9459d55684c278e5e0008",
+    "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart": "4ab7cdde7c10d2212b5f5e6a2907e6a6519e3df17e238955166b6da7ce52c400",
     "packages/quds_office_engine/lib/src/zotero/zotero_models.dart": "172663c7fef76d0fa5a1f9977c82c7df83500e9a15f1599ee9ca79ab80c3357b",
     "packages/quds_office_engine/test/bookmark_fidelity_test.dart": "3c08c1cb992be0cbffe3205ead575529473bd630a60b5e20c3eb012080290e87",
     "packages/quds_office_engine/test/bounded_cfb_reader_test.dart": "6403532630353408977ca6533373f455b176358a172a8941655d155d07da1a08",

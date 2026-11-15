@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
-import 'package:quds_office_engine/src/zotero/zotero_client.dart';
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show ZoteroHttpRequest, ZoteroHttpResponse;
 
 /// Host-owned HTTP boundary for the shared, read-only Zotero client.
 ///
