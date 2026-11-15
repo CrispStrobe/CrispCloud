@@ -356,7 +356,7 @@ void main() {
   testWidgets('failed load cannot save over an unreadable store', (
     tester,
   ) async {
-    raw = '{"version":2,"arrangements":[]}';
+    raw = '{"version":99,"arrangements":[]}';
     await mount(tester);
     await layout(tester, 'Save arrangement');
     expect(find.text('Could not load arrangements.'), findsOneWidget);
@@ -366,7 +366,7 @@ void main() {
           .onPressed,
       isNull,
     );
-    expect(raw, '{"version":2,"arrangements":[]}');
+    expect(raw, '{"version":99,"arrangements":[]}');
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     await layout(tester, 'Saved arrangements');

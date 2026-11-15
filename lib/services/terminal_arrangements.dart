@@ -55,7 +55,7 @@ class TerminalArrangements {
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
         data['version'] is! int ||
-        data['version'] != 1 ||
+        (data['version'] != 1 && data['version'] != 2) ||
         data['arrangements'] is! List) {
       throw const FormatException('Unsupported terminal arrangement store');
     }
@@ -69,7 +69,10 @@ class TerminalArrangements {
       if (entry is! Map<String, dynamic>) {
         throw const FormatException('Invalid terminal arrangement record');
       }
-      final arrangement = TerminalArrangement.fromJson(entry);
+      final arrangement = TerminalArrangement.fromJson(
+        entry,
+        requireLayout: data['version'] == 2,
+      );
       if (!names.add(arrangement.name)) {
         throw const FormatException('Duplicate terminal arrangement name');
       }
@@ -108,7 +111,9 @@ class TerminalArrangements {
 
   Future<void> _persist(List<TerminalArrangement> arrangements) async {
     final encoded = jsonEncode({
-      'version': 1,
+      // Keep the same storage key so an older app rejects this version before
+      // it can silently discard nested panes during a read-modify-write.
+      'version': 2,
       'arrangements': arrangements.map((item) => item.toJson()).toList(),
     });
     if (encoded.length > maxStorageLength) {

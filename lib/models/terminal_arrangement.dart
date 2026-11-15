@@ -1,5 +1,8 @@
 import 'ssh_terminal_config.dart';
 import 'ssh_terminal_profile.dart';
+import 'terminal_pane_layout.dart';
+
+export 'terminal_pane_layout.dart';
 
 /// The small, non-secret part of a terminal pane that can be saved.
 ///
@@ -84,19 +87,23 @@ class TerminalArrangementTab {
   }
 }
 
-enum TerminalSplitAxis { horizontal, vertical }
-
 /// A version-independent value; the enclosing store owns schema versioning.
 class TerminalArrangement {
   TerminalArrangement({
     required this.name,
     required List<TerminalArrangementTab> tabs,
     this.activeIndex = 0,
-    this.firstIndex = 0,
-    this.secondIndex,
-    this.splitAxis = TerminalSplitAxis.horizontal,
-    this.splitFraction = 0.5,
-  }) : tabs = List.unmodifiable(tabs) {
+    int firstIndex = 0,
+    int? secondIndex,
+    TerminalSplitAxis splitAxis = TerminalSplitAxis.horizontal,
+    double splitFraction = 0.5,
+    TerminalPaneLayout? layout,
+  }) : tabs = List.unmodifiable(tabs),
+       layout =
+           layout ??
+           _legacyLayout(firstIndex, secondIndex, splitAxis, splitFraction),
+       _singleAxis = splitAxis,
+       _singleFraction = splitFraction {
     if (!isValidName(name) || name != name.trim()) {
       throw const FormatException('Invalid terminal arrangement name');
     }
@@ -104,11 +111,9 @@ class TerminalArrangement {
       throw const FormatException('Invalid terminal arrangement tab count');
     }
     bool validIndex(int index) => index >= 0 && index < tabs.length;
-    final second = secondIndex;
-    if (!validIndex(firstIndex) ||
-        !validIndex(activeIndex) ||
-        (second != null && (!validIndex(second) || second == firstIndex)) ||
-        (activeIndex != firstIndex && activeIndex != second)) {
+    if (!validIndex(activeIndex) ||
+        this.layout.leafIds.any((index) => !validIndex(index)) ||
+        !this.layout.contains(activeIndex)) {
       throw const FormatException('Invalid terminal arrangement selection');
     }
     if (!splitFraction.isFinite || splitFraction < 0.2 || splitFraction > 0.8) {
@@ -116,7 +121,7 @@ class TerminalArrangement {
     }
   }
 
-  static const maxTabs = 8;
+  static const maxTabs = TerminalPaneLayout.maximumLeaves;
   static bool isValidName(String value) =>
       value.trim().isNotEmpty &&
       value.trim().length <= 80 &&
@@ -125,10 +130,39 @@ class TerminalArrangement {
   final String name;
   final List<TerminalArrangementTab> tabs;
   final int activeIndex;
-  final int firstIndex;
-  final int? secondIndex;
-  final TerminalSplitAxis splitAxis;
-  final double splitFraction;
+  final TerminalPaneLayout layout;
+  final TerminalSplitAxis _singleAxis;
+  final double _singleFraction;
+
+  // Legacy projections let existing summaries and v1 readers describe the
+  // root split. The complete topology is always represented by [layout].
+  int get firstIndex => layout.leafIds.first;
+  int? get secondIndex => switch (layout) {
+    TerminalPaneSplit(:final second) => second.leafIds.first,
+    TerminalPaneLeaf() => null,
+  };
+  TerminalSplitAxis get splitAxis => switch (layout) {
+    TerminalPaneSplit(:final axis) => axis,
+    TerminalPaneLeaf() => _singleAxis,
+  };
+  double get splitFraction => switch (layout) {
+    TerminalPaneSplit(:final fraction) => fraction,
+    TerminalPaneLeaf() => _singleFraction,
+  };
+
+  static TerminalPaneLayout _legacyLayout(
+    int first,
+    int? second,
+    TerminalSplitAxis axis,
+    double fraction,
+  ) => second == null
+      ? TerminalPaneLeaf(first)
+      : TerminalPaneSplit(
+          axis: axis,
+          fraction: fraction,
+          first: TerminalPaneLeaf(first),
+          second: TerminalPaneLeaf(second),
+        );
 
   Map<String, Object?> toJson() => {
     'name': name,
@@ -138,15 +172,20 @@ class TerminalArrangement {
     if (secondIndex != null) 'secondIndex': secondIndex,
     'splitAxis': splitAxis.name,
     'splitFraction': splitFraction,
+    'layout': layout.toJson(),
   };
 
-  factory TerminalArrangement.fromJson(Map<String, dynamic> value) {
+  factory TerminalArrangement.fromJson(
+    Map<String, dynamic> value, {
+    bool requireLayout = false,
+  }) {
     final name = value['name'];
     final tabs = value['tabs'];
     final active = value['activeIndex'];
     final first = value['firstIndex'];
     final second = value['secondIndex'];
     final fraction = value['splitFraction'];
+    final serializedLayout = value['layout'];
     if (name is! String ||
         tabs is! List ||
         tabs.isEmpty ||
@@ -154,7 +193,9 @@ class TerminalArrangement {
         active is! int ||
         first is! int ||
         (second != null && second is! int) ||
-        fraction is! num) {
+        fraction is! num ||
+        ((requireLayout || value.containsKey('layout')) &&
+            serializedLayout is! Map<String, dynamic>)) {
       throw const FormatException('Invalid terminal arrangement');
     }
     final axis = switch (value['splitAxis']) {
@@ -162,7 +203,7 @@ class TerminalArrangement {
       'vertical' => TerminalSplitAxis.vertical,
       _ => throw const FormatException('Unknown terminal split direction'),
     };
-    return TerminalArrangement(
+    final arrangement = TerminalArrangement(
       name: name,
       tabs: tabs.map((entry) {
         if (entry is! Map<String, dynamic>) {
@@ -175,7 +216,21 @@ class TerminalArrangement {
       secondIndex: second as int?,
       splitAxis: axis,
       splitFraction: fraction.toDouble(),
+      layout: serializedLayout == null
+          ? null
+          : TerminalPaneLayout.fromJson(
+              serializedLayout as Map<String, dynamic>,
+            ),
     );
+    // Reject contradictory projections rather than letting a corrupt record
+    // mean different things to callers using the old and new representations.
+    if (arrangement.firstIndex != first ||
+        arrangement.secondIndex != second ||
+        arrangement.splitAxis != axis ||
+        arrangement.splitFraction != fraction.toDouble()) {
+      throw const FormatException('Inconsistent terminal arrangement layout');
+    }
+    return arrangement;
   }
 }
 
