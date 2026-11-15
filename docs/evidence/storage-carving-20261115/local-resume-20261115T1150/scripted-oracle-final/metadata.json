@@ -1,0 +1,81 @@
+{
+  "after_entries_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "after_git": {
+    "head": "231f3e6b267bc97aec63fd96a0a3234bd0887ea2",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/oracle-report.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/sheet/edited.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/sheet/roundtrip-1.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/sheet/roundtrip-2.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/sheet/roundtrip-3.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/slide/edited.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/slide/roundtrip-1.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/slide/roundtrip-2.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/slide/roundtrip-3.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/word/edited.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/word/roundtrip-1.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/word/roundtrip-2.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/produced/word/roundtrip-3.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts/summary.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final/command.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final/metadata.json\n",
+    "tree": "3608b6b2197c299e1279ea44bf9301b5a87b3bba",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/artifacts-sha256.json": "83be060f6ebbbaeaf5aac68eda627a7231bc37f5d076c122bd3dc917be9d1775",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/command.json": "531ae366b5ad202b2513a87b13f350c41716eb7174b860b7771e9390548c0815",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-after.json.gz": "fa6d4d801a28e2cc2ecbcf288d182d43a82010c49c42173467672e8f56039e5e",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-before.json.gz": "ba5770da6e2dc9c82e9644b544dc71eb4520ec289d9068eaca4e8ec0a1f239a9",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/metadata.json": "989a609413b6726352b7ea4e4ab6a7142bb2e6cfb76ec903c34894ac2ec66725",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/produced-files.json": "1c7f27f99410c16bc90e7536614adb0ff316c7a41ae4fab421e75c5696e1597e",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stdout.jsonl": "3bc107ead0bbcffb84c9af076a658dac9c3abd3f56ddb3a9d9406993517e7782",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/suites.txt": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/summary.json": "16038c77d913b775f91c87a189cea0e09f94d78cd7e1bd7490668bf56319ad06",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "before_entries_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "before_git": {
+    "head": "231f3e6b267bc97aec63fd96a0a3234bd0887ea2",
+    "source_changes": [],
+    "status": "",
+    "tree": "3608b6b2197c299e1279ea44bf9301b5a87b3bba",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/artifacts-sha256.json": "83be060f6ebbbaeaf5aac68eda627a7231bc37f5d076c122bd3dc917be9d1775",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/command.json": "531ae366b5ad202b2513a87b13f350c41716eb7174b860b7771e9390548c0815",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-after.json.gz": "fa6d4d801a28e2cc2ecbcf288d182d43a82010c49c42173467672e8f56039e5e",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-before.json.gz": "ba5770da6e2dc9c82e9644b544dc71eb4520ec289d9068eaca4e8ec0a1f239a9",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/metadata.json": "989a609413b6726352b7ea4e4ab6a7142bb2e6cfb76ec903c34894ac2ec66725",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/produced-files.json": "1c7f27f99410c16bc90e7536614adb0ff316c7a41ae4fab421e75c5696e1597e",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stdout.jsonl": "3bc107ead0bbcffb84c9af076a658dac9c3abd3f56ddb3a9d9406993517e7782",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/suites.txt": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/summary.json": "16038c77d913b775f91c87a189cea0e09f94d78cd7e1bd7490668bf56319ad06",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py",
+    "--repo",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "--output",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/scripted-oracle-final-artifacts",
+    "--generation-receipt",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/produced-files.json"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "elapsed_seconds": 0.7209469620011077,
+  "finished_at": "2026-11-15T12:21:49.121745+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8588,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T12:21:48.399234+00:00",
+  "suite_count": null
+}
