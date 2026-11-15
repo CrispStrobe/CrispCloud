@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:xterm2/xterm.dart';
 
 import 'terminal_connection.dart';
+import 'terminal_shell_integration.dart';
 
 enum TerminalSessionStatus {
   idle,
@@ -63,9 +64,17 @@ class TerminalSession extends ChangeNotifier {
   void _bindTerminal() {
     terminal.onOutput = _write;
     terminal.onResize = (_, __, ___, ____) => _resize();
+    shellIntegration = TerminalShellIntegration(terminal)
+      ..addListener(_shellChanged);
   }
 
   late Terminal terminal;
+  late TerminalShellIntegration shellIntegration;
+
+  void _shellChanged() {
+    if (!_disposed) notifyListeners();
+  }
+
   TerminalSessionStatus status = TerminalSessionStatus.idle;
   TerminalSessionKind kind = TerminalSessionKind.local;
   String? label;
@@ -114,6 +123,7 @@ class TerminalSession extends ChangeNotifier {
     exitCode = null;
     status = TerminalSessionStatus.connecting;
     final previousTerminal = terminal;
+    shellIntegration.dispose();
     terminal = _createTerminal(kind)..resize(columns, rows);
     _bindTerminal();
     previousTerminal.onOutput = null;
@@ -294,6 +304,7 @@ class TerminalSession extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     ++_generation;
+    shellIntegration.dispose();
     terminal.onOutput = null;
     terminal.onResize = null;
     final connection = _connection;
