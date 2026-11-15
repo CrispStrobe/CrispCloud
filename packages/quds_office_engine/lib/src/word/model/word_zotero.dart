@@ -85,9 +85,14 @@ final class ZoteroCitationItem {
   /// A deep immutable snapshot, including unrecognized Zotero/CSL members.
   Map<String, dynamic> toJson() => _json;
 
+  // New linked sources need durable identities. Imported field JSON is still
+  // accepted by fromJson and retained verbatim, including unknown URI forms.
   static bool _isItemUri(String value) {
     final uri = Uri.tryParse(value);
+    final authority = RegExp(r'^[^:]+://([^/?#]*)').firstMatch(value)?.group(1);
     return uri != null &&
+        authority != null &&
+        !authority.contains(':') &&
         (uri.scheme == 'http' || uri.scheme == 'https') &&
         (uri.host == 'zotero.org' || uri.host == 'www.zotero.org') &&
         uri.userInfo.isEmpty &&
@@ -95,7 +100,7 @@ final class ZoteroCitationItem {
         !uri.hasQuery &&
         !uri.hasFragment &&
         RegExp(
-          r'^/(?:users/(?:[0-9]+|local/[A-Za-z0-9]+)|groups/[0-9]+)/items/[A-Z0-9]{8}$',
+          r'^/(?:users/(?:[1-9][0-9]*|local/[A-Za-z0-9]{8})|groups/[1-9][0-9]*)/items/[A-Z0-9]{8}$',
         ).hasMatch(uri.path);
   }
 }

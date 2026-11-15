@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "kind": "interim-zotero-engine-checkpoint",
+  "created_at_utc": "2026-11-15T20:44:19.989Z",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch": "codex/zotero-support-20261115",
+  "parent_commit": "959933475f34f748ae8184615853b77e448f2a6f",
+  "source": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "prior_commit": "875064341656ad9e74daec64f8f8d7befdb48368",
+    "commit": "df824e4351b7df7f8b7d6df2deb64f95bfe2ef2d",
+    "tree": "b1a638c938eeda95ccd39cb91f3dd1832f08d854"
+  },
+  "manifest": {
+    "path": "tool/office_fidelity_manifest.json",
+    "prior_git_blob": "becc67cc41e771b3de46e5b7d0b456b6660fbef6",
+    "git_blob": "838971d9da49a4effdf77facf1b4d883989e5744",
+    "sha256": "b8e4e1d263161583c98f83686f9205bc56a56dbd91a86b9a8023e8dfa643bec5",
+    "managed_file_count": 2375,
+    "new_paths": [
+      "packages/quds_office_engine/test/zotero_identity_client_test.dart"
+    ],
+    "removed_paths": [],
+    "standalone_sources": {
+      "packages/legacy_doc_parser": {
+        "repository": "CrispStrobe/legacy-doc-parser",
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+      }
+    }
+  },
+  "verification": {
+    "method": "Read the immutable target source tree and compare all Quds-managed entries. Freshly fetch the four changed/new files, independently verify Git SHA1 blobs and SHA256 hashes, and preserve prior verification only for identical immutable blobs, modes and byte lengths. The standalone parser tree and declaration remain unchanged from the verified parent.",
+    "prior_receipt": {
+      "commit": "959933475f34f748ae8184615853b77e448f2a6f",
+      "path": "docs/validation/zotero-local-identity-20261115/recent-integration.json"
+    },
+    "quds_files": 518,
+    "legacy_files": 1857,
+    "unchanged_managed_blobs_modes_sizes": 2371,
+    "freshly_hashed_files": 4,
+    "total_managed_files": 2375,
+    "source_normalizations": [],
+    "all_trees_nontruncated": true,
+    "hash_vectors_previously_passed": {
+      "sha256": 3,
+      "sha1": 3,
+      "git_empty_blob": true
+    },
+    "mismatches": []
+  },
+  "changed_managed_files": [
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+      "git_blob": "fbe28b5faa7f471b60b975c035105e43addf340d",
+      "sha256": "1e6ecc1dbeb3dffd1793d164a287e88980d6a16527158228a1d9b0617207f9da",
+      "size": 28329,
+      "prior_git_blob": "26b38707fa453b5c57059f0671cfba1116f55309",
+      "mode": "100644",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "git_blob": "c5a585d9751218bd2da848e7b5ad787ff9596d03",
+      "sha256": "64319faf2def8458e8c613b216c6c22cbfddb7dcbc81838fc5fc9ea3aa2c847a",
+      "size": 30264,
+      "prior_git_blob": "520ceb361c1ce83a93424a332628ae49c17c0498",
+      "mode": "100644",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_zotero_test.dart",
+      "git_blob": "53f29938b5f31cff40648f356c444d06f96183ba",
+      "sha256": "9d9cfa5dcb58e8019a26d964619d1fb5eafd113670bc9ec0a36d1d45d58e327c",
+      "size": 21044,
+      "prior_git_blob": "ebcba5996823fc9aa825c48b37641c328bfc2e4a",
+      "mode": "100644",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/zotero_identity_client_test.dart",
+      "git_blob": "42b2d545fa44937df3680b3be0215ea11ad9bb57",
+      "sha256": "3b34bceac0d57dd4ba616eefc26f3a8168936435828db2568a840a0ad8285010",
+      "size": 20093,
+      "prior_git_blob": null,
+      "mode": "100644",
+      "matches_canonical_target": true
+    }
+  ],
+  "preserved": {
+    "latest_main": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+    "terminal": "19eb5369d02520e76bf3026ad881a60a46350cee",
+    "host_application_files_unchanged": true,
+    "legacy_pin": "4895712158127b2fc930d796e17035c3ca0dac62"
+  },
+  "validation": {
+    "tests_added_or_updated": true,
+    "runtime_tests_run": 0,
+    "dart_analysis_run": false,
+    "flutter_build_run": false,
+    "github_actions_queried_or_awaited": false,
+    "limitation": "No usable command execution environment was available. This receipt records source and digest checks, not compiled/runtime qualification. UI wiring is a subsequent checkpoint."
+  }
+}

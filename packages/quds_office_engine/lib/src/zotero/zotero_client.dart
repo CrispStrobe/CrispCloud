@@ -241,19 +241,32 @@ class ZoteroClient {
 
   /// Retrieves CSL data and a formatted *individual* citation snapshot.
   /// This does not perform document-wide numbering, ibid or disambiguation.
+  /// When [expectedCitationUri] is supplied, the same response must prove that
+  /// identity. In particular, a local route and item key cannot identify a
+  /// source from another unsynced desktop database.
+  /// Set [includeFormatted] to false for metadata refresh: this requests only
+  /// item data and CSL, without loading a style or rendering a citation.
   Future<ZoteroItem> item(
     ZoteroLibrary library,
     String key, {
     String style = 'apa',
     String locale = 'en-US',
+    Uri? expectedCitationUri,
+    bool includeFormatted = true,
   }) async {
     validateZoteroKey(key);
+    final expected = expectedCitationUri == null
+        ? null
+        : _expectedIdentity(library, key, expectedCitationUri);
     final response = await _get('${_libraryPath(library)}/items/$key', {
-      'include': 'data,csljson,citation,bib',
-      ..._formatting(style, locale),
+      'include': includeFormatted ? 'data,csljson,citation,bib' : 'data,csljson',
+      if (includeFormatted) ..._formatting(style, locale),
     });
     final item = _item(_object(_decode(response)), library);
     if (item.key != key) throw _invalidResponse();
+    if (expected != null && item.citationUri != expected) {
+      throw _identityMismatch();
+    }
     return item;
   }
 
@@ -285,37 +298,173 @@ class ZoteroClient {
   /// rather than concatenating independently formatted bibliographies, which
   /// would silently break CSL sorting/disambiguation. HTML must be sanitized by
   /// the host before display or insertion as markup.
+  ///
+  /// Supply [expectedItemUris] when the selection comes from document links.
+  /// All identities are checked before the single formatted request. Local
+  /// verification also requires a pinned desktop database identity.
   Future<String> bibliography(
     ZoteroLibrary library, {
     required List<String> itemKeys,
     String style = 'apa',
     String locale = 'en-US',
+    Map<String, Uri>? expectedItemUris,
   }) async {
     final keys = _selection(itemKeys);
-    final response = await _get('${_libraryPath(library)}/items', {
+    final path = '${_libraryPath(library)}/items';
+    final formatting = _formatting(style, locale);
+    final expected = _expectedSelection(library, keys, expectedItemUris);
+    final version = expected == null
+        ? null
+        : await _verifySelection(path, library, expected);
+    final response = await _get(path, {
       'itemKey': keys.join(','),
       'format': 'bib',
       'linkwrap': '0',
-      ..._formatting(style, locale),
+      ...formatting,
     });
+    if (expected != null) {
+      _verifyAggregateResponse(response, expected.length, version);
+    }
     return response.body;
   }
 
   /// Exports selected records without converting or dropping their metadata.
   /// Selections are limited to Zotero's 50-key request maximum.
+  /// [expectedItemUris] verifies every document-linked source before export;
+  /// missing, duplicate or substituted sources fail the whole selection.
   Future<String> exportItems(
     ZoteroLibrary library,
     List<String> itemKeys, {
     ZoteroExportFormat format = ZoteroExportFormat.cslJson,
+    Map<String, Uri>? expectedItemUris,
   }) async {
     final keys = _selection(itemKeys);
-    final response = await _get('${_libraryPath(library)}/items', {
+    final path = '${_libraryPath(library)}/items';
+    final expected = _expectedSelection(library, keys, expectedItemUris);
+    final version = expected == null
+        ? null
+        : await _verifySelection(path, library, expected);
+    final response = await _get(path, {
       'itemKey': keys.join(','),
       'format': format.apiValue,
       'limit': '${keys.length}',
     });
+    if (expected != null) {
+      _verifyAggregateResponse(response, expected.length, version);
+    }
     return response.body;
   }
+
+  /// Check identity arguments before making a request. The library is only a
+  /// route; a local source URI must still be proven by returned item metadata.
+  Uri _expectedIdentity(ZoteroLibrary library, String key, Uri expected) {
+    _libraryPath(library);
+    final uri = _canonicalItemUri(expected, key);
+    if (uri == null ||
+        (library.isLocalUser
+            ? !isLocal || !uri.path.startsWith('/users/')
+            : uri != library.itemUri(key))) {
+      throw ArgumentError(
+        'The expected Zotero source must match the selected library and key.',
+      );
+    }
+    return uri;
+  }
+
+  Map<String, Uri>? _expectedSelection(
+    ZoteroLibrary library,
+    List<String> keys,
+    Map<String, Uri>? expectedItemUris,
+  ) {
+    if (expectedItemUris == null) return null;
+    if (expectedItemUris.length != keys.length ||
+        keys.any((key) => !expectedItemUris.containsKey(key))) {
+      throw ArgumentError('Provide an identity for every selected Zotero item.');
+    }
+    final expected = <String, Uri>{
+      for (final key in keys)
+        key: _expectedIdentity(library, key, expectedItemUris[key]!),
+    };
+    // Two unsynced profiles can have identical item keys and /users/0 routes.
+    // Do not combine them or deduplicate them by the request address.
+    final scopes = expected.values
+        .map((uri) => uri.path.substring(0, uri.path.lastIndexOf('/items/')))
+        .toSet();
+    if (scopes.length != 1) {
+      throw ArgumentError('Choose Zotero sources from one library identity.');
+    }
+    return Map.unmodifiable(expected);
+  }
+
+  /// Raw bibliography/export output has no usable identity envelope. Verify
+  /// the exact selection in one bounded metadata response before requesting it.
+  /// Local aggregate operations additionally need Zotero's database pin so a
+  /// profile switch between the two requests cannot export another library.
+  Future<int?> _verifySelection(
+    String path,
+    ZoteroLibrary library,
+    Map<String, Uri> expected,
+  ) async {
+    final response = await _get(path, {
+      'itemKey': expected.keys.join(','),
+      'format': 'json',
+      'include': 'data,csljson',
+      'limit': '${expected.length}',
+    });
+    final records = _array(_decode(response));
+    _verifyAggregateResponse(response, expected.length, null);
+    if (records.length != expected.length) throw _identityMismatch();
+    final seen = <String>{};
+    for (final record in records) {
+      final item = _item(_object(record), library);
+      if (!seen.add(item.key) ||
+          !expected.containsKey(item.key) ||
+          item.citationUri != expected[item.key]) {
+        throw _identityMismatch();
+      }
+    }
+    final versionHeader = response.header('Last-Modified-Version');
+    final version = int.tryParse(versionHeader ?? '');
+    if (versionHeader != null && (version == null || version < 0)) {
+      throw _invalidResponse();
+    }
+    if (isLocal && (_localServerId == null || version == null)) {
+      throw const ZoteroApiException(
+        kind: ZoteroApiErrorKind.unavailable,
+        message:
+            'This Zotero desktop does not provide a database identity and library version. Use Zotero 10 or later and reconnect to export or format these sources safely. Individual previews and metadata refresh remain available.',
+      );
+    }
+    return version;
+  }
+
+  static void _verifyAggregateResponse(
+    ZoteroHttpResponse response,
+    int expectedCount,
+    int? expectedVersion,
+  ) {
+    final total = response.header('Total-Results');
+    if (total != null && int.tryParse(total) != expectedCount) {
+      throw _identityMismatch();
+    }
+    // This version belongs to this connection and library only. Never compare
+    // object versions from the desktop with versions from the online API.
+    if (expectedVersion != null &&
+        int.tryParse(response.header('Last-Modified-Version') ?? '') !=
+            expectedVersion) {
+      throw const ZoteroApiException(
+        kind: ZoteroApiErrorKind.invalidResponse,
+        message:
+            'The Zotero library changed while preparing the selection. Try again; existing citations were kept.',
+      );
+    }
+  }
+
+  static ZoteroApiException _identityMismatch() => const ZoteroApiException(
+    kind: ZoteroApiErrorKind.invalidResponse,
+    message:
+        'Zotero did not return the selected source identities. Check the connected library; existing citations were kept.',
+  );
 
   static List<String> _selection(List<String> itemKeys) {
     final keys = itemKeys.toSet().toList(growable: false);
@@ -611,21 +760,37 @@ class ZoteroClient {
 
   /// Canonical URI IDs are verified, while citation keys and Zotero's numeric
   /// export IDs remain ordinary CSL IDs. In particular users/0 is not an ID.
-  static Uri? _cslUri(dynamic value, String key) {
+  static Uri? _cslUri(Object? value, String key) {
     if (value is! String) return null;
     final uri = Uri.tryParse(value);
-    if (uri == null || !uri.hasScheme || uri.host != 'zotero.org') return null;
-    if ((uri.scheme != 'http' && uri.scheme != 'https') ||
-        uri.userInfo.isNotEmpty ||
-        uri.hasQuery ||
-        uri.hasFragment ||
-        uri.port != (uri.scheme == 'https' ? 443 : 80)) {
+    if (uri == null ||
+        !uri.hasScheme ||
+        !const ['zotero.org', 'www.zotero.org'].contains(uri.host)) {
+      return null;
+    }
+    // Uri normalizes explicit default ports. Inspect the original authority
+    // as well so an exported :80 or :443 identity is not silently accepted.
+    final authority = RegExp(r'^[^:]+://([^/?#]*)').firstMatch(value)?.group(1);
+    final canonical = _canonicalItemUri(uri, key);
+    if (canonical == null || authority == null || authority.contains(':')) {
       throw _invalidResponse();
+    }
+    return canonical;
+  }
+
+  static Uri? _canonicalItemUri(Uri uri, String key) {
+    if (!const ['http', 'https'].contains(uri.scheme) ||
+        !const ['zotero.org', 'www.zotero.org'].contains(uri.host) ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasPort ||
+        uri.hasQuery ||
+        uri.hasFragment) {
+      return null;
     }
     final match = RegExp(
       r'^/(?:users/[1-9][0-9]*|groups/[1-9][0-9]*|users/local/[A-Za-z0-9]{8})/items/([A-Z0-9]{8})$',
     ).firstMatch(uri.path);
-    if (match == null || match.group(1) != key) throw _invalidResponse();
+    if (match == null || match.group(1) != key) return null;
     return Uri.parse('http://zotero.org${uri.path}');
   }
 

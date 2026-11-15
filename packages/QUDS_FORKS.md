@@ -23,10 +23,10 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `875064341656ad9e74daec64f8f8d7befdb48368`
+The app mirrors Quds `df824e4351b7df7f8b7d6df2deb64f95bfe2ef2d`
 on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,374 managed files
+all 2,375 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -42,12 +42,19 @@ and [source-bound local validation](../docs/zotero-validation.md). This adds
 targeted Zotero qualification; earlier storage and spreadsheet results retain
 their original source identities.
 
-This checkpoint also brings in the latest Word content-control display imports
+The preceding source-integration checkpoint brought in the latest Word content-control display imports
 and between/not-between spreadsheet conditions. The complete managed inventory
-was compared by Git blob, size and mode to its pinned canonical sources; the
-six changed managed files were freshly hashed. See the
+at that checkpoint was compared by Git blob, size and mode to its pinned canonical
+sources; the six changed managed files were freshly hashed. See the
 [integration receipt](../docs/validation/zotero-local-identity-20261115/recent-integration.json).
 No application test or build result is claimed for this source integration.
+
+The incremental Zotero engine checkpoint adds expected citation-identity checks
+for individual references and complete selections, metadata-only refresh without
+loading a citation style, and canonical identity handling in document sources.
+Its four changed/new managed files were freshly hashed; new regression tests
+are committed but were not executed. Shared-dialog wiring follows separately.
+See the [interim feature receipt](../docs/validation/zotero-local-identity-20261115/feature-checkpoint.json).
 
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax

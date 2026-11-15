@@ -331,6 +331,117 @@ void main() {
     );
   });
 
+  test('new linked sources reject request aliases and malformed identities', () {
+    for (final uri in <String>[
+      'http://zotero.org/users/0/items/ABCD1234',
+      'http://zotero.org/groups/0/items/ABCD1234',
+      'http://zotero.org/users/042/items/ABCD1234',
+      'http://zotero.org/groups/077/items/ABCD1234',
+      'http://zotero.org/users/local/short/items/ABCD1234',
+      'http://zotero.org/users/local/abcdefgh9/items/ABCD1234',
+      'http://zotero.org/users/local/abc_defg/items/ABCD1234',
+      'http://zotero.org/users/local/abcdefgh/items/abcd1234',
+      'http://zotero.org/users/local/abcdefgh/items/ABCD1234?key=secret',
+      'http://zotero.org/users/local/abcdefgh/items/ABCD1234#fragment',
+      'http://user@zotero.org/users/local/abcdefgh/items/ABCD1234',
+      'http://zotero.org:80/users/local/abcdefgh/items/ABCD1234',
+      'https://zotero.org:443/users/local/abcdefgh/items/ABCD1234',
+    ]) {
+      expect(
+        () => ZoteroCitationItem.fromCsl(
+          itemData: <String, Object?>{'id': 'source', 'type': 'book'},
+          uris: <String>[uri],
+        ),
+        throwsArgumentError,
+        reason: uri,
+      );
+    }
+  });
+
+  test('local profile identities remain distinct through DOCX saves', () {
+    final sources = <String, String>{
+      'local-a': 'http://zotero.org/users/local/abcdefgh/items/ABCD1234',
+      'local-a-alias':
+          'https://www.zotero.org/users/local/abcdefgh/items/ABCD1234',
+      'local-b': 'http://zotero.org/users/local/ijklmnop/items/ABCD1234',
+      'account': 'http://zotero.org/users/42/items/ABCD1234',
+      'group': 'http://zotero.org/groups/42/items/ABCD1234',
+    };
+    var document = WmlDocument.empty();
+    for (final entry in sources.entries) {
+      WordZotero.insertCitation(
+        document.paragraphs.single,
+        ZoteroCitation(
+          citationId: entry.key,
+          plainCitation: '(${entry.key})',
+          items: <ZoteroCitationItem>[
+            ZoteroCitationItem.fromCsl(
+              itemData: <String, Object?>{
+                'id': 'same-export-id',
+                'type': 'book',
+                'title': entry.key,
+              },
+              uris: <String>[entry.value],
+              locator: '8–10',
+              prefix: 'see',
+            ),
+          ],
+        ),
+      );
+    }
+    for (var cycle = 0; cycle < 3; cycle++) {
+      document = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(document),
+      );
+      final fields = WordZotero.fields(document);
+      expect(fields, hasLength(sources.length));
+      for (final field in fields) {
+        final citation = field.citation!;
+        final item = citation.items.single;
+        expect(item.uris.single, sources[citation.citationId]);
+        expect(item.id, item.uris.single);
+        expect(item.itemData!['id'], item.id);
+        expect(item.locator, '8–10');
+        expect(item.prefix, 'see');
+      }
+      expect(
+        WordZotero.embeddedItems(document).map((item) => item['title']),
+        <String>['local-a', 'local-b', 'account', 'group'],
+      );
+    }
+  });
+
+  test('unknown imported source identities are preserved without repair', () {
+    const importedUri = 'http://zotero.org/users/0/items/ABCD1234';
+    final imported = ZoteroCitationItem.fromJson(<String, Object?>{
+      'id': 17,
+      'uris': <String>[importedUri],
+      'itemData': <String, Object?>{
+        'id': 17,
+        'type': 'book',
+        'title': 'Keep the imported snapshot',
+      },
+      'futureIdentity': <String, Object?>{'origin': 'preserve'},
+    });
+    var document = WmlDocument.empty();
+    WordZotero.insertCitation(
+      document.paragraphs.single,
+      ZoteroCitation(
+        citationId: 'imported-identity',
+        plainCitation: '(Keep cached text)',
+        items: <ZoteroCitationItem>[imported],
+      ),
+    );
+    final instruction = WordZotero.fields(document).single.instruction;
+    document = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(document),
+    );
+    final field = WordZotero.fields(document).single;
+    expect(field.instruction, instruction);
+    expect(field.citation!.items.single.toJson(), imported.toJson());
+    expect(field.cachedText, '(Keep cached text)');
+  });
+
   test('native field locks survive import and complex-field export', () {
     final package = _fixture();
     final source = package.getPart('/word/document.xml')!;
