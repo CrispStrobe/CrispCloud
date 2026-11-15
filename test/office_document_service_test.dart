@@ -204,7 +204,8 @@ void main() {
     'EPUB extraction follows relocated OPF spine and excludes navigation',
     () async {
       final bytes = _zip({
-        'META-INF/container.xml': '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
+        'META-INF/container.xml':
+            '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
         'Book/package.opf':
             '<package><manifest>'
             '<item id="first" href="Text/z.xhtml"/>'
@@ -823,7 +824,7 @@ void imageTests() {
     expect(shape.image!.length, _png.length);
   });
 
-  test('ODT keeps a bounded image marker', () async {
+  test('ODT embeds a bounded picture as a data image', () async {
     const xml =
         '''
 <office:document-content $namespaces>
@@ -839,8 +840,11 @@ void imageTests() {
       'image.odt',
     );
     expect(doc.markdown, contains('Before'));
-    expect(doc.markdown, contains('*[Image: Picture 1]*'));
+    expect(doc.markdown, contains('![Picture 1](data:image/png;base64,'));
     expect(doc.markdown, contains('after'));
+    expect(doc.markdown, isNot(contains('*[Image:')));
+    expect(doc.plainText, contains('[Image]'));
+    expect(doc.plainText, isNot(contains('base64')));
   });
 }
 

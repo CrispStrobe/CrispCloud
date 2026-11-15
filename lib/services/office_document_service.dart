@@ -341,6 +341,7 @@ Future<String?> _readPart(ViewerArchive archive, String path) async {
 
 String _stripMarkdown(String markdown) {
   var text = markdown.replaceAll('  \n', '\n');
+  text = text.replaceAll(RegExp(r'!\[[^\]]*\]\([^)]*\)'), '[Image]');
   text = text.replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '');
   text = text.replaceAllMapped(
     RegExp(r'\*\*(.*?)\*\*'),
@@ -1575,6 +1576,31 @@ String? _odfColor(String? raw) {
 // ODT
 // ---------------------------------------------------------------------------
 
+Future<Map<String, String>> _odtPictures(ViewerArchive archive) async {
+  const perImageCap = 2 * 1024 * 1024;
+  const totalCap = 2 * 1024 * 1024;
+  final pictures = <String, String>{};
+  var used = 0;
+  for (final member in archive.members) {
+    if (!member.isFile || !member.name.startsWith('Pictures/')) continue;
+    if (member.size <= 0 || member.size > perImageCap) continue;
+    if (used + member.size > totalCap) break;
+    final mime = switch (member.name.split('.').last.toLowerCase()) {
+      'png' => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      _ => null,
+    };
+    if (mime == null) continue;
+    final bytes = await _readPartBytes(archive, member.name);
+    if (bytes == null || bytes.isEmpty) continue;
+    used += bytes.length;
+    pictures[member.name] = 'data:$mime;base64,${base64Encode(bytes)}';
+  }
+  return pictures;
+}
+
 Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   final xml = await _readPart(archive, 'content.xml');
   if (xml == null) {
@@ -1587,6 +1613,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   }
   final document = XmlDocument.parse(xml);
   final tableBudget = _OdfTableBudget();
+  final pictures = await _odtPictures(archive);
 
   // Automatic and named styles are referenced by name from spans, paragraphs
   // and list containers. Only the properties needed for readable Markdown are
@@ -1675,13 +1702,17 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
           );
           buffer.write('[$number]');
         case 'frame':
-          // Media is not embedded in Markdown; keep a bounded textual marker.
           final name = child.getAttribute('draw:name');
           final href = child
               .findAllElements('draw:image')
               .firstOrNull
               ?.getAttribute('xlink:href');
-          if (href != null && href.isNotEmpty) {
+          final data = href == null ? null : pictures[href];
+          if (data != null) {
+            final alt = (name ?? 'Image').replaceAll(RegExp(r'[\[\]]'), '');
+            buffer.write('![$alt]($data)');
+          } else if (href != null && href.isNotEmpty) {
+            // Oversized or unsupported media stays a bounded textual marker.
             buffer.write('*[Image: ${name ?? href.split('/').last}]*');
           }
         case 'bookmark':

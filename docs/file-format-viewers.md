@@ -25,7 +25,7 @@ platform acceptance remains pending as described under [Verification](#verificat
 | `.xml`, `.xsd`, `.xsl`, `.xslt` | Existing tree/source view plus explicit **XSD / XSLT** validation and transformation tools | Existing XML source editor; tool output does not overwrite the input |
 | `.doc`, `.dot` | Supported main-story formatting, list labels, tables and revision markup from unencrypted Word 97–2007 binary files | Separate reviewed structured DOCX/DOCM, installed Word/LibreOffice DOCX/DOCM, or an explicitly selected text-only DOCX |
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
-| `.odt` | Headings, paragraphs, inline bold/italic, links, ordered/unordered and nested lists, numbered footnotes, repeat/span-aware tables, image markers | Source/Hex inspection; no ODF writer |
+| `.odt` | Headings, paragraphs, inline bold/italic, links, ordered/unordered and nested lists, numbered footnotes, repeat/span-aware tables, bounded inline pictures | Source/Hex inspection; no ODF writer |
 | `.ods` | Quds grid with typed values, formulas, dates/times, currencies, comments, pictures, repeated rows/columns and spans; a Table toggle keeps the typed extraction | Imported by Quds; Save writes a new `.xlsx` copy, the original `.ods` is untouched |
 | `.odp` | Positioned slide deck: page size, frames/custom shapes, text styles/colours, fills, images, backgrounds and speaker notes | Source/Hex inspection; no ODF writer |
 | `.kdbx` | Password/key-file unlock, groups, standard/custom fields, entry history and search | Group management, entry moves, protected custom fields, history restoration and encrypted saves preserving other database data |
