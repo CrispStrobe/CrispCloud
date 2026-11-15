@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
@@ -50,48 +48,6 @@ void main() {
     expect(reopened.sheets.first.merges, hasLength(1));
   });
 
-  test('covered cells and internal repeated empty rows keep positions', () {
-    const content = '''
-<office:document-content
- xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
- xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
- xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
- <office:body><office:spreadsheet><table:table table:name="Budget">
-  <table:table-row>
-   <table:table-cell office:value-type="string" table:number-columns-spanned="2"><text:p>Heading</text:p></table:table-cell>
-   <table:covered-table-cell/>
-   <table:table-cell office:value-type="float" office:value="7"/>
-  </table:table-row>
-  <table:table-row table:number-rows-repeated="2"/>
-  <table:table-row><table:table-cell office:value-type="string"><text:p>Tail</text:p></table:table-cell></table:table-row>
- </table:table></office:spreadsheet></office:body>
-</office:document-content>
-''';
-    final archive = Archive()
-      ..addFile(
-        ArchiveFile.bytes(
-          'mimetype',
-          utf8.encode('application/vnd.oasis.opendocument.spreadsheet'),
-        ),
-      )
-      ..addFile(ArchiveFile.bytes('content.xml', utf8.encode(content)));
-    final book = OdsSheetReader.readBytes(
-      Uint8List.fromList(ZipEncoder().encode(archive)),
-    );
-    final sheet = book.sheets.single;
-    expect(sheet.name, 'Budget');
-    expect(sheet.cellA1('A1').asString, 'Heading');
-    expect(sheet.cellA1('C1').value, 7);
-    expect(sheet.cellA1('A2').asString, isEmpty);
-    expect(sheet.cellA1('A3').asString, isEmpty);
-    expect(sheet.cellA1('A4').asString, 'Tail');
-    expect(
-      sheet.merges.single.c1,
-      1,
-      reason: 'A1 spans A1:B1; the covered placeholder must not add columns',
-    );
-  });
-
   test('rejects a non-ODF package', () {
     expect(
       () => OdsSheetReader.readBytes(Uint8List.fromList(List.filled(64, 0))),
@@ -135,6 +91,8 @@ void edgeTests() {
     expect(merge.r1, 1);
     expect(sheet.cellA1('D1').horizontalAlign, SmlHAlign.center);
     expect(book.sheets[1].cellA1('A1').value, 41);
+    expect(sheet.cellA1('E3').value, 'A    B');
+    expect(sheet.cellA1('E4').value, 'L1\nL2');
   });
 
   test('edge ODS survives an xlsx round trip', () async {

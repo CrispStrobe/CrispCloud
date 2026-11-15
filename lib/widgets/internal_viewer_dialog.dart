@@ -536,6 +536,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     return name.endsWith('.xls') || name.endsWith('.xlt');
   }
 
+  bool get _isQudsSheetName =>
+      _isLegacyExcelName || _effectiveName.toLowerCase().endsWith('.ods');
+
   DocumentPreviewKind? get _browserDocumentKind {
     // Legacy Excel is imported by Quds for a typed, formula-aware grid. The
     // File Viewer spreadsheet route stays available as the explicit fallback.
@@ -870,8 +873,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           'can use a local file or a streamed temporary copy.';
     }
     if (error is FileBytesTooLargeException) {
-      final detail = InternalViewerStrings(context)
-          .withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
+      final detail = InternalViewerStrings(
+        context,
+      ).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
       return '${localizedFileBytesError(context, error)}\n\n$detail';
     }
     return localizedFileBytesError(context, error);
@@ -1003,8 +1007,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             var cut = text.lastIndexOf('\n', _kRichRenderCap);
             if (cut <= 0) cut = _kRichRenderCap;
             text = text.substring(0, cut);
-            note = InternalViewerStrings(context)
-                .withNumber('truncated', formatBytes(_kRichRenderCap));
+            note = InternalViewerStrings(
+              context,
+            ).withNumber('truncated', formatBytes(_kRichRenderCap));
           }
           _richText = text;
           setState(() {
@@ -1043,12 +1048,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.office:
           setState(() => _preparing = true);
-          if (_isLegacyExcelName && !_legacySpreadsheet) {
+          if (_isQudsSheetName && !_legacySpreadsheet) {
             final data = await _ensureFullData();
             if (!mounted || token != _prepareToken) return;
             try {
+              final name = _effectiveName.toLowerCase();
               final controller = SheetEditorController(
-                workbook: LegacySheetReader.readBytes(data),
+                workbook: name.endsWith('.ods')
+                    ? OdsSheetReader.readBytes(data)
+                    : LegacySheetReader.readBytes(data),
                 config: _sheetViewConfig,
               );
               _sheetController?.dispose();
@@ -1344,6 +1352,16 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _showLegacySpreadsheet() async {
+    if (!_isLegacyExcelName) {
+      // ODS has no File Viewer route; the fallback is the typed table view.
+      setState(() {
+        _legacySpreadsheet = true;
+        _officeView = _OfficeView.table;
+        _preparing = true;
+      });
+      await _prepareForMode(_mode, ++_prepareToken);
+      return;
+    }
     final token = ++_prepareToken;
     try {
       final data = await _readDocumentBytes(
@@ -2329,8 +2347,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 total,
               ])
             : previewMode && _mode == ViewerMode.office
-            ? OfficePreviewStrings(Localizations.localeOf(context))
-                  .searchedPreview
+            ? OfficePreviewStrings(
+                Localizations.localeOf(context),
+              ).searchedPreview
             : context.commanderTr("Searched entire file ({0})", [
                 formatBytes(source.size),
               ]);
@@ -3020,8 +3039,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } on ArchivePasswordRequiredException catch (e) {
       if (!mounted || !current()) return null;
       _showSnack(
-        InternalViewerStrings(context)
-            .text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
+        InternalViewerStrings(
+          context,
+        ).text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
       );
       return null;
     } on ArchiveViewException catch (e) {
@@ -3242,13 +3262,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                           IconButton(
                             tooltip: context.commanderTr("Edit (F4)"),
                             icon: const Icon(Icons.edit_outlined),
-                            onPressed: () =>
-                                Navigator.of(context)
-                                    .pop(InternalViewerAction.edit),
+                            onPressed: () => Navigator.of(
+                              context,
+                            ).pop(InternalViewerAction.edit),
                           ),
                         IconButton(
-                          tooltip: InternalViewerStrings(context)
-                              .text('search'),
+                          tooltip: InternalViewerStrings(
+                            context,
+                          ).text('search'),
                           icon: const Icon(Icons.search),
                           onPressed: _toggleSearch,
                         ),
@@ -3259,8 +3280,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                         ),
                         if (_canChangeEncoding)
                           PopupMenuButton<String>(
-                            tooltip: InternalViewerStrings(context)
-                                .text('encoding'),
+                            tooltip: InternalViewerStrings(
+                              context,
+                            ).text('encoding'),
                             icon: const Icon(Icons.text_fields),
                             onSelected: (value) =>
                                 _setEncoding(value == 'auto' ? null : value),
@@ -3332,22 +3354,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                             PopupMenuItem(
                               value: 'bpl8',
                               child: Text(
-                                InternalViewerStrings(context)
-                                    .withNumber('hexRows', 8),
+                                InternalViewerStrings(
+                                  context,
+                                ).withNumber('hexRows', 8),
                               ),
                             ),
                             PopupMenuItem(
                               value: 'bpl16',
                               child: Text(
-                                InternalViewerStrings(context)
-                                    .withNumber('hexRows', 16),
+                                InternalViewerStrings(
+                                  context,
+                                ).withNumber('hexRows', 16),
                               ),
                             ),
                             PopupMenuItem(
                               value: 'bpl32',
                               child: Text(
-                                InternalViewerStrings(context)
-                                    .withNumber('hexRows', 32),
+                                InternalViewerStrings(
+                                  context,
+                                ).withNumber('hexRows', 32),
                               ),
                             ),
                             const PopupMenuDivider(),
@@ -4379,8 +4404,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         Padding(
           padding: const EdgeInsets.all(8),
           child: Text(
-            OfficePdfFontNoticeStrings(Localizations.localeOf(context))
-                .text('previewFallback'),
+            OfficePdfFontNoticeStrings(
+              Localizations.localeOf(context),
+            ).text('previewFallback'),
           ),
         ),
         Expanded(child: content),
@@ -4472,14 +4498,16 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         final csv = document.csv;
         if (csv != null && csv.isNotEmpty) {
           final locale = Localizations.localeOf(context);
-          final localized = OfficePreviewStrings(locale)
-              .headings(csv, document.csvHeadings, locale);
+          final localized = OfficePreviewStrings(
+            locale,
+          ).headings(csv, document.csvHeadings, locale);
           return CsvTableView(content: localized, filename: _viewName);
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
-        final safeHtml = OfficePreviewStrings(Localizations.localeOf(context))
-            .safeHtml(document);
+        final safeHtml = OfficePreviewStrings(
+          Localizations.localeOf(context),
+        ).safeHtml(document);
         if (safeHtml != null && safeHtml.length <= _kRichRenderCap) {
           return SelectionArea(
             child: SingleChildScrollView(
@@ -4501,9 +4529,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         if (safeHtml != null) return _buildOfficeText(document, theme);
         final locale = Localizations.localeOf(context);
-        final markdown = OfficePreviewStrings(locale)
-            .headings(document.markdown, document.markdownHeadings, locale)
-            .trim();
+        final markdown = OfficePreviewStrings(
+          locale,
+        ).headings(document.markdown, document.markdownHeadings, locale).trim();
         if (markdown.isEmpty) {
           if (document.plainText.trim().isNotEmpty) {
             return _buildOfficeText(document, theme);
@@ -4648,8 +4676,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted) return;
       setState(() {
         _pdfTextLoading = false;
-        _pdfTextError = InternalViewerStrings(context)
-            .withNumber('pdfError', localizedNativePreviewError(context, e));
+        _pdfTextError = InternalViewerStrings(
+          context,
+        ).withNumber('pdfError', localizedNativePreviewError(context, e));
       });
     }
   }
@@ -4909,8 +4938,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Widget _buildStatusBar(ThemeData theme) {
     final note = _mode == ViewerMode.office && _officeDoc != null
-        ? OfficePreviewStrings(Localizations.localeOf(context))
-                  .note(_officeDoc!) ??
+        ? OfficePreviewStrings(
+                Localizations.localeOf(context),
+              ).note(_officeDoc!) ??
               _viewNote
         : _viewNote;
     final style = TextStyle(
