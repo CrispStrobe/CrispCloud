@@ -54,6 +54,23 @@ class BrowserMenuStore extends ChangeNotifier {
         /* Usable defaults remain available. */
       }
     } finally {
+      try {
+        const marker = 'browser_menu_documents_migrated_v1';
+        if (!recovered && await _storage.read(marker) != '1') {
+          final updated = _layout.withDocumentCommands();
+          if (!identical(updated, _layout)) {
+            if (!await _storage.write(backupKey, _layout.encode()) ||
+                !await _storage.write(currentKey, updated.encode()))
+              throw StateError(
+                'Could not add document commands to the saved menu.',
+              );
+            _layout = updated;
+          }
+          await _storage.write(marker, '1');
+        }
+      } catch (_) {
+        /* Custom menus remain usable if an upgrade cannot persist. */
+      }
       loaded = true;
       _changed();
     }

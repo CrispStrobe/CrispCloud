@@ -1,3 +1,5 @@
+import '../services/document_activity.dart';
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -79,6 +81,7 @@ class PdfEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
+  DocumentActivity? _activity;
   final _messenger = GlobalKey<ScaffoldMessengerState>();
   final _viewer = PdfViewerController();
   final _nativeId = DateTime.now().microsecondsSinceEpoch.toString();
@@ -356,6 +359,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     setState(() {
       _loading = true;
       _error = null;
@@ -421,6 +425,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       _session = PdfEditSession(initialBytes: bytes)
         ..addListener(_onSessionChanged);
       _controller!.addListener(_onRevision);
+      _activity?.opened();
       setState(() => _loading = false);
       _publishMenu();
     } catch (error, stack) {
@@ -569,6 +574,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
             ? _store!.save
             : (bytes) => _store!.saveCopy(bytes, copyName),
       );
+      if (outcome == PdfSaveOutcome.savedOriginal) _activity?.edited();
+      if (outcome == PdfSaveOutcome.savedCopy && copyName != null)
+        _activity?.editedSibling(copyName);
       if (!mounted) return outcome;
       if (outcome != PdfSaveOutcome.savedOriginal) {
         _lastCopyRevision = savedRevision;

@@ -1,3 +1,5 @@
+import '../services/document_activity.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -82,6 +84,7 @@ class MediaEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
+  DocumentActivity? _activity;
   static const _log = Log('MediaEditor');
   final _controlsKey = GlobalKey<MediaEditorControlsState>();
   MediaFileStore? _store;
@@ -178,6 +181,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     setState(() {
       _loading = true;
       _errorKey = null;
@@ -207,6 +211,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       if (!mounted) return;
       _session?.removeListener(_refresh);
       _session?.dispose();
+      _activity?.opened();
       _session = MediaEditSession(info)..addListener(_refresh);
       setState(() {
         _inputPath = inputPath;
@@ -412,6 +417,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
         setState(() => _saving = true);
         await _store!.saveCopy(_renderedPath!, fileName);
         persisted = true;
+        _activity?.editedSibling(fileName);
         if (!mounted) return;
         setState(() {
           _statusKey = 'Copy exported';

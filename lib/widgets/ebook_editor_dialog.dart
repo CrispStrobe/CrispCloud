@@ -1,3 +1,5 @@
+import '../services/document_activity.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -121,6 +123,7 @@ class EbookEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
+  DocumentActivity? _activity;
   final _reader = CrispEbookController();
   final _chapterReader = EbookChapterReaderController();
   final _source = CodeLineEditingController();
@@ -341,6 +344,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     try {
       final origin =
           widget.origin ??
@@ -395,6 +399,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           : null;
       if (!mounted) return;
       if (document != null) _installDocument(document);
+      _activity?.opened();
       _annotationIdentity =
           _store?.documentId ??
           '${origin?.storageId ?? 'attachment'}:${widget.file.path ?? _name}';
@@ -692,6 +697,9 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           state == _session!.stateId &&
           !_sourceDraft &&
           !_metadataDraft;
+      if (outcome == EbookSaveOutcome.savedOriginal) _activity?.edited();
+      if (outcome == EbookSaveOutcome.savedCopy && name != null)
+        _activity?.editedSibling(name);
       _reportOutcome(outcome);
       _scheduleMenu();
       return outcome == EbookSaveOutcome.savedOriginal && !_dirty;

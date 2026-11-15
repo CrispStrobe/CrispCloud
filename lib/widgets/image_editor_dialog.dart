@@ -1,3 +1,5 @@
+import '../services/document_activity.dart';
+
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -75,6 +77,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
+  DocumentActivity? _activity;
   late final GlobalKey<ProImageEditorState> _editorKey =
       widget.editorKey ?? GlobalKey<ProImageEditorState>();
   final _messenger = GlobalKey<ScaffoldMessengerState>();
@@ -280,6 +283,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     if (_loadInProgress) return;
     _loadInProgress = true;
     if (mounted) {
@@ -330,6 +334,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       if (!mounted) return;
       _session?.removeListener(_scheduleRefresh);
       _session?.dispose();
+      _activity?.opened();
       _session = ImageEditSession(initialBytes: bytes, format: info.format)
         ..addListener(_scheduleRefresh);
       _historyTokens = Expando<int>();
@@ -498,6 +503,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         );
         return false;
       }
+      _activity?.edited();
       _showMessage(
         session.isDirty ? 'New changes remain unsaved.' : 'Image saved',
       );

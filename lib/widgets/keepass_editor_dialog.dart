@@ -1,3 +1,5 @@
+import '../services/document_activity.dart';
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -134,6 +136,7 @@ class _CustomFieldDraft {
 
 class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     with WidgetsBindingObserver {
+  DocumentActivity? _activity;
   final _masterPassword = TextEditingController();
   final _search = TextEditingController();
   final _title = TextEditingController();
@@ -235,6 +238,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     final generation = ++_generation;
     try {
       if ((widget.file.size ?? 0) > kKeePassMaxFileBytes) {
@@ -262,6 +266,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       }
       if (!mounted || generation != _generation) return;
       setState(() {
+        _activity?.opened();
         _encrypted = Uint8List.fromList(bytes);
         _loading = false;
       });
@@ -1192,6 +1197,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         };
         return false;
       }
+      _activity?.edited();
       if (!_locked) _notice('saved');
       return !result.isDirty;
     } on KeePassException catch (error) {

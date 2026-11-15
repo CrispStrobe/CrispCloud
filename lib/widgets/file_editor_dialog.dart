@@ -1,3 +1,4 @@
+import '../services/document_activity.dart';
 // lib/widgets/file_editor_dialog.dart
 //
 // Built-in text/code editor for remote (and local) files.
@@ -218,7 +219,11 @@ Future<void> showTextHexEditorSession(
         MaterialPageRoute(
           fullscreenDialog: true,
           builder: (_) => openedEditor == EditorKind.hex
-              ? HexFileEditorPage(file: openedFile, backend: backend)
+              ? HexFileEditorPage(
+                  file: openedFile,
+                  backend: backend,
+                  activity: captureDocumentActivity(ref, file, side),
+                )
               : _FileEditorPage(
                   file: openedFile,
                   side: side,
@@ -278,6 +283,7 @@ class _FileEditorPage extends ConsumerStatefulWidget {
 }
 
 class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
+  DocumentActivity? _activity;
   static const _log = Log('FileEditor');
   static const _autoSaveDelay = Duration(seconds: 30);
 
@@ -602,6 +608,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _loadFile({EditorEncoding? encodingOverride}) async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     if (_closing) return;
     _log.debug(
       'loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb',
@@ -625,6 +632,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       if (!mounted || _canPop) return;
 
       final document = EditorDocument.decode(bytes, encoding: encodingOverride);
+      _activity?.opened();
       _applyDocument(document, bytes);
       setState(() {
         _loading = false;
@@ -768,6 +776,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         'A copy was downloaded. The original file is unchanged and your edits remain unsaved.',
       );
     }
+    _activity?.edited();
   }
 
   void _showSaveError(Object? error) {

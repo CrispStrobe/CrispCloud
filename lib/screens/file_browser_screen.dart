@@ -1,3 +1,7 @@
+import '../widgets/new_document_dialog.dart';
+import '../widgets/document_conversion_dialog.dart';
+import '../widgets/document_history_dialog.dart';
+import '../l10n/document_workspace_strings.dart';
 // screens/file_browser_screen.dart
 //
 // Main scaffold and layout for the two-panel file browser.
@@ -419,6 +423,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       );
     }
 
+    add(
+      'convertDocument',
+      documentTr(context, 'Convert existing file…'),
+      () => showDocumentConversionDialog(context, ref),
+    );
+    add(
+      'newDocument',
+      documentTr(context, 'New…'),
+      () => showNewDocumentDialog(context, ref),
+    );
+    add(
+      'recentDocuments',
+      documentTr(context, 'Recent files…'),
+      () => showDocumentHistoryDialog(context, ref),
+    );
     void route(String id, String label, String action) =>
         add(id, label, () => _runOverflowAction(context, action));
     add(
@@ -759,6 +778,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     return [
       fixed(
+        'newDocument',
+        documentTr(context, 'New…'),
+        () => showNewDocumentDialog(context, ref),
+      ),
+      fixed(
+        'recentDocuments',
+        documentTr(context, 'Recent files…'),
+        () => showDocumentHistoryDialog(context, ref),
+      ),
+      fixed(
         'settings',
         context.commanderTr('Settings...'),
         () => showSettingsDialog(context),
@@ -866,7 +895,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             for (final command in _fixedBrowserMenuBindings(
               context,
               ref,
-            ).skip(1))
+            ).where((command) => command.id != 'settings'))
               command.platform(),
           ],
         ),

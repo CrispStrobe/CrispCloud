@@ -1,3 +1,5 @@
+import '../services/document_activity.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -48,9 +50,11 @@ class HexFileEditorPage extends StatefulWidget {
     super.key,
     required this.file,
     required this.backend,
+    this.activity,
   });
   final FileItem file;
   final FileOperationBackend backend;
+  final DocumentActivity? activity;
   @override
   State<HexFileEditorPage> createState() => _HexFileEditorPageState();
 }
@@ -90,6 +94,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         await session.close();
         return;
       }
+      widget.activity?.opened();
       _session = session;
       _controller = HexEditorController(
         HexDocument(session.source),
@@ -149,6 +154,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
           onProgress: (done, total) => _progressChanged(done, total),
         );
         // Only the revision actually written becomes clean. Newer edits stay dirty.
+        widget.activity?.edited();
         controller.markSaved(snapshot);
       } while (_saveAgain && !_cancelled && !_disposed);
       return !controller.isDirty;
