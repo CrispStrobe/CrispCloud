@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "status": "planned; final app source freeze and all current acceptance results pending",
+  "evidence_base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
+  "source_freeze": {
+    "commit": null,
+    "rule": "Root must checkpoint the complete source after managed sync and dependency resolution. Gate driver reads each subsequent saved HEAD; never invent or copy the prior source SHA."
+  },
+  "source_inputs": {
+    "observed_app_commit": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "app_branch": "integration/storage-carving-local-20261115124645",
+    "prior_qualified_app_source": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+    "prior_qualified_evidence_saved_at": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+    "intended_quds_pin": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "intended_parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+    "upstream_quds_before_restored_tests": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea"
+  },
+  "canonical_checkout_siblings": {
+    "quds": "QudsCanonical",
+    "parser": "ParserCanonical"
+  },
+  "manifests": {
+    "app-suites.txt": {
+      "prior_source20ee_count": 65,
+      "count": 65,
+      "sha256": "6c7975878e1f087f846356c10b0b0558c8fa42f3d56ec0c18d600322d29c669c"
+    },
+    "engine-suites.txt": {
+      "prior_source20ee_count": 22,
+      "count": 22,
+      "sha256": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290"
+    },
+    "editor-suites.txt": {
+      "prior_source20ee_count": 9,
+      "count": 11,
+      "sha256": "5a0b34be6c6fa642e8a185a8a6bd4b3022bb0cbaebd5d2e19d237be3e2c19c49",
+      "additions": [
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+      ]
+    },
+    "analysis-app-files.txt": {
+      "prior_source20ee_count": 76,
+      "count": 76,
+      "sha256": "743fdb517e7752fdf2d59ef56dd336f679dc713fa28c966024e4eb2464f975aa"
+    },
+    "analysis-engine-files.txt": {
+      "prior_source20ee_count": 16,
+      "count": 16,
+      "sha256": "5e39cc6dd12c9ba6d792757312cea389bf6cf885ec73eaa9572bb0e57a6837c9"
+    },
+    "analysis-editor-files.txt": {
+      "prior_source20ee_count": 4,
+      "count": 6,
+      "sha256": "95b0c4ae127ecc9e7fb639cf6e497a60d92da6f87a8821d41ee9ee6ab990887c",
+      "additions": [
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+      ]
+    },
+    "analysis-cli-files.txt": {
+      "prior_source20ee_count": 1,
+      "count": 1,
+      "sha256": "084097b0d4c960b2686d7e116980573c9b8d32f9a083a36804c01564bcdbe393"
+    },
+    "navigation-suites.txt": {
+      "prior_source20ee_count": 1,
+      "count": 1,
+      "sha256": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015"
+    }
+  },
+  "ordered_gates": [
+    "analysis-app",
+    "analysis-engine",
+    "analysis-editor",
+    "analysis-cli",
+    "app",
+    "engine",
+    "editor",
+    "scripted-oracle",
+    "source-integrity",
+    "png-portable",
+    "navigation-capture",
+    "navigation-independent-review"
+  ],
+  "separate_parser_qualification": {
+    "source_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+    "suite_inventory": 144,
+    "accepted_test_count": null,
+    "rule": "Owner retains exact source/graph-bound standalone results; source production equivalence does not turn the prior count into a new result."
+  },
+  "changes_requiring_qualification": [
+    "ODS strict covered-cell-token admission and 10000-comment bound from canonical6e4c.",
+    "Three ODS regression cases restored unchanged by canonical9bb7: currency copy-save, sparse inherited padding, and native column geometry copy-save.",
+    "Two Word golden suites select five exact Linux references and retain exact pixel comparisons; two strict editor test files added.",
+    "Parser pin incorporates one additional compound recovery regression and mirrored final evidence; production parser bytes are unchanged.",
+    "Engine archive development dependency added; all resolution graphs must be complete and frozen before gates."
+  ],
+  "excluded_external_corpus": {
+    "status": "not executed; excluded from mandatory qualification",
+    "suites": [
+      {
+        "path": "test/local_odf_corpus_test.dart",
+        "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+      },
+      {
+        "path": "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+        "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+      }
+    ]
+  },
+  "rules": [
+    "Checkpoint complete app source, exact pins, locks and selected plans before any accepted gate.",
+    "Do not edit source, checkouts, graphs or tools during a gate; record before/after snapshots and save each completed failed or passing gate immediately.",
+    "Use fresh --label values in this evidence base, never overwrite prior receipts.",
+    "Run full selected cohorts directly; duplicate focus runs are only needed to diagnose a concrete failure.",
+    "Supply exact --engine-label and --capture-label when running dependent gates; fresh generation receipts bind retained outputs to this source snapshot.",
+    "Preserve all current recorder, tool hashing, postprocessing-failure, exact artifact, and source/resolution binding checks.",
+    "No native-hook disabling, fake library substitution, golden tolerance weakening, skipped golden comparison or --update-goldens.",
+    "Keep navigation capture executions separate from primary host totals and inspect the actual two PNGs.",
+    "If new goldens fail, save raw receipts and editor test/failures/ plus build/fidelity-diagnostics/ when present before any cleanup or retry.",
+    "Do not execute private Documents/Downloads corpus scanners and do not count empty-corpus passes.",
+    "Do not wait for, poll or restart GitHub Actions. Use the authorized remote branch and incremental [skip ci] evidence checkpoints.",
+    "Prior source20ee acceptance remains explicitly historical; no new passing count or source hash is asserted by this plan."
+  ],
+  "provenance_helpers": {
+    "audit_recorded_gates.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/audit_recorded_gates.py",
+      "incoming_sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "new_sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "unchanged": true
+    },
+    "run_portable_current.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_portable_current.py",
+      "incoming_sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "new_sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "unchanged": true
+    },
+    "run_scripted_oracle_current.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_scripted_oracle_current.py",
+      "incoming_sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "new_sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "unchanged": true
+    },
+    "run_selected_gate.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py",
+      "incoming_sha256": "0f354b708dfaa05bf7c0d27ae8ccef00dfb3f12c4e04e65da6d0f093f13ed5da",
+      "new_sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+      "unchanged": false
+    },
+    "run_source_and_notices.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_source_and_notices.py",
+      "incoming_sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "new_sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "unchanged": true
+    },
+    "toolchain_launcher.sh": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/toolchain_launcher.sh",
+      "incoming_sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "new_sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "unchanged": true
+    },
+    "verify_navigation_capture.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_navigation_capture.py",
+      "incoming_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "new_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "unchanged": true
+    }
+  },
+  "historical_copies": [
+    "historical/readiness-review.json",
+    "historical/provenance-overlay-manifest.json"
+  ],
+  "runtime_results": null
+}

@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "status": "not executed",
+  "source_commit": null,
+  "execution": "Each entry is a separate action; this file is not an automatic batch runner.",
+  "commands": [
+    {
+      "gate": "analysis-app",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-app",
+        "--label",
+        "analysis-app"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "analysis-engine",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-engine",
+        "--label",
+        "analysis-engine"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "analysis-editor",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-editor",
+        "--label",
+        "analysis-editor"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "analysis-cli",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-cli",
+        "--label",
+        "analysis-cli"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "app",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "app",
+        "--label",
+        "app"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "engine",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "engine",
+        "--label",
+        "engine"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "editor",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "editor",
+        "--label",
+        "editor"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "scripted-oracle",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "scripted-oracle",
+        "--label",
+        "scripted-oracle",
+        "--engine-label",
+        "engine"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "source-integrity",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "source-integrity",
+        "--label",
+        "source-integrity"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "png-portable",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "png-portable",
+        "--label",
+        "png-portable"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "navigation-capture",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "navigation-capture",
+        "--label",
+        "navigation-capture"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    },
+    {
+      "gate": "navigation-independent-review",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "navigation-independent-review",
+        "--label",
+        "navigation-independent-review",
+        "--capture-label",
+        "navigation-capture"
+      ],
+      "after": "Save and verify the completed receipt remotely before the next gate; stop for any failure and retain its raw evidence."
+    }
+  ]
+}

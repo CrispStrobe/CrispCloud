@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "status": "static plan preparation only; no current app runtime validation",
+  "source_observed": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "future_app_source_commit": null,
+  "intended_pins": {
+    "quds": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "parser": "08296edbee08da013a8ff718798972552ccd03f7"
+  },
+  "counts": {
+    "app-suites.txt": 65,
+    "engine-suites.txt": 22,
+    "editor-suites.txt": 11,
+    "analysis-app-files.txt": 76,
+    "analysis-engine-files.txt": 16,
+    "analysis-editor-files.txt": 6,
+    "analysis-cli-files.txt": 1,
+    "navigation-suites.txt": 1
+  },
+  "static_checks": [
+    "Manifest entries unique; 65 app /22 engine /11 editor and76/16/6/1 strict groups.",
+    "All helper Python sources parsed without executing them.",
+    "Launcher passes bash -n without executing it.",
+    "Only executable helper delta is corrected canonical sibling checkout paths.",
+    "Output, manifest and current-helper paths derive from __file__ in the new evidence base.",
+    "Old recorder/source-integrity/semantic-reader helper references intentionally remain exact historical dependencies and are hashed by the runner.",
+    "Old readiness and overlay manifest are preserved under historical/, not labeled current."
+  ],
+  "helper_integrity": {
+    "audit_recorded_gates.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/audit_recorded_gates.py",
+      "incoming_sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "new_sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "unchanged": true
+    },
+    "run_portable_current.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_portable_current.py",
+      "incoming_sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "new_sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "unchanged": true
+    },
+    "run_scripted_oracle_current.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_scripted_oracle_current.py",
+      "incoming_sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "new_sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "unchanged": true
+    },
+    "run_selected_gate.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py",
+      "incoming_sha256": "0f354b708dfaa05bf7c0d27ae8ccef00dfb3f12c4e04e65da6d0f093f13ed5da",
+      "new_sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+      "unchanged": false
+    },
+    "run_source_and_notices.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_source_and_notices.py",
+      "incoming_sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "new_sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "unchanged": true
+    },
+    "toolchain_launcher.sh": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/toolchain_launcher.sh",
+      "incoming_sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "new_sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "unchanged": true
+    },
+    "verify_navigation_capture.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_navigation_capture.py",
+      "incoming_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "new_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "unchanged": true
+    }
+  },
+  "python_files_parsed": [
+    "run_source_and_notices.py",
+    "verify_navigation_capture.py",
+    "run_portable_current.py",
+    "audit_recorded_gates.py",
+    "run_scripted_oracle_current.py",
+    "run_selected_gate.py"
+  ],
+  "runtime_tests_executed": 0,
+  "app_writes": 0,
+  "head_changes": 0,
+  "ci_polls_or_waits": 0,
+  "remaining_before_runtime": [
+    "Root synchronizes final Quds/parser managed source.",
+    "Root resolves all graphs, reviews and saves the complete new app checkpoint.",
+    "Root starts fresh source-bound gates and saves each receipt immediately."
+  ]
+}

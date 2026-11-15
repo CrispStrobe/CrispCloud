@@ -968,6 +968,99 @@ void main() {
 }
 
 void defaultAndTimeTests() {
+  test('currency symbols survive namespaced import and XLSX saves', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-row>'
+        '<t:table-cell t:style-name="usd" o:value-type="currency" '
+        'o:value="1234.5"/>'
+        '<t:table-cell t:style-name="usd" o:value-type="currency" '
+        'o:value="-1234.5"/>'
+        '<t:table-cell t:style-name="eur" o:value-type="currency" '
+        'o:value="5"/>'
+        '</t:table-row></t:table>',
+        styles:
+            '<n:currency-style xmlns:n="$_number" s:name="USD">'
+            '<e:currency-symbol>wrong</e:currency-symbol>'
+            '<n:currency-symbol>\$</n:currency-symbol>'
+            '<n:number n:decimal-places="2" n:grouping="true"/>'
+            '</n:currency-style>'
+            '<n:currency-style xmlns:n="$_number" s:name="EUR">'
+            '<n:currency-symbol>€</n:currency-symbol>'
+            '<n:number n:decimal-places="2"/>'
+            '</n:currency-style>'
+            '<s:style s:name="usd" s:family="table-cell" '
+            's:data-style-name="USD"/>'
+            '<s:style s:name="eur" s:family="table-cell" '
+            's:data-style-name="EUR"/>',
+      ),
+    );
+    for (final current in [book, await _roundTrip(book)]) {
+      for (final expected in {
+        'A1': r'$1,234.50',
+        'B1': r'-$1,234.50',
+        'C1': '€5.00',
+      }.entries) {
+        final cell = current.firstSheet.cellA1(expected.key);
+        expect(
+          current.styles!.format(cell.value, cell.styleIndex),
+          expected.value,
+        );
+      }
+    }
+  });
+
+  test('inherited styled padding stays sparse while explicit blanks survive', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:default-cell-style-name="inherited" '
+        't:number-columns-repeated="4096"/>'
+        '<t:table-row t:default-cell-style-name="inherited" '
+        't:style-name="defaultHeight" t:number-rows-repeated="4000">'
+        '<t:table-cell t:number-columns-repeated="4096"/></t:table-row>'
+        '<t:table-row><t:table-cell o:value-type="float" o:value="9"/>'
+        '<t:table-cell t:style-name="accent"/></t:table-row></t:table>',
+        styles:
+            '<s:style s:name="inherited" s:family="table-cell">'
+            '<s:text-properties f:font-size="14pt"/></s:style>'
+            '<s:style s:name="accent" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#FF0000"/></s:style>'
+            '<s:style s:name="defaultHeight" s:family="table-row">'
+            '<s:table-row-properties s:row-height="14.95pt"/></s:style>',
+      ),
+    );
+    expect(book.firstSheet.rowHeights, isEmpty);
+    for (final current in [book, await _roundTrip(book)]) {
+      final sheet = current.firstSheet;
+      expect(sheet.allCells, hasLength(2));
+      expect(sheet.cellA1('A4001').value, 9);
+      expect(sheet.cellA1('A4001').fontSize, 14);
+      final blank = sheet.cellA1('B4001');
+      expect(current.styles!.fillAt(blank.styleIndex), 'FF0000');
+    }
+  });
+
+  test('ODS native column geometry survives a new XLSX copy', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:style-name="wide"/>'
+        '<t:table-column t:style-name="normal" t:number-columns-repeated="4095"/>'
+        '<t:table-row>${_value('value')}</t:table-row></t:table>',
+        styles:
+            '<s:style s:name="wide" s:family="table-column">'
+            '<s:table-column-properties s:column-width="1in"/></s:style>'
+            '<s:style s:name="normal" s:family="table-column">'
+            '<s:table-column-properties s:column-width="0.8898in"/></s:style>',
+      ),
+    );
+    for (final current in [book, await _roundTrip(book)]) {
+      final sheet = current.firstSheet;
+      expect(sheet.columnWidths.keys, [0]);
+      expect(sheet.exportColumnWidth(0), closeTo(96 / 7.4, 1e-10));
+      expect(sheet.columnWidth(1), 81);
+    }
+  });
+
   test('cell then row then per-column styles survive repeated cells', () async {
     final book = OdsSheetReader.readBytes(
       _ods(

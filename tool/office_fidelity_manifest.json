@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "integration/office-storage-reconcile-20261115",
-  "source_commit": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+  "source_branch": "integration/ods-regression-restore-20261115T1246",
+  "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "a1897669db8671bdf4cba0f235bd5babe3d5cd462cc54ea6ba82a45a2e4174b2",
     "packages/quds_office_editor/lib/quds_office_editor.dart": "aeaf43f56fae1d83eaa2a1044ece9760e5834482b5f8fdfc49d0ddf3bf64c681",
@@ -307,7 +307,7 @@
     "packages/quds_office_engine/test/note_marker_merge_test.dart": "c5ea2e069021071299b1b191154fe98fcd870dbbc4e6edce174da775ad83e6e8",
     "packages/quds_office_engine/test/note_separator_fidelity_test.dart": "7f086b027fe9be2cd03e5326d9508573dbb14a3d77744ccae62c4585252cd195",
     "packages/quds_office_engine/test/numbering_collision_test.dart": "9b05f637b3965c98f2b16062c4052e8d18310db8724aab04a8f28e7f339e78ea",
-    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "d05e241ac6be5289fb1b97b7f895f0e20f7aeaeff21973dad2d256962f77417f",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "ff344f74106cb2bbb61d8d705d0be4a5392b0e7e9452e3bf6a1dee989d39c400",
     "packages/quds_office_engine/test/office_features_test.dart": "baf7bf76e6455acfc14bd8412e0d9aeccaac99b77cf076947939c350111ac7ec",
     "packages/quds_office_engine/test/office_fidelity_oracle_test.dart": "097a6ba4f7b5d433c899eaad8c5df1c41be006d035e5fa76710f6de64f2d6a68",
     "packages/quds_office_engine/test/office_named_fonts_test.dart": "079c26e265a63814c80b748a643dbf6a8e9ce3ab81447e424c6745334b10ee83",

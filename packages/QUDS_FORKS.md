@@ -23,10 +23,13 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea` on
-`integration/office-storage-reconcile-20261115` and standalone
+The app mirrors Quds `9bb71983a4ae6bc7bb3372fd931e724ddd102fc8` on
+`integration/ods-regression-restore-20261115T1246` and standalone
 legacy parser `08296edbee08da013a8ff718798972552ccd03f7`; all 2,334 managed files
-are pinned for verification. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
+are pinned for verification. The correction restores the currency-symbol save,
+inherited styled-padding sparsity, and native column geometry regressions dropped
+by the incoming ODS test reorganization; the new admission bounds are preserved.
+New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field

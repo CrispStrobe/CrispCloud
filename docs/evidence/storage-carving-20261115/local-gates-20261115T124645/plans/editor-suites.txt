@@ -1,0 +1,11 @@
+packages/quds_office_editor/test/word_inline_picture_history_test.dart
+packages/quds_office_editor/test/word_selection_paint_test.dart
+packages/quds_office_editor/test/sheet_navigation_controller_test.dart
+packages/quds_office_editor/test/sheet_navigation_widget_test.dart
+packages/quds_office_editor/test/sheet_cell_state_history_test.dart
+packages/quds_office_editor/test/sheet_style_history_test.dart
+packages/quds_office_editor/test/sheet_sort_history_test.dart
+packages/quds_office_editor/test/word_operation_history_test.dart
+packages/quds_office_editor/test/word_split_identity_test.dart
+packages/quds_office_editor/test/office_fidelity_golden_test.dart
+packages/quds_office_editor/test/office_structure_goldens_test.dart

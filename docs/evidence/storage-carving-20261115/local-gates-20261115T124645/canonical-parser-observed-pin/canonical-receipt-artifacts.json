@@ -1,0 +1,82 @@
+{
+  "README.md": {
+    "size": 2397,
+    "sha256": "d36b189b6bd9893430c3cb5731a49890322ce76c3aa4dee67a5871d6fcb5b2db"
+  },
+  "changed-suite/artifacts-sha256.json": {
+    "size": 1004,
+    "sha256": "2b5992e9fa9dfe42bce8632bed69e87e17c86560cd0065d078c74ea44b1737e9"
+  },
+  "changed-suite/command.json": {
+    "size": 460,
+    "sha256": "4b34d439042d8599f628e37f2f33a9a312b68fc8291a13b40336e4a263b1c98f"
+  },
+  "changed-suite/inputs-after.json.gz": {
+    "size": 89570,
+    "sha256": "7d6b8ac3975cd2b11e65c42896d31d1a2fd47375404a539e67a4dd1121e4ba26"
+  },
+  "changed-suite/inputs-before.json.gz": {
+    "size": 89571,
+    "sha256": "6ef1f7fb8fe016e9738ac7896470f117ce7dc7666c0465960f1f12c39feb233f"
+  },
+  "changed-suite/metadata.json": {
+    "size": 3121,
+    "sha256": "0a190a596eb98e8e71cfeda9d1dc0604429ad04765ba5da1ae2faa764c959b98"
+  },
+  "changed-suite/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "changed-suite/stdout.jsonl": {
+    "size": 8178,
+    "sha256": "d0ace4de8f500c1d085b0463bd5fd4a6e58b5d075ea59d833bfeabfb127c9ff9"
+  },
+  "changed-suite/suites.txt": {
+    "size": 46,
+    "sha256": "bb903be0d6237d074718c2e228ef2f111344cd5a3953a4e6b854bc483c304b47"
+  },
+  "changed-suite/summary.json": {
+    "size": 737,
+    "sha256": "c3bc1b959797b327cf78709fef6eb05c494d1e9a3d8bb74dc074f7a507c5e027"
+  },
+  "observed-test-delta.patch": {
+    "size": 1883,
+    "sha256": "2d10899f628a2813f030a7fb887808307f2c2ad7c8d26fdb6a7c90d390f12c53"
+  },
+  "source-equivalence.json": {
+    "size": 4623,
+    "sha256": "4d7c76ec741996f201217304cebef98cf7239892255d0e0c3293be8803b923ef"
+  },
+  "strict-analysis/artifacts-sha256.json": {
+    "size": 757,
+    "sha256": "000ff21aaf7d76dd14775ad4387f1dcad8e6f67820bdadb282f3a9a68e6e6c93"
+  },
+  "strict-analysis/command.json": {
+    "size": 423,
+    "sha256": "22d288f06d40666f0f98984625d0c266a28dfd460522566358c048bbcaedaa99"
+  },
+  "strict-analysis/inputs-after.json.gz": {
+    "size": 89571,
+    "sha256": "0fa833bf603f684a5c2ade389639f42e21a7519189cd5f31d40501ccf4d11019"
+  },
+  "strict-analysis/inputs-before.json.gz": {
+    "size": 89572,
+    "sha256": "135af64ec1f6eacd56c5a0592cbe8b0c05f02727efac8fcef8dabb991eefca5f"
+  },
+  "strict-analysis/metadata.json": {
+    "size": 2800,
+    "sha256": "6145c90d3e2344ee61cbfb433254ab2568c84fa23eba9184611d400d90785d35"
+  },
+  "strict-analysis/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "strict-analysis/stdout.log": {
+    "size": 71,
+    "sha256": "b15d1468b312ca201df9b0dfe0a5ff798df02dd1b43ee71feb9877ae81bed486"
+  },
+  "tracked-git-objects.json.gz": {
+    "size": 115314,
+    "sha256": "662f5c83a075f263a4f52d9718eecf9148255d0d4584037ba6b24f4c2a8f4410"
+  }
+}

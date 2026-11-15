@@ -1,0 +1,92 @@
+[
+  {
+    "file": "office_fidelity_word.png",
+    "changed_pixels": 5399,
+    "changed_ratio": 0.0060256696428571425,
+    "computed_bbox_exclusive": [
+      3,
+      4,
+      741,
+      1085
+    ],
+    "saved_bbox_inclusive": [
+      3,
+      4,
+      740,
+      1084
+    ],
+    "counts_and_inclusive_bounds_match": true
+  },
+  {
+    "file": "structure_create_1.png",
+    "changed_pixels": 5936,
+    "changed_ratio": 0.006625,
+    "computed_bbox_exclusive": [
+      3,
+      4,
+      761,
+      1085
+    ],
+    "saved_bbox_inclusive": [
+      3,
+      4,
+      760,
+      1084
+    ],
+    "counts_and_inclusive_bounds_match": true
+  },
+  {
+    "file": "structure_edit_1.png",
+    "changed_pixels": 1468,
+    "changed_ratio": 0.0016383928571428571,
+    "computed_bbox_exclusive": [
+      3,
+      4,
+      741,
+      1085
+    ],
+    "saved_bbox_inclusive": [
+      3,
+      4,
+      740,
+      1084
+    ],
+    "counts_and_inclusive_bounds_match": true
+  },
+  {
+    "file": "structure_edit_2.png",
+    "changed_pixels": 5029,
+    "changed_ratio": 0.005612723214285714,
+    "computed_bbox_exclusive": [
+      3,
+      4,
+      741,
+      1085
+    ],
+    "saved_bbox_inclusive": [
+      3,
+      4,
+      740,
+      1084
+    ],
+    "counts_and_inclusive_bounds_match": true
+  },
+  {
+    "file": "structure_remove_1.png",
+    "changed_pixels": 4299,
+    "changed_ratio": 0.004797991071428571,
+    "computed_bbox_exclusive": [
+      3,
+      4,
+      741,
+      1085
+    ],
+    "saved_bbox_inclusive": [
+      3,
+      4,
+      740,
+      1084
+    ],
+    "counts_and_inclusive_bounds_match": true
+  }
+]
