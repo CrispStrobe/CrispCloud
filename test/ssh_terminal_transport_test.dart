@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crisp_cloud/models/screen_session_options.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/ssh_terminal_service.dart';
@@ -118,6 +119,113 @@ void main() {
     await _flushEvents();
     expect(shell.received.single, utf8.encode('still here\r'));
   });
+
+  test('screen uses an exec PTY and preserves input and geometry', () async {
+    const screen = ScreenSessionOptions(sessionName: 'build');
+    await service.startShell(
+      session.id,
+      width: 132,
+      height: 43,
+      screen: screen,
+    );
+    expect(client.commands, [screen.command]);
+    expect(client.shellRequests, 0);
+    expect(client.pty!.type, 'xterm-256color');
+    expect(client.pty!.width, 132);
+    expect(client.pty!.height, 43);
+    await service.writeToShell(session.id, '\x01c');
+    await service.resizeTerminal(session.id, 95, 31);
+    await _flushEvents();
+    expect(client.shells.single.received.single, [1, 99]);
+    expect(client.shells.single.resizes, [(95, 31)]);
+  });
+
+  test(
+    'invalid or conflicting screen options preserve the running shell',
+    () async {
+      await service.startShell(session.id);
+      final shell = client.shells.single;
+      for (final options in [
+        const ScreenSessionOptions(sessionName: "x'; id; #"),
+        const ScreenSessionOptions(sessionName: 'work'),
+      ]) {
+        await expectLater(
+          service.startShell(
+            session.id,
+            screen: options,
+            tmux: options.sessionName == 'work'
+                ? const TmuxSessionOptions(sessionName: 'work')
+                : null,
+          ),
+          throwsArgumentError,
+        );
+        expect(client.commands, isEmpty);
+        expect(shell.closed, isFalse);
+        expect(client.isClosed, isFalse);
+      }
+      await service.writeToShell(session.id, 'still here\r');
+      await _flushEvents();
+      expect(shell.received.single, utf8.encode('still here\r'));
+    },
+  );
+
+  test('disconnect during screen startup closes the late channel', () async {
+    final pending = Completer<SSHSession>();
+    client.pendingExecution = pending.future;
+    final starting = service.startShell(
+      session.id,
+      screen: const ScreenSessionOptions(
+        sessionName: '123.work',
+        mode: ScreenSessionMode.attach,
+      ),
+    );
+    final failed = expectLater(starting, throwsStateError);
+    await _flushEvents();
+    await service.disconnect(session.id);
+    final lateShell = _Shell();
+    pending.complete(lateShell);
+    await failed;
+    expect(lateShell.closed, isTrue);
+    expect(service.getActiveSessions(), isEmpty);
+    expect(client.shellRequests, 0);
+  });
+
+  test(
+    'failed screen exec closes its pool slot without shell fallback',
+    () async {
+      final pending = Completer<SSHSession>();
+      client.pendingExecution = pending.future;
+      final starting = service.startShell(
+        session.id,
+        screen: const ScreenSessionOptions(sessionName: 'work'),
+      );
+      final failed = expectLater(starting, throwsStateError);
+      await _flushEvents();
+      pending.completeError(StateError('Exec request rejected'));
+      await failed;
+      expect(client.isClosed, isTrue);
+      expect(client.shellRequests, 0);
+      expect(service.getActiveSessions(), isEmpty);
+    },
+  );
+
+  test(
+    'closing screen disconnects only this SSH client without remote commands',
+    () async {
+      const screen = ScreenSessionOptions(
+        sessionName: '123.work',
+        mode: ScreenSessionMode.attach,
+      );
+      final output = await service.startShell(session.id, screen: screen);
+      final connection = SshTerminalConnection(service, session.id, output);
+      await connection.close();
+      expect(client.isClosed, isTrue);
+      expect(client.shells.single.closed, isTrue);
+      expect(client.shells.single.received, isEmpty);
+      expect(client.commands, [screen.command]);
+      expect(client.runCommands, isEmpty);
+    },
+  );
 
   test('disconnect during tmux startup closes its late exec channel', () async {
     final pending = Completer<SSHSession>();

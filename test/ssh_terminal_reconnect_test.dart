@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:crisp_cloud/models/screen_session_options.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/providers/core_providers.dart';
 import 'package:crisp_cloud/providers/ssh_terminal_provider.dart';
@@ -188,6 +189,101 @@ void main() {
     },
   );
 
+  testWidgets(
+    'screen detach and reconnect preserve the exact target without secrets',
+    (tester) async {
+      await mount(tester);
+      await tester.tap(find.byKey(const ValueKey('terminal-connect-ssh')));
+      await tester.pumpAndSettle();
+      await submit(
+        tester,
+        const SshTerminalConfig(
+          host: 'screen.example',
+          port: 2222,
+          username: 'alice',
+          password: 'first-secret',
+          screen: ScreenSessionOptions(
+            sessionName: '123.work',
+            mode: ScreenSessionMode.attach,
+          ),
+        ),
+      );
+      expect(terminal.isConnected, isTrue);
+      expect(service.screenOptions.single?.sessionName, '123.work');
+      expect(service.screenOptions.single?.mode, ScreenSessionMode.attach);
+      expect(service.shellOptions.single, isNull);
+      expect(find.textContaining('screen: 123.work'), findsOneWidget);
+
+      await chooseAction(tester, 'Reconnect SSH');
+      final remembered = tester
+          .widget<SshTerminalConnectDialog>(
+            find.byType(SshTerminalConnectDialog),
+          )
+          .initialConfig!;
+      expect(remembered.screen?.sessionName, '123.work');
+      expect(remembered.password, isEmpty);
+      expect(service.disconnected, isEmpty);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(terminal.isConnected, isTrue);
+
+      await chooseAction(tester, 'Detach from screen');
+      expect(terminal.status, TerminalSessionStatus.disconnected);
+      expect(service.disconnected, ['session-1']);
+      await chooseAction(tester, 'Reconnect SSH');
+      await submit(
+        tester,
+        SshTerminalConfig(
+          host: remembered.host,
+          port: remembered.port,
+          username: remembered.username,
+          password: 'replacement-secret',
+          screen: remembered.screen,
+        ),
+      );
+      expect(service.requests.last.password, 'replacement-secret');
+      expect(service.screenOptions.last?.sessionName, '123.work');
+      expect(terminal.isConnected, isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    },
+  );
+
+  testWidgets(
+    'conflicting multiplexer options do not replace a live connection',
+    (tester) async {
+      await mount(tester);
+      await tester.tap(find.byKey(const ValueKey('terminal-connect-ssh')));
+      await tester.pumpAndSettle();
+      await submit(
+        tester,
+        const SshTerminalConfig(
+          host: 'live.example',
+          port: 22,
+          username: 'alice',
+        ),
+      );
+      await chooseAction(tester, 'Reconnect SSH');
+      await submit(
+        tester,
+        const SshTerminalConfig(
+          host: 'replacement.example',
+          port: 22,
+          username: 'alice',
+          tmux: TmuxSessionOptions(sessionName: 'work'),
+          screen: ScreenSessionOptions(sessionName: 'work'),
+        ),
+      );
+      expect(terminal.isConnected, isTrue);
+      expect(service.requests, hasLength(1));
+      expect(service.disconnected, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    },
+  );
+
   testWidgets('failed startup can reconnect with the previous destination', (
     tester,
   ) async {
@@ -291,6 +387,7 @@ class _RecordingSshService extends SshTerminalService {
   final requests = <SshTerminalConfig>[];
   final prompts = <HostKeyPrompt?>[];
   final shellOptions = <TmuxSessionOptions?>[];
+  final screenOptions = <ScreenSessionOptions?>[];
   final disconnected = <String>[];
   final _sessions = <String, SshSession>{};
   final _outputs = <String, StreamController<String>>{};
@@ -372,8 +469,10 @@ class _RecordingSshService extends SshTerminalService {
     int width = 80,
     int height = 24,
     TmuxSessionOptions? tmux,
+    ScreenSessionOptions? screen,
   }) async {
     shellOptions.add(tmux);
+    screenOptions.add(screen);
     final output = StreamController<String>();
     _outputs[sessionId] = output;
     return output.stream;

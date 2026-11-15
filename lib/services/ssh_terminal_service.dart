@@ -19,6 +19,7 @@ import 'package:crisp_storage/crisp_storage.dart'
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
+import '../models/screen_session_options.dart';
 import '../models/tmux_session_options.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -473,7 +474,7 @@ class SshTerminalService {
   // Interactive shell
   // -------------------------------------------------------------------------
 
-  /// Starts an interactive PTY shell or named remote [tmux] session.
+  /// Starts an interactive PTY shell or a remote [tmux] / [screen] session.
   ///
   /// Returns a single-subscription stream of decoded terminal output, including
   /// ANSI sequences. The initial prompt is buffered until a listener attaches.
@@ -484,10 +485,14 @@ class SshTerminalService {
     int width = 80,
     int height = 24,
     TmuxSessionOptions? tmux,
+    ScreenSessionOptions? screen,
   }) async {
     _validateDimensions(width, height);
     // Validate before replacing a running shell or sending any remote request.
-    final command = tmux?.command;
+    if (tmux != null && screen != null) {
+      throw ArgumentError('Choose either tmux or screen, not both');
+    }
+    final command = tmux?.command ?? screen?.command;
     final state = _requireSession(sessionId);
     final client = state.client;
     if (client.isClosed) {
