@@ -1,0 +1,18 @@
+{
+  "incoming-reader-baseline-inputs.tar.gz": {
+    "bytes": 66995,
+    "sha256": "329c148e569f00e392cfa2dee737e43fcae4e55a302af282d59fef098083e0c1"
+  },
+  "incoming-reader-baseline.jsonl": {
+    "bytes": 26664,
+    "sha256": "b09baaa639d2dfaaa051e64d20ee79ebb50a34e801553c2144c67e360f2d0319"
+  },
+  "incoming-reader-baseline.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "incoming-reader-baseline.summary.json": {
+    "bytes": 3928,
+    "sha256": "7a19c9070ca692097d88d6513016a567d2a5721d5b38f0528198cf25bdfd5966"
+  }
+}
