@@ -34,6 +34,12 @@ header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
 
+ODS metadata imports include print areas, titles, names, auto-filters and
+same-workbook list-source snapshots. Validation source expansion shares a
+two-million-cell work budget across definitions, checks coordinate bounds before
+iteration, and preserves spaces in quoted sheet names. Dynamic validation links
+remain outside this snapshot contract.
+
 Zotero support adds a shared references workspace, read-only online and desktop clients,
 offline CSL import/export, guarded DOCX citation and bibliography fields, and
 undoable editing. CrispCloud supplies its selected proxy/TLS transport and
