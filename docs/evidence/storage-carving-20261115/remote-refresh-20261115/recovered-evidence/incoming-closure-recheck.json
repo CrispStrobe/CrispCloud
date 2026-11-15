@@ -1,0 +1,590 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T12:35:46.516198+00:00",
+  "repository": "CrispStrobe/CrispCloud",
+  "review_head": "cc92423bb98789239380864d5e8343c19c25e815",
+  "inventory": {
+    "branches": 17,
+    "recent_prs_updated_on_or_after": "2026-11-15",
+    "recent_prs": 14,
+    "distinct_heads": 20,
+    "external_fork_heads": 0
+  },
+  "heads": [
+    {
+      "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "labels": [
+        "branch codex/office-recovery-20261115",
+        "PR#110 codex/office-recovery-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "0c574677be7749969d5c9230a5c036fde95cd87e",
+      "labels": [
+        "branch continuation/storage-qualification-20261115T1000"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "labels": [
+        "branch feature/new-documents-history-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+      "labels": [
+        "branch fix/excel-legacy-xls"
+      ],
+      "disposition": "historically_imported_and_semantically_superseded",
+      "proof": {
+        "exact_blobs_reverified": 52,
+        "changed_paths": 59,
+        "matching_blobs": [
+          {
+            "path": "docs/excel-fidelity-audit-20261114.md",
+            "blob": "43d9ccb01d3a23522c2c87e2408c14d2cd232ac2",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "docs/file-format-viewers.md",
+            "blob": "f416426ba76d8ae05922dca8be3865755677ab5b",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "docs/file-viewer-selected-documents.md",
+            "blob": "c6bf837538473593266afbbab7299ef20af06cdb",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "docs/office-engine-strategy.md",
+            "blob": "df63f22e1fb4932a22ee7453362b6a1dfe2974f3",
+            "matching_ancestor": "c730957ba35d79fe9a43dbfef4edb7662945b033"
+          },
+          {
+            "path": "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+            "blob": "00f2b771f1bebef6e323fa045992e67c24fcd8a0",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+            "blob": "723357afb66e8b8c645a028c71fc8e146048177a",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+            "blob": "afd5817c94e3bf610904902f6d1faa003f96bd89",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/lib/src/embed/office_editors.dart",
+            "blob": "167e065dc7b57d1eb884018cfae0cc7ae764be4d",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/lib/src/embed/office_theme.dart",
+            "blob": "97ee6a0209687d3e951b095af49a8d13e8d7a962",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/goldens/linux/provenance.json",
+            "blob": "7e39cf77058ceec40382faf539629ff0c9571168",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/goldens/linux/word_selection_macOS.png",
+            "blob": "fad3b5808c64f894bb694cda1a40f3fcc6208f33",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/goldens/linux/word_selection_windows.png",
+            "blob": "225b1e29eedae43dc212c128b99fbb26574bc052",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/goldens/word_selection_macOS.png",
+            "blob": "d9e6588a6dbe6a4fd7eff6eafd50f896cb4c49f5",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/goldens/word_selection_windows.png",
+            "blob": "bb8da2f8af7c759aa368851d52cba2465d769a90",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/sheet_navigation_controller_test.dart",
+            "blob": "b8228009bcdb6b8a25e154457bf94f2bb3e526f0",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/sheet_navigation_widget_test.dart",
+            "blob": "d84fda74a9653d818c9aedda9d13f7e4041f690e",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/word_inline_picture_history_test.dart",
+            "blob": "587b88896fc94bc067e2a6cb2b132ca2e2769931",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/word_selection_paint_test.dart",
+            "blob": "92160a0578cc58089d8c1bcdb89c71cb722eb207",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/quds_office_engine.dart",
+            "blob": "d27f35c9ec530b0766ededba09def6893350ca11",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/office/office_find.dart",
+            "blob": "1cda0085e716947387dec6bf309f4f49a2316a74",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+            "blob": "23b3a201d9850c9074719087f9688ee942b6aec8",
+            "matching_ancestor": "bda0374b6f773e8797ffa09c24020ef22fb6b649"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+            "blob": "fd80e3c68e200af881f36a28f0d0b364733a4d1c",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+            "blob": "463ce848e38127c220110246d93c2e493b8185ae",
+            "matching_ancestor": "db5e3f7516b1e6c08cc2926f6d5afdceba85792d"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+            "blob": "37125cc5a7e1b662887434f6fae0b01c3d073a72",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/wml_clone.dart",
+            "blob": "d867955187404cebbb63ec167d6038728c0ee9ff",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+            "blob": "737cd0e139ee8dc56f57def65ee2a5c21e3b592c",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/wml_run_edit.dart",
+            "blob": "0e155db6740ce50f580237d490acf3bdc1a438f8",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/word_field_spans.dart",
+            "blob": "5925ea216c7665bef3ed74e05e6e5dfbe108e047",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/word_revision.dart",
+            "blob": "80ce9868caa0a7d5ba46f5b28d0c314bc8c88b1c",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/word_styles.dart",
+            "blob": "39c8b05dca8db3f39ba56b2ebf8f90ebc022260f",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+            "blob": "25bec6b5a56190b1d52d658230d0e22779be61a7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_drawing_io.dart",
+            "blob": "507c3ebe5187cb2da12d443d8d0c326b5d30dc6a",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_frame_io.dart",
+            "blob": "67b19dd8443233a69af6b023bd7a7d078d163792",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_heading_io.dart",
+            "blob": "0bbba58f2df2b1f29ab616d6ae9ce173b837ca9b",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+            "blob": "c253103e9e4ba6909e68c72ac69d569ac26848e4",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_style_cascade.dart",
+            "blob": "d6e24a8b7fa7deb2003dd1d08de5dace2098a001",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods",
+            "blob": "6eab4ec418c58920b1b0696fa53c08f73459108e",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+            "blob": "a9387018cae1af3f2f817094b9d6d8e2b2a814ee",
+            "matching_ancestor": "c730957ba35d79fe9a43dbfef4edb7662945b033"
+          },
+          {
+            "path": "packages/quds_office_engine/test/sheet_wrap_text_fidelity_test.dart",
+            "blob": "8dcc9c09a94069b1e43315f9e1afb62f382facdc",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/styleless_import_fidelity_test.dart",
+            "blob": "e5f020780dfd262cd163edcb5db67b7336a5044c",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_auxiliary_content_control_test.dart",
+            "blob": "43b8bbe03584a187042f741f9f860040ae2a9c1e",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_content_control_fidelity_test.dart",
+            "blob": "bde2d5bc84c538b6e7e694fae7d01f55c9a8b56d",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_field_span_test.dart",
+            "blob": "19045b53fe84f1584d5d943c27a16c4b9ea4f514",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_heading_apply_test.dart",
+            "blob": "bdd211cae24e54f4a961e7c8bfec0d5beaddc1d4",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_inline_picture_test.dart",
+            "blob": "b31b298066d388d18b639a5ddcb8a8e145801234",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_preserved_header_test.dart",
+            "blob": "fdcaf359525b2f6931839973272d1fa994e187f8",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_revision_scaling_test.dart",
+            "blob": "94418f426cb8299a4c12c0452a98416f2cf0c854",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_shape_without_textbox_test.dart",
+            "blob": "828f980003b0dba281db6ffbbb5b9aed8d487824",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/check.sh",
+            "blob": "817082ca6036ccffbc0276d2bb75590e387aeed7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/scripted_oracle.py",
+            "blob": "5f994fbcbcbbab2dbcfc5d723f1610807aecdd5e",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/test_scripted_oracle.py",
+            "blob": "ea172fa12e8b3d2e764ab73206d818b3108407b7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/word_steps.dart",
+            "blob": "8cbf2f232462853b8fd7fa74ba34c089171ec3fd",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          }
+        ],
+        "remaining_semantic_paths": [
+          "lib/services/office_document_service.dart",
+          "lib/widgets/file_editor_dialog.dart",
+          "lib/widgets/internal_viewer_dialog.dart",
+          "lib/widgets/office_editor_dialog.dart",
+          "packages/QUDS_FORKS.md",
+          "test/office_document_service_test.dart",
+          "tool/office_fidelity_manifest.json"
+        ],
+        "retained_semantic_finding": "Four shared app files and service tests have later combined implementations preserving ODS edit/copy-save, typed XLS grid/fallback and richer ODF extraction; vendor/fork pins are newer. Prior semantic review is retained in README.md and legacy-branch-app-feature.patch.",
+        "reviewed_current_features": [
+          "ODS file routing imports with OdsSheetReader, writes a new XLSX copy and preserves source bytes.",
+          "Quds typed XLS/ODS read-only grid retains the Legacy fallback toggle and sheet controller lifecycle.",
+          "Office service retains typed repeated/merged ODS extraction, ODT styled text/lists/notes and ODP positioned slide rendering.",
+          "Current source pins supersede older QUDS_FORKS and manifest values."
+        ]
+      }
+    },
+    {
+      "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "labels": [
+        "branch fix/odf-final",
+        "PR#116 fix/odf-final"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "labels": [
+        "branch fix/ods-date-styles",
+        "PR#120 fix/ods-date-styles"
+      ],
+      "disposition": "source_equivalent_except_superseded_canonical_pin",
+      "proof": {
+        "already_imported_ancestor": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+        "complete_tree_difference": [
+          "tool/office_fidelity_manifest.json"
+        ],
+        "manifest_only_field_changed": [
+          "source_commit"
+        ],
+        "previous_pin": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+        "incoming_pin": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+        "current_pin": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+      }
+    },
+    {
+      "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "labels": [
+        "branch integrate/consistency-20261115",
+        "PR#113 integrate/consistency-20261115"
+      ],
+      "disposition": "historically_imported_and_semantically_superseded",
+      "proof": {
+        "exact_blobs_reverified": 20,
+        "changed_paths": 21,
+        "matching_blobs": [
+          {
+            "path": "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+            "blob": "afd5817c94e3bf610904902f6d1faa003f96bd89",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_editor/test/word_inline_picture_history_test.dart",
+            "blob": "587b88896fc94bc067e2a6cb2b132ca2e2769931",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart",
+            "blob": "09f9e3fc7118dc98ceb4c5ced8a816eed93267a7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+            "blob": "2078e58e23f0b4f88f57e5a4204b0e1ff4b78aa9",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+            "blob": "eac533a54c7c7c33af8c7d9a4aed825dc180e96d",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+            "blob": "fd80e3c68e200af881f36a28f0d0b364733a4d1c",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+            "blob": "463ce848e38127c220110246d93c2e493b8185ae",
+            "matching_ancestor": "db5e3f7516b1e6c08cc2926f6d5afdceba85792d"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+            "blob": "37125cc5a7e1b662887434f6fae0b01c3d073a72",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/wml_clone.dart",
+            "blob": "d867955187404cebbb63ec167d6038728c0ee9ff",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+            "blob": "737cd0e139ee8dc56f57def65ee2a5c21e3b592c",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/model/wml_run_edit.dart",
+            "blob": "0e155db6740ce50f580237d490acf3bdc1a438f8",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+            "blob": "25bec6b5a56190b1d52d658230d0e22779be61a7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_drawing_io.dart",
+            "blob": "507c3ebe5187cb2da12d443d8d0c326b5d30dc6a",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+            "blob": "c253103e9e4ba6909e68c72ac69d569ac26848e4",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/sheet_wrap_text_fidelity_test.dart",
+            "blob": "8dcc9c09a94069b1e43315f9e1afb62f382facdc",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/test/word_inline_picture_test.dart",
+            "blob": "b31b298066d388d18b639a5ddcb8a8e145801234",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/check.sh",
+            "blob": "817082ca6036ccffbc0276d2bb75590e387aeed7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/scripted_oracle.py",
+            "blob": "5f994fbcbcbbab2dbcfc5d723f1610807aecdd5e",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "packages/quds_office_engine/tool/fidelity/test_scripted_oracle.py",
+            "blob": "ea172fa12e8b3d2e764ab73206d818b3108407b7",
+            "matching_ancestor": "59466d8b48f329362ab88e9da5e195c849557069"
+          },
+          {
+            "path": "tool/office_fidelity_manifest.json",
+            "blob": "3348d748fad9d08dd0db84b8a0ce176ce9365a17",
+            "matching_ancestor": "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          }
+        ],
+        "remaining_semantic_paths": [
+          "packages/QUDS_FORKS.md"
+        ],
+        "retained_semantic_finding": "The sole unmatched path is QUDS_FORKS.md containing an older source pin; current source pins supersede it.",
+        "reviewed_current_features": [
+          "ODS file routing imports with OdsSheetReader, writes a new XLSX copy and preserves source bytes.",
+          "Quds typed XLS/ODS read-only grid retains the Legacy fallback toggle and sheet controller lifecycle.",
+          "Office service retains typed repeated/merged ODS extraction, ODT styled text/lists/notes and ODP positioned slide rendering.",
+          "Current source pins supersede older QUDS_FORKS and manifest values."
+        ]
+      }
+    },
+    {
+      "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "labels": [
+        "branch integrate/legacy-xls-preview-20261115",
+        "PR#114 integrate/legacy-xls-preview-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "labels": [
+        "branch integrate/odf-integration-20261115",
+        "PR#117 integrate/odf-integration-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "labels": [
+        "branch integrate/ods-fixes-20261115",
+        "PR#118 integrate/ods-fixes-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "labels": [
+        "branch integrate/ods-style-20261115",
+        "PR#119 integrate/ods-style-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "labels": [
+        "branch integrate/office-goldens-20261115",
+        "PR#115 integrate/office-goldens-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "labels": [
+        "branch integrate/word-inline-pictures-20261115",
+        "PR#112 integrate/word-inline-pictures-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "labels": [
+        "branch integration/office-reconcile-storage-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "cc92423bb98789239380864d5e8343c19c25e815",
+      "labels": [
+        "branch integration/storage-carving-20261115",
+        "PR#111 integration/storage-carving-20261115"
+      ],
+      "disposition": "same_head"
+    },
+    {
+      "head": "dacd3e584abe885058f9dddbde8493976647e5d3",
+      "labels": [
+        "branch integration/storage-carving-local-qualification-20261115"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "labels": [
+        "branch main"
+      ],
+      "disposition": "source_equivalent_except_superseded_canonical_pin",
+      "proof": {
+        "already_imported_ancestor": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+        "complete_tree_difference": [
+          "tool/office_fidelity_manifest.json"
+        ],
+        "manifest_only_field_changed": [
+          "source_commit"
+        ],
+        "previous_pin": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+        "incoming_pin": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+        "current_pin": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+      }
+    },
+    {
+      "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "labels": [
+        "PR#108 fix/excel-legacy-xls"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "1b7680583ac69649b17287ab68738288fec10f51",
+      "labels": [
+        "PR#109 fix/legacy-doc-recover"
+      ],
+      "disposition": "ancestor"
+    },
+    {
+      "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "labels": [
+        "PR#107 integration/storage-delta-20261114"
+      ],
+      "disposition": "ancestor"
+    }
+  ],
+  "all_observed_heads_accounted_for": true,
+  "scope": "Finite connector-observed inventory, independently reverified against immutable local Git ancestry and blob/tree identities. Source-equivalent pins and historical supersession are explicit; this does not assert every historical head is an ancestor or that future pushes were observed."
+}

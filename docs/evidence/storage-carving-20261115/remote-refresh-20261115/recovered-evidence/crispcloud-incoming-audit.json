@@ -1,0 +1,324 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "observed_at": "2026-11-15T12:31:32.639Z",
+  "target_branch": "integration/storage-carving-20261115",
+  "target_head": "cc92423bb98789239380864d5e8343c19c25e815",
+  "last_code_checkpoint": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+  "saved_after_user_handoff": 32,
+  "canonical": {
+    "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+    "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615"
+  },
+  "branches": [
+    {
+      "name": "codex/office-recovery-20261115",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 162
+    },
+    {
+      "name": "continuation/storage-qualification-20261115T1000",
+      "sha": "0c574677be7749969d5c9230a5c036fde95cd87e",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 61
+    },
+    {
+      "name": "feature/new-documents-history-20261115",
+      "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 144
+    },
+    {
+      "name": "fix/excel-legacy-xls",
+      "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+      "status": "diverged",
+      "ahead_of_target": 6,
+      "behind_target": 168
+    },
+    {
+      "name": "fix/odf-final",
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 118
+    },
+    {
+      "name": "fix/ods-date-styles",
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "status": "diverged",
+      "ahead_of_target": 1,
+      "behind_target": 112
+    },
+    {
+      "name": "integrate/consistency-20261115",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "status": "diverged",
+      "ahead_of_target": 2,
+      "behind_target": 142
+    },
+    {
+      "name": "integrate/legacy-xls-preview-20261115",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 137
+    },
+    {
+      "name": "integrate/odf-integration-20261115",
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 131
+    },
+    {
+      "name": "integrate/ods-fixes-20261115",
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 122
+    },
+    {
+      "name": "integrate/ods-style-20261115",
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 115
+    },
+    {
+      "name": "integrate/office-goldens-20261115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 133
+    },
+    {
+      "name": "integrate/word-inline-pictures-20261115",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 149
+    },
+    {
+      "name": "integration/office-reconcile-storage-20261115",
+      "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 161
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "sha": "cc92423bb98789239380864d5e8343c19c25e815",
+      "status": "identical",
+      "ahead_of_target": 0,
+      "behind_target": 0
+    },
+    {
+      "name": "integration/storage-carving-local-qualification-20261115",
+      "sha": "dacd3e584abe885058f9dddbde8493976647e5d3",
+      "status": "behind",
+      "ahead_of_target": 0,
+      "behind_target": 74
+    },
+    {
+      "name": "main",
+      "sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "status": "diverged",
+      "ahead_of_target": 1,
+      "behind_target": 114
+    }
+  ],
+  "open_prs": [
+    {
+      "number": 111,
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "draft": true,
+      "head": "integration/storage-carving-20261115",
+      "head_sha": "cc92423bb98789239380864d5e8343c19c25e815",
+      "head_repository": "CrispStrobe/CrispCloud",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/111"
+    },
+    {
+      "number": 110,
+      "title": "Add draft-safe worksheet navigation and complete host validation",
+      "draft": true,
+      "head": "codex/office-recovery-20261115",
+      "head_sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "head_repository": "CrispStrobe/CrispCloud",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/110"
+    }
+  ],
+  "new_main_proof": {
+    "main": "686318626e209220011f7da194cfe4e41ca4adeb",
+    "already_imported_ancestor": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+    "complete_blob_tree_difference": [
+      "tool/office_fidelity_manifest.json"
+    ],
+    "branch_head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+    "branch_delta": [
+      "tool/office_fidelity_manifest.json"
+    ],
+    "recommendation": "Merge history while retaining current canonical source and manifest; latest main only changes the superseded pin compared with imported source."
+  },
+  "evidence_base": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150",
+  "final_gate_metadata": [
+    {
+      "gate": "analysis-app-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null,
+      "analyzed_files": 76
+    },
+    {
+      "gate": "analysis-engine-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "91d8e8ba1331ecce1419b8fba61f92b72291fe60",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null,
+      "analyzed_files": 16
+    },
+    {
+      "gate": "analysis-editor-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "5d6a9e32206bc39c7514b1863b9a96cc00c12099",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null,
+      "analyzed_files": 4
+    },
+    {
+      "gate": "analysis-cli-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "1985e2113a1b61ac36315759f2061ad8d8ace8f3",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null,
+      "analyzed_files": 1
+    },
+    {
+      "gate": "app-retry-1",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "5869f75908a4192ada1934a0f4cdcf16a526ef9e",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "counts": {
+        "errors": 0,
+        "failed": 0,
+        "other_results": 0,
+        "passed": 903,
+        "skipped": 0,
+        "tests": 903
+      },
+      "suite_count": 65
+    },
+    {
+      "gate": "engine-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "50b493c0261436d4b36f2273e87004b4091f0de2",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "counts": {
+        "errors": 0,
+        "failed": 0,
+        "other_results": 0,
+        "passed": 249,
+        "skipped": 0,
+        "tests": 249
+      },
+      "suite_count": 22
+    },
+    {
+      "gate": "editor-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "d9e65ff1e8ee63b68087ea445408282e9e699584",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "counts": {
+        "errors": 0,
+        "failed": 0,
+        "other_results": 0,
+        "passed": 101,
+        "skipped": 0,
+        "tests": 101
+      },
+      "suite_count": 9
+    },
+    {
+      "gate": "scripted-oracle-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "231f3e6b267bc97aec63fd96a0a3234bd0887ea2",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null
+    },
+    {
+      "gate": "source-integrity-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "cf5b50c6bcab5f9c69283ed8296ce100de912251",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null
+    },
+    {
+      "gate": "png-portable-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "a01995044a9ba7078d1d248e95aa684834afce2e",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null
+    },
+    {
+      "gate": "navigation-capture-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "6fec638c9386be139c288e5bf07b020b71b24473",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": 1
+    },
+    {
+      "gate": "navigation-independent-review-final",
+      "qualification_success": true,
+      "returncode": 0,
+      "tested_head": "8c235f9e27d1086cdef177b93f6d0bf45f30e386",
+      "input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "input_count": 8588,
+      "stable": true,
+      "suite_count": null
+    }
+  ],
+  "limits": [
+    "This is connector metadata/source-tree audit, not independent raw receipt verification or a test rerun.",
+    "Retained final gates all declare one common source/resolution digest; fresh local audit must verify hashes and machine events.",
+    "Historical artifact checker requires vanished absolute tool paths and package graphs. Do not fabricate those paths or claim a fresh full-current-tool audit. Revalidate retained evidence with explicit relocated-historical scope.",
+    "Numeric navigation verification explicitly requires separate human-visible image review; no visual-inspection receipt is saved.",
+    "PR111 body remains stale and refers to dd77efcb / older pins and pending gates; update only after final audit.",
+    "External Office rendering, broad Open XML schema, other platforms and native macOS toolbar acceptance remain separate scopes."
+  ]
+}

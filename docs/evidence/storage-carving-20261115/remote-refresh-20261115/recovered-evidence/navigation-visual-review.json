@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "reviewed_source_commit": "cc92423bb98789239380864d5e8343c19c25e815",
+  "method": "Both actual retained PNGs were displayed using view_image and inspected. Separate Python verification rechecked image bytes, dimensions, six font assets and two capture sources against the immutable Git source.",
+  "captures": [
+    {
+      "file": "rename-validation.png",
+      "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+      "dimensions": [1600, 1000],
+      "locale": "en",
+      "observations": [
+        "Complete worksheet editor backdrop, including the sheet grid and bottom worksheet selector, is visible behind the modal.",
+        "Rename worksheet title, Worksheet name label and duplicate value Reference are readable with real glyphs.",
+        "The red unique-name validation text wraps legibly inside the dialog without clipping.",
+        "Cancel and Rename actions are visible and readable; real toolbar icons are present."
+      ],
+      "requested_visual_scope_passed": true
+    },
+    {
+      "file": "worksheet-arabic-narrow.png",
+      "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+      "dimensions": [390, 1000],
+      "locale": "ar",
+      "observations": [
+        "Arabic menu and ribbon text display recognizable joined glyphs with the intended RTL chrome.",
+        "The responsive title is intentionally elided while the visible toolbar actions remain available.",
+        "The bottom worksheet row shows the authored Budget label on the right and visible selector arrow and rename pencil on the left.",
+        "The narrow grid and horizontal scrollbar remain visible; no missing-font boxes or clipped worksheet controls are observed."
+      ],
+      "requested_visual_scope_passed": true
+    }
+  ],
+  "nonblocking_capture_detail": "Both test captures retain the small diagonal Flutter debug marker at a top corner. They are test captures, not release screenshots.",
+  "blocking_findings": [],
+  "success": true,
+  "scope": "Visual inspection of two saved font-backed complete-host captures. This does not exercise interactions, physical devices, native macOS toolbar behavior, external Office rendering or broader UI acceptance."
+}

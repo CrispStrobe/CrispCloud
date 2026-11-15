@@ -1,0 +1,508 @@
+{
+  "archive": {
+    "file": "artifacts.tar.xz",
+    "sha256": "de6647565ad53acb740bec9eea0e6bdd9abff7561bfd596a8d589401ba3295e2",
+    "size": 162656
+  },
+  "every_member_reverified": true,
+  "file_count": 99,
+  "label": "Pinned toolchain and five resolved dependency graphs",
+  "members": {
+    "setup-notes/README.md": {
+      "mode": 420,
+      "sha256": "71b2c5519efc6bf51d6f34dfdf97ec61aa973e45d99d9296f210895a10badd5c",
+      "size": 1237
+    },
+    "setup-notes/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "635f1b3c914a68c6c09ca02266ec2b41f076cbd036b04d28a17174e8a160b277",
+      "size": 14519
+    },
+    "setup-notes/channel-rust-1.100.0.toml.gz": {
+      "mode": 420,
+      "sha256": "d68a66f14a52b3f4668099052cfd759307503f9bebd9f84b610e1198eaa864b8",
+      "size": 79860
+    },
+    "setup-notes/channel-rust-1.100.0.toml.sha256": {
+      "mode": 420,
+      "sha256": "7759a37e28d41a09b4d67d0febfbed352a079c244e5ba694d517d361c7e7475e",
+      "size": 92
+    },
+    "setup-notes/dart-version.txt": {
+      "mode": 420,
+      "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4",
+      "size": 82
+    },
+    "setup-notes/dependencies/01-app-locked/after/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "cf8adaf18470cdb4bae8697f0901bd142eb2ac96038cd9db8ec90cb360ac7c92",
+      "size": 4242
+    },
+    "setup-notes/dependencies/01-app-locked/after/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "4346e6a137ca74468dfc61c9afd658ba95bcdfcb44d52cbdc9025d87f577b3ca",
+      "size": 5441
+    },
+    "setup-notes/dependencies/01-app-locked/after/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b",
+      "size": 14385
+    },
+    "setup-notes/dependencies/01-app-locked/after/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "9b7863847b9223577bfc1dba5eab18320f1fd117e395ff061dc4486d3c90c9b3",
+      "size": 4534
+    },
+    "setup-notes/dependencies/01-app-locked/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "af9f4a1445980eff6cea97f28d865203d7259e50001f13790eb11de360dc554c",
+      "size": 1205
+    },
+    "setup-notes/dependencies/01-app-locked/before/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b",
+      "size": 14385
+    },
+    "setup-notes/dependencies/01-app-locked/before/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "f25222bfec7454277919a49c56172e7e03174950a207ff6bc32808e6811cce24",
+      "size": 4532
+    },
+    "setup-notes/dependencies/01-app-locked/receipt.json": {
+      "mode": 420,
+      "sha256": "cd7eab1da54b5778b3133ddc09b36b2fe4e8cde7829b6f2a39f73a0ca8a8b891",
+      "size": 3358
+    },
+    "setup-notes/dependencies/01-app-locked/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/dependencies/01-app-locked/stdout.log": {
+      "mode": 420,
+      "sha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a",
+      "size": 6480
+    },
+    "setup-notes/dependencies/02-cli-locked/after/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "c2f346282f30e8e676b3f328bd64f67dd7b9980c13b1947eaa9d81b4573b2724",
+      "size": 1595
+    },
+    "setup-notes/dependencies/02-cli-locked/after/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "d5e870c5513a3697f062001fb08b581dae3e86461a0b16c7ddffbea0efc4d862",
+      "size": 1841
+    },
+    "setup-notes/dependencies/02-cli-locked/after/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "e47fdb656ca5df94ff98e8cd214cdb7a307af50f1bd0f517fc9a2b13b54ae959",
+      "size": 5077
+    },
+    "setup-notes/dependencies/02-cli-locked/after/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "9df71f4195a8bcc0419212366a66d384e482ae78f7850b02b23f67e5eec38ea8",
+      "size": 367
+    },
+    "setup-notes/dependencies/02-cli-locked/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "05e277d0577a7d6844508dabf5ee4d2fdfcb1965e95b5c9fa6b61a6f09aae6ea",
+      "size": 1201
+    },
+    "setup-notes/dependencies/02-cli-locked/before/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "e47fdb656ca5df94ff98e8cd214cdb7a307af50f1bd0f517fc9a2b13b54ae959",
+      "size": 5077
+    },
+    "setup-notes/dependencies/02-cli-locked/before/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "9df71f4195a8bcc0419212366a66d384e482ae78f7850b02b23f67e5eec38ea8",
+      "size": 367
+    },
+    "setup-notes/dependencies/02-cli-locked/receipt.json": {
+      "mode": 420,
+      "sha256": "c55bba2bb4ea43ea08592c4d8488ab1a8ef9f9610db7738692f860ca37892dee",
+      "size": 3371
+    },
+    "setup-notes/dependencies/02-cli-locked/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/dependencies/02-cli-locked/stdout.log": {
+      "mode": 420,
+      "sha256": "1a3d1fa485a2df6322b7c2eebaa8e777c29b21f971729f46aaa1e5faa10c03fc",
+      "size": 1538
+    },
+    "setup-notes/dependencies/03-parser-dev/after/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "02c6873bb31209fa579e4d46582cc83fbe59332560d3dd48c9040eef8b31f014",
+      "size": 1087
+    },
+    "setup-notes/dependencies/03-parser-dev/after/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "cc697cfd8a7e1cc630f3d973ff60d6b455fc4b07953127499f4b717e02454161",
+      "size": 1174
+    },
+    "setup-notes/dependencies/03-parser-dev/after/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "bfce188956f6bdf39219d0c31f3dce55649c1c8066f100a7db23f628ce0f2a6c",
+      "size": 3290
+    },
+    "setup-notes/dependencies/03-parser-dev/after/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e",
+      "size": 294
+    },
+    "setup-notes/dependencies/03-parser-dev/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "3324db2a4886b1a414a9c89d0e198143f24c644320f65e67032bf2c211d3444f",
+      "size": 1067
+    },
+    "setup-notes/dependencies/03-parser-dev/before/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e",
+      "size": 294
+    },
+    "setup-notes/dependencies/03-parser-dev/receipt.json": {
+      "mode": 420,
+      "sha256": "39973459aa8dd4c19cdf3204cf319bceb5b171b0e1cbd06ba9e7743d881d2494",
+      "size": 3288
+    },
+    "setup-notes/dependencies/03-parser-dev/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/dependencies/03-parser-dev/stdout.log": {
+      "mode": 420,
+      "sha256": "ab6544db9223e49fab35f5a633989030cb75887b2c97bbc5f966a43e436393db",
+      "size": 1252
+    },
+    "setup-notes/dependencies/04-engine-dev/after/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "d89d5d85625baba2dcf2dbdad406aa31f769b84dc291e27c2c6c013872411a0e",
+      "size": 1103
+    },
+    "setup-notes/dependencies/04-engine-dev/after/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "a6c0c749bdfe2adec286e0cf3e26600d4b7f3492e5d18e164b41f1a86e8b12d5",
+      "size": 1187
+    },
+    "setup-notes/dependencies/04-engine-dev/after/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "87cd454dcd2fe23ed2541543fc57d7f3d578b431ccec1285d23dd0fdaef23119",
+      "size": 3290
+    },
+    "setup-notes/dependencies/04-engine-dev/after/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "6314324855c4200f2d081ba5b0793cdcab4935870fd004170d80a8d8b605581c",
+      "size": 1006
+    },
+    "setup-notes/dependencies/04-engine-dev/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "919b94f68f4117c6d300a06e72743bb4256cb4d6f5b91afe645a06665fda222b",
+      "size": 1069
+    },
+    "setup-notes/dependencies/04-engine-dev/before/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "6314324855c4200f2d081ba5b0793cdcab4935870fd004170d80a8d8b605581c",
+      "size": 1006
+    },
+    "setup-notes/dependencies/04-engine-dev/receipt.json": {
+      "mode": 420,
+      "sha256": "ccb8e9516467907a5ca2855f195ea5299e8f9733ba7111ae33aeaca70170e1af",
+      "size": 3291
+    },
+    "setup-notes/dependencies/04-engine-dev/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/dependencies/04-engine-dev/stdout.log": {
+      "mode": 420,
+      "sha256": "b5ff7bbebb423aefcceb7a64a6746c594499c6acc36cab2b619bddec4c1d110d",
+      "size": 1147
+    },
+    "setup-notes/dependencies/05-editor-dev/after/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "f96a2c78450be1c340e2c2c593542a45dc24f6f5152b9d20c0111555e76d5d0f",
+      "size": 972
+    },
+    "setup-notes/dependencies/05-editor-dev/after/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "4edca86c4dec9637b75f8c97a9aaf24e698219dd754e97400214cae63dba8f26",
+      "size": 971
+    },
+    "setup-notes/dependencies/05-editor-dev/after/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "6fcd0b4de2be33040efc7082c613f43b2c4a599699d09bb7a104629e35bb9670",
+      "size": 2510
+    },
+    "setup-notes/dependencies/05-editor-dev/after/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "fba5134084e637cdfc28e68e241370684010d4ff553c22fdb1cb7d5e03c6fde1",
+      "size": 930
+    },
+    "setup-notes/dependencies/05-editor-dev/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "28630ac9a42fd89858ba27a1e6ac1e0c5851d05a29d3754bf22276b9b9b76db7",
+      "size": 1065
+    },
+    "setup-notes/dependencies/05-editor-dev/before/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "fba5134084e637cdfc28e68e241370684010d4ff553c22fdb1cb7d5e03c6fde1",
+      "size": 930
+    },
+    "setup-notes/dependencies/05-editor-dev/receipt.json": {
+      "mode": 420,
+      "sha256": "bf9b2538ec12d8e08f54656bd13ab7fc4b90082f69633cf98b5954d4b97ac2b7",
+      "size": 3272
+    },
+    "setup-notes/dependencies/05-editor-dev/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/dependencies/05-editor-dev/stdout.log": {
+      "mode": 420,
+      "sha256": "3b1327f5145adb28857636d29ebb2c5269e0f9e516102b320e724f1ee5b59ef1",
+      "size": 1364
+    },
+    "setup-notes/dependencies/06-app-final-locked/after/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "cf8adaf18470cdb4bae8697f0901bd142eb2ac96038cd9db8ec90cb360ac7c92",
+      "size": 4242
+    },
+    "setup-notes/dependencies/06-app-final-locked/after/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "4346e6a137ca74468dfc61c9afd658ba95bcdfcb44d52cbdc9025d87f577b3ca",
+      "size": 5441
+    },
+    "setup-notes/dependencies/06-app-final-locked/after/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b",
+      "size": 14385
+    },
+    "setup-notes/dependencies/06-app-final-locked/after/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "9b7863847b9223577bfc1dba5eab18320f1fd117e395ff061dc4486d3c90c9b3",
+      "size": 4534
+    },
+    "setup-notes/dependencies/06-app-final-locked/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "3ab3b6a48b0e5310d1e56cf2c7bcf26d05d029c1777786453f84df776217631e",
+      "size": 1508
+    },
+    "setup-notes/dependencies/06-app-final-locked/before/.dart_tool/package_config.json.gz": {
+      "mode": 420,
+      "sha256": "cf8adaf18470cdb4bae8697f0901bd142eb2ac96038cd9db8ec90cb360ac7c92",
+      "size": 4242
+    },
+    "setup-notes/dependencies/06-app-final-locked/before/.dart_tool/package_graph.json.gz": {
+      "mode": 420,
+      "sha256": "4346e6a137ca74468dfc61c9afd658ba95bcdfcb44d52cbdc9025d87f577b3ca",
+      "size": 5441
+    },
+    "setup-notes/dependencies/06-app-final-locked/before/pubspec.lock.gz": {
+      "mode": 420,
+      "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b",
+      "size": 14385
+    },
+    "setup-notes/dependencies/06-app-final-locked/before/pubspec.yaml.gz": {
+      "mode": 420,
+      "sha256": "9b7863847b9223577bfc1dba5eab18320f1fd117e395ff061dc4486d3c90c9b3",
+      "size": 4534
+    },
+    "setup-notes/dependencies/06-app-final-locked/receipt.json": {
+      "mode": 420,
+      "sha256": "9db3ac8b4f8bfadb5edfc0f54aaf844e64a71875873b0d18fa9b206f0c832f90",
+      "size": 3519
+    },
+    "setup-notes/dependencies/06-app-final-locked/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/dependencies/06-app-final-locked/stdout.log": {
+      "mode": 420,
+      "sha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a",
+      "size": 6480
+    },
+    "setup-notes/dependency-resolution.md": {
+      "mode": 420,
+      "sha256": "9482477158af8843c3b378b16cdff2d6677fbcf46cedd3d0a0a388622d6f261e",
+      "size": 2172
+    },
+    "setup-notes/dependency-summary.json": {
+      "mode": 420,
+      "sha256": "ba753d225f1e1a8e6513ed2addcfd612525a5dcb79bbbcb3d806910de05b63e2",
+      "size": 3199
+    },
+    "setup-notes/dependency-summary.stdout.json": {
+      "mode": 420,
+      "sha256": "ba753d225f1e1a8e6513ed2addcfd612525a5dcb79bbbcb3d806910de05b63e2",
+      "size": 3199
+    },
+    "setup-notes/download-verification.json": {
+      "mode": 420,
+      "sha256": "9c2e5401ee8e8c9879d58e05449f5bede794126c077b3ebb90af02d06d3dcbf2",
+      "size": 548
+    },
+    "setup-notes/env.sh": {
+      "mode": 420,
+      "sha256": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+      "size": 1027
+    },
+    "setup-notes/flutter-precache-linux.log": {
+      "mode": 420,
+      "sha256": "f9ea6e935b85db9285de3086ccc2471c0374b497c148108e05d7d53a96861017",
+      "size": 3210
+    },
+    "setup-notes/flutter-release.json": {
+      "mode": 420,
+      "sha256": "0512d2f3e1ecc398936a6dcd0d9b57f89c7cf6221efa5c103b95490c77eab9dd",
+      "size": 354
+    },
+    "setup-notes/flutter-tester-ldd.txt": {
+      "mode": 420,
+      "sha256": "ab06cdc9525c018481190e3f8747eba1ba6f09a035cb196b9fecfe6e34b6b29b",
+      "size": 370
+    },
+    "setup-notes/flutter-version.json": {
+      "mode": 420,
+      "sha256": "ebd38f6150f7e24d30739f5714d8eaaa116f098bf085fe146d95b829ca4393c7",
+      "size": 631
+    },
+    "setup-notes/launchers/cargo": {
+      "mode": 493,
+      "sha256": "a90148d0e05fda33b7162c28512ecfe8b760d97fe516bee4f0e5742e51fb6e24",
+      "size": 169
+    },
+    "setup-notes/launchers/clang": {
+      "mode": 493,
+      "sha256": "b82c4157b8aa46aacc566e8d88c1047879189bb9f0336db9dfe9c0a17992084c",
+      "size": 181
+    },
+    "setup-notes/launchers/clang++": {
+      "mode": 493,
+      "sha256": "47909c2e6a6296c7531c3c93445f34e0d79f48fc39d0b3388523636d4d6a9089",
+      "size": 183
+    },
+    "setup-notes/launchers/clang-19": {
+      "mode": 493,
+      "sha256": "50f4aa631de1fe9b8b6a952b6b91fc0217f251d333b2a18e272673275bdcdb2e",
+      "size": 184
+    },
+    "setup-notes/launchers/cmake": {
+      "mode": 493,
+      "sha256": "7cf3fc610611fd677be50aafb65ec600965690c2b3ded717059c4e32a860a900",
+      "size": 169
+    },
+    "setup-notes/launchers/llvm-ar": {
+      "mode": 493,
+      "sha256": "bdfca2dd4e9711f1005b56cb6b68788d11f4d1d8b905d159205c8742e88d2468",
+      "size": 183
+    },
+    "setup-notes/launchers/ninja": {
+      "mode": 493,
+      "sha256": "fde2ff5e9af64b2f8c4ff48bd427c2aa3ac669c19d8a1ac30978a8d65952813f",
+      "size": 169
+    },
+    "setup-notes/launchers/rustc": {
+      "mode": 493,
+      "sha256": "bb1c65a7a1313e3625dade5a876625019fc1aa9a1f56782dc53f20860aafc630",
+      "size": 169
+    },
+    "setup-notes/native-bootstrap-before-assets.json": {
+      "mode": 420,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "size": 3
+    },
+    "setup-notes/native-bootstrap-suites.txt": {
+      "mode": 420,
+      "sha256": "4b0c2459ab58eea94a1a83368665ab3cd25e174c421824c72e03884faee4ec05",
+      "size": 38
+    },
+    "setup-notes/native-dependencies/catalogue.json": {
+      "mode": 420,
+      "sha256": "4ddc652b224d41f76cd42f20ce72cbfd0e7bd32ad416bebbedc163339a0f5469",
+      "size": 1169
+    },
+    "setup-notes/native-dependencies/catalogue.stderr.log": {
+      "mode": 420,
+      "sha256": "4c1b9f37644ab099dadfb512638f3aed4268cf981ee6606d993223dd7e9280f3",
+      "size": 1422
+    },
+    "setup-notes/native-dependencies/catalogue.stdout.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/native-dependencies/ebook.json": {
+      "mode": 420,
+      "sha256": "2d86decd4720f31d74bc469fa189a3f6bfc70665190a489ce1c169e45fabcbb9",
+      "size": 1553
+    },
+    "setup-notes/native-dependencies/ebook.stderr.log": {
+      "mode": 420,
+      "sha256": "0a20d0e1ca745f9d6485a8aed89f7dd9a8ac39f42d30e846f2762e0b043dcf1b",
+      "size": 3094
+    },
+    "setup-notes/native-dependencies/ebook.stdout.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "setup-notes/native-packages.json": {
+      "mode": 420,
+      "sha256": "264b94cdfcc0638723f0a89bee89113dde5a02ce706118f1b80f2dcc171f71fb",
+      "size": 5827
+    },
+    "setup-notes/native-tool-versions.json": {
+      "mode": 420,
+      "sha256": "f60d96774e0ee7917cdbc407a72784e9cafbce4d59c716e34249c4b8b381aeb9",
+      "size": 2039
+    },
+    "setup-notes/native_dependencies.py": {
+      "mode": 420,
+      "sha256": "3b9da6e4e0d4a5cc29849493c3e0af3149a95d7d870a634a7664a6c0af7aca20",
+      "size": 1886
+    },
+    "setup-notes/resolution-runner.py": {
+      "mode": 420,
+      "sha256": "5b35932ac83ee6d615a9be20dc77248839364b6df23271a7ffa538787908c95a",
+      "size": 3513
+    },
+    "setup-notes/rust-packages.json": {
+      "mode": 420,
+      "sha256": "7cc447d35bc009ed7761c3627973cdc904dc2b7b6f9ecbfdab9f8b8f43c6b4d9",
+      "size": 796
+    },
+    "setup-notes/sdk-cache-preload.log": {
+      "mode": 420,
+      "sha256": "189eb7d93ec5181123d00d10f699266dedc50191fafb523311fd9bd4174d76e4",
+      "size": 26780
+    },
+    "setup-notes/sdk-pub-offline.log": {
+      "mode": 420,
+      "sha256": "bcd00201c5210d1d83936a84a7c5def6a67bf4fdf48f76554d79558f33f7b829",
+      "size": 1143
+    },
+    "setup-notes/setup-summary.json": {
+      "mode": 420,
+      "sha256": "2607a5807f5d99f2d1dcc35b853213eaf5734ee0a04e6de8b43ed788830fc4d4",
+      "size": 1072
+    },
+    "setup-notes/summarize_dependencies.py": {
+      "mode": 420,
+      "sha256": "67b47e453d68a3391d65a5719b18173e953bbac733674a0e37e9415f18b947bf",
+      "size": 1186
+    },
+    "setup-notes/toolchain_launcher.sh": {
+      "mode": 493,
+      "sha256": "27d2f97d7e67856fe77cc6652823bf7ea77be97881b592cd0b037ba13aaed536",
+      "size": 203
+    }
+  },
+  "schema": 1
+}

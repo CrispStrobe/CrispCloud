@@ -1,113 +1,42 @@
 {
-  "schema": 1,
-  "status": "final observed source cohort; execution results must come from separately recorded gates",
+  "schema": 2,
+  "status": "Current observed source plan; completed results require separately recorded saved-source gates.",
   "source_inputs": {
-    "CrispCloud prior qualified integration": "59466d8b48f329362ab88e9da5e195c849557069",
-    "CrispCloud main": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
-    "CrispCloud fix/odf-final": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
-    "Quds prior pin": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
-    "Quds main": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
-    "Quds PR24": "e033226bd2d53d1a818c6771ce347c23e6056857",
-    "Quds PR25": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
-    "Parser prior pin": "d422fa99a3a84830794f0e2dc332d59f923779f7",
-    "Parser PR14": "9f61e030d320c9086556d3368d6233d25574fdab",
-    "Parser PR15": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
-    "Parser PR16": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
-    "Parser PR17": "89555522726432b1449f0d26e701376ec6f59a27",
-    "Parser PR18": "120a3cc93776263c37a501d78a9688c0f6d66932",
-    "CrispCloud PR120 observed descendant": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
-    "Quds PR24 final observed": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
-    "Quds current integrated pin": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
-    "Parser main final observed": "7df906d2643d1fec39c49fc795733316a49f3278",
-    "Parser current integrated pin": "9bdcc7eba3f1ce80b7d834d7740895774eeca615"
+    "CrispCloud recovered head": "cc92423bb98789239380864d5e8343c19c25e815",
+    "CrispCloud fetched main": "686318626e209220011f7da194cfe4e41ca4adeb",
+    "CrispCloud joined source": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "Quds fetched main": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+    "Quds merged source": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+    "Parser merged source": "08296edbee08da013a8ff718798972552ccd03f7"
   },
   "manifests": {
     "app-suites.txt": {
-      "prior_count": 49,
+      "prior_count": 65,
       "count": 65,
-      "additions": [
-        "test/app_legal_notices_test.dart",
-        "test/pdf_font_licenses_test.dart",
-        "test/platform_runtime_licenses_test.dart",
-        "test/widget/internal_viewer_widget_test.dart",
-        "test/widget/ods_viewer_workflow_test.dart",
-        "test/legacy_word_preview_test.dart",
-        "test/legacy_word_structured_conversion_test.dart",
-        "test/word_conversion_inspection_test.dart",
-        "test/widget/legacy_word_story_preview_test.dart",
-        "test/widget/structured_legacy_word_conversion_dialog_test.dart",
-        "test/widget/legacy_word_routing_test.dart",
-        "test/legacy_word_copy_target_test.dart",
-        "test/legacy_word_conversion_strings_test.dart",
-        "test/widget/legacy_word_conversion_dialog_test.dart",
-        "test/office_ribbon_controls_i18n_test.dart",
-        "test/widget/office_font_fidelity_test.dart"
-      ]
+      "additions": []
     },
     "editor-suites.txt": {
-      "prior_count": 7,
-      "count": 9,
+      "prior_count": 9,
+      "count": 11,
       "additions": [
-        "packages/quds_office_editor/test/word_operation_history_test.dart",
-        "packages/quds_office_editor/test/word_split_identity_test.dart"
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
       ]
     },
     "engine-suites.txt": {
-      "prior_count": 17,
+      "prior_count": 22,
       "count": 22,
-      "additions": [
-        "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
-        "packages/quds_office_engine/test/office_pdf_export_test.dart",
-        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
-        "packages/quds_office_engine/test/sml_styles_date_test.dart",
-        "packages/quds_office_engine/test/sheet_comments_schema_test.dart"
-      ]
+      "additions": []
     },
     "analysis-app-files.txt": {
-      "prior_count": 53,
+      "prior_count": 76,
       "count": 76,
-      "additions": [
-        "lib/main.dart",
-        "lib/screens/about_dialog.dart",
-        "lib/services/app_legal_notices.dart",
-        "lib/services/pdf_font_licenses.dart",
-        "lib/services/platform_runtime_licenses.dart",
-        "test/app_legal_notices_test.dart",
-        "test/pdf_font_licenses_test.dart",
-        "test/platform_runtime_licenses_test.dart",
-        "test/widget/internal_viewer_widget_test.dart",
-        "test/widget/ods_viewer_workflow_test.dart",
-        "lib/l10n/legacy_word_conversion_strings.dart",
-        "lib/services/legacy_word_copy.dart",
-        "lib/services/word_conversion_inspection.dart",
-        "lib/widgets/legacy_word_conversion_dialog.dart",
-        "test/document_conversion_test.dart",
-        "test/legacy_word_conversion_strings_test.dart",
-        "test/word_conversion_inspection_test.dart",
-        "test/widget/structured_legacy_word_conversion_dialog_test.dart",
-        "test/support/legacy_word_recovery_fixture.dart",
-        "lib/l10n/office_ribbon_control_strings.dart",
-        "lib/widgets/office_editor_ribbon.dart",
-        "lib/widgets/office_editor_dialogs.dart",
-        "test/office_ribbon_controls_i18n_test.dart"
-      ]
+      "additions": []
     },
     "analysis-engine-files.txt": {
-      "prior_count": 5,
+      "prior_count": 16,
       "count": 16,
-      "additions": [
-        "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
-        "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
-        "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
-        "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
-        "packages/quds_office_engine/tool/fidelity/word_steps.dart",
-        "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
-        "packages/quds_office_engine/test/office_pdf_export_test.dart",
-        "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
-        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
-        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
-        "packages/quds_office_engine/test/sml_styles_date_test.dart"
-      ]
+      "additions": []
     },
     "analysis-cli-files.txt": {
       "prior_count": 1,
@@ -115,20 +44,15 @@
       "additions": []
     },
     "analysis-editor-files.txt": {
-      "prior_count": 0,
-      "count": 4,
+      "prior_count": 4,
+      "count": 6,
       "additions": [
-        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
-        "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
-        "packages/quds_office_editor/test/word_operation_history_test.dart",
-        "packages/quds_office_editor/test/word_split_identity_test.dart"
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
       ]
     }
   },
-  "additional_test_overlay": [
-    "test/widget/ods_viewer_workflow_test.dart",
-    "host recovery overlay: existing conversion/inspection/localization tests and generated test/support/legacy_word_recovery_fixture.dart"
-  ],
+  "additional_test_overlay": [],
   "excluded_corpus_suites": [
     {
       "path": "test/local_odf_corpus_test.dart",
@@ -162,26 +86,10 @@
     "Do not wait for or restart Actions.",
     "Keep navigation preview run separate from ordinary app counts and inspect the two genuine PNGs and font/source receipts.",
     "No native-hook disabling or fake library substitution.",
-    "Do not execute external local-corpus harnesses or count their empty/no-input behavior as acceptance.",
-    "Standalone parser qualification is owned by qualification_setup; include its current merged source and retained raw results, never treat an unchanged main branch as proof that open PR14-18 are absent.",
-    "The failed first app run and earlier source passes remain predecessor evidence; all final accepted gates rerun after the host enum and typed compound-exception corrections."
+    "Do not execute external local-corpus harnesses or count their empty/no-input behavior as acceptance."
   ],
   "concrete_addition_rationale": {
-    "app legal/PDF-font/runtime-license suites": "New bundled attribution/asset wiring and runtime registry source arriving from main.",
-    "internal_viewer_widget_test": "Existing shared F3 routes could regress when adding ODS grid preference/fallback.",
-    "ods_viewer_workflow_test": "New two-case deterministic native ODS F3 grid/fallback and display-name route regression.",
-    "word_operation_history_test and word_split_identity_test": "Canonical PR25 changes paragraph-split formatting state; check split/type/undo/redo/bookmark identities.",
-    "word_steps_vocabulary_test": "Canonical PR25 new OOXML vocabulary/18 underline styles/format continuation behavior.",
-    "office_pdf_export_test": "Canonical PR25 rewrites underline rendering in Office PDF output.",
-    "bundled notices Python verifier and guards": "Incoming source-reviewed asset/text inventory must still match merged source and fail on stale/truncated notices.",
-    "Legacy Word preview and actual F3 story/routing suites": "Parser PR17 changes recovered bookmark/comment omission; assert host projections, localization and captured source routing remain intact.",
-    "Legacy Word structured conversion and source/output inspection suites": "Parser PR14-18 broadens formats and recover:true fallback; retain output package integrity and evidence semantics.",
-    "Structured conversion dialog and conversion service regressions": "Generated Word6, directory-damaged CFBF and unsupported counted FIB must yield explicit reviewed text-only copies, no structured claims, no source mutation, and durable recovery identity through collision retry; encrypted and non-Word input remain rejected.",
-    "Legacy copy target and installed-conversion dialog suites": "Host source-inspection initialization, LegacyWordCopy classification and reviewed-save retry changed; preserve captured sibling-only saves and native-converter behavior for valid inspectable input.",
-    "Legacy conversion localization suite": "Recovery label, explicit notice and acceptance text exist in all nine supported languages without falling back to English.",
-    "sheet_normal_font_metrics_test and model/serializer": "Reproduced 81px-to-64px ODS copy-save loss; new direct/isolate save cycles verify explicit, base-only and zero default widths without changing existing native attributes.",
-    "sml_styles_date_test": "Authored ODS date order/literals, full month and weekday rendering; literal semicolons must not become number-format sections.",
-    "sheet_comments_schema_test": "New ODS annotations reach XLSX comment serialization; retain author-table, content-type, and worksheet-relationship schema checks.",
-    "Expanded underline host choices": "Canonical enum now has18styles. Exercise all real ribbon choices, Font no-op Apply and DOCX reopen, with complete localized labels. Existing imported/mixed-font fidelity protects untouched formatting."
+    "office_fidelity_golden_test and office_structure_goldens_test": "Current Quds main adds reviewed Linux references. Run real comparison without updating or relaxing them.",
+    "ODS reader and app routes": "Current main adds strict merge-placeholder and 10,000-comment admission bounds."
   }
 }
