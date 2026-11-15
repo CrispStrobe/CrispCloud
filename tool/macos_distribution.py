@@ -58,7 +58,7 @@ def check_entitlements(profile, entitlements):
     if profile == 'appstore' and sandbox is not True:
         raise ValueError('App Store app must be sandboxed')
     if profile == 'appstore' and any(entitlements.get(key) for key in (
-            'com.apple.security.cs.disable-library-validation', 'get-task-allow',
+            'com.apple.security.cs.disable-library-validation', 'com.apple.security.cs.allow-unsigned-executable-memory', 'get-task-allow',
             'com.apple.security.get-task-allow')):
         raise ValueError('App Store app contains direct/debug signing capabilities')
     if profile == 'github' and sandbox is not False:

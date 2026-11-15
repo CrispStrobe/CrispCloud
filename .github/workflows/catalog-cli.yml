@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-15, macos-15-intel, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     defaults:
       run:
         shell: bash
@@ -51,17 +51,42 @@ jobs:
           cp packages/crisp_catalog/native/vendor/crispcat-format/LICENSE cli/build/cli/bundle/LICENSE-CRISPCAT-MIT.txt
           cp packages/crisp_catalog/README.md cli/build/cli/bundle/CATALOG-README.md
           python3 tool/collect_catalog_licenses.py --output cli/build/cli/bundle/catalog-licenses
+      - name: Prepare existing Developer ID signing for published macOS CLI
+        if: runner.os == 'macOS' && inputs.release_tag != ''
+        env:
+          MACOS_DEVELOPER_ID_P12_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 }}
+          MACOS_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+          MACOS_DEVELOPER_ID_SHA1: ${{ secrets.MACOS_DEVELOPER_ID_SHA1 }}
+          MACOS_DEVELOPER_ID_PROFILE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_PROFILE_BASE64 }}
+          MACOS_DEVELOPER_ID_FINDEREXT_PROFILE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_FINDEREXT_PROFILE_BASE64 }}
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+        run: python3 tool/macos_public_signing.py prepare
+      - name: Sign and notarize published macOS CLI
+        if: runner.os == 'macOS' && inputs.release_tag != ''
+        run: |
+          python3 tool/macos_public_signing.py sign-cli --bundle cli/build/cli/bundle \
+            --archive "crispcloud-cli-${{ matrix.os }}.zip"
+      - name: Remove temporary Developer ID signing material
+        if: always() && runner.os == 'macOS' && inputs.release_tag != ''
+        run: python3 tool/macos_public_signing.py cleanup
       - uses: actions/upload-artifact@v4
         with:
           name: crisp-cli-${{ matrix.os }}
           path: cli/build/cli/bundle
           if-no-files-found: error
       - name: Package release CLI
-        if: inputs.release_tag != ''
+        if: inputs.release_tag != '' && runner.os != 'macOS'
         run: python3 -c "import shutil; shutil.make_archive('crispcloud-cli-${{ matrix.os }}', 'zip', 'cli/build/cli/bundle')"
       - name: Publish release CLI
         if: inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
-        run: gh release upload "$RELEASE_TAG" "crispcloud-cli-${{ matrix.os }}.zip" --clobber
+        run: |
+          gh release upload "$RELEASE_TAG" "crispcloud-cli-${{ matrix.os }}.zip" --clobber
+          if [ "$RUNNER_OS" = macOS ]; then
+            gh release upload "$RELEASE_TAG" "crispcloud-cli-${{ matrix.os }}.notarization.json" --clobber
+          fi

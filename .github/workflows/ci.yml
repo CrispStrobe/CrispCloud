@@ -57,6 +57,7 @@ jobs:
           python3 tool/check_distribution_components.py
           python3 -m unittest discover -s tool -p test_distribution_components.py -v
           python3 -m unittest discover -s tool -p test_macos_distribution.py -v
+          python3 -m unittest discover -s tool -p test_public_signing.py -v
 
       - name: Verify bundled notice coverage
         run: |
@@ -429,9 +430,9 @@ jobs:
 
           - platform: android
             build_cmd: ""   # handled inline below
-            artifact_name: crispcloud-android
+            artifact_name: crispcloud-android-debug
             package_cmd: ""  # handled inline below
-            artifact_path: crispcloud-android.apk
+            artifact_path: crispcloud-android-debug.apk
 
     steps:
       - uses: actions/checkout@v5
@@ -535,22 +536,22 @@ jobs:
         run: ${{ matrix.package_cmd }}
 
       # --- Android build (more complex) ---
-      - name: Build Android APK
+      - name: Build Android debug APK (compile smoke; no release secrets)
         if: matrix.platform == 'android'
         run: |
-          flutter build apk --release || true
-          find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
+          flutter build apk --debug || true
+          find . -name "app-debug.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
 
       - name: Find and rename APK
         if: matrix.platform == 'android'
         run: |
-          APK=$(find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          APK=$(find . -name "app-debug.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
           if [ -z "$APK" ]; then
-            echo "::error::No app-release.apk found — build genuinely failed"
+            echo "::error::No app-debug.apk found — build genuinely failed"
             exit 1
           fi
           echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
-          cp "$APK" crispcloud-android.apk
+          cp "$APK" crispcloud-android-debug.apk
 
       - name: Record Android build crypto evidence
         if: matrix.platform == 'android'
@@ -558,7 +559,7 @@ jobs:
           mkdir -p build/export-compliance
           dart pub deps --json > build/export-compliance/dependencies.json
           python3 tool/crypto_release_evidence.py --platform android --require-clean --record-generated-metadata \
-            --artifact crispcloud-android.apk --dependencies build/export-compliance/dependencies.json
+            --artifact crispcloud-android-debug.apk --dependencies build/export-compliance/dependencies.json
 
       - name: Upload Android crypto evidence
         if: matrix.platform == 'android'

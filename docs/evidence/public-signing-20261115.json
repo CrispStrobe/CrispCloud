@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-11-15",
+  "scope": "Native signing fixtures, not a newly built complete CrispCloud application",
+  "developer_id": {
+    "team": "N9XSJ4M3GT",
+    "certificate_sha1": "6C20CDED5C54E9E7B7A2871DEBD1EEF1AF966D4D",
+    "existing_identity_reused": true,
+    "application_profile_id": "8LLBDLS563",
+    "finder_profile_id": "GY8SX96XH7"
+  },
+  "macos": {
+    "data_protection_keychain_create_read_delete": "passed; temporary UUID-named item only",
+    "universal_fuse_helper_signature": "passed",
+    "finder_extension": "signed native stub fixture, not the complete Finder Sync implementation",
+    "app_notarization": {
+      "id": "aa123daf-618e-4fa2-871c-df779ba224b5",
+      "status": "Accepted",
+      "receipt_sha256": "9a7405976f38c3c8eb093a37bf2ac173df80c549314ac55915003036b9f0a93a"
+    },
+    "dmg_notarization": {
+      "id": "a17b8a35-6f73-44fa-9793-c33e586e83c9",
+      "status": "Accepted",
+      "receipt_sha256": "fe4fc98f0d4439cba2eb09a0e59da029e55857feb440bad058e979f6a5753dc8"
+    },
+    "app_and_dmg_stapling": "passed",
+    "gatekeeper_app_assessment": "accepted; Notarized Developer ID"
+  },
+  "cli": {
+    "dart_version": "3.13.7",
+    "native_aot_ffi_execution": "passed",
+    "archive_extraction_execution": "passed",
+    "required_scoped_entitlement": "com.apple.security.cs.allow-unsigned-executable-memory",
+    "notarization": {
+      "id": "c8b13ad9-cf65-48cc-903c-eeaed97421cd",
+      "status": "Accepted",
+      "receipt_sha256": "22f628eb223c4661a2034d43dfd8f2fa3552b3e38448331aea7520733ef47691"
+    }
+  },
+  "android": {
+    "scope": "generated minimal APK, temporary test key; production key unchanged",
+    "real_apksigner_verification": "passed",
+    "wrong_keystore_pin": "rejected",
+    "wrong_apk_signer": "rejected",
+    "published_production_certificate_sha256": "32161d81231584a424fa6ccfe876371ab03055d1c3d74e1630d637b4b100871b",
+    "published_certificate_source": "https://github.com/CrispStrobe/CrispCloud/releases/download/v1.2.8/crispcloud-android-signing-cert.sha256.txt"
+  },
+  "windows": "signing pending",
+  "production_platform_builds": "Separate hosted release acceptance; queued v1.3.4 is unchanged",
+  "temporary_credential_cleanup": "passed; only the temporary keychain removed, other search-list entries retained"
+}

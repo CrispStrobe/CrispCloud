@@ -121,6 +121,9 @@ jobs:
           : "${STORE_PASSWORD:?ANDROID_STORE_PASSWORD is required}"
           echo "$KEYSTORE_B64" | base64 --decode > android/play-upload.jks
           chmod 600 android/play-upload.jks
+          keytool -exportcert -alias "$KEY_ALIAS" -keystore android/play-upload.jks \
+            -storepass:env STORE_PASSWORD -file "$RUNNER_TEMP/android-release.cer"
+          python3 tool/verify_android_signing.py --certificate "$RUNNER_TEMP/android-release.cer" --certificate-only
           cat > android/key.properties <<EOF
           storePassword=$STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -164,12 +167,9 @@ jobs:
             sdkmanager --install "build-tools;35.0.0" >/dev/null
             APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           fi
-          "$APKSIGNER" verify --print-certs crispcloud-android.apk | tee signing.txt
-          if grep -q "CN=Android Debug" signing.txt; then
-            echo "::error::APK is debug-signed - the release keystore was not used"
-            exit 1
-          fi
-          sed -n 's/.*certificate SHA-256 digest: //p' signing.txt | head -1 > crispcloud-android-signing-cert.sha256.txt
+          python3 tool/verify_android_signing.py --apksigner "$APKSIGNER" \
+            --apk crispcloud-android.apk --certificate "$RUNNER_TEMP/android-release.cer" \
+            --output crispcloud-android-signing-cert.sha256.txt
           rm -f android/play-upload.jks android/key.properties
 
       - name: Record the APK's crypto release evidence
@@ -194,4 +194,8 @@ jobs:
           gh release upload "${{ steps.meta.outputs.tag }}"
           crispcloud-android.apk crispcloud-android-signing-cert.sha256.txt
           build/export-compliance/crypto-evidence.json --clobber
+
+      - name: Remove temporary Android signing material
+        if: always()
+        run: rm -f android/play-upload.jks android/key.properties
 

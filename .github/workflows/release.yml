@@ -8,79 +8,17 @@ name: Release
 #
 # Artifacts:
 #   - Web:     .tar.gz of build/web
-#   - macOS:   .zip of .app bundle  (code-sign placeholder — see below)
+#   - macOS:   signed/notarized .app ZIP and DMG
 #   - Linux:   .tar.gz of bundle
 #   - Windows: .zip of release bundle  (code-sign placeholder — see below)
-#   - Android: APK  (keystore-sign placeholder — see below)
+#   - Android: APK signed with the retained per-app release certificate
 #   - iOS:     .zip of unsigned .app  (export placeholder — see below)
 #
-# ─── CODE SIGNING — HOW TO ENABLE ────────────────────────────────────────────
-#
-#  macOS (Developer ID):
-#    Required secrets:
-#      MACOS_CERT_P12          – base64-encoded Developer ID certificate (.p12)
-#      MACOS_CERT_PASSWORD     – password for the .p12
-#      MACOS_NOTARY_APPLE_ID   – Apple ID for notarytool
-#      MACOS_NOTARY_TEAM_ID    – Team ID
-#      MACOS_NOTARY_PASSWORD   – App-specific password for notarytool
-#    Steps (add after "flutter build macos --release"):
-#      1. Import cert: echo "$MACOS_CERT_P12" | base64 -d > cert.p12
-#                      security create-keychain -p "" build.keychain
-#                      security import cert.p12 -k build.keychain -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
-#                      security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
-#      2. Sign:        codesign --deep --force --verify --verbose --sign "Developer ID Application: Your Name (TEAMID)" \
-#                               --options runtime --entitlements macos/Runner/Release.entitlements \
-#                               "build/macos/Build/Products/Release/CrispCloud.app"
-#      3. Notarize:    xcrun notarytool submit crispcloud-macos.zip \
-#                               --apple-id "$MACOS_NOTARY_APPLE_ID" \
-#                               --team-id "$MACOS_NOTARY_TEAM_ID" \
-#                               --password "$MACOS_NOTARY_PASSWORD" --wait
-#                      xcrun stapler staple crispcloud-macos.zip
-#
-#  Windows (Authenticode / signtool):
-#    Required secrets:
-#      WIN_CERT_PFX         – base64-encoded code signing certificate (.pfx)
-#      WIN_CERT_PASSWORD    – password for the .pfx
-#    Steps (add after "flutter build windows --release", PowerShell):
-#      1. Import cert:  [System.IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String($Env:WIN_CERT_PFX))
-#      2. Sign:         & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign `
-#                              /f cert.pfx /p $Env:WIN_CERT_PASSWORD /tr http://timestamp.digicert.com `
-#                              /td sha256 /fd sha256 `
-#                              "build\windows\x64\runner\Release\crispcloud.exe"
-#
-#  Android (keystore signing):
-#    Required secrets:
-#      ANDROID_KEYSTORE_BASE64  – base64-encoded .jks / .keystore
-#      ANDROID_KEY_ALIAS        – key alias
-#      ANDROID_KEY_PASSWORD     – key password
-#      ANDROID_STORE_PASSWORD   – keystore password
-#    Steps (add before "flutter build apk --release"):
-#      1. Decode:    echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-#      2. Configure: cat >> android/key.properties <<EOF
-#                    storePassword=$ANDROID_STORE_PASSWORD
-#                    keyPassword=$ANDROID_KEY_PASSWORD
-#                    keyAlias=$ANDROID_KEY_ALIAS
-#                    storeFile=keystore.jks
-#                    EOF
-#      3. Ensure android/app/build.gradle reads key.properties (standard Flutter setup).
-#
-#  iOS (ExportOptions.plist):
-#    Required secrets:
-#      IOS_CERT_P12        – base64-encoded distribution certificate (.p12)
-#      IOS_CERT_PASSWORD   – password for the .p12
-#      IOS_PROFILE_BASE64  – base64-encoded provisioning profile (.mobileprovision)
-#      IOS_EXPORT_PLIST    – contents of ExportOptions.plist (base64)
-#    Steps (add after "flutter build ios --release --no-codesign"):
-#      1. Import cert & profile (same pattern as macOS above).
-#      2. xcodebuild -workspace ios/Runner.xcworkspace \
-#                    -scheme Runner -configuration Release \
-#                    -archivePath build/ios/Runner.xcarchive archive
-#         xcodebuild -exportArchive \
-#                    -archivePath build/ios/Runner.xcarchive \
-#                    -exportOptionsPlist ExportOptions.plist \
-#                    -exportPath build/ios/export/
-#
-# ─────────────────────────────────────────────────────────────────────────────
+# macOS app/DMG and macOS CLI archives use the retained Developer ID identity
+# and shared ASC notarization key. Android uses its retained per-app release key.
+# Both paths fail closed; Windows signing remains pending. App Store submissions
+# use the separate macos-release.yml / ios-release.yml workflows.
+# See docs/public-signing.md for credentials, verification and acceptance limits.
 
 on:
   push:
@@ -362,6 +300,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Verify existing Developer ID identity and notarization access
+        env:
+          MACOS_DEVELOPER_ID_P12_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_P12_BASE64 }}
+          MACOS_DEVELOPER_ID_P12_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+          MACOS_DEVELOPER_ID_SHA1: ${{ secrets.MACOS_DEVELOPER_ID_SHA1 }}
+          MACOS_DEVELOPER_ID_PROFILE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_PROFILE_BASE64 }}
+          MACOS_DEVELOPER_ID_FINDEREXT_PROFILE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_FINDEREXT_PROFILE_BASE64 }}
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+        run: python3 tool/macos_public_signing.py prepare
+
       - name: Select Xcode 26.3 on macOS
         if: runner.os == 'macOS'
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
@@ -395,73 +346,31 @@ jobs:
       - run: flutter pub get
       - run: python3 tool/macos_distribution.py build --profile github --fuse -- --dart-define=APP_VERSION="${{ needs.create-release.outputs.app_version }}" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
-      # ── macOS Code Signing Placeholder ──────────────────────────────────
-      # Uncomment and configure the steps below to enable Developer ID signing.
-      # See the top-level comment block for full instructions.
-      #
-      # - name: Import Developer ID certificate
-      #   env:
-      #     MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
-      #     MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
-      #   run: |
-      #     echo "$MACOS_CERT_P12" | base64 -d > cert.p12
-      #     security create-keychain -p "" build.keychain
-      #     security default-keychain -s build.keychain
-      #     security unlock-keychain -p "" build.keychain
-      #     security import cert.p12 -k build.keychain -P "$MACOS_CERT_PASSWORD" \
-      #       -T /usr/bin/codesign -T /usr/bin/security
-      #     security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
-      #
-      # - name: Codesign .app
-      #   run: |
-      #     codesign --deep --force --verify --verbose \
-      #       --sign "Developer ID Application: Your Name (YOURTEAMID)" \
-      #       --options runtime \
-      #       --entitlements macos/Runner/Direct.entitlements \
-      #       "build/macos/Build/Products/Release/CrispCloud.app"
-      # ────────────────────────────────────────────────────────────────────
-
-      - name: Check distribution component boundary
-        run: python3 tool/macos_distribution.py verify --profile github --app build/macos/Build/Products/Release/CrispCloud.app
-
-      - name: Package macOS build (.zip + .dmg)
+      - name: Sign, notarize and staple the GitHub app and DMG
         run: |
-          cd build/macos/Build/Products/Release
-          APP_NAME=$(ls -d *.app 2>/dev/null | head -1)
-          echo "Packaging: $APP_NAME"
-          zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos.zip" "$APP_NAME"
-          # Create .dmg with drag-to-Applications layout
-          mkdir -p dmg_contents
-          cp -R "$APP_NAME" dmg_contents/
-          ln -s /Applications dmg_contents/Applications
-          hdiutil create -volname "CrispCloud" -srcfolder dmg_contents \
-            -ov -format UDZO "$GITHUB_WORKSPACE/crispcloud-macos.dmg"
+          python3 tool/macos_public_signing.py sign \
+            --app build/macos/Build/Products/Release/CrispCloud.app \
+            --output "$GITHUB_WORKSPACE"
+          python3 tool/macos_distribution.py verify --profile github \
+            --app build/macos/Build/Products/Release/CrispCloud.app
 
-      # ── macOS Notarization Placeholder ───────────────────────────────────
-      # - name: Notarize and staple
-      #   env:
-      #     MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
-      #     MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
-      #     MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
-      #   run: |
-      #     xcrun notarytool submit crispcloud-macos.zip \
-      #       --apple-id "$MACOS_NOTARY_APPLE_ID" \
-      #       --team-id "$MACOS_NOTARY_TEAM_ID" \
-      #       --password "$MACOS_NOTARY_PASSWORD" --wait
-      #     xcrun stapler staple crispcloud-macos.zip
-      # ────────────────────────────────────────────────────────────────────
+      - name: Remove temporary signing material
+        if: always()
+        run: python3 tool/macos_public_signing.py cleanup
 
       - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-macos
           path: |
+            macos-app-notarization.json
+            macos-dmg-notarization.json
             crispcloud-macos.zip
             crispcloud-macos.dmg
 
       - name: Upload to Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-macos.zip crispcloud-macos.dmg --clobber
+        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-macos.zip crispcloud-macos.dmg macos-app-notarization.json macos-dmg-notarization.json --clobber
 
   # ---------- Windows ----------
   build-windows:
@@ -634,6 +543,10 @@ jobs:
           : "${STORE_PASSWORD:?ANDROID_STORE_PASSWORD is required}"
           echo "$KEYSTORE_B64" | base64 --decode > android/play-upload.jks
           chmod 600 android/play-upload.jks
+          # Export only the public certificate; keep the existing update identity.
+          keytool -exportcert -alias "$KEY_ALIAS" -keystore android/play-upload.jks \
+            -storepass:env STORE_PASSWORD -file "$RUNNER_TEMP/android-release.cer"
+          python3 tool/verify_android_signing.py --certificate "$RUNNER_TEMP/android-release.cer" --certificate-only
           cat > android/key.properties <<EOF
           storePassword=$STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -677,12 +590,9 @@ jobs:
             sdkmanager --install "build-tools;35.0.0" >/dev/null
             APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           fi
-          "$APKSIGNER" verify --print-certs crispcloud-android.apk | tee signing.txt
-          if grep -q "CN=Android Debug" signing.txt; then
-            echo "::error::APK is debug-signed - the release keystore was not used"
-            exit 1
-          fi
-          sed -n 's/.*certificate SHA-256 digest: //p' signing.txt | head -1 > crispcloud-android-signing-cert.sha256.txt
+          python3 tool/verify_android_signing.py --apksigner "$APKSIGNER" \
+            --apk crispcloud-android.apk --certificate "$RUNNER_TEMP/android-release.cer" \
+            --output crispcloud-android-signing-cert.sha256.txt
           rm -f android/play-upload.jks android/key.properties
 
       - name: Check distribution component boundary
@@ -712,6 +622,10 @@ jobs:
           build/export-compliance/crypto-evidence.json --clobber
 
   # ---------- iOS (unsigned .app for later signing/export) ----------
+      - name: Remove temporary Android signing material
+        if: always()
+        run: rm -f android/play-upload.jks android/key.properties
+
   build-ios:
     name: Build iOS
     needs: [test, create-release]

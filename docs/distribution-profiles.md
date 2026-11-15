@@ -58,13 +58,12 @@ builds keep their platform sandbox; Linux/Windows keep normal account and OS
 access controls. See [Apple's sandbox requirement](https://developer.apple.com/documentation/security/app-sandbox)
 and [file access controls](https://support.apple.com/guide/mac-help/mchld5a35146/mac).
 
-Direct macOS distribution still needs appropriate Developer ID signing and
-notarization for ordinary Gatekeeper distribution. An ad-hoc signature is not
-an Apple identity and does not grant Data Protection Keychain access. The
-existing public Release workflow's Developer ID signing template still needs
-its corresponding certificates/secrets configured; selecting `github` does not
-create them or turn an ad-hoc artifact into a production-signed build. The
-registered-Mac development signing script remains for local testing.
+GitHub macOS app/DMG and CLI releases now use the retained Developer ID identity
+and shared notarization key, with mandatory signature checks. The app and Finder
+extension have their own Developer ID profiles, preserving the signed application
+identifiers needed for Keychain access. See [public signing](public-signing.md)
+for the configured secret names, live acceptance and CLI runtime exception.
+The registered-Mac development signing script remains for local testing.
 
 Sandboxed and unsandboxed processes can resolve different settings/support
 directories. Switching editions is not an automatic settings/vault migration.

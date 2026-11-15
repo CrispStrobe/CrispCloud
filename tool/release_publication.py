@@ -14,12 +14,17 @@ REQUIRED_ASSETS = frozenset({
     "crispcloud-linux-x64.tar.gz",
     "crispcloud-macos.zip",
     "crispcloud-macos.dmg",
+    "macos-app-notarization.json",
+    "macos-dmg-notarization.json",
     "crispcloud-windows-x64.zip",
     "crispcloud-android.apk",
+    "crispcloud-android-signing-cert.sha256.txt",
     "crispcloud-ios-nosign.zip",
     "crispcloud-cli-ubuntu-latest.zip",
     "crispcloud-cli-macos-15.zip",
     "crispcloud-cli-macos-15-intel.zip",
+    "crispcloud-cli-macos-15.notarization.json",
+    "crispcloud-cli-macos-15-intel.notarization.json",
     "crispcloud-cli-windows-latest.zip",
 })
 

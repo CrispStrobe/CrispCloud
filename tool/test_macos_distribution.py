@@ -60,7 +60,7 @@ class ProfileTests(unittest.TestCase):
                 distribution.check_entitlements(profile, {'com.apple.security.app-sandbox': sandbox})
 
     def test_store_rejects_debug_and_direct_loader_capabilities(self):
-        for key in ['com.apple.security.cs.disable-library-validation', 'get-task-allow']:
+        for key in ['com.apple.security.cs.disable-library-validation', 'com.apple.security.cs.allow-unsigned-executable-memory', 'get-task-allow']:
             with self.subTest(key=key), self.assertRaises(ValueError):
                 distribution.check_entitlements('appstore', {'com.apple.security.app-sandbox': True, key: True})
 

@@ -400,6 +400,30 @@ jobs:
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
+      - name: Configure retained Android release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${KEYSTORE_B64:?Missing retained Android keystore}"
+          : "${KEY_ALIAS:?Missing retained Android alias}"
+          : "${KEY_PASSWORD:?Missing retained Android key password}"
+          : "${STORE_PASSWORD:?Missing retained Android store password}"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > android/play-upload.jks
+          chmod 600 android/play-upload.jks
+          keytool -exportcert -alias "$KEY_ALIAS" -keystore android/play-upload.jks \
+            -storepass:env STORE_PASSWORD -file "$RUNNER_TEMP/android-release.cer"
+          python3 tool/verify_android_signing.py --certificate "$RUNNER_TEMP/android-release.cer" --certificate-only
+          cat > android/key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=play-upload.jks
+          EOF
+
       - run: flutter pub get
 
       - name: Build APK
@@ -416,12 +440,25 @@ jobs:
           fi
           cp "$APK" crispcloud-nightly-android.apk
 
+      - name: Verify the nightly uses the retained release key
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          python3 tool/verify_android_signing.py --apksigner "$APKSIGNER" \
+            --apk crispcloud-nightly-android.apk --certificate "$RUNNER_TEMP/android-release.cer" \
+            --output crispcloud-nightly-android-signing-cert.sha256.txt
+
       - uses: actions/upload-artifact@v5
         with:
           name: nightly-android
-          path: crispcloud-nightly-android.apk
+          path: |
+            crispcloud-nightly-android.apk
+            crispcloud-nightly-android-signing-cert.sha256.txt
 
   # ---------- Build iOS ----------
+      - name: Remove temporary Android signing files
+        if: always()
+        run: rm -f android/play-upload.jks android/key.properties
+
   build-ios:
     name: Build iOS (no-codesign)
     needs: test
