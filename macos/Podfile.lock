@@ -4,6 +4,8 @@ PODS:
     - FlutterMacOS
   - cryptography_flutter (0.0.1):
     - FlutterMacOS
+  - dart_pdf_printing (0.1.0):
+    - FlutterMacOS
   - desktop_drop (0.0.1):
     - FlutterMacOS
   - dynamic_color (0.0.2):
@@ -77,6 +79,7 @@ PODS:
 DEPENDENCIES:
   - crisp_audio (from `Flutter/ephemeral/.symlinks/plugins/crisp_audio/darwin`)
   - cryptography_flutter (from `Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos`)
+  - dart_pdf_printing (from `Flutter/ephemeral/.symlinks/plugins/dart_pdf_printing/macos`)
   - desktop_drop (from `Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos`)
   - dynamic_color (from `Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos`)
   - file_picker (from `Flutter/ephemeral/.symlinks/plugins/file_picker/macos`)
@@ -108,6 +111,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/crisp_audio/darwin
   cryptography_flutter:
     :path: Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos
+  dart_pdf_printing:
+    :path: Flutter/ephemeral/.symlinks/plugins/dart_pdf_printing/macos
   desktop_drop:
     :path: Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos
   dynamic_color:
@@ -152,6 +157,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   crisp_audio: c1b02b155da73f43c566acddb8e2a9e0e1b2ecee
   cryptography_flutter: be2b3e0e31603521b6a1c2bea232a88a2488a91c
+  dart_pdf_printing: 36c1f56b76e8324ceefa5fac5c57cf5ebb359add
   desktop_drop: 10a3e6a7fa9dbe350541f2574092fecfa345a07b
   dynamic_color: cb7c2a300ee67ed3bd96c3e852df3af0300bf610
   file_picker: 7584aae6fa07a041af2b36a2655122d42f578c1a
