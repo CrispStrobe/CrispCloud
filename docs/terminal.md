@@ -190,6 +190,8 @@ the whole terminal keeps the connections alive. Use **Terminal layout** to split
 the workspace side by side or top and bottom; creating the first split opens
 another terminal. Clicking a pane makes it the keyboard target. Selecting a
 hidden tab replaces the active split pane while preserving the other one.
+The existing SSH service permits five concurrent SSH connections across the
+app; the eight-tab limit also accommodates local and disconnected terminals.
 
 Only two panes are displayed at once. When the available space is too small,
 the active pane is displayed alone and the split reappears when space permits.
@@ -390,7 +392,9 @@ flutter test --concurrency=2 \
   test/screen_session_options_test.dart test/screen_session_command_test.dart \
   test/terminal_tabs_test.dart test/terminal_search_test.dart \
   test/terminal_search_bar_test.dart test/ssh_terminal_profiles_test.dart \
-  test/ssh_terminal_profiles_dialog_test.dart
+  test/ssh_terminal_profiles_dialog_test.dart \
+  test/terminal_backend_metadata_test.dart test/widget/terminal_localization_test.dart \
+  test/terminal_workspace_panel_test.dart test/terminal_panel_test.dart
 
 flutter test --platform chrome --concurrency=1 \
   test/terminal_session_test.dart test/terminal_widget_test.dart \
@@ -462,6 +466,28 @@ physical-device keyboard/IME or Windows ConPTY validation.
    Also exercise the browser's in-memory built-in shell; those files are local
    to that terminal session and are not the browser's selected filesystem.
    Test a signed sandboxed macOS build separately from an unsandboxed build.
+9. **Tabs and split views.** Open two terminals, split side by side and top and
+   bottom, and type into each pane. Output in another pane must not redirect
+   typing. Switch a third tab into a split, rename it, hide/reopen the terminal,
+   and shrink the window until the split collapses. All retained sessions must
+   keep their own output. Cancel a running-tab close, then retry and confirm;
+   only that connection should close.
+10. **Search and font size.** Search wrapped text and wide Unicode output, cycle
+    matches, toggle case/whole-word matching, and change the font size. Click
+    back into the terminal while search stays open and verify that typing goes
+    to the shell. Switch tabs, hide/reopen, and resize around the search bar's
+    minimum height; the query should survive without stealing another pane's
+    focus. Verify Ctrl+C still interrupts the shell.
+11. **GNU screen.** On a controlled host, create a session, start a long-running
+    command, detach and reattach by exact name and full ID. Check duplicate
+    human names, a missing target, and another already attached client. Errors
+    must remain visible; attachment must not create a new session or evict the
+    other client. Repeat after a connection loss.
+12. **Saved destinations.** Save shell, tmux attach-only and screen attach-only
+    profiles, restart the app, and reopen each. Destination and mode should
+    survive, but every credential field must be empty. Canceling credential
+    entry must leave a live connection intact. Replacing a profile by name and
+    deleting one profile must leave the others unchanged.
 
 Only claim platform smoke tests that were actually executed. In particular,
 Linux unit/native checks do not certify Windows, signed macOS or physical

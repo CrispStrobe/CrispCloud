@@ -13,8 +13,16 @@ already merged, as are the subsequent worksheet and Office documentation PRs
 #137 and #138. The two remaining divergent branch histories have identical
 trees to their squash merges. Both storage-carving branches are ancestors of
 `main`. No additional branch merge or cherry-pick was required at that point.
-During development, main advanced through PRs #139, #141 and #142 to
-`edef30ba`; those Office-only changes were merged into the feature branch too.
+During development, main advanced through PRs #139, #141, #142 and #144–#148
+to `50b45932`; those Office-only changes were merged into the feature branch
+too, preserving their main-branch history.
+
+A later branch audit found `integrate/utf16-custom-xml-20261115` equivalent to
+main for its bibliography implementation and tests. The new
+`codex/zotero-support-20261115` branch at `454f0ec9` contains separate unmerged
+work that appeared after the initial integration baseline; it is not included
+in this terminal continuation. Its Office changes overlap ongoing main work,
+and it had no open pull request at the time of that audit.
 
 ## Implemented coverage
 

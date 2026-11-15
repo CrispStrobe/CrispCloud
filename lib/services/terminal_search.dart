@@ -88,10 +88,12 @@ class TerminalScrollbackSearch extends ChangeNotifier {
     if (_disposed || _active == value) return;
     if (!value) {
       final range = currentRange;
-      _releasePreferredAnchor();
       if (range != null) {
+        _releasePreferredAnchor();
         _preferredAnchor = terminal.buffer.createAnchorFromOffset(range.begin);
       }
+      // Dirty output already saved an anchor before invalidating its ranges.
+      // Keep that anchor while hidden so reactivation preserves the same hit.
       terminal.removeListener(_onTerminalChanged);
       _refreshTimer?.cancel();
       _refreshTimer = null;

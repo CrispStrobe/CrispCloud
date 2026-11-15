@@ -215,6 +215,121 @@ void main() {
   });
 
   testWidgets(
+    'search stays visible while clicks route typing to either split viewport',
+    (tester) async {
+      await mount(tester);
+      fixtures[0].connection.outputController.add(
+        'first needle\r\nneedle first again\r\n',
+      );
+      await tester.pump();
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyF);
+      final firstQuery = find.descendant(
+        of: find.byKey(const ValueKey('terminal-pane-1')),
+        matching: find.byKey(const ValueKey('terminal-search-query')),
+      );
+      await tester.enterText(firstQuery, 'needle');
+      await tester.pump(const Duration(milliseconds: 200));
+
+      await layout(tester, 'Split side by side');
+      fixtures[1].connection.outputController.add('second needle\r\n');
+      await tester.pump();
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyF);
+      final secondQuery = find.descendant(
+        of: find.byKey(const ValueKey('terminal-pane-2')),
+        matching: find.byKey(const ValueKey('terminal-search-query')),
+      );
+      await tester.enterText(secondQuery, 'needle');
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(tester.widget<TextField>(secondQuery).focusNode!.hasFocus, isTrue);
+
+      // An inactive pane's controls activate that pane before navigating.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('terminal-pane-1')),
+          matching: find.byKey(const ValueKey('terminal-search-next')),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      expect(tester.widget<TextField>(firstQuery).focusNode!.hasFocus, isTrue);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('terminal-pane-1')),
+          matching: find.text('2/2'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        fixtures.every((fixture) => fixture.connection.input.isEmpty),
+        isTrue,
+      );
+      await tester.tap(secondQuery);
+      await tester.pump();
+      await tester.pump();
+
+      // An already-active pane must honor an explicit click on its viewport.
+      await tester.tap(viewFinder(1));
+      await tester.pump();
+      await tester.pump();
+      expect(view(tester, 1).focusNode!.hasFocus, isTrue);
+      expect(
+        tester.widget<TextField>(secondQuery).focusNode!.hasFocus,
+        isFalse,
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB, character: 'b');
+      await tester.pump();
+      expect(fixtures[0].connection.input, isEmpty);
+      expect(fixtures[1].connection.input.join(), 'b');
+
+      // The inactive pane previously preferred its search field. Clicking its
+      // terminal must select shell input before activation requests focus.
+      await tester.tap(viewFinder(0));
+      await tester.pump();
+      await tester.pump();
+      expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+      expect(view(tester, 1).focusNode!.hasFocus, isFalse);
+      expect(tester.widget<TextField>(firstQuery).focusNode!.hasFocus, isFalse);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA, character: 'a');
+      await tester.pump();
+      expect(fixtures[0].connection.input.join(), 'a');
+      expect(fixtures[1].connection.input.join(), 'b');
+      expect(tester.widget<TextField>(firstQuery).controller!.text, 'needle');
+      expect(tester.widget<TextField>(secondQuery).controller!.text, 'needle');
+
+      await tester.tap(firstQuery);
+      await tester.pump();
+      await tester.pump();
+      expect(tester.widget<TextField>(firstQuery).focusNode!.hasFocus, isTrue);
+      expect(view(tester, 0).focusNode!.hasFocus, isFalse);
+      await tester.enterText(firstQuery, 'first query');
+
+      // Tab selection restores each pane's preferred input surface; Find
+      // explicitly reclaims a query even when its search bar is already open.
+      await activate(tester, 2);
+      expect(view(tester, 1).focusNode!.hasFocus, isTrue);
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyF);
+      expect(tester.widget<TextField>(secondQuery).focusNode!.hasFocus, isTrue);
+      expect(view(tester, 1).focusNode!.hasFocus, isFalse);
+      await tester.enterText(secondQuery, 'second query');
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(fixtures[0].connection.input.join(), 'a');
+      expect(fixtures[1].connection.input.join(), 'b');
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
+
+  testWidgets(
     'clicking current or another tab reclaims typing from a file pane',
     (tester) async {
       await mount(tester);
@@ -664,7 +779,9 @@ class _TrackedSession extends TerminalSession {
 }
 
 class _Connection implements TerminalConnection {
-  final outputController = StreamController<String>();
+  // Give cancellation a future on the widget clock. With no onCancel, Dart
+  // returns a shared root-zone completed future that fakeAsync cannot flush.
+  final outputController = StreamController<String>(onCancel: () async {});
   final finished = Completer<int?>();
   final input = <String>[];
   int closes = 0;

@@ -87,6 +87,22 @@ class SshTerminalProfile {
     if (gatewayValue != null && gatewayValue is! String) {
       throw const FormatException('Invalid SSH profile gateway');
     }
+    Uri? gateway;
+    if (gatewayValue != null) {
+      final rawGateway = gatewayValue as String;
+      // Validate the stored text as well as the parsed URI: parsing a wss URL
+      // normalizes an explicit port zero away and would change the endpoint.
+      gateway = Uri.tryParse(rawGateway);
+      if (rawGateway.length > 2048 ||
+          sshGatewayValidationMessage(
+                gateway,
+                required: true,
+                rawUrl: rawGateway,
+              ) !=
+              null) {
+        throw const FormatException('Invalid SSH profile gateway');
+      }
+    }
     final session = value['session'];
     if (session is! Map<String, dynamic>) {
       throw const FormatException('Invalid SSH profile session');
@@ -130,9 +146,7 @@ class SshTerminalProfile {
         port: port,
         username: text('username'),
         authentication: authentication,
-        gateway: gatewayValue == null
-            ? null
-            : Uri.parse(gatewayValue as String),
+        gateway: gateway,
         tmux: tmux,
         screen: screen,
       ),

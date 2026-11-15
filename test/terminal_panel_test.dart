@@ -19,7 +19,9 @@ import 'package:crisp_cloud/widgets/terminal_panel.dart';
 import 'package:crisp_cloud/widgets/terminal_process_native.dart' as proc;
 
 class _Connection implements TerminalConnection {
-  final controller = StreamController<String>();
+  // An explicit cancellation future stays on the widget test's clock instead
+  // of using Dart's shared root-zone completed future.
+  final controller = StreamController<String>(onCancel: () async {});
   final finished = Completer<int?>();
   final input = <String>[];
 

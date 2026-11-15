@@ -135,6 +135,39 @@ void main() {
     expect(decoded.config.passphrase, isEmpty);
   });
 
+  test('stored gateway text is validated before URI normalization', () {
+    final data = SshTerminalProfile(name: 'Build', config: config()).toJson();
+    for (final gateway in [
+      'wss://gateway.example:0/ssh',
+      'wss://[::1]:0/ssh',
+      'wss://gateway.example:65536/ssh',
+      'wss://gateway.example:invalid/ssh',
+      'wss://[::1/ssh',
+      '',
+    ]) {
+      expect(
+        () => SshTerminalProfile.fromJson({...data, 'gateway': gateway}),
+        throwsFormatException,
+        reason: gateway,
+      );
+    }
+    for (final gateway in [
+      'wss://gateway.example:443/ssh',
+      'wss://gateway.example:8443/ssh',
+      'wss://[::1]:8443/ssh',
+    ]) {
+      final decoded = SshTerminalProfile.fromJson({
+        ...data,
+        'gateway': gateway,
+      });
+      expect(decoded.config.gateway, Uri.parse(gateway));
+    }
+    expect(
+      SshTerminalProfile.fromJson({...data, 'gateway': null}).config.gateway,
+      isNull,
+    );
+  });
+
   test(
     'simultaneous saves serialize read-modify-write and preserve both tabs',
     () async {

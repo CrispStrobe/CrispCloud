@@ -143,6 +143,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   Terminal? _screenTerminal;
   bool _showSearch = false;
   bool _searchFits = true;
+  bool _preferSearchFocus = false;
+  int _searchFocusRequest = 0;
   double _fontSize = 13;
   int _connectionRequest = 0;
 
@@ -273,16 +275,26 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (mounted &&
         widget.visible &&
         _activePane &&
-        !(_showSearch && _searchFits) &&
+        !(_showSearch && _searchFits && _preferSearchFocus) &&
         _focusAreaState.state == FocusArea.terminal) {
       _focus.requestFocus();
     }
   }
 
   void _activateInput() {
+    if (_preferSearchFocus) setState(() => _preferSearchFocus = false);
     widget.onActivate?.call();
     _focusAreaState.state = FocusArea.terminal;
     if (widget.active) _focus.requestFocus();
+  }
+
+  void _activateSearch() {
+    setState(() {
+      _preferSearchFocus = true;
+      _searchFocusRequest++;
+    });
+    widget.onActivate?.call();
+    _focusAreaState.state = FocusArea.terminal;
   }
 
   void _onInputFocusChanged() {
@@ -683,7 +695,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0;
       if (find || zoomIn || zoomOut || reset) {
         if (event is KeyDownEvent) {
-          if (find) setState(() => _showSearch = true);
+          if (find) _openSearch();
           if (zoomIn) _setFontSize(_fontSize + 1);
           if (zoomOut) _setFontSize(_fontSize - 1);
           if (reset) _setFontSize(13);
@@ -730,8 +742,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     setState(() => _fontSize = size.clamp(8.0, 32.0));
   }
 
+  void _openSearch() {
+    setState(() => _showSearch = true);
+    _activateSearch();
+  }
+
   void _closeSearch() {
-    setState(() => _showSearch = false);
+    setState(() {
+      _showSearch = false;
+      _preferSearchFocus = false;
+    });
     _focusIfVisible();
   }
 
@@ -818,7 +838,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       case _PanelAction.paste:
         unawaited(_paste());
       case _PanelAction.find:
-        setState(() => _showSearch = true);
+        _openSearch();
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:
@@ -1179,12 +1199,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         widget.visible &&
                         widget.active &&
                         ref.watch(focusAreaProvider) == FocusArea.terminal,
-                    focusRequest: widget.focusRequest,
+                    autofocus: _preferSearchFocus,
+                    focusRequest: widget.focusRequest + _searchFocusRequest,
                     onWorkspaceKey: widget.onWorkspaceKey,
-                    onActivate: () {
-                      widget.onActivate?.call();
-                      _focusAreaState.state = FocusArea.terminal;
-                    },
+                    onActivate: _activateSearch,
                     terminal: _session.terminal,
                     controller: _controller,
                     scrollController: _scroll,

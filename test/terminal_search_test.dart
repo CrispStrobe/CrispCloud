@@ -236,6 +236,33 @@ void main() {
     expect(bounded.buffer.getText(boundedSearch.currentRange!, true), 'hit');
   });
 
+  testWidgets('hiding during pending output preserves the selected hit', (
+    tester,
+  ) async {
+    terminal.write('hit first\r\nhit selected\r\nhit third');
+    search.setQuery('hit');
+    search.refresh();
+    search.next();
+    final selectedLine = terminal.buffer.lines[search.currentRange!.begin.y];
+
+    terminal.write('\r\nhit fourth');
+    expect(search.pending, isTrue);
+    search.setActive(false);
+    terminal.write('\r\nhit fifth');
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(controller.searchHighlights, isEmpty);
+    search.setActive(true);
+    await tester.pump(const Duration(milliseconds: 160));
+
+    expect(search.matchCount, 5);
+    expect(search.currentIndex, 1);
+    expect(
+      terminal.buffer.lines[search.currentRange!.begin.y],
+      same(selectedLine),
+    );
+    expect(input, isEmpty);
+  });
+
   testWidgets('clearing or disposing cancels delayed searches and highlights', (
     tester,
   ) async {

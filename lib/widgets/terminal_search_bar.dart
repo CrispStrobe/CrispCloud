@@ -35,7 +35,8 @@ class TerminalSearchBar extends StatefulWidget {
   final bool active;
   final VoidCallback? onActivate;
 
-  /// Increment to reclaim search focus without rebuilding or clearing its query.
+  /// Increment to reclaim focus when [autofocus] prefers search input, without
+  /// rebuilding or clearing its query.
   final int focusRequest;
   final KeyEventResult Function(KeyEvent)? onWorkspaceKey;
 
@@ -46,6 +47,7 @@ class TerminalSearchBar extends StatefulWidget {
 class _TerminalSearchBarState extends State<TerminalSearchBar> {
   final _query = TextEditingController();
   final _focus = FocusNode(debugLabel: 'Terminal search');
+  final _pendingActions = <void Function(TerminalScrollbackSearch)>[];
   late TerminalScrollbackSearch _search;
 
   @override
@@ -72,6 +74,7 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
         !identical(oldWidget.controller, widget.controller)) {
       final matchCase = _search.caseSensitive;
       final wholeWord = _search.wholeWord;
+      _pendingActions.clear();
       _search.removeListener(_onSearchChanged);
       _search.dispose();
       _attachSearch();
@@ -91,11 +94,19 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
       _focus.unfocus();
     }
     if (oldWidget.active != widget.active ||
-        (widget.active && requestedFocus)) {
+        (widget.active &&
+            (requestedFocus || oldWidget.autofocus != widget.autofocus))) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _search.setActive(widget.active);
-        if (widget.active && (widget.autofocus || requestedFocus)) {
+        if (widget.active) {
+          final actions = List.of(_pendingActions);
+          _pendingActions.clear();
+          for (final action in actions) {
+            action(_search);
+          }
+        }
+        if (widget.active && widget.autofocus) {
           _focus.requestFocus();
         }
       });
@@ -104,6 +115,20 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
 
   void _onSearchChanged() {
     if (mounted) setState(() {});
+  }
+
+  bool get _canActivate => widget.active || widget.onActivate != null;
+
+  void _performSearchAction(void Function(TerminalScrollbackSearch) action) {
+    if (!_canActivate) return;
+    widget.onActivate?.call();
+    if (widget.active) {
+      action(_search);
+    } else {
+      // A visible inactive split still exposes its search controls. Wait for
+      // the parent to activate this pane before navigating or revealing a hit.
+      _pendingActions.add(action);
+    }
   }
 
   void _revealCurrent() {
@@ -151,9 +176,9 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
     if (event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.numpadEnter) {
       if (HardwareKeyboard.instance.isShiftPressed) {
-        _search.previous();
+        _performSearchAction((search) => search.previous());
       } else {
-        _search.next();
+        _performSearchAction((search) => search.next());
       }
       return KeyEventResult.handled;
     }
@@ -222,17 +247,22 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
       key: const ValueKey('terminal-search-previous'),
       label: 'Previous match',
       icon: const Icon(Icons.keyboard_arrow_up),
-      onPressed: _search.query.isEmpty ? null : _search.previous,
+      onPressed: _search.query.isEmpty || !_canActivate
+          ? null
+          : () => _performSearchAction((search) => search.previous()),
     ),
     _button(
       key: const ValueKey('terminal-search-next'),
       label: 'Next match',
       icon: const Icon(Icons.keyboard_arrow_down),
-      onPressed: _search.query.isEmpty ? null : _search.next,
+      onPressed: _search.query.isEmpty || !_canActivate
+          ? null
+          : () => _performSearchAction((search) => search.next()),
     ),
     if (compact)
       PopupMenuButton<_SearchOption>(
         key: const ValueKey('terminal-search-options'),
+        enabled: _canActivate,
         tooltip: context.terminalSearchTr('Search options'),
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 160),
@@ -242,12 +272,14 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
           minimumSize: const Size(36, 36),
           maximumSize: const Size(36, 36),
         ),
-        onSelected: (value) => switch (value) {
-          _SearchOption.matchCase => _search.setCaseSensitive(
-            !_search.caseSensitive,
-          ),
-          _SearchOption.wholeWord => _search.setWholeWord(!_search.wholeWord),
-        },
+        onSelected: (value) => _performSearchAction(
+          (search) => switch (value) {
+            _SearchOption.matchCase => search.setCaseSensitive(
+              !search.caseSensitive,
+            ),
+            _SearchOption.wholeWord => search.setWholeWord(!search.wholeWord),
+          },
+        ),
         itemBuilder: (_) => [
           CheckedPopupMenuItem(
             value: _SearchOption.matchCase,
@@ -268,14 +300,22 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
         label: 'Match case',
         selected: _search.caseSensitive,
         icon: const Text('Aa'),
-        onPressed: () => _search.setCaseSensitive(!_search.caseSensitive),
+        onPressed: !_canActivate
+            ? null
+            : () => _performSearchAction(
+                (search) => search.setCaseSensitive(!search.caseSensitive),
+              ),
       ),
       _button(
         key: const ValueKey('terminal-search-word'),
         label: 'Whole words',
         selected: _search.wholeWord,
         icon: const Icon(Icons.space_bar),
-        onPressed: () => _search.setWholeWord(!_search.wholeWord),
+        onPressed: !_canActivate
+            ? null
+            : () => _performSearchAction(
+                (search) => search.setWholeWord(!search.wholeWord),
+              ),
       ),
     ],
     _button(
@@ -318,7 +358,7 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
             onTap: widget.onActivate,
             textInputAction: TextInputAction.search,
             onSubmitted: (_) {
-              _search.next();
+              _performSearchAction((search) => search.next());
               _focus.requestFocus();
             },
           );
@@ -348,6 +388,7 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
 
   @override
   void dispose() {
+    _pendingActions.clear();
     _search.removeListener(_onSearchChanged);
     _search.dispose();
     _query.dispose();

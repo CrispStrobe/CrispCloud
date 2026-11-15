@@ -31,6 +31,7 @@ void main() {
     WidgetTester tester, {
     double width = 640,
     bool active = true,
+    bool autofocus = true,
     int focusRequest = 0,
     FocusNode? terminalFocus,
     KeyEventResult Function(KeyEvent)? onWorkspaceKey,
@@ -56,6 +57,7 @@ void main() {
                         view.currentState!.renderTerminal.lineHeight,
                     onClose: () => closed++,
                     active: active,
+                    autofocus: autofocus,
                     focusRequest: focusRequest,
                     onWorkspaceKey: onWorkspaceKey,
                   ),
@@ -238,6 +240,30 @@ void main() {
     expect(terminalFocus.hasFocus, isTrue);
     expect(field.focusNode!.hasFocus, isFalse);
     expect(field.controller!.text, 'hit');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('workspace focus request respects a viewport focus preference', (
+    tester,
+  ) async {
+    final terminalFocus = FocusNode();
+    addTearDown(terminalFocus.dispose);
+    await mount(tester, autofocus: false, terminalFocus: terminalFocus);
+    terminalFocus.requestFocus();
+    await tester.pump();
+    await mount(
+      tester,
+      autofocus: false,
+      terminalFocus: terminalFocus,
+      focusRequest: 1,
+    );
+    await tester.pump();
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('terminal-search-query')),
+    );
+    expect(terminalFocus.hasFocus, isTrue);
+    expect(field.focusNode!.hasFocus, isFalse);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
