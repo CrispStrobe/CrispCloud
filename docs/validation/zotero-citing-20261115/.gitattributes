@@ -1,0 +1,2 @@
+# Preserve raw execution output, including whitespace in parameterized names.
+*.log -whitespace

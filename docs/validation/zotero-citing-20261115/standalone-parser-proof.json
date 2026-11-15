@@ -1,0 +1,21 @@
+{
+  "actual_bytes_match_inventory": true,
+  "baseline_host_commit": "fe22a0458acfa90c0cce457d20fecbaa85a260e6",
+  "baseline_manifest_sha256": "a5c1c84457fb26fb53b5b90a5a0f4f0d89465c13e96c3b773784463d152324f5",
+  "changed_paths": [],
+  "file_count_after": 1857,
+  "file_count_before": 1857,
+  "inventory_sha256_after": "d1374afae132aa225d0f6a06528093608f7a18a8bc7976ff064f88887ad2d9b0",
+  "inventory_sha256_before": "d1374afae132aa225d0f6a06528093608f7a18a8bc7976ff064f88887ad2d9b0",
+  "inventory_unchanged": true,
+  "mismatched_actual_paths": [],
+  "source_after": {
+    "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "repository": "CrispStrobe/legacy-doc-parser"
+  },
+  "source_before": {
+    "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "repository": "CrispStrobe/legacy-doc-parser"
+  },
+  "source_pin_unchanged": true
+}

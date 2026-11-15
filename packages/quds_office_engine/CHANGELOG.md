@@ -4,6 +4,16 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add Zotero's native HTTP Citing Protocol with bounded, credential-free
+  loopback transactions, exact command/field validation, cooperative cancellation
+  and error cleanup. Stage complete Word citation/bibliography refreshes,
+  inline/footnote/endnote insertion and safe note conversions without live
+  mutation. Preserve native XML/JSON document preferences in owned, chunked
+  `ZOTERO_PREF_*` custom properties. Keep processor-managed citations separate
+  from the basic fallback. Verify German ibid., numeric ordering and
+  disambiguation against pinned real Zotero CSL output; live native acceptance
+  remains pending.
+
 - Verify persistent source identities before connected Zotero item reads and
   selected-source exports. Check complete selections before formatting; pin
   desktop database identity and library version across aggregate requests.
@@ -19,7 +29,8 @@ All notable changes to `quds_office_engine` are documented here.
 - Add Zotero CSL citation and bibliography field inspection, bounded JSON
   metadata, embedded CSL items, explicit cached-text insertion/editing, and
   deliberate unlinking. Write native complex ADDIN fields and preserve rich
-  imported caches and unknown Zotero metadata without automatic CSL processing.
+  imported caches and unknown Zotero metadata. Cached-text operations remain
+  available without a running native Zotero processor.
 
 - Complete the bounded ODS picture and spreadsheet-state pass: embed package
   pictures as worksheet drawings, apply nameless document default styles and

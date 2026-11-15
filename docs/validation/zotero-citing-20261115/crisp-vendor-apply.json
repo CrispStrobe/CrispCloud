@@ -1,0 +1,20 @@
+{
+  "from": "706971b6818d5382e135ea947ce862b27124a46a",
+  "to": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+  "write": [
+    "packages/quds_office_editor/CHANGELOG.md",
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+    "packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "packages/quds_office_engine/test/word_content_control_fidelity_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2391,
+  "applied": true
+}

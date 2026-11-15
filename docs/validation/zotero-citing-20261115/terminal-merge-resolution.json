@@ -1,0 +1,20 @@
+{
+  "host_before": "b9c8ca907ebb7b9d5f36384eec7d99a93d6557bb",
+  "incoming_terminal_parent": "bd086eea48525346216c59e0c899b4d33751029b",
+  "retained_quds_pin": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+  "managed_source_changes": [],
+  "resolved_files": [
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "selection": "ours",
+      "sha256": "f7eccedae958547b9838ed7320b76d2979437b810792ee4a3eaf66260e0c98df"
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "selection": "ours",
+      "sha256": "e8077ab0e707a98899c30ebb0ee2a80bdd038fc0ea07162251562bf852ca1f7a"
+    }
+  ],
+  "notes": "Incoming fork notes contained only older source pin, older Zotero checkpoint description and equivalent historical cohort wording. Current notes retain all substantive incoming coverage and additional current remaining-gaps links.",
+  "staging_changed_by_agent": false
+}

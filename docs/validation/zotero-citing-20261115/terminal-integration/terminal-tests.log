@@ -1,0 +1,185 @@
+00:00 +0: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart
+00:00 +0: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: nested layout round-trips order, axes and independent dividers
+00:00 +1: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: repeated splits retain prior sessions and stop at eight panes
+00:00 +2: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: switching a hidden terminal replaces only the selected leaf
+00:00 +3: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: closing a pane collapses parents without losing sibling topology
+00:00 +4: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: divider movement targets its branch and balance preserves topology
+00:00 +5: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: runtime IDs map to saved indexes and back without changing layout
+00:00 +6: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: constructors reject duplicate IDs, negative IDs and bad proportions
+00:00 +7: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_pane_layout_test.dart: decoder rejects malformed and over-deep trees before traversing them
+00:00 +8: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart
+00:02 +8: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement schema round-trips names, pane positions, size and safe SSH destinations
+00:02 +9: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement schema ignores injected secrets and executable data when decoding
+00:02 +10: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement schema rejects invalid names, font sizes, tab counts and pane indexes
+00:02 +11: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement schema validates destinations with the shared SSH profile schema
+00:02 +12: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement schema nested arrangements retain hidden tabs and active inner leaves
+00:02 +13: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement schema rejects contradictory or missing nested layout data
+00:02 +14: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement store serializes concurrent saves and retains unrelated records
+00:02 +15: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement store reads legacy v1 and migrates all records on the next save
+00:02 +16: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement store bounds saved arrangements but permits replacement at capacity
+00:02 +17: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement store rejects corrupt or newer data before save or delete writes
+00:02 +18: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement store releases the lock after backend errors
+00:02 +19: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_test.dart: arrangement store default backend coordinates distinct store instances
+00:02 +20: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_dialog_test.dart
+00:03 +20: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:05 +21: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_dialog_test.dart: future data disables saving and remains intact on both dialogs
+00:05 +22: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_dialog_test.dart: failed deletion retains the saved value and retry succeeds
+00:05 +23: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_dialog_test.dart: capacity preserves existing arrangements and allows replacement
+00:05 +24: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_arrangements_dialog_test.dart: save remains reachable with a narrow window and keyboard inset
+00:06 +25: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart
+00:07 +25: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: aliases use first matching values and trailing defaults
+00:07 +26: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: global values before Host win as in ssh_config
+00:07 +27: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: keywords ignore case, aliases and patterns preserve case
+00:07 +28: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: glob and negation require a positive match
+00:07 +29: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: quotes comments equals and CRLF do not change field values
+00:07 +30: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: IdentityFile is additive and remains an unexpanded hint
+00:07 +31: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: IdentityFile none does not become a key path
+00:07 +32: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: missing user never guesses the device account or destination account
+00:07 +33: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: jump aliases get independent options and explicit overrides
+00:07 +34: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: jump missing user uses explicit default rather than target user
+00:07 +35: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: IPv6 and ssh URI jump endpoints preserve ports
+00:07 +36: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: ProxyJump none wins over a later default jump
+00:07 +37: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: proxy none is case-insensitive and preserves ProxyCommand competition
+00:07 +38: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: ProxyJump and ProxyCommand compete in source order
+00:07 +39: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: unsupported alias options do not taint an unrelated alias
+00:07 +40: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: external matching and includes block every entry without evaluation
+00:07 +41: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: unsupported security commands forwarding and unknown options block
+00:07 +42: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: non-routing tuning options are explicitly advisory
+00:07 +43: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: nested and repeated routes fail instead of being simplified
+00:07 +44: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: HostName is not looked up as another alias
+00:07 +45: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: invalid ports endpoints placeholders and jump syntax fail
+00:07 +46: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: malformed source never yields a partially qualified profile
+00:07 +47: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: wildcard-only configurations provide a visible no-alias diagnostic
+00:07 +48: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: input alias line and identity limits reject the whole operation
+00:07 +49: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: atomic profile import one batch performs one write and preserves existing destinations
+00:07 +50: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: atomic profile import a collision rejects the entire batch and never overwrites
+00:07 +51: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: atomic profile import duplicates within a batch reject before writing
+00:07 +52: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: atomic profile import capacity failures preserve the entire old store
+00:07 +53: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_test.dart: atomic profile import concurrent imports cannot replace one another
+00:07 +54: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart
+00:07 +54: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:09 +55: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: existing names get an editable unique suggestion and never overwrite
+00:09 +56: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: a racing profile save rejects the batch without replacements
+00:10 +57: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: unsupported routing is visible and cannot be selected
+00:10 +58: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: default username fixes a missing user after a fresh preview
+00:10 +59: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: editing a previewed source revokes its old selection
+00:10 +60: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: oversized paste rejects all text and revokes the prior preview
+00:10 +61: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: storage errors stay bounded and do not leak internal details
+00:11 +62: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: pending batch writes disable cancel and all import controls
+00:11 +63: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: profile manager exposes import and stays open after saving
+00:12 +64: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: short narrow layouts scroll source preview and selection without overflow
+00:12 +65: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_config_import_dialog_test.dart: all eight established locales translate the import entry point
+00:12 +66: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart
+00:13 +66: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: logical chords match exact modifier state and preserve unicode IDs
+00:13 +67: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: plain typing, modifiers and unstable logical IDs cannot become shortcuts
+00:13 +68: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: workspace, copy, search and interrupt shortcuts retain priority
+00:13 +69: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: text mappings preserve literal text and never append an Enter
+00:13 +70: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: key actions use each recipients cursor and keyboard modes
+00:13 +71: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: printable key taps include explicit text only for legacy fallback
+00:13 +72: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: payloads and action schemas are bounded and fail closed
+00:13 +73: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: local store serializes concurrent additions, edits, disabling and deletion
+00:13 +74: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: local store never silently overwrites another chord while editing
+00:13 +75: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: local store bounds mappings and permits an update at capacity
+00:13 +76: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: local store corrupt, duplicate and future stores remain untouched
+00:13 +77: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_key_bindings_test.dart: local store default stores coordinate and backend failures release the lock
+00:13 +78: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart
+00:14 +78: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: a compound key tap has one input origin and complete protocol edges
+00:14 +79: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: compound taps preserve explicit text fallback and ignored-input isolation
+00:14 +80: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: only explicit input produces user events; terminal replies stay local
+00:14 +81: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: replayed paste uses recipient bracketed-paste mode without recursion
+00:14 +82: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: replayed key uses recipient application cursor mode
+00:14 +83: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: revoked broadcast lease drops input already waiting in the write queue
+00:14 +84: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: locked or disconnected input is not broadcast
+00:14 +85: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: reconnect replaces the input identity and command history
+00:14 +86: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: failed transport stays owned until asynchronous cleanup settles
+00:14 +87: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: replacement waits for pending failed-transport cleanup
+00:14 +88: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: cancelled late opener stays owned while its close is pending
+00:14 +89: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_user_input_test.dart: input origin can be consumed only once per explicit operation
+00:14 +90: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart
+00:15 +90: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: mapped key taps deliver Kitty releases from a legacy-mode source
+00:15 +91: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: mirrors explicit input once and re-encodes recipient terminal modes
+00:15 +92: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: active-pane and focus predicates exclude other input surfaces
+00:15 +93: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: device replies, mouse and focus reports never mirror
+00:15 +94: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: disconnection disarms every member and stale snapshots cannot rearm
+00:15 +95: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: reconnecting any selected member stops a pending group immediately
+00:15 +96: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: oversized input remains on its source and disarms before mirroring
+00:15 +97: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: stop revokes already queued recipient input before transport delivery
+00:15 +98: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: rearm uses a new lease and never revives old queued delivery
+00:15 +99: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: preserves prior callbacks and does not overwrite a later owner
+00:15 +100: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: unselected and newly created tabs never inherit membership
+00:15 +101: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: bounds groups and rejects duplicates without installing callbacks
+00:15 +102: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/terminal_broadcast_test.dart: a disposed external member invalidates the group before new input
+00:15 +103: loading /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart
+00:16 +103: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: opens one outer socket, authenticates each hop, executes at final host
+ℹ️ [SshTerminalService] Session ho73ooux7a0 established to target.example:2200
+ℹ️ [SshTerminalService] execute(ho73ooux7a0)
+ℹ️ [SshTerminalService] Disconnecting session ho73ooux7a0
+00:16 +104: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: direct connections still use verified socket path when no seam is set
+ℹ️ [SshTerminalService] Session ho73oovbmx0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73oovbmx0
+00:16 +105: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: mixed hop key authentication never sends a passphrase as a password
+ℹ️ [SshTerminalService] Session ho73oox7vv0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73oox7vv0
+00:16 +106: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+00:16 +107: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+ℹ️ [SshTerminalService] Session ho73op089o0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73op089o0
+00:17 +108: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: private-key targets retain the password-authenticated jump route
+ℹ️ [SshTerminalService] Session ho73op1fds0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73op1fds0
+00:17 +109: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: disconnect releases channels without waiting for a remote close reply
+ℹ️ [SshTerminalService] Session ho73op1l4p0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73op1l4p0
+00:17 +110: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: rejecting a middle host key prevents downstream auth and closes route
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:17 +111: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: changed middle host key fails closed without offering a trust override
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for inner.example:22. Expected SHA256:ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ; received SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+00:17 +112: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: forwarding failure releases already authenticated hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Forwarding rejected
+00:17 +113: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: final authentication failure closes the final client and its ancestors
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Authentication failed
+00:17 +114: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: disconnectAll closes a client while its host-key prompt is pending
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:17 +115: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: cancellation closes a forwarded socket that arrives later
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:17 +116: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: dispose closes an outer socket that arrives after cancellation
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:17 +117: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: route snapshot cannot change while the first connection awaits I/O
+ℹ️ [SshTerminalService] Session ho73op28bo0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73op28bo0
+00:17 +118: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: each attempt retains its captured host-key prompt for every hop
+ℹ️ [SshTerminalService] Session ho73op2b8x0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73op2b8x0
+00:17 +119: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: invalid duplicate or oversized routes fail before network I/O
+00:17 +120: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: tab cancellation prevents later hops without disconnecting other tabs
+ℹ️ [SshTerminalService] Session ho73op2fso0 established to other.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] execute(ho73op2fso0)
+ℹ️ [SshTerminalService] Disconnecting session ho73op2fso0
+00:17 +121: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: already stale tab attempts never open a socket
+00:17 +122: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: a route consumes one terminal pool slot and cleanup makes it reusable
+ℹ️ [SshTerminalService] Session ho73op2kma0 established to target.example:2200
+ℹ️ [SshTerminalService] Session ho73op2l3m1 established to other1.example:22
+ℹ️ [SshTerminalService] Session ho73op2lez2 established to other2.example:22
+ℹ️ [SshTerminalService] Session ho73op2lrr3 established to other3.example:22
+ℹ️ [SshTerminalService] Session ho73op2m3d4 established to other4.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73op2kma0
+ℹ️ [SshTerminalService] Session ho73op2nd25 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73op2l3m1
+ℹ️ [SshTerminalService] Disconnecting session ho73op2lez2
+ℹ️ [SshTerminalService] Disconnecting session ho73op2lrr3
+ℹ️ [SshTerminalService] Disconnecting session ho73op2m3d4
+ℹ️ [SshTerminalService] Disconnecting session ho73op2nd25
+00:17 +123: /workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness/test/ssh_jump_transport_test.dart: a failed client constructor closes its socket and previous hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Client constructor failed
+00:17 +124: All tests passed!

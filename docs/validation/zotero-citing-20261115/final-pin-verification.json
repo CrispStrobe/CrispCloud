@@ -1,0 +1,75 @@
+{
+  "canonical_package_changes_since_tested_commit": [
+    "packages/quds_office_editor/CHANGELOG.md",
+    "packages/quds_office_engine/CHANGELOG.md"
+  ],
+  "final_quds_commit": "fc37658c907edf6687eccb9564d3046283b49a3a",
+  "final_source_aggregate_sha256": "36cdb9b16441302139f8e563233a88e1948e3e6f8ec232de1074830966ed1547",
+  "final_sync_apply": "final-vendor-apply.json",
+  "final_sync_plan": "final-vendor-plan.json",
+  "host_head_at_verification": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+  "normal_vendor_verification": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "tool/verify_office_fidelity.py",
+      "--source",
+      "/workspace/scratch/d13d764c3646/audit/quds-fc37658-source"
+    ],
+    "exit_code": 0,
+    "log": "final-vendor-verify.log",
+    "log_sha256": "9f0cb1e6d9324803c338330c6637406a962bd5629d2dd41a2b36bcca79d298c2"
+  },
+  "qualified_host_source_commit": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+  "qualified_quds_commit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+  "qualified_runtime_receipt": "host-validation-receipt.json",
+  "runtime_source_aggregate_sha256": "36cdb9b16441302139f8e563233a88e1948e3e6f8ec232de1074830966ed1547",
+  "runtime_test_reuse_basis": "Exact equality of all measured source/dependency bytes; canonical package changes consist only of two changelogs. Final source pin and manifest were verified separately.",
+  "runtime_tests_repeated": false,
+  "source_changed_paths": [],
+  "source_file_count": 1582,
+  "source_inventory": "host-source-after.json",
+  "source_matches_runtime_before_and_after_final_sync": true,
+  "standalone_parser_proof": "final-standalone-parser-proof.json",
+  "status": "passed",
+  "tracked_vendor_verification": {
+    "command": [
+      "python3",
+      "tool/verify_office_fidelity.py",
+      "--source",
+      "/workspace/scratch/d13d764c3646/audit/quds-fc37658-source",
+      "--require-tracked"
+    ],
+    "exit_code": 0,
+    "log": "final-vendor-verify-tracked.log",
+    "log_sha256": "9f0cb1e6d9324803c338330c6637406a962bd5629d2dd41a2b36bcca79d298c2"
+  },
+  "vendor_manifest_after_final_sync": {
+    "managed_file_count": 2391,
+    "managed_inventory_sha256": "bf0bc65dbf9f8cca290a5b18146db0951fb06e35564a01caee533768e5a9a787",
+    "sha256": "598b0c4233dfaed12f04babca5f9faf64f6ce8c60f24af69b4878c1b474f5618",
+    "source_branch": "codex/zotero-support-20261115",
+    "source_commit": "fc37658c907edf6687eccb9564d3046283b49a3a",
+    "source_repository": "CrispStrobe/quds_office_suite",
+    "standalone_sources": {
+      "packages/legacy_doc_parser": {
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "repository": "CrispStrobe/legacy-doc-parser"
+      }
+    }
+  },
+  "vendor_manifest_before_final_sync": {
+    "managed_file_count": 2391,
+    "managed_inventory_sha256": "64070e7f17090ded9dca86b0e62f0ea248e08707ac522146467a758d890a1e85",
+    "sha256": "e8077ab0e707a98899c30ebb0ee2a80bdd038fc0ea07162251562bf852ca1f7a",
+    "source_branch": "codex/zotero-support-20261115",
+    "source_commit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+    "source_repository": "CrispStrobe/quds_office_suite",
+    "standalone_sources": {
+      "packages/legacy_doc_parser": {
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+        "repository": "CrispStrobe/legacy-doc-parser"
+      }
+    }
+  },
+  "verified_at_utc": "2026-11-15T22:40:39.080515+00:00"
+}

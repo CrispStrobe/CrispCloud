@@ -1,0 +1,2183 @@
+{
+  "recorded_utc": "2026-11-15T22:38:01.755068+00:00",
+  "incoming_work_cutoff_utc": "2026-11-15T22:34:47.559Z",
+  "scope": "Final post-integration branch/PR classification of every incoming head discovered at the agreed cutoff; later remote activity is outside this snapshot",
+  "api_metadata_sha256": "a2367224a59384fa476582cf09fa928ad9761ed34689ae8f37d4e041e38982ce",
+  "pre_integration_audit_sha256": "6c2196a5ac15885b315407e7472817dfabe1d314ae5c55a8de9bd2d8ffb5f55b",
+  "ci_actions_queried": false,
+  "remote_mutations": [],
+  "head_index_or_production_mutations_by_auditor": false,
+  "repositories": {
+    "quds_office_suite": {
+      "integrated_source_commit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+      "integrated_source_tree": "580a083b2843459ab1991ea39d8c0dd39b5ec0ec",
+      "local_head_at_audit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+      "main_at_cutoff": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+      "main_included_by_ancestry": true,
+      "branch_count": 19,
+      "branch_status_counts": {
+        "current-source-checkpoint": 1,
+        "exact-tree-equivalent-to-included-commit": 2,
+        "included-by-ancestry": 16
+      },
+      "branches": [
+        {
+          "branch": "codex/zotero-support-20261115",
+          "head_at_cutoff": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+          "status": "current-source-checkpoint",
+          "fetched_head_at_audit": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d"
+        },
+        {
+          "branch": "docs/readme-remaining-gaps",
+          "head_at_cutoff": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+          "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92",
+          "fetched_head_at_audit": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630"
+        },
+        {
+          "branch": "docs/remaining-gaps",
+          "head_at_cutoff": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "d5db3b28384c317809f9926b1fec1653741380ae",
+          "tree": "989695b4b987f949dd25db3c736ad14333e5bd73",
+          "fetched_head_at_audit": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0"
+        },
+        {
+          "branch": "feat/conditional-affix",
+          "head_at_cutoff": "20681b8658392212c128f51b4c91f0b638942448",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "20681b8658392212c128f51b4c91f0b638942448"
+        },
+        {
+          "branch": "feat/conditional-between",
+          "head_at_cutoff": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "b69bad50fb235118a5334b325683cd1524b3e3d1"
+        },
+        {
+          "branch": "feat/conditional-dxf",
+          "head_at_cutoff": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c"
+        },
+        {
+          "branch": "feat/conditional-operators",
+          "head_at_cutoff": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "21de3c3963b0334068b87fb1c25c787660cb17cf"
+        },
+        {
+          "branch": "feat/conditional-text",
+          "head_at_cutoff": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "752a94dfddf69522429f3025f9d25702499cb6da"
+        },
+        {
+          "branch": "feat/ods-conditional",
+          "head_at_cutoff": "e59751246a200e7477657d0e4835bf77b153422c",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "e59751246a200e7477657d0e4835bf77b153422c"
+        },
+        {
+          "branch": "feat/ods-default-geometry",
+          "head_at_cutoff": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "912f26f21446ef9bdbf4f542535438dae0ded9a9"
+        },
+        {
+          "branch": "feat/ods-default-style",
+          "head_at_cutoff": "49b447324159595c59e64d8425b54a09f79ec736",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "49b447324159595c59e64d8425b54a09f79ec736"
+        },
+        {
+          "branch": "feat/ods-images",
+          "head_at_cutoff": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "7fe296e29e2e1b173580f6854507fc060cb4f080"
+        },
+        {
+          "branch": "feat/ods-validations",
+          "head_at_cutoff": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "b85501b2810e537e21040d82528d8dbaa6fdcf15"
+        },
+        {
+          "branch": "feat/sheet-hidden-sheets",
+          "head_at_cutoff": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "4c8036bbf16ac224c3fc102b5c44d8913a512b18"
+        },
+        {
+          "branch": "feat/sheet-hidden-state",
+          "head_at_cutoff": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "46850ae47e0241733750decb22417a0150e4b0e4"
+        },
+        {
+          "branch": "fix/sdt-multi-section-control",
+          "head_at_cutoff": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "866c14f0b3a876e11732bc544dc25a05d8f10524"
+        },
+        {
+          "branch": "fix/sdt-trailing-section-break",
+          "head_at_cutoff": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "8fc3d06be36da5c2176feb107c14245f61650d75"
+        },
+        {
+          "branch": "fix/utf16-custom-xml",
+          "head_at_cutoff": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "09a05d7d60d2a2e1d2547487ad4545c50472834b"
+        },
+        {
+          "branch": "main",
+          "head_at_cutoff": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064"
+        }
+      ],
+      "pr_count": 46,
+      "fetched_pr_ref_count": 46,
+      "pr_status_counts": {
+        "included-by-ancestry": 44,
+        "exact-tree-equivalent-to-included-commit": 2
+      },
+      "pull_requests": [
+        {
+          "number": 1,
+          "head": "54f0f8de01416640560519aa9d732f668f603709",
+          "fetched_head": "54f0f8de01416640560519aa9d732f668f603709",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 2,
+          "head": "08b09485588d2b6270f594a07c983689c087587d",
+          "fetched_head": "08b09485588d2b6270f594a07c983689c087587d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 3,
+          "head": "e550723b0f2a7cd849970f58820d260c36857502",
+          "fetched_head": "e550723b0f2a7cd849970f58820d260c36857502",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 4,
+          "head": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+          "fetched_head": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 5,
+          "head": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+          "fetched_head": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 6,
+          "head": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+          "fetched_head": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 7,
+          "head": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+          "fetched_head": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 8,
+          "head": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "fetched_head": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 9,
+          "head": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "fetched_head": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 10,
+          "head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "fetched_head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 11,
+          "head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "fetched_head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 12,
+          "head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "fetched_head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 13,
+          "head": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "fetched_head": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 14,
+          "head": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "fetched_head": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 15,
+          "head": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "fetched_head": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 16,
+          "head": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "fetched_head": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 17,
+          "head": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "fetched_head": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 18,
+          "head": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "fetched_head": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 19,
+          "head": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "fetched_head": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 20,
+          "head": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "fetched_head": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 21,
+          "head": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "fetched_head": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 22,
+          "title": "Keep inline pictures inside their line of text",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/22",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T14:59:44Z",
+          "merged_at": "2026-11-15T07:11:20Z",
+          "merge_commit_sha": "62af42d0f241bfd78559124cbf78c5143faa50be",
+          "head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "branch": "fix/word-inline-pictures",
+          "base": "main",
+          "base_sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "fetched_head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 23,
+          "head": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+          "fetched_head": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 24,
+          "head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+          "fetched_head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 25,
+          "title": "Accept OOXML step vocabulary, keep all Word underline styles, continue formatting after a split",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/25",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T14:59:44Z",
+          "merged_at": "2026-11-15T11:30:45Z",
+          "merge_commit_sha": "25240781e0fdac36bc9d1bf75d6d3e4bc6c3c279",
+          "head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "branch": "fix/word-steps-vocabulary",
+          "base": "main",
+          "base_sha": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
+          "fetched_head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 26,
+          "head": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+          "fetched_head": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 27,
+          "head": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+          "fetched_head": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 28,
+          "title": "Prove edited XLSM/XLTX saves preserve package type",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/28",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T14:59:45Z",
+          "merged_at": "2026-11-15T14:17:35Z",
+          "merge_commit_sha": "93b138d48fe12e1a49c9587e228b792c4e49f6f5",
+          "head": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+          "branch": "test/xlsm-preservation",
+          "base": "main",
+          "base_sha": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+          "fetched_head": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 29,
+          "head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "fetched_head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 30,
+          "title": "Apply ODS document default cell styles",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/30",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T16:25:32Z",
+          "merged_at": "2026-11-15T16:25:32Z",
+          "merge_commit_sha": "39761edb40a140fc488b3bdb0ddc36dbee557a93",
+          "head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "branch": "feat/ods-default-style",
+          "base": "main",
+          "base_sha": "5532d598499eceac0a75098fda3d54bfd9515ed0",
+          "fetched_head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 31,
+          "title": "Honor nameless ODS default styles and geometry",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/31",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T16:45:53Z",
+          "merged_at": "2026-11-15T16:45:53Z",
+          "merge_commit_sha": "2f47132206a88c6dd0f724a665fb6b7158cf3a57",
+          "head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "branch": "feat/ods-default-geometry",
+          "base": "main",
+          "base_sha": "39761edb40a140fc488b3bdb0ddc36dbee557a93",
+          "fetched_head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 32,
+          "title": "Preserve hidden ODS rows and columns",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/32",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T16:51:32Z",
+          "merged_at": "2026-11-15T16:51:32Z",
+          "merge_commit_sha": "a6c9d7efc3b986baac52d1237deb5f50a162db3a",
+          "head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "branch": "feat/sheet-hidden-state",
+          "base": "main",
+          "base_sha": "2f47132206a88c6dd0f724a665fb6b7158cf3a57",
+          "fetched_head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 33,
+          "title": "Preserve hidden ODS worksheets",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/33",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T18:39:22Z",
+          "merged_at": "2026-11-15T18:39:22Z",
+          "merge_commit_sha": "3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa",
+          "head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "branch": "feat/sheet-hidden-sheets",
+          "base": "main",
+          "base_sha": "49769a21ba26cf2866ee26c66938d3ce8d5ad3d9",
+          "fetched_head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 34,
+          "title": "Accept UTF-16 custom XML while probing bibliography ownership",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/34",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T18:49:26Z",
+          "merged_at": "2026-11-15T18:49:26Z",
+          "merge_commit_sha": "7b3b0bbba3a8530678d77325bbec1091f6aae9c9",
+          "head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "branch": "fix/utf16-custom-xml",
+          "base": "main",
+          "base_sha": "3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa",
+          "fetched_head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 35,
+          "title": "Import ODS conditional formats and paint matches",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/35",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T18:57:27Z",
+          "merged_at": "2026-11-15T18:57:27Z",
+          "merge_commit_sha": "1d7fee380def59d5a766cab106e519952d5c3292",
+          "head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "branch": "feat/ods-conditional",
+          "base": "main",
+          "base_sha": "7b3b0bbba3a8530678d77325bbec1091f6aae9c9",
+          "fetched_head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 36,
+          "title": "Support the full numeric conditional comparators",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/36",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:01:57Z",
+          "merged_at": "2026-11-15T19:01:57Z",
+          "merge_commit_sha": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "branch": "feat/conditional-operators",
+          "base": "main",
+          "base_sha": "1d7fee380def59d5a766cab106e519952d5c3292",
+          "fetched_head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 37,
+          "title": "Emit conditional dxf styles for generated rules",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/37",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:10:36Z",
+          "merged_at": "2026-11-15T19:10:36Z",
+          "merge_commit_sha": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "branch": "feat/conditional-dxf",
+          "base": "main",
+          "base_sha": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "fetched_head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 38,
+          "title": "Import ODS contains-text and duplicate rules",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/38",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:13:56Z",
+          "merged_at": "2026-11-15T19:13:56Z",
+          "merge_commit_sha": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "branch": "feat/conditional-text",
+          "base": "main",
+          "base_sha": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "fetched_head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 39,
+          "title": "Import ODS list validations",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/39",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:18:35Z",
+          "merged_at": "2026-11-15T19:18:34Z",
+          "merge_commit_sha": "c210315bee537776b556ae9885e907483b6df7bd",
+          "head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "branch": "feat/ods-validations",
+          "base": "main",
+          "base_sha": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "fetched_head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 40,
+          "title": "Add Zotero online and desktop libraries with DOCX citation fields",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/40",
+          "state": "closed",
+          "draft": true,
+          "updated_at": "2026-11-15T22:12:58Z",
+          "merged_at": "2026-11-15T22:12:58Z",
+          "merge_commit_sha": "3304f42ee17b52659a82d5714dcc730184050960",
+          "head": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+          "branch": "codex/zotero-support-20261115",
+          "base": "main",
+          "base_sha": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "fetched_head": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 41,
+          "title": "Support between conditional rules",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/41",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T20:23:41Z",
+          "merged_at": "2026-11-15T20:23:40Z",
+          "merge_commit_sha": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "branch": "feat/conditional-between",
+          "base": "main",
+          "base_sha": "c210315bee537776b556ae9885e907483b6df7bd",
+          "fetched_head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 42,
+          "title": "Lift a trailing section break out of a body content control",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/42",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T20:24:56Z",
+          "merged_at": "2026-11-15T20:24:56Z",
+          "merge_commit_sha": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "branch": "fix/sdt-trailing-section-break",
+          "base": "main",
+          "base_sha": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "fetched_head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 43,
+          "title": "Support begins-with and ends-with conditions",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/43",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:05:48Z",
+          "merged_at": "2026-11-15T22:05:48Z",
+          "merge_commit_sha": "b01455fa415f9411411d06c7c2ab66947630af1a",
+          "head": "20681b8658392212c128f51b4c91f0b638942448",
+          "branch": "feat/conditional-affix",
+          "base": "main",
+          "base_sha": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "fetched_head": "20681b8658392212c128f51b4c91f0b638942448",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 44,
+          "title": "Split content controls across multiple document sections",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/44",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:18:55Z",
+          "merged_at": "2026-11-15T22:18:54Z",
+          "merge_commit_sha": "33d36cd0e111fbfdd152c49d54532286fe8e8d2d",
+          "head": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "branch": "fix/sdt-multi-section-control",
+          "base": "main",
+          "base_sha": "7f005ef2592d2c1691762c6f0a3826302fedbdbc",
+          "fetched_head": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 45,
+          "title": "Document remaining Office engine work and update changelogs",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/45",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:22:35Z",
+          "merged_at": "2026-11-15T22:22:34Z",
+          "merge_commit_sha": "d5db3b28384c317809f9926b1fec1653741380ae",
+          "head": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "branch": "docs/remaining-gaps",
+          "base": "main",
+          "base_sha": "33d36cd0e111fbfdd152c49d54532286fe8e8d2d",
+          "fetched_head": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "d5db3b28384c317809f9926b1fec1653741380ae",
+          "tree": "989695b4b987f949dd25db3c736ad14333e5bd73"
+        },
+        {
+          "number": 46,
+          "title": "Link the remaining office-format backlog",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/46",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:24:09Z",
+          "merged_at": "2026-11-15T22:24:09Z",
+          "merge_commit_sha": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+          "head": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "branch": "docs/readme-remaining-gaps",
+          "base": "main",
+          "base_sha": "d5db3b28384c317809f9926b1fec1653741380ae",
+          "fetched_head": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+          "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92"
+        }
+      ],
+      "unaccounted_heads": [],
+      "all_remote_heads_accounted": true,
+      "reconciliation_commits": [
+        {
+          "sha": "ba9451b7426f126187ddd2b4c57f8eeb5b859638",
+          "parents": [
+            "706971b6818d5382e135ea947ce862b27124a46a",
+            "68d5bd8a34e881dcd4c6077493fcde55bbfb0064"
+          ],
+          "subject": "Merge current main through PR46 into Zotero continuation [skip ci]"
+        },
+        {
+          "sha": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+          "parents": [
+            "ba9451b7426f126187ddd2b4c57f8eeb5b859638"
+          ],
+          "subject": "test(zotero): qualify reconciled Office source and document native contract [skip ci]"
+        }
+      ]
+    },
+    "CrispCloud": {
+      "integrated_source_commit": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+      "integrated_source_tree": "7ee36ca36fa3fbae67d9d2a805ee4c3c56514cbe",
+      "local_head_at_audit": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+      "main_at_cutoff": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "main_included_by_ancestry": true,
+      "branch_count": 34,
+      "branch_status_counts": {
+        "included-by-ancestry": 32,
+        "exact-tree-equivalent-to-included-commit": 2
+      },
+      "branches": [
+        {
+          "branch": "codex/ssh-terminal-tmux",
+          "head_at_cutoff": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+        },
+        {
+          "branch": "codex/terminal-screen-workspace",
+          "head_at_cutoff": "a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "bd086eea48525346216c59e0c899b4d33751029b"
+        },
+        {
+          "branch": "codex/zotero-support-20261115",
+          "head_at_cutoff": "f0f3863604ba272149af3b00d165c41abae16521",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "6a53294ad086e2a1c6475d888fbed7dcc2591449"
+        },
+        {
+          "branch": "docs/conditional-affix",
+          "head_at_cutoff": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "4919c87f0225599b9b2b963285d364d2c2bd1a1e"
+        },
+        {
+          "branch": "docs/conditional-between",
+          "head_at_cutoff": "073713474ea62525d9f5832da918407de333cd03",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "073713474ea62525d9f5832da918407de333cd03"
+        },
+        {
+          "branch": "docs/conditional-complete",
+          "head_at_cutoff": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+        },
+        {
+          "branch": "docs/conditional-formats",
+          "head_at_cutoff": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+        },
+        {
+          "branch": "docs/ods-hidden-state",
+          "head_at_cutoff": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+        },
+        {
+          "branch": "docs/ods-pictures",
+          "head_at_cutoff": "128f55295107e3ada605b52d160165e03f726cb4",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "128f55295107e3ada605b52d160165e03f726cb4"
+        },
+        {
+          "branch": "docs/ods-validations",
+          "head_at_cutoff": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+        },
+        {
+          "branch": "docs/office-pin-20261115",
+          "head_at_cutoff": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+        },
+        {
+          "branch": "docs/remaining-gaps",
+          "head_at_cutoff": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "e52d1befb856f9d510cdaea887097759cf745828",
+          "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+          "fetched_head_at_audit": "a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+        },
+        {
+          "branch": "docs/remaining-gaps-link",
+          "head_at_cutoff": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+          "fetched_head_at_audit": "854d2ff6a20206434c64173ddca1152b079c8277"
+        },
+        {
+          "branch": "feat/hidden-sheets-ui",
+          "head_at_cutoff": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+        },
+        {
+          "branch": "feat/odt-headers",
+          "head_at_cutoff": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+        },
+        {
+          "branch": "feat/odt-images",
+          "head_at_cutoff": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+        },
+        {
+          "branch": "feat/odt-styles",
+          "head_at_cutoff": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+        },
+        {
+          "branch": "feat/odt-textboxes",
+          "head_at_cutoff": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+        },
+        {
+          "branch": "fix/conditional-affix-vendor",
+          "head_at_cutoff": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+        },
+        {
+          "branch": "fix/conditional-between-vendor",
+          "head_at_cutoff": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+        },
+        {
+          "branch": "fix/conditional-dxf-vendor",
+          "head_at_cutoff": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "b9b7932eca6213973803b5bb227464cccd3051d6"
+        },
+        {
+          "branch": "fix/conditional-operators-vendor",
+          "head_at_cutoff": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "24ac26de023313dba726f8cdaabd16179c49da01"
+        },
+        {
+          "branch": "fix/conditional-text-vendor",
+          "head_at_cutoff": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+        },
+        {
+          "branch": "fix/hidden-state-vendor",
+          "head_at_cutoff": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+        },
+        {
+          "branch": "fix/ods-conditional-vendor",
+          "head_at_cutoff": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+        },
+        {
+          "branch": "fix/ods-default-geometry-vendor",
+          "head_at_cutoff": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "29a2bb5158a316dcde5da776172e09027e04f78d"
+        },
+        {
+          "branch": "fix/ods-default-style-vendor",
+          "head_at_cutoff": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+        },
+        {
+          "branch": "fix/ods-images-vendor",
+          "head_at_cutoff": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+        },
+        {
+          "branch": "fix/ods-validations-vendor",
+          "head_at_cutoff": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "ee74601e71441fcac2b6defebff33ca04f538d12"
+        },
+        {
+          "branch": "integrate/sdt-section-break-20261115",
+          "head_at_cutoff": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "012314d440c49bc73b6726796fd9930eee6f1830"
+        },
+        {
+          "branch": "integrate/utf16-custom-xml-20261115",
+          "head_at_cutoff": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+        },
+        {
+          "branch": "integration/storage-carving-20261115",
+          "head_at_cutoff": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "5018aebb709b35f1c4d730c06e0f91187727751c"
+        },
+        {
+          "branch": "integration/storage-carving-local-20261115124645",
+          "head_at_cutoff": "10891b06a6da9f2502960cdbfe34b30eed271665",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "10891b06a6da9f2502960cdbfe34b30eed271665"
+        },
+        {
+          "branch": "main",
+          "head_at_cutoff": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "status": "included-by-ancestry",
+          "fetched_head_at_audit": "d1add32cf5f4a14379ae35ca30b123e781558549"
+        }
+      ],
+      "pr_count": 146,
+      "fetched_pr_ref_count": 146,
+      "pr_status_counts": {
+        "included-by-ancestry": 144,
+        "exact-tree-equivalent-to-included-commit": 2
+      },
+      "pull_requests": [
+        {
+          "number": 5,
+          "head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+          "fetched_head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 6,
+          "head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+          "fetched_head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 7,
+          "head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+          "fetched_head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 8,
+          "head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+          "fetched_head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 9,
+          "head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+          "fetched_head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 10,
+          "head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+          "fetched_head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 11,
+          "head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+          "fetched_head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 12,
+          "head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+          "fetched_head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 13,
+          "head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+          "fetched_head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 14,
+          "head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+          "fetched_head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 15,
+          "head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+          "fetched_head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 16,
+          "head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+          "fetched_head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 17,
+          "head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+          "fetched_head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 18,
+          "head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+          "fetched_head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 19,
+          "head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+          "fetched_head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 20,
+          "head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+          "fetched_head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 21,
+          "head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+          "fetched_head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 22,
+          "head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+          "fetched_head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 23,
+          "head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+          "fetched_head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 24,
+          "head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+          "fetched_head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 25,
+          "head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+          "fetched_head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 26,
+          "head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+          "fetched_head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 27,
+          "head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+          "fetched_head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 28,
+          "head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+          "fetched_head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 29,
+          "head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+          "fetched_head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 30,
+          "head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+          "fetched_head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 31,
+          "head": "ab45ac55990233492208549c18f42dfe51e518e4",
+          "fetched_head": "ab45ac55990233492208549c18f42dfe51e518e4",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 32,
+          "head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+          "fetched_head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 33,
+          "head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+          "fetched_head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 34,
+          "head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+          "fetched_head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 35,
+          "head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+          "fetched_head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 36,
+          "head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+          "fetched_head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 37,
+          "head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+          "fetched_head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 38,
+          "head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+          "fetched_head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 39,
+          "head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+          "fetched_head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 40,
+          "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+          "fetched_head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 41,
+          "head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+          "fetched_head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 42,
+          "head": "ea4446482d7ca513160669fbb48e641397c6514f",
+          "fetched_head": "ea4446482d7ca513160669fbb48e641397c6514f",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 43,
+          "head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+          "fetched_head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 45,
+          "head": "f39bcd927f32729e63194f35db019c36802d1c67",
+          "fetched_head": "f39bcd927f32729e63194f35db019c36802d1c67",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 47,
+          "head": "be318f380fc47f94975a35c0924c89190d46f990",
+          "fetched_head": "be318f380fc47f94975a35c0924c89190d46f990",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 49,
+          "head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+          "fetched_head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 50,
+          "head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+          "fetched_head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 51,
+          "head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+          "fetched_head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 52,
+          "head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+          "fetched_head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 53,
+          "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+          "fetched_head": "bffdfbb49433859823081f2198f16e33be8369a6",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 54,
+          "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+          "fetched_head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 55,
+          "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+          "fetched_head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 56,
+          "head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+          "fetched_head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 57,
+          "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+          "fetched_head": "62e438e6836949207b4541b818c1c261bb7104fe",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 58,
+          "head": "9887b53272d5f747cae9f73b363748985937ad05",
+          "fetched_head": "9887b53272d5f747cae9f73b363748985937ad05",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 59,
+          "head": "132f70e746aa9815a51a046ab02e83393d084622",
+          "fetched_head": "132f70e746aa9815a51a046ab02e83393d084622",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 60,
+          "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+          "fetched_head": "f798f27d823ee846b5e6238e167970e0345612ed",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 61,
+          "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+          "fetched_head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 62,
+          "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "fetched_head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 63,
+          "head": "baccf470e946fc86fde41c96443423006eac2be7",
+          "fetched_head": "baccf470e946fc86fde41c96443423006eac2be7",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 64,
+          "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+          "fetched_head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 65,
+          "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+          "fetched_head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 66,
+          "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+          "fetched_head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 67,
+          "head": "403e942dc99779883210125a01841ef209e19d2e",
+          "fetched_head": "403e942dc99779883210125a01841ef209e19d2e",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 68,
+          "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+          "fetched_head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 69,
+          "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+          "fetched_head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 70,
+          "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+          "fetched_head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 71,
+          "head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+          "fetched_head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 72,
+          "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+          "fetched_head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 73,
+          "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+          "fetched_head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 74,
+          "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+          "fetched_head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 75,
+          "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+          "fetched_head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 76,
+          "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+          "fetched_head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 77,
+          "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+          "fetched_head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 78,
+          "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+          "fetched_head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 79,
+          "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+          "fetched_head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 80,
+          "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+          "fetched_head": "fdf8c35014367834570bb89a3902f50fd132e865",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 81,
+          "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+          "fetched_head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 82,
+          "head": "085495527e0ab02f52eeded928d54cb766b79910",
+          "fetched_head": "085495527e0ab02f52eeded928d54cb766b79910",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 83,
+          "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+          "fetched_head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 84,
+          "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+          "fetched_head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 85,
+          "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+          "fetched_head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 86,
+          "head": "120f839ab9091bdbedf326621347ee737140e043",
+          "fetched_head": "120f839ab9091bdbedf326621347ee737140e043",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 87,
+          "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+          "fetched_head": "8b0c01597c231814815bf5456ab0a616102e7307",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 88,
+          "head": "b100cd751688f13609a8829180b487b381588d14",
+          "fetched_head": "b100cd751688f13609a8829180b487b381588d14",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 89,
+          "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+          "fetched_head": "84c3a1172759abdbab0c320142ae190e532f7753",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 90,
+          "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+          "fetched_head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 91,
+          "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+          "fetched_head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 92,
+          "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+          "fetched_head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 93,
+          "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+          "fetched_head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 94,
+          "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+          "fetched_head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 95,
+          "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+          "fetched_head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 97,
+          "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+          "fetched_head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 100,
+          "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+          "fetched_head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 101,
+          "head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+          "fetched_head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 102,
+          "head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "fetched_head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 103,
+          "head": "d504409acc779b670de482247f3231a7247dcd92",
+          "fetched_head": "d504409acc779b670de482247f3231a7247dcd92",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 104,
+          "head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+          "fetched_head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 105,
+          "head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+          "fetched_head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 106,
+          "head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "fetched_head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 107,
+          "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "fetched_head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 108,
+          "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "fetched_head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 109,
+          "head": "1b7680583ac69649b17287ab68738288fec10f51",
+          "fetched_head": "1b7680583ac69649b17287ab68738288fec10f51",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 110,
+          "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+          "fetched_head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 111,
+          "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "fetched_head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 112,
+          "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+          "fetched_head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 113,
+          "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "fetched_head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 114,
+          "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "fetched_head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 115,
+          "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "fetched_head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 116,
+          "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+          "fetched_head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 117,
+          "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+          "fetched_head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 118,
+          "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+          "fetched_head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 119,
+          "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+          "fetched_head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 120,
+          "head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+          "fetched_head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 121,
+          "head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+          "fetched_head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 122,
+          "head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+          "fetched_head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 123,
+          "head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+          "fetched_head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 124,
+          "head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+          "fetched_head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 125,
+          "head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+          "fetched_head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 126,
+          "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "fetched_head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 127,
+          "head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "fetched_head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 128,
+          "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "fetched_head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 129,
+          "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "fetched_head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 130,
+          "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "fetched_head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 131,
+          "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "fetched_head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 132,
+          "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "fetched_head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 133,
+          "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "fetched_head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 134,
+          "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "fetched_head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 135,
+          "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "fetched_head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 136,
+          "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "fetched_head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "metadata_source": "fetched refs/remotes/pull",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 137,
+          "title": "Hide hidden worksheets in the worksheet selector",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/137",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T18:43:16Z",
+          "merged_at": "2026-11-15T18:43:15Z",
+          "merge_commit_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+          "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "branch": "feat/hidden-sheets-ui",
+          "base": "main",
+          "base_sha": "d86ec1903e66a9086b3b350740a07cc16a66971b",
+          "fetched_head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 138,
+          "title": "Record ODS hidden-state and current Quds pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/138",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T18:44:41Z",
+          "merged_at": "2026-11-15T18:44:41Z",
+          "merge_commit_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+          "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "branch": "docs/ods-hidden-state",
+          "base": "main",
+          "base_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+          "fetched_head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 139,
+          "title": "Vendor ODS conditional formats",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/139",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T18:59:38Z",
+          "merged_at": "2026-11-15T18:59:38Z",
+          "merge_commit_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+          "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "branch": "fix/ods-conditional-vendor",
+          "base": "main",
+          "base_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+          "fetched_head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 140,
+          "title": "Extend terminal workspace with jump hosts, shell integration, session discovery and broadcast",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/140",
+          "state": "open",
+          "draft": true,
+          "updated_at": "2026-11-15T22:30:05Z",
+          "merged_at": null,
+          "merge_commit_sha": null,
+          "head": "a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423",
+          "branch": "codex/terminal-screen-workspace",
+          "base": "main",
+          "base_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+          "fetched_head": "bd086eea48525346216c59e0c899b4d33751029b",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 141,
+          "title": "Vendor numeric conditional comparators",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/141",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:03:37Z",
+          "merged_at": "2026-11-15T19:03:36Z",
+          "merge_commit_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+          "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "branch": "fix/conditional-operators-vendor",
+          "base": "main",
+          "base_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+          "fetched_head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 142,
+          "title": "Document numeric ODS conditional formats",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/142",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:05:38Z",
+          "merged_at": "2026-11-15T19:05:37Z",
+          "merge_commit_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+          "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "branch": "docs/conditional-formats",
+          "base": "main",
+          "base_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+          "fetched_head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 143,
+          "title": "Vendor the UTF-16 custom XML bibliography fix",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/143",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:08:32Z",
+          "merged_at": null,
+          "merge_commit_sha": null,
+          "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "branch": "integrate/utf16-custom-xml-20261115",
+          "base": "main",
+          "base_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+          "fetched_head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 144,
+          "title": "Vendor conditional dxf styles",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/144",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:11:36Z",
+          "merged_at": "2026-11-15T19:11:36Z",
+          "merge_commit_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+          "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "branch": "fix/conditional-dxf-vendor",
+          "base": "main",
+          "base_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+          "fetched_head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 145,
+          "title": "Vendor contains-text and duplicate conditional rules",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/145",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:14:58Z",
+          "merged_at": "2026-11-15T19:14:58Z",
+          "merge_commit_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+          "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "branch": "fix/conditional-text-vendor",
+          "base": "main",
+          "base_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+          "fetched_head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 146,
+          "title": "Document complete conditional format subset",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/146",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:16:04Z",
+          "merged_at": "2026-11-15T19:16:04Z",
+          "merge_commit_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+          "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "branch": "docs/conditional-complete",
+          "base": "main",
+          "base_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+          "fetched_head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 147,
+          "title": "Vendor ODS list validations",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/147",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:19:44Z",
+          "merged_at": "2026-11-15T19:19:44Z",
+          "merge_commit_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+          "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "branch": "fix/ods-validations-vendor",
+          "base": "main",
+          "base_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+          "fetched_head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 148,
+          "title": "Document ODS list validations and current pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/148",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T19:20:05Z",
+          "merged_at": "2026-11-15T19:20:05Z",
+          "merge_commit_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+          "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "branch": "docs/ods-validations",
+          "base": "main",
+          "base_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+          "fetched_head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 149,
+          "title": "Add Zotero online and desktop libraries to the Word editor",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/149",
+          "state": "open",
+          "draft": true,
+          "updated_at": "2026-11-15T22:33:05Z",
+          "merged_at": null,
+          "merge_commit_sha": "477f05cb61eef5cbb0201401cd4a8e6a7d18d1d7",
+          "head": "f0f3863604ba272149af3b00d165c41abae16521",
+          "branch": "codex/zotero-support-20261115",
+          "base": "main",
+          "base_sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "fetched_head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 150,
+          "title": "Vendor between conditional rules",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/150",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T20:24:41Z",
+          "merged_at": "2026-11-15T20:24:41Z",
+          "merge_commit_sha": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+          "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "branch": "fix/conditional-between-vendor",
+          "base": "main",
+          "base_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+          "fetched_head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 151,
+          "title": "Record between conditions and current Quds pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/151",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T20:25:04Z",
+          "merged_at": "2026-11-15T20:25:04Z",
+          "merge_commit_sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+          "head": "073713474ea62525d9f5832da918407de333cd03",
+          "branch": "docs/conditional-between",
+          "base": "main",
+          "base_sha": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+          "fetched_head": "073713474ea62525d9f5832da918407de333cd03",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 152,
+          "title": "Vendor the trailing content-control section break fix",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/152",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T20:35:24Z",
+          "merged_at": "2026-11-15T20:35:24Z",
+          "merge_commit_sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "branch": "integrate/sdt-section-break-20261115",
+          "base": "main",
+          "base_sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+          "fetched_head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 153,
+          "title": "Vendor begins-with and ends-with conditions",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/153",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:07:45Z",
+          "merged_at": "2026-11-15T22:07:45Z",
+          "merge_commit_sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+          "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "branch": "fix/conditional-affix-vendor",
+          "base": "main",
+          "base_sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "fetched_head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 154,
+          "title": "Record conditional affix rules and current pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/154",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:08:35Z",
+          "merged_at": "2026-11-15T22:08:34Z",
+          "merge_commit_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+          "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "branch": "docs/conditional-affix",
+          "base": "main",
+          "base_sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+          "fetched_head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "included-by-ancestry"
+        },
+        {
+          "number": 155,
+          "title": "Document the remaining Office format backlog",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/155",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:21:17Z",
+          "merged_at": "2026-11-15T22:21:17Z",
+          "merge_commit_sha": "e52d1befb856f9d510cdaea887097759cf745828",
+          "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "branch": "docs/remaining-gaps",
+          "base": "main",
+          "base_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+          "fetched_head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "e52d1befb856f9d510cdaea887097759cf745828",
+          "tree": "51441da74a9f0b92f610373681e8f23d89f829f6"
+        },
+        {
+          "number": 156,
+          "title": "Refresh verified snapshot in remaining-gaps doc",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/156",
+          "state": "closed",
+          "draft": false,
+          "updated_at": "2026-11-15T22:23:46Z",
+          "merged_at": "2026-11-15T22:23:46Z",
+          "merge_commit_sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "branch": "docs/remaining-gaps-link",
+          "base": "main",
+          "base_sha": "e52d1befb856f9d510cdaea887097759cf745828",
+          "fetched_head": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "metadata_source": "GitHub PR API at cutoff; overrides stale fetched head",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2"
+        }
+      ],
+      "unaccounted_heads": [],
+      "all_remote_heads_accounted": true,
+      "reconciliation_commits": [
+        {
+          "sha": "b9c8ca907ebb7b9d5f36384eec7d99a93d6557bb",
+          "parents": [
+            "f8705ac84322ae45e6c4a22985016b1714885353",
+            "d1add32cf5f4a14379ae35ca30b123e781558549"
+          ],
+          "subject": "Merge current main through PR156 with reconciled Quds source [skip ci]"
+        },
+        {
+          "sha": "f0f3863604ba272149af3b00d165c41abae16521",
+          "parents": [
+            "b9c8ca907ebb7b9d5f36384eec7d99a93d6557bb",
+            "bd086eea48525346216c59e0c899b4d33751029b"
+          ],
+          "subject": "Merge latest terminal workspace and OpenSSH import without losing Zotero work [skip ci]"
+        },
+        {
+          "sha": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+          "parents": [
+            "f0f3863604ba272149af3b00d165c41abae16521",
+            "a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423"
+          ],
+          "subject": "Merge terminal key bindings and SSH routing from final audit snapshot [skip ci]"
+        }
+      ]
+    }
+  },
+  "all_remote_heads_accounted": true
+}

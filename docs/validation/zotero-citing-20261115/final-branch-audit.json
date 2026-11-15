@@ -1,0 +1,4313 @@
+{
+  "recorded_utc": "2026-11-15T22:30:31.252914+00:00",
+  "scope": "Read-only final remote snapshot versus the pre-reconciliation Zotero checkpoints; root may reconcile concurrently",
+  "remote_api_snapshot_utc": "2026-11-15T22:27:26.771Z",
+  "prior_audit_utc": "2026-11-15T22:02:29.168855+00:00",
+  "prior_audit_sha256": "9649ab0ae4c90de426cd892fade9cc49b744321551418b86e67fc252638d8d25",
+  "ci_actions_queried": false,
+  "remote_mutations": [],
+  "canonical_head_index_worktree_mutations_by_auditor": false,
+  "notes": [
+    "Branch API metadata, PR metadata and fetched PR refs are compared against the source checkpoints named in the parent task, not a moving HEAD.",
+    "Parent subsequently merged latest Quds main as ba9451b7 while this audit ran. Current local HEADs are recorded separately.",
+    "Merge previews used isolated scratch GIT_OBJECT_DIRECTORY with canonical object store as read-only alternate.",
+    "A broad patch-ID scan attempted lazy retrieval of missing historic CrispCloud blobs and was canceled when the proxy connection stalled. No patch-ID completeness is claimed. This final receipt uses ancestry, exact trees and changed paths with lazy fetching disabled."
+  ],
+  "repositories": {
+    "quds_office_suite": {
+      "comparison_head": "706971b6818d5382e135ea947ce862b27124a46a",
+      "comparison_tree": "ff328de0e40f6cefb1d9d1100c75348a4fb4dd3f",
+      "local_head_at_receipt": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+      "local_status_at_receipt": "?? docs/validation/zotero-citing-20261115/final/\n?? docs/validation/zotero-citing-20261115/pre-reconciliation/\n?? docs/validation/zotero-citing-20261115/setup-receipt.json",
+      "main": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+      "main_is_ancestor_of_comparison_head": false,
+      "main_is_ancestor_of_current_head": true,
+      "branch_count": 19,
+      "branch_status_counts": {
+        "current": 1,
+        "incoming-distinct-head": 5,
+        "exact-tree-equivalent-to-included-commit": 5,
+        "ancestor": 8
+      },
+      "branches": [
+        {
+          "branch": "codex/zotero-support-20261115",
+          "head": "706971b6818d5382e135ea947ce862b27124a46a",
+          "status": "current",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "ff328de0e40f6cefb1d9d1100c75348a4fb4dd3f"
+          },
+          "previous_head": "f40aa887325982ea70c8285b25f8ff5b92a46eb9",
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+          "fetched_head_matches_api_snapshot": false
+        },
+        {
+          "branch": "docs/readme-remaining-gaps",
+          "head": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "status": "incoming-distinct-head",
+          "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+            "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/remaining-gaps",
+          "head": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "status": "incoming-distinct-head",
+          "tree": "989695b4b987f949dd25db3c736ad14333e5bd73",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "d5db3b28384c317809f9926b1fec1653741380ae",
+            "tree": "989695b4b987f949dd25db3c736ad14333e5bd73"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/conditional-affix",
+          "head": "20681b8658392212c128f51b4c91f0b638942448",
+          "status": "incoming-distinct-head",
+          "tree": "921c5b374484c7169c56e824e4fc2217c8086e17",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "20681b8658392212c128f51b4c91f0b638942448",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/conditional-between",
+          "head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "tree": "1efc6bcb3f5321ed9a8841bd6c40e24ca4097b1d",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/conditional-dxf",
+          "head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/conditional-operators",
+          "head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/conditional-text",
+          "head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/ods-conditional",
+          "head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "e59751246a200e7477657d0e4835bf77b153422c",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/ods-default-geometry",
+          "head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/ods-default-style",
+          "head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "49b447324159595c59e64d8425b54a09f79ec736",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/ods-images",
+          "head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/ods-validations",
+          "head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "c210315bee537776b556ae9885e907483b6df7bd",
+          "tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/sheet-hidden-sheets",
+          "head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/sheet-hidden-state",
+          "head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/sdt-multi-section-control",
+          "head": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "status": "incoming-distinct-head",
+          "tree": "86cf81f36f4691ca0b8bbcd8ca6a738ace48852e",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/sdt-trailing-section-break",
+          "head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/utf16-custom-xml",
+          "head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "main",
+          "head": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+          "status": "incoming-distinct-head",
+          "tree": "64406b4f20db48e086fd998c5e3278c666387be5",
+          "included_by_latest_main": {
+            "status": "current"
+          },
+          "previous_head": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+          "fetched_head_matches_api_snapshot": true
+        }
+      ],
+      "removed_branches": [],
+      "all_fetched_pr_refs": 46,
+      "pr_status_counts": {
+        "ancestor": 37,
+        "exact-tree-equivalent-to-included-commit": 5,
+        "incoming-distinct-head": 4
+      },
+      "pr_heads": [
+        {
+          "number": 1,
+          "head": "54f0f8de01416640560519aa9d732f668f603709",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "54f0f8de01416640560519aa9d732f668f603709",
+          "new_or_changed": false
+        },
+        {
+          "number": 2,
+          "head": "08b09485588d2b6270f594a07c983689c087587d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "08b09485588d2b6270f594a07c983689c087587d",
+          "new_or_changed": false
+        },
+        {
+          "number": 3,
+          "head": "e550723b0f2a7cd849970f58820d260c36857502",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e550723b0f2a7cd849970f58820d260c36857502",
+          "new_or_changed": false
+        },
+        {
+          "number": 4,
+          "head": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+          "new_or_changed": false
+        },
+        {
+          "number": 5,
+          "head": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+          "new_or_changed": false
+        },
+        {
+          "number": 6,
+          "head": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+          "new_or_changed": false
+        },
+        {
+          "number": 7,
+          "head": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+          "new_or_changed": false
+        },
+        {
+          "number": 8,
+          "head": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "new_or_changed": false
+        },
+        {
+          "number": 9,
+          "head": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "new_or_changed": false
+        },
+        {
+          "number": 10,
+          "head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "new_or_changed": false
+        },
+        {
+          "number": 11,
+          "head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "new_or_changed": false
+        },
+        {
+          "number": 12,
+          "head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "new_or_changed": false
+        },
+        {
+          "number": 13,
+          "head": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "new_or_changed": false
+        },
+        {
+          "number": 14,
+          "head": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "new_or_changed": false
+        },
+        {
+          "number": 15,
+          "head": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "new_or_changed": false
+        },
+        {
+          "number": 16,
+          "head": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "new_or_changed": false
+        },
+        {
+          "number": 17,
+          "head": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "new_or_changed": false
+        },
+        {
+          "number": 18,
+          "head": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "new_or_changed": false
+        },
+        {
+          "number": 19,
+          "head": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "new_or_changed": false
+        },
+        {
+          "number": 20,
+          "head": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "new_or_changed": false
+        },
+        {
+          "number": 21,
+          "head": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "new_or_changed": false
+        },
+        {
+          "number": 22,
+          "head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "new_or_changed": false
+        },
+        {
+          "number": 23,
+          "head": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+          "new_or_changed": false
+        },
+        {
+          "number": 24,
+          "head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+          "new_or_changed": false
+        },
+        {
+          "number": 25,
+          "head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "new_or_changed": false
+        },
+        {
+          "number": 26,
+          "head": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5b9ac71db1934252c4b8ae48ac03d4cd976e15ae",
+          "new_or_changed": false
+        },
+        {
+          "number": 27,
+          "head": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "cde05b85bcd00c26d519d43283fcc6b55a1884e7",
+          "new_or_changed": false
+        },
+        {
+          "number": 28,
+          "head": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+          "new_or_changed": false
+        },
+        {
+          "number": 29,
+          "head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "new_or_changed": false
+        },
+        {
+          "number": 30,
+          "head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "new_or_changed": false
+        },
+        {
+          "number": 31,
+          "head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "new_or_changed": false
+        },
+        {
+          "number": 32,
+          "head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "new_or_changed": false
+        },
+        {
+          "number": 33,
+          "head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "new_or_changed": false
+        },
+        {
+          "number": 34,
+          "head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "new_or_changed": false
+        },
+        {
+          "number": 35,
+          "head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "new_or_changed": false
+        },
+        {
+          "number": 36,
+          "head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "new_or_changed": false
+        },
+        {
+          "number": 37,
+          "head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "new_or_changed": false
+        },
+        {
+          "number": 38,
+          "head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "new_or_changed": false
+        },
+        {
+          "number": 39,
+          "head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "c210315bee537776b556ae9885e907483b6df7bd",
+          "tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "new_or_changed": false
+        },
+        {
+          "number": 40,
+          "head": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f40aa887325982ea70c8285b25f8ff5b92a46eb9",
+          "new_or_changed": true
+        },
+        {
+          "number": 41,
+          "head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "status": "exact-tree-equivalent-to-included-commit",
+          "equivalent_commit": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "tree": "1efc6bcb3f5321ed9a8841bd6c40e24ca4097b1d",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "new_or_changed": false
+        },
+        {
+          "number": 42,
+          "head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "new_or_changed": false
+        },
+        {
+          "number": 43,
+          "head": "20681b8658392212c128f51b4c91f0b638942448",
+          "status": "incoming-distinct-head",
+          "tree": "921c5b374484c7169c56e824e4fc2217c8086e17",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 44,
+          "head": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "status": "incoming-distinct-head",
+          "tree": "86cf81f36f4691ca0b8bbcd8ca6a738ace48852e",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 45,
+          "head": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "status": "incoming-distinct-head",
+          "tree": "989695b4b987f949dd25db3c736ad14333e5bd73",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "d5db3b28384c317809f9926b1fec1653741380ae",
+            "tree": "989695b4b987f949dd25db3c736ad14333e5bd73"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 46,
+          "head": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "status": "incoming-distinct-head",
+          "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+            "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        }
+      ],
+      "new_or_changed_pr_heads": [
+        {
+          "number": 40,
+          "head": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f40aa887325982ea70c8285b25f8ff5b92a46eb9",
+          "new_or_changed": true
+        },
+        {
+          "number": 43,
+          "head": "20681b8658392212c128f51b4c91f0b638942448",
+          "status": "incoming-distinct-head",
+          "tree": "921c5b374484c7169c56e824e4fc2217c8086e17",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 44,
+          "head": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "status": "incoming-distinct-head",
+          "tree": "86cf81f36f4691ca0b8bbcd8ca6a738ace48852e",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 45,
+          "head": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "status": "incoming-distinct-head",
+          "tree": "989695b4b987f949dd25db3c736ad14333e5bd73",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "d5db3b28384c317809f9926b1fec1653741380ae",
+            "tree": "989695b4b987f949dd25db3c736ad14333e5bd73"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 46,
+          "head": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "status": "incoming-distinct-head",
+          "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+            "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        }
+      ],
+      "recent_prs": [
+        {
+          "number": 46,
+          "title": "Link the remaining office-format backlog",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/46",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:24:06Z",
+          "updated_at": "2026-11-15T22:24:09Z",
+          "closed_at": "2026-11-15T22:24:09Z",
+          "merged_at": "2026-11-15T22:24:09Z",
+          "merge_commit_sha": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+          "head": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+          "branch": "docs/readme-remaining-gaps",
+          "base": "main",
+          "base_sha": "d5db3b28384c317809f9926b1fec1653741380ae",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92"
+          }
+        },
+        {
+          "number": 45,
+          "title": "Document remaining Office engine work and update changelogs",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/45",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:22:29Z",
+          "updated_at": "2026-11-15T22:22:35Z",
+          "closed_at": "2026-11-15T22:22:35Z",
+          "merged_at": "2026-11-15T22:22:34Z",
+          "merge_commit_sha": "d5db3b28384c317809f9926b1fec1653741380ae",
+          "head": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+          "branch": "docs/remaining-gaps",
+          "base": "main",
+          "base_sha": "33d36cd0e111fbfdd152c49d54532286fe8e8d2d",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "989695b4b987f949dd25db3c736ad14333e5bd73"
+          }
+        },
+        {
+          "number": 44,
+          "title": "Split content controls across multiple document sections",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/44",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:18:46Z",
+          "updated_at": "2026-11-15T22:18:55Z",
+          "closed_at": "2026-11-15T22:18:55Z",
+          "merged_at": "2026-11-15T22:18:54Z",
+          "merge_commit_sha": "33d36cd0e111fbfdd152c49d54532286fe8e8d2d",
+          "head": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+          "branch": "fix/sdt-multi-section-control",
+          "base": "main",
+          "base_sha": "7f005ef2592d2c1691762c6f0a3826302fedbdbc",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "86cf81f36f4691ca0b8bbcd8ca6a738ace48852e"
+          }
+        },
+        {
+          "number": 40,
+          "title": "Add Zotero online and desktop libraries with DOCX citation fields",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/40",
+          "state": "closed",
+          "draft": true,
+          "created_at": "2026-11-15T19:40:20Z",
+          "updated_at": "2026-11-15T22:12:58Z",
+          "closed_at": "2026-11-15T22:12:58Z",
+          "merged_at": "2026-11-15T22:12:58Z",
+          "merge_commit_sha": "3304f42ee17b52659a82d5714dcc730184050960",
+          "head": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+          "branch": "codex/zotero-support-20261115",
+          "base": "main",
+          "base_sha": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 43,
+          "title": "Support begins-with and ends-with conditions",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/43",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:05:44Z",
+          "updated_at": "2026-11-15T22:05:48Z",
+          "closed_at": "2026-11-15T22:05:48Z",
+          "merged_at": "2026-11-15T22:05:48Z",
+          "merge_commit_sha": "b01455fa415f9411411d06c7c2ab66947630af1a",
+          "head": "20681b8658392212c128f51b4c91f0b638942448",
+          "branch": "feat/conditional-affix",
+          "base": "main",
+          "base_sha": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "921c5b374484c7169c56e824e4fc2217c8086e17"
+          }
+        },
+        {
+          "number": 42,
+          "title": "Lift a trailing section break out of a body content control",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/42",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T20:24:49Z",
+          "updated_at": "2026-11-15T20:24:56Z",
+          "closed_at": "2026-11-15T20:24:56Z",
+          "merged_at": "2026-11-15T20:24:56Z",
+          "merge_commit_sha": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "branch": "fix/sdt-trailing-section-break",
+          "base": "main",
+          "base_sha": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 41,
+          "title": "Support between conditional rules",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/41",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T20:23:38Z",
+          "updated_at": "2026-11-15T20:23:41Z",
+          "closed_at": "2026-11-15T20:23:41Z",
+          "merged_at": "2026-11-15T20:23:40Z",
+          "merge_commit_sha": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "branch": "feat/conditional-between",
+          "base": "main",
+          "base_sha": "c210315bee537776b556ae9885e907483b6df7bd",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "42b7f1e767454a962ef3a21342eac335bbf925db",
+            "tree": "1efc6bcb3f5321ed9a8841bd6c40e24ca4097b1d"
+          }
+        },
+        {
+          "number": 39,
+          "title": "Import ODS list validations",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/39",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:18:31Z",
+          "updated_at": "2026-11-15T19:18:35Z",
+          "closed_at": "2026-11-15T19:18:35Z",
+          "merged_at": "2026-11-15T19:18:34Z",
+          "merge_commit_sha": "c210315bee537776b556ae9885e907483b6df7bd",
+          "head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "branch": "feat/ods-validations",
+          "base": "main",
+          "base_sha": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "c210315bee537776b556ae9885e907483b6df7bd",
+            "tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5"
+          }
+        },
+        {
+          "number": 38,
+          "title": "Import ODS contains-text and duplicate rules",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/38",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:13:53Z",
+          "updated_at": "2026-11-15T19:13:56Z",
+          "closed_at": "2026-11-15T19:13:56Z",
+          "merged_at": "2026-11-15T19:13:56Z",
+          "merge_commit_sha": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "branch": "feat/conditional-text",
+          "base": "main",
+          "base_sha": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+            "tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5"
+          }
+        },
+        {
+          "number": 37,
+          "title": "Emit conditional dxf styles for generated rules",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/37",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:10:33Z",
+          "updated_at": "2026-11-15T19:10:36Z",
+          "closed_at": "2026-11-15T19:10:36Z",
+          "merged_at": "2026-11-15T19:10:36Z",
+          "merge_commit_sha": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "branch": "feat/conditional-dxf",
+          "base": "main",
+          "base_sha": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+            "tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7"
+          }
+        },
+        {
+          "number": 36,
+          "title": "Support the full numeric conditional comparators",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/36",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:01:53Z",
+          "updated_at": "2026-11-15T19:01:57Z",
+          "closed_at": "2026-11-15T19:01:57Z",
+          "merged_at": "2026-11-15T19:01:57Z",
+          "merge_commit_sha": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "branch": "feat/conditional-operators",
+          "base": "main",
+          "base_sha": "1d7fee380def59d5a766cab106e519952d5c3292",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+            "tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c"
+          }
+        },
+        {
+          "number": 35,
+          "title": "Import ODS conditional formats and paint matches",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/35",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T18:57:23Z",
+          "updated_at": "2026-11-15T18:57:27Z",
+          "closed_at": "2026-11-15T18:57:27Z",
+          "merged_at": "2026-11-15T18:57:27Z",
+          "merge_commit_sha": "1d7fee380def59d5a766cab106e519952d5c3292",
+          "head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "branch": "feat/ods-conditional",
+          "base": "main",
+          "base_sha": "7b3b0bbba3a8530678d77325bbec1091f6aae9c9",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 34,
+          "title": "Accept UTF-16 custom XML while probing bibliography ownership",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/34",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T18:49:19Z",
+          "updated_at": "2026-11-15T18:49:26Z",
+          "closed_at": "2026-11-15T18:49:26Z",
+          "merged_at": "2026-11-15T18:49:26Z",
+          "merge_commit_sha": "7b3b0bbba3a8530678d77325bbec1091f6aae9c9",
+          "head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "branch": "fix/utf16-custom-xml",
+          "base": "main",
+          "base_sha": "3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 33,
+          "title": "Preserve hidden ODS worksheets",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/33",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T18:39:19Z",
+          "updated_at": "2026-11-15T18:39:22Z",
+          "closed_at": "2026-11-15T18:39:22Z",
+          "merged_at": "2026-11-15T18:39:22Z",
+          "merge_commit_sha": "3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa",
+          "head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "branch": "feat/sheet-hidden-sheets",
+          "base": "main",
+          "base_sha": "49769a21ba26cf2866ee26c66938d3ce8d5ad3d9",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 32,
+          "title": "Preserve hidden ODS rows and columns",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/32",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T16:51:29Z",
+          "updated_at": "2026-11-15T16:51:32Z",
+          "closed_at": "2026-11-15T16:51:32Z",
+          "merged_at": "2026-11-15T16:51:32Z",
+          "merge_commit_sha": "a6c9d7efc3b986baac52d1237deb5f50a162db3a",
+          "head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "branch": "feat/sheet-hidden-state",
+          "base": "main",
+          "base_sha": "2f47132206a88c6dd0f724a665fb6b7158cf3a57",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 31,
+          "title": "Honor nameless ODS default styles and geometry",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/31",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T16:45:49Z",
+          "updated_at": "2026-11-15T16:45:53Z",
+          "closed_at": "2026-11-15T16:45:53Z",
+          "merged_at": "2026-11-15T16:45:53Z",
+          "merge_commit_sha": "2f47132206a88c6dd0f724a665fb6b7158cf3a57",
+          "head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "branch": "feat/ods-default-geometry",
+          "base": "main",
+          "base_sha": "39761edb40a140fc488b3bdb0ddc36dbee557a93",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 30,
+          "title": "Apply ODS document default cell styles",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/30",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T16:25:29Z",
+          "updated_at": "2026-11-15T16:25:32Z",
+          "closed_at": "2026-11-15T16:25:32Z",
+          "merged_at": "2026-11-15T16:25:32Z",
+          "merge_commit_sha": "39761edb40a140fc488b3bdb0ddc36dbee557a93",
+          "head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "branch": "feat/ods-default-style",
+          "base": "main",
+          "base_sha": "5532d598499eceac0a75098fda3d54bfd9515ed0",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 28,
+          "title": "Prove edited XLSM/XLTX saves preserve package type",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/28",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T13:51:21Z",
+          "updated_at": "2026-11-15T14:59:45Z",
+          "closed_at": "2026-11-15T14:17:35Z",
+          "merged_at": "2026-11-15T14:17:35Z",
+          "merge_commit_sha": "93b138d48fe12e1a49c9587e228b792c4e49f6f5",
+          "head": "a8cd28d8af8ca966e8c4259862587ecc9aade2f4",
+          "branch": "test/xlsm-preservation",
+          "base": "main",
+          "base_sha": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 25,
+          "title": "Accept OOXML step vocabulary, keep all Word underline styles, continue formatting after a split",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/25",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T10:29:04Z",
+          "updated_at": "2026-11-15T14:59:44Z",
+          "closed_at": "2026-11-15T11:30:45Z",
+          "merged_at": "2026-11-15T11:30:45Z",
+          "merge_commit_sha": "25240781e0fdac36bc9d1bf75d6d3e4bc6c3c279",
+          "head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "branch": "fix/word-steps-vocabulary",
+          "base": "main",
+          "base_sha": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 22,
+          "title": "Keep inline pictures inside their line of text",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/22",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T06:49:32Z",
+          "updated_at": "2026-11-15T14:59:44Z",
+          "closed_at": "2026-11-15T07:11:20Z",
+          "merged_at": "2026-11-15T07:11:20Z",
+          "merge_commit_sha": "62af42d0f241bfd78559124cbf78c5143faa50be",
+          "head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "branch": "fix/word-inline-pictures",
+          "base": "main",
+          "base_sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        }
+      ],
+      "incoming": {
+        "main": {
+          "head": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+          "commit_count": 24,
+          "non_merge_commit_count": 12,
+          "commits": [
+            {
+              "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+              "parents": [
+                "c210315bee537776b556ae9885e907483b6df7bd"
+              ],
+              "subject": "feat(sheet): support between conditional rules",
+              "committed_at": "2026-11-15T21:23:33+01:00",
+              "tree": "1efc6bcb3f5321ed9a8841bd6c40e24ca4097b1d",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ],
+              "exact_tree_equivalent_to_local_commit": "42b7f1e767454a962ef3a21342eac335bbf925db"
+            },
+            {
+              "sha": "99145ce56af0448f1a93b67fcd18fb2280a96096",
+              "parents": [
+                "f40aa887325982ea70c8285b25f8ff5b92a46eb9",
+                "b69bad50fb235118a5334b325683cd1524b3e3d1"
+              ],
+              "subject": "Record already integrated Office branch history",
+              "committed_at": "2026-11-15T23:04:26+01:00",
+              "tree": "04b9e6f69b342149a46cfecb7f8c11d84672d801"
+            },
+            {
+              "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+              "parents": [
+                "8815cec9705f8a0b099f83f38d5eca75c5564171"
+              ],
+              "subject": "fix(sheet): emit conditional dxf styles for generated rules",
+              "committed_at": "2026-11-15T20:10:29+01:00",
+              "tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ],
+              "exact_tree_equivalent_to_local_commit": "85f5109c8067133bc30942d71b0be6ea9d9bf68c"
+            },
+            {
+              "sha": "c21f4f30350ef66cae3057c01faca66a0dbd37c6",
+              "parents": [
+                "99145ce56af0448f1a93b67fcd18fb2280a96096",
+                "b0efe6c661009ffa463f2bf6d7945216ce1dae4c"
+              ],
+              "subject": "Record already integrated Office branch history",
+              "committed_at": "2026-11-15T23:04:26+01:00",
+              "tree": "04b9e6f69b342149a46cfecb7f8c11d84672d801"
+            },
+            {
+              "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+              "parents": [
+                "1d7fee380def59d5a766cab106e519952d5c3292"
+              ],
+              "subject": "feat(sheet): support the full numeric conditional comparators",
+              "committed_at": "2026-11-15T20:01:49+01:00",
+              "tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ],
+              "exact_tree_equivalent_to_local_commit": "8815cec9705f8a0b099f83f38d5eca75c5564171"
+            },
+            {
+              "sha": "9491d8d7ac351947cae8a930e99d3dc65f985c21",
+              "parents": [
+                "c21f4f30350ef66cae3057c01faca66a0dbd37c6",
+                "21de3c3963b0334068b87fb1c25c787660cb17cf"
+              ],
+              "subject": "Record already integrated Office branch history",
+              "committed_at": "2026-11-15T23:04:26+01:00",
+              "tree": "04b9e6f69b342149a46cfecb7f8c11d84672d801"
+            },
+            {
+              "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+              "parents": [
+                "85f5109c8067133bc30942d71b0be6ea9d9bf68c"
+              ],
+              "subject": "feat(sheet): import ODS contains-text and duplicate rules",
+              "committed_at": "2026-11-15T20:13:49+01:00",
+              "tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ],
+              "exact_tree_equivalent_to_local_commit": "9f1efe0758f5e67f10cec05883cc587a3b08b14c"
+            },
+            {
+              "sha": "ec7576bbcbffb6e82e9ae07913ef0f265730d007",
+              "parents": [
+                "9491d8d7ac351947cae8a930e99d3dc65f985c21",
+                "752a94dfddf69522429f3025f9d25702499cb6da"
+              ],
+              "subject": "Record already integrated Office branch history",
+              "committed_at": "2026-11-15T23:04:26+01:00",
+              "tree": "04b9e6f69b342149a46cfecb7f8c11d84672d801"
+            },
+            {
+              "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+              "parents": [
+                "9f1efe0758f5e67f10cec05883cc587a3b08b14c"
+              ],
+              "subject": "feat(sheet): import ODS list validations",
+              "committed_at": "2026-11-15T20:18:28+01:00",
+              "tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ],
+              "exact_tree_equivalent_to_local_commit": "c210315bee537776b556ae9885e907483b6df7bd"
+            },
+            {
+              "sha": "2f46160555935e21bb632076dc9d1caee1b56553",
+              "parents": [
+                "ec7576bbcbffb6e82e9ae07913ef0f265730d007",
+                "b85501b2810e537e21040d82528d8dbaa6fdcf15"
+              ],
+              "subject": "Record already integrated Office branch history",
+              "committed_at": "2026-11-15T23:04:27+01:00",
+              "tree": "04b9e6f69b342149a46cfecb7f8c11d84672d801"
+            },
+            {
+              "sha": "b01455fa415f9411411d06c7c2ab66947630af1a",
+              "parents": [
+                "b2d5331f49001af189118d90af208cbc1ee2ae67"
+              ],
+              "subject": "feat(sheet): support begins-with and ends-with conditions (#43)",
+              "committed_at": "2026-11-15T23:05:47+01:00",
+              "tree": "921c5b374484c7169c56e824e4fc2217c8086e17",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ]
+            },
+            {
+              "sha": "8c04caf9c7bba2607d65b99c76a166de90fcbf07",
+              "parents": [
+                "2f46160555935e21bb632076dc9d1caee1b56553",
+                "b01455fa415f9411411d06c7c2ab66947630af1a"
+              ],
+              "subject": "Merge remote-tracking branch 'origin/main' into integrate/current-quds-20261115",
+              "committed_at": "2026-11-15T23:09:03+01:00",
+              "tree": "6573b8b93b0a31424864ab2ba609363ce1a822f9"
+            },
+            {
+              "sha": "3d193455894c563bb96ecd3ef6170a1533a0a9f4",
+              "parents": [
+                "8c04caf9c7bba2607d65b99c76a166de90fcbf07",
+                "e6050a2966873a717a0f120c76b79dee97cb90f0"
+              ],
+              "subject": "Merge remote-tracking branch 'origin/codex/zotero-support-20261115' into integrate/current-quds-20261115",
+              "committed_at": "2026-11-15T23:09:28+01:00",
+              "tree": "bc9346a5f07b7e820c630ad9c2fc410a754bc5f6"
+            },
+            {
+              "sha": "3304f42ee17b52659a82d5714dcc730184050960",
+              "parents": [
+                "3d193455894c563bb96ecd3ef6170a1533a0a9f4",
+                "8855b88a96b5c94349e3b5278c339228a1688c3e"
+              ],
+              "subject": "Merge remote-tracking branch 'origin/codex/zotero-support-20261115' into integrate/current-quds-20261115",
+              "committed_at": "2026-11-15T23:12:03+01:00",
+              "tree": "108e757e4d507edf590c6e37c1829e26e6bcab1e"
+            },
+            {
+              "sha": "7f005ef2592d2c1691762c6f0a3826302fedbdbc",
+              "parents": [
+                "3304f42ee17b52659a82d5714dcc730184050960"
+              ],
+              "subject": "Clarify integrated Zotero citing engine and pending live acceptance",
+              "committed_at": "2026-11-15T23:13:04+01:00",
+              "tree": "7433e4ef3a946ce2d627ff5ccf284f2fb132cd59",
+              "changed_paths": [
+                "README.md"
+              ]
+            },
+            {
+              "sha": "16942b28be7ce93cb86293e5c5ff2e7db3f57450",
+              "parents": [
+                "7f005ef2592d2c1691762c6f0a3826302fedbdbc"
+              ],
+              "subject": "Keep Zotero citing additions clean under fatal analyzer infos",
+              "committed_at": "2026-11-15T23:19:07+01:00",
+              "tree": "f95870b5aeb49d1629d6098bfbdd122b1d7aacc0",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+                "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+                "packages/quds_office_engine/lib/src/zotero/zotero_models.dart"
+              ]
+            },
+            {
+              "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+              "parents": [
+                "7f005ef2592d2c1691762c6f0a3826302fedbdbc"
+              ],
+              "subject": "Split content controls across multiple document sections",
+              "committed_at": "2026-11-15T23:18:41+01:00",
+              "tree": "86cf81f36f4691ca0b8bbcd8ca6a738ace48852e",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+                "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+                "packages/quds_office_engine/test/word_content_control_fidelity_test.dart"
+              ]
+            },
+            {
+              "sha": "33d36cd0e111fbfdd152c49d54532286fe8e8d2d",
+              "parents": [
+                "7f005ef2592d2c1691762c6f0a3826302fedbdbc",
+                "866c14f0b3a876e11732bc544dc25a05d8f10524"
+              ],
+              "subject": "Merge pull request #44 from CrispStrobe/fix/sdt-multi-section-control",
+              "committed_at": "2026-11-15T23:18:54+01:00",
+              "tree": "86cf81f36f4691ca0b8bbcd8ca6a738ace48852e"
+            },
+            {
+              "sha": "7f50904ded862e3209cafa4177d2eeeadccdb686",
+              "parents": [
+                "16942b28be7ce93cb86293e5c5ff2e7db3f57450",
+                "33d36cd0e111fbfdd152c49d54532286fe8e8d2d"
+              ],
+              "subject": "Merge remote-tracking branch 'origin/main' into integrate/current-quds-20261115",
+              "committed_at": "2026-11-15T23:21:29+01:00",
+              "tree": "bc1ba8d9ab09c4244d8aa9ebd6a14cca417985fb"
+            },
+            {
+              "sha": "20681b8658392212c128f51b4c91f0b638942448",
+              "parents": [
+                "b2d5331f49001af189118d90af208cbc1ee2ae67"
+              ],
+              "subject": "feat(sheet): support begins-with and ends-with conditions",
+              "committed_at": "2026-11-15T23:05:38+01:00",
+              "tree": "921c5b374484c7169c56e824e4fc2217c8086e17",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+              ],
+              "exact_tree_equivalent_to_other_incoming_commit": "b01455fa415f9411411d06c7c2ab66947630af1a"
+            },
+            {
+              "sha": "68b4afd67053fd2677b6487ed67a9e5767f5744b",
+              "parents": [
+                "7f50904ded862e3209cafa4177d2eeeadccdb686",
+                "20681b8658392212c128f51b4c91f0b638942448"
+              ],
+              "subject": "Record integrated conditional-affix branch history",
+              "committed_at": "2026-11-15T23:21:54+01:00",
+              "tree": "bc1ba8d9ab09c4244d8aa9ebd6a14cca417985fb"
+            },
+            {
+              "sha": "d5db3b28384c317809f9926b1fec1653741380ae",
+              "parents": [
+                "33d36cd0e111fbfdd152c49d54532286fe8e8d2d"
+              ],
+              "subject": "Document remaining Office engine work and update changelogs (#45)",
+              "committed_at": "2026-11-15T23:22:34+01:00",
+              "tree": "989695b4b987f949dd25db3c736ad14333e5bd73",
+              "changed_paths": [
+                "docs/office-remaining-gaps.md",
+                "packages/quds_office_editor/CHANGELOG.md",
+                "packages/quds_office_engine/CHANGELOG.md"
+              ]
+            },
+            {
+              "sha": "b4b00a883348ad9864a4433fe4edbfad4958523a",
+              "parents": [
+                "d5db3b28384c317809f9926b1fec1653741380ae"
+              ],
+              "subject": "Link the remaining office-format backlog (#46)",
+              "committed_at": "2026-11-15T23:24:08+01:00",
+              "tree": "56cc9fb26ec42ce335f7cea0698a34435696fc92",
+              "changed_paths": [
+                "README.md"
+              ]
+            },
+            {
+              "sha": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+              "parents": [
+                "68b4afd67053fd2677b6487ed67a9e5767f5744b",
+                "b4b00a883348ad9864a4433fe4edbfad4958523a"
+              ],
+              "subject": "Merge remote-tracking branch 'origin/main' into integrate/current-quds-20261115",
+              "committed_at": "2026-11-15T23:25:18+01:00",
+              "tree": "64406b4f20db48e086fd998c5e3278c666387be5"
+            }
+          ]
+        }
+      }
+    },
+    "CrispCloud": {
+      "comparison_head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+      "comparison_tree": "418827298a6a09733be9d834a6f07e8f9ac57fff",
+      "local_head_at_receipt": "f8705ac84322ae45e6c4a22985016b1714885353",
+      "local_status_at_receipt": "M  docs/file-format-viewers.md\nM  docs/office-engine-strategy.md\nA  docs/office-remaining-gaps-20261115.md\nUU packages/QUDS_FORKS.md\nMM packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart\nMM packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart\nMM packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart\nMM packages/quds_office_engine/test/ods_sheet_reader_test.dart\nUU tool/office_fidelity_manifest.json\n?? docs/validation/zotero-citing-20261115/README.md\n?? docs/validation/zotero-citing-20261115/run-host-validation.py",
+      "main": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "main_is_ancestor_of_comparison_head": false,
+      "main_is_ancestor_of_current_head": false,
+      "branch_count": 34,
+      "branch_status_counts": {
+        "ancestor": 27,
+        "incoming-distinct-head": 6,
+        "current": 1
+      },
+      "branches": [
+        {
+          "branch": "codex/ssh-terminal-tmux",
+          "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "codex/terminal-screen-workspace",
+          "head": "bd086eea48525346216c59e0c899b4d33751029b",
+          "status": "incoming-distinct-head",
+          "tree": "6d486faa4874cba62c511de7ee24555d0c145609",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "6d486faa4874cba62c511de7ee24555d0c145609"
+          },
+          "previous_head": "4cd8065aec7ade066a0a9f34438288c09d866333",
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "bd086eea48525346216c59e0c899b4d33751029b",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "codex/zotero-support-20261115",
+          "head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+          "status": "current",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "418827298a6a09733be9d834a6f07e8f9ac57fff"
+          },
+          "previous_head": "fe22a0458acfa90c0cce457d20fecbaa85a260e6",
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "f8705ac84322ae45e6c4a22985016b1714885353",
+          "fetched_head_matches_api_snapshot": false
+        },
+        {
+          "branch": "docs/conditional-affix",
+          "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "status": "incoming-distinct-head",
+          "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+            "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/conditional-between",
+          "head": "073713474ea62525d9f5832da918407de333cd03",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+            "tree": "19aa47714e57658028ce19c336b80da2fa05e967"
+          },
+          "previous_head": "073713474ea62525d9f5832da918407de333cd03",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "073713474ea62525d9f5832da918407de333cd03",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/conditional-complete",
+          "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+            "tree": "da02e789e7eb64258af155086b4da2336e40cfe9"
+          },
+          "previous_head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/conditional-formats",
+          "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+            "tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae"
+          },
+          "previous_head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/ods-hidden-state",
+          "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+            "tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111"
+          },
+          "previous_head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/ods-pictures",
+          "head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "128f55295107e3ada605b52d160165e03f726cb4",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/ods-validations",
+          "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+            "tree": "b46b96d6ede506583d37f0d885892f0bac260cff"
+          },
+          "previous_head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/office-pin-20261115",
+          "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/remaining-gaps",
+          "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "status": "incoming-distinct-head",
+          "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "e52d1befb856f9d510cdaea887097759cf745828",
+            "tree": "51441da74a9f0b92f610373681e8f23d89f829f6"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "docs/remaining-gaps-link",
+          "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "status": "incoming-distinct-head",
+          "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "d1add32cf5f4a14379ae35ca30b123e781558549",
+            "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/hidden-sheets-ui",
+          "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "45370df56a6ea01ae8597294ee5522d91676079d",
+            "tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858"
+          },
+          "previous_head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/odt-headers",
+          "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/odt-images",
+          "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/odt-styles",
+          "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "feat/odt-textboxes",
+          "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/conditional-affix-vendor",
+          "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "status": "incoming-distinct-head",
+          "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+            "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8"
+          },
+          "previous_head": null,
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/conditional-between-vendor",
+          "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+            "tree": "149261a6dcddf061726466e1d98e47b8a11f2c30"
+          },
+          "previous_head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/conditional-dxf-vendor",
+          "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "110824c7c964419e7feae100cc94f47c1ed92d59",
+            "tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b"
+          },
+          "previous_head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/conditional-operators-vendor",
+          "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+            "tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39"
+          },
+          "previous_head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/conditional-text-vendor",
+          "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "0198e9626eaec828eccd6a8f63378e1286871017",
+            "tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55"
+          },
+          "previous_head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/hidden-state-vendor",
+          "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/ods-conditional-vendor",
+          "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+            "tree": "3b86bb4bc05d386957be7fe7b3208156a965e685"
+          },
+          "previous_head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/ods-default-geometry-vendor",
+          "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/ods-default-style-vendor",
+          "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/ods-images-vendor",
+          "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "fix/ods-validations-vendor",
+          "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+            "tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de"
+          },
+          "previous_head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "integrate/sdt-section-break-20261115",
+          "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "integrate/utf16-custom-xml-20261115",
+          "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "4ec2a641f712fe1a7aab76672b4452a97fc8a2a8"
+          },
+          "previous_head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "integration/storage-carving-20261115",
+          "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "integration/storage-carving-local-20261115124645",
+          "head": "10891b06a6da9f2502960cdbfe34b30eed271665",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_head": "10891b06a6da9f2502960cdbfe34b30eed271665",
+          "new_or_changed": false,
+          "fetched_head_at_receipt": "10891b06a6da9f2502960cdbfe34b30eed271665",
+          "fetched_head_matches_api_snapshot": true
+        },
+        {
+          "branch": "main",
+          "head": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "status": "incoming-distinct-head",
+          "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+          "included_by_latest_main": {
+            "status": "current"
+          },
+          "previous_head": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "new_or_changed": true,
+          "fetched_head_at_receipt": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "fetched_head_matches_api_snapshot": true
+        }
+      ],
+      "removed_branches": [],
+      "all_fetched_pr_refs": 146,
+      "pr_status_counts": {
+        "ancestor": 140,
+        "incoming-distinct-head": 5,
+        "current": 1
+      },
+      "pr_heads": [
+        {
+          "number": 5,
+          "head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+          "new_or_changed": false
+        },
+        {
+          "number": 6,
+          "head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+          "new_or_changed": false
+        },
+        {
+          "number": 7,
+          "head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+          "new_or_changed": false
+        },
+        {
+          "number": 8,
+          "head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+          "new_or_changed": false
+        },
+        {
+          "number": 9,
+          "head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+          "new_or_changed": false
+        },
+        {
+          "number": 10,
+          "head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+          "new_or_changed": false
+        },
+        {
+          "number": 11,
+          "head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+          "new_or_changed": false
+        },
+        {
+          "number": 12,
+          "head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+          "new_or_changed": false
+        },
+        {
+          "number": 13,
+          "head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+          "new_or_changed": false
+        },
+        {
+          "number": 14,
+          "head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+          "new_or_changed": false
+        },
+        {
+          "number": 15,
+          "head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+          "new_or_changed": false
+        },
+        {
+          "number": 16,
+          "head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+          "new_or_changed": false
+        },
+        {
+          "number": 17,
+          "head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+          "new_or_changed": false
+        },
+        {
+          "number": 18,
+          "head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+          "new_or_changed": false
+        },
+        {
+          "number": 19,
+          "head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+          "new_or_changed": false
+        },
+        {
+          "number": 20,
+          "head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+          "new_or_changed": false
+        },
+        {
+          "number": 21,
+          "head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+          "new_or_changed": false
+        },
+        {
+          "number": 22,
+          "head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+          "new_or_changed": false
+        },
+        {
+          "number": 23,
+          "head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+          "new_or_changed": false
+        },
+        {
+          "number": 24,
+          "head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+          "new_or_changed": false
+        },
+        {
+          "number": 25,
+          "head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+          "new_or_changed": false
+        },
+        {
+          "number": 26,
+          "head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+          "new_or_changed": false
+        },
+        {
+          "number": 27,
+          "head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+          "new_or_changed": false
+        },
+        {
+          "number": 28,
+          "head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+          "new_or_changed": false
+        },
+        {
+          "number": 29,
+          "head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+          "new_or_changed": false
+        },
+        {
+          "number": 30,
+          "head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+          "new_or_changed": false
+        },
+        {
+          "number": 31,
+          "head": "ab45ac55990233492208549c18f42dfe51e518e4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "ab45ac55990233492208549c18f42dfe51e518e4",
+          "new_or_changed": false
+        },
+        {
+          "number": 32,
+          "head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+          "new_or_changed": false
+        },
+        {
+          "number": 33,
+          "head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+          "new_or_changed": false
+        },
+        {
+          "number": 34,
+          "head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+          "new_or_changed": false
+        },
+        {
+          "number": 35,
+          "head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+          "new_or_changed": false
+        },
+        {
+          "number": 36,
+          "head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+          "new_or_changed": false
+        },
+        {
+          "number": 37,
+          "head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+          "new_or_changed": false
+        },
+        {
+          "number": 38,
+          "head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+          "new_or_changed": false
+        },
+        {
+          "number": 39,
+          "head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+          "new_or_changed": false
+        },
+        {
+          "number": 40,
+          "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+          "new_or_changed": false
+        },
+        {
+          "number": 41,
+          "head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+          "new_or_changed": false
+        },
+        {
+          "number": 42,
+          "head": "ea4446482d7ca513160669fbb48e641397c6514f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "ea4446482d7ca513160669fbb48e641397c6514f",
+          "new_or_changed": false
+        },
+        {
+          "number": 43,
+          "head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+          "new_or_changed": false
+        },
+        {
+          "number": 45,
+          "head": "f39bcd927f32729e63194f35db019c36802d1c67",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f39bcd927f32729e63194f35db019c36802d1c67",
+          "new_or_changed": false
+        },
+        {
+          "number": 47,
+          "head": "be318f380fc47f94975a35c0924c89190d46f990",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "be318f380fc47f94975a35c0924c89190d46f990",
+          "new_or_changed": false
+        },
+        {
+          "number": 49,
+          "head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+          "new_or_changed": false
+        },
+        {
+          "number": 50,
+          "head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+          "new_or_changed": false
+        },
+        {
+          "number": 51,
+          "head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+          "new_or_changed": false
+        },
+        {
+          "number": 52,
+          "head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+          "new_or_changed": false
+        },
+        {
+          "number": 53,
+          "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "bffdfbb49433859823081f2198f16e33be8369a6",
+          "new_or_changed": false
+        },
+        {
+          "number": 54,
+          "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+          "new_or_changed": false
+        },
+        {
+          "number": 55,
+          "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+          "new_or_changed": false
+        },
+        {
+          "number": 56,
+          "head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+          "new_or_changed": false
+        },
+        {
+          "number": 57,
+          "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "62e438e6836949207b4541b818c1c261bb7104fe",
+          "new_or_changed": false
+        },
+        {
+          "number": 58,
+          "head": "9887b53272d5f747cae9f73b363748985937ad05",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "9887b53272d5f747cae9f73b363748985937ad05",
+          "new_or_changed": false
+        },
+        {
+          "number": 59,
+          "head": "132f70e746aa9815a51a046ab02e83393d084622",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "132f70e746aa9815a51a046ab02e83393d084622",
+          "new_or_changed": false
+        },
+        {
+          "number": 60,
+          "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f798f27d823ee846b5e6238e167970e0345612ed",
+          "new_or_changed": false
+        },
+        {
+          "number": 61,
+          "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+          "new_or_changed": false
+        },
+        {
+          "number": 62,
+          "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "new_or_changed": false
+        },
+        {
+          "number": 63,
+          "head": "baccf470e946fc86fde41c96443423006eac2be7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "baccf470e946fc86fde41c96443423006eac2be7",
+          "new_or_changed": false
+        },
+        {
+          "number": 64,
+          "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+          "new_or_changed": false
+        },
+        {
+          "number": 65,
+          "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+          "new_or_changed": false
+        },
+        {
+          "number": 66,
+          "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+          "new_or_changed": false
+        },
+        {
+          "number": 67,
+          "head": "403e942dc99779883210125a01841ef209e19d2e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "403e942dc99779883210125a01841ef209e19d2e",
+          "new_or_changed": false
+        },
+        {
+          "number": 68,
+          "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+          "new_or_changed": false
+        },
+        {
+          "number": 69,
+          "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+          "new_or_changed": false
+        },
+        {
+          "number": 70,
+          "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+          "new_or_changed": false
+        },
+        {
+          "number": 71,
+          "head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+          "new_or_changed": false
+        },
+        {
+          "number": 72,
+          "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+          "new_or_changed": false
+        },
+        {
+          "number": 73,
+          "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+          "new_or_changed": false
+        },
+        {
+          "number": 74,
+          "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+          "new_or_changed": false
+        },
+        {
+          "number": 75,
+          "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+          "new_or_changed": false
+        },
+        {
+          "number": 76,
+          "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+          "new_or_changed": false
+        },
+        {
+          "number": 77,
+          "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+          "new_or_changed": false
+        },
+        {
+          "number": 78,
+          "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+          "new_or_changed": false
+        },
+        {
+          "number": 79,
+          "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+          "new_or_changed": false
+        },
+        {
+          "number": 80,
+          "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "fdf8c35014367834570bb89a3902f50fd132e865",
+          "new_or_changed": false
+        },
+        {
+          "number": 81,
+          "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+          "new_or_changed": false
+        },
+        {
+          "number": 82,
+          "head": "085495527e0ab02f52eeded928d54cb766b79910",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "085495527e0ab02f52eeded928d54cb766b79910",
+          "new_or_changed": false
+        },
+        {
+          "number": 83,
+          "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+          "new_or_changed": false
+        },
+        {
+          "number": 84,
+          "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+          "new_or_changed": false
+        },
+        {
+          "number": 85,
+          "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+          "new_or_changed": false
+        },
+        {
+          "number": 86,
+          "head": "120f839ab9091bdbedf326621347ee737140e043",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "120f839ab9091bdbedf326621347ee737140e043",
+          "new_or_changed": false
+        },
+        {
+          "number": 87,
+          "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "8b0c01597c231814815bf5456ab0a616102e7307",
+          "new_or_changed": false
+        },
+        {
+          "number": 88,
+          "head": "b100cd751688f13609a8829180b487b381588d14",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b100cd751688f13609a8829180b487b381588d14",
+          "new_or_changed": false
+        },
+        {
+          "number": 89,
+          "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "84c3a1172759abdbab0c320142ae190e532f7753",
+          "new_or_changed": false
+        },
+        {
+          "number": 90,
+          "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+          "new_or_changed": false
+        },
+        {
+          "number": 91,
+          "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+          "new_or_changed": false
+        },
+        {
+          "number": 92,
+          "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+          "new_or_changed": false
+        },
+        {
+          "number": 93,
+          "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+          "new_or_changed": false
+        },
+        {
+          "number": 94,
+          "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+          "new_or_changed": false
+        },
+        {
+          "number": 95,
+          "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+          "new_or_changed": false
+        },
+        {
+          "number": 97,
+          "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+          "new_or_changed": false
+        },
+        {
+          "number": 100,
+          "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+          "new_or_changed": false
+        },
+        {
+          "number": 101,
+          "head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+          "new_or_changed": false
+        },
+        {
+          "number": 102,
+          "head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "new_or_changed": false
+        },
+        {
+          "number": 103,
+          "head": "d504409acc779b670de482247f3231a7247dcd92",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d504409acc779b670de482247f3231a7247dcd92",
+          "new_or_changed": false
+        },
+        {
+          "number": 104,
+          "head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+          "new_or_changed": false
+        },
+        {
+          "number": 105,
+          "head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+          "new_or_changed": false
+        },
+        {
+          "number": 106,
+          "head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "new_or_changed": false
+        },
+        {
+          "number": 107,
+          "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "new_or_changed": false
+        },
+        {
+          "number": 108,
+          "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "new_or_changed": false
+        },
+        {
+          "number": 109,
+          "head": "1b7680583ac69649b17287ab68738288fec10f51",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "1b7680583ac69649b17287ab68738288fec10f51",
+          "new_or_changed": false
+        },
+        {
+          "number": 110,
+          "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+          "new_or_changed": false
+        },
+        {
+          "number": 111,
+          "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "new_or_changed": false
+        },
+        {
+          "number": 112,
+          "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+          "new_or_changed": false
+        },
+        {
+          "number": 113,
+          "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "new_or_changed": false
+        },
+        {
+          "number": 114,
+          "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "new_or_changed": false
+        },
+        {
+          "number": 115,
+          "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "new_or_changed": false
+        },
+        {
+          "number": 116,
+          "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+          "new_or_changed": false
+        },
+        {
+          "number": 117,
+          "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+          "new_or_changed": false
+        },
+        {
+          "number": 118,
+          "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+          "new_or_changed": false
+        },
+        {
+          "number": 119,
+          "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+          "new_or_changed": false
+        },
+        {
+          "number": 120,
+          "head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+          "new_or_changed": false
+        },
+        {
+          "number": 121,
+          "head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+          "new_or_changed": false
+        },
+        {
+          "number": 122,
+          "head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+          "new_or_changed": false
+        },
+        {
+          "number": 123,
+          "head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+          "new_or_changed": false
+        },
+        {
+          "number": 124,
+          "head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d7895df6d55ca588a70575dabf2216ed42055d75",
+          "new_or_changed": false
+        },
+        {
+          "number": 125,
+          "head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+          "new_or_changed": false
+        },
+        {
+          "number": 126,
+          "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "new_or_changed": false
+        },
+        {
+          "number": 127,
+          "head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "new_or_changed": false
+        },
+        {
+          "number": 128,
+          "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "new_or_changed": false
+        },
+        {
+          "number": 129,
+          "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "new_or_changed": false
+        },
+        {
+          "number": 130,
+          "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "new_or_changed": false
+        },
+        {
+          "number": 131,
+          "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "new_or_changed": false
+        },
+        {
+          "number": 132,
+          "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "new_or_changed": false
+        },
+        {
+          "number": 133,
+          "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "new_or_changed": false
+        },
+        {
+          "number": 134,
+          "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "new_or_changed": false
+        },
+        {
+          "number": 135,
+          "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "new_or_changed": false
+        },
+        {
+          "number": 136,
+          "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "new_or_changed": false
+        },
+        {
+          "number": 137,
+          "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "45370df56a6ea01ae8597294ee5522d91676079d",
+            "tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858"
+          },
+          "previous_fetched_head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "new_or_changed": false
+        },
+        {
+          "number": 138,
+          "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+            "tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111"
+          },
+          "previous_fetched_head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "new_or_changed": false
+        },
+        {
+          "number": 139,
+          "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+            "tree": "3b86bb4bc05d386957be7fe7b3208156a965e685"
+          },
+          "previous_fetched_head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "new_or_changed": false
+        },
+        {
+          "number": 140,
+          "head": "bd086eea48525346216c59e0c899b4d33751029b",
+          "status": "incoming-distinct-head",
+          "tree": "6d486faa4874cba62c511de7ee24555d0c145609",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "6d486faa4874cba62c511de7ee24555d0c145609"
+          },
+          "previous_fetched_head": "4cd8065aec7ade066a0a9f34438288c09d866333",
+          "new_or_changed": true
+        },
+        {
+          "number": 141,
+          "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+            "tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39"
+          },
+          "previous_fetched_head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "new_or_changed": false
+        },
+        {
+          "number": 142,
+          "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+            "tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae"
+          },
+          "previous_fetched_head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "new_or_changed": false
+        },
+        {
+          "number": 143,
+          "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "4ec2a641f712fe1a7aab76672b4452a97fc8a2a8"
+          },
+          "previous_fetched_head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "new_or_changed": false
+        },
+        {
+          "number": 144,
+          "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "110824c7c964419e7feae100cc94f47c1ed92d59",
+            "tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b"
+          },
+          "previous_fetched_head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "new_or_changed": false
+        },
+        {
+          "number": 145,
+          "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "0198e9626eaec828eccd6a8f63378e1286871017",
+            "tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55"
+          },
+          "previous_fetched_head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "new_or_changed": false
+        },
+        {
+          "number": 146,
+          "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+            "tree": "da02e789e7eb64258af155086b4da2336e40cfe9"
+          },
+          "previous_fetched_head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "new_or_changed": false
+        },
+        {
+          "number": 147,
+          "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+            "tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de"
+          },
+          "previous_fetched_head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "new_or_changed": false
+        },
+        {
+          "number": 148,
+          "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+            "tree": "b46b96d6ede506583d37f0d885892f0bac260cff"
+          },
+          "previous_fetched_head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "new_or_changed": false
+        },
+        {
+          "number": 149,
+          "head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+          "status": "current",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "418827298a6a09733be9d834a6f07e8f9ac57fff"
+          },
+          "previous_fetched_head": "fe22a0458acfa90c0cce457d20fecbaa85a260e6",
+          "new_or_changed": true
+        },
+        {
+          "number": 150,
+          "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+            "tree": "149261a6dcddf061726466e1d98e47b8a11f2c30"
+          },
+          "previous_fetched_head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "new_or_changed": false
+        },
+        {
+          "number": 151,
+          "head": "073713474ea62525d9f5832da918407de333cd03",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+            "tree": "19aa47714e57658028ce19c336b80da2fa05e967"
+          },
+          "previous_fetched_head": "073713474ea62525d9f5832da918407de333cd03",
+          "new_or_changed": false
+        },
+        {
+          "number": 152,
+          "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "status": "ancestor",
+          "included_by_latest_main": {
+            "status": "ancestor"
+          },
+          "previous_fetched_head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "new_or_changed": false
+        },
+        {
+          "number": 153,
+          "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "status": "incoming-distinct-head",
+          "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+            "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 154,
+          "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "status": "incoming-distinct-head",
+          "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+            "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 155,
+          "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "status": "incoming-distinct-head",
+          "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "e52d1befb856f9d510cdaea887097759cf745828",
+            "tree": "51441da74a9f0b92f610373681e8f23d89f829f6"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 156,
+          "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "status": "incoming-distinct-head",
+          "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "d1add32cf5f4a14379ae35ca30b123e781558549",
+            "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        }
+      ],
+      "new_or_changed_pr_heads": [
+        {
+          "number": 140,
+          "head": "bd086eea48525346216c59e0c899b4d33751029b",
+          "status": "incoming-distinct-head",
+          "tree": "6d486faa4874cba62c511de7ee24555d0c145609",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "6d486faa4874cba62c511de7ee24555d0c145609"
+          },
+          "previous_fetched_head": "4cd8065aec7ade066a0a9f34438288c09d866333",
+          "new_or_changed": true
+        },
+        {
+          "number": 149,
+          "head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+          "status": "current",
+          "included_by_latest_main": {
+            "status": "incoming-distinct-head",
+            "tree": "418827298a6a09733be9d834a6f07e8f9ac57fff"
+          },
+          "previous_fetched_head": "fe22a0458acfa90c0cce457d20fecbaa85a260e6",
+          "new_or_changed": true
+        },
+        {
+          "number": 153,
+          "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "status": "incoming-distinct-head",
+          "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+            "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 154,
+          "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "status": "incoming-distinct-head",
+          "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+            "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 155,
+          "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "status": "incoming-distinct-head",
+          "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "e52d1befb856f9d510cdaea887097759cf745828",
+            "tree": "51441da74a9f0b92f610373681e8f23d89f829f6"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        },
+        {
+          "number": 156,
+          "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "status": "incoming-distinct-head",
+          "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+          "included_by_latest_main": {
+            "status": "exact-tree-equivalent-to-included-commit",
+            "equivalent_commit": "d1add32cf5f4a14379ae35ca30b123e781558549",
+            "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2"
+          },
+          "previous_fetched_head": null,
+          "new_or_changed": true
+        }
+      ],
+      "recent_prs": [
+        {
+          "number": 140,
+          "title": "Extend terminal workspace with jump hosts, shell integration, session discovery and broadcast",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/140",
+          "state": "open",
+          "draft": true,
+          "created_at": "2026-11-15T19:03:15Z",
+          "updated_at": "2026-11-15T22:26:08Z",
+          "closed_at": null,
+          "merged_at": null,
+          "merge_commit_sha": null,
+          "head": "bd086eea48525346216c59e0c899b4d33751029b",
+          "branch": "codex/terminal-screen-workspace",
+          "base": "main",
+          "base_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "6d486faa4874cba62c511de7ee24555d0c145609"
+          }
+        },
+        {
+          "number": 149,
+          "title": "Add Zotero online and desktop libraries to the Word editor",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/149",
+          "state": "open",
+          "draft": true,
+          "created_at": "2026-11-15T19:41:35Z",
+          "updated_at": "2026-11-15T22:24:31Z",
+          "closed_at": null,
+          "merged_at": null,
+          "merge_commit_sha": null,
+          "head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+          "branch": "codex/zotero-support-20261115",
+          "base": "main",
+          "base_sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "current"
+          }
+        },
+        {
+          "number": 156,
+          "title": "Refresh verified snapshot in remaining-gaps doc",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/156",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:23:42Z",
+          "updated_at": "2026-11-15T22:23:46Z",
+          "closed_at": "2026-11-15T22:23:46Z",
+          "merged_at": "2026-11-15T22:23:46Z",
+          "merge_commit_sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "head": "854d2ff6a20206434c64173ddca1152b079c8277",
+          "branch": "docs/remaining-gaps-link",
+          "base": "main",
+          "base_sha": "e52d1befb856f9d510cdaea887097759cf745828",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2"
+          }
+        },
+        {
+          "number": 155,
+          "title": "Document the remaining Office format backlog",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/155",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:21:13Z",
+          "updated_at": "2026-11-15T22:21:17Z",
+          "closed_at": "2026-11-15T22:21:17Z",
+          "merged_at": "2026-11-15T22:21:17Z",
+          "merge_commit_sha": "e52d1befb856f9d510cdaea887097759cf745828",
+          "head": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+          "branch": "docs/remaining-gaps",
+          "base": "main",
+          "base_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "51441da74a9f0b92f610373681e8f23d89f829f6"
+          }
+        },
+        {
+          "number": 154,
+          "title": "Record conditional affix rules and current pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/154",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:08:31Z",
+          "updated_at": "2026-11-15T22:08:35Z",
+          "closed_at": "2026-11-15T22:08:34Z",
+          "merged_at": "2026-11-15T22:08:34Z",
+          "merge_commit_sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+          "head": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+          "branch": "docs/conditional-affix",
+          "base": "main",
+          "base_sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6"
+          }
+        },
+        {
+          "number": 153,
+          "title": "Vendor begins-with and ends-with conditions",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/153",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T22:07:42Z",
+          "updated_at": "2026-11-15T22:07:45Z",
+          "closed_at": "2026-11-15T22:07:45Z",
+          "merged_at": "2026-11-15T22:07:45Z",
+          "merge_commit_sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+          "head": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+          "branch": "fix/conditional-affix-vendor",
+          "base": "main",
+          "base_sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "incoming-distinct-head",
+            "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8"
+          }
+        },
+        {
+          "number": 152,
+          "title": "Vendor the trailing content-control section break fix",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/152",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T20:34:46Z",
+          "updated_at": "2026-11-15T20:35:24Z",
+          "closed_at": "2026-11-15T20:35:24Z",
+          "merged_at": "2026-11-15T20:35:24Z",
+          "merge_commit_sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "branch": "integrate/sdt-section-break-20261115",
+          "base": "main",
+          "base_sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 151,
+          "title": "Record between conditions and current Quds pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/151",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T20:25:01Z",
+          "updated_at": "2026-11-15T20:25:04Z",
+          "closed_at": "2026-11-15T20:25:04Z",
+          "merged_at": "2026-11-15T20:25:04Z",
+          "merge_commit_sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+          "head": "073713474ea62525d9f5832da918407de333cd03",
+          "branch": "docs/conditional-between",
+          "base": "main",
+          "base_sha": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 150,
+          "title": "Vendor between conditional rules",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/150",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T20:24:38Z",
+          "updated_at": "2026-11-15T20:24:41Z",
+          "closed_at": "2026-11-15T20:24:41Z",
+          "merged_at": "2026-11-15T20:24:41Z",
+          "merge_commit_sha": "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+          "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "branch": "fix/conditional-between-vendor",
+          "base": "main",
+          "base_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 148,
+          "title": "Document ODS list validations and current pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/148",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:20:02Z",
+          "updated_at": "2026-11-15T19:20:05Z",
+          "closed_at": "2026-11-15T19:20:05Z",
+          "merged_at": "2026-11-15T19:20:05Z",
+          "merge_commit_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+          "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "branch": "docs/ods-validations",
+          "base": "main",
+          "base_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 147,
+          "title": "Vendor ODS list validations",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/147",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:19:41Z",
+          "updated_at": "2026-11-15T19:19:44Z",
+          "closed_at": "2026-11-15T19:19:44Z",
+          "merged_at": "2026-11-15T19:19:44Z",
+          "merge_commit_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+          "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "branch": "fix/ods-validations-vendor",
+          "base": "main",
+          "base_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 146,
+          "title": "Document complete conditional format subset",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/146",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:16:01Z",
+          "updated_at": "2026-11-15T19:16:04Z",
+          "closed_at": "2026-11-15T19:16:04Z",
+          "merged_at": "2026-11-15T19:16:04Z",
+          "merge_commit_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+          "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "branch": "docs/conditional-complete",
+          "base": "main",
+          "base_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 145,
+          "title": "Vendor contains-text and duplicate conditional rules",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/145",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:14:55Z",
+          "updated_at": "2026-11-15T19:14:58Z",
+          "closed_at": "2026-11-15T19:14:58Z",
+          "merged_at": "2026-11-15T19:14:58Z",
+          "merge_commit_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+          "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "branch": "fix/conditional-text-vendor",
+          "base": "main",
+          "base_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 144,
+          "title": "Vendor conditional dxf styles",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/144",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:11:34Z",
+          "updated_at": "2026-11-15T19:11:36Z",
+          "closed_at": "2026-11-15T19:11:36Z",
+          "merged_at": "2026-11-15T19:11:36Z",
+          "merge_commit_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+          "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "branch": "fix/conditional-dxf-vendor",
+          "base": "main",
+          "base_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 143,
+          "title": "Vendor the UTF-16 custom XML bibliography fix",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/143",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:08:02Z",
+          "updated_at": "2026-11-15T19:08:32Z",
+          "closed_at": "2026-11-15T19:08:32Z",
+          "merged_at": null,
+          "merge_commit_sha": null,
+          "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "branch": "integrate/utf16-custom-xml-20261115",
+          "base": "main",
+          "base_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 142,
+          "title": "Document numeric ODS conditional formats",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/142",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:05:33Z",
+          "updated_at": "2026-11-15T19:05:38Z",
+          "closed_at": "2026-11-15T19:05:37Z",
+          "merged_at": "2026-11-15T19:05:37Z",
+          "merge_commit_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+          "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "branch": "docs/conditional-formats",
+          "base": "main",
+          "base_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 141,
+          "title": "Vendor numeric conditional comparators",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/141",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T19:03:33Z",
+          "updated_at": "2026-11-15T19:03:37Z",
+          "closed_at": "2026-11-15T19:03:36Z",
+          "merged_at": "2026-11-15T19:03:36Z",
+          "merge_commit_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+          "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "branch": "fix/conditional-operators-vendor",
+          "base": "main",
+          "base_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 139,
+          "title": "Vendor ODS conditional formats",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/139",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T18:59:34Z",
+          "updated_at": "2026-11-15T18:59:38Z",
+          "closed_at": "2026-11-15T18:59:38Z",
+          "merged_at": "2026-11-15T18:59:38Z",
+          "merge_commit_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+          "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "branch": "fix/ods-conditional-vendor",
+          "base": "main",
+          "base_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 138,
+          "title": "Record ODS hidden-state and current Quds pin",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/138",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T18:44:38Z",
+          "updated_at": "2026-11-15T18:44:41Z",
+          "closed_at": "2026-11-15T18:44:41Z",
+          "merged_at": "2026-11-15T18:44:41Z",
+          "merge_commit_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+          "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "branch": "docs/ods-hidden-state",
+          "base": "main",
+          "base_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        },
+        {
+          "number": 137,
+          "title": "Hide hidden worksheets in the worksheet selector",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/137",
+          "state": "closed",
+          "draft": false,
+          "created_at": "2026-11-15T18:43:12Z",
+          "updated_at": "2026-11-15T18:43:16Z",
+          "closed_at": "2026-11-15T18:43:15Z",
+          "merged_at": "2026-11-15T18:43:15Z",
+          "merge_commit_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+          "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "branch": "feat/hidden-sheets-ui",
+          "base": "main",
+          "base_sha": "d86ec1903e66a9086b3b350740a07cc16a66971b",
+          "fetched_head_matches_api": true,
+          "head_status_at_comparison": {
+            "status": "ancestor"
+          }
+        }
+      ],
+      "incoming": {
+        "main": {
+          "head": "d1add32cf5f4a14379ae35ca30b123e781558549",
+          "commit_count": 4,
+          "non_merge_commit_count": 4,
+          "commits": [
+            {
+              "sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+              "parents": [
+                "ecb2198900bbcb48d944bf791b95ea3d5c854589"
+              ],
+              "subject": "Vendor begins-with and ends-with conditions (#153)",
+              "committed_at": "2026-11-15T23:07:44+01:00",
+              "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+                "tool/office_fidelity_manifest.json"
+              ]
+            },
+            {
+              "sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+              "parents": [
+                "2f88409f0817172cd29c94e4682d03e9e29a2c54"
+              ],
+              "subject": "Record conditional affix rules and current pin (#154)",
+              "committed_at": "2026-11-15T23:08:34+01:00",
+              "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+              "changed_paths": [
+                "packages/QUDS_FORKS.md"
+              ]
+            },
+            {
+              "sha": "e52d1befb856f9d510cdaea887097759cf745828",
+              "parents": [
+                "01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+              ],
+              "subject": "Document the remaining Office format backlog (#155)",
+              "committed_at": "2026-11-15T23:21:16+01:00",
+              "tree": "51441da74a9f0b92f610373681e8f23d89f829f6",
+              "changed_paths": [
+                "docs/file-format-viewers.md",
+                "docs/office-engine-strategy.md",
+                "docs/office-remaining-gaps-20261115.md",
+                "packages/QUDS_FORKS.md"
+              ]
+            },
+            {
+              "sha": "d1add32cf5f4a14379ae35ca30b123e781558549",
+              "parents": [
+                "e52d1befb856f9d510cdaea887097759cf745828"
+              ],
+              "subject": "Refresh verified snapshot in remaining-gaps doc (#156)",
+              "committed_at": "2026-11-15T23:23:45+01:00",
+              "tree": "c6f614db823791782eabf056bbb3178b0c8c82a2",
+              "changed_paths": [
+                "docs/office-remaining-gaps-20261115.md"
+              ]
+            }
+          ]
+        },
+        "terminal140": {
+          "head": "bd086eea48525346216c59e0c899b4d33751029b",
+          "commit_count": 7,
+          "non_merge_commit_count": 6,
+          "commits": [
+            {
+              "sha": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+              "parents": [
+                "ecb2198900bbcb48d944bf791b95ea3d5c854589"
+              ],
+              "subject": "Vendor begins-with and ends-with conditions (#153)",
+              "committed_at": "2026-11-15T23:07:44+01:00",
+              "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+                "tool/office_fidelity_manifest.json"
+              ]
+            },
+            {
+              "sha": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+              "parents": [
+                "2f88409f0817172cd29c94e4682d03e9e29a2c54"
+              ],
+              "subject": "Record conditional affix rules and current pin (#154)",
+              "committed_at": "2026-11-15T23:08:34+01:00",
+              "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+              "changed_paths": [
+                "packages/QUDS_FORKS.md"
+              ]
+            },
+            {
+              "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+              "parents": [
+                "2f88409f0817172cd29c94e4682d03e9e29a2c54"
+              ],
+              "subject": "Record conditional affix rules and current pin",
+              "committed_at": "2026-11-15T23:08:28+01:00",
+              "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6",
+              "changed_paths": [
+                "packages/QUDS_FORKS.md"
+              ],
+              "exact_tree_equivalent_to_other_incoming_commit": "01f7fc778cb3f401f4d261c3de2eccfee91547f6"
+            },
+            {
+              "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+              "parents": [
+                "ecb2198900bbcb48d944bf791b95ea3d5c854589"
+              ],
+              "subject": "Vendor begins-with and ends-with conditions",
+              "committed_at": "2026-11-15T23:07:38+01:00",
+              "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8",
+              "changed_paths": [
+                "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+                "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+                "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+                "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+                "tool/office_fidelity_manifest.json"
+              ],
+              "exact_tree_equivalent_to_other_incoming_commit": "2f88409f0817172cd29c94e4682d03e9e29a2c54"
+            },
+            {
+              "sha": "ba8380431c64eded8caad4c33532d3fb73716d5a",
+              "parents": [
+                "4cd8065aec7ade066a0a9f34438288c09d866333",
+                "64030d55f314c493e45e5258a4490401ad337b13",
+                "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+                "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+                "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+              ],
+              "subject": "Integrate all recent branches through PR154 and latest Zotero with canonical Office source [skip ci]",
+              "committed_at": "2026-11-15T23:15:51+01:00",
+              "tree": "4bcc5e780ace7586147b8445d0503af6e444299a"
+            },
+            {
+              "sha": "65de2205509437d3030ae12a2cd6cd63743393f7",
+              "parents": [
+                "ba8380431c64eded8caad4c33532d3fb73716d5a"
+              ],
+              "subject": "Add nested terminal panes, zoom, navigation and versioned arrangements [skip ci]",
+              "committed_at": "2026-11-15T23:20:23+01:00",
+              "tree": "09f3dfe9216548ffccb8b12d6aadc08724ddbdbf",
+              "changed_paths": [
+                "docs/validation/terminal-parity-continuation/branch-pr-snapshot.json",
+                "docs/validation/terminal-parity-continuation/canonical-integration.json",
+                "docs/validation/terminal-parity-continuation/canonical-source-verification.json",
+                "docs/validation/terminal-parity-continuation/pr-head-ancestry.json",
+                "lib/l10n/terminal_controls_strings.dart",
+                "lib/models/terminal_arrangement.dart",
+                "lib/models/terminal_pane_layout.dart",
+                "lib/services/terminal_arrangements.dart",
+                "lib/widgets/terminal_tabs.dart",
+                "test/terminal_arrangements_dialog_test.dart",
+                "test/terminal_arrangements_test.dart",
+                "test/terminal_arrangements_widget_test.dart",
+                "test/terminal_pane_layout_test.dart",
+                "test/terminal_tabs_test.dart"
+              ]
+            },
+            {
+              "sha": "bd086eea48525346216c59e0c899b4d33751029b",
+              "parents": [
+                "65de2205509437d3030ae12a2cd6cd63743393f7"
+              ],
+              "subject": "Import reviewed OpenSSH destinations atomically and validate nested layouts [skip ci]",
+              "committed_at": "2026-11-15T23:26:05+01:00",
+              "tree": "6d486faa4874cba62c511de7ee24555d0c145609",
+              "changed_paths": [
+                "docs/validation/terminal-parity-continuation/ssh-config-openssh-oracle.json",
+                "lib/l10n/ssh_config_import_strings.dart",
+                "lib/models/ssh_config_import.dart",
+                "lib/services/ssh_terminal_profiles.dart",
+                "lib/widgets/ssh_config_import_dialog.dart",
+                "lib/widgets/ssh_terminal_profiles_dialog.dart",
+                "lib/widgets/terminal_tabs.dart",
+                "test/ssh_config_import_dialog_test.dart",
+                "test/ssh_config_import_test.dart",
+                "test/terminal_arrangements_widget_test.dart"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "merge_previews": {
+    "quds-merged-pr40": {
+      "head": "706971b6818d5382e135ea947ce862b27124a46a",
+      "incoming": "3304f42ee17b52659a82d5714dcc730184050960",
+      "exit_code": 0,
+      "stdout": "844acbce8769b5716bccc2ff4a252f1bc1e3ad27\n\n",
+      "stderr": "",
+      "merge_tree": "844acbce8769b5716bccc2ff4a252f1bc1e3ad27",
+      "head_tree": "ff328de0e40f6cefb1d9d1100c75348a4fb4dd3f",
+      "exact_tree_compatible": false,
+      "changed_paths": [
+        "M\tpackages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ],
+      "patch_file": "quds-merged-pr40.diff"
+    },
+    "quds-latest-main": {
+      "head": "706971b6818d5382e135ea947ce862b27124a46a",
+      "incoming": "68d5bd8a34e881dcd4c6077493fcde55bbfb0064",
+      "exit_code": 0,
+      "stdout": "de8267436578ab008b4c6a12f2a242f7e1ec5695\n\nAuto-merging packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart\n",
+      "stderr": "",
+      "merge_tree": "de8267436578ab008b4c6a12f2a242f7e1ec5695",
+      "head_tree": "ff328de0e40f6cefb1d9d1100c75348a4fb4dd3f",
+      "exact_tree_compatible": false,
+      "changed_paths": [
+        "M\tREADME.md",
+        "A\tdocs/office-remaining-gaps.md",
+        "M\tpackages/quds_office_editor/CHANGELOG.md",
+        "M\tpackages/quds_office_engine/CHANGELOG.md",
+        "M\tpackages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "M\tpackages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+        "M\tpackages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+        "M\tpackages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+        "M\tpackages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+        "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "M\tpackages/quds_office_engine/test/word_content_control_fidelity_test.dart"
+      ],
+      "patch_file": "quds-latest-main.diff"
+    },
+    "crisp-latest-main": {
+      "head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+      "incoming": "d1add32cf5f4a14379ae35ca30b123e781558549",
+      "exit_code": 1,
+      "stdout": "0507a6ffe0d877434fa58228b93ccc3d7ba8ba2d\npackages/QUDS_FORKS.md\ntool/office_fidelity_manifest.json\n\nAuto-merging packages/QUDS_FORKS.md\nCONFLICT (content): Merge conflict in packages/QUDS_FORKS.md\nAuto-merging tool/office_fidelity_manifest.json\nCONFLICT (content): Merge conflict in tool/office_fidelity_manifest.json\n",
+      "stderr": "",
+      "merge_tree": "0507a6ffe0d877434fa58228b93ccc3d7ba8ba2d",
+      "head_tree": "418827298a6a09733be9d834a6f07e8f9ac57fff",
+      "exact_tree_compatible": false,
+      "changed_paths": [
+        "M\tdocs/file-format-viewers.md",
+        "M\tdocs/office-engine-strategy.md",
+        "A\tdocs/office-remaining-gaps-20261115.md",
+        "M\tpackages/QUDS_FORKS.md",
+        "M\tpackages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "M\ttool/office_fidelity_manifest.json"
+      ],
+      "patch_file": "crisp-latest-main.diff"
+    },
+    "crisp-terminal140": {
+      "head": "062ef3c8c403741903dbeb136371365bdca7a02b",
+      "incoming": "bd086eea48525346216c59e0c899b4d33751029b",
+      "exit_code": 1,
+      "stdout": "e78b56b1ddce2816c0697c454ad8f9cf0a87a5ca\npackages/QUDS_FORKS.md\ntool/office_fidelity_manifest.json\n\nAuto-merging packages/QUDS_FORKS.md\nCONFLICT (content): Merge conflict in packages/QUDS_FORKS.md\nAuto-merging tool/office_fidelity_manifest.json\nCONFLICT (content): Merge conflict in tool/office_fidelity_manifest.json\n",
+      "stderr": "",
+      "merge_tree": "e78b56b1ddce2816c0697c454ad8f9cf0a87a5ca",
+      "head_tree": "418827298a6a09733be9d834a6f07e8f9ac57fff",
+      "exact_tree_compatible": false,
+      "changed_paths": [
+        "A\tdocs/validation/terminal-parity-continuation/branch-pr-snapshot.json",
+        "A\tdocs/validation/terminal-parity-continuation/canonical-integration.json",
+        "A\tdocs/validation/terminal-parity-continuation/canonical-source-verification.json",
+        "A\tdocs/validation/terminal-parity-continuation/pr-head-ancestry.json",
+        "A\tdocs/validation/terminal-parity-continuation/ssh-config-openssh-oracle.json",
+        "A\tlib/l10n/ssh_config_import_strings.dart",
+        "M\tlib/l10n/terminal_controls_strings.dart",
+        "A\tlib/models/ssh_config_import.dart",
+        "M\tlib/models/terminal_arrangement.dart",
+        "A\tlib/models/terminal_pane_layout.dart",
+        "M\tlib/services/ssh_terminal_profiles.dart",
+        "M\tlib/services/terminal_arrangements.dart",
+        "A\tlib/widgets/ssh_config_import_dialog.dart",
+        "M\tlib/widgets/ssh_terminal_profiles_dialog.dart",
+        "M\tlib/widgets/terminal_tabs.dart",
+        "M\tpackages/QUDS_FORKS.md",
+        "M\tpackages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+        "M\tpackages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "A\ttest/ssh_config_import_dialog_test.dart",
+        "A\ttest/ssh_config_import_test.dart",
+        "M\ttest/terminal_arrangements_dialog_test.dart",
+        "M\ttest/terminal_arrangements_test.dart",
+        "M\ttest/terminal_arrangements_widget_test.dart",
+        "A\ttest/terminal_pane_layout_test.dart",
+        "M\ttest/terminal_tabs_test.dart",
+        "M\ttool/office_fidelity_manifest.json"
+      ],
+      "patch_file": "crisp-terminal140.diff"
+    }
+  },
+  "patch_files": {
+    "crisp-terminal140.diff": "e9081bf274fca73fd2d94ad02e54ec47fb91173b32a565a74f3c6788fc4e252e",
+    "quds-merged-pr40.diff": "6a3f711aa4034574807de043f317bef6ab90c90f928dbbfbe2c65cb2ed9f241a",
+    "quds-latest-main.diff": "b1c97fc907c0cf605cc6c7783b6b67ab84d1d4fc11197eed659eead4003cbaac",
+    "crisp-latest-main.diff": "49c876b485259a931ce46bde0ba8b134278338600ae8125d24a469199eb857fe"
+  }
+}

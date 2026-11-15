@@ -1,0 +1,3 @@
+# Qualification logs are durable evidence; include them despite the root rule.
+!*.log
+__pycache__/

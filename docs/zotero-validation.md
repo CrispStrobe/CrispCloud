@@ -1,6 +1,55 @@
 # Zotero validation — 15 November 2026
 
-## Rich formatting continuation: current executed results
+## Native citing continuation: current executed results
+
+Native desktop tools now use Zotero's source picker, document style preferences
+and complete CSL processor, with staged citation/bibliography updates, safe
+note conversion, preference persistence and one-step undo/redo.
+
+The reconciled host source `6a53294ad086e2a1c6475d888fbed7dcc2591449` was
+qualified against canonical Quds `55d46a0fb5f7392dab1a604bc3c15126bd3e380d`.
+Later documentation-only pins retain the measured implementation.
+
+| Executed local check | Result |
+| --- | ---: |
+| Canonical Zotero/Word engine and related import cohort | 380 passed |
+| Canonical shared editor controller/formatter/dialog cohort | 117 passed |
+| Actual Quds Studio native transport | 16 passed |
+| Actual CrispCloud host service/transport/credential/target/ribbon cohort | 37 passed |
+| **Office/Zotero selection** | **550 passed** |
+| Incoming ODS/conditional-affix integration cohort | 80 passed |
+| Incoming terminal pane/arrangement/OpenSSH import/key-binding/SSH transport cohort | 124 passed |
+| **Total selected tests** | **754 passed** |
+| Terminal shell smoke, counted separately | 3 passed; none skipped |
+| Canonical three-scope strict analysis and eight-target host analysis | Clean |
+| Canonical and host formatter/whitespace checks | Clean |
+| Normal and tracked vendor guards | **2,391 entries verified** |
+
+The final canonical run measured 1,558 unchanged source/dependency-input files;
+the host run measured 1,582 unchanged files and an unchanged vendor manifest.
+The 2,391 managed entries comprise 534 Quds files and 1,857 unchanged standalone
+parser files. Actual parser bytes, hashes, executable modes and its existing
+source pin were preserved. Genuine dependency locks were enforced; production
+constraints were not relaxed.
+
+See [the host evidence and reproduction](validation/zotero-citing-20261115/README.md),
+[terminal integration evidence](validation/zotero-citing-20261115/terminal-integration/README.md),
+and [canonical evidence](https://github.com/CrispStrobe/quds_office_suite/tree/codex/zotero-support-20261115/docs/validation/zotero-citing-20261115).
+The initial audit preceded feature work. A final reconciliation also brought
+in Quds main through #46, CrispCloud main through #156 and terminal #140 through
+`a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423`, preserving both merge parents.
+
+This is focused source qualification. Full native builds, live Zotero/private
+accounts, actual OS-keychain behavior and native Word/Zotero refresh acceptance
+remain unverified. Mixed inline styles and bibliography paragraph layout remain
+simplified with review; inherited Quds note preview labels follow stored IDs.
+Active ODT citation transfer remains absent. Older sections below retain their
+original source scope and do not describe the new desktop controls.
+
+No GitHub Actions were queried, polled, awaited or rerun. Checkpoints created
+for this continuation use `[skip ci]`.
+
+## Earlier rich formatting continuation: historical executed results
 
 The final shared source is pinned to Quds
 `f40aa887325982ea70c8285b25f8ff5b92a46eb9`, whose library/test trees are identical

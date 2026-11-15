@@ -4,6 +4,14 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Add native Zotero source-picker, document-style, bibliography and complete
+  document-refresh controls, including catalog-seeded insertion. Apply staged
+  results as one undo step with note/preferences restoration and stale-target
+  guards. Review mixed inline styling and unsupported bibliography layout before
+  applying simplifications; discard staged changes on desktop error alerts.
+  Preserve the original selection on undo and place the caret after new fields.
+  Full native app and live Zotero/Word acceptance remain pending.
+
 - Resolve unsynced local Zotero references through the matching desktop
   connection for basic refresh, individual previews, reference export and
   formatted bibliography. Keep local profile identities distinct, validate
@@ -21,8 +29,8 @@ All notable changes to `quds_office_editor` are documented here.
   Hosts inject their network transport and may use their existing secure key
   store. Citation editing, refresh and unlink participate in undo/redo and save
   revisions; asynchronous writes reject a changed document or caret. Basic
-  author-year formatting is explicit, with no claim to a full CSL processor or
-  the native Zotero HTTP citing adapter. Rich/unsupported native fields remain preserved.
+  author-year formatting remains an explicit fallback when native Zotero is
+  unavailable. Rich/unsupported native fields remain preserved.
 
 - Paint matching conditional-format fills and font colours in the sheet grid,
   hide hidden rows/columns, and start on the first visible worksheet. Hidden

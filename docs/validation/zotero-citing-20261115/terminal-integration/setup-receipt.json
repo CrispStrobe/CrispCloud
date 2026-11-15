@@ -1,0 +1,105 @@
+{
+  "base_harness": "/workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-harness",
+  "base_manifest_sha256": "d264bcae33bb5ef0ea1e50e8a2b69152d262d425676de8fd418da86f3c7fa83b",
+  "base_lock_sha256": "e7bc320cdf1e0db0e40685a310fb58006ebe9c5d7d038d85a51c79d3d5183d23",
+  "added_production_dependencies": {
+    "xterm2": "5.4.0",
+    "crisp_storage": "path: CrispCloud/packages/crisp_storage"
+  },
+  "production_override_retained": {
+    "pointycastle": "^4.0.0"
+  },
+  "native_rust_bridges": "Not enabled: crisp_storage officially supports Dart-only SSH with both optional Rust hook defines absent. No package source or hook is changed.",
+  "production_manifests_changed": false,
+  "office_harness_changed": false,
+  "intermediate_65_tests_3_smoke_scenarios": "Archived under before-key-bindings; not additive to final totals.",
+  "source_commit_after_merge": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+  "harness_directory": "/workspace/scratch/d13d764c3646/zotero-toolchain/crisp-terminal-expanded-harness",
+  "runtime": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/d13d764c3646/zotero-toolchain/flutter-sdk"
+  },
+  "sdk_artifacts": {
+    "bin/cache/dart-sdk/bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "bin/cache/artifacts/engine/linux-x64/flutter_tester": {
+      "bytes": 36051744,
+      "sha256": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f"
+    },
+    "bin/cache/engine-dart-sdk.stamp": {
+      "bytes": 41,
+      "sha256": "d86a5372c28ba89bef3fa93796ba2066caa8a254a32d8387ed3c0720e7dda52c"
+    },
+    "bin/internal/engine.version": {
+      "bytes": 41,
+      "sha256": "d86a5372c28ba89bef3fa93796ba2066caa8a254a32d8387ed3c0720e7dda52c"
+    }
+  },
+  "environment_helper": "export FLUTTER_ROOT=/workspace/scratch/d13d764c3646/zotero-toolchain/flutter-sdk\nexport PUB_CACHE=/workspace/scratch/d13d764c3646/zotero-toolchain/pub-cache\nexport TMPDIR=/workspace/scratch/d13d764c3646/zotero-toolchain/tmp\nexport XDG_CONFIG_HOME=/workspace/scratch/d13d764c3646/zotero-toolchain/config\nexport PATH=\"$FLUTTER_ROOT/bin:$PATH\"\nexport CI=true\nexport FLUTTER_SUPPRESS_ANALYTICS=true\nexport DART_SUPPRESS_ANALYTICS=true\n",
+  "resolved_package_count": 127,
+  "resolution_commands": [
+    [
+      "direct-dart",
+      "official-flutter_tools.snapshot",
+      "pub",
+      "get"
+    ],
+    [
+      "direct-dart",
+      "official-flutter_tools.snapshot",
+      "pub",
+      "get",
+      "--enforce-lockfile"
+    ]
+  ],
+  "files": {
+    "pubspec.yaml": {
+      "sha256": "a05e9920ca35b383c942dac2c9ccd3a4eae6814b3543fa1c1f024e4b66793df2",
+      "bytes": 904
+    },
+    "pubspec.lock": {
+      "sha256": "706308421149a0bb95e3a730029e9a0bf8282910d687700f06c903e2c1dcd427",
+      "bytes": 29124
+    },
+    "pub-get.log": {
+      "sha256": "00d5d4e6aae24810d3362e9cb4a1abab5be3870dfccdea4813ff749d5649fc96",
+      "bytes": 2481
+    },
+    "pub-enforce.log": {
+      "sha256": "fb053a741b3cc36b49d2697a850200d9003220a48f8547929e6a7d107935a78c",
+      "bytes": 1965
+    }
+  },
+  "supporting_manifest_text": {
+    "packages/quds_reports/pubspec.yaml": "name: quds_reports\npublish_to: none\ndescription: >-\n  Band reports for Dart: .qrep templates, expressions, Arabic Tafqeet,\n  pagination, charts, and PDF, XLSX, and DOCX export.\nversion: 1.5.0\nhomepage: https://github.com/MohammedAsaadAsaad/quds_office_suite\nrepository: https://github.com/MohammedAsaadAsaad/quds_office_suite/tree/main/packages/quds_reports\nissue_tracker: https://github.com/MohammedAsaadAsaad/quds_office_suite/issues\n\ntopics:\n  - reports\n  - pdf\n  - invoice\n  - excel\n  - word\n\nscreenshots:\n  - description: \"Band report: sales dashboard with KPI cards, vector charts, and a grouped table (PDF).\"\n    path: example/screenshots/report_sales_performance.png\n  - description: \"Arabic RTL VAT invoice with a QR code and the amount in words (PDF).\"\n    path: example/screenshots/report_sales_invoice_ar.png\n  - description: \"Arabic account statement with a running balance and an area chart (PDF).\"\n    path: example/screenshots/report_account_statement_ar.png\n  - description: \"Arabic certificate of appreciation with an embedded seal and signature (PDF).\"\n    path: example/screenshots/report_certificate_ar.png\n  - description: \"Chart gallery: columns, lines, pies, gauges, and extruded charts drawn as vectors.\"\n    path: example/screenshots/report_chart_gallery.png\n  - description: \"Shape map: countries colored from a table, with a legend and labels.\"\n    path: example/screenshots/report_shape_map.png\n  - description: \"The same sales report exported to XLSX with native Excel charts.\"\n    path: example/screenshots/report_sales_performance_xlsx.png\n  - description: \"Quds Report Studio: the desktop designer for .qrep files (Windows and Linux).\"\n    path: example/screenshots/report_studio_designer.png\n  - description: \"Live preview in the studio: paginated pages painted from the engine.\"\n    path: example/screenshots/studio_preview.png\n  - description: \"Ready-made product catalog open in the studio, photos saved inside the .qrep.\"\n    path: example/screenshots/report_studio_templates.png\n\nplatforms:\n  android:\n  ios:\n  linux:\n  macos:\n  web:\n  windows:\n\nenvironment:\n  sdk: ^3.12.0\n\ndependencies:\n  quds_office_engine:\n    path: ../quds_office_engine\n\ndev_dependencies:\n  lints: ^6.0.0\n  test: ^1.26.0\n",
+    "packages/legacy_doc_parser/pubspec.yaml": "name: legacy_doc_parser\ndescription: Portable Word 97\u20132003 DOC/DOT parsing, structured content extraction, and DOCX conversion in Dart.\nversion: 0.1.0-dev.1\nrepository: https://github.com/CrispStrobe/legacy-doc-parser\nissue_tracker: https://github.com/CrispStrobe/legacy-doc-parser/issues\nenvironment:\n  sdk: \">=3.8.0 <4.0.0\"\ndependencies:\n  archive: ^4.6.0\ndev_dependencies:\n  test: ^1.25.15\n  lints: ^3.0.0\n  xml: ^6.6.1\n",
+    "packages/quds_office_editor/pubspec.yaml": "name: quds_office_editor\npublish_to: none\ndescription: >-\n  Flutter Office surfaces on custom RenderBox: Word, Excel, PowerPoint, PDF\n  viewer/editor, and a visual band-report designer with inspector and preview.\nversion: 1.6.0\nhomepage: https://github.com/MohammedAsaadAsaad/quds_office_suite\nrepository: https://github.com/MohammedAsaadAsaad/quds_office_suite/tree/main/packages/quds_office_editor\nissue_tracker: https://github.com/MohammedAsaadAsaad/quds_office_suite/issues\n\ntopics:\n  - flutter\n  - office\n  - editor\n  - pdf\n  - word\n\nplatforms:\n  android:\n  ios:\n  linux:\n  macos:\n  web:\n  windows:\n\nscreenshots:\n  - description: \"Report designer: bands, rulers, chart element, and the professional inspector.\"\n    path: example/screenshots/report_designer.png\n  - description: \"Report designer live preview: paginated output painted from the engine.\"\n    path: example/screenshots/report_preview.png\n  - description: \"Arabic RTL invoice template in the report designer.\"\n    path: example/screenshots/report_designer_rtl.png\n  - description: \"Ready-made product catalog template with its photos saved inside the .qrep.\"\n    path: example/screenshots/report_template_catalog.png\n  - description: \"Data explorer: edit the report's tables, typed columns, and calculated columns.\"\n    path: example/screenshots/report_data_explorer.png\n  - description: \"Shape map in the designer: import a shapefile or GeoJSON and bind it to the value table.\"\n    path: example/screenshots/report_shape_map.png\n  - description: \"Word canvas: paginated pages, BiDi caret, outline, and custom chrome.\"\n    path: example/screenshots/word.png\n  - description: \"Excel grid: virtualized sheet, formula bar, charts, and sheet tabs.\"\n    path: example/screenshots/excel.png\n  - description: \"PowerPoint stage: slides, animations pane, and slide sorter.\"\n    path: example/screenshots/powerpoint.png\n  - description: \"PDF viewer: fit page, thumbnails, and view options.\"\n    path: example/screenshots/pdf.png\n\nenvironment:\n  sdk: ^3.12.0\n  flutter: \">=3.44.0\"\n\ndependencies:\n  url_launcher: ^6.3.1\n  flutter:\n    sdk: flutter\n  quds_office_engine:\n    path: ../quds_office_engine\n  quds_reports:\n    path: ../quds_reports\n\ndev_dependencies:\n  flutter_lints: ^6.0.0\n  flutter_test:\n    sdk: flutter\n\nflutter:\n  uses-material-design: false\n  assets:\n    - fonts/\n    - templates/\n",
+    "packages/quds_office_engine/pubspec.yaml": "name: quds_office_engine\npublish_to: none\ndescription: >-\n  Pure Dart Office, PDF, and report engine: DOCX/XLSX/PPTX, formulas, BiDi/RTL,\n  PdfFile, pdf_widgets, and .qrep band reports exported to PDF, XLSX, and DOCX.\nversion: 1.5.0\nhomepage: https://github.com/MohammedAsaadAsaad/quds_office_suite\nrepository: https://github.com/MohammedAsaadAsaad/quds_office_suite/tree/main/packages/quds_office_engine\nissue_tracker: https://github.com/MohammedAsaadAsaad/quds_office_suite/issues\n\ntopics:\n  - office\n  - docx\n  - xlsx\n  - pptx\n  - pdf\n\nscreenshots:\n  - description: \"Quds Report Studio: a desktop .qrep designer built on this engine (Windows and Linux installers).\"\n    path: example/screenshots/report_studio_designer.png\n  - description: \"A DOCX saved by LibreOffice Writer: its own PDF next to this engine's pure-Dart OfficePdfExport.\"\n    path: example/screenshots/office_fidelity_word.png\n  - description: \"Band report: sales dashboard with KPI cards, vector charts, and grouped tables (PDF).\"\n    path: example/screenshots/report_sales_performance.png\n  - description: \"Band report: Arabic RTL VAT invoice with QR code and amount in words (PDF).\"\n    path: example/screenshots/report_sales_invoice_ar.png\n  - description: \"Band report: Arabic account statement with running balance and area chart (PDF).\"\n    path: example/screenshots/report_account_statement_ar.png\n  - description: \"Ready-made template: product catalog with photos saved inside the .qrep, open in Quds Report Studio.\"\n    path: example/screenshots/report_studio_templates.png\n  - description: \"Ready-made template: Arabic certificate of appreciation with embedded seal and signature (PDF).\"\n    path: example/screenshots/report_certificate_ar.png\n  - description: \"The same report exported to XLSX with native Excel charts and typed cells.\"\n    path: example/screenshots/report_sales_performance_xlsx.png\n  - description: \"Chart gallery: pie, waterfall, funnel, gauge, bullet, scatter, and bubble, drawn as vectors.\"\n    path: example/screenshots/report_chart_gallery.png\n  - description: \"Shape map: countries colored from a table, with a legend and labels on wide regions.\"\n    path: example/screenshots/report_shape_map.png\n\nplatforms:\n  android:\n  ios:\n  linux:\n  macos:\n  web:\n  windows:\n\nenvironment:\n  sdk: ^3.12.0\n\ndependencies:\n  legacy_doc_parser:\n    path: ../legacy_doc_parser\n  characters: ^1.4.1\n  crypto: ^3.0.7\n\ndev_dependencies:\n  lints: ^6.0.0\n  test: ^1.26.0\n",
+    "packages/crisp_storage/pubspec.yaml": "name: crisp_storage\ndescription: Shared native storage transports and transfer primitives for Crisp apps.\nversion: 0.1.0\npublish_to: none\nenvironment:\n  sdk: '>=3.10.0 <4.0.0'\ndependencies:\n  code_assets: ^2.1.0\n  hooks: ^2.2.0\n  crypto: ^3.0.3\n  http: ^1.2.0\n  filen_client:\n    path: ../filen_client\n  internxt_client: 0.2.3\n  flutter_rust_bridge: 2.11.1\n  collection: ^1.19.0\n  dartssh2: ^4.1.0\n  path: ^1.9.0\n  xml: '>=6.5.0 <8.0.0'\ndev_dependencies:\n  test: ^1.25.0\n  lints: ^5.0.0\n\n# Same SDK-compatibility override used by both Flutter apps.\ndependency_overrides:\n  pointycastle: ^4.0.0\n",
+    "packages/filen_client/pubspec.yaml": "name: filen_client\ndescription: Unofficial Dart client and CLI for Filen.io end-to-end-encrypted cloud storage \u2014 login, list, encrypted upload/download with batching and resume, plus a WebDAV bridge.\nversion: 0.2.2\npublish_to: none\nrepository: https://github.com/CrispStrobe/filen-dart\nenvironment:\n  sdk: '>=3.0.0 <4.0.0'\n\ndependencies:\n  args: ^2.4.2\n  crypto: ^3.0.3\n  http: ^1.1.0\n  pointycastle: ^3.7.3\n  hex: ^0.2.0\n  path: ^1.8.3\n  convert: ^3.1.1\n  glob: ^2.1.2\n\n  # WebDAV Dependencies\n  shelf: ^1.4.0\n  shelf_router: ^1.1.0 # Good for adding other handlers\n  shelf_dav: ^1.0.0  # The server\n  file: ^7.0.0       # The virtual filesystem interface\n  ffi: ^2.2.0\n  cryptography: ^2.9.0\n\ndev_dependencies:\n  lints: ^2.1.0\n  test: ^1.24.0\n  coverage: ^1.6.0\n"
+  },
+  "notes": [
+    "The initial 65-test/3-scenario receipt remains in before-key-bindings and is not additive to final results.",
+    "No production manifests, dependency constraints, library implementations or native build hooks were modified.",
+    "The graph resolves actual production dependencies, including local crisp_storage and filen_client; all source paths link to the merged repository.",
+    "The declared app pointycastle ^4.0.0 override is retained as in production.",
+    "crisp_storage supports pure Dart SSH with optional Rust hook defines absent; this focused harness does not enable SMB/cloud native bridges.",
+    "All nine selected suites use repository fixtures/injected transports and storage. No live SSH endpoints, user configuration or private credentials are accessed.",
+    "The full PTY/filesystem provider graph and opt-in live SSH tests are outside this focused cohort."
+  ],
+  "office_harness_unchanged": true,
+  "native_hook_outputs": {}
+}

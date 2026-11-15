@@ -1,0 +1,11 @@
+{
+  "from": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+  "to": "fc37658c907edf6687eccb9564d3046283b49a3a",
+  "write": [
+    "packages/quds_office_editor/CHANGELOG.md",
+    "packages/quds_office_engine/CHANGELOG.md"
+  ],
+  "delete": [],
+  "pinned_files": 2391,
+  "applied": false
+}

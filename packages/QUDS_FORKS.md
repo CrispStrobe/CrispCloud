@@ -23,7 +23,7 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `55d46a0fb5f7392dab1a604bc3c15126bd3e380d`
+The app mirrors Quds `fc37658c907edf6687eccb9564d3046283b49a3a`
 on `codex/zotero-support-20261115`, including canonical main `68d5bd8`, through PR #46,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
 all 2,391 managed files
