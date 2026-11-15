@@ -32,6 +32,45 @@ void main() {
   }
 
   test(
+    'switching to an editor revokes folder and prior editor actions',
+    () async {
+      final actions = <String>[];
+      final toolbar = MacBrowserToolbar((id) async => actions.add(id));
+      await toolbar.configure(
+        title: 'CrispCloud',
+        visible: true,
+        dark: true,
+        items: [
+          {'id': 'swap', 'enabled': true},
+        ],
+      );
+      await toolbar.configure(
+        title: 'one.pdf',
+        visible: true,
+        dark: true,
+        items: [
+          {'id': 'pdf:one:save', 'enabled': true},
+        ],
+      );
+      await nativeAction('swap');
+      await nativeAction('pdf:one:save');
+      await toolbar.configure(
+        title: 'two.pdf',
+        visible: true,
+        dark: true,
+        items: [
+          {'id': 'pdf:two:save', 'enabled': false},
+          {'id': 'pdf:two:close', 'enabled': true},
+        ],
+      );
+      await nativeAction('pdf:one:save');
+      await nativeAction('pdf:two:save');
+      await nativeAction('pdf:two:close');
+      expect(actions, ['pdf:one:save', 'pdf:two:close']);
+      await toolbar.dispose();
+    },
+  );
+  test(
     'native commands obey current enabled state and ignore unknown IDs',
     () async {
       final actions = <String>[];

@@ -54,6 +54,10 @@ void main() {
         expect(host.savedBytes, orderedEquals(original));
         expect(host.cloud.writes, isEmpty);
         await host.back();
+        await officePumpUntil(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+        );
         expect(find.byType(OfficeEditorDialog), findsNothing);
         await host.dispose();
       });

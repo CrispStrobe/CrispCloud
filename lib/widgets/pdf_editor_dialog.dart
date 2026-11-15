@@ -3,14 +3,18 @@ import 'dart:typed_data';
 
 import 'package:dart_pdf_editor/dart_pdf_editor.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_cos/pdf_cos.dart' show CosPasswordException;
 import 'package:pdf_document/pdf_document.dart' show PdfAcroForm, PdfSignature;
 
+import 'pdf_floating_toolbars.dart';
 import '../l10n/pdf_editor_strings.dart';
+import '../l10n/pdf_workspace_strings.dart';
+import '../services/pdf_selection_note.dart';
+import '../services/mac_browser_toolbar.dart';
 import '../l10n/pdf_operations_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -76,9 +80,13 @@ class PdfEditorDialog extends ConsumerStatefulWidget {
 
 class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   final _messenger = GlobalKey<ScaffoldMessengerState>();
+  final _viewer = PdfViewerController();
+  final _nativeId = DateTime.now().microsecondsSinceEpoch.toString();
+  bool _notePromptOpen = false;
   PdfFileStore? _store;
   PdfEditSession? _session;
   PdfEditingController? _controller;
+  PdfEditorCommands? _commands;
   PdfEditingPreferences? _preferences;
   int _revision = 0;
   bool _hadPendingInk = false;
@@ -100,12 +108,16 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       (_session?.isDirty ?? false) || (_controller?.hasPendingInk ?? false);
 
   bool get _busy =>
-      (_session?.isSaving ?? false) || _exporting || _choosingSave;
+      (_session?.isSaving ?? false) ||
+      _exporting ||
+      _choosingSave ||
+      _notePromptOpen;
   String get _deviceExportLabel => kIsWeb ? 'Download a copy' : 'Export a copy';
 
   @override
   void initState() {
     super.initState();
+    _viewer.addListener(_publishMenu);
     unawaited(_load());
   }
 
@@ -124,20 +136,27 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     final actions = _menuActions;
     _menuActions = null;
     if (container == null || actions == null) return;
-    try {
-      if (identical(container.read(pdfEditorMenuProvider), actions)) {
-        container.read(pdfEditorMenuProvider.notifier).state = null;
+    // Route disposal can happen during build; clear after the tree settles,
+    // and never remove a newer editor's registration.
+    Future<void>.microtask(() {
+      try {
+        if (identical(container.read(pdfEditorMenuProvider), actions)) {
+          container.read(pdfEditorMenuProvider.notifier).state = null;
+        }
+      } catch (_) {
+        // The provider container may already be disposed.
       }
-    } catch (_) {
-      // The provider container may already be disposed.
-    }
+    });
   }
 
   @override
   void dispose() {
-    _providerContainer = null;
     _clearMenu();
+    _providerContainer = null;
+    _viewer.removeListener(_publishMenu);
+    _viewer.dispose();
     _controller?.removeListener(_onRevision);
+    _commands?.dispose();
     _controller?.dispose();
     _session?.removeListener(_onSessionChanged);
     _session?.dispose();
@@ -159,6 +178,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       _copyOnly,
       canUndo,
       canRedo,
+      _canAttachNote,
     ].join('|');
     if (signature == _menuSignature && _menuActions != null) return;
     _menuSignature = signature;
@@ -170,6 +190,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       canClose: !_busy,
       canUndo: canUndo,
       canRedo: canRedo,
+      canAttachNote: operational && _canAttachNote,
+      title: '${widget.file.name}${dirty ? " *" : ""}',
+      sessionId: _nativeId,
     );
     _menuActions = actions;
     container.read(pdfEditorMenuProvider.notifier).state = actions;
@@ -195,6 +218,91 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       case PdfEditorMenuAction.redo:
         _controller?.redo();
         break;
+      case PdfEditorMenuAction.attachNote:
+        unawaited(_attachNote());
+        break;
+    }
+  }
+
+  bool get _canAttachNote =>
+      _controller != null &&
+      (_viewer.hasSelection || _controller!.canSetSelectedContents);
+
+  Future<void> _attachNote({PdfTextMenuRequest? request}) async {
+    final controller = _controller;
+    if (controller == null || _busy || !_flushPendingInk()) return;
+    final quads =
+        request?.quadsByPage ??
+        {
+          for (final page in _viewer.selectionPages)
+            page: _viewer.selectionRectsOn(page),
+        };
+    final capture = PdfSelectionNote.capture(controller, quads);
+    final slots = List<(int, int)>.of(controller.selectedAnnotationSlots);
+    if (capture.isEmpty && !controller.canSetSelectedContents) return;
+    final initial = capture.isEmpty
+        ? controller.selectedAnnotation?.contents ?? ''
+        : '';
+    final revision = controller.revisionId;
+    final field = TextEditingController(text: initial);
+    setState(() => _notePromptOpen = true);
+    _publishMenu();
+    String? result;
+    final route = DialogRoute<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const ValueKey('pdf-selection-note-dialog'),
+        title: Text(pdfWorkspaceTr(context, 'Attach note')),
+        content: SizedBox(
+          width: 420,
+          child: TextField(
+            key: const ValueKey('pdf-selection-note-text'),
+            controller: field,
+            autofocus: true,
+            minLines: 3,
+            maxLines: 8,
+            decoration: InputDecoration(
+              labelText: pdfWorkspaceTr(context, 'Note'),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.pdfTr('Cancel')),
+          ),
+          FilledButton(
+            key: const ValueKey('pdf-selection-note-save'),
+            onPressed: () => Navigator.pop(dialogContext, field.text),
+            child: Text(context.pdfTr('Save')),
+          ),
+        ],
+      ),
+    );
+    try {
+      result = await Navigator.of(context, rootNavigator: true).push(route);
+      if (!mounted || result == null || result.trim().isEmpty) return;
+      if (controller.revisionId != revision ||
+          (capture.isEmpty &&
+              !listEquals(slots, controller.selectedAnnotationSlots))) {
+        _notice(
+          pdfWorkspaceTr(context, 'The PDF changed. Select the text again.'),
+        );
+        return;
+      }
+      if (capture.isEmpty) {
+        controller.setSelectedContents(result.trim());
+      } else {
+        capture.attach(result);
+        _viewer.clearSelection();
+      }
+    } finally {
+      await route.completed;
+      field.dispose();
+      if (mounted) {
+        setState(() => _notePromptOpen = false);
+        _publishMenu();
+      }
     }
   }
 
@@ -297,6 +405,11 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       _copyOnly = PdfSignature.of(candidate.document).isNotEmpty;
       _updateRedactionStatus(candidate.document);
       _controller = candidate;
+      _commands = PdfEditorCommands(
+        controller: candidate,
+        viewerController: _viewer,
+        tools: _editingTools,
+      );
       candidate = null;
       _revision = _controller!.revisionId;
       _session = PdfEditSession(initialBytes: bytes)
@@ -860,6 +973,68 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     child: Text(context.pdfTr(message)),
   );
 
+  Widget _buildSurface() => LayoutBuilder(
+    builder: (context, constraints) {
+      final floating = constraints.maxWidth >= 800;
+      final view = PdfEditorView(
+        controller: _controller!,
+        commands: _commands,
+        viewerController: _viewer,
+        textMenuBuilder: (context, request) => [
+          if (request.hasSelection)
+            PdfTextMenuItem(
+              key: const ValueKey('pdf-text-attach-note'),
+              label: pdfWorkspaceTr(context, 'Attach note'),
+              icon: Icons.add_comment_outlined,
+              onSelected: (captured) => _attachNote(request: captured),
+            ),
+        ],
+        documentId: _store!.documentId,
+        autoRenderWorker: widget.autoRenderWorker,
+        features: PdfEditorFeatures(tools: _editingTools, toolbar: !floating),
+        // The surface owns Ctrl/Cmd+S. Registering another
+        // host binding would risk starting two writes.
+        showSaveButton: false,
+        alwaysAllowSave: true,
+        onSave: (_) => unawaited(_save()),
+        onSaveAs: (_) => unawaited(_save(copy: true)),
+        onPickPdfFilesToInsert: _pickPdfFiles,
+        imagePicker: (_) => _pickFile(['png', 'jpg', 'jpeg']),
+        onExportPages: (bytes) => unawaited(_exportPages([bytes])),
+        onSplitPages: (bytes) => unawaited(_exportPages(bytes)),
+        // No signing callback: the certificate-signing tool
+        // stays hidden. Hand-drawn ink signatures remain.
+      );
+      if (!floating) return view;
+      return PdfMaterialHost(
+        child: PdfEditorCommandsScope(
+          commands: _commands!,
+          child: PdfFloatingToolbars(
+            commands: _commands!,
+            controller: _controller!,
+            child: view,
+            barBuilder: (context, primary, vertical, handle) =>
+                PdfEditingToolbar(
+                  controller: _controller!,
+                  viewerController: _viewer,
+                  tools: _editingTools,
+                  compact: false,
+                  dense: true,
+                  showPrimaryBar: primary,
+                  showContextBar: !primary,
+                  moveHandle: handle,
+                  dock: vertical ? PdfPanelDock.left : PdfPanelDock.bottom,
+                  imagePicker: (_) => _pickFile(['png', 'jpg', 'jpeg']),
+                  onAnnotationLibraryPressed: () =>
+                      _preferences!.showAnnotationLibraryPanel =
+                          !_preferences!.showAnnotationLibraryPanel,
+                ),
+          ),
+        ),
+      );
+    },
+  );
+
   @override
   Widget build(BuildContext context) {
     final dirty = _isDirty;
@@ -872,62 +1047,82 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       child: ScaffoldMessenger(
         key: _messenger,
         child: Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            leading: IconButton(
-              key: const ValueKey('pdf-close'),
-              tooltip: context.pdfTr('Close'),
-              onPressed: _busy ? null : _requestClose,
-              icon: const Icon(Icons.close),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${widget.file.name}${dirty ? ' *' : ''}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  context.pdfTr(
-                    _busy
-                        ? 'Saving…'
-                        : dirty
-                        ? 'Unsaved changes'
-                        : 'PDF editor',
+          appBar: ref.watch(nativePdfToolbarReadyProvider)
+              ? null
+              : AppBar(
+                  automaticallyImplyLeading: false,
+                  leading: IconButton(
+                    key: const ValueKey('pdf-close'),
+                    tooltip: context.pdfTr('Close'),
+                    onPressed: _busy ? null : _requestClose,
+                    icon: const Icon(Icons.close),
                   ),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ],
-            ),
-            actions: [
-              if (controller != null) ...[
-                IconButton(
-                  key: const ValueKey('pdf-save'),
-                  tooltip: context.pdfTr(_copyOnly ? 'Save a copy' : 'Save'),
-                  onPressed: !_busy && (dirty || _copyOnly)
-                      ? () => unawaited(_save())
-                      : null,
-                  icon: const Icon(Icons.save_outlined),
-                ),
-                if (!_copyOnly)
-                  IconButton(
-                    key: const ValueKey('pdf-save-copy'),
-                    tooltip: context.pdfTr('Save a copy'),
-                    onPressed: _busy
-                        ? null
-                        : () => unawaited(_save(copy: true)),
-                    icon: const Icon(Icons.save_as_outlined),
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${widget.file.name}${dirty ? ' *' : ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        context.pdfTr(
+                          _busy
+                              ? 'Saving…'
+                              : dirty
+                              ? 'Unsaved changes'
+                              : 'PDF editor',
+                        ),
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
                   ),
-                IconButton(
-                  key: const ValueKey('pdf-export-copy'),
-                  tooltip: context.pdfTr(_deviceExportLabel),
-                  onPressed: _busy ? null : () => unawaited(_exportDevice()),
-                  icon: const Icon(Icons.download_outlined),
+                  actions: [
+                    if (controller != null) ...[
+                      IconButton(
+                        key: const ValueKey('pdf-save'),
+                        tooltip: context.pdfTr(
+                          _copyOnly ? 'Save a copy' : 'Save',
+                        ),
+                        onPressed: !_busy && (dirty || _copyOnly)
+                            ? () => unawaited(_save())
+                            : null,
+                        icon: const Icon(Icons.save_outlined),
+                      ),
+                      if (!_copyOnly)
+                        IconButton(
+                          key: const ValueKey('pdf-save-copy'),
+                          tooltip: context.pdfTr('Save a copy'),
+                          onPressed: _busy
+                              ? null
+                              : () => unawaited(_save(copy: true)),
+                          icon: const Icon(Icons.save_as_outlined),
+                        ),
+                      IconButton(
+                        key: const ValueKey('pdf-export-copy'),
+                        tooltip: context.pdfTr(_deviceExportLabel),
+                        onPressed: _busy
+                            ? null
+                            : () => unawaited(_exportDevice()),
+                        icon: const Icon(Icons.download_outlined),
+                      ),
+                    ],
+                    ListenableBuilder(
+                      listenable: Listenable.merge([
+                        _viewer,
+                        if (_controller != null) _controller!,
+                      ]),
+                      builder: (context, _) => IconButton(
+                        key: const ValueKey('pdf-attach-note'),
+                        tooltip: pdfWorkspaceTr(context, 'Attach note'),
+                        icon: const Icon(Icons.add_comment_outlined),
+                        onPressed: !_busy && _canAttachNote
+                            ? () => unawaited(_attachNote())
+                            : null,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ],
-          ),
           body: Column(
             children: [
               if (_busy) const LinearProgressIndicator(),
@@ -971,25 +1166,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
                           ),
                         ),
                       )
-                    : PdfEditorView(
-                        controller: controller!,
-                        documentId: _store!.documentId,
-                        autoRenderWorker: widget.autoRenderWorker,
-                        features: PdfEditorFeatures(tools: _editingTools),
-                        // The surface owns Ctrl/Cmd+S. Registering another
-                        // host binding would risk starting two writes.
-                        showSaveButton: false,
-                        alwaysAllowSave: true,
-                        onSave: (_) => unawaited(_save()),
-                        onSaveAs: (_) => unawaited(_save(copy: true)),
-                        onPickPdfFilesToInsert: _pickPdfFiles,
-                        imagePicker: (_) => _pickFile(['png', 'jpg', 'jpeg']),
-                        onExportPages: (bytes) =>
-                            unawaited(_exportPages([bytes])),
-                        onSplitPages: (bytes) => unawaited(_exportPages(bytes)),
-                        // No signing callback: the certificate-signing tool
-                        // stays hidden. Hand-drawn ink signatures remain.
-                      ),
+                    : _buildSurface(),
               ),
             ],
           ),

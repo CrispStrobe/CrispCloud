@@ -1971,6 +1971,57 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     if (!_nativeToolbar.supported) return;
     final l = AppLocalizations.of(context)!;
     final active = ModalRoute.of(context)?.isCurrent != false;
+    final pdf = ref.watch(pdfEditorMenuProvider);
+    if (pdf != null) {
+      final specs = <(PdfEditorMenuAction, String, String)>[
+        (PdfEditorMenuAction.close, 'Close', 'chevron.left'),
+        (PdfEditorMenuAction.undo, 'Undo', 'arrow.uturn.backward'),
+        (PdfEditorMenuAction.redo, 'Redo', 'arrow.uturn.forward'),
+        (PdfEditorMenuAction.attachNote, 'Attach note', 'text.bubble'),
+        (PdfEditorMenuAction.save, 'Save', 'square.and.arrow.down'),
+        (
+          PdfEditorMenuAction.saveCopy,
+          'Save a copy',
+          'square.and.arrow.down.on.square',
+        ),
+        (
+          PdfEditorMenuAction.exportCopy,
+          'Export a copy',
+          'square.and.arrow.up',
+        ),
+      ];
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || !identical(ref.read(pdfEditorMenuProvider), pdf))
+          return;
+        final ready = await _nativeToolbar.configure(
+          title: pdf.title.isEmpty ? l.appTitle : pdf.title,
+          visible: true,
+          dark: Theme.of(context).brightness == Brightness.dark,
+          items: [
+            for (final spec in specs)
+              {
+                'id': 'pdf:${pdf.sessionId}:${spec.$1.name}',
+                'label': context.commanderTr(spec.$2),
+                'symbol': spec.$3,
+                'enabled': pdf.isEnabled(spec.$1),
+              },
+          ],
+        );
+        if (mounted &&
+            identical(ref.read(pdfEditorMenuProvider), pdf) &&
+            ref.read(nativePdfToolbarReadyProvider) != ready) {
+          ref.read(nativePdfToolbarReadyProvider.notifier).state = ready;
+        }
+      });
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          ref.read(pdfEditorMenuProvider) == null &&
+          ref.read(nativePdfToolbarReadyProvider)) {
+        ref.read(nativePdfToolbarReadyProvider.notifier).state = false;
+      }
+    });
     final dual = ref.watch(showDualPanelProvider);
     final tree = ref.watch(showTreeSidebarProvider);
     final preview = ref.watch(showPreviewProvider);
@@ -2039,7 +2090,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       if (!mounted) return;
       final ready = await _nativeToolbar.configure(
         title: l.appTitle,
-        visible: visible,
+        visible: visible && active,
         dark: Theme.of(context).brightness == Brightness.dark,
         items: items,
       );
@@ -2060,7 +2111,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   Future<void> _onNativeToolbarAction(String id) async {
-    if (!mounted || ModalRoute.of(context)?.isCurrent == false) return;
+    if (!mounted) return;
+    if (id.startsWith('pdf:')) {
+      final parts = id.split(':');
+      final pdf = ref.read(pdfEditorMenuProvider);
+      if (parts.length == 3 && pdf != null && parts[1] == pdf.sessionId) {
+        for (final action in PdfEditorMenuAction.values) {
+          if (action.name == parts[2]) {
+            pdf.dispatch(action);
+            return;
+          }
+        }
+      }
+      return;
+    }
+    if (ModalRoute.of(context)?.isCurrent == false) return;
     final side = ref.read(activePanelProvider);
     switch (id) {
       case 'swap':

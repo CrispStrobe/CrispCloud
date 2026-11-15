@@ -4,6 +4,10 @@ import 'dart:typed_data';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
+import 'package:crisp_cloud/services/mac_browser_toolbar.dart';
+import 'package:crisp_cloud/services/pdf_editor_menu.dart';
+import 'package:crisp_cloud/services/pdf_selection_note.dart';
+import 'package:pdf_document/pdf_document.dart' show PdfRect;
 import 'package:crisp_cloud/services/pdf_device_export.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/pdf_editor_dialog.dart';
@@ -108,6 +112,78 @@ Finder get _unsaved => find.byKey(const ValueKey('pdf-unsaved-dialog'));
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'native PDF chrome removes the duplicate row only after acknowledgement',
+    (tester) async {
+      await _open(tester, _MemoryPdfStore());
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(PdfEditorDialog)),
+      );
+      expect(find.byKey(const ValueKey('pdf-close')), findsOneWidget);
+      final actions = container.read(pdfEditorMenuProvider)!;
+      expect(actions.title, 'sample.pdf');
+      expect(actions.sessionId, isNotEmpty);
+      container.read(nativePdfToolbarReadyProvider.notifier).state = true;
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byType(PdfEditorView), findsOneWidget);
+      container.read(nativePdfToolbarReadyProvider.notifier).state = false;
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('pdf-close')), findsOneWidget);
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      expect(container.read(pdfEditorMenuProvider), isNull);
+    },
+  );
+
+  testWidgets(
+    'Attach note edits selected highlight, Cancel preserves it, save reopens contents',
+    (tester) async {
+      final store = _MemoryPdfStore();
+      await _open(tester, store);
+      final controller = _controller(tester);
+      PdfSelectionNote.capture(controller, {
+        0: [const PdfRect(10, 20, 100, 40)],
+      }).attach('First note');
+      controller.selectAnnotation(0, 0);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('pdf-attach-note')));
+      await tester.pumpAndSettle();
+      expect(find.text('First note'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('pdf-selection-note-text')),
+        'Cancelled',
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('pdf-selection-note-dialog')),
+          matching: find.text('Cancel'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        controller.document.page(0).annotations.single.contents,
+        'First note',
+      );
+      await tester.tap(find.byKey(const ValueKey('pdf-attach-note')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('pdf-selection-note-text')),
+        'Updated note',
+      );
+      await tester.tap(find.byKey(const ValueKey('pdf-selection-note-save')));
+      await tester.pumpAndSettle();
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      final reopened = PdfEditingController(store.writes.single);
+      expect(
+        reopened.document.page(0).annotations.single.contents,
+        'Updated note',
+      );
+      reopened.dispose();
+    },
+  );
 
   testWidgets(
     'pending ink enables Save and survives immediate save and reopen',

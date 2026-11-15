@@ -53,6 +53,7 @@ List<PlatformMenuItem> buildPdfEditorPlatformMenus(
     PlatformMenu(
       label: 'Edit',
       menus: <PlatformMenuItem>[
+        item('Attach Note', PdfEditorMenuAction.attachNote),
         item(
           'Undo',
           PdfEditorMenuAction.undo,
