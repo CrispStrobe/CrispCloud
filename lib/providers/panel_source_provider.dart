@@ -44,8 +44,9 @@ Future<void> swapPanelSources(WidgetRef ref) async {
   final active = ref.read(activePanelProvider);
   final focus = ref.read(focusAreaProvider);
   try {
-    if (!await leftPanel.swapViewWith(rightPanel) || !ref.context.mounted)
+    if (!await leftPanel.swapViewWith(rightPanel) || !ref.context.mounted) {
       return;
+    }
     // A slow provider must not steal a newer focus choice on completion.
     if (ref.read(activePanelProvider) != active) return;
     final next = oppositePanel(active);
@@ -117,6 +118,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
     _log.debug('enterContainer: $containerPath');
     final revision = ++_sourceRevision;
     final parent = state;
+    var adopted = false;
     const service = PanelSourceService();
     try {
       final unlocked = await service.enterContainer(
@@ -126,12 +128,16 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
         byteSource: byteSource,
         options: options,
         headerLocation: headerLocation,
-        isCancelled: () => !mounted || revision != _sourceRevision,
+        // A later directory navigation cancels a pending unlock, but must not
+        // invalidate the reader after its session has been adopted by the pane.
+        isCancelled: () =>
+            !mounted || (!adopted && revision != _sourceRevision),
       );
       if (!mounted || revision != _sourceRevision) {
         await service.lockContainer(unlocked);
         return false;
       }
+      adopted = true;
       state = unlocked;
       _persist();
       return true;
@@ -160,8 +166,8 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
     while (cursor != null) {
       if (cursor is ContainerPanelSource) retained.add(cursor.unlockSession);
       cursor = switch (cursor) {
-        ArchivePanelSource s => s.parent,
-        ContainerPanelSource s => s.parent,
+        final ArchivePanelSource s => s.parent,
+        final ContainerPanelSource s => s.parent,
         _ => null,
       };
     }
@@ -172,8 +178,8 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
         unawaited(const PanelSourceService().lockContainer(cursor));
       }
       cursor = switch (cursor) {
-        ArchivePanelSource s => s.parent,
-        ContainerPanelSource s => s.parent,
+        final ArchivePanelSource s => s.parent,
+        final ContainerPanelSource s => s.parent,
         _ => null,
       };
     }

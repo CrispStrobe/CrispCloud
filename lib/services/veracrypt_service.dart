@@ -186,11 +186,15 @@ enum VeraCryptKdf {
 /// through 82 (at most 1 GiB / 64 passes). A higher pass budget is explicit,
 /// with an absolute 1024-pass ceiling. Budgets never alter derived parameters:
 /// an over-budget volume is refused, not retried with weaker settings.
+/// PBKDF2 defaults to at most five million iterations per candidate on native
+/// builds, with a configurable ceiling of twenty million. Browser attempts
+/// have an additional hard limit of one million iterations per candidate.
 class VeraCryptUnlockOptions {
   final VeraCryptKdf kdf;
   final int pim;
   final List<Uint8List> keyfiles;
   final bool trueCryptMode;
+  final int maxPbkdf2Iterations;
   final int maxArgon2MemoryKiB;
   final int maxArgon2Iterations;
 
@@ -199,6 +203,7 @@ class VeraCryptUnlockOptions {
     this.pim = 0,
     this.keyfiles = const [],
     this.trueCryptMode = false,
+    this.maxPbkdf2Iterations = 5000000,
     this.maxArgon2MemoryKiB = 1048576,
     this.maxArgon2Iterations = 64,
   });
@@ -312,6 +317,16 @@ class VeraCryptUnlockedVolume {
 class VeraCryptService {
   static const int _headerSize = 512;
   static const int _saltSize = 64;
+  // PointyCastle's web Argon2 implementation represents each 64-bit word as
+  // a separate Register64 object: the default needs over 54 million objects.
+  // Enable a browser backend only once it has bounded memory and a worker.
+  static const bool supportsArgon2id = bool.fromEnvironment('dart.library.io');
+
+  /// A work ceiling per candidate, independent of the optional tighter budget.
+  /// Browser KDFs run synchronously until a worker backend is available.
+  static const int maximumPbkdf2Iterations = supportsArgon2id
+      ? 20000000
+      : 1000000;
   static const int maxPim = 2147468;
   static const int maxKeyfiles = 64;
   static const int maxKeyfileBytes = 1048576;
@@ -479,6 +494,10 @@ class VeraCryptService {
         'A test iteration override requires PBKDF2, a positive count and no PIM.',
       );
     }
+    if (options.maxPbkdf2Iterations < 1 ||
+        options.maxPbkdf2Iterations > 20000000) {
+      throw ArgumentError('Invalid PBKDF2 resource budget.');
+    }
     if (options.maxArgon2MemoryKiB < 65536 ||
         options.maxArgon2MemoryKiB > 1048576 ||
         options.maxArgon2Iterations < 1 ||
@@ -486,6 +505,12 @@ class VeraCryptService {
       throw ArgumentError('Invalid Argon2 resource budget.');
     }
     if (options.kdf == VeraCryptKdf.argon2id) {
+      if (!supportsArgon2id) {
+        throw UnsupportedError(
+          'Argon2id container unlocking requires native CrispCloud; '
+          'the browser backend is not enabled.',
+        );
+      }
       final cost = argon2Parameters(options.pim);
       if (cost.memoryKiB > options.maxArgon2MemoryKiB ||
           cost.iterations > options.maxArgon2Iterations) {
@@ -493,8 +518,44 @@ class VeraCryptService {
           'The selected Argon2 settings exceed the unlock resource budget.',
         );
       }
+    } else {
+      // Check every candidate before doing password/keyfile or KDF work, so
+      // automatic selection cannot partially run an over-budget attempt.
+      final budget = options.maxPbkdf2Iterations < maximumPbkdf2Iterations
+          ? options.maxPbkdf2Iterations
+          : maximumPbkdf2Iterations;
+      for (final candidate in _candidates(options)) {
+        final iterations =
+            testIterations ??
+            pbkdf2Iterations(
+              candidate,
+              pim: options.pim,
+              trueCryptMode: options.trueCryptMode,
+            );
+        if (iterations > budget) {
+          throw const VeraCryptResourceLimitException(
+            'The selected PBKDF2 settings exceed the unlock resource budget.',
+          );
+        }
+      }
     }
   }
+
+  static List<VeraCryptKdf> _candidates(VeraCryptUnlockOptions options) =>
+      options.kdf != VeraCryptKdf.auto
+      ? [options.kdf]
+      : options.trueCryptMode
+      ? const [
+          VeraCryptKdf.sha512,
+          VeraCryptKdf.ripemd160,
+          VeraCryptKdf.whirlpool,
+        ]
+      : const [
+          VeraCryptKdf.sha512,
+          VeraCryptKdf.sha256,
+          VeraCryptKdf.whirlpool,
+          VeraCryptKdf.ripemd160,
+        ];
 
   /// VeraCrypt's binary keyfile mix. No normalization is applied to passwords.
   /// CRC state is raw (no final XOR); both pool and password mixing use byte
@@ -632,16 +693,7 @@ class VeraCryptService {
       trueCryptMode: options.trueCryptMode,
     );
     final salt = Uint8List.fromList(headerBytes.sublist(0, _saltSize));
-    final candidates = options.kdf != VeraCryptKdf.auto
-        ? [options.kdf]
-        : options.trueCryptMode
-        ? [VeraCryptKdf.sha512, VeraCryptKdf.ripemd160, VeraCryptKdf.whirlpool]
-        : [
-            VeraCryptKdf.sha512,
-            VeraCryptKdf.sha256,
-            VeraCryptKdf.whirlpool,
-            VeraCryptKdf.ripemd160,
-          ];
+    final candidates = _candidates(options);
     try {
       for (final candidate in candidates) {
         final key = _deriveBytes(
@@ -665,8 +717,9 @@ class VeraCryptService {
             trueCryptMode: options.trueCryptMode,
             containerSizeBytes: containerSizeBytes,
           );
-          if (metadata != null)
+          if (metadata != null) {
             return VeraCryptUnlockedVolume._(metadata, clear);
+          }
         } finally {
           engine.dispose();
           _wipe(clear);
@@ -729,8 +782,9 @@ class VeraCryptService {
     if (trueCryptMode) {
       if ((version != 4 && version != 5) ||
           requiredVersion < 0x0600 ||
-          requiredVersion > 0x071a)
+          requiredVersion > 0x071a) {
         return null;
+      }
     } else if (version != 5 || requiredVersion > 0x0126) {
       return null;
     }
@@ -756,12 +810,14 @@ class VeraCryptService {
         volumeSize % sectorSize != 0 ||
         dataOffset % sectorSize != 0 ||
         dataSize % sectorSize != 0 ||
-        (hiddenSize != 0 && hiddenSize != volumeSize))
+        (hiddenSize != 0 && hiddenSize != volumeSize)) {
       return null;
+    }
     if (containerSizeBytes != null) {
       final dataLimit = containerSizeBytes - 131072;
-      if (dataOffset > dataLimit || dataSize > dataLimit - dataOffset)
+      if (dataOffset > dataLimit || dataSize > dataLimit - dataOffset) {
         return null;
+      }
     }
     return VeraCryptVolumeHeader(
       salt: Uint8List.fromList(salt),

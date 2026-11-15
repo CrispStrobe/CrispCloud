@@ -185,6 +185,8 @@ void main() {
         ),
         const VeraCryptUnlockOptions(maxArgon2MemoryKiB: 1),
         const VeraCryptUnlockOptions(maxArgon2Iterations: 1025),
+        const VeraCryptUnlockOptions(maxPbkdf2Iterations: 0),
+        const VeraCryptUnlockOptions(maxPbkdf2Iterations: 20000001),
         VeraCryptUnlockOptions(keyfiles: [Uint8List(0)]),
         VeraCryptUnlockOptions(
           keyfiles: List.generate(65, (_) => Uint8List(1)),
@@ -200,6 +202,17 @@ void main() {
         );
       }
       for (final options in [
+        const VeraCryptUnlockOptions(kdf: VeraCryptKdf.sha512, pim: 4986),
+        const VeraCryptUnlockOptions(pim: VeraCryptService.maxPim),
+        const VeraCryptUnlockOptions(
+          kdf: VeraCryptKdf.ripemd160,
+          maxPbkdf2Iterations: 500000,
+        ),
+        const VeraCryptUnlockOptions(
+          kdf: VeraCryptKdf.sha512,
+          pim: 19986,
+          maxPbkdf2Iterations: 20000000,
+        ),
         const VeraCryptUnlockOptions(
           kdf: VeraCryptKdf.argon2id,
           pim: 31,
@@ -225,6 +238,32 @@ void main() {
         ),
         throwsArgumentError,
       );
+      // An empty raw header proves allowed upper-bound settings validate
+      // without actually performing their intentionally expensive work.
+      expect(
+        VeraCryptService.unlockHeader(
+          Uint8List(0),
+          'pw',
+          options: const VeraCryptUnlockOptions(
+            kdf: VeraCryptKdf.sha512,
+            pim: 4985,
+          ),
+        ),
+        isNull,
+      );
+      expect(
+        VeraCryptService.unlockHeader(
+          Uint8List(0),
+          'pw',
+          options: const VeraCryptUnlockOptions(
+            kdf: VeraCryptKdf.sha512,
+            pim: 19985,
+            maxPbkdf2Iterations: 20000000,
+          ),
+        ),
+        isNull,
+      );
+      expect(VeraCryptService.maximumPbkdf2Iterations, 20000000);
       expect(
         () => VeraCryptService.unlockHeader(
           Uint8List(512),

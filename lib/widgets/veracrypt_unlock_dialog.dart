@@ -5,9 +5,9 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 
-import '../l10n/commander_strings.dart';
+import '../l10n/veracrypt_strings.dart';
 import '../services/veracrypt_container_reader.dart';
 import '../services/veracrypt_service.dart';
 
@@ -28,20 +28,23 @@ class VeraCryptKeyfile {
 /// The recipient must dispose them even if opening fails or is cancelled.
 class VeraCryptCredentials {
   VeraCryptCredentials({
-    required String password,
+    required this._password,
     required this.options,
     required this.headerLocation,
-  }) : _password = password;
+  });
 
-  String? _password;
+  String _password;
+  bool _disposed = false;
   final VeraCryptUnlockOptions options;
   final VeraCryptHeaderLocation headerLocation;
 
-  String get password =>
-      _password ?? (throw StateError('These credentials have been disposed.'));
+  String get password => _disposed
+      ? throw StateError('These credentials have been disposed.')
+      : _password;
 
   void dispose() {
-    _password = null;
+    _password = '';
+    _disposed = true;
     for (final keyfile in options.keyfiles) {
       keyfile.fillRange(0, keyfile.length, 0);
     }
@@ -85,6 +88,7 @@ class VeraCryptUnlockDialog extends StatefulWidget {
     this.initialPim = 0,
     this.initialHeaderLocation = VeraCryptHeaderLocation.primary,
     this.pickKeyfiles,
+    this.allowArgon2id = true,
   });
 
   final String name;
@@ -94,6 +98,9 @@ class VeraCryptUnlockDialog extends StatefulWidget {
   final int initialPim;
   final VeraCryptHeaderLocation initialHeaderLocation;
   final VeraCryptKeyfilePicker? pickKeyfiles;
+
+  /// A host may narrow capabilities; this cannot enable an unsupported backend.
+  final bool allowArgon2id;
 
   @override
   State<VeraCryptUnlockDialog> createState() => _VeraCryptUnlockDialogState();
@@ -109,6 +116,9 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
   bool _picking = false;
   String? _error;
 
+  bool get _supportsArgon2id =>
+      widget.allowArgon2id && VeraCryptService.supportsArgon2id;
+
   @override
   void initState() {
     super.initState();
@@ -116,6 +126,9 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
     _kdf = widget.initialKdf;
     if (_trueCrypt &&
         const [VeraCryptKdf.argon2id, VeraCryptKdf.sha256].contains(_kdf)) {
+      _kdf = VeraCryptKdf.auto;
+    }
+    if (!_supportsArgon2id && _kdf == VeraCryptKdf.argon2id) {
       _kdf = VeraCryptKdf.auto;
     }
     _pim = TextEditingController(
@@ -186,6 +199,12 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
       setState(() => _error = 'Enter a password or choose keyfiles.');
       return;
     }
+    if (_workLimitExceeded(_trueCrypt ? 0 : pim!)) {
+      setState(() {
+        _error = 'This PIM exceeds the bundled reader work limit.';
+      });
+      return;
+    }
     final credentials = VeraCryptCredentials(
       password: _password.text,
       options: VeraCryptUnlockOptions(
@@ -202,6 +221,49 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
     Navigator.of(context).pop(credentials);
   }
 
+  bool _workLimitExceeded(int pim) {
+    const budget = VeraCryptUnlockOptions();
+    if (_kdf == VeraCryptKdf.argon2id) {
+      final cost = VeraCryptService.argon2Parameters(pim);
+      return !_supportsArgon2id ||
+          cost.memoryKiB > budget.maxArgon2MemoryKiB ||
+          cost.iterations > budget.maxArgon2Iterations;
+    }
+    final iterations = VeraCryptService.pbkdf2Iterations(
+      _kdf == VeraCryptKdf.auto ? VeraCryptKdf.ripemd160 : _kdf,
+      pim: pim,
+      trueCryptMode: _trueCrypt,
+    );
+    return iterations > budget.maxPbkdf2Iterations ||
+        iterations > VeraCryptService.maximumPbkdf2Iterations;
+  }
+
+  String? _costText(BuildContext context) {
+    final input = _pim.text.trim();
+    final pim = _trueCrypt || input.isEmpty ? 0 : int.tryParse(input);
+    if (pim == null || pim < 0 || pim > VeraCryptService.maxPim) return null;
+    if (_kdf == VeraCryptKdf.argon2id) {
+      final cost = VeraCryptService.argon2Parameters(pim);
+      return veraCryptText(context, 'Argon2id: {0} MiB, {1} passes.', [
+        cost.memoryMiB,
+        cost.iterations,
+      ]);
+    }
+    return veraCryptText(
+      context,
+      _kdf == VeraCryptKdf.auto
+          ? 'PBKDF2: up to {0} iterations per hash.'
+          : 'PBKDF2: {0} iterations.',
+      [
+        VeraCryptService.pbkdf2Iterations(
+          _kdf == VeraCryptKdf.auto ? VeraCryptKdf.ripemd160 : _kdf,
+          pim: pim,
+          trueCryptMode: _trueCrypt,
+        ),
+      ],
+    );
+  }
+
   String _kdfLabel(VeraCryptKdf kdf) => switch (kdf) {
     VeraCryptKdf.auto => 'Automatic (PBKDF2)',
     VeraCryptKdf.sha512 => 'PBKDF2 / SHA-512',
@@ -213,7 +275,7 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
 
   @override
   Widget build(BuildContext context) {
-    String tr(String text) => context.commanderTr(text);
+    String tr(String text) => veraCryptText(context, text);
     return AlertDialog(
       title: Text(tr('Open encrypted container')),
       content: SizedBox(
@@ -239,6 +301,7 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
               DropdownButtonFormField<bool>(
                 key: const ValueKey('veracrypt-format'),
                 initialValue: _trueCrypt,
+                isExpanded: true,
                 decoration: InputDecoration(labelText: tr('Format')),
                 items: const [
                   DropdownMenuItem(value: false, child: Text('VeraCrypt')),
@@ -285,6 +348,8 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
                         ].contains(kdf))
                       DropdownMenuItem(
                         value: kdf,
+                        enabled:
+                            kdf != VeraCryptKdf.argon2id || _supportsArgon2id,
                         child: Text(tr(_kdfLabel(kdf))),
                       ),
                 ],
@@ -296,7 +361,9 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
                 const SizedBox(height: 8),
                 Text(
                   tr(
-                    _kdf == VeraCryptKdf.argon2id
+                    !_supportsArgon2id
+                        ? 'Argon2id containers require the native app.'
+                        : _kdf == VeraCryptKdf.argon2id
                         ? 'Argon2id uses 416 MiB with the default PIM. A custom PIM changes memory use and unlock time.'
                         : 'Choose Argon2id explicitly for an Argon2id container.',
                   ),
@@ -308,10 +375,19 @@ class _VeraCryptUnlockDialogState extends State<VeraCryptUnlockDialog> {
                   controller: _pim,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  onChanged: (_) => setState(() => _error = null),
                   decoration: InputDecoration(
                     labelText: tr('PIM'),
                     helperText: tr('Leave empty or enter 0 for the default.'),
                   ),
+                ),
+              ],
+              if (_costText(context) case final cost?) ...[
+                const SizedBox(height: 8),
+                Text(
+                  cost,
+                  key: const ValueKey('veracrypt-cost'),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
               const SizedBox(height: 12),

@@ -51,6 +51,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/veracrypt_strings.dart';
 import '../l10n/binary_structure_strings.dart';
 import '../l10n/disk_partition_strings.dart';
 import '../l10n/lrc_strings.dart';
@@ -1752,7 +1753,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     var pim = 0;
     var header = VeraCryptHeaderLocation.primary;
     for (var attempt = 0; attempt < 3; attempt++) {
-      if (!current()) return;
+      if (!mounted || !current()) return;
       setState(() => _preparing = false);
       final credentials = await showVeraCryptUnlockDialog(
         context,
@@ -4866,7 +4867,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     // closes the archive/key owner through the normal cleanup.
                     onPressed: () => _selectMode(ViewerMode.binary),
                     icon: const Icon(Icons.lock_outline),
-                    label: Text(context.commanderTr('Lock container')),
+                    label: Text(veraCryptText(context, 'Lock container')),
                   ),
                 TextButton.icon(
                   key: const ValueKey('test-archive'),
@@ -4942,7 +4943,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                       key: const ValueKey('veracrypt-retry'),
                       onPressed: () => _selectMode(ViewerMode.archive),
                       icon: const Icon(Icons.lock_open),
-                      label: Text(context.commanderTr('Unlock container')),
+                      label: Text(veraCryptText(context, 'Unlock container')),
                     ),
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.hex),

@@ -85,6 +85,7 @@ Future<ViewerArchive> openVeraCryptArchive(
         trueCryptMode: options.trueCryptMode,
         maxArgon2MemoryKiB: options.maxArgon2MemoryKiB,
         maxArgon2Iterations: options.maxArgon2Iterations,
+        maxPbkdf2Iterations: options.maxPbkdf2Iterations,
       ),
       source.length,
     );
