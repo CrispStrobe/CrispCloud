@@ -115,10 +115,8 @@ bool officeHandleDocumentShortcut(OfficeController controller, KeyEvent event) {
         (controller.findSession.options == null ||
             controller.findSession.options!.query.isEmpty)) {
       controller.requestFind();
-    } else if (shift) {
-      controller.findPrevious();
     } else {
-      controller.findNext();
+      _stepDocumentFind(controller, forward: !shift);
     }
     return true;
   }
@@ -972,6 +970,12 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
   /// didUpdateWidget API.
   void didUpdateWidget(QudsSheetEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.controller, _c)) {
+      oldWidget.controller.removeListener(_rebuild);
+      _c.addListener(_rebuild);
+      _stopNavRepeat();
+      _dismissContextMenu();
+    }
     if (widget.config != null && !identical(widget.config, _c.config)) {
       _c.syncConfig(widget.config!);
     }
@@ -1576,6 +1580,8 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
               ),
             ),
           ),
+          if (widget.navigationBuilder != null)
+            widget.navigationBuilder!(context, _c),
           if (widget.statusBarBuilder != null)
             widget.statusBarBuilder!(context, _c),
         ],
@@ -2674,6 +2680,24 @@ class RenderSpeakerNotesBar extends RenderBox {
   }
 }
 
+void _stepDocumentFind(OfficeController controller, {required bool forward}) {
+  try {
+    if (forward) {
+      controller.findNext();
+    } else {
+      controller.findPrevious();
+    }
+  } on StateError catch (error) {
+    // The sheet controller retains the draft and notifies host chrome with
+    // lastValidationError. Keyboard navigation must leave that correction path
+    // available instead of forwarding an expected validation error to Flutter.
+    if (controller is! SheetEditorController ||
+        controller.lastValidationError != error.message) {
+      rethrow;
+    }
+  }
+}
+
 Map<Type, Action<Intent>> _documentActions(OfficeController controller) {
   return <Type, Action<Intent>>{
     OfficeFindIntent: CallbackAction<OfficeFindIntent>(
@@ -2702,11 +2726,7 @@ Map<Type, Action<Intent>> _documentActions(OfficeController controller) {
     ),
     OfficeFindNextIntent: CallbackAction<OfficeFindNextIntent>(
       onInvoke: (OfficeFindNextIntent i) {
-        if (i.forward) {
-          controller.findNext();
-        } else {
-          controller.findPrevious();
-        }
+        _stepDocumentFind(controller, forward: i.forward);
         return null;
       },
     ),

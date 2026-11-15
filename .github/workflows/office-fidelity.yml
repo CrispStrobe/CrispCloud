@@ -106,6 +106,7 @@ jobs:
             build/office-fill-host-acceptance/
             build/office-sheet-state-acceptance/
             build/office-style-history-acceptance/
+            build/office-sheet-navigation-acceptance/
             packages/quds_office_engine/build/fidelity*
   external-schema:
     needs: host-roundtrip
@@ -123,7 +124,7 @@ jobs:
       - name: Require every actual host export
         run: |
           python3 -m unittest discover -s tool -p test_office_host_evidence.py
-          python3 tool/office_host_evidence.py verify --root evidence --report build/external/host-inventory.json
+          python3 tool/office_host_evidence.py verify --root evidence --downloaded-artifacts --report build/external/host-inventory.json
       - name: Prove validator detects invalid XML
         run: dotnet run --project tool/office-validation -- --self-test
       - name: Validate host uploads and engine exports

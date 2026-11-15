@@ -539,6 +539,7 @@ abstract final class WordDrawingIo {
     String? fill;
     String? stroke;
     final List<WmlBlock> frameBlocks = <WmlBlock>[];
+    var sawTextBox = false;
     final PictureAdjust adj = PictureAdjust();
     if (!reader.isEmptyElement) {
       final int depth = reader.depth;
@@ -558,6 +559,9 @@ abstract final class WordDrawingIo {
             reader.localName == 'txbx' ||
             reader.localName == 'txbxContent') {
           sawShape = true;
+        }
+        if (reader.localName == 'txbx' || reader.localName == 'txbxContent') {
+          sawTextBox = true;
         }
         if (reader.localName == 'txbxContent' && readBlockContent != null) {
           frameBlocks.addAll(readBlockContent(reader));
@@ -756,6 +760,7 @@ abstract final class WordDrawingIo {
         importedInsets: frameInsets,
         sourceLinePropertiesXml: frameLineProperties,
         importedStrokeColor: stroke,
+        hasTextBox: sawTextBox,
         blocks: frameBlocks,
       );
     }

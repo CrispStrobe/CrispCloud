@@ -14,6 +14,7 @@ import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
 import '../model/word_bookmarks.dart';
 import '../model/word_content_controls.dart';
+import '../model/word_field_spans.dart';
 import '../model/word_notes.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
@@ -73,6 +74,7 @@ class WordSerializer {
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
     WordContentControls.validate(document);
+    _skippedFieldBoundaries = WordFieldSpans.unbalanced(document);
     for (final blocks in [
       for (final section in document.sections) section.blocks,
       for (final note in [...document.footnotes, ...document.endnotes])
@@ -319,6 +321,31 @@ class WordSerializer {
       case WmlOpaqueBlock():
         WordOpaqueIo.write(w, block, _package!, _activePartUri);
     }
+  }
+
+  Set<WmlFieldBoundary> _skippedFieldBoundaries = Set.identity();
+
+  void _writeFieldBoundary(XmlWriter w, WmlFieldBoundary boundary) {
+    w.writeStartElement('r', prefix: 'w');
+    final rPr = boundary.runPropertiesXml;
+    if (rPr != null && rPr.isNotEmpty) {
+      XmlDocument.parse(rPr).root!.writeTo(w);
+    }
+    if (boundary.kind == WmlFieldBoundaryKind.instruction) {
+      w.writeStartElement('instrText', prefix: 'w');
+      w.writeAttribute('xml:space', 'preserve');
+      w.writeText(boundary.text);
+      w.writeEndElement();
+    } else if (boundary.sourceXml != null) {
+      XmlDocument.parse(boundary.sourceXml!).root!.writeTo(w);
+    } else {
+      w.writeEmptyElement(
+        'fldChar',
+        prefix: 'w',
+        attributes: {'w:fldCharType': boundary.kind.name},
+      );
+    }
+    w.writeEndElement();
   }
 
   void _writeToc(XmlWriter w, WmlToc toc) {
@@ -796,6 +823,10 @@ class WordSerializer {
             _writeTrackedRun(w, paragraph, inline, offset);
           }
           offset += inline.text.length;
+        case WmlFieldBoundary():
+          if (!_skippedFieldBoundaries.contains(inline)) {
+            _writeFieldBoundary(w, inline);
+          }
         case WmlOpaqueInline():
           w.writeStartElement('r', prefix: 'w');
           final rPr = inline.runPropertiesXml;
@@ -1579,36 +1610,42 @@ class WordSerializer {
           visuals: section.headerVisuals,
           header: true,
           watermark: i == 0 ? watermark : '',
+          preserved: section.preservedStories['header'],
         ),
         footer: _writeHfPart(
           package,
           section.footer,
           visuals: section.footerVisuals,
           header: false,
+          preserved: section.preservedStories['footer'],
         ),
         firstHeader: _writeHfPart(
           package,
           section.firstHeader,
           visuals: section.firstHeaderVisuals,
           header: true,
+          preserved: section.preservedStories['firstHeader'],
         ),
         firstFooter: _writeHfPart(
           package,
           section.firstFooter,
           visuals: section.firstFooterVisuals,
           header: false,
+          preserved: section.preservedStories['firstFooter'],
         ),
         evenHeader: _writeHfPart(
           package,
           section.evenHeader,
           visuals: section.evenHeaderVisuals,
           header: true,
+          preserved: section.preservedStories['evenHeader'],
         ),
         evenFooter: _writeHfPart(
           package,
           section.evenFooter,
           visuals: section.evenFooterVisuals,
           header: false,
+          preserved: section.preservedStories['evenFooter'],
         ),
       );
     }
@@ -1621,7 +1658,28 @@ class WordSerializer {
     required List<WmlVisual> visuals,
     required bool header,
     String watermark = '',
+    WmlOpaqueBlock? preserved,
   }) {
+    if (preserved != null && story.isEmpty && visuals.isEmpty) {
+      // A part the story model could not represent: write it back verbatim
+      // (relationships remapped to the new part by WordOpaqueIo).
+      final int n = _hfPart++;
+      final String name = header ? 'header$n.xml' : 'footer$n.xml';
+      final String uri = OpcUris.resolve(_mainPartUri, name);
+      final String previousPart = _activePartUri;
+      _activePartUri = uri;
+      final XmlWriter w = XmlWriter();
+      w.writeStartDocument();
+      WordOpaqueIo.write(w, preserved, package, uri);
+      _activePartUri = previousPart;
+      return _putNamedPart(
+        package,
+        uri,
+        header ? OfficeContentTypes.wordHeader : OfficeContentTypes.wordFooter,
+        w.toXml(),
+        header ? RelationshipTypes.header : RelationshipTypes.footer,
+      );
+    }
     if (story.isEmpty && visuals.isEmpty && watermark.isEmpty) {
       return null;
     }

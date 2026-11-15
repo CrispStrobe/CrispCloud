@@ -39,6 +39,7 @@ import '../services/office_editor_menu.dart';
 import '../services/document_fonts.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
+import 'office_worksheet_bar.dart';
 
 const _log = Log('OfficeEditor');
 
@@ -665,6 +666,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         focusNode: _focusNode,
         findBarBuilder: (BuildContext context, SheetEditorController c) =>
             OfficeFindBar(controller: c),
+        navigationBuilder: (BuildContext context, SheetEditorController c) =>
+            OfficeWorksheetBar(controller: c, editorFocusNode: _focusNode),
       ),
       OfficeEditorKind.slides => QudsSlideEditor(
         controller: controller as SlideEditorController,

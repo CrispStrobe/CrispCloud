@@ -170,6 +170,7 @@ abstract final class WmlClone {
       sourceLinePropertiesXml: source.sourceLinePropertiesXml,
       importedStrokeColor: source.importedStrokeColor,
       anchorParagraphProperties: source.anchorParagraphProperties?.copy(),
+      hasTextBox: source.hasTextBox,
       blocks: <WmlBlock>[
         for (final WmlBlock block in source.blocks) WmlClone.block(block),
       ],

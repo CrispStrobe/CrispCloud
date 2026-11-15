@@ -371,7 +371,9 @@ void main() {
       'equation': '<w:p><m:oMath><m:r><m:t>x</m:t></m:r></m:oMath></w:p>',
       'table': '<w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl>',
     }.entries) {
-      test('$story control retains explicit ${content.key} import guard', () {
+      test(story == 'comments'
+          ? '$story control retains explicit ${content.key} import guard'
+          : '$story control with ${content.key} is preserved verbatim', () {
         final source = _source(
           changedStory: story,
           changedContent: content.value,
@@ -379,16 +381,25 @@ void main() {
         final before = {
           for (final part in source.parts) part.uri: List.of(part.bytesView),
         };
-        expect(
-          () => WordDeserializer().read(source),
-          throwsA(
-            isA<UnsupportedError>().having(
-              (error) => error.message,
-              'source context',
-              contains('/word/aux_$story.xml'),
+        if (story == 'comments') {
+          expect(
+            () => WordDeserializer().read(source),
+            throwsA(
+              isA<UnsupportedError>().having(
+                (error) => error.message,
+                'source context',
+                contains('/word/aux_$story.xml'),
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Kept verbatim instead of refusing; import changes no part.
+          final doc = WordDeserializer().read(source);
+          expect(
+            doc.sections.first.preservedStories.keys,
+            contains(story == 'header_default' ? 'header' : 'footer'),
+          );
+        }
         expect({
           for (final part in source.parts) part.uri: List.of(part.bytesView),
         }, before);
