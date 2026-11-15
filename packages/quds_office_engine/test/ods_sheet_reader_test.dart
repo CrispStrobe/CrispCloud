@@ -263,6 +263,7 @@ void main() {
   defaultAndTimeTests();
   defaultStyleTests();
   defaultGeometryTests();
+  hiddenStateTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1385,5 +1386,34 @@ void defaultGeometryTests() {
     final sheet = book.sheets.first;
     expect(sheet.columnWidth(0), greaterThan(160));
     expect(sheet.rowHeightAt(0), closeTo(96, 0.01));
+  });
+}
+
+void hiddenStateTests() {
+  test('ODS hidden columns and rows survive save', () async {
+    final source = _ods(
+      '<t:table t:name="Data">'
+      '<t:table-column t:visibility="collapse"/>'
+      '<t:table-column/>'
+      '<t:table-row t:visibility="collapse"><t:table-cell>'
+      '<x:p>Hidden</x:p></t:table-cell></t:table-row>'
+      '<t:table-row><t:table-cell><x:p>Visible</x:p></t:table-cell>'
+      '</t:table-row></t:table>',
+    );
+    final book = OdsSheetReader.readBytes(source);
+    final sheet = book.sheets.first;
+    expect(sheet.columnProperties[0]?['hidden'], '1');
+    expect(sheet.rowHeightAt(0), 0);
+    expect(sheet.hiddenRows, contains(0));
+    expect(sheet.cellA1('A1').value, 'Hidden');
+
+    final reopened = SheetDeserializer().readBytes(
+      await OfficeIsolateSave.workbook(book, recalculate: false),
+    );
+    final saved = reopened.sheets.first;
+    expect(saved.columnProperties[0]?['hidden'], '1');
+    expect(saved.hiddenRows, contains(0));
+    expect(saved.rowHeightAt(0), 0);
+    expect(saved.cellA1('A2').value, 'Visible');
   });
 }
