@@ -4,6 +4,20 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Import ODS merged anchors and covered cells at their original coordinates,
+  including vertical spans and data after repeated blank rows. Recognize row
+  and column groups by namespace, resolve named cell styles from `styles.xml`,
+  and retain inherited wrap settings, explicit spaces and formula string text.
+  Repeated padding advances the grid without allocating cells; meaningful data
+  outside 100,000 rows or 4,096 columns declines instead of being truncated.
+  The workbook shares limits of 128 sheets, 200,000 materialized cells,
+  200,000 dimension assignments, 1,000 merges and 8 MiB expanded UTF-8 cell text.
+  Input and combined XML each cap at 64 MiB; XML nesting/events and style work
+  have separate limits. Repeated formulas, matrix formulas, repeated merged
+  anchors, overlapping merges, nested tables and covered cells that contain
+  stored data explicitly decline. This is a bounded ODS-to-XLSX import profile,
+  not roundtrip preservation of arbitrary ODF features.
+
 - Preserve imported typed formula caches through unsupported dependencies,
   including cross-sheet and runtime references. Resolve recalculations before
   writing caches, retain unsupported provenance through nested values, and keep

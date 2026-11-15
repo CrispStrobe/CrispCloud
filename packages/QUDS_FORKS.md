@@ -23,7 +23,8 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds main `793c64ac4fc2e896706aa65c13eaa70bd27f7267` and standalone
+The app mirrors Quds `fe500e2bf50aae3098040ee0308221db2ae0d9f6` on
+`integration/storage-odf-qualification-20261115` and standalone
 legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,223 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
@@ -38,6 +39,15 @@ native style, unwrapped cells cannot reuse wrapped styles, and wrap-only edits
 survive new-workbook saves. The scripted Word oracle resolves heading outline
 levels through paragraph styles and their inheritance while retaining explicit
 override and malformed-style negative controls.
+
+ODS import and table previews preserve merged/covered-cell coordinates and
+repeated interior blank rows. Namespace-aware grouped rows and inherited cell
+styles are retained. Expansion budgets reject out-of-profile data explicitly;
+unsupported repeated/matrix formulas and ambiguous merges are not silently
+converted. The editor exports a new XLSX copy and keeps the ODS source intact.
+Regression tests cover completed copies, cancellation, browser downloads and
+newer edits made while a copy picker is open. The exact supported import profile
+and limits are documented in the engine CHANGELOG.
 
 Selection screenshot tests retain the original macOS-authored masters and use
 separate Linux-host references. The Linux PNGs are exact captures from the
