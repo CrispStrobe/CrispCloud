@@ -172,8 +172,14 @@ abstract final class LegacyHtmlSheetReader {
               ..value = raw
               ..type = SmlCellType.string;
           }
+          // Excel's HTML table import applies a 10 pt wrapped cell style;
+          // header cells are bold and centred.
+          target.fontSize = 10;
+          target.wrapText = true;
           if (isHeader) {
-            target.fontBold = true;
+            target
+              ..fontBold = true
+              ..horizontalAlign = SmlHAlign.center;
           }
           if (rowspan > 1 || colspan > 1) {
             sheet.merges.add(
