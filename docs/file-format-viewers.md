@@ -18,7 +18,8 @@ platform acceptance remains pending as described under [Verification](#verificat
 | `.ppt`, `.pps`, `.pot` | Positioned slide rendering through the selected browser engine; explicit **Text fallback** uses the native current-slide reader | Existing explicit hex editor; no binary PowerPoint writer |
 | `.wpd`, `.wp`, `.wp5`, `.wp6` | Structured WordPerfect paragraphs, styles, lists, ordered tables, running sections and notes through libwpd | Source/Hex inspection; no WordPerfect writer added |
 | `.chm` | Compiled Help topics, contents/index/search and archive-local resources | Source/Hex inspection; no Help authoring added |
-| `.xls`, `.xlt`, `.xlsb` | Worksheet tabs and a virtual grid with supported formatting and saved formula values | Source/Hex inspection; no legacy Excel writer added |
+| `.xls`, `.xlt` | Quds BIFF import rendered as a typed, formula-aware read-only grid; **Legacy** toggle falls back to the File Viewer virtual grid | Quds import → sheet editor; Save writes a new `.xlsx` copy, the original `.xls` is never rewritten |
+| `.xlsb` | Worksheet tabs and a virtual grid with supported formatting and saved formula values | Source/Hex inspection; no legacy Excel writer added |
 | `.ps`, `.eps` | Local PostScript page rasterization through the Stet worker/WASM engine | Source/Hex inspection; no PostScript writer added |
 | `.xml`, `.xsd`, `.xsl`, `.xslt` | Existing tree/source view plus explicit **XSD / XSLT** validation and transformation tools | Existing XML source editor; tool output does not overwrite the input |
 | `.doc`, `.dot` | Supported main-story formatting, list labels, tables and revision markup from unencrypted Word 97–2007 binary files | Separate reviewed structured DOCX/DOCM, installed Word/LibreOffice DOCX/DOCM, or an explicitly selected text-only DOCX |
