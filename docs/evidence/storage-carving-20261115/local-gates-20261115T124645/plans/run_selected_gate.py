@@ -141,6 +141,16 @@ elif args.name == "scripted-oracle":
     artifacts = fresh_artifacts("-artifacts")
     command = [sys.executable, str(driver), "--repo", str(repo), "--output", str(artifacts),
                "--generation-receipt", str(generation / "produced-files.json")]
+elif args.name == "comments-oracle":
+    driver = plans / "run_comments_oracle.py"
+    verifier = plans / "verify_comments.py"
+    fixture = repo / "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+    tools.extend([driver, verifier, fixture])
+    artifacts = fresh_artifacts("-artifacts")
+    command = [sys.executable, str(driver), "--repo", str(repo),
+               "--dart", str(dart), "--tested-head", head,
+               "--source-resolution-sha256", recording.snapshot(repo)["entries_sha256"],
+               "--output", str(artifacts)]
 elif args.name == "source-integrity":
     driver = plans / "run_source_and_notices.py"
     historical = repo / "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity"

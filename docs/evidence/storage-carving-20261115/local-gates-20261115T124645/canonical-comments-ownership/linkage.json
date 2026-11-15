@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "source_commit": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "source_tree": "9b5f9f9aeeb2fc59f46f0331037118a980b864b3",
+  "evidence_commit": "9f60ab2a47c2ebcef3d322a608d690178ff9b22f",
+  "evidence_tree": "4d1ef23da7a81ab2e61052e467ca449d6c98ed5c",
+  "branch": "integration/comments-ownership-20261115T132154",
+  "observed_incoming_pin": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+  "source_parents": [
+    "7a7fd2fe776d5733ddb824315e0768d01d1cbabc"
+  ],
+  "preserved_ancestors": {
+    "4e8c8f80f206e93be8530a94da478e06c0f87608": true,
+    "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8": true,
+    "c17098d65fe5f6e2bdf9999389deb2a6b508d928": true
+  },
+  "restored_ods_test_blob": "ed5cd8985befe19b89375a63bbb73581753fda60",
+  "changed_source_files": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "blob": "4cbc5fa6bc476572253cfbd30685e6fbdece9fad",
+      "size": 54851,
+      "sha256": "4bfabb807ff50edf68d6e2e1d3a32623847ef10b9dc055ab392bf5614014eeb7"
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+      "blob": "e09987bd9895692e46ee41334d783363e32cb561",
+      "size": 20310,
+      "sha256": "e9b5aad698d42df42c88d6b236ab01fa8303e61e1e2827471b882a83e7a462f0"
+    },
+    {
+      "path": "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+      "blob": "9b545271f344d35aaf4abc8dcdcca657891a5949",
+      "size": 4817,
+      "sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3"
+    }
+  ],
+  "gates": [
+    {
+      "name": "failing-baseline",
+      "tested_head": "55fe279284130d8691c9edcd3fe5ae68656a7037",
+      "returncode": 1,
+      "inputs_and_commit_stable": true,
+      "input_entries_sha256": "658f0f770138ff5b0f2adfb978cd2961f2a27cedca2bd8890bcea7d6855c6ed8",
+      "qualification_success": false,
+      "expected_failing_baseline": true,
+      "totals": {
+        "errors": 4,
+        "failed": 4,
+        "other_results": 0,
+        "passed": 0,
+        "skipped": 0,
+        "tests": 4
+      },
+      "scope": "Focused machine test receipts; not an additional primary host cohort"
+    },
+    {
+      "name": "corrected-focused",
+      "tested_head": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+      "returncode": 0,
+      "inputs_and_commit_stable": true,
+      "input_entries_sha256": "886b4834df0031addf863e0fdd5b70b655d851249c308d9a5483fd350bde781b",
+      "qualification_success": true,
+      "expected_failing_baseline": false,
+      "totals": {
+        "errors": 0,
+        "failed": 0,
+        "other_results": 0,
+        "passed": 28,
+        "skipped": 0,
+        "tests": 28
+      },
+      "scope": "Focused machine test receipts; not an additional primary host cohort"
+    },
+    {
+      "name": "strict-analysis",
+      "tested_head": "eade542c800b3087bf478a11976ab4111983cf4c",
+      "returncode": 0,
+      "inputs_and_commit_stable": true,
+      "input_entries_sha256": "886b4834df0031addf863e0fdd5b70b655d851249c308d9a5483fd350bde781b",
+      "qualification_success": true,
+      "expected_failing_baseline": false,
+      "totals": null,
+      "scope": "Selected strict analysis of writer, namespace suite and fixture generator"
+    }
+  ],
+  "raw_files_verified": 25,
+  "baseline_receipt_commit": "7a7fd2fe776d5733ddb824315e0768d01d1cbabc",
+  "runtime_receipt_commit": "eade542c800b3087bf478a11976ab4111983cf4c",
+  "no_source_changes_after_corrected_source": true,
+  "canonical_clean_detached_at_source": true,
+  "independent_oracle": "Separate pending host gate: generator emits 9 XLSX plus 2 JSON files, with authored expectations; no claim here that Python/openpyxl has already checked them.",
+  "primary_host_additional_test_count": 0,
+  "no_upstream_refresh_beyond_exact_observed_pin": true,
+  "ci_waited": false
+}

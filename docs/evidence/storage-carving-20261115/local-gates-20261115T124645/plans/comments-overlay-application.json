@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "source_commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "overlay_manifest_sha256": "55c42059573eeae67d20d0ce83202fa3c38d35ef8bf59906da7bd0752291cb27",
+  "all_original_hash_guards_passed": true,
+  "applied_files": {
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/COMMENTS-ORACLE-PLAN.md": "356fe23344bb5b1fecfe7805e75d4accf017e73dac440bfad651ca6369202c10",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/gate-commands-final.json": "c7a30bd9ce9da77e728e21b179f846c9583bba27353dab8557af7db6950436bc",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/historical/source966-gate-plan.json": "1449c8dc9674cb80c43d97b44a25913abec6b5a446de8f3b59a8bab97dc07265",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/analysis-engine-files.txt": "63826c5e180b89179eedbc5c0eb1f3a33743cdfd9a02c59f5c4d63947b1faed4",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/comments-oracle-readiness.json": "b93d8af809f131be77fd47627d1826310f0b7b5a4f4c4a61b9154554c22770b2",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/engine-suites.txt": "a6e24fd8693da10b2d5c6311f483d3b1907909267b4b48f208db7aeb2eecc55c",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/gate-plan.json": "46adfc0d59f6332519070852a55c2e5179d57cacd635350d5ef83ec730bbd0cd",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py": "ac788a5e86ffbeb82583e9382fcc2aac061841e3d0fe9ce95425dbfa8869c4d7",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py": "8ea761641d7f4e0e48debf171e2e03de06b86517b72d89fc0fe160271370d706",
+    "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a"
+  },
+  "root_metadata_updates": [
+    "Bound source_freeze and command source to actual saved4c2b6ddd",
+    "Replaced stale conditional parser reuse text with independently verified full4132/144 exact082 run and linkage"
+  ],
+  "canonical_comments_linkage_files": {
+    "linkage.json": "8c10170b7c36bfcc6d88e1a2db5ef80ebd176dfb4280621e33fcddb5ba52c9e9",
+    "raw-gates-sha256.json": "48d57e5db0c97ad02bdd242744f87ac4c197a8f278f35d64ce20257532f31584",
+    "README.md": "2a0f76aaa7661958e8a4a342529a64b3e04a95be64459558ba04d242d81777ac",
+    "source-correction.patch": "c6f32026ae80492931cad42f85f832bb49cfce56a758248bd7e72ef560735595"
+  },
+  "production_changes": false
+}
