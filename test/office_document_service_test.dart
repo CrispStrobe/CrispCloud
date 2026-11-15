@@ -296,6 +296,121 @@ void odfTests() {
     expect(doc.csv!.split('\n').first, 'Wide,,7');
   });
 
+  test(
+    'ODS preserves internal blank runs and trims trailing padding',
+    () async {
+      const xml =
+          '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table table:name="Data">
+      <table:table-row>
+        <table:table-cell office:value-type="string"><text:p>Start</text:p></table:table-cell>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="2">
+        <table:table-cell/>
+      </table:table-row>
+      <table:table-row>
+        <table:table-cell office:value-type="float" office:value="42"/>
+        <table:table-cell table:formula="of:=[.A4]" office:value-type="float" office:value="42"/>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="1048570"/>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+      final doc = await parseOfficeDocument(
+        _zip({'content.xml': xml}),
+        'gaps.ods',
+      );
+      expect(doc.fallback, isNull);
+      expect(doc.csv!.split('\n'), ['Start', '', '', '42,42']);
+      expect(
+        doc.markdown,
+        contains(
+          '| Start |  |\n| --- | --- |\n'
+          '|  |  |\n|  |  |\n| 42 | 42 |',
+        ),
+      );
+    },
+  );
+
+  test('ODS CSV preserves leading blank rows and cell whitespace', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row table:number-rows-repeated="2"/>
+      <table:table-row>
+        <table:table-cell office:value-type="string" office:string-value="  First  "/>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'leading.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv, '\n\n  First  ');
+  });
+
+  test('ODS counts explicit and repeated covered cells only once', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row>
+        <table:table-cell table:number-columns-spanned="2"><text:p>Wide</text:p></table:table-cell>
+        <table:covered-table-cell/>
+        <table:table-cell office:value-type="float" office:value="7"/>
+      </table:table-row>
+      <table:table-row>
+        <table:table-cell table:number-columns-spanned="3"><text:p>Wider</text:p></table:table-cell>
+        <table:covered-table-cell table:number-columns-repeated="2"/>
+        <table:table-cell office:value-type="float" office:value="8"/>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'spans.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv!.split('\n'), ['Wide,,7', 'Wider,,,8']);
+  });
+
+  test('ODS empty padding still counts toward the logical row limit', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row>
+        <table:table-cell><text:p>Inside</text:p></table:table-cell>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="1000000"/>
+      <table:table-row>
+        <table:table-cell><text:p>Outside</text:p></table:table-cell>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'limit.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv, 'Inside');
+    expect(doc.markdown, isNot(contains('Outside')));
+  });
+
   test('ODT renders lists and ODF table cells', () async {
     const xml =
         '''

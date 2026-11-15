@@ -104,9 +104,11 @@ abstract final class OdsSheetReader {
       );
       _readColumns(table, sheet, styles);
       var rowIndex = 0;
-      for (final row in table.childElements.where(
-        (element) => element.localName == 'table-row',
-      )) {
+      final rows = table.childElements
+          .where((element) => element.localName == 'table-row')
+          .toList();
+      for (var rowNumber = 0; rowNumber < rows.length; rowNumber++) {
+        final row = rows[rowNumber];
         final rowRepeat = _repeat(row, 'number-rows-repeated', _maxRows);
         final rowStyle = styles[row.getAttribute('style-name')];
         final rowHeight = _lengthToPoints(
@@ -121,41 +123,46 @@ abstract final class OdsSheetReader {
               element.localName != 'covered-table-cell') {
             continue;
           }
-          final covered = element.localName == 'covered-table-cell';
-          final span = covered
-              ? 1
-              : _repeat(element, 'number-columns-spanned', _maxColumns);
+          // Covered cells are placeholders for columns the spanning anchor
+          // has already advanced past; advancing again shifts every later
+          // cell to the right.
+          if (element.localName == 'covered-table-cell') continue;
+          final span = _repeat(element, 'number-columns-spanned', _maxColumns);
           final repeat = _repeat(
             element,
             'number-columns-repeated',
             _maxColumns,
           );
           for (var i = 0; i < repeat && column < _maxColumns; i++) {
-            if (!covered) {
-              final cell = _createCell(
-                sheet,
-                SmlCellRef(column, rowIndex),
-                element,
-                engineStyles,
-                styles,
-                numberStyles,
-              );
-              if (cell != null) {
-                hasContent = true;
-                parsed.add((column: column, span: span, cell: cell));
-              }
+            final cell = _createCell(
+              sheet,
+              SmlCellRef(column, rowIndex),
+              element,
+              engineStyles,
+              styles,
+              numberStyles,
+            );
+            if (cell != null) {
+              hasContent = true;
+              parsed.add((column: column, span: span, cell: cell));
             }
             column += span;
           }
         }
-        // A repeated empty row is trailing padding, not data.
-        if (!hasContent && rowRepeat > 1) break;
         if (rowHeight != null && rowHeight > 0) {
           for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
             sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
               rowHeight,
             );
           }
+        }
+        // Internal repeated empty rows are spacing and must keep later rows
+        // at their authored positions. Only trailing padding is discarded.
+        if (!hasContent && rowRepeat > 1) {
+          if (rowNumber == rows.length - 1) break;
+          rowIndex += rowRepeat.clamp(1, _maxRows);
+          if (rowIndex >= _maxRows) break;
+          continue;
         }
         for (final entry in parsed) {
           if (entry.span > 1) {
