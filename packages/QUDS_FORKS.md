@@ -24,7 +24,7 @@ content.
 ## Current integrated state (15 November 2026)
 
 <<<<<<< HEAD
-The app mirrors Quds `b2d5331` on `main`
+The app mirrors Quds `b01455f` on `main`
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
 all 2,363 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
@@ -290,6 +290,13 @@ Follow
 - tests live next to the behavior they cover;
 - package CHANGELOGs get an `Unreleased` entry for user-visible changes;
 - do not bump versions outside a release.
+
+## Remaining limits
+
+The engine-side backlog is tracked in the Quds
+[office-remaining-gaps.md](https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/office-remaining-gaps.md).
+The host-level backlog is
+[office-remaining-gaps-20261115.md](../docs/office-remaining-gaps-20261115.md).
 
 ## Syncing
 
