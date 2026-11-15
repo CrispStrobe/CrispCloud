@@ -1,0 +1,1371 @@
+{
+  "schemaVersion": 1,
+  "processorVersion": "1.4.61",
+  "sources": [
+    {
+      "name": "citeproc.js",
+      "repository": "zotero/zotero",
+      "commit": "992853536935dce3249a4ecf61d0d129883f85c4",
+      "path": "chrome/content/zotero/xpcom/citeproc.js",
+      "gitBlobSha": "821ba30cb1b10677744f166b56f12fbd54394df3",
+      "sha256": "f4c82cd815c7229e3a2e4e80673f19aa6a27e2d5017bf1b0234b1e3beaf70946",
+      "url": "https://raw.githubusercontent.com/zotero/zotero/992853536935dce3249a4ecf61d0d129883f85c4/chrome/content/zotero/xpcom/citeproc.js",
+      "license": "CPAL-1.0 OR AGPL-3.0-or-later"
+    },
+    {
+      "name": "httpIntegrationClient.js",
+      "repository": "zotero/zotero",
+      "commit": "992853536935dce3249a4ecf61d0d129883f85c4",
+      "path": "chrome/content/zotero/xpcom/httpIntegrationClient.js",
+      "gitBlobSha": "611911bbfce0a7656eab8e4a322588863976aa34",
+      "sha256": "979862550b60cccc3b91a5a70debbd3824f4a2319b718f079d4ec7d25538d9ad",
+      "url": "https://raw.githubusercontent.com/zotero/zotero/992853536935dce3249a4ecf61d0d129883f85c4/chrome/content/zotero/xpcom/httpIntegrationClient.js",
+      "license": "AGPL-3.0-or-later"
+    },
+    {
+      "name": "chicago-notes-bibliography-subsequent-ibid.csl",
+      "repository": "citation-style-language/styles",
+      "commit": "d16ba6427ca3c5dada6578a6f7a0f98bd3ea03b3",
+      "path": "chicago-notes-bibliography-subsequent-ibid.csl",
+      "gitBlobSha": "566c3ef53459703b91a2c9c85137c8b81ff89396",
+      "sha256": "39c868e65da74bff51f5be6cbaefc39f809841ab81758a378b883ef767eb500a",
+      "url": "https://raw.githubusercontent.com/citation-style-language/styles/d16ba6427ca3c5dada6578a6f7a0f98bd3ea03b3/chicago-notes-bibliography-subsequent-ibid.csl",
+      "license": "CC-BY-SA-3.0"
+    },
+    {
+      "name": "elsevier-vancouver.csl",
+      "repository": "citation-style-language/styles",
+      "commit": "d16ba6427ca3c5dada6578a6f7a0f98bd3ea03b3",
+      "path": "elsevier-vancouver.csl",
+      "gitBlobSha": "c0b242a13fcf2803ab03fdd99b9b0c984329f10e",
+      "sha256": "005e915c3419eb2b84eb2b31bffc411dce3890619d3fd0ed23ac6591ac128335",
+      "url": "https://raw.githubusercontent.com/citation-style-language/styles/d16ba6427ca3c5dada6578a6f7a0f98bd3ea03b3/elsevier-vancouver.csl",
+      "license": "CC-BY-SA-3.0"
+    },
+    {
+      "name": "apa.csl",
+      "repository": "citation-style-language/styles",
+      "commit": "d16ba6427ca3c5dada6578a6f7a0f98bd3ea03b3",
+      "path": "apa.csl",
+      "gitBlobSha": "d663d1e1b728c5fbc70dea233e1c0d09121e8909",
+      "sha256": "3917def5fc951b104d64216c3373096042368b9704ba269ca83c14ebaba889fc",
+      "url": "https://raw.githubusercontent.com/citation-style-language/styles/d16ba6427ca3c5dada6578a6f7a0f98bd3ea03b3/apa.csl",
+      "license": "CC-BY-SA-3.0"
+    },
+    {
+      "name": "locales-de-DE.xml",
+      "repository": "citation-style-language/locales",
+      "commit": "14940e56f7c783e4173cafbd92e0f5856f2caa14",
+      "path": "locales-de-DE.xml",
+      "gitBlobSha": "87ec7f698f0137f69f08ce2005cff8baef2d7933",
+      "sha256": "befaeb7c9b4f2ce8e4b7e4ef028500c317ba4e92a5edf2125dad267b9b9951ad",
+      "url": "https://raw.githubusercontent.com/citation-style-language/locales/14940e56f7c783e4173cafbd92e0f5856f2caa14/locales-de-DE.xml",
+      "license": "CC-BY-SA-3.0"
+    },
+    {
+      "name": "locales-en-US.xml",
+      "repository": "citation-style-language/locales",
+      "commit": "14940e56f7c783e4173cafbd92e0f5856f2caa14",
+      "path": "locales-en-US.xml",
+      "gitBlobSha": "0d74676be4376660f43f2fdb4bf7cade9cf15fe6",
+      "sha256": "ac864c7c21166b4390d82c31792cdc509400727fa0060b43d8aa17e07f9cb079",
+      "url": "https://raw.githubusercontent.com/citation-style-language/locales/14940e56f7c783e4173cafbd92e0f5856f2caa14/locales-en-US.xml",
+      "license": "CC-BY-SA-3.0"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "german-ibid",
+      "styleFile": "chicago-notes-bibliography-subsequent-ibid.csl",
+      "styleId": "http://www.zotero.org/styles/chicago-notes-bibliography-subsequent-ibid",
+      "locale": "de-DE",
+      "items": {
+        "A": {
+          "id": "A",
+          "type": "book",
+          "title": "Forschung in Jerusalem",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "B": {
+          "id": "B",
+          "type": "book",
+          "title": "Quellen und Methoden",
+          "author": [
+            {
+              "family": "Schmidt",
+              "given": "Omar"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2022
+              ]
+            ]
+          },
+          "publisher": "Muster Verlag",
+          "publisher-place": "Hamburg"
+        },
+        "C": {
+          "id": "C",
+          "type": "book",
+          "title": "Neue Perspektiven",
+          "author": [
+            {
+              "family": "Ali",
+              "given": "Layla"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2025
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "D": {
+          "id": "D",
+          "type": "book",
+          "title": "Weitere Forschung",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        }
+      },
+      "citations": [
+        {
+          "citationID": "g1",
+          "properties": {
+            "noteIndex": 1
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "label": "page",
+              "locator": "12",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g2",
+          "properties": {
+            "noteIndex": 2
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "label": "page",
+              "locator": "12",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g3",
+          "properties": {
+            "noteIndex": 3
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "label": "page",
+              "locator": "34",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g4",
+          "properties": {
+            "noteIndex": 4
+          },
+          "citationItems": [
+            {
+              "id": "B",
+              "label": "page",
+              "locator": "8",
+              "itemData": {
+                "id": "B",
+                "type": "book",
+                "title": "Quellen und Methoden",
+                "author": [
+                  {
+                    "family": "Schmidt",
+                    "given": "Omar"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2022
+                    ]
+                  ]
+                },
+                "publisher": "Muster Verlag",
+                "publisher-place": "Hamburg"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g5",
+          "properties": {
+            "noteIndex": 5
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "label": "page",
+              "locator": "35",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g6",
+          "properties": {
+            "noteIndex": 6
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g7",
+          "properties": {
+            "noteIndex": 7
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "label": "page",
+              "locator": "38",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g8",
+          "properties": {
+            "noteIndex": 8
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "label": "page",
+              "locator": "39",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            },
+            {
+              "id": "B",
+              "label": "page",
+              "locator": "9",
+              "itemData": {
+                "id": "B",
+                "type": "book",
+                "title": "Quellen und Methoden",
+                "author": [
+                  {
+                    "family": "Schmidt",
+                    "given": "Omar"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2022
+                    ]
+                  ]
+                },
+                "publisher": "Muster Verlag",
+                "publisher-place": "Hamburg"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "g9",
+          "properties": {
+            "noteIndex": 9
+          },
+          "citationItems": [
+            {
+              "id": "B",
+              "label": "page",
+              "locator": "10",
+              "itemData": {
+                "id": "B",
+                "type": "book",
+                "title": "Quellen und Methoden",
+                "author": [
+                  {
+                    "family": "Schmidt",
+                    "given": "Omar"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2022
+                    ]
+                  ]
+                },
+                "publisher": "Muster Verlag",
+                "publisher-place": "Hamburg"
+              }
+            }
+          ]
+        }
+      ],
+      "rendered": [
+        {
+          "citationId": "g1",
+          "noteIndex": 1,
+          "html": "Anna Müller, <i>Forschung in Jerusalem</i> (Beispiel Verlag, 2024), 12."
+        },
+        {
+          "citationId": "g2",
+          "noteIndex": 2,
+          "html": "Ebd."
+        },
+        {
+          "citationId": "g3",
+          "noteIndex": 3,
+          "html": "Ebd., 34."
+        },
+        {
+          "citationId": "g4",
+          "noteIndex": 4,
+          "html": "Omar Schmidt, <i>Quellen und Methoden</i> (Muster Verlag, 2022), 8."
+        },
+        {
+          "citationId": "g5",
+          "noteIndex": 5,
+          "html": "Müller, <i>Forschung in Jerusalem</i>, 35."
+        },
+        {
+          "citationId": "g6",
+          "noteIndex": 6,
+          "html": "Müller, <i>Forschung in Jerusalem</i>."
+        },
+        {
+          "citationId": "g7",
+          "noteIndex": 7,
+          "html": "Ebd., 38."
+        },
+        {
+          "citationId": "g8",
+          "noteIndex": 8,
+          "html": "Ebd., 39; Schmidt, <i>Quellen und Methoden</i>, 9."
+        },
+        {
+          "citationId": "g9",
+          "noteIndex": 9,
+          "html": "Schmidt, <i>Quellen und Methoden</i>, 10."
+        }
+      ],
+      "bibliography": {
+        "parameters": {
+          "maxoffset": 0,
+          "entryspacing": 1,
+          "linespacing": 1,
+          "second-field-align": false,
+          "entry_ids": [
+            [
+              "A"
+            ],
+            [
+              "B"
+            ]
+          ],
+          "bibliography_errors": [],
+          "done": false,
+          "hangingindent": true,
+          "bibstart": "<div class=\"csl-bib-body\">\n",
+          "bibend": "</div>"
+        },
+        "html": "<div class=\"csl-bib-body\">\n  <div class=\"csl-entry\">Müller, Anna. <i>Forschung in Jerusalem</i>. Beispiel Verlag, 2024.</div>\n  <div class=\"csl-entry\">Schmidt, Omar. <i>Quellen und Methoden</i>. Muster Verlag, 2022.</div>\n</div>"
+      }
+    },
+    {
+      "id": "numeric-original",
+      "styleFile": "elsevier-vancouver.csl",
+      "styleId": "http://www.zotero.org/styles/elsevier-vancouver",
+      "locale": "en-US",
+      "items": {
+        "A": {
+          "id": "A",
+          "type": "book",
+          "title": "Forschung in Jerusalem",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "B": {
+          "id": "B",
+          "type": "book",
+          "title": "Quellen und Methoden",
+          "author": [
+            {
+              "family": "Schmidt",
+              "given": "Omar"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2022
+              ]
+            ]
+          },
+          "publisher": "Muster Verlag",
+          "publisher-place": "Hamburg"
+        },
+        "C": {
+          "id": "C",
+          "type": "book",
+          "title": "Neue Perspektiven",
+          "author": [
+            {
+              "family": "Ali",
+              "given": "Layla"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2025
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "D": {
+          "id": "D",
+          "type": "book",
+          "title": "Weitere Forschung",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        }
+      },
+      "citations": [
+        {
+          "citationID": "n1",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "n2",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "B",
+              "itemData": {
+                "id": "B",
+                "type": "book",
+                "title": "Quellen und Methoden",
+                "author": [
+                  {
+                    "family": "Schmidt",
+                    "given": "Omar"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2022
+                    ]
+                  ]
+                },
+                "publisher": "Muster Verlag",
+                "publisher-place": "Hamburg"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "n3",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        }
+      ],
+      "rendered": [
+        {
+          "citationId": "n1",
+          "noteIndex": 0,
+          "html": "[1]"
+        },
+        {
+          "citationId": "n2",
+          "noteIndex": 0,
+          "html": "[2]"
+        },
+        {
+          "citationId": "n3",
+          "noteIndex": 0,
+          "html": "[1]"
+        }
+      ],
+      "bibliography": {
+        "parameters": {
+          "maxoffset": 3,
+          "entryspacing": 0,
+          "linespacing": 1,
+          "second-field-align": "flush",
+          "entry_ids": [
+            [
+              "A"
+            ],
+            [
+              "B"
+            ]
+          ],
+          "bibliography_errors": [],
+          "done": false,
+          "bibstart": "<div class=\"csl-bib-body\">\n",
+          "bibend": "</div>"
+        },
+        "html": "<div class=\"csl-bib-body\">\n  <div class=\"csl-entry\">\n    <div class=\"csl-left-margin\">[1]</div><div class=\"csl-right-inline\">Müller A. Forschung in Jerusalem. Berlin: Beispiel Verlag; 2024.</div>\n  </div>\n  <div class=\"csl-entry\">\n    <div class=\"csl-left-margin\">[2]</div><div class=\"csl-right-inline\">Schmidt O. Quellen und Methoden. Hamburg: Muster Verlag; 2022.</div>\n  </div>\n</div>"
+      }
+    },
+    {
+      "id": "numeric-prepend",
+      "styleFile": "elsevier-vancouver.csl",
+      "styleId": "http://www.zotero.org/styles/elsevier-vancouver",
+      "locale": "en-US",
+      "items": {
+        "A": {
+          "id": "A",
+          "type": "book",
+          "title": "Forschung in Jerusalem",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "B": {
+          "id": "B",
+          "type": "book",
+          "title": "Quellen und Methoden",
+          "author": [
+            {
+              "family": "Schmidt",
+              "given": "Omar"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2022
+              ]
+            ]
+          },
+          "publisher": "Muster Verlag",
+          "publisher-place": "Hamburg"
+        },
+        "C": {
+          "id": "C",
+          "type": "book",
+          "title": "Neue Perspektiven",
+          "author": [
+            {
+              "family": "Ali",
+              "given": "Layla"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2025
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "D": {
+          "id": "D",
+          "type": "book",
+          "title": "Weitere Forschung",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        }
+      },
+      "citations": [
+        {
+          "citationID": "n0",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "C",
+              "itemData": {
+                "id": "C",
+                "type": "book",
+                "title": "Neue Perspektiven",
+                "author": [
+                  {
+                    "family": "Ali",
+                    "given": "Layla"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2025
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "n1",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "n2",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "B",
+              "itemData": {
+                "id": "B",
+                "type": "book",
+                "title": "Quellen und Methoden",
+                "author": [
+                  {
+                    "family": "Schmidt",
+                    "given": "Omar"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2022
+                    ]
+                  ]
+                },
+                "publisher": "Muster Verlag",
+                "publisher-place": "Hamburg"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "n3",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        }
+      ],
+      "rendered": [
+        {
+          "citationId": "n0",
+          "noteIndex": 0,
+          "html": "[1]"
+        },
+        {
+          "citationId": "n1",
+          "noteIndex": 0,
+          "html": "[2]"
+        },
+        {
+          "citationId": "n2",
+          "noteIndex": 0,
+          "html": "[3]"
+        },
+        {
+          "citationId": "n3",
+          "noteIndex": 0,
+          "html": "[2]"
+        }
+      ],
+      "bibliography": {
+        "parameters": {
+          "maxoffset": 3,
+          "entryspacing": 0,
+          "linespacing": 1,
+          "second-field-align": "flush",
+          "entry_ids": [
+            [
+              "C"
+            ],
+            [
+              "A"
+            ],
+            [
+              "B"
+            ]
+          ],
+          "bibliography_errors": [],
+          "done": false,
+          "bibstart": "<div class=\"csl-bib-body\">\n",
+          "bibend": "</div>"
+        },
+        "html": "<div class=\"csl-bib-body\">\n  <div class=\"csl-entry\">\n    <div class=\"csl-left-margin\">[1]</div><div class=\"csl-right-inline\">Ali L. Neue Perspektiven. Berlin: Beispiel Verlag; 2025.</div>\n  </div>\n  <div class=\"csl-entry\">\n    <div class=\"csl-left-margin\">[2]</div><div class=\"csl-right-inline\">Müller A. Forschung in Jerusalem. Berlin: Beispiel Verlag; 2024.</div>\n  </div>\n  <div class=\"csl-entry\">\n    <div class=\"csl-left-margin\">[3]</div><div class=\"csl-right-inline\">Schmidt O. Quellen und Methoden. Hamburg: Muster Verlag; 2022.</div>\n  </div>\n</div>"
+      }
+    },
+    {
+      "id": "author-year-single",
+      "styleFile": "apa.csl",
+      "styleId": "http://www.zotero.org/styles/apa",
+      "locale": "en-US",
+      "items": {
+        "A": {
+          "id": "A",
+          "type": "book",
+          "title": "Forschung in Jerusalem",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "B": {
+          "id": "B",
+          "type": "book",
+          "title": "Quellen und Methoden",
+          "author": [
+            {
+              "family": "Schmidt",
+              "given": "Omar"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2022
+              ]
+            ]
+          },
+          "publisher": "Muster Verlag",
+          "publisher-place": "Hamburg"
+        },
+        "C": {
+          "id": "C",
+          "type": "book",
+          "title": "Neue Perspektiven",
+          "author": [
+            {
+              "family": "Ali",
+              "given": "Layla"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2025
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "D": {
+          "id": "D",
+          "type": "book",
+          "title": "Weitere Forschung",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        }
+      },
+      "citations": [
+        {
+          "citationID": "a1",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        }
+      ],
+      "rendered": [
+        {
+          "citationId": "a1",
+          "noteIndex": 0,
+          "html": "(Müller, 2024)"
+        }
+      ],
+      "bibliography": {
+        "parameters": {
+          "maxoffset": 0,
+          "entryspacing": 0,
+          "linespacing": 2,
+          "second-field-align": false,
+          "entry_ids": [
+            [
+              "A"
+            ]
+          ],
+          "bibliography_errors": [],
+          "done": false,
+          "hangingindent": true,
+          "bibstart": "<div class=\"csl-bib-body\">\n",
+          "bibend": "</div>"
+        },
+        "html": "<div class=\"csl-bib-body\">\n  <div class=\"csl-entry\">Müller, A. (2024). <i>Forschung in Jerusalem</i>. Beispiel Verlag.</div>\n</div>"
+      }
+    },
+    {
+      "id": "author-year-disambiguation",
+      "styleFile": "apa.csl",
+      "styleId": "http://www.zotero.org/styles/apa",
+      "locale": "en-US",
+      "items": {
+        "A": {
+          "id": "A",
+          "type": "book",
+          "title": "Forschung in Jerusalem",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "B": {
+          "id": "B",
+          "type": "book",
+          "title": "Quellen und Methoden",
+          "author": [
+            {
+              "family": "Schmidt",
+              "given": "Omar"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2022
+              ]
+            ]
+          },
+          "publisher": "Muster Verlag",
+          "publisher-place": "Hamburg"
+        },
+        "C": {
+          "id": "C",
+          "type": "book",
+          "title": "Neue Perspektiven",
+          "author": [
+            {
+              "family": "Ali",
+              "given": "Layla"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2025
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        },
+        "D": {
+          "id": "D",
+          "type": "book",
+          "title": "Weitere Forschung",
+          "author": [
+            {
+              "family": "Müller",
+              "given": "Anna"
+            }
+          ],
+          "issued": {
+            "date-parts": [
+              [
+                2024
+              ]
+            ]
+          },
+          "publisher": "Beispiel Verlag",
+          "publisher-place": "Berlin"
+        }
+      },
+      "citations": [
+        {
+          "citationID": "a1",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "A",
+              "itemData": {
+                "id": "A",
+                "type": "book",
+                "title": "Forschung in Jerusalem",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        },
+        {
+          "citationID": "a2",
+          "properties": {
+            "noteIndex": 0
+          },
+          "citationItems": [
+            {
+              "id": "D",
+              "itemData": {
+                "id": "D",
+                "type": "book",
+                "title": "Weitere Forschung",
+                "author": [
+                  {
+                    "family": "Müller",
+                    "given": "Anna"
+                  }
+                ],
+                "issued": {
+                  "date-parts": [
+                    [
+                      2024
+                    ]
+                  ]
+                },
+                "publisher": "Beispiel Verlag",
+                "publisher-place": "Berlin"
+              }
+            }
+          ]
+        }
+      ],
+      "rendered": [
+        {
+          "citationId": "a1",
+          "noteIndex": 0,
+          "html": "(Müller, 2024a)"
+        },
+        {
+          "citationId": "a2",
+          "noteIndex": 0,
+          "html": "(Müller, 2024b)"
+        }
+      ],
+      "bibliography": {
+        "parameters": {
+          "maxoffset": 0,
+          "entryspacing": 0,
+          "linespacing": 2,
+          "second-field-align": false,
+          "entry_ids": [
+            [
+              "A"
+            ],
+            [
+              "D"
+            ]
+          ],
+          "bibliography_errors": [],
+          "done": false,
+          "hangingindent": true,
+          "bibstart": "<div class=\"csl-bib-body\">\n",
+          "bibend": "</div>"
+        },
+        "html": "<div class=\"csl-bib-body\">\n  <div class=\"csl-entry\">Müller, A. (2024a). <i>Forschung in Jerusalem</i>. Beispiel Verlag.</div>\n  <div class=\"csl-entry\">Müller, A. (2024b). <i>Weitere Forschung</i>. Beispiel Verlag.</div>\n</div>"
+      }
+    }
+  ]
+}

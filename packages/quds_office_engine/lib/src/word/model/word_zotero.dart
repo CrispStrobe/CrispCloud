@@ -128,7 +128,8 @@ final class ZoteroCitation {
     'citationItems': <Map<String, dynamic>>[
       for (final item in items) item.toJson(),
     ],
-    'schema': 'https://github.com/citation-style-language/schema/raw/master/csl-citation.json',
+    'schema':
+        'https://github.com/citation-style-language/schema/raw/master/csl-citation.json',
   });
 
   ZoteroCitation.fromJson(Map<String, dynamic> json)
@@ -575,8 +576,9 @@ abstract final class WordZotero {
   /// Whether rich bibliography runs can replace this complete paragraph while
   /// retaining all outside content and structural markers.
   static bool canReplaceFormattedBibliography(WmlZoteroField field) {
-    if (field.kind != ZoteroFieldKind.bibliography || !field.canEdit)
+    if (field.kind != ZoteroFieldKind.bibliography || !field.canEdit) {
       return false;
+    }
     final paragraph = field.paragraph;
     return field.wholeParagraph ||
         (field.run != null &&
@@ -999,8 +1001,9 @@ final class _OpenField {
   void addBoundary(WmlParagraph paragraph, WmlFieldBoundary boundary) {
     boundaries.putIfAbsent(paragraph, () => <WmlFieldBoundary>[]).add(boundary);
     if (boundary.kind == WmlFieldBoundaryKind.begin) {
-      locked = RegExp(r'fldLock\s*=\s*["\x27](?:1|true|on)["\x27]')
-          .hasMatch(boundary.sourceXml ?? '');
+      locked = RegExp(
+        r'fldLock\s*=\s*["\x27](?:1|true|on)["\x27]',
+      ).hasMatch(boundary.sourceXml ?? '');
     }
     if (boundary.runPropertiesXml?.trim().isNotEmpty == true) {
       opaqueMetadata = true;

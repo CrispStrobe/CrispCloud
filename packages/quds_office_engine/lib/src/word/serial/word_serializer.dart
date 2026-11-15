@@ -250,6 +250,12 @@ class WordSerializer {
         final bool lastBlock = b == item.slice.blocks.length - 1;
         if (!item.last && lastBlock && block is WmlParagraph) {
           _writeParagraph(w, block, sectionBreak: item.section);
+        } else if (!item.last &&
+            lastBlock &&
+            block is WmlContentControlBlock &&
+            block.blocks.isNotEmpty &&
+            block.blocks.last is WmlParagraph) {
+          _writeBlock(w, block, imageIds, trailingSectionBreak: item.section);
         } else {
           _writeBlock(w, block, imageIds);
         }
@@ -257,7 +263,7 @@ class WordSerializer {
       if (item.last) {
         _writeSectPr(w, item.section);
       } else if (item.slice.blocks.isEmpty ||
-          item.slice.blocks.last is! WmlParagraph) {
+          !_writesTrailingSectionBreak(item.slice.blocks.last)) {
         _writeParagraph(w, WmlParagraph(), sectionBreak: item.section);
       }
       item.section.columnCount = savedCols;
@@ -268,11 +274,18 @@ class WordSerializer {
     return w.toXml();
   }
 
+  bool _writesTrailingSectionBreak(WmlBlock block) =>
+      block is WmlParagraph ||
+      (block is WmlContentControlBlock &&
+          block.blocks.isNotEmpty &&
+          block.blocks.last is WmlParagraph);
+
   void _writeBlock(
     XmlWriter w,
     WmlBlock block,
-    Map<OfficeVisual, String> imageIds,
-  ) {
+    Map<OfficeVisual, String> imageIds, {
+    WmlSection? trailingSectionBreak,
+  }) {
     switch (block) {
       case WmlContentControlBlock():
         final shell = WordContentControlIo.start(
@@ -281,8 +294,15 @@ class WordSerializer {
           _package!,
           _activePartUri,
         );
-        for (final child in block.blocks) {
-          _writeBlock(w, child, imageIds);
+        for (var i = 0; i < block.blocks.length; i++) {
+          final child = block.blocks[i];
+          if (trailingSectionBreak != null &&
+              i == block.blocks.length - 1 &&
+              child is WmlParagraph) {
+            _writeParagraph(w, child, sectionBreak: trailingSectionBreak);
+          } else {
+            _writeBlock(w, child, imageIds);
+          }
         }
         WordContentControlIo.end(w, shell);
       case WmlParagraph():

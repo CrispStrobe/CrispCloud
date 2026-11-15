@@ -23,11 +23,10 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors combined canonical Quds main
-`3304f42ee17b52659a82d5714dcc730184050960`, preserving the latest Zotero
-work and the begins-with/ends-with conditional-format rules,
+The app mirrors Quds `55d46a0fb5f7392dab1a604bc3c15126bd3e380d`
+on `codex/zotero-support-20261115`, including canonical main `68d5bd8`, through PR #46,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,384 managed files
+all 2,391 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -35,12 +34,15 @@ header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
 
-The current incremental Zotero checkpoint adds the bounded desktop HTTP citing
-protocol, staged Word-field transactions and persistent Zotero document data.
-The host transport admits JSON POST only to the two native document endpoints,
-keeps catalog reads separate and supports the longer timeout needed for native
-dialogs. This is a source integration checkpoint; editor controls and final
-acceptance for this continuation are recorded separately when complete.
+The current incremental Zotero checkpoint connects the bounded desktop HTTP
+citing protocol to native picker, style, refresh and bibliography controls.
+Word-field transactions remain staged until completion and guarded application
+as one undo step; Zotero document preferences persist through DOCX. The host
+transport admits JSON POST only to the two native document endpoints, keeps
+catalog reads separate and supports the longer timeout needed for native
+dialogs. Pinned processor fixtures cover German ibid., numeric renumbering and
+author-year disambiguation. This is a source integration checkpoint; final
+acceptance for this continuation is recorded separately when complete.
 
 Zotero support adds a shared references workspace, read-only online and desktop clients,
 offline CSL import/export, guarded DOCX citation and bibliography fields, and
@@ -84,10 +86,10 @@ style and default column/row geometry are applied when no explicit style exists.
 ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text, begins/ends-with and duplicate) and list validations
 are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The latest upstream sheet/ODS
-development cohort is recorded as 495 tests; it was not rerun during this
-terminal integration. The combined host qualification remains separately
-source-bound in the storage evidence.
+elapsed time formats survive XLSX saves. The incoming branch records a 495-test
+sheet/ODS development cohort; that complete cohort was not rerun during this
+integration. The combined host qualification remains separately source-bound
+in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
 and Excel wrap-text support. Import preserves the correct wrap flag for each
@@ -333,6 +335,13 @@ Follow
 - tests live next to the behavior they cover;
 - package CHANGELOGs get an `Unreleased` entry for user-visible changes;
 - do not bump versions outside a release.
+
+## Remaining limits
+
+The engine-side backlog is tracked in the Quds
+[office-remaining-gaps.md](https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/office-remaining-gaps.md).
+The host-level backlog is
+[office-remaining-gaps-20261115.md](../docs/office-remaining-gaps-20261115.md).
 
 ## Syncing
 

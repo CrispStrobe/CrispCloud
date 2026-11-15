@@ -277,6 +277,8 @@ Future<void> _documentAction(
   await tester.pumpAndSettle();
   final action = find.text(label);
   await tester.ensureVisible(action);
+  // A long document-tools header needs a layout frame after scrolling.
+  await tester.pump();
   await tester.tap(action);
   if (opensReview) {
     await tester.pump();

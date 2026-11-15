@@ -585,6 +585,7 @@ class WordEditorController extends OfficeController {
   /// fromMillisecondsSinceEpoch API.
   var _localEditAt = DateTime.fromMillisecondsSinceEpoch(0);
   String? _textBeforeLocalEdit;
+  bool _historyRestoredSelection = false;
   double? _stickyCaretX;
 
   @override
@@ -4128,6 +4129,7 @@ class WordEditorController extends OfficeController {
   @override
   /// beforeHistoryChange API.
   void beforeHistoryChange() {
+    _historyRestoredSelection = false;
     _textBeforeLocalEdit = _activeParagraph.text;
   }
 
@@ -4143,7 +4145,8 @@ class WordEditorController extends OfficeController {
       0,
       _activeParagraph.text.length,
     );
-    caret.collapseSelection();
+    if (!_historyRestoredSelection) caret.collapseSelection();
+    _historyRestoredSelection = false;
     _markLocalEdit(previousText: _textBeforeLocalEdit);
     _syncImeSelection();
     notifyListeners();
@@ -6804,6 +6807,98 @@ class WordEditorController extends OfficeController {
   /// Zotero fields in every modeled story, including imported citations.
   /// Reinspect after mutations or undo/redo: field handles are short-lived.
   List<WmlZoteroField> get zoteroFields => WordZotero.fields(document);
+
+  /// Starts a detached Zotero desktop transaction tied to this exact editing
+  /// target. The host drives its protocol and calls [WordZoteroTransaction.apply]
+  /// only after completion and any formatting review.
+  WordZoteroTransaction beginZoteroTransaction({
+    required String documentId,
+    WmlZoteroField? selectedField,
+    ZoteroCitation? seedCitation,
+  }) {
+    if (_disposed || !config.allowsMutation) {
+      throw StateError('This document is not editable.');
+    }
+    _assertZoteroTrackingMode();
+    if (isEditingHeaderFooter ||
+        isEditingComment ||
+        editingFrame ||
+        selectedFrame != null) {
+      throw UnsupportedError(
+        'Open Zotero from the document body to use its desktop citation tools.',
+      );
+    }
+    if (selectedField != null) _assertZoteroFieldOwner(selectedField);
+    return WordZoteroTransaction._(
+      this,
+      WordZoteroCitingSession(
+        document: document,
+        documentId: documentId,
+        insertionParagraph: caret.isCollapsed ? _activeParagraph : null,
+        insertionOffset: caret.logicalIndex,
+        selectedField: selectedField,
+        seedCitation: seedCitation,
+      ),
+    );
+  }
+
+  void _applyZoteroTransaction(WordZoteroCitingSession session) {
+    _assertZoteroTrackingMode();
+    if (!identical(session.document, document)) {
+      throw StateError('The document changed while Zotero was open.');
+    }
+    if (!session.isComplete) {
+      throw StateError('Zotero has not completed the operation.');
+    }
+    if (!session.hasChanges) return;
+    final before = _ZoteroDocumentSnapshot.capture(document);
+    late final _ZoteroDocumentSnapshot after;
+    try {
+      session.apply();
+      after = _ZoteroDocumentSnapshot.capture(document);
+    } finally {
+      before.restore(document);
+    }
+    final beforeCaret = caret.logicalIndex;
+    final beforeParagraph = caret.paragraphIndex;
+    final beforeAnchor = caret.selectionAnchor;
+    final beforeAnchorParagraph = caret.selectionAnchorParagraph;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          after.restore(document);
+          final paragraphs = _paragraphs;
+          final destination = session.caretAfter;
+          final destinationIndex = destination == null
+              ? -1
+              : paragraphs.indexOf(destination.paragraph);
+          caret.paragraphIndex =
+              (destinationIndex < 0 ? beforeParagraph : destinationIndex).clamp(
+                0,
+                paragraphs.length - 1,
+              );
+          caret.logicalIndex =
+              (destinationIndex < 0 ? beforeCaret : destination!.offset).clamp(
+                0,
+                paragraphs[caret.paragraphIndex].text.length,
+              );
+          caret.collapseSelection();
+        },
+        undoFn: () {
+          before.restore(document);
+          caret.paragraphIndex = beforeParagraph;
+          caret.logicalIndex = beforeCaret;
+          caret.selectionAnchor = beforeAnchor;
+          caret.selectionAnchorParagraph = beforeAnchorParagraph;
+          // The generic history hook normally collapses a selection. This
+          // command restores an exact selection snapshot instead.
+          _historyRestoredSelection = true;
+        },
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
 
   /// Inserts a Zotero citation and its embedded CSL data as one undo step.
   /// Display text is supplied explicitly; this does not run a CSL processor.
@@ -12343,6 +12438,140 @@ class _SheetGridSnap {
 
 // Only this command may cross an otherwise read-only protection boundary.
 // Ordinary document commands remain blocked until protection is undone.
+/// A native Zotero operation pinned to one editor document and selection.
+/// Commands operate on [session] until [apply] commits the complete result.
+final class WordZoteroTransaction {
+  WordZoteroTransaction._(this._controller, this.session)
+    : _target = _capture(_controller);
+
+  final WordEditorController _controller;
+  final WordZoteroCitingSession session;
+  final Object _target;
+  bool _applied = false;
+
+  static Object _capture(WordEditorController controller) => (
+    document: controller.document,
+    revision: controller.contentRevision,
+    caret: controller.caret,
+    paragraph: controller.caret.paragraphIndex,
+    offset: controller.caret.logicalIndex,
+    anchorParagraph: controller.caret.selectionAnchorParagraph,
+    anchorOffset: controller.caret.selectionAnchor,
+    headerFooter: controller.isEditingHeaderFooter,
+    footer: controller.isEditingFooter,
+    section: controller.isEditingHeaderFooter
+        ? controller.editingSectionIndex
+        : null,
+    comment: controller.isEditingComment ? controller.selectedComment : null,
+    frame: controller.selectedFrame,
+    editingFrame: controller.editingFrame,
+    table: controller.selectedTable,
+    tableBand: controller.selectedTableBand,
+    visual: controller.selectedVisual,
+    equation: controller.selectedEquation,
+  );
+
+  /// Run before every protocol command, after host prompts, and before apply.
+  void assertCurrent() {
+    if (_applied ||
+        _controller.isDisposed ||
+        !_controller.config.allowsMutation ||
+        _controller.document.trackRevisions ||
+        _controller.document.restrictEditing ||
+        _target != _capture(_controller)) {
+      throw StateError(
+        'The document or insertion point changed while Zotero was open. Close the Zotero dialog and try again.',
+      );
+    }
+  }
+
+  void apply() {
+    assertCurrent();
+    _controller._applyZoteroTransaction(session);
+    _applied = true;
+  }
+}
+
+/// Keeps original object identities so older and newer undo commands continue
+/// to address the same paragraphs, note objects and block containers.
+final class _ZoteroDocumentSnapshot {
+  _ZoteroDocumentSnapshot._({
+    required this.paragraphs,
+    required this.blocks,
+    required this.footnotes,
+    required this.endnotes,
+    required this.data,
+  });
+
+  factory _ZoteroDocumentSnapshot.capture(WmlDocument document) {
+    final blocks = <List<WmlBlock>, List<WmlBlock>>{};
+    final paragraphs =
+        <
+          WmlParagraph,
+          ({List<WmlInline> inlines, WmlParagraphProps properties})
+        >{};
+    void visit(List<WmlBlock> list) {
+      blocks[list] = List<WmlBlock>.of(list);
+      for (final block in list) {
+        if (block is WmlParagraph) {
+          paragraphs[block] = (
+            inlines: WmlClone.inlines(block.inlines),
+            properties: block.properties.copy(),
+          );
+        }
+        for (final children in WordTree.childLists(block)) {
+          visit(children);
+        }
+      }
+    }
+
+    for (final section in document.sections) {
+      visit(section.blocks);
+    }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      visit(note.blocks);
+    }
+    return _ZoteroDocumentSnapshot._(
+      paragraphs: paragraphs,
+      blocks: blocks,
+      footnotes: List<WmlNote>.of(document.footnotes),
+      endnotes: List<WmlNote>.of(document.endnotes),
+      data: WordZoteroDocumentData.read(document),
+    );
+  }
+
+  final Map<
+    WmlParagraph,
+    ({List<WmlInline> inlines, WmlParagraphProps properties})
+  >
+  paragraphs;
+  final Map<List<WmlBlock>, List<WmlBlock>> blocks;
+  final List<WmlNote> footnotes;
+  final List<WmlNote> endnotes;
+  final String data;
+
+  void restore(WmlDocument document) {
+    for (final entry in blocks.entries) {
+      entry.key
+        ..clear()
+        ..addAll(entry.value);
+    }
+    for (final entry in paragraphs.entries) {
+      entry.key.properties = entry.value.properties.copy();
+      entry.key.inlines
+        ..clear()
+        ..addAll(WmlClone.inlines(entry.value.inlines));
+    }
+    document.footnotes
+      ..clear()
+      ..addAll(footnotes);
+    document.endnotes
+      ..clear()
+      ..addAll(endnotes);
+    document.zoteroDocumentData = data;
+  }
+}
+
 class _WordProtectionCommand extends _CallbackCommand {
   _WordProtectionCommand({required super.executeFn, required super.undoFn});
 }

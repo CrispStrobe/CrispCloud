@@ -104,6 +104,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   var _publicGroup = true;
   var _busy = false;
   var _reviewing = false;
+  ZoteroCitingCancellation? _citingCancellation;
   String? _error;
   String? _notice;
   final _selected = <String, ZoteroCitationItem>{};
@@ -144,6 +145,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   @override
   void dispose() {
+    _citingCancellation?.cancel();
     for (final controller in [
       _key,
       _style,
@@ -170,6 +172,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       if (mounted) {
         setState(() {
           _error = switch (error) {
+            ZoteroCitingException e =>
+              e.desktopMayNeedRestart
+                  ? '${e.message} Finish or cancel the open Zotero dialog. If Zotero remains busy, restart Zotero before trying again.'
+                  : e.message,
             ZoteroApiException e => e.message,
             FormatException e => e.message,
             UnsupportedError e =>
@@ -489,14 +495,241 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     );
   });
 
-  Future<T?> _showReview<T>(WidgetBuilder builder) async {
+  Future<T?> _showReview<T>(
+    WidgetBuilder builder, {
+    bool barrierDismissible = true,
+  }) async {
     setState(() => _reviewing = true);
     try {
-      return await showDialog<T>(context: context, builder: builder);
+      return await showDialog<T>(
+        context: context,
+        builder: builder,
+        barrierDismissible: barrierDismissible,
+      );
     } finally {
       if (mounted) setState(() => _reviewing = false);
     }
   }
+
+  Future<void> _citeWithDesktop(
+    ZoteroCitingCommand command, {
+    WmlZoteroField? field,
+    List<ZoteroCitationItem>? items,
+  }) => _run(() async {
+    _checkTarget();
+    final transport = widget.localTransport;
+    if (transport == null) {
+      throw StateError(
+        'Zotero desktop citation tools are unavailable in this host.',
+      );
+    }
+    final id =
+        'quds-${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 30)}';
+    final transaction = _controller.beginZoteroTransaction(
+      documentId: id,
+      selectedField: field,
+      seedCitation: items == null
+          ? null
+          : ZoteroCitation(
+              citationId: '$id-citation',
+              items: items,
+              plainCitation: zoteroBasicCitation(items),
+            ),
+    );
+    final cancellation = ZoteroCitingCancellation();
+    setState(() => _citingCancellation = cancellation);
+    try {
+      await ZoteroCitingClient(transport: transport).execute(
+        command: command,
+        documentId: id,
+        cancellation: cancellation,
+        guard: () {
+          _checkTarget();
+          transaction.assertCurrent();
+        },
+        handler: (name, arguments) async {
+          if (name == 'Document.displayAlert') {
+            if (arguments.length != 4 ||
+                arguments[0] != id ||
+                arguments[1] is! String ||
+                (arguments[1] as String).length > 20000 ||
+                arguments[3] is! int) {
+              throw const FormatException('Zotero returned an invalid dialog.');
+            }
+            final buttons = arguments[3] as int;
+            final choices = switch (buttons) {
+              0 => <(String, int)>[('OK', 1)],
+              1 => <(String, int)>[('Cancel', 0), ('OK', 1)],
+              2 => <(String, int)>[('No', 0), ('Yes', 1)],
+              3 => <(String, int)>[('Cancel', 0), ('No', 1), ('Yes', 2)],
+              _ => throw const FormatException(
+                'Zotero requested an unsupported dialog.',
+              ),
+            };
+            final answer = await _showReview<int>(
+              (dialogContext) => PopScope(
+                canPop: false,
+                child: AlertDialog(
+                  title: const Text('Zotero'),
+                  content: SizedBox(
+                    width: 560,
+                    child: SingleChildScrollView(
+                      child: SelectableText(arguments[1] as String),
+                    ),
+                  ),
+                  actions: [
+                    for (final (label, value) in choices)
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, value),
+                        child: Text(label),
+                      ),
+                  ],
+                ),
+              ),
+              barrierDismissible: false,
+            );
+            transaction.assertCurrent();
+            return answer ?? (buttons == 0 ? 1 : 0);
+          }
+          return transaction.session.handle(name, arguments);
+        },
+      );
+      _checkTarget();
+      transaction.assertCurrent();
+      final result = transaction.session;
+      result.prepareReview();
+      if (!result.hasChanges) {
+        setState(
+          () => _notice = 'Zotero finished without changing the document.',
+        );
+        return;
+      }
+      if (result.formattingWarnings.isNotEmpty) {
+        final apply = await _showReview<bool>(
+          (dialogContext) => AlertDialog(
+            title: const Text('Review Zotero formatting'),
+            content: SizedBox(
+              width: 600,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${result.changedFieldCount} citation or bibliography field(s) will be updated.',
+                    ),
+                    const SizedBox(height: 12),
+                    for (final warning in result.formattingWarnings)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(warning),
+                      ),
+                    const Text(
+                      'Citation identity, source data and Zotero style preferences will be kept. Review the resulting text before applying.',
+                    ),
+                    const Divider(),
+                    for (final text in result.previewTexts.take(20))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: SelectableText(
+                          text.length > 1000
+                              ? '${text.substring(0, 1000)}…'
+                              : text,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Apply Zotero result'),
+              ),
+            ],
+          ),
+        );
+        if (apply != true) {
+          if (mounted) {
+            setState(
+              () => _notice = 'Zotero result discarded. The document was kept.',
+            );
+          }
+          return;
+        }
+      }
+      _write(transaction.apply);
+      if (items != null) _selected.clear();
+      setState(
+        () => _notice =
+            'Zotero updated the document using its selected style. You can undo the complete operation.',
+      );
+    } finally {
+      if (mounted) setState(() => _citingCancellation = null);
+    }
+  });
+
+  Widget _desktopTools() => Card(
+    key: const ValueKey('zotero-desktop-tools'),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Zotero desktop citation tools',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Use Zotero’s source picker and installed citation styles. Refresh processes the whole document together, including numbering, disambiguation and style-dependent ibid. / Ebd. with page locators.',
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              FilledButton(
+                onPressed: _busy || !_canEdit
+                    ? null
+                    : () =>
+                          _citeWithDesktop(ZoteroCitingCommand.addEditCitation),
+                child: const Text('Citation in Zotero…'),
+              ),
+              OutlinedButton(
+                onPressed: _busy || !_canEdit
+                    ? null
+                    : () => _citeWithDesktop(ZoteroCitingCommand.setDocPrefs),
+                child: const Text('Document style…'),
+              ),
+              OutlinedButton(
+                onPressed: _busy || !_canEdit
+                    ? null
+                    : () => _citeWithDesktop(ZoteroCitingCommand.refresh),
+                child: const Text('Refresh all with Zotero'),
+              ),
+              OutlinedButton(
+                onPressed: _busy || !_canEdit
+                    ? null
+                    : () => _citeWithDesktop(
+                        ZoteroCitingCommand.addEditBibliography,
+                      ),
+                child: const Text('Bibliography in Zotero…'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Open Zotero on this computer. In Document style, choose a style that uses ibid. and German for Ebd.; the selected style controls punctuation and pages. Footnotes and endnotes are supported. Moving an existing note citation between formats requires a note containing only that citation.',
+            style: TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    ),
+  );
 
   void _saveFormat() {
     _session.style = _style.text.trim();
@@ -723,72 +956,102 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: 980,
-        height: max(160, min(760, size.height - 32)),
-        child: DefaultTabController(
-          length: 3,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.menu_book_outlined),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'Zotero references',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
+    return PopScope(
+      canPop: _citingCancellation == null,
+      child: Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: 980,
+          height: max(160, min(760, size.height - 32)),
+          child: DefaultTabController(
+            length: 3,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.menu_book_outlined),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Zotero references',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
+                      IconButton(
+                        onPressed: _citingCancellation != null
+                            ? null
+                            : () => Navigator.pop(context),
+                        tooltip: 'Close Zotero',
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_citingCancellation != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Finish or cancel the citation/style dialog in Zotero to continue. Changes are staged until the operation finishes.',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _citingCancellation!.isCancelled
+                              ? null
+                              : () {
+                                  setState(() => _citingCancellation!.cancel());
+                                },
+                          child: Text(
+                            _citingCancellation!.isCancelled
+                                ? 'Cancelling…'
+                                : 'Cancel operation',
+                          ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: 'Close Zotero',
-                      icon: const Icon(Icons.close),
-                    ),
+                  ),
+                const TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  tabs: [
+                    Tab(text: 'Library'),
+                    Tab(text: 'Document'),
+                    Tab(text: 'Import CSL JSON'),
                   ],
                 ),
-              ),
-              const TabBar(
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                tabs: [
-                  Tab(text: 'Library'),
-                  Tab(text: 'Document'),
-                  Tab(text: 'Import CSL JSON'),
-                ],
-              ),
-              if (_busy && !_reviewing)
-                const LinearProgressIndicator(minHeight: 2),
-              if (!_canEdit)
-                _banner(
-                  _controller.document.trackRevisions
-                      ? 'Turn off Track changes to insert or edit citations. Existing fields remain preserved.'
-                      : 'This document is read-only. You can browse and export reference data.',
+                if (_busy && !_reviewing)
+                  const LinearProgressIndicator(minHeight: 2),
+                if (!_canEdit)
+                  _banner(
+                    _controller.document.trackRevisions
+                        ? 'Turn off Track changes to insert or edit citations. Existing fields remain preserved.'
+                        : 'This document is read-only. You can browse and export reference data.',
+                  ),
+                if (_error != null) _banner(_error!, error: true),
+                if (_notice != null) _banner(_notice!),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _scrollableTab(
+                        _libraryTab(),
+                        minHeight: size.width < 600
+                            ? (widget.localTransport == null ? 820 : 920)
+                            : (widget.localTransport == null ? 660 : 760),
+                      ),
+                      _documentTab(),
+                      _scrollableTab(_importTab(), minHeight: 600),
+                    ],
+                  ),
                 ),
-              if (_error != null) _banner(_error!, error: true),
-              if (_notice != null) _banner(_notice!),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _scrollableTab(
-                      _libraryTab(),
-                      minHeight: size.width < 600
-                          ? (widget.localTransport == null ? 820 : 920)
-                          : (widget.localTransport == null ? 660 : 760),
-                    ),
-                    _documentTab(),
-                    _scrollableTab(_importTab(), minHeight: 600),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1203,6 +1466,24 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               icon: const Icon(Icons.format_quote),
               label: const Text('Insert citation'),
             ),
+            if (widget.localTransport != null)
+              OutlinedButton(
+                onPressed:
+                    _busy ||
+                        !_canEdit ||
+                        _selected.isEmpty ||
+                        _selected.values.any((item) => item.uris.isEmpty)
+                    ? null
+                    : () => _citeWithDesktop(
+                        ZoteroCitingCommand.addEditCitation,
+                        items: _selected.values.toList(),
+                      ),
+                child: const Tooltip(
+                  message:
+                      'Choose Document → Document style… first, then insert selected sources in that style.',
+                  child: Text('Insert with Zotero…'),
+                ),
+              ),
             PopupMenuButton<ZoteroExportFormat>(
               enabled: !_busy && _selected.isNotEmpty,
               tooltip: 'Copy selected references',
@@ -1244,6 +1525,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (widget.localTransport != null) _desktopTools(),
                 const Text(
                   'Citation fields retain source data in DOCX. Basic author–year text supports offline work; Zotero-formatted bibliographies use your selected style.',
                 ),
@@ -1255,7 +1537,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                         controller: _style,
                         enabled: !_busy,
                         decoration: const InputDecoration(
-                          labelText: 'Zotero style ID',
+                          labelText: 'Preview / export style ID',
                           hintText: 'apa',
                           isDense: true,
                         ),
@@ -1314,7 +1596,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'Refresh updates only citations created with basic author–year format. Document-wide CSL numbering, disambiguation, and the Zotero desktop picker are not provided.',
+                    'Basic refresh updates only citations created with basic author–year format. Desktop citation tools process the document using Zotero’s selected CSL style; preview/export settings above are separate.',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -1348,6 +1630,14 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     enabled: !_busy && _canEdit && field.isValid,
                     tooltip: 'Reference actions',
                     onSelected: (action) {
+                      if (action == 'native') {
+                        _citeWithDesktop(
+                          field.kind == ZoteroFieldKind.citation
+                              ? ZoteroCitingCommand.addEditCitation
+                              : ZoteroCitingCommand.addEditBibliography,
+                          field: field,
+                        );
+                      }
                       if (action == 'edit') {
                         _compose(citation!.items, field: field);
                       }
@@ -1364,6 +1654,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       }
                     },
                     itemBuilder: (_) => [
+                      if (widget.localTransport != null && field.canEdit)
+                        const PopupMenuItem(
+                          value: 'native',
+                          child: Text('Edit in Zotero…'),
+                        ),
                       if (citation != null && field.canEdit)
                         const PopupMenuItem(
                           value: 'edit',
