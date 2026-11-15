@@ -181,7 +181,51 @@ permit SFTP while forbidding a shell or PTY; that produces a connection error,
 not a fallback that bypasses server policy. Terminal transcripts and typed
 commands are not persisted as a new history database.
 
-## SSH authentication, reconnect and tmux
+## Tabs, split views, search and text size
+
+The terminal strip supports up to eight independent tabs. **New terminal** (+)
+starts another local or built-in shell. Each tab has its own scrollback,
+selection, SSH reconnect destination and search state. Switching tabs or hiding
+the whole terminal keeps the connections alive. Use **Terminal layout** to split
+the workspace side by side or top and bottom; creating the first split opens
+another terminal. Clicking a pane makes it the keyboard target. Selecting a
+hidden tab replaces the active split pane while preserving the other one.
+
+Only two panes are displayed at once. When the available space is too small,
+the active pane is displayed alone and the split reappears when space permits.
+**Single pane** keeps both sessions alive. Double-click a tab or choose
+**Rename terminal** to give it a local label; that label does not replace the
+trusted SSH endpoint in the pane header. Closing a running tab asks before
+disconnecting it. The last tab remains available; use Disconnect or Hide for it.
+Tabs and layouts remain in memory for this app session, not across app restarts.
+
+Choose **Terminal actions → Find in terminal** for literal search over the
+active screen and its scrollback. Case-sensitive and whole-word options, next
+and previous matches, and Enter / Shift+Enter navigation are available. Escape
+closes search. Matches use the emulator's Unicode and wrapped-line mapping;
+search highlights do not overwrite the clipboard selection. Output refreshes
+matches without dragging the viewport. Inactive searches pause, and scans are
+throttled during heavy output. Search shows the first 1,000 matches, with `+`
+when additional matches exist; it does not evaluate regular expressions.
+
+Font controls adjust the current tab from 8 to 32 logical pixels and reset to
+13. Font changes resize the PTY through the normal terminal layout path.
+
+| Action | Linux / Windows | Apple platforms |
+| --- | --- | --- |
+| New terminal | Ctrl+Shift+T | Command+T |
+| Close selected tab | Ctrl+Shift+W | Command+W |
+| Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab | Ctrl+Tab / Ctrl+Shift+Tab |
+| Find | Ctrl+Shift+F | Command+F |
+| Larger / smaller font | Ctrl+Shift+Plus / Ctrl+Shift+Minus | Command+Plus / Command+Minus |
+| Reset font size | Ctrl+Shift+0 | Command+0 |
+
+Workspace shortcuts also work from the terminal search field. These shortcuts
+apply while a terminal owns the keyboard; Ctrl+C remains a terminal interrupt.
+Browser-reserved shortcuts can be intercepted by the browser before reaching
+the app; the terminal strip and actions menu provide the corresponding controls.
+
+## SSH authentication, reconnect, tmux and screen
 
 Open **Connect via SSH** and select **Password** or **Private key** under
 Authentication. Key mode accepts a PEM/OpenSSH private key and an optional
@@ -192,13 +236,15 @@ server login password. Invalid keys or an incorrect passphrase fail before a
 connection is opened. Both authentication modes use the same host-key checks
 and direct TCP or explicit WebSocket gateway transport.
 
-The Session selector offers three modes:
+The Session selector offers five modes:
 
 | Mode | Behaviour |
 | --- | --- |
 | **Remote shell** | Opens the server's normal interactive login shell. |
 | **Create or attach tmux** | Creates the named session if absent, or attaches to it if it already exists. |
 | **Attach existing tmux** | Attaches only to the exact named session; a missing session is an error and does not create one. |
+| **Create new screen** | Creates a new GNU screen session with the requested name. |
+| **Attach existing screen** | Resolves an exact existing screen name or full `PID.name` ID, then joins that session. Missing or ambiguous targets fail. |
 
 The remote server must have `tmux` available on the SSH command path and allow
 PTY execution. Names contain 1–64 ASCII letters, digits, underscores or hyphens
@@ -211,19 +257,36 @@ remain visible in terminal output; no fresh-shell fallback hides the failure.
 The terminal also retains the SSH channel's exit status when the server supplies
 one, after both output channels have drained.
 
-The terminal header includes the trusted SSH endpoint and selected tmux session.
+GNU screen must be available on the server's command path. New names follow the
+same 1–64-character rule as tmux. Attachment also accepts a full `PID.name` from
+`screen -ls`, including dotted tty/host suffixes. Duplicate names require a full
+ID. Screen creation is explicit because its CLI has no atomic exact-name
+create-or-attach operation; two Create actions can create distinct sessions
+with the same human name.
+
+Screen attachment reads a bounded listing in the C locale, rejects unavailable
+and competing-prefix matches, then uses the full ID with `screen -x`. It does
+not force-detach other displays, log out other clients, or fall back to a new
+session or shell. Screen's CLI can still race with another process renaming or
+creating sessions between listing and attachment; this is a conservative
+listing check, not an atomic server-side exact-only attachment primitive.
+
+The terminal header includes the trusted SSH endpoint and selected session.
 **Detach from tmux** closes CrispCloud's SSH connection without sending `exit`
 or `kill-session`. The server's tmux session normally keeps running. Existing
 server settings such as `destroy-unattached`, host shutdown, or explicitly
 exiting the session's last shell can still end it. Hiding the panel keeps the
 current connection, while the existing SSH inactivity timeout still applies.
+**Detach from screen** likewise closes only this SSH connection. The remote
+session remains subject to screen's own settings, remote process exit and host
+shutdown. Closing a terminal tab uses the same transport cleanup.
 
 Use **Terminal actions → Reconnect SSH** to reopen the form with the last host,
-port, username, authentication method, gateway and tmux selection. Passwords,
+port, username, authentication method, gateway and tmux or screen selection. Passwords,
 private keys and passphrases are cleared and must be entered again. Canceling
 this dialog leaves a currently connected terminal intact. These reconnect
-settings live only in the current panel's memory and are not saved as profiles
-or restored after restarting the app. After a restart, entering the same server,
+settings live only in the current tab's memory unless explicitly saved as a
+profile (see below). After a restart, entering the same server,
 user and tmux name can reattach to the remote session. Selecting
 **Attach existing tmux** avoids creating a fresh session if the old one is gone.
 
@@ -232,10 +295,34 @@ For default tmux bindings, tap Ctrl+B followed by `c` for a new window, `n`/`p`
 for the next/previous window, `%` or `"` to split a pane, or `d` to detach.
 Customized tmux prefixes and bindings remain controlled by the remote server;
 the extra key sends the actual control character. The built-in sandbox shell
-does not run tmux.
+does not run tmux or screen. **Ctrl+A** sends screen's default prefix; with
+default bindings, follow it with `c` for a new window, `n`/`p` to change windows,
+or `d` to detach. Prefix actions select their pane before subsequent typing.
 
 See the upstream [tmux getting started guide](https://github.com/tmux/tmux/wiki/Getting-Started)
 for the default bindings and remote session model.
+See also the [GNU screen invocation manual](https://www.gnu.org/software/screen/manual/html_node/Invoking-Screen.html).
+
+## Saved SSH profiles
+
+After entering a destination, choose **Terminal actions → Save SSH profile**
+and give it a name. **Saved SSH profiles** lists destinations to reopen or
+delete. Selecting one opens the regular connection form for credential entry;
+canceling that form leaves the existing connection intact.
+
+Profiles store only their name, host, port, username, authentication method,
+optional gateway and exact shell/tmux/screen settings. Passwords, private keys
+and passphrases are removed before a profile is constructed and are absent from
+the versioned persisted schema. Profiles use the app's local preferences and
+survive ordinary app restarts; they are not exported or synchronized by this
+feature. Reusing a name explicitly replaces that profile. Up to 50 profiles
+are supported. Concurrent saves from different tabs are serialized; unreadable
+or newer-format saved data is left untouched and reported as an error.
+
+An attach-only profile remains attach-only, including after restarting the
+app. Profile loading does not bypass host-key verification or connect
+automatically. A saved Create new screen profile still creates a new screen
+session on each connection; select Attach existing screen to resume one.
 
 ## License provenance
 
@@ -299,14 +386,21 @@ flutter test --concurrency=2 \
   test/ssh_terminal_transport_test.dart test/ssh_terminal_test.dart \
   test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart \
   test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart \
-  test/ssh_terminal_reconnect_test.dart
+  test/ssh_terminal_reconnect_test.dart \
+  test/screen_session_options_test.dart test/screen_session_command_test.dart \
+  test/terminal_tabs_test.dart test/terminal_search_test.dart \
+  test/terminal_search_bar_test.dart test/ssh_terminal_profiles_test.dart \
+  test/ssh_terminal_profiles_dialog_test.dart
 
 flutter test --platform chrome --concurrency=1 \
   test/terminal_session_test.dart test/terminal_widget_test.dart \
   test/ssh_terminal_transport_test.dart \
   test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart \
   test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart \
-  test/ssh_terminal_reconnect_test.dart
+  test/ssh_terminal_reconnect_test.dart \
+  test/screen_session_options_test.dart test/terminal_tabs_test.dart \
+  test/terminal_search_test.dart test/terminal_search_bar_test.dart \
+  test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
 
 flutter analyze --no-fatal-warnings --no-fatal-infos
 flutter build web --release

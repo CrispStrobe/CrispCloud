@@ -31,6 +31,8 @@ void main() {
     WidgetTester tester, {
     double width = 640,
     bool active = true,
+    int focusRequest = 0,
+    KeyEventResult Function(KeyEvent)? onWorkspaceKey,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -53,6 +55,8 @@ void main() {
                         view.currentState!.renderTerminal.lineHeight,
                     onClose: () => closed++,
                     active: active,
+                    focusRequest: focusRequest,
+                    onWorkspaceKey: onWorkspaceKey,
                   ),
                   Expanded(
                     child: TerminalView(
@@ -184,6 +188,58 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(field.focusNode!.hasFocus, isTrue);
     expect(find.text('1/2'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('explicit focus request reclaims an already-active search', (
+    tester,
+  ) async {
+    terminal.write('hit');
+    await mount(tester);
+    await findText(tester, 'hit');
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('terminal-search-query')),
+    );
+    field.focusNode!.unfocus();
+    await tester.pump();
+    expect(field.focusNode!.hasFocus, isFalse);
+    await mount(tester, focusRequest: 1);
+    await tester.pump();
+    expect(field.focusNode!.hasFocus, isTrue);
+    expect(field.controller!.text, 'hit');
+    expect(find.text('1/1'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('workspace shortcut is forwarded without leaking other keys', (
+    tester,
+  ) async {
+    var cycles = 0;
+    await mount(
+      tester,
+      onWorkspaceKey: (event) {
+        if (event.logicalKey == LogicalKeyboardKey.tab &&
+            HardwareKeyboard.instance.isControlPressed) {
+          if (event is KeyDownEvent) cycles++;
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+    );
+    await findText(tester, 'retained query');
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f5);
+    await tester.pump();
+    expect(cycles, 1);
+    expect(bubbled, isEmpty);
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('terminal-search-query')),
+    );
+    expect(field.controller!.text, 'retained query');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

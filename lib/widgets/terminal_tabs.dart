@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_strings.dart';
 import '../providers/terminal_provider.dart';
+import '../providers/focus_area_provider.dart';
 import '../services/terminal_session.dart';
 import 'terminal_panel.dart';
 
@@ -56,6 +57,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   late int _active;
   Axis _axis = Axis.horizontal;
   bool _closing = false;
+  int _focusRequest = 0;
 
   @override
   void initState() {
@@ -100,8 +102,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   }
 
   void _activate(int id) {
-    if (_active == id || !_tabs.any((tab) => tab.id == id)) return;
+    if (!_tabs.any((tab) => tab.id == id)) return;
+    ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
     setState(() {
+      _focusRequest++;
       if (id != _first && id != _second) {
         if (_active == _second) {
           _second = id;
@@ -488,6 +492,11 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                                                   tab.id == _second
                                             : tab.id == _active),
                                     active: tab.id == _active,
+                                    focusRequest: _focusRequest,
+                                    isActivePane: () =>
+                                        mounted &&
+                                        widget.visible &&
+                                        _active == tab.id,
                                     onActivate: () => _activate(tab.id),
                                     onWorkspaceKey: _onWorkspaceKey,
                                   ),

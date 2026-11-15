@@ -141,6 +141,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('saved profiles remain scrollable in a short narrow viewport', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 320);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await store.save(SshTerminalProfile(name: 'Production', config: config));
+    await open(tester, SshTerminalProfilesDialog(store: store));
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('ssh-profile-Production')),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect((await store.load()).single.name, 'Production');
+  });
+
   testWidgets(
     'selecting a saved profile asks for credentials and cancel preserves live connection',
     (tester) async {

@@ -12,17 +12,19 @@ The terminal workspace continuation starts at `ebb8d13c` on `main` (15 November
 already merged, as are the subsequent worksheet and Office documentation PRs
 #137 and #138. The two remaining divergent branch histories have identical
 trees to their squash merges. Both storage-carving branches are ancestors of
-`main`. No additional branch merge or cherry-pick is required.
+`main`. No additional branch merge or cherry-pick was required at that point.
+During development, main advanced through PRs #139, #141 and #142 to
+`edef30ba`; those Office-only changes were merged into the feature branch too.
 
-## Coverage before this continuation
+## Implemented coverage
 
-| Area | Existing support | Work in this continuation |
+| Area | Existing support | Added in this continuation |
 | --- | --- | --- |
 | Terminal emulation | PTY, ANSI/VT rendering, Unicode, alternate screen, mouse, bracketed paste | Keep upstream emulator and existing clipboard boundary |
-| Local shells | Desktop PTY/ConPTY; built-in shell; embedded iOS shell | Independent terminal tabs and split views |
-| SSH | Password and encrypted private-key authentication; verified host keys; explicit browser gateway | Reusable destination profiles without saved credentials |
-| Persistent remote sessions | Named tmux create/attach and exact attach; detach; reconnect | GNU screen launch and attachment |
-| Navigation | Scrollback, selection and explicit copy/paste | Find in scrollback and font zoom |
+| Local shells | Desktop PTY/ConPTY; built-in shell; embedded iOS shell | Up to eight independent terminal tabs; two-pane horizontal/vertical layouts; names, focus isolation and close confirmation |
+| SSH | Password and encrypted private-key authentication; verified host keys; explicit browser gateway | Up to 50 named destination profiles with no saved credentials; safe concurrent writes and unchanged trust checks |
+| Persistent remote sessions | Named tmux create/attach and exact attach; detach; reconnect | Explicit GNU screen create and attach, bounded exact-listing resolution and non-evicting detach |
+| Navigation | Scrollback, selection and explicit copy/paste | Unicode/wrap-aware literal search, case/word options, bounded highlights and navigation; per-tab font zoom |
 | Mobile | Extra keys and direct SSH | Screen prefix alongside tmux prefix |
 
 ## Remaining larger parity areas
@@ -37,6 +39,11 @@ trees to their squash merges. Both storage-carving branches are ancestors of
 These are independent capabilities and require separate implementation and
 validation. Running tmux in a PTY does not implement iTerm2's native tmux
 control-mode integration.
+
+The reference workflow areas come from iTerm2's
+[feature highlights](https://iterm2.com/documentation-highlights.html) and
+[tmux integration guide](https://iterm2.com/documentation-tmux-integration.html).
+See [the terminal guide](terminal.md) for exact supported behavior and controls.
 
 ## Validation policy for this continuation
 

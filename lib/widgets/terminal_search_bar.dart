@@ -22,6 +22,8 @@ class TerminalSearchBar extends StatefulWidget {
     this.autofocus = true,
     this.active = true,
     this.onActivate,
+    this.focusRequest = 0,
+    this.onWorkspaceKey,
   });
 
   final Terminal terminal;
@@ -32,6 +34,10 @@ class TerminalSearchBar extends StatefulWidget {
   final bool autofocus;
   final bool active;
   final VoidCallback? onActivate;
+
+  /// Increment to reclaim search focus without rebuilding or clearing its query.
+  final int focusRequest;
+  final KeyEventResult Function(KeyEvent)? onWorkspaceKey;
 
   @override
   State<TerminalSearchBar> createState() => _TerminalSearchBarState();
@@ -78,11 +84,13 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
         _search.setQuery(_query.text);
       });
     }
-    if (oldWidget.active != widget.active) {
+    final requestedFocus = oldWidget.focusRequest != widget.focusRequest;
+    if (oldWidget.active != widget.active ||
+        (widget.active && requestedFocus)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _search.setActive(widget.active);
-        if (widget.active && widget.autofocus) {
+        if (widget.active && (widget.autofocus || requestedFocus)) {
           _focus.requestFocus();
         } else if (!widget.active) {
           _focus.unfocus();
@@ -126,6 +134,10 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
   }
 
   KeyEventResult _onKey(FocusNode _, KeyEvent event) {
+    final workspaceResult = widget.onWorkspaceKey?.call(event);
+    if (workspaceResult != null && workspaceResult != KeyEventResult.ignored) {
+      return workspaceResult;
+    }
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
     }

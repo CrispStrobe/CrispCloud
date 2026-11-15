@@ -398,6 +398,10 @@ jobs:
           test/terminal_workspace_web_test.dart
           test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart
           test/ssh_terminal_reconnect_test.dart
+          test/screen_session_options_test.dart
+          test/terminal_search_test.dart test/terminal_search_bar_test.dart
+          test/terminal_tabs_test.dart
+          test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
 
       - name: Browser credential vault authentication and compatibility
         run: >-
@@ -626,6 +630,16 @@ jobs:
           flutter test test/terminal_process_test.dart
           test/terminal_session_test.dart test/terminal_widget_test.dart
 
+      - name: Terminal workspace and remote session regressions
+        run: >-
+          flutter test --no-pub --concurrency=2
+          test/screen_session_options_test.dart test/tmux_session_options_test.dart
+          test/ssh_terminal_transport_test.dart test/ssh_terminal_connect_dialog_test.dart
+          test/ssh_terminal_reconnect_test.dart
+          test/terminal_search_test.dart test/terminal_search_bar_test.dart
+          test/terminal_tabs_test.dart
+          test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
+
       - name: Patch pdfx CMake (fix VERSION 2.8.12 rejected by CMake 3.30+)
         shell: bash
         run: |
@@ -726,6 +740,12 @@ jobs:
           test/terminal_process_test.dart
           test/terminal_session_test.dart
           test/terminal_widget_test.dart
+          test/screen_session_options_test.dart test/screen_session_command_test.dart
+          test/tmux_session_options_test.dart test/ssh_terminal_transport_test.dart
+          test/ssh_terminal_connect_dialog_test.dart test/ssh_terminal_reconnect_test.dart
+          test/terminal_search_test.dart test/terminal_search_bar_test.dart
+          test/terminal_tabs_test.dart
+          test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
           test/azure_range_read_test.dart
           test/fuse_filesystem_protocol_test.dart
           test/fuse_mount_test.dart

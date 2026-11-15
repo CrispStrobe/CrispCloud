@@ -78,6 +78,8 @@ class TerminalPanel extends ConsumerStatefulWidget {
     this.active = true,
     this.embedded = false,
     this.autoStart = false,
+    this.focusRequest = 0,
+    this.isActivePane,
     this.onActivate,
     this.onWorkspaceKey,
   });
@@ -88,6 +90,8 @@ class TerminalPanel extends ConsumerStatefulWidget {
   final bool active;
   final bool embedded;
   final bool autoStart;
+  final int focusRequest;
+  final bool Function()? isActivePane;
   final VoidCallback? onActivate;
   final KeyEventResult Function(KeyEvent event)? onWorkspaceKey;
 
@@ -159,6 +163,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       };
 
   bool get _canDisconnect => _session.canDisconnect;
+  bool get _activePane =>
+      widget.active && (widget.isActivePane?.call() ?? true);
 
   bool get _usingTmux =>
       _session.kind == TerminalSessionKind.ssh &&
@@ -248,7 +254,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     }
     if (!widget.visible || !widget.active) {
       _focus.unfocus();
-    } else if (!oldWidget.visible || !oldWidget.active) {
+    } else if (!oldWidget.visible ||
+        !oldWidget.active ||
+        oldWidget.focusRequest != widget.focusRequest) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _focusIfVisible());
     }
     _scheduleMenuUpdate();
@@ -264,7 +272,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void _focusIfVisible() {
     if (mounted &&
         widget.visible &&
-        widget.active &&
+        _activePane &&
         !(_showSearch && _searchFits) &&
         _focusAreaState.state == FocusArea.terminal) {
       _focus.requestFocus();
@@ -625,12 +633,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   Future<void> _paste() async {
-    if (!_session.isConnected || !widget.visible || !widget.active) return;
+    if (!_session.isConnected || !widget.visible || !_activePane) return;
     final terminal = _session.terminal;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (!mounted ||
         !widget.visible ||
-        !widget.active ||
+        !_activePane ||
         !_session.isConnected ||
         !identical(terminal, _session.terminal)) {
       return;
@@ -727,6 +735,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _sendKey(TerminalKey key, {bool ctrl = false}) {
     if (!_session.isConnected) return;
+    _activateInput();
     _session.terminal.keyInput(key, ctrl: ctrl);
     _focusIfVisible();
   }
@@ -1158,23 +1167,33 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   ),
                 ),
               _buildHeader(),
-              if (showSearch)
-                TerminalSearchBar(
-                  active: widget.visible && widget.active,
-                  onActivate: () {
-                    widget.onActivate?.call();
-                    _focusAreaState.state = FocusArea.terminal;
-                  },
-                  terminal: _session.terminal,
-                  controller: _controller,
-                  scrollController: _scroll,
-                  lineHeight: () =>
-                      _terminalViewKey
-                          .currentState
-                          ?.renderTerminal
-                          .lineHeight ??
-                      16,
-                  onClose: _closeSearch,
+              if (_showSearch)
+                Visibility(
+                  visible: showSearch,
+                  maintainState: true,
+                  child: TerminalSearchBar(
+                    active:
+                        showSearch &&
+                        widget.visible &&
+                        widget.active &&
+                        ref.watch(focusAreaProvider) == FocusArea.terminal,
+                    focusRequest: widget.focusRequest,
+                    onWorkspaceKey: widget.onWorkspaceKey,
+                    onActivate: () {
+                      widget.onActivate?.call();
+                      _focusAreaState.state = FocusArea.terminal;
+                    },
+                    terminal: _session.terminal,
+                    controller: _controller,
+                    scrollController: _scroll,
+                    lineHeight: () =>
+                        _terminalViewKey
+                            .currentState
+                            ?.renderTerminal
+                            .lineHeight ??
+                        16,
+                    onClose: _closeSearch,
+                  ),
                 ),
               Expanded(
                 child: Stack(

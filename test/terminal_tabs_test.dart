@@ -215,6 +215,58 @@ void main() {
   });
 
   testWidgets(
+    'clicking current or another tab reclaims typing from a file pane',
+    (tester) async {
+      await mount(tester);
+      container.read(focusAreaProvider.notifier).state = FocusArea.local;
+      await tester.pump();
+      expect(view(tester, 0).focusNode!.hasFocus, isFalse);
+      await activate(tester, 1);
+      expect(container.read(focusAreaProvider), FocusArea.terminal);
+      expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+      await newTab(tester);
+      container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+      await tester.pump();
+      await activate(tester, 1);
+      expect(container.read(focusAreaProvider), FocusArea.terminal);
+      expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+      expect(view(tester, 1).focusNode!.hasFocus, isFalse);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA, character: 'a');
+      await tester.pump();
+      expect(fixtures[0].connection.input.join(), 'a');
+      expect(fixtures[1].connection.input, isEmpty);
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
+  testWidgets(
+    'mobile control keys activate their pane before subsequent typing',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      await mount(tester);
+      await layout(tester, 'Split side by side');
+      expect(view(tester, 1).focusNode!.hasFocus, isTrue);
+      final control = find.descendant(
+        of: find.byKey(const ValueKey('terminal-pane-1')),
+        matching: find.text('Ctrl+A'),
+      );
+      await tester.tap(control);
+      await tester.pump();
+      await tester.pump();
+      expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB, character: 'b');
+      await tester.pump();
+      expect(fixtures[0].connection.input.join(), '\x01b');
+      expect(fixtures[1].connection.input, isEmpty);
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+    skip: kIsWeb,
+  );
+
+  testWidgets(
     'narrow and short layouts collapse and restore splits without losing sessions',
     (tester) async {
       await mount(tester);

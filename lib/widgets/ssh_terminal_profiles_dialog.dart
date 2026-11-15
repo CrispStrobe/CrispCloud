@@ -47,79 +47,59 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
     content: SizedBox(
       width: 460,
       height: 340,
-      child: Column(
-        children: [
-          Text(
-            context.terminalControlsTr(
-              'Connection settings are saved without passwords, private keys or passphrases.',
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                context.terminalControlsTr(_error!),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+      child: FutureBuilder<List<SshTerminalProfile>>(
+        future: _profiles,
+        builder: (context, snapshot) => ListView(
+          children: [
+            Text(
+              context.terminalControlsTr(
+                'Connection settings are saved without passwords, private keys or passphrases.',
               ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: FutureBuilder<List<SshTerminalProfile>>(
-              future: _profiles,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      context.terminalControlsTr(
-                        'Could not load SSH profiles.',
-                      ),
-                    ),
-                  );
-                }
-                final profiles = snapshot.data;
-                if (profiles == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (profiles.isEmpty) {
-                  return Center(
-                    child: Text(
-                      context.terminalControlsTr('No saved SSH profiles'),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: profiles.length,
-                  itemBuilder: (context, index) {
-                    final profile = profiles[index];
-                    final config = profile.config;
-                    final session = config.tmux != null
-                        ? ' · tmux: ${config.tmux!.sessionName}'
-                        : config.screen != null
-                        ? ' · screen: ${config.screen!.sessionName}'
-                        : '';
-                    return ListTile(
-                      key: ValueKey('ssh-profile-${profile.name}'),
-                      title: Text(profile.name),
-                      subtitle: Text(
-                        '${config.username}@${config.host}:${config.port}$session',
-                      ),
-                      onTap: _busy
-                          ? null
-                          : () =>
-                                Navigator.pop(context, config.withoutSecrets()),
-                      trailing: IconButton(
-                        tooltip: context.terminalControlsTr('Delete'),
-                        onPressed: _busy ? null : () => _delete(profile),
-                        icon: const Icon(Icons.delete_outline),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  context.terminalControlsTr(_error!),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            const SizedBox(height: 8),
+            if (snapshot.hasError)
+              Center(
+                child: Text(
+                  context.terminalControlsTr('Could not load SSH profiles.'),
+                ),
+              )
+            else if (snapshot.data == null)
+              const Center(child: CircularProgressIndicator())
+            else if (snapshot.data!.isEmpty)
+              Center(
+                child: Text(
+                  context.terminalControlsTr('No saved SSH profiles'),
+                ),
+              )
+            else
+              for (final profile in snapshot.data!)
+                ListTile(
+                  key: ValueKey('ssh-profile-${profile.name}'),
+                  title: Text(profile.name),
+                  subtitle: Text(_destination(profile.config)),
+                  onTap: _busy
+                      ? null
+                      : () => Navigator.pop(
+                          context,
+                          profile.config.withoutSecrets(),
+                        ),
+                  trailing: IconButton(
+                    tooltip: context.terminalControlsTr('Delete'),
+                    onPressed: _busy ? null : () => _delete(profile),
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ),
+          ],
+        ),
       ),
     ),
     actions: [
@@ -129,6 +109,15 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
       ),
     ],
   );
+
+  String _destination(SshTerminalConfig config) {
+    final session = config.tmux != null
+        ? ' · tmux: ${config.tmux!.sessionName}'
+        : config.screen != null
+        ? ' · screen: ${config.screen!.sessionName}'
+        : '';
+    return '${config.username}@${config.host}:${config.port}$session';
+  }
 }
 
 class SaveSshTerminalProfileDialog extends StatefulWidget {
