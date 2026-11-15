@@ -183,7 +183,7 @@ final class ZoteroCitation {
       ...properties,
       'plainCitation': plainCitation,
       'formattedCitation': formattedCitation ?? plainCitation,
-      if (noteIndex != null) 'noteIndex': noteIndex,
+      'noteIndex': ?noteIndex,
     },
   });
 
@@ -215,7 +215,7 @@ final class WmlZoteroField {
     this.opaqueMetadata = false,
     List<WmlInline> contents = const <WmlInline>[],
     Map<WmlParagraph, List<WmlFieldBoundary>>? boundaries,
-  }) : _contents = contents,
+  }) : _contents = List<WmlInline>.unmodifiable(contents),
        _boundaries = boundaries ?? <WmlParagraph, List<WmlFieldBoundary>>{};
 
   final ZoteroFieldKind kind;
@@ -270,8 +270,9 @@ abstract final class WordZotero {
   static ZoteroFieldKind? kindOfInstruction(String? instruction) {
     if (instruction == null) return null;
     if (_citationPrefix.hasMatch(instruction)) return ZoteroFieldKind.citation;
-    if (_bibliographyPrefix.hasMatch(instruction))
+    if (_bibliographyPrefix.hasMatch(instruction)) {
       return ZoteroFieldKind.bibliography;
+    }
     return null;
   }
 
@@ -350,10 +351,11 @@ abstract final class WordZotero {
         depth++;
       } else if (inline.kind == WmlFieldBoundaryKind.end) {
         if (depth == 0) {
-          if (at <= offset)
+          if (at <= offset) {
             throw UnsupportedError(
               'Move the caret outside the cross-paragraph field.',
             );
+          }
         } else if (--depth == 0) {
           spans.add((first: first, last: index, start: start, end: offset));
         }
@@ -540,8 +542,11 @@ abstract final class WordZotero {
           current.start == field.start &&
           current.end == field.end &&
           current.locked == field.locked &&
-          current.nested == field.nested)
+          current.nested == field.nested &&
+          current.opaqueMetadata == field.opaqueMetadata &&
+          current.canEdit == field.canEdit) {
         return;
+      }
     }
     throw StateError(
       'The Zotero field changed. Inspect it again before editing.',
@@ -570,7 +575,9 @@ abstract final class WordZotero {
     final found = <WmlZoteroField>[];
     final stack = <_OpenField>[];
     for (final paragraph in story) {
-      for (final field in stack) field.addParagraph(paragraph);
+      for (final field in stack) {
+        field.addParagraph(paragraph);
+      }
       final paragraphInstruction = paragraph.properties.fieldInstruction;
       if (paragraphInstruction != null &&
           kindOfInstruction(paragraphInstruction) != null) {
@@ -592,7 +599,9 @@ abstract final class WordZotero {
         if (inline is WmlFieldBoundary) {
           switch (inline.kind) {
             case WmlFieldBoundaryKind.begin:
-              for (final field in stack) field.nested = true;
+              for (final field in stack) {
+                field.nested = true;
+              }
               final field = _OpenField(paragraph, offset)
                 ..nested = stack.isNotEmpty;
               field.addBoundary(paragraph, inline);
@@ -769,8 +778,9 @@ const _maxJsonLength = 1024 * 1024;
 
 Map<String, dynamic> _freezeObject(Map<String, dynamic> json) {
   dynamic freeze(dynamic value, int depth) {
-    if (depth > 64)
+    if (depth > 64) {
       throw const FormatException('Zotero metadata is too deeply nested.');
+    }
     if (value is Map<String, dynamic>) {
       return Map<String, dynamic>.unmodifiable(<String, dynamic>{
         for (final entry in value.entries)
@@ -785,8 +795,9 @@ Map<String, dynamic> _freezeObject(Map<String, dynamic> json) {
     if (value == null ||
         value is String ||
         value is bool ||
-        (value is num && value.isFinite))
+        (value is num && value.isFinite)) {
       return value;
+    }
     throw const FormatException('Zotero metadata must contain JSON values.');
   }
 

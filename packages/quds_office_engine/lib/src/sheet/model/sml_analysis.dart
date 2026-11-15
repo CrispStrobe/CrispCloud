@@ -105,7 +105,11 @@ class SmlDataValidation {
     if (kind != SmlValidationKind.list) {
       return const <String>[];
     }
-    return formula1
+    var source = formula1.trim();
+    if (source.length >= 2 && source.startsWith('"') && source.endsWith('"')) {
+      source = source.substring(1, source.length - 1).replaceAll('""', '"');
+    }
+    return source
         .split(RegExp(r'[,،]'))
         .map((String item) => item.trim())
         .where((String item) => item.isNotEmpty)
@@ -150,7 +154,16 @@ class SmlDataValidation {
 }
 
 /// Conditional format kinds hosts can paint.
-enum SmlConditionalKind { greaterThan, lessThan, equal, duplicate, contains }
+enum SmlConditionalKind {
+  greaterThan,
+  greaterOrEqual,
+  lessThan,
+  lessOrEqual,
+  equal,
+  notEqual,
+  duplicate,
+  contains,
+}
 
 /// One conditional-format rule.
 class SmlConditionalRule {
@@ -161,6 +174,7 @@ class SmlConditionalRule {
     this.formula = '',
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
+    this.dxfId,
   });
 
   /// range API.
@@ -178,6 +192,9 @@ class SmlConditionalRule {
   /// fontRgb API.
   String fontRgb;
 
+  /// Generated differential-style id, assigned during serialization.
+  int? dxfId;
+
   /// matches API.
   bool matches(SmlCell cell, SmlWorksheet sheet) {
     final String text = cell.asString;
@@ -186,12 +203,22 @@ class SmlConditionalRule {
         final double? n = cell.asNumber;
         final double? bound = double.tryParse(formula);
         return n != null && bound != null && n > bound;
+      case SmlConditionalKind.greaterOrEqual:
+        final double? n = cell.asNumber;
+        final double? bound = double.tryParse(formula);
+        return n != null && bound != null && n >= bound;
       case SmlConditionalKind.lessThan:
         final double? n = cell.asNumber;
         final double? bound = double.tryParse(formula);
         return n != null && bound != null && n < bound;
+      case SmlConditionalKind.lessOrEqual:
+        final double? n = cell.asNumber;
+        final double? bound = double.tryParse(formula);
+        return n != null && bound != null && n <= bound;
       case SmlConditionalKind.equal:
         return text == formula;
+      case SmlConditionalKind.notEqual:
+        return text != formula;
       case SmlConditionalKind.contains:
         return text.toLowerCase().contains(formula.toLowerCase());
       case SmlConditionalKind.duplicate:
@@ -326,9 +353,9 @@ abstract final class SmlAnalysis {
           ..hasExplicitFontColorEdit = src.hasExplicitFontColorEdit
           ..fontBold = src.fontBold
           ..fontSize = src.fontSize
-        ..fontFamily = src.fontFamily
+          ..fontFamily = src.fontFamily
           ..horizontalAlign = src.horizontalAlign
-        ..wrapText = src.wrapText
+          ..wrapText = src.wrapText
           ..borderRgb = src.borderRgb
           ..borderWidth = src.borderWidth
           ..locked = src.locked;

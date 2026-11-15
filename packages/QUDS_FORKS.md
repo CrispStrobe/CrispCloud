@@ -23,9 +23,10 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa` on `main`
+The app mirrors Quds `9da9c638bfe3bf932a70b2268dc16ef783fc009a`
+on `codex/zotero-support-20261115`, including canonical main `c210315`,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,363 managed files
+all 2,374 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -33,14 +34,23 @@ header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
 
+Zotero support adds a shared references workspace, a read-only Web API client,
+offline CSL import/export, guarded DOCX citation and bibliography fields, and
+undoable editing. CrispCloud supplies its selected proxy/TLS transport and
+optional existing credential store. See [usage and formatting limits](../docs/zotero.md)
+and [source-bound local validation](../docs/zotero-validation.md). This adds
+targeted Zotero qualification; earlier storage and spreadsheet results retain
+their original source identities.
+
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings, and hidden rows, columns and sheets
+ODS pictures import as worksheet drawings; conditional formats (numeric, contains-text and duplicate) and list validations
+are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 488
+elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 493
 tests; the combined host qualification remains separately source-bound in the
 storage evidence.
 

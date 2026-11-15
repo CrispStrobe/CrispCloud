@@ -32,8 +32,9 @@ String zoteroHtmlToPlainText(String html) {
         if (value != null &&
             value > 0 &&
             value <= 0x10ffff &&
-            (value < 0xd800 || value > 0xdfff))
+            (value < 0xd800 || value > 0xdfff)) {
           return String.fromCharCode(value);
+        }
         return '\uFFFD';
       }
       return const {
@@ -137,7 +138,7 @@ String _authors(Map<String, dynamic> data, {bool short = false}) {
     return zoteroHtmlToPlainText('${data['title'] ?? 'Untitled'}');
   }
   final names = <String>[];
-  for (final author in authors.whereType<Map>()) {
+  for (final author in authors.whereType<Map<dynamic, dynamic>>()) {
     final literal = author['literal'];
     final family = author['family'];
     final given = author['given'];
@@ -161,11 +162,13 @@ String _year(Map<String, dynamic> data) {
     if (parts is List &&
         parts.isNotEmpty &&
         parts.first is List &&
-        (parts.first as List).isNotEmpty)
+        (parts.first as List).isNotEmpty) {
       return '${(parts.first as List).first}';
+    }
     final literal = issued['literal'] ?? issued['raw'];
-    if (literal is String)
+    if (literal is String) {
       return RegExp(r'\b\d{4}\b').firstMatch(literal)?[0] ?? literal;
+    }
   }
   return 'n.d.';
 }
@@ -237,13 +240,15 @@ class ZoteroSourceAddress {
         uri.userInfo.isNotEmpty ||
         uri.hasPort ||
         uri.hasQuery ||
-        uri.hasFragment)
+        uri.hasFragment) {
       return null;
+    }
     final parts = uri.pathSegments;
     if (parts.length != 4 ||
         parts[2] != 'items' ||
-        !RegExp(r'^[A-Z0-9]{8}$').hasMatch(parts[3]))
+        !RegExp(r'^[A-Z0-9]{8}$').hasMatch(parts[3])) {
       return null;
+    }
     final id = int.tryParse(parts[1]);
     if (id == null || id <= 0) return null;
     final library = switch (parts[0]) {

@@ -9,8 +9,9 @@ enum ZoteroLibraryType { user, group }
 /// A Zotero library is identified by its kind and numeric ID, not its name.
 class ZoteroLibrary {
   ZoteroLibrary({required this.type, required this.id}) {
-    if (id <= 0)
+    if (id <= 0) {
       throw ArgumentError('A positive Zotero library ID is required.');
+    }
   }
 
   factory ZoteroLibrary.user(int id) =>

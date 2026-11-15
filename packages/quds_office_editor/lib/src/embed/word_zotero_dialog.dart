@@ -103,7 +103,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   WordEditorController get _controller => widget.controller;
   ZoteroSession get _session => widget.session;
   bool get _canEdit =>
-      _controller.config.allowsMutation && !_controller.document.trackRevisions;
+      !_controller.isDisposed &&
+      _controller.config.allowsMutation &&
+      !_controller.document.trackRevisions;
   List<ZoteroCitationItem> get _documentItems => [
     for (final field in _controller.zoteroFields) ...?field.citation?.items,
   ];
@@ -148,7 +150,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     try {
       await action();
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = switch (error) {
             ZoteroApiException e => e.message,
@@ -162,6 +164,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               'The operation could not finish. Existing document content was kept.',
           };
         });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -184,10 +187,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   Future<void> _connect() => _run(() async {
     final transport = widget.transport;
-    if (transport == null)
+    if (transport == null) {
       throw StateError(
         'This host has no Zotero network transport. Use CSL JSON import.',
       );
+    }
     final client = ZoteroClient(transport: transport, apiKey: _key.text);
     final identity = await client.verifyKey();
     if (!mounted) return;
@@ -213,11 +217,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _moreGroups = groups.nextStart;
     _session.library ??= _groups.isEmpty ? null : _groups.first.library;
     if (_session.library != null) await _loadLibrary();
-    if (mounted)
+    if (mounted) {
       setState(
         () => _notice =
             'Connected as ${identity.username}. Library access is read-only.',
       );
+    }
   });
 
   Future<void> _loadLibrary() async {
@@ -247,8 +252,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 
   Future<void> _openPublic() => _run(() async {
     final id = int.tryParse(_libraryId.text.trim());
-    if (id == null || id <= 0)
+    if (id == null || id <= 0) {
       throw const FormatException('Enter a numeric Zotero user or group ID.');
+    }
     _session.library = _publicGroup
         ? ZoteroLibrary.group(id)
         : ZoteroLibrary.user(id);
@@ -288,12 +294,13 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     }
     _run(() async {
       if (widget.persistApiKey != null) await widget.persistApiKey!(null);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _session.rememberKey = false;
           _notice =
               'The saved key was removed. This connection is session-only.';
         });
+      }
     });
   }
 
@@ -302,15 +309,17 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       setState(() => _selected.remove(item.sourceId));
       return;
     }
-    if (_selected.length >= 20)
+    if (_selected.length >= 20) {
       throw const FormatException('Select at most 20 sources per citation.');
+    }
     final full = item.cslJson == null
         ? await _client!.item(item.library, item.key)
         : item;
     if (!mounted) return;
     final data = full.cslJson;
-    if (data == null)
+    if (data == null) {
       throw const FormatException('Zotero returned no CSL data for this item.');
+    }
     setState(
       () => _selected[item.sourceId] = ZoteroCitationItem.fromCsl(
         itemData: data,
@@ -346,10 +355,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   locale: _session.locale,
                 );
                 final text = zoteroHtmlToPlainText(item.citationHtml ?? '');
-                if (text.isEmpty)
+                if (text.isEmpty) {
                   throw const FormatException(
                     'No formatted citation was returned.',
                   );
+                }
                 return text;
               },
       ),
@@ -381,12 +391,22 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     WmlZoteroField? field,
   }) => _run(() async {
     _checkTarget();
+    if (field != null &&
+        const ['uncited', 'omitted', 'custom'].any((name) {
+          final value = field.metadata?[name];
+          return value != null && (value is! List || value.isNotEmpty);
+        })) {
+      throw UnsupportedError(
+        'This bibliography has Zotero additions, exclusions, or custom entries. Update it with Zotero to retain those choices.',
+      );
+    }
     _saveFormat();
     final items = _documentItems;
-    if (items.isEmpty)
+    if (items.isEmpty) {
       throw const FormatException(
         'Insert a citation before creating its bibliography.',
       );
+    }
     String text;
     if (online) {
       final addresses = <String, ZoteroSourceAddress>{};
@@ -395,10 +415,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             .map(ZoteroSourceAddress.parse)
             .whereType<ZoteroSourceAddress>()
             .firstOrNull;
-        if (address == null)
+        if (address == null) {
           throw const FormatException(
             'Some sources are offline or unlinked. Use the basic bibliography.',
           );
+        }
         addresses['${address.library.apiPath}/${address.key}'] = address;
       }
       final library = addresses.values.first.library;
@@ -421,8 +442,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       text = zoteroBasicBibliography(items);
     }
     if (!mounted) return;
-    if (text.trim().isEmpty)
+    if (text.trim().isEmpty) {
       throw const FormatException('No bibliography text was returned.');
+    }
     final reviewed = await _reviewText(
       online ? 'Zotero bibliography — plain text' : 'Basic bibliography',
       text,
@@ -445,14 +467,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               field.citation!.properties['qudsFormat'] == 'basic-author-year',
         )
         .toList();
-    if (fields.isEmpty)
+    if (fields.isEmpty) {
       throw const FormatException(
         'No basic author–year citations to refresh. Imported or custom-formatted citations are kept as they are.',
       );
-    if (fields.any((field) => !field.canEdit))
+    }
+    if (fields.any((field) => !field.canEdit)) {
       throw const FormatException(
         'One or more citations cannot be safely edited.',
       );
+    }
     final fetched = <String, Map<String, dynamic>>{};
     final updates = <String, ZoteroCitation>{};
     for (final field in fields) {
@@ -469,16 +493,18 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         }
         final uri = address.library.itemUri(address.key).toString();
         if (!fetched.containsKey(uri)) {
-          if (fetched.length >= 50)
+          if (fetched.length >= 50) {
             throw const FormatException(
               'Refresh at most 50 linked sources at once.',
             );
+          }
           final remote = await _client!.item(address.library, address.key);
           if (!mounted) return;
-          if (remote.cslJson == null)
+          if (remote.cslJson == null) {
             throw const FormatException(
               'A source has no CSL data. Existing citations were kept.',
             );
+          }
           fetched[uri] = remote.cslJson!;
         }
         items.add(
@@ -529,8 +555,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     }
     if (!mounted) return;
     await Clipboard.setData(ClipboardData(text: text));
-    if (mounted)
+    if (mounted) {
       setState(() => _notice = 'Reference data copied to the clipboard.');
+    }
   });
 
   Future<String?> _reviewText(String title, String initial) async {
@@ -557,8 +584,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             ),
             FilledButton(
               onPressed: () {
-                if (text.text.trim().isNotEmpty)
+                if (text.text.trim().isNotEmpty) {
                   Navigator.pop(context, text.text);
+                }
               },
               child: const Text('Use bibliography'),
             ),
@@ -631,10 +659,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       _libraryTab(),
                       minHeight: size.width < 600 ? 820 : 660,
                     ),
-                    _scrollableTab(
-                      _documentTab(),
-                      minHeight: size.width < 600 ? 680 : 500,
-                    ),
+                    _documentTab(),
                     _scrollableTab(_importTab(), minHeight: 600),
                   ],
                 ),
@@ -759,11 +784,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   onChanged: _busy
                       ? null
                       : (library) {
-                          if (library != null)
+                          if (library != null) {
                             _run(() async {
                               _session.library = library;
                               await _loadLibrary();
                             });
+                          }
                         },
                 ),
               ),
@@ -776,11 +802,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                             _identity!.userId,
                             start: _moreGroups!,
                           );
-                          if (mounted)
+                          if (mounted) {
                             setState(() {
                               _groups.addAll(page.items);
                               _moreGroups = page.nextStart;
                             });
+                          }
                         }),
                   child: const Text('More groups'),
                 ),
@@ -881,11 +908,12 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                             start: _moreCollections!,
                             limit: 100,
                           );
-                          if (mounted)
+                          if (mounted) {
                             setState(() {
                               _collections.addAll(page.items);
                               _moreCollections = page.nextStart;
                             });
+                          }
                         }),
                   child: const Text('More collections'),
                 ),
@@ -1030,151 +1058,159 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     final fields = _controller.zoteroFields;
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Citation fields retain source data in DOCX. Basic author–year text supports offline work; Zotero-formatted bibliographies use your selected style.',
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _style,
-                  enabled: !_busy,
-                  decoration: const InputDecoration(
-                    labelText: 'Zotero style ID',
-                    hintText: 'apa',
-                    isDense: true,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Citation fields retain source data in DOCX. Basic author–year text supports offline work; Zotero-formatted bibliographies use your selected style.',
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _style,
+                        enabled: !_busy,
+                        decoration: const InputDecoration(
+                          labelText: 'Zotero style ID',
+                          hintText: 'apa',
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 110,
+                      child: TextField(
+                        controller: _locale,
+                        enabled: !_busy,
+                        decoration: const InputDecoration(
+                          labelText: 'Locale',
+                          hintText: 'en-US',
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    FilledButton(
+                      onPressed:
+                          _busy ||
+                              !_canEdit ||
+                              _documentItems.isEmpty ||
+                              _client == null
+                          ? null
+                          : () => _bibliography(online: true),
+                      child: const Text('Zotero bibliography'),
+                    ),
+                    OutlinedButton(
+                      onPressed: _busy || !_canEdit || _documentItems.isEmpty
+                          ? null
+                          : () => _bibliography(online: false),
+                      child: const Text('Basic bibliography'),
+                    ),
+                    OutlinedButton(
+                      onPressed: _busy || !_canEdit || _client == null
+                          ? null
+                          : _refresh,
+                      child: const Text('Refresh basic citations'),
+                    ),
+                    TextButton(
+                      onPressed: _busy || _documentItems.isEmpty
+                          ? null
+                          : () => _copySources(),
+                      child: const Text('Copy embedded CSL JSON'),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Refresh updates only citations created with basic author–year format. Document-wide CSL numbering, disambiguation, and the Zotero desktop picker are not provided.',
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 110,
-                child: TextField(
-                  controller: _locale,
-                  enabled: !_busy,
-                  decoration: const InputDecoration(
-                    labelText: 'Locale',
-                    hintText: 'en-US',
-                    isDense: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              FilledButton(
-                onPressed:
-                    _busy ||
-                        !_canEdit ||
-                        _documentItems.isEmpty ||
-                        _client == null
-                    ? null
-                    : () => _bibliography(online: true),
-                child: const Text('Zotero bibliography'),
-              ),
-              OutlinedButton(
-                onPressed: _busy || !_canEdit || _documentItems.isEmpty
-                    ? null
-                    : () => _bibliography(online: false),
-                child: const Text('Basic bibliography'),
-              ),
-              OutlinedButton(
-                onPressed: _busy || !_canEdit || _client == null
-                    ? null
-                    : _refresh,
-                child: const Text('Refresh basic citations'),
-              ),
-              TextButton(
-                onPressed: _busy || _documentItems.isEmpty
-                    ? null
-                    : () => _copySources(),
-                child: const Text('Copy embedded CSL JSON'),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'Refresh updates only citations created with basic author–year format. Document-wide CSL numbering, disambiguation, and the Zotero desktop picker are not provided.',
-              style: TextStyle(fontSize: 12),
+              ],
             ),
           ),
-          Expanded(
-            child: fields.isEmpty
-                ? const Center(
-                    child: Text('No Zotero fields in this document.'),
-                  )
-                : ListView.separated(
-                    itemCount: fields.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final field = fields[index];
-                      final citation = field.citation;
-                      return ListTile(
-                        title: Text(
-                          field.cachedText.isEmpty
-                              ? '(Empty cached text)'
-                              : field.cachedText,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          '${field.kind.name}${field.canEdit ? '' : ' · preserved, read-only structure'}${citation == null ? '' : ' · ${citation.items.length} source(s)'}',
-                        ),
-                        trailing: PopupMenuButton<String>(
-                          enabled: !_busy && _canEdit && field.isValid,
-                          tooltip: 'Reference actions',
-                          onSelected: (action) {
-                            if (action == 'edit')
-                              _compose(citation!.items, field: field);
-                            if (action == 'basic')
-                              _bibliography(online: false, field: field);
-                            if (action == 'online')
-                              _bibliography(online: true, field: field);
-                            if (action == 'unlink')
-                              _run(() async {
-                                _write(
-                                  () => _controller.unlinkZoteroField(field),
-                                );
-                              });
-                          },
-                          itemBuilder: (_) => [
-                            if (citation != null && field.canEdit)
-                              const PopupMenuItem(
-                                value: 'edit',
-                                child: Text('Edit citation'),
-                              ),
-                            if (field.kind == ZoteroFieldKind.bibliography &&
-                                field.canEdit) ...[
-                              const PopupMenuItem(
-                                value: 'basic',
-                                child: Text('Update basic bibliography'),
-                              ),
-                              if (_client != null)
-                                const PopupMenuItem(
-                                  value: 'online',
-                                  child: Text('Update Zotero bibliography'),
-                                ),
-                            ],
-                            if (!field.locked && !field.nested)
-                              const PopupMenuItem(
-                                value: 'unlink',
-                                child: Text('Convert to text (undoable)'),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
+          if (fields.isEmpty)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: Text('No Zotero fields in this document.')),
+            )
+          else
+            SliverList.separated(
+              itemCount: fields.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final field = fields[index];
+                final citation = field.citation;
+                return ListTile(
+                  title: Text(
+                    field.cachedText.isEmpty
+                        ? '(Empty cached text)'
+                        : field.cachedText,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-          ),
+                  subtitle: Text(
+                    '${field.kind.name}${field.canEdit ? '' : ' · preserved, read-only structure'}${citation == null ? '' : ' · ${citation.items.length} source(s)'}',
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    enabled: !_busy && _canEdit && field.isValid,
+                    tooltip: 'Reference actions',
+                    onSelected: (action) {
+                      if (action == 'edit') {
+                        _compose(citation!.items, field: field);
+                      }
+                      if (action == 'basic') {
+                        _bibliography(online: false, field: field);
+                      }
+                      if (action == 'online') {
+                        _bibliography(online: true, field: field);
+                      }
+                      if (action == 'unlink') {
+                        _run(() async {
+                          _write(() => _controller.unlinkZoteroField(field));
+                        });
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      if (citation != null && field.canEdit)
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edit citation'),
+                        ),
+                      if (field.kind == ZoteroFieldKind.bibliography &&
+                          field.canEdit) ...[
+                        const PopupMenuItem(
+                          value: 'basic',
+                          child: Text('Update basic bibliography'),
+                        ),
+                        if (_client != null)
+                          const PopupMenuItem(
+                            value: 'online',
+                            child: Text('Update Zotero bibliography'),
+                          ),
+                      ],
+                      if (!field.locked && !field.nested)
+                        const PopupMenuItem(
+                          value: 'unlink',
+                          child: Text('Convert to text (undoable)'),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -1328,18 +1364,20 @@ class _CitationComposerState extends State<_CitationComposer> {
     });
     try {
       final text = await widget.loadStyleSnapshot!();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _basic = false;
           _text.text = text;
         });
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = error is ZoteroApiException
               ? error.message
               : 'The style preview could not be loaded. Your current text was kept.',
         );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -1368,14 +1406,24 @@ class _CitationComposerState extends State<_CitationComposer> {
             DropdownButtonFormField<bool>(
               key: ValueKey(_basic),
               initialValue: _basic,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Citation text format',
               ),
               items: const [
-                DropdownMenuItem(value: true, child: Text('Basic author–year')),
+                DropdownMenuItem(
+                  value: true,
+                  child: Text(
+                    'Basic author–year',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 DropdownMenuItem(
                   value: false,
-                  child: Text('Custom text / preserve current format'),
+                  child: Text(
+                    'Custom text / preserve current format',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
               onChanged: _loading
@@ -1494,6 +1542,7 @@ class _CitationComposerState extends State<_CitationComposer> {
             SizedBox(
               width: 150,
               child: DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue:
                     const [
                       '',

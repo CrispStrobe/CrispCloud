@@ -1707,8 +1707,9 @@ class WordDeserializer {
         if (!valid ||
             cache == null ||
             !separated ||
-            WordZotero.metadataOf(code) == null)
+            WordZotero.metadataOf(code) == null) {
           continue;
+        }
         cache
           ..fieldInstruction = code
           ..fieldLocked = locked

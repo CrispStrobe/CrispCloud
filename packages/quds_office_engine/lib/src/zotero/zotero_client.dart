@@ -9,9 +9,8 @@ export 'zotero_models.dart';
 /// dart:io or Flutter, and never persists the API key.
 /// Transports must disable redirects, so a custom API-key header cannot be
 /// forwarded to another origin. Honor [ZoteroHttpRequest.followRedirects].
-typedef ZoteroTransport = Future<ZoteroHttpResponse> Function(
-  ZoteroHttpRequest request,
-);
+typedef ZoteroTransport =
+    Future<ZoteroHttpResponse> Function(ZoteroHttpRequest request);
 
 class ZoteroHttpRequest {
   ZoteroHttpRequest({required this.uri, required Map<String, String> headers})
@@ -79,18 +78,17 @@ class ZoteroApiException implements Exception {
 /// No method changes a Zotero library. API keys go only in an HTTP header.
 class ZoteroClient {
   ZoteroClient({
-    required ZoteroTransport transport,
+    required this.transport,
     String? apiKey,
     DateTime Function()? clock,
-  }) : _transport = transport,
-       _apiKey = apiKey?.trim(),
+  }) : _apiKey = apiKey?.trim(),
        _clock = clock ?? DateTime.now {
     if (_apiKey != null && RegExp(r'[\r\n\x00-\x1f\x7f]').hasMatch(_apiKey)) {
       throw ArgumentError('The Zotero API key contains invalid characters.');
     }
   }
 
-  final ZoteroTransport _transport;
+  final ZoteroTransport transport;
   final String? _apiKey;
   final DateTime Function() _clock;
   DateTime? _backoffUntil;
@@ -203,9 +201,9 @@ class ZoteroClient {
     };
     final uri = _uri(path, parameters);
     final response = await _request(uri);
-    final items = _array(_decode(response))
-        .map((json) => _item(_object(json), library))
-        .toList();
+    final items = _array(
+      _decode(response),
+    ).map((json) => _item(_object(json), library)).toList();
     return _page(items, response, uri, start, limit);
   }
 
@@ -314,8 +312,9 @@ class ZoteroClient {
         'Use a Zotero citation style identifier, such as apa.',
       );
     }
-    if (!RegExp(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$')
-        .hasMatch(locale)) {
+    if (!RegExp(
+      r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$',
+    ).hasMatch(locale)) {
       throw ArgumentError('Use a citation locale such as en-US.');
     }
     return {'style': style, 'locale': locale};
@@ -347,7 +346,7 @@ class ZoteroClient {
     );
     ZoteroHttpResponse response;
     try {
-      response = await _transport(request);
+      response = await transport(request);
     } catch (_) {
       // Transport exceptions may contain URLs or headers. Never surface them.
       throw const ZoteroApiException(

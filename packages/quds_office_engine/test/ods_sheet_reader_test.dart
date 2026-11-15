@@ -267,6 +267,7 @@ void main() {
   defaultGeometryTests();
   hiddenStateTests();
   conditionalFormatTests();
+  validationTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1444,6 +1445,74 @@ void hiddenStateTests() {
 }
 
 void conditionalFormatTests() {
+  test('ODS text and duplicate conditions keep their type', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell><x:p>apple</x:p></t:table-cell>'
+        '<t:table-cell><x:p>pear</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell><x:p>apple</x:p></t:table-cell>'
+        '<t:table-cell><x:p>pear</x:p></t:table-cell></t:table-row>'
+        '<cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" '
+        'cal:value="contains-text(&quot;app&quot;)"/>'
+        '</cal:conditional-format>'
+        '<cal:conditional-format cal:target-range-address="Data.B1:Data.B10">'
+        '<cal:condition cal:apply-style-name="cf" cal:value="duplicate"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    final rules = sheet.conditionalFormats;
+    expect(rules.length, 2);
+    expect(rules[0].kind, SmlConditionalKind.contains);
+    expect(rules[0].formula, 'app');
+    expect(rules[1].kind, SmlConditionalKind.duplicate);
+    expect(rules[0].matches(sheet.cellA1('A1'), sheet), isTrue);
+    expect(rules[1].matches(sheet.cellA1('B1'), sheet), isTrue);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('type="containsText"'));
+    expect(sheetXml, contains('text="app"'));
+    expect(sheetXml, contains('type="duplicateValues"'));
+  });
+
+  test('ODS conditional comparison operators keep their meaning', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        'o:value-type="float" o:value="5"><x:p>5</x:p></t:table-cell>'
+        '</t:table-row><cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" cal:value="&gt;=5"/>'
+        '<cal:condition cal:apply-style-name="cf" cal:value="&lt;&gt;3"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    final rules = sheet.conditionalFormats;
+    expect(rules.length, 2);
+    expect(rules[0].kind, SmlConditionalKind.greaterOrEqual);
+    expect(rules[1].kind, SmlConditionalKind.notEqual);
+    expect(rules[0].matches(sheet.cellA1('A1'), sheet), isTrue);
+    expect(rules[1].matches(sheet.cellA1('A1'), sheet), isTrue);
+    sheet.cellA1('A1').value = 3;
+    expect(rules[1].matches(sheet.cellA1('A1'), sheet), isFalse);
+  });
+
   test('ODS conditional formats import and serialize', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
@@ -1477,5 +1546,48 @@ void conditionalFormatTests() {
     );
     expect(sheetXml, contains('conditionalFormatting'));
     expect(sheetXml, contains('greaterThan'));
+    expect(sheetXml, contains('dxfId="0"'));
+    final stylesXml = utf8.decode(
+      archive.findFile('xl/styles.xml')!.content as List<int>,
+    );
+    expect(stylesXml, contains('<dxfs count="1">'));
+    expect(stylesXml, contains('FF00FF00'));
+  });
+}
+
+void validationTests() {
+  test('ODS list validations become typed XLSX validations', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell t:content-validation-name="v">'
+        '<x:p>Red</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell t:content-validation-name="v">'
+        '<x:p>Green</x:p></t:table-cell></t:table-row>'
+        '<t:content-validations><t:content-validation t:name="v" '
+        't:condition="of:cell-content-is-in-list(&quot;Red&quot;;&quot;Green&quot;)" '
+        't:allow-empty-cell="false"/></t:content-validations></t:table>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.validations.length, 2);
+    expect(sheet.validations.first.kind, SmlValidationKind.list);
+    expect(sheet.validations.first.listItems, ['Red', 'Green']);
+    expect(sheet.validations.first.allowBlank, isFalse);
+    expect(sheet.validations.first.range.start.a1, 'A1');
+    expect(sheet.validations.last.range.start.a1, 'A2');
+    expect(sheet.validations.first.accepts('Green'), isTrue);
+    expect(sheet.validations.first.accepts('Blue'), isFalse);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('type="list"'));
+    expect(sheetXml, contains('"Red,Green"'));
+
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.validations.first.listItems, ['Red', 'Green']);
   });
 }

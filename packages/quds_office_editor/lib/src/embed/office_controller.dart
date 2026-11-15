@@ -95,6 +95,9 @@ abstract class OfficeController extends ChangeNotifier {
   /// isDirty API.
   bool get isDirty => _dirty || _hasPendingEdits;
 
+  /// Allows asynchronous host workflows to reject a closed editor safely.
+  bool get isDisposed => _disposed;
+
   // Drafts contribute to dirty state without replacing the state of unrelated
   // committed commands. Discarding a draft therefore cannot clear those edits.
   bool get _hasPendingEdits => false;

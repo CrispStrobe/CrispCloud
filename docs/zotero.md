@@ -19,11 +19,16 @@ button in the Insert ribbon's References group.
    field to text. All document changes participate in undo/redo and save
    revisions.
 
+Set the style ID and locale in Document (defaults: `apa` and `en-US`) before
+requesting a bibliography or individual preview. Expand a source's title in the
+citation composer to edit its locator and affixes.
+
 For offline work, export references from Zotero as CSL JSON and paste the file
 contents into **Import CSL JSON**. The importer accepts single items, arrays,
 and the API's `items` envelope. Unlinked records retain embedded source data
 without claiming to be present in a Zotero library. Selected online references
-can be copied as BibTeX, BibLaTeX, RIS or CSL JSON.
+from one library can be copied as BibTeX, BibLaTeX, RIS or CSL JSON. Use
+**Document → Copy embedded CSL JSON** for a mixed-library or offline document.
 
 ## Credentials and networking
 
@@ -41,8 +46,8 @@ reference exports. Zotero library access is read-only.
 
 ## Scope and preservation
 
-New citations use Zotero-compatible complex DOCX field codes and embed CSL
-source snapshots. Imported Zotero field JSON, cached text, and native document
+New citations use complex DOCX fields following Zotero field-code conventions
+and embed CSL source snapshots. Imported Zotero field JSON, cached text, and native document
 preferences are preserved on ordinary saves. Unsupported locked/nested/rich or
 multi-paragraph field replacements are refused; explicit unlink retains text.
 Track-changes mode and unresolved revisions in affected paragraphs also guard
@@ -54,7 +59,10 @@ citation preview is not a full document-wide CSL run. Complete online
 bibliographies are requested in one operation for at most 50 distinct sources
 in one library, then reviewed and inserted as plain text. Larger/mixed-library
 sets can use the basic bibliography or CSL export. Refresh updates Quds basic
-citations only; imported and custom-style caches are left alone.
+citations for at most 50 distinct linked sources atomically; imported and
+custom-style caches are left alone. Bibliographies with imported nonempty
+`uncited`, `omitted`, or `custom` settings refuse basic replacement and preserve
+those choices.
 
 Full CSL numbering/disambiguation/ibid, the native Zotero desktop picker and
 HTTP citing adapter, ODT active-citation transfer, and native Word/Zotero refresh
@@ -74,3 +82,8 @@ bibliography preservation and ODS conditional formatting changes. Engine,
 editor and host work is saved incrementally in remote feature branches. It does
 not depend on the starved GitHub Actions queue. The final local qualification
 and remaining platform limits are recorded in `docs/zotero-validation.md`.
+
+The final refresh also integrates Quds main `c210315` (PRs #36–39) and CrispCloud
+main `50b45932` (through PR #148). Concurrent terminal-workspace draft PR #140
+continues separately; the Office change does not absorb its later unfinished
+implementation.
