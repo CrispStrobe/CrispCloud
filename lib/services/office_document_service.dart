@@ -1137,9 +1137,9 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
   final presentationXml = await _readPart(archive, 'ppt/presentation.xml');
   if (presentationXml != null) {
     try {
-      final size = XmlDocument.parse(presentationXml)
-          .findAllElements('p:sldSz')
-          .firstOrNull;
+      final size = XmlDocument.parse(
+        presentationXml,
+      ).findAllElements('p:sldSz').firstOrNull;
       final cx = int.tryParse(size?.getAttribute('cx') ?? '');
       final cy = int.tryParse(size?.getAttribute('cy') ?? '');
       if (cx != null && cy != null && cx > 0 && cy > 0) {
@@ -1620,20 +1620,42 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   // modelled.
   final styles = <String, XmlElement>{};
   final listStyles = <String, XmlElement>{};
-  for (final collection in <String>[
-    'office:automatic-styles',
-    'office:styles',
-  ]) {
-    final root = document.findAllElements(collection).firstOrNull;
-    if (root == null) continue;
-    for (final style in root.childElements) {
-      final name = style.getAttribute('style:name');
-      if (name == null) continue;
-      if (style.localName == 'style') {
-        styles[name] = style;
-      } else if (style.localName == 'list-style') {
-        listStyles[name] = style;
+  void collectStyles(XmlDocument source, {required bool overwrite}) {
+    for (final collection in <String>[
+      'office:automatic-styles',
+      'office:styles',
+    ]) {
+      final root = source.findAllElements(collection).firstOrNull;
+      if (root == null) continue;
+      for (final style in root.childElements) {
+        final name = style.getAttribute('style:name');
+        if (name == null) continue;
+        if (style.localName == 'style') {
+          if (overwrite) {
+            styles[name] = style;
+          } else {
+            styles.putIfAbsent(name, () => style);
+          }
+        } else if (style.localName == 'list-style') {
+          if (overwrite) {
+            listStyles[name] = style;
+          } else {
+            listStyles.putIfAbsent(name, () => style);
+          }
+        }
       }
+    }
+  }
+
+  collectStyles(document, overwrite: true);
+  // Named character/paragraph/list styles usually live in styles.xml; only
+  // automatic styles are guaranteed to be in content.xml.
+  final stylesXml = await _readPart(archive, 'styles.xml');
+  if (stylesXml != null) {
+    try {
+      collectStyles(XmlDocument.parse(stylesXml), overwrite: false);
+    } on XmlException {
+      // A malformed styles part must not hide the document body.
     }
   }
 

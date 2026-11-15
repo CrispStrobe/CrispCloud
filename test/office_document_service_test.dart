@@ -204,7 +204,8 @@ void main() {
     'EPUB extraction follows relocated OPF spine and excludes navigation',
     () async {
       final bytes = _zip({
-        'META-INF/container.xml': '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
+        'META-INF/container.xml':
+            '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
         'Book/package.opf':
             '<package><manifest>'
             '<item id="first" href="Text/z.xhtml"/>'
@@ -821,6 +822,42 @@ void imageTests() {
     final shape = doc.deck!.slides.single.shapes.single;
     expect(shape.image, isNotNull);
     expect(shape.image!.length, _png.length);
+  });
+
+  test('ODT named styles and list styles come from styles.xml', () async {
+    const content =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:text>
+    <text:p><text:span text:style-name="T1">Bold named</text:span></text:p>
+    <text:list text:style-name="L1"><text:list-item>
+      <text:p>First item</text:p>
+    </text:list-item></text:list>
+  </office:text></office:body>
+</office:document-content>
+''';
+    const styles =
+        '''
+<office:document-styles $namespaces>
+  <office:styles>
+    <style:style style:name="T1" style:family="text">
+      <style:text-properties fo:font-weight="bold"/>
+    </style:style>
+    <style:list-style style:name="L1">
+      <text:list-level-style-number text:level="1"/>
+    </style:list-style>
+  </office:styles>
+</office:document-styles>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({
+        'content.xml': utf8.encode(content),
+        'styles.xml': utf8.encode(styles),
+      }),
+      'styles.odt',
+    );
+    expect(doc.markdown, contains('**Bold named**'));
+    expect(doc.markdown, contains('1. First item'));
   });
 
   test('ODT text boxes keep their visible labels', () async {
