@@ -72,13 +72,13 @@ class MainFlutterWindow: NSWindow, NSToolbarDelegate, NSDraggingSource {
         result(FlutterMethodNotImplemented)
         return
       }
+      self.title = args["title"] as? String ?? "CrispCloud"
       guard args["visible"] as? Bool == true else {
         self.toolbar = nil
         self.browserToolbarSpecifications = []
         result(true)
         return
       }
-      self.title = args["title"] as? String ?? "CrispCloud"
       self.appearance = NSAppearance(named: args["dark"] as? Bool == true ? .darkAqua : .aqua)
       self.browserToolbarSpecifications = args["items"] as? [[String: Any]] ?? []
       if self.browserNativeToolbar == nil {

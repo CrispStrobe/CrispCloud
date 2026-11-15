@@ -62,27 +62,27 @@ class HostEvidenceTest(unittest.TestCase):
 
     def test_artifact_download_wrapper_preserves_complete_relative_paths(self):
         self.populate(self.root / 'downloaded-artifact')
-        report = evidence.inspect(self.root, downloaded_artifacts=True)
+        report = evidence.inspect(self.root, layout='artifact')
         self.assertEqual(report['failures'], [])
         self.assertEqual(report['verified'], len(evidence.expected_paths()))
-        self.assertEqual(report['layout'], 'downloaded_artifacts')
+        self.assertEqual(report['layout'], 'artifact')
 
     def test_checkout_ignores_archived_artifacts_and_still_requires_current_outputs(self):
         self.populate()
         self.populate(self.root / 'docs/evidence/previous/run')
-        report = evidence.inspect(self.root)
+        report = evidence.inspect(self.root, layout='checkout')
         self.assertEqual(report['failures'], [])
         self.assertEqual(report['verified'], len(evidence.expected_paths()))
         self.assertEqual(report['layout'], 'checkout')
         self.assertTrue(all(item['file'] == item['path'] for item in report['files']))
         name = evidence.expected_paths()[0]
         (self.root / name).unlink()
-        report = evidence.inspect(self.root)
+        report = evidence.inspect(self.root, layout='checkout')
         self.assertEqual(report['failures'], [f'{name}: expected one file, found 0'])
 
     def test_checkout_does_not_accept_an_archived_tree_when_no_current_outputs_exist(self):
         self.populate(self.root / 'docs/evidence/previous/run')
-        report = evidence.inspect(self.root)
+        report = evidence.inspect(self.root, layout='checkout')
         self.assertEqual(report['verified'], 0)
         self.assertEqual(len(report['failures']), len(evidence.expected_paths()))
 
@@ -155,7 +155,7 @@ class HostEvidenceTest(unittest.TestCase):
                 duplicate = self.root / 'second' / name
                 duplicate.parent.mkdir(parents=True, exist_ok=True)
                 duplicate.write_bytes((first / name).read_bytes())
-                report = evidence.inspect(self.root, downloaded_artifacts=True)
+                report = evidence.inspect(self.root, layout='artifact')
                 self.assertIn(f'{name}: expected one file, found 2', report['failures'])
                 duplicate.unlink()
 
@@ -166,7 +166,7 @@ class HostEvidenceTest(unittest.TestCase):
                 name = f'build/{directory}/unreviewed.xlsx'
                 extra = self.root / 'extra-wrapper' / name
                 package(extra)
-                report = evidence.inspect(self.root, downloaded_artifacts=True)
+                report = evidence.inspect(self.root, layout='artifact')
                 self.assertEqual(report['verified'], report['expected'])
                 self.assertEqual(report['failures'], [f'Unexpected host Office output: {name}'])
                 extra.unlink()
@@ -238,7 +238,122 @@ class HostEvidenceTest(unittest.TestCase):
     def test_duplicate_complete_artifacts_fail(self):
         self.populate(self.root / 'first')
         self.populate(self.root / 'second')
-        self.assertTrue(evidence.inspect(self.root, downloaded_artifacts=True)['failures'])
+        self.assertTrue(evidence.inspect(self.root, layout='artifact')['failures'])
+
+    def test_checkout_uses_current_outputs_with_committed_historical_evidence(self):
+        self.populate()
+        historical = self.populate(
+            self.root / 'docs/evidence/storage-delta-20261114/qualification/host-outputs')
+        report = evidence.inspect(self.root, layout='checkout')
+        self.assertEqual(report['failures'], [])
+        self.assertEqual(report['verified'], len(evidence.expected_paths()))
+        self.assertTrue(all(item['file'] == item['path'] for item in report['files']))
+        self.assertTrue(historical.is_dir())
+        # The same bytes interpreted as a bundle remain an ambiguous duplicate.
+        report = evidence.inspect(self.root, layout='artifact')
+        self.assertEqual(report['verified'], 0)
+        self.assertTrue(all('found 2' in failure for failure in report['failures']))
+
+    def test_checkout_cannot_use_historical_files_to_complete_current_outputs(self):
+        self.populate()
+        historical = self.populate(self.root / 'docs/evidence/old-run/host-outputs')
+        name = evidence.expected_paths()[0]
+        (self.root / name).unlink()
+        self.assertTrue((historical / name).is_file())
+        report = evidence.inspect(self.root, layout='checkout')
+        self.assertEqual(report['failures'], [f'{name}: expected one file, found 0'])
+
+    def test_checkout_cannot_replace_invalid_current_package_with_historical_copy(self):
+        self.populate()
+        self.populate(self.root / 'docs/evidence/old-run/host-outputs')
+        name = evidence.expected_paths()[0]
+        (self.root / name).write_bytes(b'not an Office package')
+        report = evidence.inspect(self.root, layout='checkout')
+        self.assertEqual(len(report['failures']), 1)
+        self.assertIn(f'{name}: invalid Office package', report['failures'][0])
+
+    def test_checkout_still_rejects_undeclared_files_in_each_current_root(self):
+        self.populate()
+        for parts in (*evidence.RENDERED_ROOTS, *evidence.SCHEMA_ONLY_ROOTS):
+            with self.subTest(root=parts):
+                file = self.root.joinpath(*parts, 'unreviewed.xlsx')
+                package(file)
+                report = evidence.inspect(self.root, layout='checkout')
+                self.assertEqual(report['failures'],
+                                 [f'Unexpected host Office output: {file.relative_to(self.root)}'])
+                file.unlink()
+
+    def test_partial_nested_rendered_wrappers_cannot_hide_duplicate_exports(self):
+        first = self.populate(self.root / 'download/complete')
+        for parts in evidence.RENDERED_ROOTS:
+            with self.subTest(root=parts):
+                name = next(name for name in evidence.expected_paths()
+                            if Path(name).parts[:2] == parts)
+                duplicate = self.root / 'other/nested/archive' / name
+                duplicate.parent.mkdir(parents=True, exist_ok=True)
+                duplicate.write_bytes((first / name).read_bytes())
+                report = evidence.inspect(self.root, layout='artifact')
+                self.assertIn(f'{name}: expected one file, found 2', report['failures'])
+                duplicate.unlink()
+
+    def test_partial_nested_rendered_wrappers_cannot_hide_undeclared_exports(self):
+        self.populate(self.root / 'download/complete')
+        for parts in evidence.RENDERED_ROOTS:
+            with self.subTest(root=parts):
+                name = '/'.join((*parts, 'unreviewed.xlsx'))
+                extra = self.root / 'other/nested/archive' / name
+                package(extra)
+                report = evidence.inspect(self.root, layout='artifact')
+                self.assertEqual(report['verified'], report['expected'])
+                self.assertEqual(report['failures'], [f'Unexpected host Office output: {name}'])
+                extra.unlink()
+
+    def test_artifact_cannot_assemble_complete_inventory_from_multiple_roots(self):
+        first = self.populate(self.root / 'first')
+        name = evidence.expected_paths()[0]
+        second = self.root / 'second' / name
+        second.parent.mkdir(parents=True, exist_ok=True)
+        (first / name).rename(second)
+        report = evidence.inspect(self.root, layout='artifact')
+        self.assertEqual(report['verified'], report['expected'])
+        self.assertEqual(report['failures'],
+                         ['Required host files are spread across different artifact roots'])
+
+    def test_engine_corpus_stays_separate_and_cannot_supply_missing_host_export(self):
+        for wrapper in ('', 'download/nested-bundle'):
+            with self.subTest(wrapper=wrapper), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                base = self.populate(root / wrapper)
+                engine = base / 'packages/quds_office_engine'
+                package(engine / 'build/fidelity/engine-export.docx')
+                report = evidence.inspect(root, layout='artifact')
+                self.assertEqual(report['failures'], [])
+                self.assertEqual(report['verified'], report['expected'])
+                name = 'build/fidelity/unchanged-controller.docx'
+                (base / name).rename(engine / name)
+                report = evidence.inspect(root, layout='artifact')
+                self.assertEqual(report['failures'], [f'{name}: expected one file, found 0'])
+                # A second host root cannot use the engine's location as a
+                # blanket exclusion for duplicate or unknown host outputs.
+                package(engine / 'build/fidelity-custom-tabs/unreviewed.docx')
+                self.assertTrue(any('Unexpected host Office output' in failure
+                                    for failure in evidence.inspect(root)['failures']))
+
+    def test_verify_command_requires_explicit_layout_and_records_choice(self):
+        self.populate()
+        with patch('sys.argv', ['office_host_evidence.py', 'verify', '--root', str(self.root)]), \
+                patch('sys.stderr'), self.assertRaises(SystemExit) as error:
+            evidence.main()
+        self.assertEqual(error.exception.code, 2)
+        self.assertFalse((self.root / evidence.REPORT).exists())
+        for layout in ('checkout', 'artifact'):
+            with self.subTest(layout=layout), patch('sys.argv', [
+                'office_host_evidence.py', 'verify', '--root', str(self.root), '--layout', layout,
+            ]), patch('sys.stdout'):
+                self.assertEqual(evidence.main(), 0)
+                report = evidence.json.loads((self.root / evidence.REPORT).read_text())
+                self.assertEqual(report['layout'], layout)
+                self.assertEqual(report['failures'], [])
 
     def test_extra_output_and_invalid_zip_fail(self):
         self.populate()

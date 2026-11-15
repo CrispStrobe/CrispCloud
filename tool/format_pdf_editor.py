@@ -16,6 +16,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 APP_PATTERNS = (
     "lib/l10n/pdf_editor_strings.dart",
+    "lib/l10n/pdf_workspace_strings.dart",
+    "lib/services/pdf_selection_note.dart",
+    "lib/widgets/pdf_floating_toolbars.dart",
+    "test/widget/pdf_floating_toolbars_test.dart",
     "lib/l10n/pdf_operations_strings.dart",
     "lib/services/pdf_operations_host.dart",
     "lib/widgets/pdf_operations_dialog.dart",

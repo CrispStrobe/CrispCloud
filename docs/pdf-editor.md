@@ -7,6 +7,27 @@ PDFs are routed to this editor before the plain-text editor.
 For selected-file actions and matching CLI commands, see
 [PDF operations](pdf-operations.md).
 
+## Selection notes and compact workspace
+
+Select text, then choose **Attach note** from its context menu or the note
+button. The note is attached to the selection's highlight geometry, including
+multiple lines/pages, and is saved as annotation contents. One Undo removes the
+whole operation. Select an existing highlight and use the same button to edit
+its note. Cancel preserves the previous note; a changed document invalidates a
+captured selection rather than applying it at stale coordinates.
+
+On macOS the native title bar replaces folder actions with PDF Close, Undo,
+Redo, Attach note, Save, Save copy and Export. Once those controls are available,
+the duplicate PDF title/save row disappears, leaving the title bar and PDF
+navigation/search row. Other platforms retain the Flutter title controls.
+
+On wide screens the main tools and contextual settings are independent floating
+cards with smaller padding. Drag either grip; click its grip for optional
+snapping, vertical orientation or reset. Positions and orientations persist
+between documents. Empty space between cards remains usable for page gestures.
+Narrow screens retain the docked touch toolbar. Pending ink is committed before
+Save, Export or Close, including strokes still inside the batching delay.
+
 ## Features and limits
 
 The editor offers annotations, notes, drawing, standard AcroForm fields,

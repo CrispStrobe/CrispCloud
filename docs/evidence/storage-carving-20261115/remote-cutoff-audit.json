@@ -1,0 +1,2482 @@
+{
+  "schema": "crispcloud.remote-cutoff-audit.v1",
+  "observation_started_at": "2026-11-15T06:34:41Z",
+  "observation_completed_at": "2026-11-15T06:37:21.766389+00:00",
+  "candidate_commit": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+  "canonical_pin_at_candidate": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+  "scope": "One cutoff snapshot of all advertised branch and PR heads in CrispCloud and quds_office_suite, with recent PR states and CI runs. No source, index, HEAD or remote mutation.",
+  "repositories": [
+    {
+      "key": "app",
+      "repository": "CrispStrobe/CrispCloud",
+      "comparison_commit": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+      "sources": {
+        "branches": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100",
+        "open_pull_requests": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=open&per_page=100",
+        "recent_closed_pull_requests": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=closed&sort=updated&direction=desc&per_page=5",
+        "workflow_runs": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs?per_page=40",
+        "git_remote": "https://github.com/CrispStrobe/CrispCloud.git",
+        "fetched_ref_namespace": "refs/audit-cutoff"
+      },
+      "branches": [
+        {
+          "name": "codex/office-recovery-20261115",
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+        },
+        {
+          "name": "fix/excel-legacy-xls",
+          "sha": "a77364501d274e0fde2e9fffeefb121258ae9614"
+        },
+        {
+          "name": "integration/office-reconcile-storage-20261115",
+          "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb"
+        },
+        {
+          "name": "integration/storage-carving-20261115",
+          "sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417"
+        },
+        {
+          "name": "main",
+          "sha": "fa030137fd203467d5560b68b767019194b95ebd"
+        }
+      ],
+      "open_pull_requests": [
+        {
+          "number": 110,
+          "title": "Add draft-safe worksheet navigation and complete host validation",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "head_ref": "codex/office-recovery-20261115",
+          "base_sha": "8a24763fb4b2c720ff6b617cebbea8971191bdca",
+          "draft": true,
+          "updated_at": "2026-11-15T06:27:09Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/110"
+        }
+      ],
+      "recent_closed_pull_requests": [
+        {
+          "number": 109,
+          "title": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+          "head_sha": "1b7680583ac69649b17287ab68738288fec10f51",
+          "base_sha": "8a24763fb4b2c720ff6b617cebbea8971191bdca",
+          "merged_at": "2026-11-15T06:27:18Z",
+          "closed_at": "2026-11-15T06:27:18Z",
+          "merge_commit_sha": "22f4d709dff82447ea80fe6bcdd2f10d076e0c93",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/109"
+        },
+        {
+          "number": 107,
+          "title": "feat(storage): add reviewed S3 block reuse to queued copies",
+          "head_sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "base_sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+          "merged_at": "2026-11-14T22:32:06Z",
+          "closed_at": "2026-11-14T22:32:06Z",
+          "merge_commit_sha": "1981907636f8bf59fc8a631cbc97d7950b8c1dd5",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/107"
+        },
+        {
+          "number": 108,
+          "title": "Open legacy .xls workbooks as XLSX",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "base_sha": "8a24763fb4b2c720ff6b617cebbea8971191bdca",
+          "merged_at": "2026-11-15T06:27:18Z",
+          "closed_at": "2026-11-15T06:27:18Z",
+          "merge_commit_sha": "d764308cf77b535265a15c5065bbe4a0d66e227f",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/108"
+        },
+        {
+          "number": 106,
+          "title": "Add shared queued HTTP payload limits for G29",
+          "head_sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "base_sha": "022ac6c91ccaa86f1d36a4d8cc1b20733037a67d",
+          "merged_at": "2026-11-14T20:12:42Z",
+          "closed_at": "2026-11-14T20:12:42Z",
+          "merge_commit_sha": "d40ca389c009803c1f811458215a1c7e8d6a0973",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/106"
+        },
+        {
+          "number": 103,
+          "title": "Add bounded read-only NTFS filesystem image browsing",
+          "head_sha": "d504409acc779b670de482247f3231a7247dcd92",
+          "base_sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "merged_at": null,
+          "closed_at": "2026-11-14T14:07:51Z",
+          "merge_commit_sha": "3700b81fbc5562eb05c487abb18457c299511a7d",
+          "url": "https://github.com/CrispStrobe/CrispCloud/pull/103"
+        }
+      ],
+      "workflow_runs_query_total": 5315,
+      "source_refs": [
+        {
+          "ref": "refs/heads/codex/office-recovery-20261115",
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": false,
+          "comparison_only_commits": 12,
+          "source_only_commits": 3,
+          "disposition": "incoming_commits_require_reconciliation"
+        },
+        {
+          "ref": "refs/heads/fix/excel-legacy-xls",
+          "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 11,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/integration/office-reconcile-storage-20261115",
+          "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+          "kind": "branch",
+          "owned_integration_alias": true,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 3,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/integration/storage-carving-20261115",
+          "sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+          "kind": "branch",
+          "owned_integration_alias": true,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 0,
+          "source_only_commits": 0,
+          "disposition": "same_commit"
+        },
+        {
+          "ref": "refs/heads/main",
+          "sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": false,
+          "comparison_only_commits": 6,
+          "source_only_commits": 14,
+          "disposition": "incoming_commits_require_reconciliation"
+        },
+        {
+          "ref": "refs/pull/10/head",
+          "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1402,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/100/head",
+          "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 203,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/101/head",
+          "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 165,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/102/head",
+          "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 152,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/103/head",
+          "sha": "d504409acc779b670de482247f3231a7247dcd92",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 145,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/104/head",
+          "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 132,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/105/head",
+          "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 106,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/106/head",
+          "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 90,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/107/head",
+          "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 32,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/108/head",
+          "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 11,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/109/head",
+          "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 15,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/11/head",
+          "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1398,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/110/head",
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": false,
+          "comparison_only_commits": 12,
+          "source_only_commits": 3,
+          "disposition": "incoming_commits_require_reconciliation"
+        },
+        {
+          "ref": "refs/pull/12/head",
+          "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1268,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/13/head",
+          "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1235,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/14/head",
+          "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1309,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/15/head",
+          "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1167,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/16/head",
+          "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1142,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/17/head",
+          "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1161,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/18/head",
+          "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1126,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/19/head",
+          "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1134,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/20/head",
+          "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1139,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/21/head",
+          "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1006,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/22/head",
+          "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1003,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/23/head",
+          "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 987,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/24/head",
+          "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 999,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/25/head",
+          "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 970,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/26/head",
+          "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 954,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/27/head",
+          "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 952,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/28/head",
+          "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 932,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/29/head",
+          "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 950,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/30/head",
+          "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 948,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/31/head",
+          "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 930,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/32/head",
+          "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 928,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/33/head",
+          "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 926,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/34/head",
+          "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 905,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/35/head",
+          "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 924,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/36/head",
+          "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 903,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/37/head",
+          "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 901,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/38/head",
+          "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 899,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/39/head",
+          "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 897,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/40/head",
+          "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 828,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/41/head",
+          "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 894,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/42/head",
+          "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 892,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/43/head",
+          "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 890,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/45/head",
+          "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 888,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/47/head",
+          "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 886,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/49/head",
+          "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 884,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/5/head",
+          "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1465,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/50/head",
+          "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 872,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/51/head",
+          "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 870,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/52/head",
+          "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 876,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/53/head",
+          "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 588,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/54/head",
+          "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 749,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/55/head",
+          "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 716,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/56/head",
+          "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 755,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/57/head",
+          "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 750,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/58/head",
+          "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 748,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/59/head",
+          "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 747,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/6/head",
+          "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1443,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/60/head",
+          "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 745,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/61/head",
+          "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 744,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/62/head",
+          "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 745,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/63/head",
+          "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 743,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/64/head",
+          "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 742,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/65/head",
+          "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 741,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/66/head",
+          "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 739,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/67/head",
+          "sha": "403e942dc99779883210125a01841ef209e19d2e",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 737,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/68/head",
+          "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 719,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/69/head",
+          "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 736,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/7/head",
+          "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1416,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/70/head",
+          "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 734,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/71/head",
+          "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 733,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/72/head",
+          "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 732,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/73/head",
+          "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 730,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/74/head",
+          "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 729,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/75/head",
+          "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 728,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/76/head",
+          "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 727,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/77/head",
+          "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 726,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/78/head",
+          "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 725,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/79/head",
+          "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 712,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/8/head",
+          "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1122,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/80/head",
+          "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 723,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/81/head",
+          "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 719,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/82/head",
+          "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 597,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/83/head",
+          "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 716,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/84/head",
+          "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 583,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/85/head",
+          "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 701,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/86/head",
+          "sha": "120f839ab9091bdbedf326621347ee737140e043",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 509,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/87/head",
+          "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 508,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/88/head",
+          "sha": "b100cd751688f13609a8829180b487b381588d14",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 506,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/89/head",
+          "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 504,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/9/head",
+          "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 1365,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/90/head",
+          "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 499,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/91/head",
+          "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 445,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/92/head",
+          "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 489,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/93/head",
+          "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 488,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/94/head",
+          "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 418,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/95/head",
+          "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 278,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/97/head",
+          "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 282,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        }
+      ],
+      "counts": {
+        "branch_heads": 5,
+        "pull_request_heads": 100,
+        "all_refs": 105,
+        "contained_refs": 102,
+        "uncontained_refs": 3,
+        "distinct_head_commits": 103,
+        "open_pull_requests": 1,
+        "distinct_incoming_commits": 17,
+        "incoming_non_merge_commits": 12
+      },
+      "api_branch_heads_match_git_advertisement": true,
+      "api_open_pr_heads_match_git_advertisement": true,
+      "incoming_commits": [
+        {
+          "sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "parents": [
+            "67d004b8a972a0fbdbd41a42a1a7363c91e5093b"
+          ],
+          "committed_at": "2026-11-15T07:27:12+01:00",
+          "subject": "Record validated integration and final Office source identity",
+          "is_merge": false,
+          "changed_paths": [
+            "docs/apple-export-policy.json",
+            "docs/integration-20261115.md",
+            "packages/QUDS_FORKS.md",
+            "packages/quds_office_engine/lib/quds_office_engine.dart",
+            "tool/office_fidelity_manifest.json"
+          ]
+        },
+        {
+          "sha": "67d004b8a972a0fbdbd41a42a1a7363c91e5093b",
+          "parents": [
+            "d764308cf77b535265a15c5065bbe4a0d66e227f"
+          ],
+          "committed_at": "2026-11-15T07:19:23+01:00",
+          "subject": "Bind release review to final integrated Office sources",
+          "is_merge": false,
+          "changed_paths": [
+            "docs/apple-export-policy.json"
+          ]
+        },
+        {
+          "sha": "d764308cf77b535265a15c5065bbe4a0d66e227f",
+          "parents": [
+            "b3d98a40b7daebdc2bb01cfb6df6d002bebfc178",
+            "a77364501d274e0fde2e9fffeefb121258ae9614"
+          ],
+          "committed_at": "2026-11-15T07:19:18+01:00",
+          "subject": "Merge remote-tracking branch 'origin/fix/excel-legacy-xls' into integrate/current-20261115",
+          "is_merge": true
+        },
+        {
+          "sha": "b3d98a40b7daebdc2bb01cfb6df6d002bebfc178",
+          "parents": [
+            "678c1cda863327fbfa177b36d45db949fd3a5cfe"
+          ],
+          "committed_at": "2026-11-15T07:18:49+01:00",
+          "subject": "Vendor Word heading and shape fixes and legacy spreadsheet palettes",
+          "is_merge": false,
+          "changed_paths": [
+            "lib/screens/file_browser_screen.dart",
+            "packages/QUDS_FORKS.md",
+            "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+            "packages/quds_office_engine/lib/quds_office_engine.dart",
+            "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart",
+            "packages/quds_office_engine/lib/src/word/model/wml_clone.dart",
+            "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+            "packages/quds_office_engine/lib/src/word/model/word_styles.dart",
+            "packages/quds_office_engine/lib/src/word/serial/word_drawing_io.dart",
+            "packages/quds_office_engine/lib/src/word/serial/word_frame_io.dart",
+            "packages/quds_office_engine/lib/src/word/serial/word_heading_io.dart",
+            "packages/quds_office_engine/lib/src/word/serial/word_style_cascade.dart",
+            "packages/quds_office_engine/test/styleless_import_fidelity_test.dart",
+            "packages/quds_office_engine/test/word_heading_apply_test.dart",
+            "packages/quds_office_engine/test/word_shape_without_textbox_test.dart",
+            "packages/quds_office_engine/tool/fidelity/word_steps.dart",
+            "tool/office_fidelity_manifest.json"
+          ]
+        },
+        {
+          "sha": "678c1cda863327fbfa177b36d45db949fd3a5cfe",
+          "parents": [
+            "4848b08001d53629f8e9139e0a1d1f190a12b54f"
+          ],
+          "committed_at": "2026-11-15T07:15:12+01:00",
+          "subject": "Run new PDF regressions in CI and refresh reviewed export fingerprints",
+          "is_merge": false,
+          "changed_paths": [
+            ".github/workflows/pdf-editor.yml",
+            "docs/apple-export-policy.json",
+            "docs/crypto-inventory.json",
+            "tool/format_pdf_editor.py"
+          ]
+        },
+        {
+          "sha": "4848b08001d53629f8e9139e0a1d1f190a12b54f",
+          "parents": [
+            "022d20e2f9f1b8ede5944698308d65ff00cad6c8"
+          ],
+          "committed_at": "2026-11-15T07:12:57+01:00",
+          "subject": "Integrate worksheet recovery and Word selection with final Quds source sync",
+          "is_merge": false,
+          "changed_paths": [
+            "README.md",
+            "docs/pdf-editor.md",
+            "lib/screens/file_browser_screen.dart",
+            "lib/widgets/pdf_editor_dialog.dart",
+            "packages/QUDS_FORKS.md",
+            "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+            "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+            "packages/quds_office_editor/lib/src/embed/office_theme.dart",
+            "packages/quds_office_editor/test/goldens/word_selection_macOS.png",
+            "packages/quds_office_editor/test/goldens/word_selection_windows.png",
+            "packages/quds_office_editor/test/word_selection_paint_test.dart",
+            "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+            "test/legacy_html_sheet_integration_test.dart",
+            "test/widget/pdf_editor_dialog_test.dart",
+            "tool/office_fidelity_manifest.json"
+          ]
+        },
+        {
+          "sha": "022d20e2f9f1b8ede5944698308d65ff00cad6c8",
+          "parents": [
+            "24753ebe2d35019f16ff2e8e7b62e4332eb6d21e",
+            "22f4d709dff82447ea80fe6bcdd2f10d076e0c93"
+          ],
+          "committed_at": "2026-11-15T07:10:27+01:00",
+          "subject": "Merge remote-tracking branch 'origin/integration/storage-carving-20261115' into integrate/current-20261115",
+          "is_merge": true
+        },
+        {
+          "sha": "24753ebe2d35019f16ff2e8e7b62e4332eb6d21e",
+          "parents": [
+            "dc59065133d188e2e84dc9929a1506dd07b82480",
+            "1a86e790080c174c27a283b7ac49913ca1fa91f0"
+          ],
+          "committed_at": "2026-11-15T07:10:27+01:00",
+          "subject": "Merge remote-tracking branch 'origin/codex/office-recovery-20261115' into integrate/current-20261115",
+          "is_merge": true
+        },
+        {
+          "sha": "dc59065133d188e2e84dc9929a1506dd07b82480",
+          "parents": [
+            "2bf26c163a7d0b2911a9f25f69c4284a36be9e5b",
+            "7df902f42cede050f220514ea9230a03fc6686bc"
+          ],
+          "committed_at": "2026-11-15T07:10:08+01:00",
+          "subject": "Merge remote-tracking branch 'origin/fix/excel-legacy-xls' into integrate/current-20261115",
+          "is_merge": true
+        },
+        {
+          "sha": "2bf26c163a7d0b2911a9f25f69c4284a36be9e5b",
+          "parents": [
+            "9dfc36f1782f13518edf8f16762a403dacb0201a"
+          ],
+          "committed_at": "2026-11-15T07:08:56+01:00",
+          "subject": "Measure floating PDF cards safely and keep note prompts free of save progress",
+          "is_merge": false,
+          "changed_paths": [
+            "lib/widgets/pdf_editor_dialog.dart",
+            "lib/widgets/pdf_floating_toolbars.dart"
+          ]
+        },
+        {
+          "sha": "9dfc36f1782f13518edf8f16762a403dacb0201a",
+          "parents": [
+            "9a1c994b3f28edd2f1d479393d72ebbd8acab8ed"
+          ],
+          "committed_at": "2026-11-15T07:08:22+01:00",
+          "subject": "Verify native action isolation and retain reproducible PDF toolbar patch",
+          "is_merge": false,
+          "changed_paths": [
+            "lib/screens/file_browser_screen.dart",
+            "lib/services/mac_browser_toolbar.dart",
+            "packages/dart_pdf_editor/UPSTREAM.patch",
+            "packages/pdf_document/UPSTREAM.patch",
+            "test/pdf_selection_note_test.dart",
+            "test/widget/pdf_floating_toolbars_test.dart"
+          ]
+        },
+        {
+          "sha": "9a1c994b3f28edd2f1d479393d72ebbd8acab8ed",
+          "parents": [
+            "d62776c520c7e48af6dd83bb22d47b469149f1ab"
+          ],
+          "committed_at": "2026-11-15T07:06:15+01:00",
+          "subject": "Use PDF actions in native titlebar and add selection notes and compact independent tools",
+          "is_merge": false,
+          "changed_paths": [
+            "lib/l10n/pdf_workspace_strings.dart",
+            "lib/screens/file_browser_screen.dart",
+            "lib/services/mac_browser_toolbar.dart",
+            "lib/services/pdf_editor_menu.dart",
+            "lib/services/pdf_selection_note.dart",
+            "lib/widgets/pdf_editor_dialog.dart",
+            "lib/widgets/pdf_editor_menus.dart",
+            "lib/widgets/pdf_floating_toolbars.dart",
+            "macos/Runner/MainFlutterWindow.swift",
+            "packages/QUDS_FORKS.md",
+            "packages/dart_pdf_editor/UPSTREAM.md",
+            "packages/dart_pdf_editor/lib/src/editing/editing_toolbar.dart",
+            "test/mac_browser_toolbar_test.dart",
+            "test/pdf_selection_note_test.dart",
+            "test/widget/legacy_sheet_import_test.dart",
+            "test/widget/pdf_editor_dialog_test.dart"
+          ]
+        },
+        {
+          "sha": "d62776c520c7e48af6dd83bb22d47b469149f1ab",
+          "parents": [
+            "fd2f4e8bbff37213f1cbff762305bd5296a7417c"
+          ],
+          "committed_at": "2026-11-15T06:46:40+01:00",
+          "subject": "Integrate current Office branches and protect legacy saves and pending PDF ink",
+          "is_merge": false,
+          "changed_paths": [
+            "README.md",
+            "lib/widgets/office_editor_dialog.dart",
+            "lib/widgets/pdf_editor_dialog.dart",
+            "packages/legacy_doc_parser/UPSTREAM.json",
+            "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart",
+            "packages/legacy_doc_parser/test/legacy_word_external_hyperlink_test.dart",
+            "packages/quds_office_engine/lib/quds_office_engine.dart",
+            "packages/quds_office_engine/lib/src/office/office_find.dart",
+            "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+            "packages/quds_office_engine/lib/src/word/model/word_field_spans.dart",
+            "packages/quds_office_engine/lib/src/word/model/word_revision.dart",
+            "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+            "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+            "packages/quds_office_engine/test/word_auxiliary_content_control_test.dart",
+            "packages/quds_office_engine/test/word_content_control_fidelity_test.dart",
+            "packages/quds_office_engine/test/word_field_span_test.dart",
+            "packages/quds_office_engine/test/word_preserved_header_test.dart",
+            "packages/quds_office_engine/test/word_revision_scaling_test.dart",
+            "pubspec.yaml",
+            "test/widget/legacy_sheet_import_test.dart",
+            "test/widget/pdf_editor_dialog_test.dart",
+            "tool/office_fidelity_manifest.json"
+          ]
+        },
+        {
+          "sha": "fd2f4e8bbff37213f1cbff762305bd5296a7417c",
+          "parents": [
+            "372138e9c2905917f14ac737d1b408405f1442c8",
+            "1b7680583ac69649b17287ab68738288fec10f51"
+          ],
+          "committed_at": "2026-11-15T06:18:27+01:00",
+          "subject": "Merge remote-tracking branch 'origin/fix/legacy-doc-recover' into integrate/current-20261115",
+          "is_merge": true
+        },
+        {
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "parents": [
+            "ac12975b852ff6b025cf1e5c55f4066f6c94a181"
+          ],
+          "committed_at": "2026-11-15T07:26:53+01:00",
+          "subject": "test(office): capture complete worksheet views and retain CI previews",
+          "is_merge": false,
+          "changed_paths": [
+            ".github/workflows/office-fidelity.yml",
+            "test/widget/office_sheet_navigation_workflow_test.dart"
+          ]
+        },
+        {
+          "sha": "ac12975b852ff6b025cf1e5c55f4066f6c94a181",
+          "parents": [
+            "cb23bdadffb95532d513cbc3bbc62d8bafa978fd"
+          ],
+          "committed_at": "2026-11-15T07:26:27+01:00",
+          "subject": "test(office): retain inventory regression and exact hosted replay",
+          "is_merge": false,
+          "changed_paths": [
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-baseline/baseline-source.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-baseline/existing-controls.log",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-baseline/historical-root-collision.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-baseline/office_host_evidence.py",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/artifact-inventory.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/artifact-inventory.log",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/checkout-original.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/checkout-positive.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/checkout-wrong-artifact-layout.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/controls.log",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/historical-files.txt",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/input-sha256.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/receipt.json",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/reproduce_checkout.py",
+            "docs/evidence/office-worksheet-navigation-20261115/resume/inventory-repair-validation/source.json"
+          ]
+        },
+        {
+          "sha": "cb23bdadffb95532d513cbc3bbc62d8bafa978fd",
+          "parents": [
+            "8c7f8ac78593661d415a23d52048de6053f378c9"
+          ],
+          "committed_at": "2026-11-15T07:22:00+01:00",
+          "subject": "fix(office): distinguish checkout and artifact inventory roots",
+          "is_merge": false,
+          "changed_paths": [
+            ".github/workflows/office-fidelity.yml",
+            "tool/check_office_fidelity.sh",
+            "tool/office_host_evidence.py",
+            "tool/test_office_host_evidence.py"
+          ]
+        }
+      ],
+      "ci_at_current_branch_heads": [
+        {
+          "id": 43686039218,
+          "name": "Storage capabilities",
+          "head_branch": "integration/storage-carving-20261115",
+          "head_sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:34:10Z",
+          "updated_at": "2026-11-15T06:34:10Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686039218"
+        },
+        {
+          "id": 43686039150,
+          "name": "Shared encrypted providers",
+          "head_branch": "integration/storage-carving-20261115",
+          "head_sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:34:10Z",
+          "updated_at": "2026-11-15T06:34:10Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686039150"
+        },
+        {
+          "id": 43686039144,
+          "name": "Experimental Rust SMB",
+          "head_branch": "integration/storage-carving-20261115",
+          "head_sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:34:10Z",
+          "updated_at": "2026-11-15T06:34:10Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686039144"
+        },
+        {
+          "id": 43685507419,
+          "name": "Ebook application integration",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507419"
+        },
+        {
+          "id": 43685507403,
+          "name": "Office fidelity integration",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507403"
+        },
+        {
+          "id": 43685507374,
+          "name": "PDF editor",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507374"
+        },
+        {
+          "id": 43685507348,
+          "name": "Shared encrypted providers",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507348"
+        },
+        {
+          "id": 43685507338,
+          "name": "Dart and Rust provider compatibility",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "completed",
+          "conclusion": "success",
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:30:45Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507338"
+        },
+        {
+          "id": 43685507336,
+          "name": "Storage capabilities",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507336"
+        },
+        {
+          "id": 43685507332,
+          "name": "Image editor",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507332"
+        },
+        {
+          "id": 43685507328,
+          "name": "Shared HTTP transfer bandwidth",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507328"
+        },
+        {
+          "id": 43685507327,
+          "name": "CI",
+          "head_branch": "main",
+          "head_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "status": "queued",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:27:19Z",
+          "updated_at": "2026-11-15T06:27:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685507327"
+        },
+        {
+          "id": 43685499200,
+          "name": "CI",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499200"
+        },
+        {
+          "id": 43685499167,
+          "name": "Office fidelity integration",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499167"
+        },
+        {
+          "id": 43685499166,
+          "name": "Image editor",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499166"
+        },
+        {
+          "id": 43685499165,
+          "name": "Commander archive workflows",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:18Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499165"
+        },
+        {
+          "id": 43685499155,
+          "name": "Shared HTTP transfer bandwidth",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499155"
+        },
+        {
+          "id": 43685499154,
+          "name": "Storage capabilities",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499154"
+        },
+        {
+          "id": 43685499151,
+          "name": "File workspace UX",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499151"
+        },
+        {
+          "id": 43685499133,
+          "name": "PDF editor",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499133"
+        },
+        {
+          "id": 43685499109,
+          "name": "Text and hex editor",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:33:15Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499109"
+        },
+        {
+          "id": 43685499108,
+          "name": "Media editor",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:27:13Z",
+          "updated_at": "2026-11-15T06:27:13Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499108"
+        },
+        {
+          "id": 43685477823,
+          "name": "Office fidelity integration",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:26:55Z",
+          "updated_at": "2026-11-15T06:27:38Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685477823"
+        },
+        {
+          "id": 43684658082,
+          "name": "Text and hex editor",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:26:36Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684658082"
+        },
+        {
+          "id": 43684658053,
+          "name": "Office fidelity integration",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:29:39Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684658053"
+        },
+        {
+          "id": 43684658018,
+          "name": "File workspace UX",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:25:57Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684658018"
+        },
+        {
+          "id": 43684657999,
+          "name": "Image editor",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "success",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:23:19Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657999"
+        },
+        {
+          "id": 43684657979,
+          "name": "CI",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "queued",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:16:24Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657979"
+        },
+        {
+          "id": 43684657975,
+          "name": "Ebook application integration",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "success",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:23:59Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657975"
+        },
+        {
+          "id": 43684657959,
+          "name": "Commander archive workflows",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:20:38Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657959"
+        },
+        {
+          "id": 43684657958,
+          "name": "PDF editor",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:32:56Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657958"
+        },
+        {
+          "id": 43684657956,
+          "name": "Media editor",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:22:52Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657956"
+        },
+        {
+          "id": 43684657941,
+          "name": "Storage capabilities",
+          "head_branch": "fix/excel-legacy-xls",
+          "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "status": "completed",
+          "conclusion": "success",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:16:06Z",
+          "updated_at": "2026-11-15T06:26:23Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43684657941"
+        }
+      ],
+      "ci_query_is_recent_first_page_only": true,
+      "ci_current_status_counts": {
+        "queued": 20,
+        "success": 4,
+        "in_progress": 5,
+        "failure": 4
+      },
+      "local_head_after_read_only_audit": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+      "recommended_incoming_heads": [
+        {
+          "sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "ref": "refs/heads/main",
+          "disposition": "Merge exact cutoff main; includes new PDF features, legacy spreadsheet save protections, standalone DOC parser d422fa99 and updated canonical provenance."
+        },
+        {
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "ref": "refs/heads/codex/office-recovery-20261115",
+          "pr": 110,
+          "disposition": "Merge exact cutoff navigation head after main; adds three inventory/evidence/whole-view-capture commits beyond already integrated 8c7f8ac7."
+        }
+      ],
+      "incoming_main_office_pins": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "main",
+        "source_commit": "eae58542dffd73cf30e97cc60a59a5474656d676",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "d422fa99a3a84830794f0e2dc332d59f923779f7"
+          }
+        },
+        "managed_file_count": 2214
+      },
+      "inventory_reconciliation": "Prefer navigation explicit --layout checkout/artifact and complete artifact-root discovery. Retain/adapt the two checkout archival-evidence regressions from 59b6a509. Avoid reverting the inventory repair to main stale implementation.",
+      "deleted_branch_names_since_initial_audit": [
+        "fix/legacy-doc-recover",
+        "integration/storage-delta-20261114"
+      ]
+    },
+    {
+      "key": "quds",
+      "repository": "CrispStrobe/quds_office_suite",
+      "comparison_commit": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+      "sources": {
+        "branches": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches?per_page=100",
+        "open_pull_requests": "https://api.github.com/repos/CrispStrobe/quds_office_suite/pulls?state=open&per_page=100",
+        "recent_closed_pull_requests": "https://api.github.com/repos/CrispStrobe/quds_office_suite/pulls?state=closed&sort=updated&direction=desc&per_page=5",
+        "workflow_runs": "https://api.github.com/repos/CrispStrobe/quds_office_suite/actions/runs?per_page=20",
+        "git_remote": "https://github.com/CrispStrobe/quds_office_suite.git",
+        "fetched_ref_namespace": "refs/audit-cutoff"
+      },
+      "branches": [
+        {
+          "name": "codex/office-recovery-20261115",
+          "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0"
+        },
+        {
+          "name": "feat/word-like-selection",
+          "sha": "e8227569a3b90fb21db598483690bd13fe74ddef"
+        },
+        {
+          "name": "fix/excel-legacy-import",
+          "sha": "fd749d8ee140be623597493cdbc05ce20f1f5151"
+        },
+        {
+          "name": "fix/word-heading-like-word",
+          "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+        },
+        {
+          "name": "fix/word-shape-no-textbox",
+          "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a"
+        },
+        {
+          "name": "integration/office-storage-reconcile-20261115",
+          "sha": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca"
+        },
+        {
+          "name": "main",
+          "sha": "eae58542dffd73cf30e97cc60a59a5474656d676"
+        }
+      ],
+      "open_pull_requests": [],
+      "recent_closed_pull_requests": [
+        {
+          "number": 21,
+          "title": "Apply headings the way Word does; shade theme colours in HSL",
+          "head_sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "base_sha": "5133ce0343cb7c9456f852a4e760c771294ae6de",
+          "merged_at": "2026-11-15T06:24:52Z",
+          "closed_at": "2026-11-15T06:24:52Z",
+          "merge_commit_sha": "29ae021647d36a98153ca05d26525e1c4baffab1",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/21"
+        },
+        {
+          "number": 20,
+          "title": "Keep shapes without text free of empty text boxes on save",
+          "head_sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "base_sha": "5133ce0343cb7c9456f852a4e760c771294ae6de",
+          "merged_at": "2026-11-15T06:24:51Z",
+          "closed_at": "2026-11-15T06:24:52Z",
+          "merge_commit_sha": "61f30f303727a285d1cb87bfdd4e3fa9521fc906",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/20"
+        },
+        {
+          "number": 15,
+          "title": "Make tracked-change import and save linear instead of quadratic",
+          "head_sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "base_sha": "5133ce0343cb7c9456f852a4e760c771294ae6de",
+          "merged_at": "2026-11-15T06:13:02Z",
+          "closed_at": "2026-11-15T06:13:02Z",
+          "merge_commit_sha": "59860a37c83fd5dedf71d8dac0f4f2f88bed5f40",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/15"
+        },
+        {
+          "number": 17,
+          "title": "Keep unmodelable header/footer parts verbatim instead of refusing documents",
+          "head_sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "base_sha": "5133ce0343cb7c9456f852a4e760c771294ae6de",
+          "merged_at": "2026-11-15T06:13:02Z",
+          "closed_at": "2026-11-15T06:13:02Z",
+          "merge_commit_sha": "af0b1bd2b8613681ab59aa2c42b4858e30531338",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/17"
+        },
+        {
+          "number": 14,
+          "title": "Keep complex fields as spans instead of wrapping whole paragraphs",
+          "head_sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "base_sha": "5133ce0343cb7c9456f852a4e760c771294ae6de",
+          "merged_at": "2026-11-15T06:13:02Z",
+          "closed_at": "2026-11-15T06:13:02Z",
+          "merge_commit_sha": "79b4b5b033aa1f9e4204404f07074c0f5e44fe28",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/pull/14"
+        }
+      ],
+      "workflow_runs_query_total": 263,
+      "source_refs": [
+        {
+          "ref": "refs/heads/codex/office-recovery-20261115",
+          "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 25,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/feat/word-like-selection",
+          "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/fix/excel-legacy-import",
+          "sha": "fd749d8ee140be623597493cdbc05ce20f1f5151",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 20,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/fix/word-heading-like-word",
+          "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/fix/word-shape-no-textbox",
+          "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/heads/integration/office-storage-reconcile-20261115",
+          "sha": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+          "kind": "branch",
+          "owned_integration_alias": true,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 0,
+          "source_only_commits": 0,
+          "disposition": "same_commit"
+        },
+        {
+          "ref": "refs/heads/main",
+          "sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "kind": "branch",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": false,
+          "comparison_only_commits": 1,
+          "source_only_commits": 4,
+          "disposition": "incoming_commits_require_reconciliation"
+        },
+        {
+          "ref": "refs/pull/1/head",
+          "sha": "54f0f8de01416640560519aa9d732f668f603709",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 225,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/10/head",
+          "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 65,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/11/head",
+          "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 52,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/12/head",
+          "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 47,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/13/head",
+          "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 30,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/14/head",
+          "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/15/head",
+          "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/16/head",
+          "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 21,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/17/head",
+          "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/18/head",
+          "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 25,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/19/head",
+          "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/2/head",
+          "sha": "08b09485588d2b6270f594a07c983689c087587d",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 216,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/20/head",
+          "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/21/head",
+          "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 28,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/3/head",
+          "sha": "e550723b0f2a7cd849970f58820d260c36857502",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 195,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/4/head",
+          "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 161,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/5/head",
+          "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 141,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/6/head",
+          "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 134,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/7/head",
+          "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 119,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/8/head",
+          "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 65,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        },
+        {
+          "ref": "refs/pull/9/head",
+          "sha": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "kind": "pull_request_head",
+          "owned_integration_alias": false,
+          "contained_in_comparison_commit": true,
+          "comparison_only_commits": 65,
+          "source_only_commits": 0,
+          "disposition": "already_contained"
+        }
+      ],
+      "counts": {
+        "branch_heads": 7,
+        "pull_request_heads": 21,
+        "all_refs": 28,
+        "contained_refs": 27,
+        "uncontained_refs": 1,
+        "distinct_head_commits": 24,
+        "open_pull_requests": 0,
+        "distinct_incoming_commits": 4,
+        "incoming_non_merge_commits": 1
+      },
+      "api_branch_heads_match_git_advertisement": true,
+      "api_open_pr_heads_match_git_advertisement": true,
+      "incoming_commits": [
+        {
+          "sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "parents": [
+            "afe8c511f835251d4aca740b89b650c0738bb898"
+          ],
+          "committed_at": "2026-11-15T07:23:57+01:00",
+          "subject": "Document integrated editing capabilities and order engine exports",
+          "is_merge": false,
+          "changed_paths": [
+            "README.md",
+            "packages/quds_office_engine/lib/quds_office_engine.dart"
+          ]
+        },
+        {
+          "sha": "afe8c511f835251d4aca740b89b650c0738bb898",
+          "parents": [
+            "29ae021647d36a98153ca05d26525e1c4baffab1",
+            "fd749d8ee140be623597493cdbc05ce20f1f5151"
+          ],
+          "committed_at": "2026-11-15T07:16:17+01:00",
+          "subject": "Merge remote-tracking branch 'origin/fix/excel-legacy-import' into fix/csv-sheet-import-20261114",
+          "is_merge": true
+        },
+        {
+          "sha": "29ae021647d36a98153ca05d26525e1c4baffab1",
+          "parents": [
+            "61f30f303727a285d1cb87bfdd4e3fa9521fc906",
+            "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+          ],
+          "committed_at": "2026-11-15T07:16:12+01:00",
+          "subject": "Merge remote-tracking branch 'origin/fix/word-heading-like-word' into fix/csv-sheet-import-20261114",
+          "is_merge": true
+        },
+        {
+          "sha": "61f30f303727a285d1cb87bfdd4e3fa9521fc906",
+          "parents": [
+            "4f7d0e0064cb430cc14e3daca663cffade777938",
+            "5278aafd512640608fe06b8f7d357c4cffe8520a"
+          ],
+          "committed_at": "2026-11-15T07:16:12+01:00",
+          "subject": "Merge remote-tracking branch 'origin/fix/word-shape-no-textbox' into fix/csv-sheet-import-20261114",
+          "is_merge": true
+        }
+      ],
+      "ci_at_current_branch_heads": [
+        {
+          "id": 43685320777,
+          "name": "CI",
+          "head_branch": "main",
+          "head_sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:24:52Z",
+          "updated_at": "2026-11-15T06:32:09Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43685320777"
+        },
+        {
+          "id": 43685320729,
+          "name": "Office fidelity oracles",
+          "head_branch": "main",
+          "head_sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "status": "in_progress",
+          "conclusion": null,
+          "event": "push",
+          "created_at": "2026-11-15T06:24:52Z",
+          "updated_at": "2026-11-15T06:35:04Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43685320729"
+        },
+        {
+          "id": 43684233336,
+          "name": "CI",
+          "head_branch": "fix/word-heading-like-word",
+          "head_sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:10:31Z",
+          "updated_at": "2026-11-15T06:17:18Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43684233336"
+        },
+        {
+          "id": 43684233315,
+          "name": "Office fidelity oracles",
+          "head_branch": "fix/word-heading-like-word",
+          "head_sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:10:31Z",
+          "updated_at": "2026-11-15T06:11:22Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43684233315"
+        },
+        {
+          "id": 43684217004,
+          "name": "CI",
+          "head_branch": "fix/word-shape-no-textbox",
+          "head_sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:10:18Z",
+          "updated_at": "2026-11-15T06:21:56Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43684217004"
+        },
+        {
+          "id": 43684216959,
+          "name": "Office fidelity oracles",
+          "head_branch": "fix/word-shape-no-textbox",
+          "head_sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:10:18Z",
+          "updated_at": "2026-11-15T06:13:13Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43684216959"
+        },
+        {
+          "id": 43683942538,
+          "name": "Office fidelity oracles",
+          "head_branch": "feat/word-like-selection",
+          "head_sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:06:36Z",
+          "updated_at": "2026-11-15T06:11:25Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43683942538"
+        },
+        {
+          "id": 43683942515,
+          "name": "CI",
+          "head_branch": "feat/word-like-selection",
+          "head_sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "status": "completed",
+          "conclusion": "failure",
+          "event": "pull_request",
+          "created_at": "2026-11-15T06:06:36Z",
+          "updated_at": "2026-11-15T06:18:44Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43683942515"
+        },
+        {
+          "id": 43682115989,
+          "name": "CI",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "status": "completed",
+          "conclusion": "success",
+          "event": "pull_request",
+          "created_at": "2026-11-15T05:40:54Z",
+          "updated_at": "2026-11-15T05:53:31Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43682115989"
+        },
+        {
+          "id": 43682115974,
+          "name": "Office fidelity oracles",
+          "head_branch": "codex/office-recovery-20261115",
+          "head_sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "status": "completed",
+          "conclusion": "success",
+          "event": "pull_request",
+          "created_at": "2026-11-15T05:40:54Z",
+          "updated_at": "2026-11-15T06:03:05Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43682115974"
+        }
+      ],
+      "ci_query_is_recent_first_page_only": true,
+      "ci_current_status_counts": {
+        "in_progress": 2,
+        "failure": 6,
+        "success": 2
+      },
+      "local_head_after_read_only_audit": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+      "canonical_main_tree_comparison": {
+        "from": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+        "to": "eae58542dffd73cf30e97cc60a59a5474656d676",
+        "identical_tree": false,
+        "changed_paths": [
+          "README.md",
+          "packages/quds_office_engine/lib/quds_office_engine.dart"
+        ],
+        "disposition": "All functional PR branches already integrated. Main adds merge ancestry, README prose, and ordering of an existing export only; no new runtime behavior. Accept main eae58542 pin and exact export ordering to match incoming app manifest; a new canonical integration branch is unnecessary."
+      }
+    }
+  ],
+  "cutoff_result": "NEW_SOURCE_COMMITS_FOUND",
+  "recommended_next_step": "Integrate the two exact app heads above, preserve incoming canonical/standalone source provenance, reconcile inventory controls, then resume source-bound gates. Do not poll further for unrelated post-cutoff documentation."
+}

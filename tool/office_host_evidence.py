@@ -188,23 +188,47 @@ def clean(root):
         target.unlink(missing_ok=True)
 
 
-def inspect(root, *, downloaded_artifacts=False):
+def artifact_bases(root):
+    """Find host trees in an extracted artifact, including partial wrappers.
+
+    A downloaded bundle may contain several wrappers. Discover all declared
+    host roots so a duplicate or undeclared file cannot hide in a wrapper that
+    happens not to contain fidelity-host. The engine corpus is uploaded next to
+    the host outputs and has a separate inventory/schema gate.
+    """
+    anchors = {parts[1] for parts in (*RENDERED_ROOTS, *SCHEMA_ONLY_ROOTS)}
+    candidates = {
+        directory.parent.parent
+        for anchor in anchors
+        for directory in root.rglob(anchor)
+        if directory.is_dir() and directory.parent.name == 'build'
+    }
+    candidates.add(root)
+    bases = set(candidates)
+    for base in candidates:
+        # Exempt only the engine corpus at its exact packaged location, relative
+        # to another candidate host root. Other rendered and acceptance roots
+        # under that location still identify a host tree and must be inspected.
+        if (base.parent.name == 'packages'
+                and base.name == 'quds_office_engine'
+                and base.parent.parent in candidates
+                and not any((base / 'build' / anchor).is_dir()
+                            for anchor in anchors - {'fidelity'})):
+            bases.remove(base)
+    return bases
+
+
+def inspect(root, *, layout='artifact'):
     root = root.resolve()
+    if layout not in ('checkout', 'artifact'):
+        raise ValueError(f'Unknown host evidence layout: {layout}')
     expected = expected_paths()
     references = {entry['path']: entry for entry in reference_entries()}
     schema_only = {entry['path']: entry for entry in schema_only_entries()}
-    # A checkout contains historical receipts whose build/ trees must neither
-    # duplicate nor substitute for the outputs of this run. Only explicitly
-    # selected artifact downloads may discover wrapper directories.
-    bases = {root}
-    if downloaded_artifacts:
-        # Match complete build/... suffixes, never filenames from engine output.
-        bases.update(
-            directory.parent.parent
-            for anchor in ('fidelity-host', *(parts[1] for parts in SCHEMA_ONLY_ROOTS))
-            for directory in root.rglob(anchor)
-            if directory.is_dir() and directory.parent.name == 'build'
-        )
+    # A checkout retains historical artifacts under docs/evidence. Only its
+    # exact root/build belongs to this run; downloaded bundles instead require
+    # recursive wrapper discovery and collision detection.
+    bases = {root} if layout == 'checkout' else artifact_bases(root)
     files = []
     failures = []
     used_bases = set()
@@ -244,10 +268,11 @@ def inspect(root, *, downloaded_artifacts=False):
         })
     if len(used_bases) > 1:
         failures.append('Required host files are spread across different artifact roots')
-    scans = [(base, parts) for base in used_bases for parts in RENDERED_ROOTS]
-    # A separate wrapper containing only an undeclared acceptance file must
-    # still fail, even though it supplied none of the required artifacts.
-    scans += [(base, parts) for base in bases for parts in SCHEMA_ONLY_ROOTS]
+    # Inspect every discovered root, including wrappers that supplied none of
+    # the required files. An undeclared rendered file is just as significant as
+    # an undeclared schema-only acceptance file.
+    scans = [(base, parts) for base in bases
+             for parts in (*RENDERED_ROOTS, *SCHEMA_ONLY_ROOTS)]
     for base, parts in sorted(scans):
         for file in base.joinpath(*parts).rglob('*'):
             if (file.is_file() and file.suffix.lower() in OFFICE
@@ -255,7 +280,8 @@ def inspect(root, *, downloaded_artifacts=False):
                 failures.append(f'Unexpected host Office output: {file.relative_to(base)}')
     authored_inputs = sum(entry['role'] == 'authored_input' for entry in schema_only.values())
     return {
-        'layout': 'downloaded_artifacts' if downloaded_artifacts else 'checkout',
+        'layout': layout,
+        'artifact_roots': sorted(base.relative_to(root).as_posix() for base in bases),
         'expected': len(expected),
         'verified': len(files),
         'expected_host_outputs': len(expected) - len(references) - authored_inputs,
@@ -279,14 +305,16 @@ def main():
     parser.add_argument('command', choices=['clean', 'verify'])
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--report', type=Path)
-    parser.add_argument('--downloaded-artifacts', action='store_true',
-                        help='discover and validate artifact wrapper roots instead of only the current checkout outputs')
+    parser.add_argument('--layout', choices=['checkout', 'artifact'],
+                        help='checkout: exact root/build; artifact: discover downloaded wrappers')
     args = parser.parse_args()
     if args.command == 'clean':
         clean(args.root)
         print(f'Cleared only {len(expected_paths())} declared host outputs and receipt')
         return 0
-    report = inspect(args.root, downloaded_artifacts=args.downloaded_artifacts)
+    if args.layout is None:
+        parser.error('verify requires --layout checkout or --layout artifact')
+    report = inspect(args.root, layout=args.layout)
     output = args.report or args.root / REPORT
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2) + '\n')

@@ -187,15 +187,36 @@ void _evidence(String filename, Uint8List bytes) => File('$_output/$filename')
 /// Optional preview of the actual host widget, separate from XLSX acceptance.
 Future<void> _preview(WidgetTester tester, String filename) async {
   if (Platform.environment['OFFICE_NAVIGATION_PREVIEW'] != '1') return;
-  final boundary = tester.renderObject<RenderRepaintBoundary>(
-    find.byType(RepaintBoundary).first,
+  // A route's first repaint boundary can belong to the obscured launch page.
+  // Capture the complete view so the editor and modal overlays stay together.
+  await tester.pump();
+  final view = tester.binding.renderViews.singleWhere(
+    (view) => view.flutterView.viewId == tester.view.viewId,
   );
-  final image = await boundary.toImage();
+  expect(view.debugNeedsPaint, isFalse);
+  final layer = view.debugLayer! as OffsetLayer;
+  final image = await layer.toImage(Offset.zero & tester.view.physicalSize);
   try {
+    expect(image.width, tester.view.physicalSize.width.toInt());
+    expect(image.height, tester.view.physicalSize.height.toInt());
     final bytes = (await image.toByteData(format: ui.ImageByteFormat.png))!;
+    final png = bytes.buffer.asUint8List(
+      bytes.offsetInBytes,
+      bytes.lengthInBytes,
+    );
     File('build/office-sheet-navigation-preview/$filename')
       ..createSync(recursive: true)
-      ..writeAsBytesSync(bytes.buffer.asUint8List());
+      ..writeAsBytesSync(png);
+    File('build/office-sheet-navigation-preview/$filename.json')
+        .writeAsStringSync(
+          const JsonEncoder.withIndent('  ').convert({
+            'file': filename,
+            'capture': 'complete host render view including modal overlays',
+            'width': image.width,
+            'height': image.height,
+            'sha256': sha256.convert(png).toString(),
+          }),
+        );
   } finally {
     image.dispose();
   }

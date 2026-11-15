@@ -23,27 +23,19 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The storage continuation mirrors canonical integration
-`01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca` on
-`integration/office-storage-reconcile-20261115` and the unchanged standalone
-legacy parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`. All 2,214 managed files
-match those sources. This combines canonical main `4f7d0e0`, worksheet
-navigation, the latest legacy Excel palette import, Word shapes without text
-boxes, heading inheritance and theme shading. App-side worksheet navigation
-and the reviewed DOC recovery/import routes are retained. Source reconciliation
-does not by itself qualify the complete Office rendering workflow; current
-checks are recorded in [the integration record](../docs/office-storage-reconciliation-20261115.md).
+The app mirrors Quds `eae58542dffd73cf30e97cc60a59a5474656d676` and standalone
+legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,214 managed files
+verify. New work includes supported BIFF8/HTML spreadsheet imports, shared
+formulas and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline field preservation, revision
+performance fixes and opaque unsupported headers. Integration regressions cover
+header revision ownership, field isolation across stories and non-text field
+results. Legacy DOC preview/conversion explicitly enables parser recovery and
+reports limitations; converted legacy documents save separately as OOXML.
 
-## Previous integrated state (14 November 2026)
-
-The app mirrors Quds main `5133ce0343cb7c9456f852a4e760c771294ae6de` and standalone
-legacy parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`; all 2,194 managed files
-verify. This includes authored number formats, shared history/sorting coverage,
-Word media deduplication, supported symbol characters and sibling text-box
-isolation. Legacy VML content retains its opaque source and relationship
-integrity through export without claiming full visual rendering. Legacy conversion exports canonical built-in style names and offers
-explicit auxiliary-feature recovery at the parser API; the app import route
-continues to use strict parsing.
+The storage continuation retains its earlier combined canonical checkpoint
+`01f167cc` in [the reconciliation record](../docs/office-storage-reconciliation-20261115.md).
+The current pin above follows the newer merged main and preserves its exact
+export ordering and standalone parser source.
 
 ## Spreadsheet audit checkpoint (14 November 2026)
 

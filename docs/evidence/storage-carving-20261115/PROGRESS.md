@@ -49,9 +49,13 @@ hosted CI and other-platform/live-provider qualification remain distinct.
 - `c1494c40c8b0624b2ee1344b233c8128c54f5183`: merged the full Office
   reconciliation at `59b6a50990c4a368e03cd4d03b8075248edc6ffb`, including
   navigation `8c7f8ac7` and canonical Quds `01f167cc`. All observed app/PR
-  heads are contained in this merged history.
+  heads at that first snapshot are contained in this merged history.
 
-The next implementation checkpoint adds independent fixtures/portable drivers,
+- `229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417`: complete PNG profile,
+  independent fixtures, guarded native publication and regression tests.
+  Saved before final qualification.
+
+The complete implementation checkpoint adds independent fixtures/portable drivers,
 strict parser tests, native guard regression tests and a guard that rechecks
 identity/cancellation synchronously after the final asynchronous path read.
 A pause epoch comparison also detects pause-and-resume within that final read;
@@ -64,3 +68,24 @@ qualify the whole app. The initial scoped analysis reported 29 style infos,
 which were corrected. The first baseline native attempt passed 132 tests then
 hit an in-progress API mismatch while compiling the final UI suite; that suite
 will run again against the complete checkpoint.
+
+## Latest-source reconciliation and qualification boundary
+
+A final remote cutoff at 06:34:41–06:37:21 UTC found newer main and worksheet
+navigation work. The combined candidate incorporates app main `fa030137`,
+navigation `7e5af83c`, Quds main `eae58542` and DOC parser `d422fa99`.
+`remote-cutoff-audit.json` retains the exact heads, advertised refs, PR states
+and CI observations. The managed-source check passes for all 2,214 files.
+
+The first source-bound native gate at `229c6a86` stopped before any test ran:
+the optional system-SQLite launcher requested an unversioned `libsqlite3.so`
+that this host does not provide. Its receipt is retained as a bootstrap failure,
+not a failed test assertion. Qualification uses the default native hooks that
+already compiled and ran the baseline cohort on this host.
+
+Final gates will identify the saved source commit and tree, hash the local
+source and package-resolution inputs before and after each command, and retain
+raw logs. Resolved external dependency-cache payloads are not archived; these
+are source-bound local results, not a hermetic execution claim. Hosted CI,
+complete Office rendering/schema acceptance and other platforms remain
+separate qualification scopes.

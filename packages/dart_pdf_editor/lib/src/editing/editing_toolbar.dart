@@ -230,9 +230,20 @@ class PdfEditingToolbar extends StatefulWidget {
     this.dock = PdfPanelDock.bottom,
     this.compact,
     this.cardAlignment = Alignment.center,
+    this.showPrimaryBar = true,
+    this.showContextBar = true,
+    this.dense = false,
+    this.moveHandle,
     this.leading = const [],
     this.trailing = const [],
   });
+
+  /// CrispCloud: independently place the two stock bars without duplicating
+  /// the command implementations. Defaults retain the upstream combined UI.
+  final bool showPrimaryBar;
+  final bool showContextBar;
+  final bool dense;
+  final Widget? moveHandle;
 
   final PdfEditingController controller;
 
@@ -1479,7 +1490,9 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
   }
 
   Widget _buildDesktopCards(BuildContext context) {
-    final strip = _desktopStrip(context);
+    final strip = widget.showContextBar ? _desktopStrip(context) : null;
+    if (!widget.showPrimaryBar) return strip ?? const SizedBox.shrink();
+    if (!widget.showContextBar) return _dock(context);
     if (widget.dock.isHorizontal) {
       final rail = _dock(context);
       final children = <Widget>[
@@ -1542,6 +1555,8 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
     return LayoutBuilder(
       builder: (context, constraints) => Align(
         alignment: widget.cardAlignment,
+        widthFactor: widget.dense ? 1 : null,
+        heightFactor: widget.dense ? 1 : null,
         child: Container(
           key: const ValueKey('pdf-editing-toolbar-card'),
           constraints: scrollDirection == Axis.horizontal
@@ -1556,8 +1571,16 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
             child: SingleChildScrollView(
               scrollDirection: scrollDirection,
               child: Padding(
-                padding: padding,
-                child: child,
+                padding: widget.dense
+                    ? padding.resolve(Directionality.of(context)) * 0.5
+                    : padding,
+                child: widget.moveHandle == null
+                    ? child
+                    : Flex(
+                        direction: scrollDirection,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [widget.moveHandle!, child],
+                      ),
               ),
             ),
           ),

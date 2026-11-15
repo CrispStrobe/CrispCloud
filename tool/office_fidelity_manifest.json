@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "integration/office-storage-reconcile-20261115",
-  "source_commit": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+  "source_branch": "main",
+  "source_commit": "eae58542dffd73cf30e97cc60a59a5474656d676",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -920,7 +920,7 @@
     "packages/legacy_doc_parser/lib/src/word_compatibility_writer.dart": "a5ef25e5476f4aaeefc7dc16d0ca75dd8d962a9eded7dc1426dafef11f971ba5",
     "packages/legacy_doc_parser/lib/src/word_compound_storage_validation.dart": "969b2f7f2d7b01620f628f616aae491be063364c3b00761dcca498b71712cb7c",
     "packages/legacy_doc_parser/lib/src/word_decoration_writer.dart": "ae6db28240462473763f98b96dac37ba5ccb8b9a8ba817fdf7cd5f4ded7c24de",
-    "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart": "699c374455efc7a9d19cb88bd6925e054c14944bfbdee704d5042c9535512366",
+    "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart": "b22862ee3e93929e58fc5515a7046e993449466d6f431d2d5d6621034309dd6c",
     "packages/legacy_doc_parser/lib/src/word_font_writer.dart": "09afb7ca08d619c164c331e3e58df17a60b6ab2755d807e4f196ea494abcd523",
     "packages/legacy_doc_parser/lib/src/word_image_appearance_writer.dart": "e24db670081f3808f9d46aa730c9421f56edca44365931f4f202d34d0f67434e",
     "packages/legacy_doc_parser/lib/src/word_layout_writer.dart": "b9b30f35547fc5bdb0a7843d9d984c356dcaf398f4ef8da740752bc945fec4ef",
@@ -1376,7 +1376,7 @@
     "packages/legacy_doc_parser/test/legacy_word_decorations_test.dart": "61413bd0857aa9ecb9f7e4d465fcc0e1ebc77f52b06a3242bc791114c09f387e",
     "packages/legacy_doc_parser/test/legacy_word_display_field_evidence_test.dart": "afb6bd2a000bff0be19d1ab205153546a029cb0431884c23dbb694e4ebc154c1",
     "packages/legacy_doc_parser/test/legacy_word_display_field_revisions_test.dart": "5818e94eebd691af18e855179188c78a725c72fde35e57d08174415ff05c8bc2",
-    "packages/legacy_doc_parser/test/legacy_word_external_hyperlink_test.dart": "0c927938131fe1a8f4025738d8613d794203cbf9f6c5bde0babb014acc913cee",
+    "packages/legacy_doc_parser/test/legacy_word_external_hyperlink_test.dart": "bc41bdf49255ae6e692826753db52ce988d4cc6f3676835b66d9c3669445f929",
     "packages/legacy_doc_parser/test/legacy_word_fib_extension_test.dart": "bb097de0dda93a85b847f453691b74fad904a801d2cb3aec1841a3cf7c8f8434",
     "packages/legacy_doc_parser/test/legacy_word_field_instruction_visibility_test.dart": "67e5bb65180f8da30ee7f95e473d01b29119ee46fd154e16770df2eb4d3a2035",
     "packages/legacy_doc_parser/test/legacy_word_field_marker_formatting_test.dart": "a8033066b9d738464f8f7d178fddaeb0c6f01c878557bbc60b792cfc604940ce",
@@ -1834,7 +1834,7 @@
     "packages/quds_office_editor/test/word_tab_stops_editor_test.dart": "78c66bc45eb49b0d202df59f03912b4e0c5b4e79bfe7d3ded916d12173c81aba",
     "packages/quds_office_editor/test/word_table_grid_history_test.dart": "e8058115b6654094d37d98a87e1adbd64e367a431666f601eefde491ca149a7a",
     "packages/quds_office_engine/CHANGELOG.md": "ea3266ada2363e556d4edd8b78825daec864fc5462bf4c6b7a5afc81861a03c8",
-    "packages/quds_office_engine/lib/quds_office_engine.dart": "3218e4e318c115a090cdf7eb0a150ad2e63f8eb02d5630a768f8d53e4056ae08",
+    "packages/quds_office_engine/lib/quds_office_engine.dart": "0ff9d1870a81ea3eea064b88d0e925ebbfc88cf5e57d57383e42ebbd2d1bb20d",
     "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart": "f04618334611bb31abcf34a7388c45c0068b161f09a56303d3c39226f859ce60",
     "packages/quds_office_engine/lib/src/bidi/line_breaker.dart": "0975948413b06e984c31b88f85da21977b139305fb50923a36b1c31297bed8d4",
     "packages/quds_office_engine/lib/src/extract/office_search_text.dart": "97dc650cee6bb7e6ee4e234207b07f5b225fd7f682892751b599d4553893cb6f",
@@ -2221,7 +2221,7 @@
   "standalone_sources": {
     "packages/legacy_doc_parser": {
       "repository": "CrispStrobe/legacy-doc-parser",
-      "commit": "f9d10b5a5e68b4216892d64622caa8b0a15c7afd"
+      "commit": "d422fa99a3a84830794f0e2dc332d59f923779f7"
     }
   }
 }

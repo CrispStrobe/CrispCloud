@@ -1,15 +1,15 @@
 # Office reconciliation for the storage continuation — 15 November 2026
 
-The `integration/office-reconcile-storage-20261115` branch preserves the latest
-Office work before storage recovery implementation continues. It incorporates
+The `integration/office-reconcile-storage-20261115` branch preserved the first
+Office snapshot before storage recovery implementation continued. It incorporates
 Excel PR #108 at `a77364501d274e0fde2e9fffeefb121258ae9614` and worksheet
 navigation at `8c7f8ac78593661d415a23d52048de6053f378c9`. DOC recovery PR #109
 at `1b7680583ac69649b17287ab68738288fec10f51` was already included in the storage
 branch. Existing main `8a24763fb4b2c720ff6b617cebbea8971191bdca` is retained.
 
-## Canonical source
+## Initial canonical source checkpoint
 
-All 2,214 managed files match Quds integration
+At that checkpoint, all 2,214 managed files matched Quds integration
 `01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca` and the unchanged standalone DOC
 parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`. The Quds checkpoint is saved
 on `integration/office-storage-reconcile-20261115` with these explicit parents:
@@ -32,13 +32,12 @@ but rejected 57 inventory paths because recursive discovery counted archived
 build outputs inside committed evidence. Those are historical results; they
 are not acceptance for this combined source.
 
-Checkout verification now inspects only the current declared `build/` roots.
+Checkout verification inspects only the current declared `build/` roots.
 Historical copies cannot create duplicate results or substitute for a missing
-current output. Downloaded workflow artifacts use the explicit
-`--downloaded-artifacts` option, retaining discovery of wrapper roots and the
-duplicate, unexpected-file and split-root checks. The required 182 files and
-their rendering/schema scopes remain unchanged. The report records the chosen
-layout.
+current output. The initial checkpoint used `--downloaded-artifacts` for
+downloaded bundles. The later navigation reconciliation below supersedes that
+interface with explicit layout names and broader artifact-root checks. The
+required 182 files and their rendering/schema scopes remain unchanged.
 
 ## Qualification at the reconciliation checkpoint
 
@@ -49,5 +48,35 @@ layout.
 - Runtime, rendering and external schema acceptance for this combined source
   are pending. Earlier test totals are not relabeled as current results.
 
-The separate storage implementation and its qualification will be recorded on
-the storage continuation branch.
+## Final source cutoff incorporated into storage
+
+The final audit observed remote refs from 06:34:41 through 06:37:21 UTC on
+15 November 2026. It found 105 advertised CrispCloud branch/PR refs and 28
+canonical Quds branch/PR refs. The initial implementation already contained
+102 app refs; current main and the navigation branch/PR alias contributed
+17 additional distinct commits. The audit is preserved in
+`evidence/storage-carving-20261115/remote-cutoff-audit.json`.
+
+The combined storage candidate incorporates:
+
+- CrispCloud main `fa030137fd203467d5560b68b767019194b95ebd`, including the
+  merged Office PRs, newer PDF interactions and legacy save protection;
+- navigation / PR #110 `7e5af83c4e6d26247ccf91d2b03c47a816f46231`, including
+  complete worksheet-view captures and the newer evidence inventory repair;
+- exact canonical Quds main `eae58542dffd73cf30e97cc60a59a5474656d676` and
+  standalone DOC parser `d422fa99a3a84830794f0e2dc332d59f923779f7`, as pinned
+  in the incoming main manifest. The 2,214-file managed-source check passes.
+
+The current checker uses `--layout checkout` for a working checkout and
+`--layout artifact` for downloaded bundles. Artifact discovery includes partial
+and otherwise-unused wrappers so duplicate or undeclared output cannot hide
+outside the principal host tree. Both checkout-history regression cases are
+retained with the explicit checkout layout. Historical evidence remains intact.
+
+The earlier canonical integration branch remains a durable history checkpoint;
+the final app mirror follows the newer canonical main pin. This reconciliation
+does not close another PR or merge the storage branch into upstream main.
+
+The storage evidence directory records qualification against the saved combined
+source. Earlier totals above remain historical and do not establish current
+runtime, rendering or external schema acceptance.

@@ -2,6 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// True only after the native window has accepted the active PDF toolbar.
+final nativePdfToolbarReadyProvider = StateProvider<bool>((ref) => false);
 
 /// Native macOS window chrome; commands remain owned by the Flutter browser.
 class MacBrowserToolbar {
@@ -18,8 +22,9 @@ class MacBrowserToolbar {
       !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
   Future<void> _handle(MethodCall call) async {
-    if (_disposed || call.method != 'action' || call.arguments is! String)
+    if (_disposed || call.method != 'action' || call.arguments is! String) {
       return;
+    }
     final id = call.arguments as String;
     if (_enabled.contains(id)) await onAction(id);
   }

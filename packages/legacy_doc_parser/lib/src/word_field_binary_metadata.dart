@@ -34,7 +34,8 @@ extension _WordFieldBinaryMetadata on _StructuredWordWriter {
         artifact.source.structure != 'NilPICFAndBinData' ||
         artifact.source.offset < 0 ||
         artifact.source.length != artifact.bytes.length ||
-        _internalHfdLocation(artifact.bytes) != anchor) {
+        (!_emptyBinData(artifact.bytes) &&
+            _internalHfdLocation(artifact.bytes) != anchor)) {
       return null;
     }
     // Preserve every original UTF-16 offset used by nested-field/event slicing.
@@ -43,8 +44,11 @@ extension _WordFieldBinaryMetadata on _StructuredWordWriter {
 
   String? _externalHyperlinkInstruction(LegacyWordField field) {
     if (field.type.toUpperCase() != 'HYPERLINK') return null;
+    // Optional display switches after the target (\o "tip", \t "_blank",
+    // \n, \m) are part of an ordinary HYPERLINK instruction.
     final match = RegExp(
-      r'^\s*HYPERLINK\s+(?:"([^"\x00-\x1f]+)"|([^\s"\\\x00-\x1f]+))\s*\x01\s*$',
+      r'^\s*HYPERLINK\s+(?:"([^"\x00-\x1f]+)"|([^\s"\\\x00-\x1f]+))'
+      r'(?:\s+\\[mnot](?:\s+"[^"\x00-\x1f]*")?)*\s*\x01\s*$',
       caseSensitive: false,
     ).firstMatch(field.instruction);
     if (match == null) return null;
@@ -58,7 +62,8 @@ extension _WordFieldBinaryMetadata on _StructuredWordWriter {
         artifact.source.structure != 'NilPICFAndBinData' ||
         artifact.source.offset < 0 ||
         artifact.source.length != artifact.bytes.length ||
-        _externalHfdUrl(artifact.bytes) != target) {
+        (!_emptyBinData(artifact.bytes) &&
+            _externalHfdUrl(artifact.bytes) != target)) {
       return null;
     }
     // No URL resolution, canonicalization or traversal. The field already
@@ -92,6 +97,18 @@ extension _WordFieldBinaryMetadata on _StructuredWordWriter {
       location.$2,
     );
   }
+}
+
+/// A NilPICFAndBinData whose binData is empty: only the 68-byte header
+/// (lcb == cbHeader == 68). Word 2010 and later write HYPERLINK fields this
+/// way; the field instruction is then the only statement of the target and
+/// there is no binary copy that could contradict it. A present but
+/// different HFD still disqualifies the field.
+bool _emptyBinData(Uint8List bytes) {
+  if (bytes.length != 68) return false;
+  final data = ByteData.sublistView(bytes);
+  return data.getInt32(0, Endian.little) == 68 &&
+      data.getUint16(4, Endian.little) == 68;
 }
 
 ByteData? _hfdHeader(Uint8List bytes, int bits) {

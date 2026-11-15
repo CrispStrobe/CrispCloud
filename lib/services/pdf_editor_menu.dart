@@ -1,7 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Commands shared by the PDF editor and the app menu bar.
-enum PdfEditorMenuAction { save, saveCopy, exportCopy, close, undo, redo }
+enum PdfEditorMenuAction {
+  save,
+  saveCopy,
+  exportCopy,
+  close,
+  undo,
+  redo,
+  attachNote,
+}
 
 /// A snapshot of the active PDF editor's command availability.
 class PdfEditorMenuActions {
@@ -13,6 +21,9 @@ class PdfEditorMenuActions {
     required this.canClose,
     required this.canUndo,
     required this.canRedo,
+    this.canAttachNote = false,
+    this.title = '',
+    this.sessionId = '',
   });
 
   final void Function(PdfEditorMenuAction action) perform;
@@ -22,6 +33,9 @@ class PdfEditorMenuActions {
   final bool canClose;
   final bool canUndo;
   final bool canRedo;
+  final bool canAttachNote;
+  final String title;
+  final String sessionId;
 
   bool isEnabled(PdfEditorMenuAction action) {
     return switch (action) {
@@ -31,6 +45,7 @@ class PdfEditorMenuActions {
       PdfEditorMenuAction.close => canClose,
       PdfEditorMenuAction.undo => canUndo,
       PdfEditorMenuAction.redo => canRedo,
+      PdfEditorMenuAction.attachNote => canAttachNote,
     };
   }
 

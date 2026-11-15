@@ -55,6 +55,9 @@ jobs:
           test/pdf_operations_host_test.dart
           test/widget/pdf_operations_dialog_test.dart
           test/pdf_font_licenses_test.dart
+          test/pdf_selection_note_test.dart
+          test/mac_browser_toolbar_test.dart
+          test/widget/pdf_floating_toolbars_test.dart
           test/pdf_edit_session_test.dart
           test/pdf_file_store_test.dart
           test/pdf_device_export_test.dart

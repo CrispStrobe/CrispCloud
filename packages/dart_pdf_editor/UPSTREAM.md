@@ -146,3 +146,10 @@ plus CrispCloud's PDF integration tests and web build. Preserve existing
 credential-storage behavior unless a separate migration is deliberately
 implemented. Format local edits with `dart format --language-version=3.5` to
 match this upstream version without rewriting all of its sources.
+
+## Compact independent toolbar cards
+
+CrispCloud adds optional primary/context card visibility, a move-handle slot
+and dense card padding to `PdfEditingToolbar`. Defaults preserve the combined
+upstream layout. The host uses the same command controller for both cards and
+persists their independent positions; no annotation tools are reimplemented.
