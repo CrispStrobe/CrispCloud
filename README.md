@@ -49,6 +49,10 @@ UTF-16 `.strings` files with unknown extensions. Ambiguous prose stays plain
 text. Right-click or long-press the current pane path to copy it, manage its
 favorite, open it in the other pane, or swap pane locations.
 
+File → Print (Cmd/Ctrl+P) is available in suitable viewers and editors,
+using the current document without saving it. Markdown, HTML and EPUB use an
+explicitly labelled text layout. See [printing support and limits](docs/document-printing.md).
+
 ## Providers
 
 | Provider | Features |

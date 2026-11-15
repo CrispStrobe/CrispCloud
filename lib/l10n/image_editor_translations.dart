@@ -119,6 +119,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': 'Free',
     'Original': 'Original',
     'Could not open image': 'Could not open image',
+    'Could not open text editor': 'Could not open text editor',
     'Could not save image': 'Could not save image',
     'Could not apply changes': 'Could not apply changes',
     'This image format is not supported for editing.':
@@ -296,6 +297,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': 'Frei',
     'Original': 'Original',
     'Could not open image': 'Bild konnte nicht geöffnet werden',
+    'Could not open text editor': 'Texteditor konnte nicht geöffnet werden',
     'Could not save image': 'Bild konnte nicht gespeichert werden',
     'Could not apply changes': 'Änderungen konnten nicht angewendet werden',
     'This image format is not supported for editing.':
@@ -470,6 +472,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': 'Libre',
     'Original': 'Original',
     'Could not open image': 'Impossible d’ouvrir l’image',
+    'Could not open text editor': 'Impossible d’ouvrir l’éditeur de texte',
     'Could not save image': 'Impossible d’enregistrer l’image',
     'Could not apply changes': 'Impossible d’appliquer les modifications',
     'This image format is not supported for editing.':
@@ -645,6 +648,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': 'Libre',
     'Original': 'Original',
     'Could not open image': 'No se pudo abrir la imagen',
+    'Could not open text editor': 'No se pudo abrir el editor de texto',
     'Could not save image': 'No se pudo guardar la imagen',
     'Could not apply changes': 'No se pudieron aplicar los cambios',
     'This image format is not supported for editing.':
@@ -820,6 +824,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': 'Livre',
     'Original': 'Original',
     'Could not open image': 'Não foi possível abrir a imagem',
+    'Could not open text editor': 'Não foi possível abrir o editor de texto',
     'Could not save image': 'Não foi possível salvar a imagem',
     'Could not apply changes': 'Não foi possível aplicar as alterações',
     'This image format is not supported for editing.':
@@ -996,6 +1001,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': '自由',
     'Original': '原始',
     'Could not open image': '无法打开图像',
+    'Could not open text editor': '无法打开文本编辑器',
     'Could not save image': '无法保存图像',
     'Could not apply changes': '无法应用更改',
     'This image format is not supported for editing.': '此图像格式不支持编辑。',
@@ -1172,6 +1178,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': '自由',
     'Original': '元の比率',
     'Could not open image': '画像を開けませんでした',
+    'Could not open text editor': 'テキストエディターを開けませんでした',
     'Could not save image': '画像を保存できませんでした',
     'Could not apply changes': '変更を適用できませんでした',
     'This image format is not supported for editing.': 'この画像形式は編集に対応していません。',
@@ -1352,6 +1359,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': '자유',
     'Original': '원본',
     'Could not open image': '이미지를 열 수 없습니다',
+    'Could not open text editor': '텍스트 편집기를 열 수 없습니다',
     'Could not save image': '이미지를 저장할 수 없습니다',
     'Could not apply changes': '변경 사항을 적용할 수 없습니다',
     'This image format is not supported for editing.': '이 이미지 형식은 편집할 수 없습니다.',
@@ -1532,6 +1540,7 @@ const imageEditorTranslations = <String, Map<String, String>>{
     'Free': 'حر',
     'Original': 'أصلي',
     'Could not open image': 'تعذّر فتح الصورة',
+    'Could not open text editor': 'تعذّر فتح محرر النص',
     'Could not save image': 'تعذّر حفظ الصورة',
     'Could not apply changes': 'تعذّر تطبيق التغييرات',
     'This image format is not supported for editing.':

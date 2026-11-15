@@ -367,24 +367,25 @@ class CropCornerPainter extends CustomPainter {
         cropRect.bottomLeft,
         cropRect.bottomRight,
       ]) {
-        canvas.drawCircle(
-          point,
-          radius,
-          Paint()
-            ..color = style.cropCornerColor.withValues(
-              alpha: fadeInOpacity * frameOpacity,
-            ),
-        );
-        canvas.drawCircle(
-          point,
-          radius,
-          Paint()
-            ..color = style.background.withValues(
-              alpha: fadeInOpacity * frameOpacity,
-            )
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.5 / rotationScaleFactor,
-        );
+        canvas
+          ..drawCircle(
+            point,
+            radius,
+            Paint()
+              ..color = style.cropCornerColor.withValues(
+                alpha: fadeInOpacity * frameOpacity,
+              ),
+          )
+          ..drawCircle(
+            point,
+            radius,
+            Paint()
+              ..color = style.background.withValues(
+                alpha: fadeInOpacity * frameOpacity,
+              )
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.5 / rotationScaleFactor,
+          );
       }
     } else {
       double calculateAngleFromArcLength(

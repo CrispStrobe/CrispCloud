@@ -50,6 +50,7 @@ class DocumentPrintScope extends ConsumerStatefulWidget {
 }
 
 class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
+  final _shortcutFocus = FocusNode(debugLabel: 'Document print shortcuts');
   bool _running = false;
   bool _scheduled = false;
   late final ProviderContainer _container;
@@ -113,9 +114,13 @@ class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
     } finally {
       if (mounted) {
         setState(() => _running = false);
-        if ((_route?.isCurrent ?? true) &&
-            previousFocus?.context?.mounted == true) {
-          previousFocus?.requestFocus();
+        if (_route?.isCurrent ?? true) {
+          if (previousFocus?.context?.mounted == true &&
+              previousFocus!.ancestors.contains(_shortcutFocus)) {
+            previousFocus.requestFocus();
+          } else {
+            _shortcutFocus.requestFocus();
+          }
         }
       }
     }
@@ -132,12 +137,21 @@ class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
         const SingleActivator(LogicalKeyboardKey.keyP, control: true): () =>
             unawaited(_run()),
       },
-      child: _PrintState(action: _action, busy: _running, child: widget.child),
+      child: Focus(
+        focusNode: _shortcutFocus,
+        autofocus: true,
+        child: _PrintState(
+          action: _action,
+          busy: _running,
+          child: widget.child,
+        ),
+      ),
     );
   }
 
   @override
   void dispose() {
+    _shortcutFocus.dispose();
     scheduleMicrotask(() {
       try {
         if (identical(_container.read(documentPrintProvider), _action)) {

@@ -2528,11 +2528,11 @@ class ProImageEditorState extends State<ProImageEditor>
     Duration duration = const Duration(milliseconds: 150),
   }) async {
     if (!mounted || isSubEditorOpen || isSubEditorClosing) return;
-    if (textEditorConfigs.enableInlineEditing) {
-      _openInlineTextEditor();
-      return;
-    }
     try {
+      if (textEditorConfigs.enableInlineEditing) {
+        _openInlineTextEditor();
+        return;
+      }
       final customCallback = mainEditorCallbacks?.onCreateTextLayer;
       TextLayer? layer;
 
@@ -2586,9 +2586,9 @@ class ProImageEditorState extends State<ProImageEditor>
       color: textEditorConfigs.initialPrimaryColor,
       background: secondary ?? const Color(0xFFFFFFFF),
       customSecondaryColor: secondary != null,
-      textStyle:
-          textEditorConfigs.customTextStyles?.first ??
-          textEditorConfigs.defaultTextStyle,
+      textStyle: (textEditorConfigs.customTextStyles?.isNotEmpty == true
+          ? textEditorConfigs.customTextStyles!.first
+          : textEditorConfigs.defaultTextStyle),
     );
     // The screenshot is taken once the text is written.
     addLayer(layer, blockCaptureScreenshot: true);

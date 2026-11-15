@@ -486,7 +486,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     } catch (error, stack) {
       _log.warn('Could not open image text tool', error, stack);
       if (mounted) {
-        _showMessage('Could not open text editor: $error', error: true);
+        _showMessage(
+          'Could not open text editor',
+          error: true,
+          details: error.toString(),
+        );
       }
     } finally {
       _openingText = false;
@@ -834,10 +838,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     });
   }
 
-  void _showMessage(String key, {bool error = false}) {
+  void _showMessage(String key, {bool error = false, String? details}) {
     _messenger.currentState?.showSnackBar(
       SnackBar(
-        content: Text(context.imageTr(key)),
+        content: Text(
+          '${context.imageTr(key)}${details == null ? '' : ': $details'}',
+        ),
         backgroundColor: error ? Theme.of(context).colorScheme.error : null,
       ),
     );

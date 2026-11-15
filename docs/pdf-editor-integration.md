@@ -100,3 +100,13 @@ to embed the editor.
 6. The Material boundary is limited to the editor surface.
 
 Only after these gates should the PDF editor become a product dependency.
+
+## Floating toolbar defaults and printing (2026-11-15)
+
+New/default layouts use vertical primary tools at the left edge of the actual
+PDF viewport and vertical secondary tools at its right edge. Thumbnail and
+other docked panels are excluded from the overlay bounds, including after
+resizing. Explicit saved toolbar positions/orientations remain respected;
+both bars can still be moved independently. Reset restores the new defaults.
+File → Print uses the live document, including pending ink and current page,
+without saving or clearing its dirty state. See [printing](document-printing.md).

@@ -60,6 +60,8 @@ jobs:
           test/pdf_selection_note_test.dart
           test/mac_browser_toolbar_test.dart
           test/widget/pdf_floating_toolbars_test.dart
+          test/document_printing_test.dart
+          test/widget/document_print_scope_test.dart
           test/pdf_document_workspace_portability_test.dart
           test/document_history_test.dart
           test/new_document_test.dart

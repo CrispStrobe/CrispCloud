@@ -221,3 +221,24 @@ Native application build results remain visible separately on the pull request.
 These are CI execution results; the local editing environment could not start
 the Dart VM. No credential-dependent cloud provider test is implied by the
 real-file and rendered-editor results above.
+
+## Text launch recovery and crop handles (2026-11-15)
+
+The host awaits Text opening, rejects overlapping launches and reports an
+original exception with its stack in the application log. A failed launch
+returns control for retry. The engine resets failed subeditor state, handles
+empty custom font lists and ignores late callbacks after disposal. Native
+segmentation faults cannot be caught by Dart; a successful lifecycle test does
+not establish the root cause of a previously reported process exit.
+
+Four visible crop grips have larger corner-first hit targets. Hit testing
+uses the painted crop rectangle after translation and zoom, so corner drags
+retain both-axis intent while edge drags retain one-axis intent.
+
+The shared `test/support/image_text_lifecycle.dart` exercises actual tool
+opening, repeated cancellation, typing, applying, explicit saving, injected
+launch failure/retry and diagonal crop dragging. It is run as widget tests
+with all three desktop UI variants and as an actual macOS integration test.
+The test store is isolated from user files. Window close/termination breadcrumbs
+are retained in the app's Application Support `window_lifecycle.log` (bounded
+size) to distinguish a normal last-window exit from an OS crash report.
