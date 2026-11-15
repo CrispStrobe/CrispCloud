@@ -1,0 +1,130 @@
+00:00 +0: loading /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/ssh_terminal_live_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  live-ssh was used in the suite itself
+
+00:00 +0: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho73b9s1sm0 established to 127.0.0.1:39925
+ℹ️ [SshTerminalService] execute(ho73b9s1sm0)
+ℹ️ [SshTerminalService] Disconnecting session ho73b9s1sm0
+ℹ️ [SshTerminalService] Session ho73b9x8b71 established to 127.0.0.1:39925
+ℹ️ [SshTerminalService] execute(ho73b9x8b71)
+ℹ️ [SshTerminalService] Disconnecting session ho73b9x8b71
+00:00 +1: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho73ba1kve0 established to 127.0.0.1:39925
+ℹ️ [SshTerminalService] Disconnecting session ho73ba1kve0
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:39925. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:SomUaOd27HylhCZJTOGkIvTKE0Cf75itMc9e37ctEv4.
+00:00 +2: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+ℹ️ [SshTerminalService] Session ho73ba7ngb0 established to 127.0.0.1:39925
+ℹ️ [SshTerminalService] startShell(ho73ba7ngb0)
+ℹ️ [SshTerminalService] Disconnecting session ho73ba7ngb0
+00:01 +2 -1: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status [E]
+  SSHStateError(SSH connection closed)
+  package:dartssh2/src/utils/terminal_state.dart 30:44           TerminalState.terminate
+  package:dartssh2/src/utils/async_queue.dart 48:40              AsyncQueue.closeWithError
+  package:dartssh2/src/ssh_channel.dart 315:24                   SSHChannelController._finish
+  package:dartssh2/src/ssh_channel.dart 297:5                    SSHChannelController.destroy
+  package:dartssh2/src/ssh_client.dart 934:15                    SSHClient._closeChannels
+  package:dartssh2/src/ssh_client.dart 973:7                     SSHClient._handleTransportClosed
+  package:dartssh2/src/ssh_client.dart 321:14                    new SSHClient.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                     _Completer.completeError
+  package:dartssh2/src/utils/async_queue.dart 53:17              AsyncQueue.closeWithError
+  package:dartssh2/src/ssh_channel.dart 315:24                   SSHChannelController._finish
+  package:dartssh2/src/ssh_channel.dart 297:5                    SSHChannelController.destroy
+  package:dartssh2/src/ssh_client.dart 934:15                    SSHClient._closeChannels
+  package:dartssh2/src/ssh_client.dart 973:7                     SSHClient._handleTransportClosed
+  package:dartssh2/src/ssh_client.dart 321:14                    new SSHClient.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                     Future.then
+  package:dartssh2/src/ssh_client.dart 320:21                    new SSHClient
+  package:crisp_storage/src/host_keys.dart 98:18                 openVerifiedSsh
+  package:crisp_cloud/services/ssh_terminal_service.dart 603:49  SshTerminalService._openRoute
+  ===== asynchronous gap ===========================
+  dart:async                                                     _CustomZone.registerUnaryCallback
+  package:crisp_cloud/services/ssh_terminal_service.dart 579:15  SshTerminalService._openRoute
+  package:crisp_cloud/services/ssh_terminal_service.dart 493:24  SshTerminalService._connect
+  package:crisp_cloud/services/ssh_terminal_service.dart 405:12  SshTerminalService.connectWithKey
+  test/ssh_terminal_live_test.dart 53:12                         main.<fn>.connect
+  test/ssh_terminal_live_test.dart 124:31                        main.<fn>.<fn>
+
+00:01 +2 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+OpenSSH jump fixture log:
+Server listening on 127.0.0.1 port 52543.
+Connection from 127.0.0.1 port 33630 on 127.0.0.1 port 52543 rdomain ""
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 33630
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 39602 on 127.0.0.1 port 52543 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 39602 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 81
+Connection closed by 127.0.0.1 port 39602
+Transferred: sent 4480, received 2852 bytes
+Closing connection to 127.0.0.1 port 39602
+Connection from 127.0.0.1 port 39604 on 127.0.0.1 port 52543 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 39604 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 88
+Connection closed by 127.0.0.1 port 39604
+Transferred: sent 4464, received 2836 bytes
+Closing connection to 127.0.0.1 port 39604
+Connection from 127.0.0.1 port 39620 on 127.0.0.1 port 52543 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 39620 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 95
+Read error from remote host 127.0.0.1 port 39620: Connection reset by peer
+Connection from 127.0.0.1 port 39628 on 127.0.0.1 port 52543 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 39628 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 101
+Read error from remote host 127.0.0.1 port 39628: Connection reset by peer
+Connection from 127.0.0.1 port 39632 on 127.0.0.1 port 52543 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 39632 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 106
+Read error from remote host 127.0.0.1 port 39632: Connection reset by peer
+
+OpenSSH target fixture log:
+Server listening on 127.0.0.1 port 39925.
+Connection from 127.0.0.1 port 55668 on 127.0.0.1 port 39925 rdomain ""
+kex_exchange_identification: Connection closed by remote host
+Connection closed by 127.0.0.1 port 55668
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 55684 on 127.0.0.1 port 39925 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 55684 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 84
+Starting session: command for agent from 127.0.0.1 port 55684 id 0
+Close session: user agent from 127.0.0.1 port 55684 id 0
+Connection closed by 127.0.0.1 port 55684
+Transferred: sent 2064, received 1232 bytes
+Closing connection to 127.0.0.1 port 55684
+Connection from 127.0.0.1 port 55698 on 127.0.0.1 port 39925 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 55698 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 91
+Starting session: command for agent from 127.0.0.1 port 55698 id 0
+Close session: user agent from 127.0.0.1 port 55698 id 0
+Connection closed by 127.0.0.1 port 55698
+Transferred: sent 2048, received 1216 bytes
+Closing connection to 127.0.0.1 port 55698
+Connection from 127.0.0.1 port 55702 on 127.0.0.1 port 39925 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 55702 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 98
+Connection closed by 127.0.0.1 port 55702
+Transferred: sent 1860, received 1088 bytes
+Closing connection to 127.0.0.1 port 55702
+Connection from 127.0.0.1 port 55718 on 127.0.0.1 port 39925 rdomain ""
+Connection closed by 127.0.0.1 port 55718 [preauth]
+srclimit_penalise: ipv4: new 127.0.0.1/32 deferred penalty of 1 seconds for penalty: connections without attempting authentication
+Connection from 127.0.0.1 port 55722 on 127.0.0.1 port 39925 rdomain ""
+Accepted key ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY found at /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/.dart_tool/terminal-live-smoke/route-f4812k_l/client.pub:1
+Accepted publickey for agent from 127.0.0.1 port 55722 ssh2: ED25519 SHA256:x6ffwKi9MlxYBPnb5wFPRhbowLDIy9SPhkHjsQWD4WY
+User child is on pid 109
+chown(/dev/pts/0, 1000, 5) failed: Invalid argument
+Attempt to write login records by non-root user (aborting)

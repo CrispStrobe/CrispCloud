@@ -1,0 +1,30 @@
+-j/--concurrency was parsed but will be ignored, this option is not supported when running Integration Tests or web tests.
+00:00 +0: loading /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/terminal_session_test.dart
+[CHROME]:[137:137:1115/232518.116303:FATAL:chrome/browser/process_singleton_posix.cc:297] Check failed: . socket() failed: Operation not permitted (1)
+[CHROME]:[1115/232518.116530:ERROR:third_party/crashpad/crashpad/util/linux/scoped_ptrace_attach.cc:27] ptrace: Operation not permitted (1)
+[CHROME]:[159:159:0100/000000.153364:ERROR:content/zygote/zygote_linux.cc:662] write: Broken pipe (32)
+[CHROME]:[155:155:0100/000000.165733:ERROR:content/zygote/zygote_linux.cc:662] write: Broken pipe (32)
+Failed to launch browser after 3 tries. Command used to launch it: /workspace/scratch/3517d212389a/.terminal-tools/bin/chromium-test --user-data-dir=/workspace/scratch/3517d212389a/.terminal-tools/tmp/flutter_tools.QOFEMW/flutter_tools_chrome_device.HJWZPG --remote-debugging-port=34137 --disable-background-timer-throttling --disable-extensions --disable-popup-blocking --bwsi --no-first-run --no-default-browser-check --disable-default-apps --disable-translate --disable-search-engine-choice-screen --no-sandbox --headless --window-size=2400,1800 http://localhost:40261/static/index.html?managerUrl=ws%3A%2F%2Flocalhost%3A40261%2F0&debug=false
+00:00 +0 -1: loading /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/terminal_session_test.dart [E]
+  Failed to load "/workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/terminal_session_test.dart": Failed to launch browser. Make sure you are using an up-to-date Chrome or Edge. Otherwise, consider using -d web-server instead and filing an issue at https://github.com/flutter/flutter/issues.
+  package:flutter_tools/src/base/common.dart 34:3                  throwToolExit
+  package:flutter_tools/src/web/chrome.dart 341:17                 ChromiumLauncher._spawnChromiumProcess.<fn>
+  dart:async/stream_pipe.dart 14:23                                _runUserCode
+  dart:async/stream.dart 1787:11                                   Stream.firstWhere.<fn>
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/web/chrome.dart 314:7                  ChromiumLauncher._spawnChromiumProcess
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/web/chrome.dart 254:29                 ChromiumLauncher.launch
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/test/flutter_web_platform.dart 874:29  BrowserManager.start
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/test/flutter_web_platform.dart 636:27  FlutterWebPlatform.load
+  ===== asynchronous gap ===========================
+  package:test_core/src/runner/loader.dart 249:27                  Loader.loadFile.<fn>
+  ===== asynchronous gap ===========================
+  package:test_core/src/runner/load_suite.dart 95:21               new LoadSuite.<fn>.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/terminal_session_test.dart: loading /workspace/scratch/3517d212389a/.terminal-tools/focused-harness/test/terminal_session_test.dart

@@ -1,0 +1,1195 @@
+{
+  "checked_at_utc": "2026-11-15T22:44:12.093803+00:00",
+  "workflow_sha256": "c5b917a29231f694950a4e693933f47dfe506e5de6387d08f765aeae7114eb3b",
+  "yaml_parses": true,
+  "all_referenced_tests_exist": true,
+  "referenced_test_occurrences": 169,
+  "unique_resolved_test_paths": 103,
+  "python_smoke_runners_parse": true,
+  "github_actions_queried": false,
+  "checks": [
+    {
+      "job": "analyze",
+      "step": "Shared SMB reconnect and resume regression",
+      "directory": "packages/crisp_storage",
+      "test": "test/smb_transfer_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/aes_siv_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/background_sync_mobile_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/backup_encryption_security_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/backup_service_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/config_services_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_bootstrap_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_config_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_first_setup_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_recovery_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_recovery_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_settings_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/credential_storage_setup_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/cryptomator_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/custom_ca_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/encryption_key_lifecycle_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/encryption_service_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/file_encryption_recovery_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/filen_adapter_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/filen_bounded_transfer_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/filen_crypto_validation_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/infrastructure_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/internxt_bounded_transfer_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/internxt_download_path_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/internxt_rewire_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/internxt_secure_config_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/keepass_crypto_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/keepass_extended_service_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/keepass_service_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/proxy_service_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/proxy_settings_i18n_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/secure_storage_file_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/secure_storage_macos_keychain_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/secure_storage_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/secure_storage_web_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/security_features_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/tls_verification_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/veracrypt_compatibility_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/veracrypt_container_reader_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/veracrypt_header_vectors_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/veracrypt_header_worker_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/veracrypt_panel_transfer_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/veracrypt_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Crypto audit regressions (published vectors and credential migration)",
+      "directory": ".",
+      "test": "test/web_master_password_gate_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Office encrypted-package integrity",
+      "directory": "packages/quds_office_engine",
+      "test": "test/office_crypto_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/background_transfer_journal_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/crypto_paths_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/encrypted_storage_wrapper_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/file_collection_paging_store_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/gcm_transfer_stream_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/integrity_recovery_native_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/local_file_service_symlink_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/native_ffi_crypto_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/native_metadata_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/native_metadata_windows_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Headless crypto tests (native FFI assertions + cross-path interop)",
+      "directory": ".",
+      "test": "test/transfer_journal_storage_io_test.dart",
+      "exists": true
+    },
+    {
+      "job": "crypto-gate",
+      "step": "Native terminal smoke tests",
+      "directory": ".",
+      "test": "test/terminal_process_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "IndexedDB concurrency and paged restart recovery",
+      "directory": ".",
+      "test": "test/file_collection_browser_storage_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/screen_session_options_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_config_import_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_config_import_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_gateway_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_jump_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_jump_host_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_jump_transport_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_discovery_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_session_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_sessions_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_terminal_connect_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_terminal_gateway_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_terminal_profiles_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_terminal_profiles_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_terminal_reconnect_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/ssh_terminal_transport_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_arrangements_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_arrangements_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_arrangements_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_broadcast_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_broadcast_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_key_bindings_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_key_bindings_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_pane_layout_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_search_bar_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_search_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_session_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_shell_directory_labels_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_shell_integration_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_tabs_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_user_input_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/terminal_workspace_web_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Terminal input and explicit SSH gateway",
+      "directory": ".",
+      "test": "test/tmux_session_options_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Browser credential vault authentication and compatibility",
+      "directory": ".",
+      "test": "test/filen_secure_config_browser_test.dart",
+      "exists": true
+    },
+    {
+      "job": "collection-browser",
+      "step": "Browser credential vault authentication and compatibility",
+      "directory": ".",
+      "test": "test/secure_storage_web_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal regression tests (Windows ConPTY)",
+      "directory": ".",
+      "test": "test/terminal_process_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal regression tests (Windows ConPTY)",
+      "directory": ".",
+      "test": "test/terminal_session_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal regression tests (Windows ConPTY)",
+      "directory": ".",
+      "test": "test/terminal_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/screen_session_options_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_config_import_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_config_import_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_jump_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_jump_host_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_jump_transport_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_discovery_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_session_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_sessions_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_terminal_connect_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_terminal_profiles_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_terminal_profiles_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_terminal_reconnect_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/ssh_terminal_transport_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_arrangements_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_arrangements_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_arrangements_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_broadcast_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_broadcast_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_key_bindings_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_key_bindings_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_pane_layout_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_search_bar_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_search_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_shell_directory_labels_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_shell_integration_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_tabs_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/terminal_user_input_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-windows",
+      "step": "Terminal workspace and remote session regressions",
+      "directory": ".",
+      "test": "test/tmux_session_options_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/azure_range_read_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/finder_extension_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/fuse_filesystem_protocol_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/fuse_mount_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/local_file_service_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/macos_fuse_helper_fixture_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/native_ffi_crypto_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/native_preview_error_localization_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/screen_session_command_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/screen_session_options_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/sftp_operation_localization_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_config_import_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_config_import_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_jump_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_jump_host_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_jump_transport_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_discovery_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_session_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_multiplexer_sessions_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_terminal_connect_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_terminal_profiles_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_terminal_profiles_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_terminal_reconnect_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/ssh_terminal_transport_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_arrangements_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_arrangements_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_arrangements_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_broadcast_dialog_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_broadcast_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_key_bindings_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_key_bindings_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_pane_layout_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_process_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_search_bar_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_search_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_session_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_shell_directory_labels_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_shell_integration_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_tabs_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_user_input_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/terminal_widget_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/tmux_session_options_test.dart",
+      "exists": true
+    },
+    {
+      "job": "build-macos",
+      "step": "macOS regression tests",
+      "directory": ".",
+      "test": "test/xdg_test.dart",
+      "exists": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_live_test.dart
+00:00 +0: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho73s3dxgt0 established to 127.0.0.1:52369
+ℹ️ [SshTerminalService] execute(ho73s3dxgt0)
+ℹ️ [SshTerminalService] Disconnecting session ho73s3dxgt0
+ℹ️ [SshTerminalService] Session ho73s3iwlq1 established to 127.0.0.1:52369
+ℹ️ [SshTerminalService] execute(ho73s3iwlq1)
+ℹ️ [SshTerminalService] Disconnecting session ho73s3iwlq1
+00:00 +1: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho73s3n0hf0 established to 127.0.0.1:52369
+ℹ️ [SshTerminalService] Disconnecting session ho73s3n0hf0
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:52369. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:z6a16PmiHecffnRXDV5ByPuUycDa0qmbdNezYy6COt4.
+00:00 +2: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+  Skip: Use --with-pty with an sshd allowed to write login records.
+00:00 +2 ~1: All tests passed!
