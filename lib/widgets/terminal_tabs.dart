@@ -963,6 +963,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                                   'Resize split',
                                 ),
                                 value: '${(fraction * 100).round()}%',
+                                increasedValue:
+                                    '${((fraction + 0.05).clamp(lower, 1 - lower) * 100).round()}%',
+                                decreasedValue:
+                                    '${((fraction - 0.05).clamp(lower, 1 - lower) * 100).round()}%',
                                 onIncrease: () => resize(usable * 0.05),
                                 onDecrease: () => resize(-usable * 0.05),
                                 child: MouseRegion(

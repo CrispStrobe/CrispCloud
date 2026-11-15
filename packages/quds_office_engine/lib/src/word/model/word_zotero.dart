@@ -128,8 +128,7 @@ final class ZoteroCitation {
     'citationItems': <Map<String, dynamic>>[
       for (final item in items) item.toJson(),
     ],
-    'schema':
-        'https://github.com/citation-style-language/schema/raw/master/csl-citation.json',
+    'schema': 'https://github.com/citation-style-language/schema/raw/master/csl-citation.json',
   });
 
   ZoteroCitation.fromJson(Map<String, dynamic> json)
@@ -313,7 +312,25 @@ abstract final class WordZotero {
     WmlParagraph paragraph,
     ZoteroCitation citation, {
     int? index,
+  }) => insertNativeCitation(
+    paragraph,
+    instruction: citation.fieldInstruction,
+    text: citation.plainCitation,
+    index: index,
+  );
+
+  /// Inserts a validated native Zotero result as one atomic inline field.
+  /// Mixed character formatting must be reviewed by the caller before it is
+  /// simplified; a uniformly formatted result retains its character style.
+  static void insertNativeCitation(
+    WmlParagraph paragraph, {
+    required String instruction,
+    required String text,
+    int? index,
+    ZoteroFormattedText? formattedText,
   }) {
+    _validateNativeInstruction(instruction, ZoteroFieldKind.citation);
+    _assertFormattedText(text, formattedText);
     if (paragraph.properties.fieldInstruction?.trim().isNotEmpty == true ||
         paragraph.properties.pageNumberField) {
       throw UnsupportedError(
@@ -326,16 +343,92 @@ abstract final class WordZotero {
       index ?? paragraph.text.length,
     ).start;
     final boundaryIndex = _complexInsertionIndex(paragraph, at);
+    final base = WmlRunEdit.propsAt(paragraph, at == 0 ? 0 : at - 1).copy();
     final run = WmlRun(
-      text: citation.plainCitation,
-      properties: WmlRunEdit.propsAt(paragraph, at == 0 ? 0 : at - 1).copy(),
-      fieldInstruction: citation.fieldInstruction,
+      text: text,
+      properties: _atomicProperties(formattedText, base),
+      fieldInstruction: instruction,
     );
     if (boundaryIndex == null) {
       WmlRunEdit.insertRuns(paragraph, at, <WmlRun>[run]);
     } else {
       WordContentControls.assertCanEdit(paragraph, at, at);
       paragraph.inlines.insert(boundaryIndex, run);
+    }
+  }
+
+  /// Replaces the exact code and result supplied by Zotero's document processor.
+  /// This does not invent a citation cache from embedded item metadata.
+  static void replaceNativeResult(
+    WmlZoteroField field, {
+    required String instruction,
+    required String text,
+    ZoteroFormattedText? formattedText,
+  }) {
+    _validateNativeInstruction(instruction, field.kind);
+    _assertFormattedText(text, formattedText);
+    final base = WmlRunEdit.propsAt(field.paragraph, field.start).copy();
+    _replace(
+      field,
+      instruction,
+      text,
+      formattedText: field.kind == ZoteroFieldKind.bibliography
+          ? formattedText
+          : null,
+      preserveSameText: formattedText == null,
+    );
+    if (field.kind == ZoteroFieldKind.citation && formattedText != null) {
+      final current = _storyFields(<WmlParagraph>[field.paragraph]).firstWhere(
+        (candidate) =>
+            candidate.start == field.start &&
+            candidate.instruction == instruction,
+      );
+      if (current.run != null) {
+        current.run!.properties = _atomicProperties(formattedText, base);
+      }
+    }
+  }
+
+  static WmlRunProps _atomicProperties(
+    ZoteroFormattedText? text,
+    WmlRunProps base,
+  ) =>
+      text != null &&
+          text.hasUniformCharacterFormatting &&
+          text.spans.isNotEmpty
+      ? text.toRuns(baseProperties: base).first.properties
+      : base;
+
+  static void _validateNativeInstruction(
+    String instruction,
+    ZoteroFieldKind kind,
+  ) {
+    if (kindOfInstruction(instruction) != kind ||
+        metadataOf(instruction) == null) {
+      throw const FormatException('Zotero returned an invalid native field.');
+    }
+    if (kind == ZoteroFieldKind.citation) {
+      ZoteroCitation.fromJson(metadataOf(instruction)!);
+    }
+  }
+
+  /// Deletes one editable field packet, including its cached result.
+  static void delete(WmlZoteroField field) {
+    if (!field.canEdit) {
+      throw UnsupportedError('This Zotero field cannot be deleted safely.');
+    }
+    _assertCurrent(field);
+    WordContentControls.assertCanEdit(field.paragraph, field.start, field.end);
+    if (field.run != null) {
+      field.paragraph.inlines.remove(field.run);
+    } else if (field.wholeParagraph) {
+      field.paragraph.inlines.clear();
+      _clearParagraphField(field.paragraph);
+    } else {
+      final boundaries = field._boundaries[field.paragraph]!;
+      final start = field.paragraph.inlines.indexOf(boundaries.first);
+      final end = field.paragraph.inlines.indexOf(boundaries.last);
+      field.paragraph.inlines.removeRange(start, end + 1);
     }
   }
 
@@ -477,6 +570,23 @@ abstract final class WordZotero {
       text,
       formattedText: formattedText,
     );
+  }
+
+  /// Whether rich bibliography runs can replace this complete paragraph while
+  /// retaining all outside content and structural markers.
+  static bool canReplaceFormattedBibliography(WmlZoteroField field) {
+    if (field.kind != ZoteroFieldKind.bibliography || !field.canEdit)
+      return false;
+    final paragraph = field.paragraph;
+    return field.wholeParagraph ||
+        (field.run != null &&
+            paragraph.inlines.length == 1 &&
+            identical(paragraph.inlines.single, field.run) &&
+            field.run!.commentIds.isEmpty &&
+            paragraph.contentControlWrappers.isEmpty &&
+            paragraph.properties.fieldInstruction == null &&
+            !paragraph.properties.pageNumberField) ||
+        _standaloneComplexField(field);
   }
 
   static void _assertFormattedText(
@@ -889,9 +999,8 @@ final class _OpenField {
   void addBoundary(WmlParagraph paragraph, WmlFieldBoundary boundary) {
     boundaries.putIfAbsent(paragraph, () => <WmlFieldBoundary>[]).add(boundary);
     if (boundary.kind == WmlFieldBoundaryKind.begin) {
-      locked = RegExp(
-        r'fldLock\s*=\s*["\x27](?:1|true|on)["\x27]',
-      ).hasMatch(boundary.sourceXml ?? '');
+      locked = RegExp(r'fldLock\s*=\s*["\x27](?:1|true|on)["\x27]')
+          .hasMatch(boundary.sourceXml ?? '');
     }
     if (boundary.runPropertiesXml?.trim().isNotEmpty == true) {
       opaqueMetadata = true;

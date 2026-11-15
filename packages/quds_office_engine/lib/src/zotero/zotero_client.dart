@@ -9,23 +9,36 @@ export 'zotero_models.dart';
 /// dart:io or Flutter, and never persists the API key.
 /// Transports must disable redirects, so a custom API-key header cannot be
 /// forwarded to another origin. Honor [ZoteroHttpRequest.followRedirects].
-typedef ZoteroTransport = Future<ZoteroHttpResponse> Function(
-  ZoteroHttpRequest request,
-);
+typedef ZoteroTransport =
+    Future<ZoteroHttpResponse> Function(ZoteroHttpRequest request);
 
 class ZoteroHttpRequest {
-  ZoteroHttpRequest({required this.uri, required Map<String, String> headers})
-    : headers = Map.unmodifiable(headers);
+  ZoteroHttpRequest({
+    required this.uri,
+    required Map<String, String> headers,
+    this.method = 'GET',
+    this.body,
+    this.timeout,
+  }) : headers = Map.unmodifiable(headers);
 
   final Uri uri;
   Uri get url => uri;
   final Map<String, String> headers;
-  String get method => 'GET';
+  final String method;
+
+  /// Encoded request data. Catalog requests never have a body. Citing requests
+  /// use JSON on the fixed desktop connector endpoints only.
+  final String? body;
+
+  /// Optional host-enforced request bound. A native Zotero picker can keep a
+  /// citing request pending while the user chooses sources or a citation style.
+  /// Hosts must still enforce their own maximum and reject unsupported routes.
+  final Duration? timeout;
   bool get followRedirects => false;
 
-  // Deliberately omit headers, which may contain a secret API key.
+  // Deliberately omit headers and body, which can contain credentials or data.
   @override
-  String toString() => 'ZoteroHttpRequest(GET ${uri.path})';
+  String toString() => 'ZoteroHttpRequest($method ${uri.path})';
 }
 
 class ZoteroHttpResponse {
@@ -233,9 +246,9 @@ class ZoteroClient {
     };
     final uri = _uri(path, parameters);
     final response = await _request(uri);
-    final items = _array(_decode(response))
-        .map((json) => _item(_object(json), library))
-        .toList();
+    final items = _array(
+      _decode(response),
+    ).map((json) => _item(_object(json), library)).toList();
     return _page(items, response, uri, start, limit);
   }
 
@@ -259,7 +272,9 @@ class ZoteroClient {
         ? null
         : _expectedIdentity(library, key, expectedCitationUri);
     final response = await _get('${_libraryPath(library)}/items/$key', {
-      'include': includeFormatted ? 'data,csljson,citation,bib' : 'data,csljson',
+      'include': includeFormatted
+          ? 'data,csljson,citation,bib'
+          : 'data,csljson',
       if (includeFormatted) ..._formatting(style, locale),
     });
     final item = _item(_object(_decode(response)), library);
@@ -379,7 +394,9 @@ class ZoteroClient {
     if (expectedItemUris == null) return null;
     if (expectedItemUris.length != keys.length ||
         keys.any((key) => !expectedItemUris.containsKey(key))) {
-      throw ArgumentError('Provide an identity for every selected Zotero item.');
+      throw ArgumentError(
+        'Provide an identity for every selected Zotero item.',
+      );
     }
     final expected = <String, Uri>{
       for (final key in keys)
@@ -493,8 +510,9 @@ class ZoteroClient {
         'Use a Zotero citation style identifier, such as apa.',
       );
     }
-    if (!RegExp(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$')
-        .hasMatch(locale)) {
+    if (!RegExp(
+      r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$',
+    ).hasMatch(locale)) {
       throw ArgumentError('Use a citation locale such as en-US.');
     }
     return {'style': style, 'locale': locale};

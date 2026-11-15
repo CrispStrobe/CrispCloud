@@ -44,3 +44,6 @@ packages/crisp_storage/rust_cloud/Cargo.lock text eol=lf
 
 # Unified-diff context lines are immutable evidence, including blank contexts.
 packages/legacy_doc_parser/doc/evidence/**/*.patch -whitespace
+
+# Retain hashed feature-validation command output verbatim.
+docs/validation/**/*.log -text -whitespace
