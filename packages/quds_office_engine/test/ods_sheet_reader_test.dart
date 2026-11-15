@@ -135,6 +135,19 @@ void edgeTests() {
     expect(merge.r1, 1);
     expect(sheet.cellA1('D1').horizontalAlign, SmlHAlign.center);
     expect(book.sheets[1].cellA1('A1').value, 41);
+    expect(sheet.comments.single.ref.a1, 'A5');
+    expect(sheet.comments.single.text, 'Review this');
+    expect(sheet.comments.single.author, 'Alice');
+    expect(sheet.cellA1('E3').value, 'A    B');
+    expect(sheet.cellA1('E4').value, 'L1\nL2');
+    expect(
+      styles.format(sheet.cellA1('F3').value, sheet.cellA1('F3').styleIndex),
+      '2024-03-04',
+    );
+    expect(
+      styles.format(sheet.cellA1('F4').value, sheet.cellA1('F4').styleIndex),
+      '2024-03-04 13:45',
+    );
   });
 
   test('edge ODS survives an xlsx round trip', () async {
@@ -146,6 +159,7 @@ void edgeTests() {
     expect(reopened.sheets.first.cellA1('A1').value, 45293);
     expect(reopened.sheets.first.cellA1('B1').formula, 'Sheet2!A1+1');
     expect(reopened.sheets.first.merges, hasLength(1));
+    expect(reopened.sheets.first.comments.single.text, 'Review this');
     expect(
       reopened.styles!.format(
         45293,
