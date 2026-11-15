@@ -38,6 +38,7 @@ import '../providers/providers.dart';
 import '../services/captured_file_target.dart';
 import '../services/office_device_export.dart';
 import '../services/log_service.dart';
+import '../services/office_zotero.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_recovery_strings.dart';
@@ -168,6 +169,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       GlobalKey<OfficeEditorRibbonState>();
   OfficeEditorMenuActions? _menuActions;
   ProviderContainer? _providerContainer;
+  final ZoteroSession _zoteroSession = ZoteroSession();
+  OfficeZoteroTransport? _zoteroTransport;
+  bool _zoteroCredentialsLoaded = false;
+  bool _zoteroOpen = false;
 
   OfficeSurfaceConfig _config = const OfficeSurfaceConfig(
     mode: OfficeInteractionMode.editing,
@@ -192,6 +197,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   @override
   void dispose() {
+    _zoteroTransport?.dispose();
+    _zoteroSession.apiKey = null;
     _workspace?.dispose();
     final ProviderContainer? container = _providerContainer;
     final OfficeEditorMenuActions? actions = _menuActions;
@@ -749,6 +756,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           onSave: () => unawaited(_save()),
           onSaveCopy: () => unawaited(_saveCopy()),
           onPrint: () => ref.read(documentPrintProvider)?.run(),
+          onZotero: _kind == OfficeEditorKind.word
+              ? () => unawaited(_showZotero())
+              : null,
           onClose: () => unawaited(_close()),
           onConfigChanged: _onConfigChanged,
           onFind: _requestFind,
@@ -759,6 +769,68 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         Expanded(child: editor),
       ],
     );
+  }
+
+  Future<void> _showZotero() async {
+    final controller = _controller;
+    if (_zoteroOpen ||
+        controller is! WordEditorController ||
+        !controller.config.allowsMutation) {
+      return;
+    }
+    _zoteroOpen = true;
+    OfficeZoteroTransport? transport;
+    try {
+      final credentials = OfficeZoteroCredentials(
+        ref.read(secureStorageProvider),
+      );
+      if (!_zoteroCredentialsLoaded) {
+        try {
+          final saved = await credentials.load();
+          if (!mounted || !identical(controller, _controller)) return;
+          _zoteroSession.apiKey = saved;
+          _zoteroSession.rememberKey = saved != null;
+          _zoteroCredentialsLoaded = true;
+        } on OfficeZoteroException catch (error) {
+          if (!mounted) return;
+          // Keep a key entered during this document session even if the
+          // initial credential-store read was unavailable.
+          _zoteroCredentialsLoaded = true;
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(context.tr(error.message))));
+        }
+      }
+      if (!mounted ||
+          !identical(controller, _controller) ||
+          !controller.config.allowsMutation) {
+        return;
+      }
+      transport = OfficeZoteroTransport(
+        createClient: ref.read(proxyServiceProvider).createHttpClient,
+      );
+      _zoteroTransport = transport;
+      await showWordZoteroDialog(
+        context,
+        controller: controller,
+        session: _zoteroSession,
+        transport: transport.send,
+        persistApiKey: credentials.canPersist ? credentials.save : null,
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr('Could not open Zotero. Please try again.'),
+            ),
+          ),
+        );
+      }
+    } finally {
+      transport?.dispose();
+      if (identical(_zoteroTransport, transport)) _zoteroTransport = null;
+      _zoteroOpen = false;
+    }
   }
 
   Widget _messagePane(String message, ThemeData theme) {

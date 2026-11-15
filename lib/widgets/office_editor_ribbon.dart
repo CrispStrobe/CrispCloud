@@ -53,6 +53,7 @@ class OfficeEditorRibbon extends StatefulWidget {
     required this.onSave,
     this.onSaveCopy,
     this.onPrint,
+    this.onZotero,
     required this.onClose,
     required this.onConfigChanged,
     required this.onFind,
@@ -67,6 +68,7 @@ class OfficeEditorRibbon extends StatefulWidget {
   final VoidCallback onSave;
   final VoidCallback? onSaveCopy;
   final VoidCallback? onPrint;
+  final VoidCallback? onZotero;
   final VoidCallback onClose;
   final ValueChanged<OfficeSurfaceConfig> onConfigChanged;
   final VoidCallback onFind;
@@ -232,6 +234,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _canMutate ? () => _insertNote(endnote: true) : null,
             icon: Icons.notes,
           ),
+          if (widget.onZotero != null)
+            _menuItem(
+              'Zotero…',
+              _canMutate ? widget.onZotero : null,
+              icon: Icons.format_quote,
+            ),
           const Divider(height: 1),
           _menuItem('Page break', _pageBreak, icon: Icons.insert_page_break),
           _menuItem(
@@ -938,6 +946,15 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.link, 'Hyperlink', _insertHyperlink),
             _bigButton(Icons.comment_outlined, 'Comment', _insertComment),
           ]),
+          if (widget.onZotero != null)
+            _group('References', <Widget>[
+              _bigButton(
+                Icons.format_quote,
+                'Zotero',
+                widget.onZotero!,
+                enabled: _canMutate,
+              ),
+            ]),
           _group('Header & Footer', <Widget>[
             _bigButton(Icons.web_asset, 'Header', _beginHeader),
             _bigButton(Icons.web_asset_off, 'Footer', _beginFooter),
