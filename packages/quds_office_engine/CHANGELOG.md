@@ -4,6 +4,16 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Apply ODS cell style precedence from explicit cell, row default and column
+  default styles, including repeated cells that cross differing column styles.
+  Default-style padding remains sparse and column style bookkeeping shares the
+  workbook dimension budget. Preserve absolute sheet references, clock component
+  formats and elapsed hour/minute/second formats through XLSX saves. Quoted
+  formula text and sheet identifiers retain their original content. The importer
+  also retains its compatibility extension for omitted horizontal covered-cell
+  placeholders; standard ODF requires those placeholders. Explicit covered cells
+  consume reserved positions once, and ambiguous overlapping merges still decline.
+
 - Import ODS merged anchors and covered cells at their original coordinates,
   including vertical spans and data after repeated blank rows. Recognize row
   and column groups by namespace, resolve named cell styles from `styles.xml`,

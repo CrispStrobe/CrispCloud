@@ -1,19 +1,53 @@
 # Local integration and qualification continuation
 
-## Source saved remotely
+## Saved source and observed cutoff
 
-- `e94b73d5174f55f6c898132003fa2d0d4e1959e6` merges current app main `6fcc4497` with storage work.
-- `e0221c2034cf56cac6c9566c8ff7b65ed41518a2` also incorporates PR #116 at `bda0374b`, removes its byte-identical duplicate `odfTests()` definition, and pins canonical Quds main `793c64ac4fc2e896706aa65c13eaa70bd27f7267`. Standalone parser remains `d422fa99a3a84830794f0e2dc332d59f923779f7`.
-- `remote-refresh.json` records all 11 observed branches and 20 recent PRs through 09:14:57 UTC. Superseded heads contain no additional unique implementation.
+The app contains main through `ab7f1536`, PR #116 at `bda0374b`, the worksheet
+and document-workspace branches, and the separate qualification branch through
+`8a4cc8b6`. Incoming evidence remains intact under its original directory and
+source identity. The initial audit covered 11 branches and 20 recent PRs; the
+later audit covered 13 branches and newly merged PR #117.
 
-The workspace has restored capacity and the pinned Flutter 3.47.8 / Dart 3.13.7 toolchain plus genuine native compilers. `environment/` retains verified downloads, versions, launchers, setup attempts and successful compile/link/run probes.
+The final observed production cutoff is **2026-11-15 09:37:28 UTC (10:37 CET)**.
+Canonical Quds `b6bdbc27f79448c394a41edfe74039f1194fe471` combines the bounded
+ODS import branch through `fbe879e8`, the earlier preservation fixes, and the
+last observed `ddaca09c` default-style/time-format update. Its six changed paths
+are synchronized into the app with the guarded tool. All 2,225 managed files
+match their canonical content; standalone parser remains
+`d422fa99a3a84830794f0e2dc332d59f923779f7`.
 
-## Qualification status at this checkpoint
+The workspace has restored capacity and the pinned Flutter 3.47.8 / Dart 3.13.7
+toolchain with genuine native compilers. All five package graphs resolve; the
+committed app and CLI lockfiles are unchanged. Real native libraries have built
+successfully. Environment receipts retain verified downloads, versions,
+launchers and compile/link/run probes.
 
-Fresh runtime qualification is in progress; no app/editor/engine acceptance is claimed yet. The app cohort has 46 suites, the editor cohort has seven, and the engine cohort has 16 including the scripted artifact generator.
+## Development evidence and final gates
 
-The first source-bound audit verifies 10,429 tracked checkout files and all 2,223 managed files (491 Quds, 1,732 parser), including SHA-256, canonical Git blobs and file modes. Guarded sync dry-runs and 48 sync/inventory controls pass. Its aggregate gate is unsuccessful because the added scripted-oracle command requires real engine-generated artifacts that are not available yet. This unsuccessful attempt and all raw logs are retained unchanged under `source-integrity/`. The corrected source-only runner explicitly defers the oracle until after `scripted_workflows_test.dart`.
+The reconciled app service passes 32 focused development cases. The final
+canonical reconciliation passes 85: 49 ODS reader cases, eight time-format
+cases, 26 formula cases and two authored-format cases. Strict analysis of the
+four affected canonical Dart files is clean. All 35 earlier ODS cases remain,
+and the incoming edge fixture retains its original Git blob. Failure baselines,
+source snapshots and passing runs remain separately identified.
 
-The source review is also checking newly imported ODS row/column fidelity before the final source freeze. Each source correction and each completed gate, including unsuccessful gates, will be saved immediately. Direct Git writes lack credentials in this workspace; the authenticated GitHub Git-data API saves matching trees and merge ancestry, with expected-head checks and remote readback. No force update is used.
+These development results are not final clean-commit host acceptance. The
+final source-bound gates are listed in `final-gate-plan.json`: 49 app suites,
+seven editor suites, 17 engine suites; strict analysis of 53 app, five engine
+and one CLI file; 82 source/inventory controls; the actual scripted Office
+output oracle plus 17 controls; PNG VM/compiled-JavaScript/Python checks; and
+separate font-backed navigation captures. Each completed gate, including a
+failed gate, is saved remotely immediately before the next gate starts.
 
-All checkpoints use `[skip ci]`; no Actions run is awaited or restarted. Native macOS toolbar execution, other platforms and broad external rendering/schema acceptance remain distinct from these local Linux source-bound gates.
+The earlier source audit verified 10,429 tracked files and 2,223 managed files.
+Its aggregate failed because the output-dependent scripted oracle was attempted
+before engine-generated artifacts existed. That failure is retained unchanged.
+The corrected source-only runner defers the scripted oracle until the engine
+cohort has generated its genuine DOCX/XLSX/PPTX edits and roundtrips.
+
+Remote saves use the authenticated GitHub Git-data API because direct Git writes
+lack credentials here. Each save preserves the complete local tree and merge
+parents, checks the expected remote head, and reads back the updated ref. No
+force update is used. All checkpoints use `[skip ci]`; no Actions run is awaited
+or restarted. Native macOS toolbar execution, other platforms, external Office
+rendering and broad schema acceptance remain outside these Linux gates.

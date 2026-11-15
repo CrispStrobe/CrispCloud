@@ -10,6 +10,7 @@ const _table = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
 const _text = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
 const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
 const _fo = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+const _number = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
 
 Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
   final zip = ZipWriter();
@@ -45,6 +46,8 @@ Matcher get _invalidOds => throwsA(isA<OdsSheetFormatException>());
 
 /// Synthetic LibreOffice-generated ODS (values, formulas, styles, merge).
 void main() {
+  edgeTests();
+  defaultAndTimeTests();
   final bytes = File(
     'test/fixtures/fidelity/legacy-sheet.ods',
   ).readAsBytesSync();
@@ -567,6 +570,8 @@ void main() {
     'of:=CONCATENATE("";"a;b";"[.A1]")': 'CONCATENATE("","a;b","[.A1]")',
     "of:=SUM(['Semi;Colon'.A1];1)": "SUM('Semi;Colon'!A1,1)",
     "of:=SUM(['COM.MICROSOFT.Data'.A1];1)": "SUM('COM.MICROSOFT.Data'!A1,1)",
+    r'of:=[$Sheet2.A1]+[.$A$1]': r'Sheet2!A1+$A$1',
+    r"of:=[$'Semi;Colon'.$A$1]": r"'Semi;Colon'!$A$1",
   }.entries) {
     test('formula translation preserves literals in ${formula.key}', () async {
       final book = OdsSheetReader.readBytes(
@@ -578,6 +583,154 @@ void main() {
       );
       for (final current in [book, await _roundTrip(book)]) {
         expect(current.sheets.single.cellA1('A1').formula, formula.value);
+      }
+    });
+  }
+}
+
+void defaultAndTimeTests() {
+  test('cell then row then per-column styles survive repeated cells', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:default-cell-style-name="red"/>'
+        '<t:table-column t:default-cell-style-name="blue"/>'
+        '<t:table-column t:default-cell-style-name="red"/>'
+        '<t:table-row><t:table-cell t:number-columns-repeated="3" '
+        'o:value-type="float" o:value="7"/></t:table-row>'
+        '<t:table-row t:default-cell-style-name="green">'
+        '<t:table-cell t:number-columns-repeated="3" o:value-type="float" '
+        'o:value="8"/></t:table-row>'
+        '<t:table-row t:default-cell-style-name="green">'
+        '<t:table-cell t:style-name="blue" t:number-columns-repeated="2" '
+        'o:value-type="float" o:value="9"/>'
+        '<t:table-cell o:value-type="float" o:value="10"/>'
+        '</t:table-row></t:table>',
+        styles: [('red', 'FF0000'), ('blue', '0000FF'), ('green', '00FF00')]
+            .map(
+              (style) =>
+                  '<s:style s:name="${style.$1}" s:family="table-cell">'
+                  '<s:table-cell-properties f:background-color="#${style.$2}"/>'
+                  '</s:style>',
+            )
+            .join(),
+      ),
+    );
+    for (final current in [book, await _roundTrip(book)]) {
+      final sheet = current.firstSheet;
+      expect(sheet.allCells, hasLength(9));
+      for (final row in [
+        (1, ['FF0000', '0000FF', 'FF0000']),
+        (2, ['00FF00', '00FF00', '00FF00']),
+        (3, ['0000FF', '0000FF', '00FF00']),
+      ]) {
+        for (var column = 0; column < 3; column++) {
+          final cell = sheet.cellOrNull(SmlCellRef(column, row.$1 - 1))!;
+          expect(current.styles!.fillAt(cell.styleIndex), row.$2[column]);
+          expect(cell.value, row.$1 == 3 && column == 2 ? 10 : 6 + row.$1);
+        }
+      }
+    }
+  });
+
+  test('Default column and row padding stays sparse at large repeats', () {
+    final sheet = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:default-cell-style-name="Default" '
+        't:number-columns-repeated="1073741824"/>'
+        '<t:table-row t:default-cell-style-name="Default" '
+        't:number-rows-repeated="100000">'
+        '<t:table-cell t:number-columns-repeated="1073741824"/>'
+        '</t:table-row></t:table>',
+      ),
+    ).firstSheet;
+    expect(sheet.allCells, isEmpty);
+    expect(sheet.rows, isEmpty);
+  });
+
+  test('column default bookkeeping shares the workbook dimension budget', () {
+    expect(
+      () => OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-column t:default-cell-style-name="Default" '
+                  't:number-columns-repeated="4096"/></t:table>' *
+              50,
+        ),
+      ),
+      _invalidOds,
+    );
+  });
+
+  for (final time in [
+    (
+      name: 'hour and minute',
+      duration: 'PT12H30M',
+      parts: '<n:hours/><n:minutes n:style="long"/>',
+      elapsed: false,
+      expected: '12:30',
+    ),
+    (
+      name: 'minute and second',
+      duration: 'PT7M05S',
+      parts: '<n:minutes n:style="long"/><n:seconds n:style="long"/>',
+      elapsed: false,
+      expected: '07:05',
+    ),
+    (
+      name: 'full clock',
+      duration: 'PT1H02M03S',
+      parts: '<n:hours/><n:minutes/><n:seconds/>',
+      elapsed: false,
+      expected: '1:02:03',
+    ),
+    (
+      name: 'elapsed hours',
+      duration: 'PT27H15M03S',
+      parts: '<n:hours/><n:minutes/><n:seconds/>',
+      elapsed: true,
+      expected: '27:15:03',
+    ),
+    (
+      name: 'elapsed minutes',
+      duration: 'PT1H30M',
+      parts: '<n:minutes/>',
+      elapsed: true,
+      expected: '90',
+    ),
+    (
+      name: 'elapsed minutes and seconds',
+      duration: 'PT1H02M03S',
+      parts: '<n:minutes/><n:seconds/>',
+      elapsed: true,
+      expected: '62:03',
+    ),
+    (
+      name: 'elapsed seconds',
+      duration: 'PT1M05S',
+      parts: '<n:seconds/>',
+      elapsed: true,
+      expected: '65',
+    ),
+  ]) {
+    test('ODS ${time.name} format survives XLSX save', () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-row><t:table-cell t:style-name="time" '
+          'o:value-type="time" o:time-value="${time.duration}"/>'
+          '</t:table-row></t:table>',
+          styles:
+              '<n:time-style xmlns:n="$_number" s:name="Time" '
+              'n:truncate-on-overflow="${!time.elapsed}">${time.parts}'
+              '<e:hours/></n:time-style>'
+              '<s:style s:name="time" s:family="table-cell" '
+              's:data-style-name="Time"/>',
+        ),
+      );
+      for (final current in [book, await _roundTrip(book)]) {
+        final cell = current.firstSheet.cellA1('A1');
+        expect(
+          current.styles!.format(cell.value, cell.styleIndex),
+          time.expected,
+        );
       }
     });
   }
@@ -612,4 +765,60 @@ Uint8List _odsRows(String rows, {String styles = ''}) {
       '''),
     );
   return zip.close();
+}
+
+void edgeTests() {
+  final edge = File(
+    'test/fixtures/fidelity/legacy-sheet-edge.ods',
+  ).readAsBytesSync();
+
+  test('ODS keeps dates, times, booleans, formats and sheet references', () {
+    final book = OdsSheetReader.readBytes(edge);
+    final sheet = book.sheets.first;
+    final styles = book.styles!;
+
+    expect(sheet.cellA1('A1').value, 45293);
+    expect(sheet.cellA1('A1').fontBold, isTrue);
+    expect(sheet.cellA1('A1').fillRgb, 'C0FFC0');
+    expect(styles.format(45293, sheet.cellA1('A1').styleIndex), '02.01.2024');
+
+    expect(sheet.cellA1('A2').value, closeTo(0.5208333, 0.000001));
+    expect(
+      styles.format(sheet.cellA1('A2').value, sheet.cellA1('A2').styleIndex),
+      '12:30',
+    );
+
+    expect(sheet.cellA1('A3').value, isTrue);
+    expect(sheet.cellA1('B1').formula, 'Sheet2!A1+1');
+    expect(sheet.cellA1('B1').value, 42);
+    expect(sheet.cellA1('B2').formula, r'$A$1');
+    expect(sheet.cellA1('C1').value, closeTo(0.256, 1e-9));
+    expect(styles.format(0.256, sheet.cellA1('C1').styleIndex), '25.6%');
+    expect(styles.format(1234.5, sheet.cellA1('C2').styleIndex), '1,234.50');
+
+    final merge = sheet.merges.single;
+    expect(merge.origin.a1, 'D1');
+    expect(merge.c1, 4);
+    expect(merge.r1, 1);
+    expect(sheet.cellA1('D1').horizontalAlign, SmlHAlign.center);
+    expect(book.sheets[1].cellA1('A1').value, 41);
+  });
+
+  test('edge ODS survives an xlsx round trip', () async {
+    final saved = await OfficeIsolateSave.workbook(
+      OdsSheetReader.readBytes(edge),
+      recalculate: false,
+    );
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.cellA1('A1').value, 45293);
+    expect(reopened.sheets.first.cellA1('B1').formula, 'Sheet2!A1+1');
+    expect(reopened.sheets.first.merges, hasLength(1));
+    expect(
+      reopened.styles!.format(
+        45293,
+        reopened.sheets.first.cellA1('A1').styleIndex,
+      ),
+      '02.01.2024',
+    );
+  });
 }

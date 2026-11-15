@@ -1,0 +1,467 @@
+{
+  "base_head": "0ca0d31bd757da4db6b6ef45764ff9de33990a2f",
+  "incoming_merge_head": "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+  "previous_ods_tests": 35,
+  "current_ods_tests": 49,
+  "all_previous_cases_retained_by_name": true,
+  "added_ods_cases": [
+    "Default column and row padding stays sparse at large repeats",
+    "ODS elapsed hours format survives XLSX save",
+    "ODS elapsed minutes and seconds format survives XLSX save",
+    "ODS elapsed minutes format survives XLSX save",
+    "ODS elapsed seconds format survives XLSX save",
+    "ODS full clock format survives XLSX save",
+    "ODS hour and minute format survives XLSX save",
+    "ODS keeps dates, times, booleans, formats and sheet references",
+    "ODS minute and second format survives XLSX save",
+    "cell then row then per-column styles survive repeated cells",
+    "column default bookkeeping shares the workbook dimension budget",
+    "edge ODS survives an xlsx round trip",
+    "formula translation preserves literals in of:=[$'Semi;Colon'.$A$1]",
+    "formula translation preserves literals in of:=[$Sheet2.A1]+[.$A$1]"
+  ],
+  "suite_counts": {
+    "ods_sheet_reader_test.dart": 49,
+    "sheet_time_number_format_test.dart": 8,
+    "sheet_formula_test.dart": 26,
+    "sheet_authored_number_format_test.dart": 2
+  },
+  "all_completed_cases": {
+    "test/ods_sheet_reader_test.dart": [
+      {
+        "name": "ODS keeps dates, times, booleans, formats and sheet references",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "edge ODS survives an xlsx round trip",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "cell then row then per-column styles survive repeated cells",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "Default column and row padding stays sparse at large repeats",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "column default bookkeeping shares the workbook dimension budget",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS hour and minute format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS minute and second format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS full clock format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS elapsed hours format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS elapsed minutes format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS elapsed minutes and seconds format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ODS elapsed seconds format survives XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "reads ODS values, formulas, styles and merges",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an imported ODS saves as a readable .xlsx",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rejects a non-ODF package",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "merged covered cells consume one coordinate and retain row spans",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "repeated blank rows retain later data at exact coordinates",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "row headers and groups retain blank row coordinates",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "foreign lookalike elements and attributes cannot change sheet values",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "named inherited cell wrap styles survive an XLSX roundtrip",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "column groups retain dimensions and repeated values",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "blank trailing padding is skipped without truncating data silently",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rejects cross-product expansion before materializing repeated cells",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "workbook budget is shared by multiple individually small sheets",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "repeated text is bounded before it can expand during XLSX save",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rejects invalid or out-of-range meaningful repeats instead of clipping",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula conversion preserves delimiters and brackets inside literals",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "repeated formulas decline rather than cloning incorrect references",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "preserves ODF explicit spaces, tabs and paragraph boundaries",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rejects XML with spreadsheet local names in the wrong namespace",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rejects cyclic named styles and excessive XML nesting",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "keeps internal repeated blank rows without expanding trailing padding",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "blank runs retain in-range cells and refuse later out-of-range data",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "horizontal merge consumes explicit placeholder once",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "horizontal merge consumes omitted placeholder once",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "horizontal merge consumes repeated placeholders once",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "horizontal merge consumes additional covered column once",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a new origin clears unconsumed merge placeholders",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "merge spans retain in-range cells and refuse column overflow",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "styled trailing row padding stays sparse within the admitted grid",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=MYCOM.MICROSOFT.FUNC(1)",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=\"a;b\"",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=\"literal [.A1];COM.MICROSOFT.SUM\"",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=IF([.A1]=\"a;b\";\"say \"\"[.B2];\"\"\";COM.MICROSOFT.SUM([.A1:.A2];1))",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=CONCATENATE(\"\";\"a;b\";\"[.A1]\")",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=SUM(['Semi;Colon'.A1];1)",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=SUM(['COM.MICROSOFT.Data'.A1];1)",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=[$Sheet2.A1]+[.$A$1]",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formula translation preserves literals in of:=[$'Semi;Colon'.$A$1]",
+        "result": "success",
+        "skipped": false
+      }
+    ],
+    "test/sheet_time_number_format_test.dart": [
+      {
+        "name": "date formats accept uppercase tokens and preserve escaped literals",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "clock formats retain hours, minutes, seconds and AM/PM",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "minutes before seconds do not use the calendar month",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "date tokens reset minute context after a time",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "quoted time tokens cannot change minute or elapsed context",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "elapsed hours, minutes and seconds retain totals beyond one day",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "standalone elapsed tokens support zero and padded uppercase units",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "negative elapsed sections retain the sign and positive remainders",
+        "result": "success",
+        "skipped": false
+      }
+    ],
+    "test/sheet_formula_test.dart": [
+      {
+        "name": "evaluates arithmetic, logic, lookup, and text functions",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "detects circular references and recalculates a workbook",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "merge and center keeps the origin and clears the rest",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "parses solid fills and paints them as RGB on the cell",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "round-trips merged cells and center alignment",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "round-trips cell fill and font colors",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "insert and delete rows shift merged ranges",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "round-trips frozen panes",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "round-trips sheetView rightToLeft",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "round-trips a multi-sheet workbook",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "parses quoted and unicode sheet names",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "applyInput caches the computed value and recalculate updates dependents",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "scans formula references with source offsets",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "function guide searches names and ignores cell refs",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "formats numbers via styles.xml codes",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "swaps Excel theme lt/dk indices when resolving colors",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "column and row metrics stay inside Excel limits",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "reads Gantt-like builder fills, fonts, merges and freeze",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "round-trips custom column widths and row heights",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "FILTER UNIQUE SORT and LET evaluate",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "sorts filters and names a worksheet range",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "resolves names and high-use formulas including SEQUENCE spill",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "persists validation comments tables and hides filtered rows",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "evaluates a pivot table",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "honest formulas structured refs fill and filter hide",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "evaluates hyperlink address cell info fixed and dollar",
+        "result": "success",
+        "skipped": false
+      }
+    ],
+    "test/sheet_authored_number_format_test.dart": [
+      {
+        "name": "an authored custom number format is written and reloads",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "authored formats merge with a native numFmts collection",
+        "result": "success",
+        "skipped": false
+      }
+    ]
+  },
+  "incoming_edge_fixture_blob": "0f81d41069a80cc8f3c579cbe2bd3ba633abcf14",
+  "incoming_edge_fixture_preserved_exactly": true,
+  "diff_check_exit_code": 0
+}

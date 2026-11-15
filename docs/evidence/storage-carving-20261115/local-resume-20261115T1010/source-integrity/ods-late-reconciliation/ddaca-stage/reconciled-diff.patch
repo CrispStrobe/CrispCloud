@@ -1,0 +1,1077 @@
+diff --git a/packages/quds_office_engine/CHANGELOG.md b/packages/quds_office_engine/CHANGELOG.md
+index e47c2f2..a9407e3 100644
+--- a/packages/quds_office_engine/CHANGELOG.md
++++ b/packages/quds_office_engine/CHANGELOG.md
+@@ -4,6 +4,16 @@ All notable changes to `quds_office_engine` are documented here.
+ 
+ ## Unreleased
+ 
++- Apply ODS cell style precedence from explicit cell, row default and column
++  default styles, including repeated cells that cross differing column styles.
++  Default-style padding remains sparse and column style bookkeeping shares the
++  workbook dimension budget. Preserve absolute sheet references, clock component
++  formats and elapsed hour/minute/second formats through XLSX saves. Quoted
++  formula text and sheet identifiers retain their original content. The importer
++  also retains its compatibility extension for omitted horizontal covered-cell
++  placeholders; standard ODF requires those placeholders. Explicit covered cells
++  consume reserved positions once, and ambiguous overlapping merges still decline.
++
+ - Import ODS merged anchors and covered cells at their original coordinates,
+   including vertical spans and data after repeated blank rows. Recognize row
+   and column groups by namespace, resolve named cell styles from `styles.xml`,
+diff --git a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+index d188820..6ae51e1 100644
+--- a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
++++ b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+@@ -109,7 +109,7 @@ abstract final class OdsSheetReader {
+             : name,
+         sheetId: book.sheets.length + 1,
+       );
+-      _readColumns(table, sheet, styles, budget);
++      final columnDefaults = _readColumns(table, sheet, styles, budget);
+       var rowIndex = 0;
+       final pendingRowHeights = <({int start, int count, double height})>[];
+       for (final row in _members(table, 'table-row', const {
+@@ -118,6 +118,7 @@ abstract final class OdsSheetReader {
+         'table-header-rows',
+       })) {
+         final rowRepeat = _repeat(row, 'number-rows-repeated');
++        final rowDefault = _attribute(row, 'default-cell-style-name', _table);
+         final rowStyle = _styleChain(
+           styles,
+           'table-row',
+@@ -175,50 +176,64 @@ abstract final class OdsSheetReader {
+               'Nested ODS tables are not supported',
+             );
+           }
+-          final cell = _createCell(
+-            element,
+-            book.styles!,
+-            styles,
+-            numberStyles,
++          // Parse values and formulas once, then resolve each column's style.
++          // Repetition can cross columns with different default cell styles.
++          final content = _readCellContent(element);
++          final defaultStyle =
++              _attribute(element, 'style-name', _table) ?? rowDefault;
++          for (final run in _cellStyleRuns(
++            column,
++            repeat,
++            defaultStyle,
++            columnDefaults,
+             budget,
+-          );
+-          if (cell != null || colSpan > 1 || rowSpan > 1) {
+-            if (column + repeat + colSpan - 1 > _maxColumns ||
+-                rowIndex + rowRepeat + rowSpan - 1 > _maxRows) {
+-              throw const OdsSheetFormatException(
+-                'ODS data exceeds the supported grid',
+-              );
+-            }
+-            if ((colSpan > 1 || rowSpan > 1) &&
+-                (repeat > 1 || (rowSpan > 1 && rowRepeat > 1))) {
+-              throw const OdsSheetFormatException(
+-                'Repeated merged anchors are not supported',
+-              );
+-            }
+-            if (cell?.formula != null && (repeat > 1 || rowRepeat > 1)) {
+-              throw const OdsSheetFormatException(
+-                'Repeated formulas are not supported',
+-              );
+-            }
+-            if (cell != null) {
+-              final count = repeat * rowRepeat;
+-              budget.cells(count);
+-              final value = cell.value;
+-              budget.cellText(
+-                ((value is String ? utf8.encode(value).length : 0) +
+-                        (cell.formula == null
+-                            ? 0
+-                            : utf8.encode(cell.formula!).length)) *
+-                    count,
+-              );
++          )) {
++            final cell = _createCell(
++              content,
++              run.styleName,
++              book.styles!,
++              styles,
++              numberStyles,
++              budget,
++            );
++            if (cell != null || colSpan > 1 || rowSpan > 1) {
++              if (run.column + run.repeat + colSpan - 1 > _maxColumns ||
++                  rowIndex + rowRepeat + rowSpan - 1 > _maxRows) {
++                throw const OdsSheetFormatException(
++                  'ODS data exceeds the supported grid',
++                );
++              }
++              if ((colSpan > 1 || rowSpan > 1) &&
++                  (repeat > 1 || (rowSpan > 1 && rowRepeat > 1))) {
++                throw const OdsSheetFormatException(
++                  'Repeated merged anchors are not supported',
++                );
++              }
++              if (cell?.formula != null && (repeat > 1 || rowRepeat > 1)) {
++                throw const OdsSheetFormatException(
++                  'Repeated formulas are not supported',
++                );
++              }
++              if (cell != null) {
++                final count = run.repeat * rowRepeat;
++                budget.cells(count);
++                final value = cell.value;
++                budget.cellText(
++                  ((value is String ? utf8.encode(value).length : 0) +
++                          (cell.formula == null
++                              ? 0
++                              : utf8.encode(cell.formula!).length)) *
++                      count,
++                );
++              }
++              entries.add((
++                column: run.column,
++                repeat: run.repeat,
++                colSpan: colSpan,
++                rowSpan: rowSpan,
++                cell: cell,
++              ));
+             }
+-            entries.add((
+-              column: column,
+-              repeat: repeat,
+-              colSpan: colSpan,
+-              rowSpan: rowSpan,
+-              cell: cell,
+-            ));
+           }
+           column += repeat + colSpan - 1;
+           pendingCovered = colSpan - 1;
+@@ -344,12 +359,13 @@ abstract final class OdsSheetReader {
+       ..fontFamily = source.fontFamily;
+   }
+ 
+-  static void _readColumns(
++  static Map<int, String> _readColumns(
+     XmlElement table,
+     SmlWorksheet sheet,
+     Map<String, XmlElement> styles,
+     _OdsBudget budget,
+   ) {
++    final defaults = <int, String>{};
+     var column = 0;
+     for (final element in _members(table, 'table-column', const {
+       'table-column-group',
+@@ -365,26 +381,63 @@ abstract final class OdsSheetReader {
+       final width = _lengthToPoints(
+         _property(style, 'table-column-properties', 'column-width', _style),
+       );
++      final cellStyle = _attribute(element, 'default-cell-style-name', _table);
++      // Column definitions commonly include a full-sheet metadata tail. It
++      // has no cells to preserve outside the admitted grid.
++      final end = (column + repeat).clamp(0, _maxColumns);
++      final count = (end - column).clamp(0, _maxColumns);
+       if (width != null && width > 0) {
+-        // Column definitions commonly include a full-sheet default-width tail.
+-        // It has no cells to preserve outside the admitted grid.
+-        final end = (column + repeat).clamp(0, _maxColumns);
+-        final count = (end - column).clamp(0, _maxColumns);
+         budget.dimensions(count);
+         for (var i = 0; i < count; i++) {
+           sheet.setColumnWidth(column + i, width * 96 / 72);
+         }
+       }
++      if (cellStyle != null) {
++        budget.dimensions(count);
++        for (var i = 0; i < count; i++) {
++          defaults[column + i] = cellStyle;
++        }
++      }
+       column += repeat;
+     }
++    return defaults;
+   }
+ 
+-  static SmlCell? _createCell(
+-    XmlElement element,
+-    SmlStyleSheet engineStyles,
+-    Map<String, XmlElement> styles,
+-    Map<String, XmlElement> numberStyles,
++  static Iterable<({int column, int repeat, String? styleName})> _cellStyleRuns(
++    int column,
++    int repeat,
++    String? defaultStyle,
++    Map<int, String> columnDefaults,
+     _OdsBudget budget,
++  ) sync* {
++    if (defaultStyle != null ||
++        columnDefaults.isEmpty ||
++        column >= _maxColumns) {
++      yield (column: column, repeat: repeat, styleName: defaultStyle);
++      return;
++    }
++    final end = column + repeat;
++    final admittedEnd = end.clamp(0, _maxColumns);
++    budget.styleWork(admittedEnd - column);
++    var start = column;
++    var styleName = columnDefaults[column];
++    for (var next = column + 1; next < admittedEnd; next++) {
++      final nextStyle = columnDefaults[next];
++      if (nextStyle == styleName) continue;
++      yield (column: start, repeat: next - start, styleName: styleName);
++      start = next;
++      styleName = nextStyle;
++    }
++    yield (column: start, repeat: admittedEnd - start, styleName: styleName);
++    if (end > admittedEnd) {
++      // Meaningful values in this tail still reach the grid refusal. Empty
++      // padding does not allocate or iterate beyond the admitted columns.
++      yield (column: admittedEnd, repeat: end - admittedEnd, styleName: null);
++    }
++  }
++
++  static ({Object? value, String? formula, String? valueType}) _readCellContent(
++    XmlElement element,
+   ) {
+     Object? value;
+     final valueType = _attribute(element, 'value-type', _office);
+@@ -430,7 +483,18 @@ abstract final class OdsSheetReader {
+     }
+     if (value is String && value.isEmpty) value = null;
+     final formula = _translateFormula(_attribute(element, 'formula', _table));
+-    final styleName = _attribute(element, 'style-name', _table);
++    return (value: value, formula: formula, valueType: valueType);
++  }
++
++  static SmlCell? _createCell(
++    ({Object? value, String? formula, String? valueType}) content,
++    String? styleName,
++    SmlStyleSheet engineStyles,
++    Map<String, XmlElement> styles,
++    Map<String, XmlElement> numberStyles,
++    _OdsBudget budget,
++  ) {
++    final (:value, :formula, :valueType) = content;
+     // The named Default style on empty spreadsheet padding is not cell data.
+     if (value == null &&
+         formula == null &&
+@@ -578,6 +642,9 @@ abstract final class OdsSheetReader {
+     final dot = reference.lastIndexOf('.');
+     if (dot <= 0) return reference;
+     var sheet = reference.substring(0, dot).trim();
++    // ODF's absolute sheet marker is separate from the cell's absolute row
++    // and column markers, which remain unchanged in the XLSX reference.
++    if (sheet.startsWith(r'$')) sheet = sheet.substring(1);
+     final cell = reference.substring(dot + 1);
+     final quoted = sheet.startsWith("'") && sheet.endsWith("'");
+     if (quoted) {
+@@ -602,7 +669,7 @@ abstract final class OdsSheetReader {
+       case 'date-style':
+         return 'DD.MM.YYYY';
+       case 'time-style':
+-        return 'h:mm:ss';
++        return _timeFormat(style);
+       case 'number-style':
+         final decimals = _decimals(style);
+         final grouping = _descendants(
+@@ -616,6 +683,37 @@ abstract final class OdsSheetReader {
+     return null;
+   }
+ 
++  static String _timeFormat(XmlElement style) {
++    final hours = _descendants(style, 'hours', _number).firstOrNull;
++    final minutes = _descendants(style, 'minutes', _number).firstOrNull;
++    final seconds = _descendants(style, 'seconds', _number).firstOrNull;
++    final elapsed = switch (_attribute(
++      style,
++      'truncate-on-overflow',
++      _number,
++    )) {
++      'false' || '0' => true,
++      _ => false,
++    };
++    String leading(XmlElement component, String symbol) {
++      final token = _attribute(component, 'style', _number) == 'long'
++          ? symbol * 2
++          : symbol;
++      return elapsed ? '[$token]' : token;
++    }
++
++    if (hours != null) {
++      return '${leading(hours, 'h')}${minutes == null ? '' : ':mm'}'
++          '${seconds == null ? '' : ':ss'}';
++    }
++    if (minutes != null && (seconds != null || elapsed)) {
++      final token = elapsed ? leading(minutes, 'm') : 'mm';
++      return '$token${seconds == null ? '' : ':ss'}';
++    }
++    if (seconds != null) return elapsed ? leading(seconds, 's') : 'ss';
++    return 'h:mm:ss';
++  }
++
+   static String _zeros(XmlElement style) {
+     final decimals = _decimals(style);
+     return decimals == 0 ? '0' : '0.${'0' * decimals}';
+diff --git a/packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart b/packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart
+index 463ce84..e170ea2 100644
+--- a/packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart
++++ b/packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart
+@@ -39,9 +39,8 @@ class SmlColumnMetrics {
+ }
+ 
+ /// Return null when the requested font cannot be resolved reliably.
+-typedef SmlColumnMetricsResolver = SmlColumnMetrics? Function(
+-  SmlNormalFont normalFont,
+-);
++typedef SmlColumnMetricsResolver =
++    SmlColumnMetrics? Function(SmlNormalFont normalFont);
+ 
+ /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
+ class SmlStyleSheet {
+@@ -202,9 +201,9 @@ class SmlStyleSheet {
+ 
+   /// Reads the Latin major/minor theme faces used for the ten ASCII digits.
+   static Map<String, String> parseThemeFontFamilies(String xml) {
+-    final scheme = XmlDocument.parse(xml).root
+-        ?.firstChild('themeElements')
+-        ?.firstChild('fontScheme');
++    final scheme = XmlDocument.parse(
++      xml,
++    ).root?.firstChild('themeElements')?.firstChild('fontScheme');
+     return <String, String>{
+       for (final kind in ['major', 'minor'])
+         if (scheme
+@@ -1278,9 +1277,9 @@ class SmlStyleSheet {
+     }
+ 
+     final int v = int.parse(rgb, radix: 16);
+-    final String r = channel((v >> 16) & 0xFF)
+-        .toRadixString(16)
+-        .padLeft(2, '0');
++    final String r = channel(
++      (v >> 16) & 0xFF,
++    ).toRadixString(16).padLeft(2, '0');
+     final String g = channel((v >> 8) & 0xFF).toRadixString(16).padLeft(2, '0');
+     final String b = channel(v & 0xFF).toRadixString(16).padLeft(2, '0');
+     return '$r$g$b'.toUpperCase();
+@@ -1454,12 +1453,19 @@ String _plainNumber(double n) =>
+     n == n.roundToDouble() ? '${n.round()}' : n.toString();
+ 
+ bool _isDateFormat(String code) {
+-  final String c = code.toLowerCase();
+-  return c.contains('yy') ||
++  final String c = _literalFree(code).toLowerCase();
++  final String unquoted = code.replaceAll(RegExp(r'\\.|"[^"]*"'), '');
++  return RegExp(
++        r'\[(?:hh?|mm?|ss?)\]',
++        caseSensitive: false,
++      ).hasMatch(unquoted) ||
++      c.contains('yy') ||
+       c.contains('mmm') ||
+       c.contains('dd') ||
+       c.contains('d-m') ||
+-      c.contains('mm-');
++      c.contains('mm-') ||
++      c.contains('h') ||
++      c.contains('s');
+ }
+ 
+ /// Excel 1900-date-system serial → UTC date (leap-year bug included).
+@@ -1490,17 +1496,146 @@ String formatExcelDate(DateTime dt, String code) {
+   // Literal escapes (`\.`) and quoted text must not be treated as date
+   // tokens; Excel prints dd\.mm\.yyyy as 15.03.2023.
+   final List<String> literals = <String>[];
+-  var out = code.replaceAllMapped(RegExp(r'\\(.)|"([^"]*)"'), (match) {
++  final String protected = code.replaceAllMapped(RegExp(r'\\(.)|"([^"]*)"'), (
++    match,
++  ) {
+     literals.add(match.group(1) ?? match.group(2) ?? '');
+     return '\u0000${literals.length - 1}\u0000';
+   });
+-  out = out.replaceAll('yyyy', '${dt.year}');
+-  out = out.replaceAll('yy', pad(dt.year % 100, 2));
+-  out = out.replaceAll('mmm', month);
+-  out = out.replaceAll('mm', pad(dt.month, 2));
+-  out = out.replaceAll('dd', pad(dt.day, 2));
+-  out = out.replaceAll('d', '${dt.day}');
+-  return out.replaceAllMapped(
++  final String upper = protected.toUpperCase();
++  final bool twelveHour = upper.contains('AM/PM');
++  final elapsedToken = RegExp(r'^\[(HH?|MM?|SS?)\]$');
++  final tokens = RegExp(r'AM/PM|\[[^\]]*\]|Y+|D+|H+|M+|S+')
++      .allMatches(upper)
++      .where(
++        (match) =>
++            !match[0]!.startsWith('[') || elapsedToken.hasMatch(match[0]!),
++      )
++      .toList();
++  final minutePositions = <int>{};
++  for (var token = 0; token < tokens.length; token++) {
++    final text = tokens[token][0]!;
++    if (text != 'M' && text != 'MM') continue;
++    final previous = token == 0 ? '' : tokens[token - 1][0]!;
++    final next = token + 1 == tokens.length ? '' : tokens[token + 1][0]!;
++    // Excel m/mm denotes minutes after hours or before seconds. Other date
++    // tokens reset that context, including when a date follows a time.
++    if (RegExp(r'^\[?HH?\]?$').hasMatch(previous) ||
++        RegExp(r'^\[?SS?\]?$').hasMatch(next)) {
++      minutePositions.add(tokens[token].start);
++    }
++  }
++  final hasElapsed = tokens.any((token) => elapsedToken.hasMatch(token[0]!));
++  final elapsedMilliseconds = DateTime.utc(
++    dt.year,
++    dt.month,
++    dt.day,
++    dt.hour,
++    dt.minute,
++    dt.second,
++    dt.millisecond,
++  ).difference(DateTime.utc(1899, 12, 30)).inMilliseconds;
++  final clock = hasElapsed && elapsedMilliseconds < 0
++      ? excelSerialToDate(-elapsedMilliseconds / 86400000)
++      : dt;
++  final StringBuffer out = StringBuffer();
++  var elapsedSignWritten = false;
++  var i = 0;
++  while (i < protected.length) {
++    // Elapsed units retain their totals instead of wrapping at a day/hour.
++    if (protected[i] == '[') {
++      final close = protected.indexOf(']', i + 1);
++      if (close > i) {
++        final inner = upper.substring(i + 1, close);
++        if (elapsedToken.hasMatch(upper.substring(i, close + 1))) {
++          final unit = switch (inner[0]) {
++            'H' => 3600000,
++            'M' => 60000,
++            _ => 1000,
++          };
++          if (elapsedMilliseconds < 0 && !elapsedSignWritten) out.write('-');
++          elapsedSignWritten = true;
++          out.write(pad(elapsedMilliseconds.abs() ~/ unit, inner.length));
++        }
++        i = close + 1;
++        continue;
++      }
++    }
++    final int ampm = upper.startsWith('AM/PM', i) ? 5 : 0;
++    if (ampm > 0) {
++      out.write(clock.hour < 12 ? 'AM' : 'PM');
++      i += ampm;
++      continue;
++    }
++    if (upper.startsWith('YYYY', i)) {
++      out.write(dt.year);
++      i += 4;
++      continue;
++    }
++    if (upper.startsWith('YY', i)) {
++      out.write(pad(dt.year % 100, 2));
++      i += 2;
++      continue;
++    }
++    if (upper.startsWith('MMM', i)) {
++      out.write(month);
++      i += 3;
++      continue;
++    }
++    if (upper.startsWith('MM', i)) {
++      out.write(
++        minutePositions.contains(i) ? pad(clock.minute, 2) : pad(dt.month, 2),
++      );
++      i += 2;
++      continue;
++    }
++    if (upper[i] == 'M') {
++      out.write(
++        minutePositions.contains(i) ? '${clock.minute}' : '${dt.month}',
++      );
++      i += 1;
++      continue;
++    }
++    if (upper.startsWith('DD', i)) {
++      out.write(pad(dt.day, 2));
++      i += 2;
++      continue;
++    }
++    if (upper[i] == 'D') {
++      out.write('${dt.day}');
++      i += 1;
++      continue;
++    }
++    if (upper.startsWith('HH', i)) {
++      final hour = twelveHour
++          ? (clock.hour % 12 == 0 ? 12 : clock.hour % 12)
++          : clock.hour;
++      out.write(pad(hour, 2));
++      i += 2;
++      continue;
++    }
++    if (upper[i] == 'H') {
++      final hour = twelveHour
++          ? (clock.hour % 12 == 0 ? 12 : clock.hour % 12)
++          : clock.hour;
++      out.write('$hour');
++      i += 1;
++      continue;
++    }
++    if (upper.startsWith('SS', i)) {
++      out.write(pad(clock.second, 2));
++      i += 2;
++      continue;
++    }
++    if (upper[i] == 'S') {
++      out.write('${clock.second}');
++      i += 1;
++      continue;
++    }
++    out.write(protected[i]);
++    i += 1;
++  }
++  return out.toString().replaceAllMapped(
+     RegExp('\u0000(\\d+)\u0000'),
+     (match) => literals[int.parse(match.group(1)!)],
+   );
+diff --git a/packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods b/packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods
+new file mode 100644
+index 0000000000000000000000000000000000000000..0f81d41069a80cc8f3c579cbe2bd3ba633abcf14
+GIT binary patch
+literal 11686
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/packages/quds_office_engine/test/ods_sheet_reader_test.dart b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+index dce1cc0..ad4bea4 100644
+--- a/packages/quds_office_engine/test/ods_sheet_reader_test.dart
++++ b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+@@ -10,6 +10,7 @@ const _table = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
+ const _text = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+ const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+ const _fo = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
++const _number = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
+ 
+ Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
+   final zip = ZipWriter();
+@@ -45,6 +46,8 @@ Matcher get _invalidOds => throwsA(isA<OdsSheetFormatException>());
+ 
+ /// Synthetic LibreOffice-generated ODS (values, formulas, styles, merge).
+ void main() {
++  edgeTests();
++  defaultAndTimeTests();
+   final bytes = File(
+     'test/fixtures/fidelity/legacy-sheet.ods',
+   ).readAsBytesSync();
+@@ -567,6 +570,8 @@ void main() {
+     'of:=CONCATENATE("";"a;b";"[.A1]")': 'CONCATENATE("","a;b","[.A1]")',
+     "of:=SUM(['Semi;Colon'.A1];1)": "SUM('Semi;Colon'!A1,1)",
+     "of:=SUM(['COM.MICROSOFT.Data'.A1];1)": "SUM('COM.MICROSOFT.Data'!A1,1)",
++    r'of:=[$Sheet2.A1]+[.$A$1]': r'Sheet2!A1+$A$1',
++    r"of:=[$'Semi;Colon'.$A$1]": r"'Semi;Colon'!$A$1",
+   }.entries) {
+     test('formula translation preserves literals in ${formula.key}', () async {
+       final book = OdsSheetReader.readBytes(
+@@ -583,6 +588,154 @@ void main() {
+   }
+ }
+ 
++void defaultAndTimeTests() {
++  test('cell then row then per-column styles survive repeated cells', () async {
++    final book = OdsSheetReader.readBytes(
++      _ods(
++        '<t:table><t:table-column t:default-cell-style-name="red"/>'
++        '<t:table-column t:default-cell-style-name="blue"/>'
++        '<t:table-column t:default-cell-style-name="red"/>'
++        '<t:table-row><t:table-cell t:number-columns-repeated="3" '
++        'o:value-type="float" o:value="7"/></t:table-row>'
++        '<t:table-row t:default-cell-style-name="green">'
++        '<t:table-cell t:number-columns-repeated="3" o:value-type="float" '
++        'o:value="8"/></t:table-row>'
++        '<t:table-row t:default-cell-style-name="green">'
++        '<t:table-cell t:style-name="blue" t:number-columns-repeated="2" '
++        'o:value-type="float" o:value="9"/>'
++        '<t:table-cell o:value-type="float" o:value="10"/>'
++        '</t:table-row></t:table>',
++        styles: [('red', 'FF0000'), ('blue', '0000FF'), ('green', '00FF00')]
++            .map(
++              (style) =>
++                  '<s:style s:name="${style.$1}" s:family="table-cell">'
++                  '<s:table-cell-properties f:background-color="#${style.$2}"/>'
++                  '</s:style>',
++            )
++            .join(),
++      ),
++    );
++    for (final current in [book, await _roundTrip(book)]) {
++      final sheet = current.firstSheet;
++      expect(sheet.allCells, hasLength(9));
++      for (final row in [
++        (1, ['FF0000', '0000FF', 'FF0000']),
++        (2, ['00FF00', '00FF00', '00FF00']),
++        (3, ['0000FF', '0000FF', '00FF00']),
++      ]) {
++        for (var column = 0; column < 3; column++) {
++          final cell = sheet.cellOrNull(SmlCellRef(column, row.$1 - 1))!;
++          expect(current.styles!.fillAt(cell.styleIndex), row.$2[column]);
++          expect(cell.value, row.$1 == 3 && column == 2 ? 10 : 6 + row.$1);
++        }
++      }
++    }
++  });
++
++  test('Default column and row padding stays sparse at large repeats', () {
++    final sheet = OdsSheetReader.readBytes(
++      _ods(
++        '<t:table><t:table-column t:default-cell-style-name="Default" '
++        't:number-columns-repeated="1073741824"/>'
++        '<t:table-row t:default-cell-style-name="Default" '
++        't:number-rows-repeated="100000">'
++        '<t:table-cell t:number-columns-repeated="1073741824"/>'
++        '</t:table-row></t:table>',
++      ),
++    ).firstSheet;
++    expect(sheet.allCells, isEmpty);
++    expect(sheet.rows, isEmpty);
++  });
++
++  test('column default bookkeeping shares the workbook dimension budget', () {
++    expect(
++      () => OdsSheetReader.readBytes(
++        _ods(
++          '<t:table><t:table-column t:default-cell-style-name="Default" '
++                  't:number-columns-repeated="4096"/></t:table>' *
++              50,
++        ),
++      ),
++      _invalidOds,
++    );
++  });
++
++  for (final time in [
++    (
++      name: 'hour and minute',
++      duration: 'PT12H30M',
++      parts: '<n:hours/><n:minutes n:style="long"/>',
++      elapsed: false,
++      expected: '12:30',
++    ),
++    (
++      name: 'minute and second',
++      duration: 'PT7M05S',
++      parts: '<n:minutes n:style="long"/><n:seconds n:style="long"/>',
++      elapsed: false,
++      expected: '07:05',
++    ),
++    (
++      name: 'full clock',
++      duration: 'PT1H02M03S',
++      parts: '<n:hours/><n:minutes/><n:seconds/>',
++      elapsed: false,
++      expected: '1:02:03',
++    ),
++    (
++      name: 'elapsed hours',
++      duration: 'PT27H15M03S',
++      parts: '<n:hours/><n:minutes/><n:seconds/>',
++      elapsed: true,
++      expected: '27:15:03',
++    ),
++    (
++      name: 'elapsed minutes',
++      duration: 'PT1H30M',
++      parts: '<n:minutes/>',
++      elapsed: true,
++      expected: '90',
++    ),
++    (
++      name: 'elapsed minutes and seconds',
++      duration: 'PT1H02M03S',
++      parts: '<n:minutes/><n:seconds/>',
++      elapsed: true,
++      expected: '62:03',
++    ),
++    (
++      name: 'elapsed seconds',
++      duration: 'PT1M05S',
++      parts: '<n:seconds/>',
++      elapsed: true,
++      expected: '65',
++    ),
++  ]) {
++    test('ODS ${time.name} format survives XLSX save', () async {
++      final book = OdsSheetReader.readBytes(
++        _ods(
++          '<t:table><t:table-row><t:table-cell t:style-name="time" '
++          'o:value-type="time" o:time-value="${time.duration}"/>'
++          '</t:table-row></t:table>',
++          styles:
++              '<n:time-style xmlns:n="$_number" s:name="Time" '
++              'n:truncate-on-overflow="${!time.elapsed}">${time.parts}'
++              '<e:hours/></n:time-style>'
++              '<s:style s:name="time" s:family="table-cell" '
++              's:data-style-name="Time"/>',
++        ),
++      );
++      for (final current in [book, await _roundTrip(book)]) {
++        final cell = current.firstSheet.cellA1('A1');
++        expect(
++          current.styles!.format(cell.value, cell.styleIndex),
++          time.expected,
++        );
++      }
++    });
++  }
++}
++
+ Future<SmlWorkbook> _roundTrip(SmlWorkbook book) async => SheetDeserializer()
+     .readBytes(await OfficeIsolateSave.workbook(book, recalculate: false));
+ 
+@@ -613,3 +766,59 @@ Uint8List _odsRows(String rows, {String styles = ''}) {
+     );
+   return zip.close();
+ }
++
++void edgeTests() {
++  final edge = File(
++    'test/fixtures/fidelity/legacy-sheet-edge.ods',
++  ).readAsBytesSync();
++
++  test('ODS keeps dates, times, booleans, formats and sheet references', () {
++    final book = OdsSheetReader.readBytes(edge);
++    final sheet = book.sheets.first;
++    final styles = book.styles!;
++
++    expect(sheet.cellA1('A1').value, 45293);
++    expect(sheet.cellA1('A1').fontBold, isTrue);
++    expect(sheet.cellA1('A1').fillRgb, 'C0FFC0');
++    expect(styles.format(45293, sheet.cellA1('A1').styleIndex), '02.01.2024');
++
++    expect(sheet.cellA1('A2').value, closeTo(0.5208333, 0.000001));
++    expect(
++      styles.format(sheet.cellA1('A2').value, sheet.cellA1('A2').styleIndex),
++      '12:30',
++    );
++
++    expect(sheet.cellA1('A3').value, isTrue);
++    expect(sheet.cellA1('B1').formula, 'Sheet2!A1+1');
++    expect(sheet.cellA1('B1').value, 42);
++    expect(sheet.cellA1('B2').formula, r'$A$1');
++    expect(sheet.cellA1('C1').value, closeTo(0.256, 1e-9));
++    expect(styles.format(0.256, sheet.cellA1('C1').styleIndex), '25.6%');
++    expect(styles.format(1234.5, sheet.cellA1('C2').styleIndex), '1,234.50');
++
++    final merge = sheet.merges.single;
++    expect(merge.origin.a1, 'D1');
++    expect(merge.c1, 4);
++    expect(merge.r1, 1);
++    expect(sheet.cellA1('D1').horizontalAlign, SmlHAlign.center);
++    expect(book.sheets[1].cellA1('A1').value, 41);
++  });
++
++  test('edge ODS survives an xlsx round trip', () async {
++    final saved = await OfficeIsolateSave.workbook(
++      OdsSheetReader.readBytes(edge),
++      recalculate: false,
++    );
++    final reopened = SheetDeserializer().readBytes(saved);
++    expect(reopened.sheets.first.cellA1('A1').value, 45293);
++    expect(reopened.sheets.first.cellA1('B1').formula, 'Sheet2!A1+1');
++    expect(reopened.sheets.first.merges, hasLength(1));
++    expect(
++      reopened.styles!.format(
++        45293,
++        reopened.sheets.first.cellA1('A1').styleIndex,
++      ),
++      '02.01.2024',
++    );
++  });
++}
+diff --git a/packages/quds_office_engine/test/sheet_time_number_format_test.dart b/packages/quds_office_engine/test/sheet_time_number_format_test.dart
+new file mode 100644
+index 0000000..415cd2d
+--- /dev/null
++++ b/packages/quds_office_engine/test/sheet_time_number_format_test.dart
+@@ -0,0 +1,77 @@
++import 'package:quds_office_engine/quds_office_engine.dart';
++import 'package:test/test.dart';
++
++void main() {
++  const date = 45293.0; // 2024-01-02 in the workbook's 1900 date system.
++  const time = (13 * 3600 + 7 * 60 + 9) / 86400;
++
++  test(
++    'date formats accept uppercase tokens and preserve escaped literals',
++    () {
++      expect(applyNumberFormat(date, 'DD.MM.YYYY'), '02.01.2024');
++      expect(applyNumberFormat(date, r'dd\.mm\.yyyy'), '02.01.2024');
++      expect(applyNumberFormat(date, 'yyyy"-hmm-"mm"-"dd'), '2024-hmm-01-02');
++    },
++  );
++
++  test('clock formats retain hours, minutes, seconds and AM/PM', () {
++    expect(applyNumberFormat(time, 'h:mm'), '13:07');
++    expect(applyNumberFormat(time, 'HH:MM:SS'), '13:07:09');
++    expect(applyNumberFormat(time, 'h:mm AM/PM'), '1:07 PM');
++    expect(applyNumberFormat(0, 'h:mm AM/PM'), '12:00 AM');
++    expect(applyNumberFormat(0.5, 'h:mm AM/PM'), '12:00 PM');
++  });
++
++  test('minutes before seconds do not use the calendar month', () {
++    const serial = date + (8 * 60 + 7) / 86400;
++    expect(applyNumberFormat(serial, 'mm:ss'), '08:07');
++    expect(applyNumberFormat(serial, 'm:ss'), '8:07');
++  });
++
++  test('date tokens reset minute context after a time', () {
++    expect(
++      applyNumberFormat(date + time, 'hh:mm dd/mm/yyyy'),
++      '13:07 02/01/2024',
++    );
++    expect(
++      applyNumberFormat(date + time, 'dd/mm/yyyy mm:ss'),
++      '02/01/2024 07:09',
++    );
++    expect(
++      applyNumberFormat(date + time, 'dd/mm/yyyy hh:mm:ss'),
++      '02/01/2024 13:07:09',
++    );
++  });
++
++  test('quoted time tokens cannot change minute or elapsed context', () {
++    expect(
++      applyNumberFormat(date + time, 'hh:mm "mm:ss [h]" yyyy-mm-dd'),
++      '13:07 mm:ss [h] 2024-01-02',
++    );
++    expect(applyNumberFormat(7, '"[h]" 0'), '[h] 7');
++    expect(applyNumberFormat(7, '"[h]"'), '[h]');
++  });
++
++  test('elapsed hours, minutes and seconds retain totals beyond one day', () {
++    const duration = (30 * 3600 + 7 * 60 + 9) / 86400;
++    expect(applyNumberFormat(duration, '[h]:mm:ss'), '30:07:09');
++    expect(applyNumberFormat(duration, '[hh]:mm:ss'), '30:07:09');
++    expect(applyNumberFormat(duration, '[m]:ss'), '1807:09');
++    expect(applyNumberFormat(duration, '[mm]'), '1807');
++    expect(applyNumberFormat(duration, '[s]'), '108429');
++  });
++
++  test('standalone elapsed tokens support zero and padded uppercase units', () {
++    expect(applyNumberFormat(0, '[h]'), '0');
++    expect(applyNumberFormat(0, '[m]'), '0');
++    expect(applyNumberFormat(0, '[s]'), '0');
++    expect(applyNumberFormat(8 / 24, '[HH]'), '08');
++    expect(applyNumberFormat(8 / 1440, '[MM]'), '08');
++    expect(applyNumberFormat(7 / 86400, '[SS]'), '07');
++  });
++
++  test('negative elapsed sections retain the sign and positive remainders', () {
++    expect(applyNumberFormat(-0.5 / 24, '[h]:mm:ss'), '-0:30:00');
++    expect(applyNumberFormat(-30.5 / 24, '[h]:mm;([h]:mm)'), '(30:30)');
++  });
++}

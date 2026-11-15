@@ -23,9 +23,9 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `0ca0d31bd757da4db6b6ef45764ff9de33990a2f` on
+The app mirrors Quds `b6bdbc27f79448c394a41edfe74039f1194fe471` on
 `integration/storage-carving-qualification-20261115` and standalone
-legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,223 managed files
+legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,225 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -35,8 +35,10 @@ reports limitations; converted legacy documents save separately as OOXML.
 
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
-without changing quoted literals or quoted sheet identifiers. Thirty-five focused
-ODS development tests pass, including XLSX save/reopen checks. Their retained
+without changing quoted literals or quoted sheet identifiers. Explicit cell, row
+default and column default styles retain their precedence. Absolute sheet references,
+clock components and elapsed time formats survive XLSX saves. Forty-nine focused
+ODS development tests and 36 related formatter/formula tests pass. Their retained
 baseline failures and passing runs are development evidence; the combined host
 qualification remains separately source-bound in the storage evidence.
 

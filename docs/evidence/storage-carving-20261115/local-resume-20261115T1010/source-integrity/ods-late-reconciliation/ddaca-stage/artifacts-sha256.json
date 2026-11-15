@@ -1,0 +1,66 @@
+{
+  "README.md": {
+    "bytes": 3837,
+    "sha256": "fa1cb23e1d64f53a6b3c4dda93d47f31283b64d89786543ed21744285a6714a2"
+  },
+  "coverage-and-source-review.json": {
+    "bytes": 14102,
+    "sha256": "64ff1aff2f02a7c53ed1d980e596796008857567b4dda4700f17ff15f83ee874"
+  },
+  "incoming-reader-baseline-artifacts.json": {
+    "bytes": 594,
+    "sha256": "c70fe1920238f8b1aec3ac9423ec6ba91fbc752fe2e8f995535e9785aef482c1"
+  },
+  "incoming-reader-baseline-inputs.tar.gz": {
+    "bytes": 66995,
+    "sha256": "329c148e569f00e392cfa2dee737e43fcae4e55a302af282d59fef098083e0c1"
+  },
+  "incoming-reader-baseline.jsonl": {
+    "bytes": 26664,
+    "sha256": "b09baaa639d2dfaaa051e64d20ee79ebb50a34e801553c2144c67e360f2d0319"
+  },
+  "incoming-reader-baseline.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "incoming-reader-baseline.summary.json": {
+    "bytes": 3928,
+    "sha256": "7a19c9070ca692097d88d6513016a567d2a5721d5b38f0528198cf25bdfd5966"
+  },
+  "reconciled-analysis.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "reconciled-analysis.stdout.log": {
+    "bytes": 133,
+    "sha256": "2620ce4ce6f266c76818846ac30c0fa02034e1a9504467ccc79c550bc17dc8aa"
+  },
+  "reconciled-analysis.summary.json": {
+    "bytes": 3981,
+    "sha256": "d4394a0328475ec8d0127dcaf92e037f9e2f3356a30c23d4b2574624ab3c77e4"
+  },
+  "reconciled-diff.patch": {
+    "bytes": 46709,
+    "sha256": "a105691d4125a294ce90c1bbb0932efafacd30eefcdb7437449e1077a9ca014e"
+  },
+  "reconciled-inputs.tar.gz": {
+    "bytes": 68168,
+    "sha256": "4a63bde6ecd388933ef9b1a3635e15625cad21499bdba61b6530d38552ce21ce"
+  },
+  "reconciled-union.jsonl": {
+    "bytes": 39671,
+    "sha256": "125f1871a70f5c954fe8c61f11a9c56d8f5606f8ad0ce81a2b07051964f5e817"
+  },
+  "reconciled-union.stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "reconciled-union.summary.json": {
+    "bytes": 4061,
+    "sha256": "5e7adf3ebf965d38bcf86a09ebfdbdfa08e7950fd31dff9d349fb2fcb6672852"
+  },
+  "record_development.py": {
+    "bytes": 3670,
+    "sha256": "c63105438a963be8b986ed93c1a5a4695ccba181a2b51dafa21ac7c64d8163ea"
+  }
+}
