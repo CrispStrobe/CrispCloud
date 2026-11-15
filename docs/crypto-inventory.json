@@ -1313,7 +1313,17 @@
     "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
     "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
     "packages/quds_office_engine/lib/src/word/model/word_zotero_data.dart",
-    "packages/quds_office_engine/lib/src/zotero/zotero_citing.dart"
+    "packages/quds_office_engine/lib/src/zotero/zotero_citing.dart",
+    "lib/l10n/ssh_config_import_strings.dart",
+    "lib/l10n/terminal_key_binding_strings.dart",
+    "lib/models/ssh_config_import.dart",
+    "lib/models/terminal_key_binding.dart",
+    "lib/providers/terminal_key_bindings_provider.dart",
+    "lib/services/terminal_key_bindings.dart",
+    "lib/widgets/ssh_config_import_dialog.dart",
+    "lib/widgets/terminal_key_bindings_dialog.dart",
+    "tool/with_ci_apple_sqlite.py",
+    "tool/prime_apple_sqlite_cache.sh"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
