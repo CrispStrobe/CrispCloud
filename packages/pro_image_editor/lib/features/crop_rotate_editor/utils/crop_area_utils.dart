@@ -116,16 +116,21 @@ CropAreaPart determineCropAreaPart({
   for (final corner in corners) {
     if ((point - corner.$1).distance <= radius) return corner.$2;
   }
-  if (!cropRect.inflate(interactiveCornerArea).contains(point))
+  if (!cropRect.inflate(interactiveCornerArea).contains(point)) {
     return CropAreaPart.none;
-  if ((point.dx - cropRect.left).abs() <= interactiveCornerArea)
+  }
+  if ((point.dx - cropRect.left).abs() <= interactiveCornerArea) {
     return CropAreaPart.left;
-  if ((point.dx - cropRect.right).abs() <= interactiveCornerArea)
+  }
+  if ((point.dx - cropRect.right).abs() <= interactiveCornerArea) {
     return CropAreaPart.right;
-  if ((point.dy - cropRect.top).abs() <= interactiveCornerArea)
+  }
+  if ((point.dy - cropRect.top).abs() <= interactiveCornerArea) {
     return CropAreaPart.top;
-  if ((point.dy - cropRect.bottom).abs() <= interactiveCornerArea)
+  }
+  if ((point.dy - cropRect.bottom).abs() <= interactiveCornerArea) {
     return CropAreaPart.bottom;
+  }
   return cropRect.contains(point) ? CropAreaPart.inside : CropAreaPart.none;
 }
 

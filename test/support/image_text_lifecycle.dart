@@ -1,6 +1,4 @@
 // ignore_for_file: invalid_use_of_protected_member
-import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:pro_image_editor/features/crop_rotate_editor/widgets/outside_gestures/crop_rotate_gesture_detector.dart';
@@ -8,7 +6,6 @@ import 'package:pro_image_editor/features/crop_rotate_editor/widgets/outside_ges
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/image_file_store.dart';
-import 'package:crisp_cloud/services/image_edit_session.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +70,11 @@ void registerImageTextLifecycleTests({bool live = false}) {
         ProviderScope(
           child: MaterialApp(
             home: ImageEditorDialog(
-              file: FileItem(name: store.displayName, path: store.path),
+              file: FileItem(
+                name: store.displayName,
+                path: store.path,
+                isFolder: false,
+              ),
               side: PanelSide.local,
               storeOverride: store,
               editorKey: key,
@@ -142,7 +143,11 @@ void registerImageTextLifecycleTests({bool live = false}) {
         ProviderScope(
           child: MaterialApp(
             home: ImageEditorDialog(
-              file: FileItem(name: store.displayName, path: store.path),
+              file: FileItem(
+                name: store.displayName,
+                path: store.path,
+                isFolder: false,
+              ),
               side: PanelSide.local,
               storeOverride: store,
               editorKey: key,
@@ -202,7 +207,11 @@ void registerImageTextLifecycleTests({bool live = false}) {
         ProviderScope(
           child: MaterialApp(
             home: ImageEditorDialog(
-              file: FileItem(name: store.displayName, path: store.path),
+              file: FileItem(
+                name: store.displayName,
+                path: store.path,
+                isFolder: false,
+              ),
               side: PanelSide.local,
               storeOverride: store,
               editorKey: key,

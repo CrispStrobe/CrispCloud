@@ -21,7 +21,7 @@ void main() {
             home: DocumentPrintScope(
               onPrint: () async {
                 calls++;
-                if (job != null) await job!.future;
+                if (job != null) await job.future;
               },
               child: const Scaffold(
                 appBar: null,
@@ -52,7 +52,7 @@ void main() {
       await tester.pump();
       await action.run();
       expect(calls, 2);
-      job!.completeError(StateError('printer unavailable'));
+      job.completeError(StateError('printer unavailable'));
       await first;
       await tester.pumpAndSettle();
       expect(find.textContaining('printer unavailable'), findsOneWidget);
