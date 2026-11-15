@@ -179,6 +179,17 @@ abstract final class OdsSheetReader {
         'table-header-rows',
       })) {
         final rowRepeat = _repeat(row, 'number-rows-repeated');
+        final rowVisibility =
+            _attribute(row, 'visibility', _table) ??
+            _attribute(row, 'display', _table);
+        if (rowVisibility == 'collapse' ||
+            rowVisibility == 'hidden' ||
+            rowVisibility == 'false') {
+          budget.dimensions(rowRepeat);
+          for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
+            sheet.hiddenRows.add(rowIndex + r);
+          }
+        }
         final rowDefault = _attribute(row, 'default-cell-style-name', _table);
         final rowStyle = _styleChain(
           styles,
@@ -512,6 +523,13 @@ abstract final class OdsSheetReader {
         _property(style, 'table-column-properties', 'column-width', _style),
       );
       final cellStyle = _attribute(element, 'default-cell-style-name', _table);
+      final visibility =
+          _attribute(element, 'visibility', _table) ??
+          _attribute(element, 'display', _table);
+      final hidden =
+          visibility == 'collapse' ||
+          visibility == 'hidden' ||
+          visibility == 'false';
       // Column definitions commonly include a full-sheet metadata tail. It
       // has no cells to preserve outside the admitted grid.
       final end = (column + repeat).clamp(0, _maxColumns);
@@ -527,6 +545,13 @@ abstract final class OdsSheetReader {
           for (var i = 0; i < count; i++) {
             sheet.importColumnWidth(column + i, chars);
           }
+        }
+      }
+      if (hidden && count > 0) {
+        budget.dimensions(count);
+        for (var i = 0; i < count; i++) {
+          (sheet.columnProperties[column + i] ??= <String, String>{})['hidden'] =
+              '1';
         }
       }
       if (cellStyle != null) {
