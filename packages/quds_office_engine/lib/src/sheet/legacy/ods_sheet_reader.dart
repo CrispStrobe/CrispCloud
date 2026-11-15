@@ -510,11 +510,42 @@ abstract final class OdsSheetReader {
     if (paragraphs.isEmpty) return element.text.trim();
     final buffer = StringBuffer();
     for (final paragraph in paragraphs) {
-      final text = paragraph.text.trim();
+      final text = _paragraphText(paragraph).trim();
       if (text.isNotEmpty) {
-        if (buffer.isNotEmpty) buffer.write(' ');
+        if (buffer.isNotEmpty) buffer.write('\n');
         buffer.write(text);
       }
+    }
+    return buffer.toString();
+  }
+
+  /// ODF escapes meaningful repeated spaces and breaks as elements rather
+  /// than raw characters; a plain `.text` walk would silently collapse them.
+  static String _paragraphText(XmlElement paragraph) {
+    final buffer = StringBuffer();
+    void walk(XmlNode node) {
+      if (node is XmlText) {
+        buffer.write(node.text);
+        return;
+      }
+      if (node is! XmlElement) return;
+      switch (node.localName) {
+        case 's':
+          final count = int.tryParse(node.getAttribute('c') ?? '') ?? 1;
+          buffer.write(' ' * count.clamp(1, 1024));
+        case 'tab':
+          buffer.write('\t');
+        case 'line-break':
+          buffer.write('\n');
+        default:
+          for (final child in node.children) {
+            walk(child);
+          }
+      }
+    }
+
+    for (final child in paragraph.children) {
+      walk(child);
     }
     return buffer.toString();
   }
