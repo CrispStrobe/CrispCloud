@@ -860,6 +860,37 @@ void imageTests() {
     expect(doc.markdown, contains('1. First item'));
   });
 
+  test('ODT headers and footers keep text and skip page fields', () async {
+    const content =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:text><text:p>Body</text:p></office:text></office:body>
+</office:document-content>
+''';
+    const styles =
+        '''
+<office:document-styles $namespaces>
+  <office:master-styles>
+    <style:master-page style:name="Standard">
+      <style:header><text:p>Quarterly report</text:p></style:header>
+      <style:footer><text:p>Confidential <text:page-number>84</text:page-number></text:p></style:footer>
+    </style:master-page>
+  </office:master-styles>
+</office:document-styles>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({
+        'content.xml': utf8.encode(content),
+        'styles.xml': utf8.encode(styles),
+      }),
+      'header.odt',
+    );
+    expect(doc.markdown, contains('> **Header:** Quarterly report'));
+    expect(doc.markdown, contains('> **Footer:** Confidential'));
+    expect(doc.markdown, isNot(contains('84')));
+    expect(doc.plainText, contains('Quarterly report'));
+  });
+
   test('ODT text boxes keep their visible labels', () async {
     const xml =
         '''
