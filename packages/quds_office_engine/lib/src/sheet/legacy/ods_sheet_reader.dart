@@ -98,6 +98,11 @@ abstract final class OdsSheetReader {
         final parent = styleRoot.firstChild(collection, namespaceUri: _office);
         if (parent == null) continue;
         for (final style in parent.childElements) {
+          if (_is(style, 'default-style', _style)) {
+            final family = _attribute(style, 'family', _style);
+            if (family != null) styles['$family:'] = style;
+            continue;
+          }
           final name = _attribute(style, 'name', _style);
           if (name == null) continue;
           if (_is(style, 'style', _style)) {
@@ -127,6 +132,26 @@ abstract final class OdsSheetReader {
     if (tables.isEmpty || tables.length > 128) {
       throw const OdsSheetFormatException('ODS requires 1 to 128 worksheets');
     }
+    final defaultColumnWidthPoints =
+        _lengthToPoints(
+          _property(
+            _styleChain(styles, 'table-column', null),
+            'table-column-properties',
+            'column-width',
+            _style,
+          ),
+        ) ??
+        _odfDefaultColumnWidthIn * 72;
+    final defaultRowHeightPoints =
+        _lengthToPoints(
+          _property(
+            _styleChain(styles, 'table-row', null),
+            'table-row-properties',
+            'row-height',
+            _style,
+          ),
+        ) ??
+        _odfDefaultRowHeightPoints;
     for (final table in tables) {
       final name = _attribute(table, 'name', _table)?.trim();
       final sheet = SmlWorksheet(
@@ -136,9 +161,16 @@ abstract final class OdsSheetReader {
         sheetId: book.sheets.length + 1,
       );
       sheet.importDefaultColumnWidth(
-        excelWidth: _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx,
+        excelWidth:
+            defaultColumnWidthPoints * 96 / 72 / _odfMaxDigitWidthPx,
       );
-      final columnDefaults = _readColumns(table, sheet, styles, budget);
+      final columnDefaults = _readColumns(
+        table,
+        sheet,
+        styles,
+        budget,
+        defaultColumnWidthPoints,
+      );
       var rowIndex = 0;
       final pendingRowHeights = <({int start, int count, double height})>[];
       for (final row in _members(table, 'table-row', const {
@@ -147,6 +179,17 @@ abstract final class OdsSheetReader {
         'table-header-rows',
       })) {
         final rowRepeat = _repeat(row, 'number-rows-repeated');
+        final rowVisibility =
+            _attribute(row, 'visibility', _table) ??
+            _attribute(row, 'display', _table);
+        if (rowVisibility == 'collapse' ||
+            rowVisibility == 'hidden' ||
+            rowVisibility == 'false') {
+          budget.dimensions(rowRepeat);
+          for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
+            sheet.hiddenRows.add(rowIndex + r);
+          }
+        }
         final rowDefault = _attribute(row, 'default-cell-style-name', _table);
         final rowStyle = _styleChain(
           styles,
@@ -301,7 +344,7 @@ abstract final class OdsSheetReader {
         if (rowHeight != null &&
             rowHeight > 0 &&
             (hasData ||
-                (rowHeight - _odfDefaultRowHeightPoints).abs() > 0.1) &&
+                (rowHeight - defaultRowHeightPoints).abs() > 0.1) &&
             rowIndex + rowRepeat <= _maxRows) {
           final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
           if (entries.isEmpty && rowRepeat > 1) {
@@ -461,6 +504,7 @@ abstract final class OdsSheetReader {
     SmlWorksheet sheet,
     Map<String, XmlElement> styles,
     _OdsBudget budget,
+    double defaultColumnWidthPoints,
   ) {
     final defaults = <int, String>{};
     var column = 0;
@@ -479,6 +523,13 @@ abstract final class OdsSheetReader {
         _property(style, 'table-column-properties', 'column-width', _style),
       );
       final cellStyle = _attribute(element, 'default-cell-style-name', _table);
+      final visibility =
+          _attribute(element, 'visibility', _table) ??
+          _attribute(element, 'display', _table);
+      final hidden =
+          visibility == 'collapse' ||
+          visibility == 'hidden' ||
+          visibility == 'false';
       // Column definitions commonly include a full-sheet metadata tail. It
       // has no cells to preserve outside the admitted grid.
       final end = (column + repeat).clamp(0, _maxColumns);
@@ -487,13 +538,20 @@ abstract final class OdsSheetReader {
         // Retain the native Excel character units used by ODF producers so
         // an XLSX round trip does not apply a second pixel conversion.
         final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
-        const defaultChars =
-            _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
+        final defaultChars =
+            defaultColumnWidthPoints * 96 / 72 / _odfMaxDigitWidthPx;
         if ((chars - defaultChars).abs() > 0.05) {
           budget.dimensions(count);
           for (var i = 0; i < count; i++) {
             sheet.importColumnWidth(column + i, chars);
           }
+        }
+      }
+      if (hidden && count > 0) {
+        budget.dimensions(count);
+        for (var i = 0; i < count; i++) {
+          (sheet.columnProperties[column + i] ??= <String, String>{})['hidden'] =
+              '1';
         }
       }
       if (cellStyle != null) {
@@ -1087,6 +1145,7 @@ abstract final class OdsSheetReader {
   ) {
     final result = <XmlElement>[];
     final seen = <String>{};
+    final defaultStyle = styles['$family:'];
     while (name != null) {
       if (!seen.add(name) || seen.length > 32) {
         throw const OdsSheetFormatException(
@@ -1098,6 +1157,9 @@ abstract final class OdsSheetReader {
       result.add(style);
       name = _attribute(style, 'parent-style-name', _style);
     }
+    // ODF default styles carry the document's Normal font and other fallback
+    // properties; append them after the named chain so explicit styles win.
+    if (defaultStyle != null) result.add(defaultStyle);
     return result;
   }
 

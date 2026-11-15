@@ -594,7 +594,11 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
   }
 
   /// columnWidth API.
-  double _colWAt(int col) => sheet.columnWidth(col) * viewport.scale;
+  double _colWAt(int col) {
+    final hidden = sheet.columnProperties[col]?['hidden'];
+    if (hidden == '1' || hidden == 'true') return 0;
+    return sheet.columnWidth(col) * viewport.scale;
+  }
 
   /// rowHeightAt API.
   double _rowHAt(int row) => sheet.rowHeightAt(row) * viewport.scale;

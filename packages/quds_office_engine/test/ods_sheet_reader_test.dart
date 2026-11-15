@@ -261,6 +261,9 @@ void main() {
   annotationAndAuthoredDateTests();
   edgeTests();
   defaultAndTimeTests();
+  defaultStyleTests();
+  defaultGeometryTests();
+  hiddenStateTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1021,35 +1024,38 @@ void defaultAndTimeTests() {
     }
   });
 
-  test('inherited styled padding stays sparse while explicit blanks survive', () async {
-    final book = OdsSheetReader.readBytes(
-      _ods(
-        '<t:table><t:table-column t:default-cell-style-name="inherited" '
-        't:number-columns-repeated="4096"/>'
-        '<t:table-row t:default-cell-style-name="inherited" '
-        't:style-name="defaultHeight" t:number-rows-repeated="4000">'
-        '<t:table-cell t:number-columns-repeated="4096"/></t:table-row>'
-        '<t:table-row><t:table-cell o:value-type="float" o:value="9"/>'
-        '<t:table-cell t:style-name="accent"/></t:table-row></t:table>',
-        styles:
-            '<s:style s:name="inherited" s:family="table-cell">'
-            '<s:text-properties f:font-size="14pt"/></s:style>'
-            '<s:style s:name="accent" s:family="table-cell">'
-            '<s:table-cell-properties f:background-color="#FF0000"/></s:style>'
-            '<s:style s:name="defaultHeight" s:family="table-row">'
-            '<s:table-row-properties s:row-height="14.95pt"/></s:style>',
-      ),
-    );
-    expect(book.firstSheet.rowHeights, isEmpty);
-    for (final current in [book, await _roundTrip(book)]) {
-      final sheet = current.firstSheet;
-      expect(sheet.allCells, hasLength(2));
-      expect(sheet.cellA1('A4001').value, 9);
-      expect(sheet.cellA1('A4001').fontSize, 14);
-      final blank = sheet.cellA1('B4001');
-      expect(current.styles!.fillAt(blank.styleIndex), 'FF0000');
-    }
-  });
+  test(
+    'inherited styled padding stays sparse while explicit blanks survive',
+    () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-column t:default-cell-style-name="inherited" '
+          't:number-columns-repeated="4096"/>'
+          '<t:table-row t:default-cell-style-name="inherited" '
+          't:style-name="defaultHeight" t:number-rows-repeated="4000">'
+          '<t:table-cell t:number-columns-repeated="4096"/></t:table-row>'
+          '<t:table-row><t:table-cell o:value-type="float" o:value="9"/>'
+          '<t:table-cell t:style-name="accent"/></t:table-row></t:table>',
+          styles:
+              '<s:style s:name="inherited" s:family="table-cell">'
+              '<s:text-properties f:font-size="14pt"/></s:style>'
+              '<s:style s:name="accent" s:family="table-cell">'
+              '<s:table-cell-properties f:background-color="#FF0000"/></s:style>'
+              '<s:style s:name="defaultHeight" s:family="table-row">'
+              '<s:table-row-properties s:row-height="14.95pt"/></s:style>',
+        ),
+      );
+      expect(book.firstSheet.rowHeights, isEmpty);
+      for (final current in [book, await _roundTrip(book)]) {
+        final sheet = current.firstSheet;
+        expect(sheet.allCells, hasLength(2));
+        expect(sheet.cellA1('A4001').value, 9);
+        expect(sheet.cellA1('A4001').fontSize, 14);
+        final blank = sheet.cellA1('B4001');
+        expect(current.styles!.fillAt(blank.styleIndex), 'FF0000');
+      }
+    },
+  );
 
   test('ODS native column geometry survives a new XLSX copy', () async {
     final book = OdsSheetReader.readBytes(
@@ -1340,5 +1346,74 @@ void imageTests() {
     final restored = reopened.sheets.first.drawings.single;
     expect(restored.visual.imageBytes, png);
     expect(restored.visual.width, closeTo(144, 0.01));
+  });
+}
+
+void defaultStyleTests() {
+  test('ODS document default style supplies the Normal cell font', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell>'
+        '<x:p>Plain</x:p></t:table-cell></t:table-row></t:table>',
+        namedStyles:
+            '<s:default-style s:family="table-cell">'
+            '<s:text-properties f:font-family="Liberation Sans" '
+            'f:font-size="10pt"/></s:default-style>',
+      ),
+    );
+    final cell = book.sheets.first.cellA1('A1');
+    expect(cell.value, 'Plain');
+    expect(cell.fontFamily, 'Liberation Sans');
+    expect(cell.fontSize, 10);
+  });
+}
+
+void defaultGeometryTests() {
+  test('ODS document defaults supply column width and row height', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell>'
+        '<x:p>Plain</x:p></t:table-cell></t:table-row></t:table>',
+        namedStyles:
+            '<s:default-style s:family="table-column">'
+            '<s:table-column-properties s:column-width="2in"/>'
+            '</s:default-style>'
+            '<s:default-style s:family="table-row">'
+            '<s:table-row-properties s:row-height="1in"/>'
+            '</s:default-style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.columnWidth(0), greaterThan(160));
+    expect(sheet.rowHeightAt(0), closeTo(96, 0.01));
+  });
+}
+
+void hiddenStateTests() {
+  test('ODS hidden columns and rows survive save', () async {
+    final source = _ods(
+      '<t:table t:name="Data">'
+      '<t:table-column t:visibility="collapse"/>'
+      '<t:table-column/>'
+      '<t:table-row t:visibility="collapse"><t:table-cell>'
+      '<x:p>Hidden</x:p></t:table-cell></t:table-row>'
+      '<t:table-row><t:table-cell><x:p>Visible</x:p></t:table-cell>'
+      '</t:table-row></t:table>',
+    );
+    final book = OdsSheetReader.readBytes(source);
+    final sheet = book.sheets.first;
+    expect(sheet.columnProperties[0]?['hidden'], '1');
+    expect(sheet.rowHeightAt(0), 0);
+    expect(sheet.hiddenRows, contains(0));
+    expect(sheet.cellA1('A1').value, 'Hidden');
+
+    final reopened = SheetDeserializer().readBytes(
+      await OfficeIsolateSave.workbook(book, recalculate: false),
+    );
+    final saved = reopened.sheets.first;
+    expect(saved.columnProperties[0]?['hidden'], '1');
+    expect(saved.hiddenRows, contains(0));
+    expect(saved.rowHeightAt(0), 0);
+    expect(saved.cellA1('A2').value, 'Visible');
   });
 }

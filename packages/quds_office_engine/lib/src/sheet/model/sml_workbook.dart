@@ -408,6 +408,7 @@ class SmlWorksheet {
     Map<int, double>? columnWidths,
     Map<int, Map<String, String>>? columnProperties,
     Map<int, double>? rowHeights,
+    Set<int>? hiddenRows,
     List<SmlMerge>? merges,
     List<SmlDataValidation>? validations,
     List<SmlConditionalRule>? conditionalFormats,
@@ -426,6 +427,7 @@ class SmlWorksheet {
        columnWidths = columnWidths ?? <int, double>{},
        columnProperties = columnProperties ?? <int, Map<String, String>>{},
        rowHeights = rowHeights ?? <int, double>{},
+       hiddenRows = hiddenRows ?? <int>{},
        merges = merges ?? <SmlMerge>[],
        validations = validations ?? <SmlDataValidation>[],
        conditionalFormats = conditionalFormats ?? <SmlConditionalRule>[],
@@ -938,8 +940,15 @@ class SmlWorksheet {
   double columnWidth(int col) =>
       columnWidths[col] ?? effectiveDefaultColumnWidthPx;
 
+  /// Hidden row indices. Empty hidden rows remain part of the authored sheet.
+  final Set<int> hiddenRows;
+
+  /// Whether a row is hidden by the sheet, independently of filters.
+  bool isRowHidden(int row) => hiddenRows.contains(row);
+
   /// rowHeightAt API.
   double rowHeightAt(int row) {
+    if (hiddenRows.contains(row)) return 0;
     if (autoFilter != null && autoFilter!.isRowHidden(this, row)) {
       return 0;
     }

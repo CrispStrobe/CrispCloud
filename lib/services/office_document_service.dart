@@ -1651,9 +1651,11 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   // Named character/paragraph/list styles usually live in styles.xml; only
   // automatic styles are guaranteed to be in content.xml.
   final stylesXml = await _readPart(archive, 'styles.xml');
+  XmlDocument? stylesDocument;
   if (stylesXml != null) {
     try {
-      collectStyles(XmlDocument.parse(stylesXml), overwrite: false);
+      stylesDocument = XmlDocument.parse(stylesXml);
+      collectStyles(stylesDocument, overwrite: false);
     } on XmlException {
       // A malformed styles part must not hide the document body.
     }
@@ -1823,12 +1825,64 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     }
   }
 
+  String? headerFooterText(String elementName) {
+    final source = stylesDocument;
+    if (source == null) return null;
+    final values = <String>[];
+    for (final element in source.findAllElements('style:$elementName')) {
+      final buffer = StringBuffer();
+      void walk(XmlNode node) {
+        if (node is XmlText) {
+          buffer.write(node.value);
+          return;
+        }
+        if (node is! XmlElement) return;
+        switch (node.localName) {
+          case 'page-number':
+          case 'page-count':
+          case 'date':
+          case 'time':
+          case 'title':
+          case 'subject':
+          case 'author':
+          case 'chapter':
+          case 'file-name':
+            return;
+          case 's':
+            final count = int.tryParse(node.getAttribute('text:c') ?? '') ?? 1;
+            buffer.write(' ' * count.clamp(1, 256));
+          case 'tab':
+            buffer.write('\t');
+          case 'line-break':
+            buffer.write('\n');
+          default:
+            for (final child in node.children) {
+              walk(child);
+            }
+        }
+      }
+
+      for (final child in element.children) {
+        walk(child);
+      }
+      final text = buffer.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (text.isNotEmpty && !values.contains(text)) values.add(text);
+    }
+    if (values.isEmpty) return null;
+    final text = values.join(' / ');
+    return text.length > 1000 ? text.substring(0, 1000) : text;
+  }
+
   final body = document.findAllElements('office:body').firstOrNull;
   if (body != null) {
     for (final child in body.childElements) {
       visit(child);
     }
   }
+  final header = headerFooterText('header');
+  if (header != null) blocks.insert(0, '> **Header:** $header');
+  final footer = headerFooterText('footer');
+  if (footer != null) blocks.add('> **Footer:** $footer');
   if (notes.isNotEmpty) {
     blocks.add('---');
     for (var i = 0; i < notes.length; i++) {
