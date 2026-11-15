@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/workspace/scratch/1f80e59755df/toolchains/run.py",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "json",
+    "test/archive_png_carving_service_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "classification": "Development/bootstrap only; source is being integrated concurrently, not final qualification",
+  "launcher_sha256": "d845d99eb21f270387ce3953781c7b19e9d079be92a131d11dc30edc0f6b53af"
+}

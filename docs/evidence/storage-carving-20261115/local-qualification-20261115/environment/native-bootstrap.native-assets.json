@@ -1,0 +1,87 @@
+{
+  "crisp_catalog": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/crisp_catalog/6b4ebf10e7/output.json",
+    "sha256": "04934034f5c41b5efc0a6c702647b00195017a626d3dce1dcfefd4f9a6d0976e",
+    "assets": [
+      {
+        "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/crisp_catalog/build/6b4ebf10e7/libcrisp_catalog_bridge.so",
+        "id": "package:crisp_catalog/crisp_catalog_bridge",
+        "bytes": 3611160,
+        "sha256": "7ea84af122844da162640b53eda8fe1097de8f07d970e57bb252312c67f7f5a4",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      }
+    ]
+  },
+  "crisp_ebook_conversion": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/crisp_ebook_conversion/6b4ebf10e7/output.json",
+    "sha256": "2f2008a3f28819c8451dc3dfa322d5860dbea17f10ae1a95e9febe7cf66c0f31",
+    "assets": [
+      {
+        "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/6b4ebf10e7/libcrisp_kindling_bridge.so",
+        "id": "package:crisp_ebook_conversion/kindling_bridge",
+        "bytes": 12176112,
+        "sha256": "b5aed715110695e5b3b646a6cdcb8d8d224477d62b9ea97f5d451df6c15aa13d",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      }
+    ]
+  },
+  "crisp_storage": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/crisp_storage/6b4ebf10e7/output.json",
+    "sha256": "d70d8d59246f25a4f89583c627692b0faa2ced672909d9f938e5d166e50ec597",
+    "assets": []
+  },
+  "dart_smb2": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/dart_smb2/6b4ebf10e7/output.json",
+    "sha256": "b75aeb94b0bb08c359e39a292daf4fba426abe5fd97d1dce6e06246e830411c6",
+    "assets": [
+      {
+        "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/dart_smb2/build/6b4ebf10e7/libdart_smb2.so",
+        "id": "package:dart_smb2/libsmb2",
+        "bytes": 294472,
+        "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      }
+    ]
+  },
+  "flutter_pty2": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/flutter_pty2/6b4ebf10e7/output.json",
+    "sha256": "3f057c814e6d42f99c074c5e9170cec46757daac182b79b6230c1238c873f904",
+    "assets": [
+      {
+        "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/flutter_pty2/build/6b4ebf10e7/libflutter_pty2.so",
+        "id": "package:flutter_pty2/flutter_pty2",
+        "bytes": 61776,
+        "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      }
+    ]
+  },
+  "objective_c": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/objective_c/6b4ebf10e7/output.json",
+    "sha256": "0d49150cd4fb6486c0c7a446f894b8ef0e85a26602187c35c9c24b4086cb9121",
+    "assets": []
+  },
+  "sqlite3": {
+    "output_file": "CrispCloud/.dart_tool/hooks_runner/sqlite3/6b4ebf10e7/output.json",
+    "sha256": "5eb860c190f73d22e6334dffe2757d5b5b9e2288ba0f61fbf7b13bf1377acc61",
+    "assets": [
+      {
+        "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/sqlite3/build/download-8620abc/libsqlite3.so",
+        "id": "package:sqlite3/src/ffi/libsqlite3.g.dart",
+        "bytes": 1793240,
+        "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      }
+    ]
+  }
+}
