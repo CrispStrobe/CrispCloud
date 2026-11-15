@@ -1,0 +1,93 @@
+{
+  "at": "2026-11-15T12:50:37.154091+00:00",
+  "before": {
+    "pubspec.yaml": "130479a3cc2408e0add5587568c8e6037eb3cd673816beb0dac2979199929a14",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+    "cli/pubspec.yaml": "020ecde00135f4b734f97fc57c44a1471f984bc19df9c190cf9dce4e57d03289",
+    "cli/pubspec.lock": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89",
+    "packages/quds_office_engine/pubspec.yaml": "09ab3b5abb15bacd2d398bb543640b531f92ffdd9796763cfbca14df496462c2",
+    "packages/quds_office_editor/pubspec.yaml": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e"
+  },
+  "commands": [
+    {
+      "name": "app",
+      "cwd": ".",
+      "command": [
+        "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter",
+        "--no-version-check",
+        "--suppress-analytics",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "returncode": 0,
+      "committed_lock": true
+    },
+    {
+      "name": "cli",
+      "cwd": "cli",
+      "command": [
+        "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/dart",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "returncode": 0,
+      "committed_lock": true
+    },
+    {
+      "name": "engine",
+      "cwd": "packages/quds_office_engine",
+      "command": [
+        "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter",
+        "--no-version-check",
+        "--suppress-analytics",
+        "pub",
+        "get",
+        "--offline"
+      ],
+      "returncode": 0,
+      "committed_lock": false
+    },
+    {
+      "name": "editor",
+      "cwd": "packages/quds_office_editor",
+      "command": [
+        "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter",
+        "--no-version-check",
+        "--suppress-analytics",
+        "pub",
+        "get",
+        "--offline"
+      ],
+      "returncode": 0,
+      "committed_lock": false
+    }
+  ],
+  "after": {
+    "pubspec.yaml": "130479a3cc2408e0add5587568c8e6037eb3cd673816beb0dac2979199929a14",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+    "cli/pubspec.yaml": "020ecde00135f4b734f97fc57c44a1471f984bc19df9c190cf9dce4e57d03289",
+    "cli/pubspec.lock": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89",
+    "packages/quds_office_engine/pubspec.yaml": "09ab3b5abb15bacd2d398bb543640b531f92ffdd9796763cfbca14df496462c2",
+    "packages/quds_office_editor/pubspec.yaml": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e"
+  },
+  "declarations_and_committed_locks_unchanged": true,
+  "success": true,
+  "archive_graph_versions": {
+    "app": [
+      "4.6.0"
+    ],
+    "cli": [
+      "4.6.0"
+    ],
+    "engine": [
+      "4.7.1"
+    ],
+    "editor": [
+      "4.7.1"
+    ]
+  }
+}

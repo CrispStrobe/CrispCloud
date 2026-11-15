@@ -1,0 +1,239 @@
+{
+  "schema": 2,
+  "status": "source and resolution frozen; final runtime gates pending",
+  "evidence_base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
+  "source_freeze": {
+    "commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+    "rule": "Root must checkpoint the complete source after managed sync and dependency resolution. Gate driver reads each subsequent saved HEAD; never invent or copy the prior source SHA."
+  },
+  "source_inputs": {
+    "observed_app_commit": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "app_branch": "integration/storage-carving-local-20261115124645",
+    "prior_qualified_app_source": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+    "prior_qualified_evidence_saved_at": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+    "intended_quds_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+    "intended_parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+    "upstream_quds_before_restored_tests": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+    "observed_comments_app_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+    "observed_comments_quds_pin": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+    "predecessor_app_source": "966345971a50ef93bcb67ed32060c8176b4d2949"
+  },
+  "canonical_checkout_siblings": {
+    "quds": "QudsCanonical",
+    "parser": "ParserCanonical"
+  },
+  "manifests": {
+    "app-suites.txt": {
+      "prior_source20ee_count": 65,
+      "count": 65,
+      "sha256": "6c7975878e1f087f846356c10b0b0558c8fa42f3d56ec0c18d600322d29c669c",
+      "prior_source966_count": 65
+    },
+    "engine-suites.txt": {
+      "prior_source20ee_count": 22,
+      "count": 23,
+      "sha256": "a6e24fd8693da10b2d5c6311f483d3b1907909267b4b48f208db7aeb2eecc55c",
+      "prior_source966_count": 22,
+      "additions": [
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart"
+      ]
+    },
+    "editor-suites.txt": {
+      "prior_source20ee_count": 9,
+      "count": 11,
+      "sha256": "5a0b34be6c6fa642e8a185a8a6bd4b3022bb0cbaebd5d2e19d237be3e2c19c49",
+      "additions": [
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+      ],
+      "prior_source966_count": 11
+    },
+    "analysis-app-files.txt": {
+      "prior_source20ee_count": 76,
+      "count": 76,
+      "sha256": "743fdb517e7752fdf2d59ef56dd336f679dc713fa28c966024e4eb2464f975aa",
+      "prior_source966_count": 76
+    },
+    "analysis-engine-files.txt": {
+      "prior_source20ee_count": 16,
+      "count": 19,
+      "sha256": "63826c5e180b89179eedbc5c0eb1f3a33743cdfd9a02c59f5c4d63947b1faed4",
+      "prior_source966_count": 16,
+      "additions": [
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+      ]
+    },
+    "analysis-editor-files.txt": {
+      "prior_source20ee_count": 4,
+      "count": 6,
+      "sha256": "95b0c4ae127ecc9e7fb639cf6e497a60d92da6f87a8821d41ee9ee6ab990887c",
+      "additions": [
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+      ],
+      "prior_source966_count": 6
+    },
+    "analysis-cli-files.txt": {
+      "prior_source20ee_count": 1,
+      "count": 1,
+      "sha256": "084097b0d4c960b2686d7e116980573c9b8d32f9a083a36804c01564bcdbe393",
+      "prior_source966_count": 1
+    },
+    "navigation-suites.txt": {
+      "prior_source20ee_count": 1,
+      "count": 1,
+      "sha256": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+      "prior_source966_count": 1
+    }
+  },
+  "ordered_gates": [
+    "analysis-app",
+    "analysis-engine",
+    "analysis-editor",
+    "analysis-cli",
+    "app",
+    "engine",
+    "editor",
+    "scripted-oracle",
+    "comments-oracle",
+    "source-integrity",
+    "png-portable",
+    "navigation-capture",
+    "navigation-independent-review"
+  ],
+  "separate_parser_qualification": {
+    "source_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+    "suite_inventory": 144,
+    "accepted_test_count": 4132,
+    "strict_files": 18,
+    "evidence_commit": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+    "app_linkage": "integration-return-audit/parser-09a4/canonical-parser-full-qualification.json",
+    "scope": "An existing complete raw run on the exact final parser source was independently verified in this continuation; no new full parser runtime is claimed. Previous 4131-test and changed-suite18 receipts remain historical and add zero to this count."
+  },
+  "changes_requiring_qualification": [
+    "ODS strict covered-cell-token admission and 10000-comment bound from canonical6e4c.",
+    "Three ODS regression cases restored unchanged by canonical9bb7: currency copy-save, sparse inherited padding, and native column geometry copy-save.",
+    "Two Word golden suites select five exact Linux references and retain exact pixel comparisons; two strict editor test files added.",
+    "Parser pin incorporates one additional compound recovery regression and mirrored final evidence; production parser bytes are unchanged.",
+    "Engine archive development dependency added; all resolution graphs must be complete and frozen before gates.",
+    "Observed comment namespace serialization correction plus new namespace suite and generated plain-comment fixture from frozen app3e.",
+    "Canonical47e captures existing-sheet comment ownership before mutation, preserves unrelated orphan bytes and relationships, and retains explicit empty authority across new-sheet add/clear lifecycles.",
+    "Independent comments-oracle generates nine real XLSX packages and binds all eleven output files before lxml/zipfile/openpyxl readback."
+  ],
+  "excluded_external_corpus": {
+    "status": "not executed; excluded from mandatory qualification",
+    "suites": [
+      {
+        "path": "test/local_odf_corpus_test.dart",
+        "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+      },
+      {
+        "path": "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+        "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+      }
+    ]
+  },
+  "rules": [
+    "Checkpoint complete app source, exact pins, locks and selected plans before any accepted gate.",
+    "Do not edit source, checkouts, graphs or tools during a gate; record before/after snapshots and save each completed failed or passing gate immediately.",
+    "Use fresh --label values in this evidence base, never overwrite prior receipts.",
+    "Run full selected cohorts directly; duplicate focus runs are only needed to diagnose a concrete failure.",
+    "Supply exact --engine-label and --capture-label when running dependent gates; fresh generation receipts bind retained outputs to this source snapshot.",
+    "Preserve all current recorder, tool hashing, postprocessing-failure, exact artifact, and source/resolution binding checks.",
+    "No native-hook disabling, fake library substitution, golden tolerance weakening, skipped golden comparison or --update-goldens.",
+    "Keep navigation capture executions separate from primary host totals and inspect the actual two PNGs.",
+    "If new goldens fail, save raw receipts and editor test/failures/ plus build/fidelity-diagnostics/ when present before any cleanup or retry.",
+    "Do not execute private Documents/Downloads corpus scanners and do not count empty-corpus passes.",
+    "Do not wait for, poll or restart GitHub Actions. Use the authorized remote branch and incremental [skip ci] evidence checkpoints.",
+    "Prior source20ee acceptance remains explicitly historical; no new passing count or source hash is asserted by this plan.",
+    "Run comments-oracle with the actual pinned Dart executable; record and compare generation.json before/after input hashes, generator/verifier/executable identities, and the enclosing source/resolution snapshot.",
+    "The independent comments reader never follows the authored external sentinel URL and never treats the invalid-root orphan as an owned comments part.",
+    "The source966 plan is retained byte-for-byte under historical/source966-gate-plan.json."
+  ],
+  "provenance_helpers": {
+    "audit_recorded_gates.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/audit_recorded_gates.py",
+      "incoming_sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "new_sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "unchanged": true
+    },
+    "run_portable_current.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_portable_current.py",
+      "incoming_sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "new_sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "unchanged": true
+    },
+    "run_scripted_oracle_current.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_scripted_oracle_current.py",
+      "incoming_sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "new_sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "unchanged": true
+    },
+    "run_selected_gate.py": {
+      "from_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py",
+      "incoming_sha256": "a038b05c9512f590205375bea90bd952b38fde5d3ae044e533c161416bb23778",
+      "new_sha256": "8ea761641d7f4e0e48debf171e2e03de06b86517b72d89fc0fe160271370d706",
+      "unchanged": false
+    },
+    "run_source_and_notices.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_source_and_notices.py",
+      "incoming_sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "new_sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "unchanged": true
+    },
+    "toolchain_launcher.sh": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/toolchain_launcher.sh",
+      "incoming_sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "new_sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "unchanged": true
+    },
+    "verify_navigation_capture.py": {
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_navigation_capture.py",
+      "incoming_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "new_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "unchanged": true
+    },
+    "run_comments_oracle.py": {
+      "from_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_comments_oracle.py",
+      "incoming_sha256": "4f4bf3a09ea254ac52913026f161566c7f7156b2e07b456eacd0a69a56e051ed",
+      "new_sha256": "ac788a5e86ffbeb82583e9382fcc2aac061841e3d0fe9ce95425dbfa8869c4d7",
+      "unchanged": false
+    },
+    "verify_comments.py": {
+      "from_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+      "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_comments.py",
+      "incoming_sha256": "47389ed35e2bc2904dc201828a5d78d94272b81e53bf7b6a55f3ba6a546b6666",
+      "new_sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+      "unchanged": false
+    }
+  },
+  "historical_copies": [
+    "historical/readiness-review.json",
+    "historical/provenance-overlay-manifest.json",
+    "historical/source966-gate-plan.json"
+  ],
+  "runtime_results": null,
+  "gate_labels": {
+    "analysis-app": "analysis-app-final",
+    "analysis-engine": "analysis-engine-final",
+    "analysis-editor": "analysis-editor-final",
+    "analysis-cli": "analysis-cli-final",
+    "app": "app-final",
+    "engine": "engine-final",
+    "editor": "editor-final",
+    "scripted-oracle": "scripted-oracle-final",
+    "comments-oracle": "comments-oracle-final",
+    "source-integrity": "source-integrity-final",
+    "png-portable": "png-portable-final",
+    "navigation-capture": "navigation-capture-final",
+    "navigation-independent-review": "navigation-independent-review-final"
+  },
+  "source966_receipts": {
+    "status": "preserved predecessor scope only",
+    "label_rule": "Plain labels remain tied to source966; only fresh -final labels qualify the corrected final source."
+  }
+}

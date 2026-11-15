@@ -1,0 +1,13 @@
+{
+  "status": "not executed; excluded from mandatory qualification",
+  "suites": [
+    {
+      "path": "test/local_odf_corpus_test.dart",
+      "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+    },
+    {
+      "path": "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+      "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+    }
+  ]
+}

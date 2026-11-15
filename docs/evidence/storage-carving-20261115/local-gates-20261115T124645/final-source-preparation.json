@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-15T13:38:10.895881+00:00",
+  "incoming_boundary": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "preserved_merge": "2083d2c2bdd53e9243e5f07fcc3b43a979559239",
+  "canonical_office_source": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "canonical_parser_source": "08296edbee08da013a8ff718798972552ccd03f7",
+  "managed_files": 2336,
+  "canonical_correction_baseline": "55fe279284130d8691c9edcd3fe5ae68656a7037",
+  "canonical_failure_receipts": "7a7fd2fe776d5733ddb824315e0768d01d1cbabc",
+  "canonical_focused_tests": 28,
+  "canonical_strict_files": 3,
+  "independent_source_review": "comment-ownership-review/review.json",
+  "parser_full_qualification": "integration-return-audit/parser-09a4/canonical-parser-full-qualification.json",
+  "dependencies_and_committed_locks_unchanged_since_recorded_resolution": true,
+  "source_changes": [
+    "packages/QUDS_FORKS.md",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+    "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "host_qualification": "pending fresh final labels after saved source and plan binding",
+  "new_behavior": "Capture existing comment ownership before writes; allocate separate empty authority for unrelated conventional-part collisions; preserve orphan XML/relationships through reopen/add/clear."
+}

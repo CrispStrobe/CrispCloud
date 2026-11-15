@@ -1,0 +1,197 @@
+{
+  "schema": 1,
+  "base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
+  "scope": "New evidence-base files only; no app production or historical evidence path is overwritten.",
+  "file_count": 27,
+  "files": [
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/README.md",
+      "sha256": "aa5a6bd1cd8e21e3548e20cb8e7ccb3375d8913141a29ea0c348ce74cea6adc6",
+      "size": 6016,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/gate-commands.json",
+      "sha256": "f286096fc8b535d37666b92278456c12438e358147feb94e93199da59c0db7d1",
+      "size": 5972,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/historical/provenance-overlay-manifest.json",
+      "sha256": "4b92f50093ea2c886be671a89eafb4851c5382a6ddcb0aa0911bb7bd03d23f9c",
+      "size": 1471,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/historical/readiness-review.json",
+      "sha256": "ccf673d38ce3058ee3cf824233feb2adb1802bf8ad6fe78e58547640cd74a0bc",
+      "size": 5594,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/incoming-review/README.md",
+      "sha256": "7d2120f6d3026582cb25f94e0b3b570efda76a083986e1139715eefd14d76445",
+      "size": 8346,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/incoming-review/golden-identities.json",
+      "sha256": "92a15f7ea0dc4a7913b2f80580edbce78f91f70fafdd50d6a2f8bc9e6871a4f1",
+      "size": 5985,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/incoming-review/golden-pixel-provenance-check.json",
+      "sha256": "a0708308ecc17fbf06db6bd28707d980e84da8b7a4570209e07db3be4ea9ab90",
+      "size": 1596,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plan-readiness.json",
+      "sha256": "1abe0f331087a871e08b0a59d900267cc2e373731e4ae1a7f2d6ebf7871b2d3c",
+      "size": 4420,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/analysis-app-files.txt",
+      "sha256": "743fdb517e7752fdf2d59ef56dd336f679dc713fa28c966024e4eb2464f975aa",
+      "size": 3061,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/analysis-cli-files.txt",
+      "sha256": "084097b0d4c960b2686d7e116980573c9b8d32f9a083a36804c01564bcdbe393",
+      "size": 26,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/analysis-editor-files.txt",
+      "sha256": "95b0c4ae127ecc9e7fb639cf6e497a60d92da6f87a8821d41ee9ee6ab990887c",
+      "size": 403,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/analysis-engine-files.txt",
+      "sha256": "5e39cc6dd12c9ba6d792757312cea389bf6cf885ec73eaa9572bb0e57a6837c9",
+      "size": 1040,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/app-suites.txt",
+      "sha256": "6c7975878e1f087f846356c10b0b0558c8fa42f3d56ec0c18d600322d29c669c",
+      "size": 2777,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/audit_recorded_gates.py",
+      "sha256": "f6454ad8926abef736f0b69abb47263b78c0ae04513a526057b9a8e756d55739",
+      "size": 9129,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/editor-suites.txt",
+      "sha256": "5a0b34be6c6fa642e8a185a8a6bd4b3022bb0cbaebd5d2e19d237be3e2c19c49",
+      "size": 729,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/engine-suites.txt",
+      "sha256": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+      "size": 1453,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/excluded-corpus-suites.json",
+      "sha256": "8e4c41a93bf3435d305fde0b4e2ceb32acce9bb0324e1c4ac23cfaaf024f6c8b",
+      "size": 652,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/gate-plan.json",
+      "sha256": "270d7ebf425d757a1be2d8df44106b365437d164ec2e6d3d981bbc783326e8b0",
+      "size": 9108,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/host-focus-suites.txt",
+      "sha256": "b4a3da26c15b98642565017312fbbccf45a1ac452f94d4ebdad355dfb6adbe0a",
+      "size": 277,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/navigation-suites.txt",
+      "sha256": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+      "size": 55,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/ods-geometry-suites.txt",
+      "sha256": "0577e18c5ada912041c04c197b0c873d980e8933e448b3095ee7b51dd055d03a",
+      "size": 129,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_portable_current.py",
+      "sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "size": 4454,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_scripted_oracle_current.py",
+      "sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "size": 4349,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+      "sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+      "size": 12271,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_source_and_notices.py",
+      "sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "size": 4423,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/toolchain_launcher.sh",
+      "sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "size": 203,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_navigation_capture.py",
+      "sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "size": 7053,
+      "existing_source_sha256": null,
+      "must_not_overwrite_existing_path": true
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "status": "complete source saved; commands ready for individually saved local execution",
+  "source_commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "canonical_pins": {
+    "quds": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+    "parser": "08296edbee08da013a8ff718798972552ccd03f7"
+  },
+  "execution": "Each entry is a separate action, not an automatic batch runner. Never poll, wait for or restart CI.",
+  "commands": [
+    {
+      "gate": "analysis-app",
+      "label": "analysis-app-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-app",
+        "--label",
+        "analysis-app-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "analysis-engine",
+      "label": "analysis-engine-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-engine",
+        "--label",
+        "analysis-engine-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "analysis-editor",
+      "label": "analysis-editor-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-editor",
+        "--label",
+        "analysis-editor-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "analysis-cli",
+      "label": "analysis-cli-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "analysis-cli",
+        "--label",
+        "analysis-cli-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "app",
+      "label": "app-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "app",
+        "--label",
+        "app-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "engine",
+      "label": "engine-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "engine",
+        "--label",
+        "engine-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "editor",
+      "label": "editor-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "editor",
+        "--label",
+        "editor-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "scripted-oracle",
+      "label": "scripted-oracle-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "scripted-oracle",
+        "--label",
+        "scripted-oracle-final",
+        "--engine-label",
+        "engine-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "comments-oracle",
+      "label": "comments-oracle-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "comments-oracle",
+        "--label",
+        "comments-oracle-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "source-integrity",
+      "label": "source-integrity-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "source-integrity",
+        "--label",
+        "source-integrity-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "png-portable",
+      "label": "png-portable-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "png-portable",
+        "--label",
+        "png-portable-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "navigation-capture",
+      "label": "navigation-capture-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "navigation-capture",
+        "--label",
+        "navigation-capture-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    },
+    {
+      "gate": "navigation-independent-review",
+      "label": "navigation-independent-review-final",
+      "cwd": "repository root after sourcing the pinned toolchains/env.sh",
+      "argv": [
+        "python3",
+        "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+        "navigation-independent-review",
+        "--label",
+        "navigation-independent-review-final",
+        "--capture-label",
+        "navigation-capture-final"
+      ],
+      "after": "Save and verify every completed receipt remotely before the next gate. Stop on failure, retain all raw files, and use a new label for any retry."
+    }
+  ]
+}

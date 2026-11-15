@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "status": "static readiness review; no new host runtime execution or acceptance claim",
+  "incoming_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "quds_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "fixture": {
+    "path": "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+    "git_blob": "9b545271f344d35aaf4abc8dcdcca657891a5949",
+    "sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3"
+  },
+  "gate_count": 13,
+  "suite_inventories": {
+    "app": 65,
+    "engine": 23,
+    "editor": 11,
+    "navigation_capture_separate": 1
+  },
+  "strict_file_inventories": {
+    "app": 76,
+    "engine": 19,
+    "editor": 6,
+    "cli": 1
+  },
+  "generated_outputs": {
+    "xlsx": 9,
+    "authored_manifests": 2,
+    "classic_cycles": 3,
+    "collision_cases": 6
+  },
+  "preserved_safeguards": [
+    "Recorder before/after source, commit, resolution and tools snapshots.",
+    "Actual pinned Dart executable, helpers and generator hashed by outer recorder.",
+    "Fresh artifact directories and exact regular-file inventory; no overwrite of earlier attempts.",
+    "Immediate post-generation binding before independent reader execution.",
+    "Reader before/after inputs equal immediate generated-byte fingerprints.",
+    "Exact recursive artifact hashes including partial failure logs, reports and binding.",
+    "Nonzero generation, reader, inventory, tool-stability or postprocessing errors fail the enclosing gate.",
+    "Original suite/parser/golden/PNG/navigation/source integrity checks remain."
+  ],
+  "additional_independent_checks": [
+    "Both Original and Added worksheet names and exact comments via openpyxl.",
+    "Original note text/author preserved across six lifecycle outputs.",
+    "Unowned orphan XML and outgoing relationship part preserved byte-for-byte, with original content type.",
+    "Added comments part explicitly owned and distinct from both orphan and Original comments authority.",
+    "Empty and cleared phases retain valid empty authors/commentList containers with no unexpected element or bare-text children.",
+    "No network fetch of external sentinel and no parsing of invalid-root orphan as owned comments XML."
+  ],
+  "not_executed": [
+    "Host Dart/Flutter runtime cohorts for final corrected source.",
+    "New independent comments gate.",
+    "Final 13-gate acceptance audit.",
+    "Private HOME Documents/Downloads corpus scanners.",
+    "GitHub Actions polling or waiting."
+  ],
+  "static_checks": [
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+      "python_ast_parse": true,
+      "sha256": "8ea761641d7f4e0e48debf171e2e03de06b86517b72d89fc0fe160271370d706",
+      "size": 12839
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py",
+      "python_ast_parse": true,
+      "sha256": "ac788a5e86ffbeb82583e9382fcc2aac061841e3d0fe9ce95425dbfa8869c4d7",
+      "size": 9079
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py",
+      "python_ast_parse": true,
+      "sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+      "size": 26858
+    }
+  ]
+}

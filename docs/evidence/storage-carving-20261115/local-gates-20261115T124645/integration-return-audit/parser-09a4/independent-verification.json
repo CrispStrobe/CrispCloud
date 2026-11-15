@@ -1,0 +1,140 @@
+{
+  "archive_sha256": "353e4386a5e0a9fec060e2f75ff113a08a392febd565c32c2edcec074981c95d",
+  "archive_size": 206644,
+  "current_checkout_head": "08296edbee08da013a8ff718798972552ccd03f7",
+  "evidence_commit": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+  "full_suite_source_delta_to_app_pin": [],
+  "gates": [
+    {
+      "head": "08296edbee08da013a8ff718798972552ccd03f7",
+      "input_count": 949,
+      "input_sha256": "32dabe44736cbf4eba905a4c48bb9e58b2cac488bc4ce3e076250b1dbbac8e4c",
+      "label": "full-parser",
+      "returncode": 0,
+      "selector": "All tracked paths except docs/evidence/** and doc/evidence/**; root, Office engine/editor, and legacy parser package locks/configs/graphs are included even if ignored.",
+      "stable_inputs_and_commit": true,
+      "tool_hashes": {
+        "/workspace/scratch/0b93849cdeb9/legacy-doc-parser/doc/evidence/storage-carving-reconcile-20261115/run_delta_qualification.py": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+        "/workspace/scratch/0b93849cdeb9/parser-qualification-20261115/record_gate.py": "3fc3bd50dc2c764609c551db3cb113916a208bdcb30eaf6f30625190dc1898b5",
+        "/workspace/scratch/0b93849cdeb9/toolchains/env.sh": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot": "3f675fe483acfb56e752121c2cf0b1505d4db0edf0fc16ca996d3d76eb252b55",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/kernel-service.dart.snapshot": "c0d7084a95a873914091d661c45141560070c2d582d7989d5ce3881583fc84e8"
+      },
+      "tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb"
+    },
+    {
+      "head": "08296edbee08da013a8ff718798972552ccd03f7",
+      "input_count": 949,
+      "input_sha256": "32dabe44736cbf4eba905a4c48bb9e58b2cac488bc4ce3e076250b1dbbac8e4c",
+      "label": "strict-analysis",
+      "returncode": 0,
+      "selector": "All tracked paths except docs/evidence/** and doc/evidence/**; root, Office engine/editor, and legacy parser package locks/configs/graphs are included even if ignored.",
+      "stable_inputs_and_commit": true,
+      "tool_hashes": {
+        "/workspace/scratch/0b93849cdeb9/parser-qualification-20261115/record_gate.py": "3fc3bd50dc2c764609c551db3cb113916a208bdcb30eaf6f30625190dc1898b5",
+        "/workspace/scratch/0b93849cdeb9/toolchains/env.sh": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server_aot.dart.snapshot": "2effb1def007ae4812cdc5d229587ca3df575586dd95ac7e36cd5c178490632a",
+        "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot": "3f675fe483acfb56e752121c2cf0b1505d4db0edf0fc16ca996d3d76eb252b55"
+      },
+      "tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb"
+    }
+  ],
+  "historical_evidence_paths_excluded_by_recorded_selector": 895,
+  "inner_indexes": [
+    {
+      "entries_verified": 9,
+      "path": "dependency-setup/artifacts-sha256.json"
+    },
+    {
+      "entries_verified": 8,
+      "path": "full-parser/artifacts-sha256.json"
+    },
+    {
+      "entries_verified": 6,
+      "path": "strict-analysis/artifacts-sha256.json"
+    }
+  ],
+  "machine_events": {
+    "all_test_ids_unique_and_paired": true,
+    "errors": 0,
+    "failed": 0,
+    "hidden_loader_tests": 144,
+    "passed": 4132,
+    "per_suite_counts_match_summary": true,
+    "single_done_success": true,
+    "skipped": 0,
+    "suites": 144,
+    "visible_tests": 4132
+  },
+  "normalized_package_graph_equal_to_current": true,
+  "observed_app_reference": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "outer_manifest_entries_verified": 32,
+  "resolution": {
+    ".dart_tool/package_config.json": {
+      "byte_equal_to_current": false,
+      "current_sha256": "b8da91cc7d6b9ee7f60a672e68e251cf4752a0a5a6a9a2577d55218500a8b1bf",
+      "recorded_sha256": "8a711cfd784ca3a51544b312d49baa28199854e089b341eff11d92a7612dccaf",
+      "size": 11850
+    },
+    ".dart_tool/package_graph.json": {
+      "byte_equal_to_current": false,
+      "current_sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+      "recorded_sha256": "b4afe70cf70c46781e3b18b62960752de0a8322e5201df08b6bb093b5bbb84f2",
+      "size": 8935
+    },
+    "pubspec.lock": {
+      "byte_equal_to_current": true,
+      "current_sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+      "recorded_sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+      "size": 12536
+    }
+  },
+  "schema": 1,
+  "scope": "Independently verified existing full 144-suite/4,132-test gate on exact 08296ed in its recorded standalone graph. No runtime rerun by this audit. Our distinct 18-test/one-file records remain retained separately; overlapping counts are not added.",
+  "sdk_tool_identity": [
+    {
+      "current_bytes_equal": true,
+      "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+      "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    {
+      "current_bytes_equal": true,
+      "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime",
+      "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime",
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72"
+    },
+    {
+      "current_bytes_equal": true,
+      "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm",
+      "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm",
+      "sha256": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d"
+    },
+    {
+      "current_bytes_equal": true,
+      "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server_aot.dart.snapshot",
+      "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server_aot.dart.snapshot",
+      "sha256": "2effb1def007ae4812cdc5d229587ca3df575586dd95ac7e36cd5c178490632a"
+    },
+    {
+      "current_bytes_equal": true,
+      "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot",
+      "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot",
+      "sha256": "3f675fe483acfb56e752121c2cf0b1505d4db0edf0fc16ca996d3d76eb252b55"
+    }
+  ],
+  "source_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "strict_analysis": {
+    "fatal_infos": true,
+    "fatal_warnings": true,
+    "files": 18,
+    "no_issues": true
+  },
+  "tracked_non_evidence_files_verified_against_exact_git": 937
+}

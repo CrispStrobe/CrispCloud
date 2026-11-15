@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "observed_app_commit": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "observed_parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "previous_source_pin": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+  "previous_evidence_head": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+  "previous_full_gate_head": "337b2fad504ce68f9e5e5053ae859bb5905f3dd8",
+  "observed_pin_parents": [
+    "57442c79239fb4d483e274e0ebb04f34686beb6c",
+    "ea82b13dcb0abbd151995cb7d2881789ed137286"
+  ],
+  "trees": {
+    "9bdcc7eba3f1ce80b7d834d7740895774eeca615": "e10b7de5423aad5b0ccde16a8ea6183290faf009",
+    "57442c79239fb4d483e274e0ebb04f34686beb6c": "c2be2d73ea595b4c5086552440f27639d2653649",
+    "08296edbee08da013a8ff718798972552ccd03f7": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb"
+  },
+  "tracked_path_count": 1832,
+  "unchanged_tracked_paths": 1831,
+  "only_tracked_delta": {
+    "test/recovery_reconciliation_bounds_test.dart": {
+      "before": {
+        "mode": "100644",
+        "type": "blob",
+        "git_blob": "f92b4192adfa08bac3ee83337ccf7b7ae3a85464"
+      },
+      "after": {
+        "mode": "100644",
+        "type": "blob",
+        "git_blob": "f9fed960f8c0344f8f3c0c6f7923ce7eb6026120"
+      }
+    }
+  },
+  "change_review": {
+    "added_lines": 29,
+    "removed_lines": 0,
+    "weakened_existing_assertions": false,
+    "description": "One additive typed compound-error recovery regression. The changed suite retains its 17 prior tests and adds one strict/default, explicit DOCX recovery, source-immutability and DOCM-refusal check."
+  },
+  "production_dependencies_and_other_tests_equal": true,
+  "resolved_inputs": {
+    "pubspec.lock": {
+      "previous": {
+        "kind": "file",
+        "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+        "size": 12536
+      },
+      "current": {
+        "kind": "file",
+        "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+        "size": 12536
+      },
+      "identical": true
+    },
+    ".dart_tool/package_config.json": {
+      "previous": {
+        "kind": "file",
+        "sha256": "b8da91cc7d6b9ee7f60a672e68e251cf4752a0a5a6a9a2577d55218500a8b1bf",
+        "size": 11850
+      },
+      "current": {
+        "kind": "file",
+        "sha256": "b8da91cc7d6b9ee7f60a672e68e251cf4752a0a5a6a9a2577d55218500a8b1bf",
+        "size": 11850
+      },
+      "identical": true
+    },
+    ".dart_tool/package_graph.json": {
+      "previous": {
+        "kind": "file",
+        "sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+        "size": 8935
+      },
+      "current": {
+        "kind": "file",
+        "sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+        "size": 8935
+      },
+      "identical": true
+    }
+  },
+  "recorded_tools_identical": true,
+  "tool_sha256": {
+    "/workspace/scratch/1e19fe1d39ae/parser-reconcile/record_parser_gate.py": "41631c941659fd3972089f2cd944ee09c7a104e8f495a70204b7a0b4592749a0",
+    "/workspace/scratch/1e19fe1d39ae/parser-reconcile/run_delta_qualification.py": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/receipts/flutter-version.json": "ea4bc8316415636ee34e83e16bfad26e4fc48cfb7fdaa0b0182264b2c0474eca"
+  },
+  "retained_full_gate": {
+    "evidence_directory": "directory-all-parser-final",
+    "suites": 144,
+    "totals": {
+      "errors": 0,
+      "failed": 0,
+      "other_results": 0,
+      "passed": 4131,
+      "skipped": 0,
+      "tests": 4131
+    },
+    "scope": "Historical full run retained through exact production/dependency/unchanged-test blob identity; not a fresh full run at observed pin."
+  },
+  "fresh_changed_suite": {
+    "head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "tests": 18,
+    "passed": 18,
+    "prior_tests_included": 17,
+    "added_tests": 1,
+    "full_runtime_rerun": false
+  },
+  "policy": "No new source intake beyond explicitly observed pin. No production edits or package-resolution changes. No Actions wait or polling.",
+  "fresh_strict_analysis": {
+    "head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "files": [
+      "test/recovery_reconciliation_bounds_test.dart"
+    ],
+    "fatal_infos": true,
+    "result": "No issues found",
+    "inputs_and_commit_stable": true,
+    "returncode": 0
+  }
+}

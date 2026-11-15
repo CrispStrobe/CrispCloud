@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
+  "scope": "Scratch-only reviewed overlay: four existing plan paths replaced with hash guards, six new evidence paths; no production files or completed receipts changed.",
+  "file_count": 10,
+  "intended_quds_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "intended_parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "final_app_source": null,
+  "files": [
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/COMMENTS-ORACLE-PLAN.md",
+      "sha256": "356fe23344bb5b1fecfe7805e75d4accf017e73dac440bfad651ca6369202c10",
+      "size": 4091,
+      "existing_source_sha256": null,
+      "existing_source_size": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/gate-commands-final.json",
+      "sha256": "6021dd1d80842433e2cbca7945750e224e564e737e2598f4bdbd9345ef6965ac",
+      "size": 7575,
+      "existing_source_sha256": null,
+      "existing_source_size": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/historical/source966-gate-plan.json",
+      "sha256": "1449c8dc9674cb80c43d97b44a25913abec6b5a446de8f3b59a8bab97dc07265",
+      "size": 9148,
+      "existing_source_sha256": null,
+      "existing_source_size": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/analysis-engine-files.txt",
+      "sha256": "63826c5e180b89179eedbc5c0eb1f3a33743cdfd9a02c59f5c4d63947b1faed4",
+      "size": 1243,
+      "existing_source_sha256": "5e39cc6dd12c9ba6d792757312cea389bf6cf885ec73eaa9572bb0e57a6837c9",
+      "existing_source_size": 1040,
+      "must_not_overwrite_existing_path": false
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/comments-oracle-readiness.json",
+      "sha256": "b93d8af809f131be77fd47627d1826310f0b7b5a4f4c4a61b9154554c22770b2",
+      "size": 3360,
+      "existing_source_sha256": null,
+      "existing_source_size": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/engine-suites.txt",
+      "sha256": "a6e24fd8693da10b2d5c6311f483d3b1907909267b4b48f208db7aeb2eecc55c",
+      "size": 1521,
+      "existing_source_sha256": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+      "existing_source_size": 1453,
+      "must_not_overwrite_existing_path": false
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/gate-plan.json",
+      "sha256": "92013c58603fa53d0c68cfd65eb3d40d585db2b17b6adac6f54cf6f3b3bdad48",
+      "size": 13072,
+      "existing_source_sha256": "1449c8dc9674cb80c43d97b44a25913abec6b5a446de8f3b59a8bab97dc07265",
+      "existing_source_size": 9148,
+      "must_not_overwrite_existing_path": false
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py",
+      "sha256": "ac788a5e86ffbeb82583e9382fcc2aac061841e3d0fe9ce95425dbfa8869c4d7",
+      "size": 9079,
+      "existing_source_sha256": null,
+      "existing_source_size": null,
+      "must_not_overwrite_existing_path": true
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py",
+      "sha256": "8ea761641d7f4e0e48debf171e2e03de06b86517b72d89fc0fe160271370d706",
+      "size": 12839,
+      "existing_source_sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+      "existing_source_size": 12271,
+      "must_not_overwrite_existing_path": false
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py",
+      "sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+      "size": 26858,
+      "existing_source_sha256": null,
+      "existing_source_size": null,
+      "must_not_overwrite_existing_path": true
+    }
+  ]
+}

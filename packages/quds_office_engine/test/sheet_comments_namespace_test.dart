@@ -58,6 +58,124 @@ OpcPackage _relocatedPackage({bool keepLegacyDecoy = false}) {
 }
 
 void main() {
+  for (final malformed in [false, true]) {
+    for (final withNewNote in [false, true]) {
+      test(
+        'new worksheet does not claim ${malformed ? 'malformed' : 'valid'} '
+        'unowned legacy comments ${withNewNote ? 'with new notes' : 'when empty'}',
+        () {
+          final source = SheetSerializer().write(_workbook('existing note'));
+          const orphanUri = '/xl/comments2.xml';
+          final orphanBytes = utf8.encode(
+            malformed
+                ? '<unrelated xmlns="${OfficeNamespaces.x}"/>'
+                : '<comments xmlns="${OfficeNamespaces.x}">'
+                      '<authors><author>Unrelated author</author></authors>'
+                      '<commentList><comment ref="A1" authorId="0">'
+                      '<text><t>Retain this unrelated part</t></text>'
+                      '</comment></commentList></comments>',
+          );
+          source.createPart(
+            orphanUri,
+            OfficeContentTypes.sheetComments,
+            orphanBytes,
+          );
+          final orphanRelationships = source.relationshipsFor(orphanUri)
+            ..add(
+              id: 'rIdAudit',
+              type: 'urn:example:orphan-audit',
+              target: 'https://example.test/orphan',
+              targetMode: RelationshipTargetMode.external,
+            );
+          final orphanRelationshipsXml = orphanRelationships.toXml();
+          var book = SheetDeserializer().read(source);
+          final added = SmlWorksheet(name: 'New worksheet', sheetId: 2);
+          added.cellA1('A1').value = 'new value';
+          book.sheets.add(added);
+
+          // A new source URI must not make an unrelated fixed-name part owned.
+          // Keep the shield authoritative after reopen, later addition and clear.
+          for (final note in [
+            withNewNote ? 'Initial new note' : null,
+            'Later added note',
+            null,
+          ]) {
+            final newSheet = book.sheets[1];
+            newSheet.comments.clear();
+            if (note != null) {
+              newSheet.comments.add(
+                SmlComment(
+                  ref: SmlCellRef.parse('B2'),
+                  text: note,
+                  author: 'New reviewer',
+                ),
+              );
+            }
+            final mutablePackage = book.package!;
+            final before = mutablePackage.save();
+            Object? failure;
+            try {
+              SheetSerializer().write(book, recalculate: false);
+            } catch (error) {
+              failure = error;
+            }
+            if (failure != null) {
+              expect(
+                mutablePackage.save(),
+                orderedEquals(before),
+                reason: 'a refused save must not mutate package bytes',
+              );
+            }
+            expect(
+              failure,
+              isNull,
+              reason: 'an unowned part cannot block the new worksheet',
+            );
+            final saved = OpcPackage.openBytes(mutablePackage.save());
+            final orphan = saved.getPart(orphanUri);
+            expect(orphan, isNotNull);
+            expect(orphan!.contentType, OfficeContentTypes.sheetComments);
+            expect(orphan.readBytes(), orderedEquals(orphanBytes));
+            expect(
+              saved.relationshipsFor(orphanUri).toXml(),
+              orphanRelationshipsXml,
+              reason: 'unrelated orphan relationships remain unchanged',
+            );
+            final rels = saved.relationshipsFor(newSheet.sourcePartUri!);
+            expect(rels.byType(RelationshipTypes.comments), hasLength(1));
+            final owned = rels.firstByType(RelationshipTypes.comments);
+            expect(owned, isNotNull);
+            expect(rels.resolve(owned!), isNot(orphanUri));
+            final ownedPart = saved.getPart(rels.resolve(owned))!;
+            expect(ownedPart.contentType, OfficeContentTypes.sheetComments);
+            final root = XmlDocument.parse(ownedPart.readText()).root!;
+            expect(root.localName, 'comments');
+            expect(root.namespaceUri, OfficeNamespaces.x);
+            expect(root.childElements.map((child) => child.localName), [
+              'authors',
+              'commentList',
+            ]);
+            for (final element in _elements(root)) {
+              expect(element.namespaceUri, OfficeNamespaces.x);
+            }
+            if (note == null) {
+              for (final child in root.childElements) {
+                expect(child.childElements, isEmpty);
+              }
+            }
+            book = SheetDeserializer().read(saved);
+            expect(book.firstSheet.comments.first.text, 'existing note');
+            expect(book.sheets[1].cellA1('A1').value, 'new value');
+            expect(
+              book.sheets[1].comments.map((comment) => comment.text),
+              note == null ? <String>[] : [note],
+            );
+          }
+        },
+      );
+    }
+  }
+
   test('import and edit follow the authored comments relationship', () {
     final source = _relocatedPackage();
     var book = SheetDeserializer().read(source);

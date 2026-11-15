@@ -1,0 +1,249 @@
+{
+  "schema": 1,
+  "operation": "one explicit integration-ref fetch plus immutable read-only planning; no merge or publication",
+  "refs": {
+    "incoming_base": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "qualified_source": "966345971a50ef93bcb67ed32060c8176b4d2949",
+    "observed_integration": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1"
+  },
+  "merge_base": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+  "observed_remote_head_title": "test: save local analysis-editor-final passing gate receipts [skip ci]",
+  "evidence_only": false,
+  "novel_runtime_source": [
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart"
+  ],
+  "non_evidence_tree_delta": [
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "ours": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "c3438b515a6fbc30ce88109bd5fcff139b0627c4"
+      },
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "ce6cdcef582d5e94ba41db7513a3056bd0a78eeb"
+      }
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "ours": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "e8eaba8e0ac388511bc282b6b913b127e1194e64"
+      },
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "eb7793c126ec8a7e333136e3fa9f063f32f32aab"
+      }
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+      "ours": null,
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "1f420e58eeade80886234e36dd8161e2026df8fb"
+      }
+    },
+    {
+      "path": "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+      "ours": null,
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "22ce28b46e0fbe3de00a49c783310c24adaf2622"
+      }
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "ours": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "a3e77fddca6b8ba98535e9ae404edcd4f96e4361"
+      },
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "627bccdcb672dc7c4a99c08cca2be46b32a95626"
+      }
+    }
+  ],
+  "three_way_path_counts": {
+    "ours_only": 44,
+    "incoming_only": 85,
+    "identical_change": 1,
+    "divergent_change": 2
+  },
+  "divergent_paths": [
+    {
+      "path": "packages/QUDS_FORKS.md",
+      "base": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "28c37f7dcb8aa2e0bab047b55757973b51ae5360"
+      },
+      "ours": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "c3438b515a6fbc30ce88109bd5fcff139b0627c4"
+      },
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "ce6cdcef582d5e94ba41db7513a3056bd0a78eeb"
+      }
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "base": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "b17a223c81867c8e3ba4955cbfaeb0765c9eb57f"
+      },
+      "ours": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "a3e77fddca6b8ba98535e9ae404edcd4f96e4361"
+      },
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "627bccdcb672dc7c4a99c08cca2be46b32a95626"
+      }
+    }
+  ],
+  "identical_incoming_and_ours_changes": [
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "base": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "17b037e18e84d4f3312e334f5684f8b815345e2e"
+      },
+      "ours": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "ed5cd8985befe19b89375a63bbb73581753fda60"
+      },
+      "incoming": {
+        "mode": "100644",
+        "type": "blob",
+        "blob": "ed5cd8985befe19b89375a63bbb73581753fda60"
+      }
+    }
+  ],
+  "canonical_pins": {
+    "ours_quds": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "incoming_quds": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+    "parser_pin_equal": true,
+    "parser_commit": "08296edbee08da013a8ff718798972552ccd03f7",
+    "ours_managed_files": 2334,
+    "incoming_managed_files": 2336
+  },
+  "incoming_manifest_changed_managed_files_verified": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "incoming_sha256": "7ae8bae7317b5e35e509217477d66e79e6007ae42a21c9d953c11d7bf5f1601d",
+      "bytes": 54562
+    },
+    {
+      "path": "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+      "incoming_sha256": "4d125fc7b372e95fd64ab19440ae23a8e656a95690366218ba23401a8da0a3ec",
+      "bytes": 15383
+    },
+    {
+      "path": "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+      "incoming_sha256": "973d22e5285929ca39c23a59860f896c54269efd11f04b8f5036a28ca9a18683",
+      "bytes": 1582
+    }
+  ],
+  "restored_ods_test_blob_equal": {
+    "mode": "100644",
+    "type": "blob",
+    "blob": "ed5cd8985befe19b89375a63bbb73581753fda60"
+  },
+  "runtime_effect": "SpreadsheetML comments namespace/text shape, relationship-target selection/validation, shared-part preservation and repeated-save deletion behavior change.",
+  "planned_merge": {
+    "parents": [
+      "latest saved isolated qualification evidence head",
+      "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1"
+    ],
+    "strategy": "ordinary reviewed three-way merge from latest isolated tip after its current gate completes; retain source/receipts from both histories",
+    "runtime_selection": "incoming comment correction with unchanged restored ODS tests",
+    "manual_resolution": [
+      "Select incoming QUDS_FORKS.md and incoming office_fidelity_manifest.json byte-for-byte; the restored ODS tests already match."
+    ],
+    "receipt_scope": "Existing runtime receipts remain scoped to96634597-derived source. They do not establish acceptance for the changed comments serializer.",
+    "new_qualification": [
+      "Independently audit and retain existing incoming passes before choosing reruns.",
+      "Incoming3e contains only three current-source strict-analysis gates (app76, engine19, editor6), not complete host acceptance.",
+      "Earlier canonical139-test/eight-suite comment and external-reader evidence tests25c37362, before later serializer/decoy corrections; retain that source scope.",
+      "Root reports a reproduced4e comment-ownership defect is being corrected on a separate canonical branch; final host acceptance must target that corrected source after sync.",
+      "Reuse unchanged-source evidence only through explicit source/input/tool identity; preserve every historical receipt and failure."
+    ],
+    "publication": "publish concrete merged source and each completed gate with [skip ci], using expected-head lease; do not overwrite concurrent head; no Actions waits"
+  },
+  "worktree_guard": {
+    "before": {
+      "head": "1f3fb17e0ece1ba2debce476d5f1bf2477cd342a",
+      "tree": "59d0cad89fb076a6d7760f507ce9f0d43f711d43",
+      "index_sha256": "163c0c59c4938c2f854ad0375a36c2e0edd4eaccb1eca4d901b9a3d63832f88c",
+      "requested_branch": "integration/storage-carving-20261115",
+      "saved_source": "966345971a50ef93bcb67ed32060c8176b4d2949",
+      "incoming_source": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+      "note": "Initial task stated head9f416acc; actual read before the single fetch was1f3fb17e. Audit never changes HEAD, index or worktree."
+    },
+    "after": {
+      "head": "b1af46116cdc6636ab602d78b54bf425e802eb1a",
+      "index_sha256": "ae1c42d729051f3d2da695436917e3bd2f6297a0f6b1d47d7de62d5ba04e7d83"
+    },
+    "index_unchanged_in_this_observation": false,
+    "head_unchanged_in_this_observation": false,
+    "note": "Root may advance evidence HEADs between completed gates; this agent never changes HEAD/index/worktree.",
+    "root_acknowledged_progression": "Root confirmed the initial task head was stale: app receipts were already saved at1f3fb17e, then root advanced evidence heads between completed gates. The differing snapshots in this planning report are not a qualification stability failure or an audit mutation; every audit comparison uses immutable commits."
+  },
+  "limits": [
+    "Exactly one integration-ref observation, frozen at3e9560c9; no broad branch/PR or CI observation.",
+    "Later canonical4e and parser09a4 materialization was explicitly authorized for already-observed exact references, without new branch intake.",
+    "Only object-level merge simulations and an isolated scratch index were used; no repository HEAD/index/worktree or refs changed by this agent.",
+    "The final source is expected to differ again after the in-progress canonical ownership correction; this plan does not claim final acceptance for either3e or its future correction."
+  ],
+  "canonical_ancestry": {
+    "pin": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+    "parents": [
+      "fd14d8a68477165e7ca3317b647f403f2308e353",
+      "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8"
+    ],
+    "restoration_pin_is_ancestor": true,
+    "restored_ods_tests_same_blob": true,
+    "engine_production_delta_from_restoration": [
+      "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart"
+    ],
+    "materialized_by": "incoming_audit under explicit root authorization"
+  },
+  "merge_tree_proof": "resolved-merge-tree-proof.json",
+  "root_progress_note": "Root reports observed3e was merged pending at2083d2c2. This agent made no merge commit or publication. Canonical4e comment ownership defect is being fixed before final qualification.",
+  "existing_qualification": {
+    "host_analysis_review": "incoming-analysis-receipts-review.json",
+    "host_full_qualification_present": false,
+    "canonical_accepted_comment_source": "25c373626368c4a800dbaff2024c7972ba8a6e50",
+    "canonical_accepted_comment_tests": 139,
+    "canonical_accepted_comment_suites": 8,
+    "canonical_accepted_comment_source_not_equal_to4e": true,
+    "parser_verified_full_run": "parser-09a4/canonical-parser-full-qualification.json",
+    "parser_count": {
+      "suites": 144,
+      "tests": 4132,
+      "no_addition_of_overlapping_counts": true
+    }
+  },
+  "root_completed_pending_merge": {
+    "commit": "2083d2c2bdd53e9243e5f07fcc3b43a979559239",
+    "non_evidence_delta_against_observed3e": [],
+    "source_equal_to_observed3e": true,
+    "acceptance": "Pending canonical ownership correction and final qualification; this equality is not a passing-runtime claim."
+  }
+}

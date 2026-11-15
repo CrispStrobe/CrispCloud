@@ -1,0 +1,30 @@
+{
+  "README.md": {
+    "size": 2750,
+    "sha256": "265162daee19bb650f1600d9ba1019cabeda690d815c777cea34ad0f85b0aa9e"
+  },
+  "artifacts-manifest.json": {
+    "size": 4539,
+    "sha256": "58dcccca234d66d8ce033668dbbcd55132b5bd2502e5e384827e3bb9e1c51b76"
+  },
+  "artifacts.tar.xz": {
+    "size": 206644,
+    "sha256": "353e4386a5e0a9fec060e2f75ff113a08a392febd565c32c2edcec074981c95d"
+  },
+  "audit_existing_receipt.py": {
+    "size": 10243,
+    "sha256": "51a3a571ee37ddc2cd8d5497ac565ba04b92c6b2e4416d7bcdcd35f5d7d16076"
+  },
+  "canonical-parser-full-qualification.json": {
+    "size": 3235,
+    "sha256": "0df1c03912671a66f9f2717f79b0769ba10bf7b40193b42b7ac3800101d959e7"
+  },
+  "independent-verification.json": {
+    "size": 8067,
+    "sha256": "ecc57282917d68dbec29b44d81f34e7fc7846112928700cfcfc3fb5203cacb26"
+  },
+  "summary.json": {
+    "size": 2038,
+    "sha256": "d0d56ae1c74a2572391bd546218f8d7e2cca555a972361837fde3de0dd0133cc"
+  }
+}

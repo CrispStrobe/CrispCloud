@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "analyze",
+    "--fatal-infos",
+    "--fatal-warnings",
+    "cli/lib/commands/pdf.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "shell_display": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart analyze --fatal-infos --fatal-warnings cli/lib/commands/pdf.dart"
+}

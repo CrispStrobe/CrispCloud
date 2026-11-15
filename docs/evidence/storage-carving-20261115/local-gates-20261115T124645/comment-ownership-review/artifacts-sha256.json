@@ -1,0 +1,18 @@
+{
+  "README.md": {
+    "size": 2835,
+    "sha256": "bb4049307dc67e4ab2a0ca6220c2a14d91544dba5887e95d385bc851160dcd82"
+  },
+  "candidate-diff.patch": {
+    "size": 2937,
+    "sha256": "205fbbd78b74504a93bc5d5fee4ee7d5c1436384608854501c0bc1888c0ae689"
+  },
+  "final-test-fixture-diff.patch": {
+    "size": 6733,
+    "sha256": "11a773b03c1374d2cc7f892ba1a8334577af652697e057a13e70d32ed8331fed"
+  },
+  "review.json": {
+    "size": 6015,
+    "sha256": "9e2bf806cafbdbef7b1b86d969d0298819d8a39c35f4df324ff6b8010d3f35e4"
+  }
+}

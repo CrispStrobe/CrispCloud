@@ -1,0 +1,176 @@
+diff --git a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+index eb7793c..4cbc5fa 100644
+--- a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
++++ b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+@@ -786,0 +787 @@ class SheetSerializer {
++    final sourceComments = <SmlWorksheet, PackagePart?>{};
+@@ -788 +789,2 @@ class SheetSerializer {
+-      // Reject malformed comments ownership before any package parts change.
++      // Capture only existing source-sheet ownership before any parts change.
++      // Newly allocated sheets must never adopt an unrelated legacy-named part.
+@@ -791,2 +793,6 @@ class SheetSerializer {
+-        if (sourceUri != null) {
+-          _sheetCommentsPart(sheet, sourcePackage, sourceUri);
++        if (sourceUri != null && sourcePackage.getPart(sourceUri) != null) {
++          sourceComments[sheet] = _sheetCommentsPart(
++            sheet,
++            sourcePackage,
++            sourceUri,
++          );
+@@ -882 +888,5 @@ class SheetSerializer {
+-      _writeSheetExtras(book.sheets[i], package);
++      _writeSheetExtras(
++        book.sheets[i],
++        package,
++        commentsPart: sourceComments[book.sheets[i]],
++      );
+@@ -907 +917,5 @@ class SheetSerializer {
+-  static void _writeSheetExtras(SmlWorksheet sheet, OpcPackage package) {
++  static void _writeSheetExtras(
++    SmlWorksheet sheet,
++    OpcPackage package, {
++    required PackagePart? commentsPart,
++  }) {
+@@ -910 +923,0 @@ class SheetSerializer {
+-    final commentsPart = _sheetCommentsPart(sheet, package, sheetUri);
+@@ -913,3 +926,3 @@ class SheetSerializer {
+-    // Removing an authored link can make an unrelated legacy-named part the
+-    // fallback on the next import. Retain an authoritative empty part in that
+-    // case, preserving the decoy and avoiding deleted comments resurfacing.
++    // A new sheet or removal of an authored link can expose an unrelated
++    // legacy-named part as the fallback on the next import. Keep a distinct
++    // authoritative empty part so the orphan survives without becoming a note.
+@@ -917 +929,0 @@ class SheetSerializer {
+-        commentsPart != null &&
+@@ -919 +931 @@ class SheetSerializer {
+-        legacyPart.uri != commentsPart.uri &&
++        legacyPart.uri != commentsPart?.uri &&
+diff --git a/packages/quds_office_engine/test/sheet_comments_namespace_test.dart b/packages/quds_office_engine/test/sheet_comments_namespace_test.dart
+index ea7bfaf..e09987b 100644
+--- a/packages/quds_office_engine/test/sheet_comments_namespace_test.dart
++++ b/packages/quds_office_engine/test/sheet_comments_namespace_test.dart
+@@ -82,0 +83,8 @@ void main() {
++          final orphanRelationships = source.relationshipsFor(orphanUri)
++            ..add(
++              id: 'rIdAudit',
++              type: 'urn:example:orphan-audit',
++              target: 'https://example.test/orphan',
++              targetMode: RelationshipTargetMode.external,
++            );
++          final orphanRelationshipsXml = orphanRelationships.toXml();
+@@ -130,0 +139,5 @@ void main() {
++            expect(
++              saved.relationshipsFor(orphanUri).toXml(),
++              orphanRelationshipsXml,
++              reason: 'unrelated orphan relationships remain unchanged',
++            );
+@@ -131,0 +145 @@ void main() {
++            expect(rels.byType(RelationshipTypes.comments), hasLength(1));
+@@ -134,0 +149,17 @@ void main() {
++            final ownedPart = saved.getPart(rels.resolve(owned))!;
++            expect(ownedPart.contentType, OfficeContentTypes.sheetComments);
++            final root = XmlDocument.parse(ownedPart.readText()).root!;
++            expect(root.localName, 'comments');
++            expect(root.namespaceUri, OfficeNamespaces.x);
++            expect(root.childElements.map((child) => child.localName), [
++              'authors',
++              'commentList',
++            ]);
++            for (final element in _elements(root)) {
++              expect(element.namespaceUri, OfficeNamespaces.x);
++            }
++            if (note == null) {
++              for (final child in root.childElements) {
++                expect(child.childElements, isEmpty);
++              }
++            }
+diff --git a/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart b/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart
+index 22ce28b..9b54527 100644
+--- a/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart
++++ b/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart
+@@ -44 +44,84 @@ void main(List<String> args) {
+-  stdout.writeln('Wrote three XLSX packages with six comments each.');
++  _writeCollisionFixtures(output);
++  stdout.writeln(
++    'Wrote three repeated-save and six orphan-collision XLSX packages.',
++  );
++}
++
++void _writeCollisionFixtures(Directory output) {
++  final cases = <Map<String, Object>>[];
++  for (final malformed in [false, true]) {
++    final original = SmlWorksheet(name: 'Original', sheetId: 1);
++    original.cellA1('A1').value = 'Original value';
++    original.comments.add(
++      SmlComment(
++        ref: SmlCellRef.parse('A1'),
++        text: 'Original note',
++        author: 'Original reviewer',
++      ),
++    );
++    final source = SheetSerializer().write(SmlWorkbook(sheets: [original]));
++    const orphanUri = '/xl/comments2.xml';
++    final orphanBytes = utf8.encode(
++      malformed
++          ? '<unrelated xmlns="${OfficeNamespaces.x}"/>'
++          : '<comments xmlns="${OfficeNamespaces.x}">'
++                '<authors><author>Unrelated author</author></authors>'
++                '<commentList><comment ref="A1" authorId="0">'
++                '<text><t>Retain this unrelated part</t></text>'
++                '</comment></commentList></comments>',
++    );
++    source.createPart(orphanUri, OfficeContentTypes.sheetComments, orphanBytes);
++    final orphanRelationships = source.relationshipsFor(orphanUri)
++      ..add(
++        id: 'rIdAudit',
++        type: 'urn:example:orphan-audit',
++        target: 'https://example.test/orphan',
++        targetMode: RelationshipTargetMode.external,
++      );
++    final orphanRelationshipsBytes = utf8.encode(orphanRelationships.toXml());
++    var book = SheetDeserializer().readBytes(source.save());
++    final added = SmlWorksheet(name: 'Added', sheetId: 2);
++    added.cellA1('A1').value = 'New value';
++    book.sheets.add(added);
++    for (final phase in ['empty', 'added', 'cleared']) {
++      final expected = <Map<String, String>>[];
++      book.sheets[1].comments.clear();
++      if (phase == 'added') {
++        const note = ' added & reviewed \n café 🙂 ';
++        book.sheets[1].comments.add(
++          SmlComment(
++            ref: SmlCellRef.parse('B2'),
++            text: note,
++            author: 'New reviewer',
++          ),
++        );
++        expected.add({'cell': 'B2', 'text': note, 'author': 'New reviewer'});
++      }
++      final file = 'collision-${malformed ? 'malformed' : 'valid'}-$phase.xlsx';
++      final bytes = SheetSerializer().write(book, recalculate: false).save();
++      File('${output.path}/$file').writeAsBytesSync(bytes);
++      cases.add({
++        'file': file,
++        'phase': phase,
++        'sheet_name': 'Added',
++        'orphan_part': 'xl/comments2.xml',
++        'orphan_base64': base64Encode(orphanBytes),
++        'orphan_content_type': OfficeContentTypes.sheetComments,
++        'orphan_relationships_part': 'xl/_rels/comments2.xml.rels',
++        'orphan_relationships_base64': base64Encode(orphanRelationshipsBytes),
++        'comments': expected,
++        'original_sheet_name': 'Original',
++        'original_comments': [
++          {
++            'cell': 'A1',
++            'text': 'Original note',
++            'author': 'Original reviewer',
++          },
++        ],
++      });
++      book = SheetDeserializer().readBytes(bytes);
++    }
++  }
++  File('${output.path}/collision-cases.json').writeAsStringSync(
++    '${const JsonEncoder.withIndent('  ').convert({'schema_version': 1, 'cases': cases})}\n',
++  );
