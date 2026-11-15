@@ -18,7 +18,10 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          builder: (_, child) => AppScaffoldMessenger(child: child!),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(accessibleNavigation: true),
+            child: AppScaffoldMessenger(child: child!),
+          ),
           home: Scaffold(
             body: Builder(
               builder: (context) => TextButton(
