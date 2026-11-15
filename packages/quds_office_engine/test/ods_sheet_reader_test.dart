@@ -135,6 +135,16 @@ void edgeTests() {
     expect(merge.r1, 1);
     expect(sheet.cellA1('D1').horizontalAlign, SmlHAlign.center);
     expect(book.sheets[1].cellA1('A1').value, 41);
+    expect(sheet.cellA1('E3').value, 'A    B');
+    expect(sheet.cellA1('E4').value, 'L1\nL2');
+    expect(
+      styles.format(sheet.cellA1('F3').value, sheet.cellA1('F3').styleIndex),
+      '2024-03-04',
+    );
+    expect(
+      styles.format(sheet.cellA1('F4').value, sheet.cellA1('F4').styleIndex),
+      '2024-03-04 13:45',
+    );
   });
 
   test('edge ODS survives an xlsx round trip', () async {

@@ -1472,7 +1472,7 @@ DateTime excelSerialToDate(double serial) {
 
 /// formatExcelDate API.
 String formatExcelDate(DateTime dt, String code) {
-  const List<String> months = <String>[
+  const List<String> shortMonths = <String>[
     'Jan',
     'Feb',
     'Mar',
@@ -1486,8 +1486,40 @@ String formatExcelDate(DateTime dt, String code) {
     'Nov',
     'Dec',
   ];
+  const List<String> longMonths = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const List<String> shortDays = <String>[
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+  const List<String> longDays = <String>[
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
   String pad(int value, int width) => value.toString().padLeft(width, '0');
-  final String month = months[dt.month - 1];
+  final String month = shortMonths[dt.month - 1];
   // Literal escapes (`\.`) and quoted text must not be treated as date
   // tokens; Excel prints dd\.mm\.yyyy as 15.03.2023.
   final List<String> literals = <String>[];
@@ -1529,6 +1561,11 @@ String formatExcelDate(DateTime dt, String code) {
       i += 2;
       continue;
     }
+    if (upper.startsWith('MMMM', i)) {
+      out.write(longMonths[dt.month - 1]);
+      i += 4;
+      continue;
+    }
     if (upper.startsWith('MMM', i)) {
       out.write(month);
       i += 3;
@@ -1542,6 +1579,16 @@ String formatExcelDate(DateTime dt, String code) {
     if (upper[i] == 'M') {
       out.write(timeMode ? '${dt.minute}' : '${dt.month}');
       i += 1;
+      continue;
+    }
+    if (upper.startsWith('DDDD', i)) {
+      out.write(longDays[dt.weekday - 1]);
+      i += 4;
+      continue;
+    }
+    if (upper.startsWith('DDD', i)) {
+      out.write(shortDays[dt.weekday - 1]);
+      i += 3;
       continue;
     }
     if (upper.startsWith('DD', i)) {

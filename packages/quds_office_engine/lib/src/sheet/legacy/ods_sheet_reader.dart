@@ -30,6 +30,9 @@ class OdsSheetFormatException implements Exception {
 
 /// Reads an `.ods` package into [SmlWorkbook].
 abstract final class OdsSheetReader {
+  static const double _odfMaxDigitWidthPx = 7.4;
+  static const double _odfDefaultColumnWidthIn = 0.8898;
+  static const double _odfDefaultRowHeightPoints = 14.95;
   static const int _maxRows = 100000;
   static const int _maxColumns = 4096;
 
@@ -135,6 +138,9 @@ abstract final class OdsSheetReader {
             : 'Sheet$sheetId',
         sheetId: sheetId,
       );
+      sheet.importDefaultColumnWidth(
+        excelWidth: _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx,
+      );
       final columnDefaults = _readColumns(table, sheet, styles);
       var rowIndex = 0;
       final rows = table.childElements
@@ -192,7 +198,10 @@ abstract final class OdsSheetReader {
             column += span;
           }
         }
-        if (rowHeight != null && rowHeight > 0) {
+        if (rowHeight != null &&
+            rowHeight > 0 &&
+            (hasContent ||
+                (rowHeight - _odfDefaultRowHeightPoints).abs() > 0.1)) {
           for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
             sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
               rowHeight,
@@ -264,7 +273,15 @@ abstract final class OdsSheetReader {
       final defaultStyle = element.getAttribute('default-cell-style-name');
       for (var i = 0; i < repeat && column < _maxColumns; i++) {
         if (width != null && width > 0) {
-          sheet.setColumnWidth(column, width * 96 / 72);
+          // ODF widths are physical lengths. LibreOffice converts them to
+          // Excel character units with its 10pt default-font digit width;
+          // retaining that native width keeps a round trip exact.
+          final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
+          final defaultChars =
+              _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
+          if ((chars - defaultChars).abs() > 0.05) {
+            sheet.importColumnWidth(column, chars);
+          }
         }
         if (defaultStyle != null && defaultStyle.isNotEmpty) {
           defaults[column] = defaultStyle;
@@ -328,15 +345,21 @@ abstract final class OdsSheetReader {
       numberStyles,
       element.getAttribute('value-type'),
     );
+    // Inherited column/row defaults apply to real cells, but materializing
+    // every cell of a 16k-column padding run would create millions of empty
+    // cells. Only an explicit, non-default cell style can stand alone.
+    final explicitStyle = element.getAttribute('style-name');
     final styled =
-        bold ||
-        fontSize != null ||
-        color != null ||
-        fill != null ||
-        align != SmlHAlign.general ||
-        wrap ||
-        family != null ||
-        numFmt != null;
+        explicitStyle != null &&
+        explicitStyle != 'Default' &&
+        (bold ||
+            fontSize != null ||
+            color != null ||
+            fill != null ||
+            align != SmlHAlign.general ||
+            wrap ||
+            family != null ||
+            numFmt != null);
 
     if (value == null && formula == null && !styled) return null;
 
@@ -423,9 +446,22 @@ abstract final class OdsSheetReader {
       case 'percentage-style':
         return '${_zeros(style)}%';
       case 'currency-style':
-        return '#,##0.00';
+        final symbol = _descendants(
+          style,
+          'currency-symbol',
+        ).map(_text).whereType<String>().firstOrNull;
+        final decimals = _decimals(style);
+        final base = '#,##0${decimals == 0 ? '' : '.${'0' * decimals}'}';
+        if (symbol == r'$') {
+          return r'[$$-409]'
+              '$base'
+              r';[red]-[$$-409]'
+              '$base';
+        }
+        if (symbol == null || symbol.isEmpty) return base;
+        return '"$symbol"$base';
       case 'date-style':
-        return 'DD.MM.YYYY';
+        return _dateFormat(style);
       case 'time-style':
         final hours = _descendants(style, 'hours').isNotEmpty;
         final minutes = _descendants(style, 'minutes').isNotEmpty;
@@ -445,6 +481,42 @@ abstract final class OdsSheetReader {
         return decimals == 0 ? integer : '$integer.${'0' * decimals}';
     }
     return null;
+  }
+
+  /// Renders an ODF date-style in its authored component order. Dates were
+  /// previously forced to DD.MM.YYYY, which silently rewrote ISO and US dates.
+  static String _dateFormat(XmlElement style) {
+    final buffer = StringBuffer();
+    for (final child in style.childElements) {
+      switch (child.localName) {
+        case 'year':
+          buffer.write(child.getAttribute('style') == 'short' ? 'YY' : 'YYYY');
+        case 'month':
+          if (child.getAttribute('textual') == 'true') {
+            buffer.write(child.getAttribute('style') == 'short' ? 'MMM' : 'MMMM');
+          } else {
+            buffer.write(child.getAttribute('style') == 'short' ? 'M' : 'MM');
+          }
+        case 'day':
+          buffer.write(child.getAttribute('style') == 'short' ? 'D' : 'DD');
+        case 'day-of-week':
+          buffer.write('DDD');
+        case 'hours':
+          buffer.write('HH');
+        case 'minutes':
+          buffer.write('MM');
+        case 'seconds':
+          buffer.write('SS');
+        case 'am-pm':
+          buffer.write('AM/PM');
+        case 'text':
+          // The reader skips whitespace-only text nodes, so an empty
+          // number:text is a separator (usually a space).
+          final literal = child.text;
+          buffer.write(literal.isEmpty ? ' ' : literal);
+      }
+    }
+    return buffer.isEmpty ? 'DD.MM.YYYY' : buffer.toString();
   }
 
   static String _zeros(XmlElement style) {
@@ -491,11 +563,42 @@ abstract final class OdsSheetReader {
     if (paragraphs.isEmpty) return element.text.trim();
     final buffer = StringBuffer();
     for (final paragraph in paragraphs) {
-      final text = paragraph.text.trim();
+      final text = _paragraphText(paragraph).trim();
       if (text.isNotEmpty) {
-        if (buffer.isNotEmpty) buffer.write(' ');
+        if (buffer.isNotEmpty) buffer.write('\n');
         buffer.write(text);
       }
+    }
+    return buffer.toString();
+  }
+
+  /// ODF escapes meaningful repeated spaces and breaks as elements rather
+  /// than raw characters; a plain `.text` walk would silently collapse them.
+  static String _paragraphText(XmlElement paragraph) {
+    final buffer = StringBuffer();
+    void walk(XmlNode node) {
+      if (node is XmlText) {
+        buffer.write(node.text);
+        return;
+      }
+      if (node is! XmlElement) return;
+      switch (node.localName) {
+        case 's':
+          final count = int.tryParse(node.getAttribute('c') ?? '') ?? 1;
+          buffer.write(' ' * count.clamp(1, 1024));
+        case 'tab':
+          buffer.write('\t');
+        case 'line-break':
+          buffer.write('\n');
+        default:
+          for (final child in node.children) {
+            walk(child);
+          }
+      }
+    }
+
+    for (final child in paragraph.children) {
+      walk(child);
     }
     return buffer.toString();
   }
