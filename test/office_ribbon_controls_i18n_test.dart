@@ -7,25 +7,52 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 void main() {
-  test('ribbon control translations cover each language and count parameter',
-      () {
-    final translations = OfficeRibbonControlStrings.translations;
-    expect(translations.keys.toSet(),
-        {'de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'});
-    final keys = translations['de']!.keys.toSet();
-    for (final entry in translations.entries) {
-      expect(entry.value.keys.toSet(), keys, reason: entry.key);
-      expect(entry.value.values.every((s) => s.isNotEmpty), isTrue,
-          reason: entry.key);
-      expect(entry.value['{count} lines'], contains('{count}'),
-          reason: entry.key);
+  test('every modeled underline has a distinct translated choice', () {
+    final english = OfficeRibbonControlStrings.forLanguage('en');
+    final labels = WmlUnderline.values.map(english.underline).toSet();
+    expect(labels.length, WmlUnderline.values.length);
+    for (final table in OfficeRibbonControlStrings.translations.values) {
+      expect(table.keys.toSet().containsAll(labels), isTrue);
     }
-    expect(
-        OfficeRibbonControlStrings.forLanguage('de').lines(1.5), '1.5 Zeilen');
   });
+  test(
+    'ribbon control translations cover each language and count parameter',
+    () {
+      final translations = OfficeRibbonControlStrings.translations;
+      expect(translations.keys.toSet(), {
+        'de',
+        'fr',
+        'es',
+        'pt',
+        'zh',
+        'ja',
+        'ko',
+        'ar',
+      });
+      final keys = translations['de']!.keys.toSet();
+      for (final entry in translations.entries) {
+        expect(entry.value.keys.toSet(), keys, reason: entry.key);
+        expect(
+          entry.value.values.every((s) => s.isNotEmpty),
+          isTrue,
+          reason: entry.key,
+        );
+        expect(
+          entry.value['{count} lines'],
+          contains('{count}'),
+          reason: entry.key,
+        );
+      }
+      expect(
+        OfficeRibbonControlStrings.forLanguage('de').lines(1.5),
+        '1.5 Zeilen',
+      );
+    },
+  );
 
-  testWidgets('word ribbon localizes underline control and choices',
-      (tester) async {
+  testWidgets('word ribbon localizes underline control and choices', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1700, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -40,22 +67,24 @@ void main() {
       config: config,
     );
     addTearDown(controller.dispose);
-    await tester.pumpWidget(MaterialApp(
-      locale: const Locale('de'),
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: Scaffold(
-        body: OfficeEditorRibbon(
-          controller: controller,
-          kind: OfficeEditorKind.word,
-          config: config,
-          onSave: () {},
-          onClose: () {},
-          onConfigChanged: (_) {},
-          onFind: controller.requestFind,
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('de'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: OfficeEditorRibbon(
+            controller: controller,
+            kind: OfficeEditorKind.word,
+            config: config,
+            onSave: () {},
+            onClose: () {},
+            onConfigChanged: (_) {},
+            onFind: controller.requestFind,
+          ),
         ),
       ),
-    ));
+    );
     await tester.pump();
     expect(find.byTooltip('Menüband minimieren'), findsOneWidget);
     await tester.tap(find.byTooltip('Unterstreichungsstil'));

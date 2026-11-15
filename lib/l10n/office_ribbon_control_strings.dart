@@ -1,13 +1,34 @@
+import 'package:quds_office_engine/quds_office_engine.dart' show WmlUnderline;
 import 'package:flutter/widgets.dart';
 
 /// Labels for ribbon controls that use non-text values.
 class OfficeRibbonControlStrings {
   OfficeRibbonControlStrings(BuildContext context)
-      : _language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
+    : _language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
   @visibleForTesting
   OfficeRibbonControlStrings.forLanguage(this._language);
   final String _language;
   String text(String english) => _translations[_language]?[english] ?? english;
+  String underline(WmlUnderline style) => text(switch (style) {
+    WmlUnderline.none => 'None',
+    WmlUnderline.single => 'Single',
+    WmlUnderline.double => 'Double',
+    WmlUnderline.dotted => 'Dotted',
+    WmlUnderline.wavy => 'Wavy',
+    WmlUnderline.words => 'Words only',
+    WmlUnderline.thick => 'Thick',
+    WmlUnderline.dottedHeavy => 'Heavy dotted',
+    WmlUnderline.dash => 'Dashed',
+    WmlUnderline.dashedHeavy => 'Heavy dashed',
+    WmlUnderline.dashLong => 'Long dash',
+    WmlUnderline.dashLongHeavy => 'Heavy long dash',
+    WmlUnderline.dotDash => 'Dot dash',
+    WmlUnderline.dashDotHeavy => 'Heavy dot dash',
+    WmlUnderline.dotDotDash => 'Dot dot dash',
+    WmlUnderline.dashDotDotHeavy => 'Heavy dot dot dash',
+    WmlUnderline.wavyHeavy => 'Heavy wavy',
+    WmlUnderline.wavyDouble => 'Double wavy',
+  });
   String lines(double count) =>
       text('{count} lines').replaceAll('{count}', '$count');
   @visibleForTesting
@@ -16,6 +37,20 @@ class OfficeRibbonControlStrings {
 
 const _translations = <String, Map<String, String>>{
   "de": {
+    "Words only": "Nur Wörter",
+    "Thick": "Dick",
+    "Heavy dotted": "Dick gepunktet",
+    "Dashed": "Gestrichelt",
+    "Heavy dashed": "Dick gestrichelt",
+    "Long dash": "Langer Strich",
+    "Heavy long dash": "Dicker langer Strich",
+    "Dot dash": "Strich-Punkt",
+    "Heavy dot dash": "Dicker Strich-Punkt",
+    "Dot dot dash": "Strich-Punkt-Punkt",
+    "Heavy dot dot dash": "Dicker Strich-Punkt-Punkt",
+    "Heavy wavy": "Dick gewellt",
+    "Double wavy": "Doppelt gewellt",
+
     "Expand ribbon": "Menüband erweitern",
     "Collapse ribbon": "Menüband minimieren",
     "Underline style": "Unterstreichungsstil",
@@ -37,6 +72,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "Dauer",
   },
   "fr": {
+    "Words only": "Mots seuls",
+    "Thick": "Épais",
+    "Heavy dotted": "Pointillé épais",
+    "Dashed": "Tirets",
+    "Heavy dashed": "Tirets épais",
+    "Long dash": "Tirets longs",
+    "Heavy long dash": "Tirets longs épais",
+    "Dot dash": "Point-tiret",
+    "Heavy dot dash": "Point-tiret épais",
+    "Dot dot dash": "Deux points-tiret",
+    "Heavy dot dot dash": "Deux points-tiret épais",
+    "Heavy wavy": "Ondulé épais",
+    "Double wavy": "Ondulé double",
+
     "Expand ribbon": "Développer le ruban",
     "Collapse ribbon": "Réduire le ruban",
     "Underline style": "Style de soulignement",
@@ -58,6 +107,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "Durée",
   },
   "es": {
+    "Words only": "Solo palabras",
+    "Thick": "Grueso",
+    "Heavy dotted": "Punteado grueso",
+    "Dashed": "Guiones",
+    "Heavy dashed": "Guiones gruesos",
+    "Long dash": "Guion largo",
+    "Heavy long dash": "Guion largo grueso",
+    "Dot dash": "Punto y guion",
+    "Heavy dot dash": "Punto y guion grueso",
+    "Dot dot dash": "Dos puntos y guion",
+    "Heavy dot dot dash": "Dos puntos y guion grueso",
+    "Heavy wavy": "Ondulado grueso",
+    "Double wavy": "Ondulado doble",
+
     "Expand ribbon": "Expandir cinta",
     "Collapse ribbon": "Contraer cinta",
     "Underline style": "Estilo de subrayado",
@@ -79,6 +142,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "Duración",
   },
   "pt": {
+    "Words only": "Apenas palavras",
+    "Thick": "Espesso",
+    "Heavy dotted": "Pontilhado espesso",
+    "Dashed": "Tracejado",
+    "Heavy dashed": "Tracejado espesso",
+    "Long dash": "Traço longo",
+    "Heavy long dash": "Traço longo espesso",
+    "Dot dash": "Ponto e traço",
+    "Heavy dot dash": "Ponto e traço espesso",
+    "Dot dot dash": "Dois pontos e traço",
+    "Heavy dot dot dash": "Dois pontos e traço espesso",
+    "Heavy wavy": "Ondulado espesso",
+    "Double wavy": "Ondulado duplo",
+
     "Expand ribbon": "Expandir friso",
     "Collapse ribbon": "Recolher friso",
     "Underline style": "Estilo de sublinhado",
@@ -100,6 +177,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "Duração",
   },
   "zh": {
+    "Words only": "仅文字",
+    "Thick": "粗线",
+    "Heavy dotted": "粗点线",
+    "Dashed": "虚线",
+    "Heavy dashed": "粗虚线",
+    "Long dash": "长划线",
+    "Heavy long dash": "粗长划线",
+    "Dot dash": "点划线",
+    "Heavy dot dash": "粗点划线",
+    "Dot dot dash": "双点划线",
+    "Heavy dot dot dash": "粗双点划线",
+    "Heavy wavy": "粗波浪线",
+    "Double wavy": "双波浪线",
+
     "Expand ribbon": "展开功能区",
     "Collapse ribbon": "折叠功能区",
     "Underline style": "下划线样式",
@@ -121,6 +212,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "持续时间",
   },
   "ja": {
+    "Words only": "単語のみ",
+    "Thick": "太線",
+    "Heavy dotted": "太い点線",
+    "Dashed": "破線",
+    "Heavy dashed": "太い破線",
+    "Long dash": "長い破線",
+    "Heavy long dash": "太い長破線",
+    "Dot dash": "一点鎖線",
+    "Heavy dot dash": "太い一点鎖線",
+    "Dot dot dash": "二点鎖線",
+    "Heavy dot dot dash": "太い二点鎖線",
+    "Heavy wavy": "太い波線",
+    "Double wavy": "二重波線",
+
     "Expand ribbon": "リボンを展開",
     "Collapse ribbon": "リボンを折りたたむ",
     "Underline style": "下線のスタイル",
@@ -142,6 +247,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "継続時間",
   },
   "ko": {
+    "Words only": "단어만",
+    "Thick": "굵게",
+    "Heavy dotted": "굵은 점선",
+    "Dashed": "파선",
+    "Heavy dashed": "굵은 파선",
+    "Long dash": "긴 파선",
+    "Heavy long dash": "굵은 긴 파선",
+    "Dot dash": "일점쇄선",
+    "Heavy dot dash": "굵은 일점쇄선",
+    "Dot dot dash": "이점쇄선",
+    "Heavy dot dot dash": "굵은 이점쇄선",
+    "Heavy wavy": "굵은 물결선",
+    "Double wavy": "이중 물결선",
+
     "Expand ribbon": "리본 펼치기",
     "Collapse ribbon": "리본 접기",
     "Underline style": "밑줄 스타일",
@@ -163,6 +282,20 @@ const _translations = <String, Map<String, String>>{
     "Duration": "지속 시간",
   },
   "ar": {
+    "Words only": "الكلمات فقط",
+    "Thick": "سميك",
+    "Heavy dotted": "منقط سميك",
+    "Dashed": "متقطع",
+    "Heavy dashed": "متقطع سميك",
+    "Long dash": "شرطة طويلة",
+    "Heavy long dash": "شرطة طويلة سميكة",
+    "Dot dash": "نقطة وشرطة",
+    "Heavy dot dash": "نقطة وشرطة سميكة",
+    "Dot dot dash": "نقطتان وشرطة",
+    "Heavy dot dot dash": "نقطتان وشرطة سميكة",
+    "Heavy wavy": "متموج سميك",
+    "Double wavy": "متموج مزدوج",
+
     "Expand ribbon": "توسيع الشريط",
     "Collapse ribbon": "طي الشريط",
     "Underline style": "نمط التسطير",
