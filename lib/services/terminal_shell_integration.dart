@@ -297,6 +297,9 @@ class TerminalShellIntegration extends ChangeNotifier {
 
   static String? _directory(String value) {
     if (value.isEmpty || value.length > maximumMetadataLength) return null;
+    // OSC 633 and iTerm2 also supply literal absolute paths. Characters such
+    // as #, ? and % are path characters there, not URI syntax or escapes.
+    if (value.startsWith('/')) return _displayText(value);
     final uri = Uri.tryParse(value);
     if (uri == null) return null;
     // OSC 7 uses file: URLs; OSC 633/iTerm2 may report an absolute path.

@@ -36,6 +36,7 @@ import 'ssh_terminal_profiles_dialog.dart';
 import 'terminal_tabs.dart';
 import 'terminal_search_bar.dart';
 import 'terminal_command_history_dialog.dart';
+import 'terminal_shell_setup_dialog.dart';
 import '../l10n/external_terminal_strings.dart';
 
 export '../models/ssh_terminal_config.dart';
@@ -125,6 +126,7 @@ enum _PanelAction {
   addMark,
   selectOutput,
   notifyCommand,
+  shellSetup,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -1007,6 +1009,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       case _PanelAction.notifyCommand:
         final shell = _session.shellIntegration;
         shell.notifyOnCompletion = !shell.notifyOnCompletion;
+      case _PanelAction.shellSetup:
+        unawaited(showDialog<void>(
+          context: context,
+          builder: (_) => const TerminalShellSetupDialog(),
+        ));
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:
@@ -1221,6 +1228,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         child: Text(
                           context.terminalControlsTr('Reset font size'),
                         ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.shellSetup,
+                        child: Text(context.terminalShellTr('Shell integration setup')),
                       ),
                       PopupMenuItem(
                         value: _PanelAction.history,
