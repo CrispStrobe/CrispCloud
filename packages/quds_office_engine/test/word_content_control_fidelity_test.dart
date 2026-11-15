@@ -997,4 +997,46 @@ void main() {
       expect(WordNotes.editableText(note), before);
     },
   );
+
+  OpcPackage sectionControlSource(String content) {
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body>'
+          '<w:sdt><w:sdtPr><w:id w:val="501"/></w:sdtPr>'
+          '<w:sdtContent>$content</w:sdtContent></w:sdt>'
+          '<w:p><w:r><w:t>After control</w:t></w:r></w:p>'
+          '<w:sectPr/></w:body></w:document>',
+        );
+    return package;
+  }
+
+  test('a body control ending in one section break lifts the break', () {
+    const content =
+        '<w:p><w:r><w:t>Inside</w:t></w:r></w:p>'
+        '<w:p><w:pPr><w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr></w:pPr>'
+        '<w:r><w:t>Last</w:t></w:r></w:p>';
+    final document = WordDeserializer().read(sectionControlSource(content));
+    expect(document.sections, hasLength(2));
+    expect(
+      document.sections.first.blocks.single,
+      isA<WmlContentControlBlock>(),
+    );
+    expect(document.sections.last.blocks.single, isA<WmlParagraph>());
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(document),
+    );
+    expect(reopened.sections, hasLength(2));
+  });
+
+  test('multiple section breaks in one control remain safely refused', () {
+    const content =
+        '<w:p><w:pPr><w:sectPr/></w:pPr><w:r><w:t>One</w:t></w:r></w:p>'
+        '<w:p><w:pPr><w:sectPr/></w:pPr><w:r><w:t>Two</w:t></w:r></w:p>';
+    expect(
+      () => WordDeserializer().read(sectionControlSource(content)),
+      throwsUnsupportedError,
+    );
+  });
 }
