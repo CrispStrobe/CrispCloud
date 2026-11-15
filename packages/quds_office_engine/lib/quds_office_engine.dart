@@ -67,6 +67,7 @@ export 'src/sheet/formula/formula_functions.dart';
 export 'src/sheet/formula/formula_guide.dart';
 export 'src/sheet/formula/formula_refs.dart';
 export 'src/sheet/legacy/legacy_sheet_reader.dart';
+export 'src/sheet/legacy/ods_sheet_reader.dart';
 export 'src/sheet/model/sheet_rename.dart';
 export 'src/sheet/model/sml_analysis.dart';
 export 'src/sheet/model/sml_power_query.dart';

@@ -54,7 +54,7 @@ continues to use strict parsing.
 
 ## State (14 November 2026, spreadsheet fidelity)
 
-- Pinned fork revision: `0918d2e5ad86ed5e57bb6637e3b9c9038f9e6f1e` (fork
+- Pinned fork revision: `9b81058f0e11bf866e3057a6f2f9a6c9a8ece0e2` (fork
   `main`, resolved by the sync tool), also containing the recovery checkpoint
   `2d2a7be4`.
 - Four spreadsheet defects found by the Excel fidelity audit are fixed and

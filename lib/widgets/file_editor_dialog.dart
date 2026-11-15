@@ -112,7 +112,7 @@ Future<void> showFileEditorDialog(
       if (isOfficeFileName(file.name)) {
         final ext = file.name.split('.').last.toLowerCase();
         // Legacy Excel opens as an in-memory XLSX import; Save writes a copy.
-        final saveAsName = (ext == 'xls' || ext == 'xlt')
+        final saveAsName = (ext == 'xls' || ext == 'xlt' || ext == 'ods')
             ? '${file.name.substring(0, file.name.length - ext.length)}xlsx'
             : null;
         await showOfficeEditorDialog(
