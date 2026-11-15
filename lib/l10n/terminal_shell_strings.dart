@@ -10,6 +10,10 @@ extension TerminalShellStrings on BuildContext {
 
 const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
 const _values = <String, List<String>>{
+  'Shell integration setup': ['Shell-Integration einrichten', 'Configurer l’intégration du shell', 'Configurar integración del intérprete', 'Configurar integração da shell', '设置 Shell 集成', 'シェル統合の設定', '셸 통합 설정', 'إعداد تكامل الصدفة'],
+  'Copy setup script': ['Einrichtungsskript kopieren', 'Copier le script de configuration', 'Copiar script de configuración', 'Copiar script de configuração', '复制设置脚本', '設定スクリプトをコピー', '설정 스크립트 복사', 'نسخ نص الإعداد'],
+  'Copied': ['Kopiert', 'Copié', 'Copiado', 'Copiado', '已复制', 'コピーしました', '복사됨', 'تم النسخ'],
+  'Copy the script, then paste and run it in the chosen shell. It enables integration for that session and preserves existing prompt hooks.': ['Kopieren Sie das Skript und führen Sie es in der gewählten Shell aus. Es aktiviert die Integration für diese Sitzung und erhält vorhandene Prompt-Hooks.', 'Copiez le script, puis collez-le et exécutez-le dans le shell choisi. Il active l’intégration pour cette session et préserve les fonctions d’invite existantes.', 'Copia el script, pégalo y ejecútalo en el intérprete elegido. Activa la integración para esa sesión y conserva los enlaces del indicador existentes.', 'Copie o script, cole-o e execute-o na shell escolhida. Ativa a integração para essa sessão e preserva as funções de prompt existentes.', '复制脚本，然后在所选 Shell 中粘贴并运行。它会为该会话启用集成，并保留现有的提示符钩子。', 'スクリプトをコピーし、選んだシェルに貼り付けて実行してください。そのセッションで統合を有効にし、既存のプロンプトフックを保持します。', '스크립트를 복사한 후 선택한 셸에 붙여넣고 실행하세요. 해당 세션의 통합을 활성화하고 기존 프롬프트 훅을 보존합니다.', 'انسخ النص ثم الصقه وشغّله في الصدفة المختارة. يفعّل التكامل لهذه الجلسة ويحافظ على وظائف الموجه الحالية.'],
   'Command history': [
     'Befehlsverlauf',
     'Historique des commandes',

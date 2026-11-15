@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-15",
+  "scope": "Current terminal continuation, separate from historical PR #140 validation",
+  "executed_before_environment_loss": {
+    "ssh_jump_model": {
+      "runtime": "Dart 3.13.7 VM",
+      "assertions_passed": 24,
+      "scope": "Pure model validation smoke, not Flutter transport/widget suites"
+    },
+    "shell_helpers": {
+      "shells": [
+        "bash --noprofile --norc -i",
+        "zsh -f -i"
+      ],
+      "checks_per_shell": 9,
+      "total_checks_passed": 18,
+      "checks": [
+        "syntax",
+        "successful invocation",
+        "OSC 133 A",
+        "OSC 133 B",
+        "OSC 133 C",
+        "success/failure D status",
+        "existing prompt hooks",
+        "percent-encoded Unicode working directory",
+        "idempotent setup"
+      ],
+      "limits": "Piped interactive shells, not PTYs. Run predates final remote review fixes. The subsequent Zsh precmd return-zero correction has not been executed."
+    }
+  },
+  "native_flutter_feature_tests": {
+    "completed": 0,
+    "status": "blocked",
+    "reason": "Filesystem exhausted during first test kernel cache copy; execution environment later became unavailable. See runtime-attempts.md and runtime-attempts.json."
+  },
+  "final_remote_review": {
+    "status": "source review only",
+    "executed": false,
+    "needs": [
+      "format/analyze current branch",
+      "run shell, input, broadcast, arrangement, jump route and multiplexer suites",
+      "repeat shell helper checks including nonzero-command Zsh hook ordering"
+    ]
+  },
+  "github_actions": {
+    "awaited": false,
+    "required": false,
+    "manually_triggered": false
+  },
+  "production_dependency_changes_for_terminal": false
+}
