@@ -1,0 +1,54 @@
+[
+  {
+    "index": "artifacts-sha256.json",
+    "files": 20,
+    "mismatches": []
+  },
+  {
+    "index": "changed-suite/artifacts-sha256.json",
+    "files": 8,
+    "mismatches": []
+  },
+  {
+    "index": "strict-analysis/artifacts-sha256.json",
+    "files": 6,
+    "mismatches": []
+  },
+  {
+    "gate": "changed-suite",
+    "entries_equal": true,
+    "snapshot_count": 1844,
+    "head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "tools_equal": true,
+    "returncode": 0,
+    "claimed_success": true
+  },
+  {
+    "gate": "strict-analysis",
+    "entries_equal": true,
+    "snapshot_count": 1844,
+    "head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "tools_equal": true,
+    "returncode": 0,
+    "claimed_success": true
+  },
+  {
+    "machine_events": {
+      "starts": 19,
+      "ends": 19,
+      "visible_tests": 18,
+      "visible_results": {
+        "success": 18
+      },
+      "non_successful_ends": [],
+      "done": [
+        {
+          "success": true,
+          "type": "done",
+          "time": 1024
+        }
+      ],
+      "errors": []
+    }
+  }
+]

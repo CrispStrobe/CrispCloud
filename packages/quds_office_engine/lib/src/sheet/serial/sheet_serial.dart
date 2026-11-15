@@ -23,6 +23,83 @@ import 'sheet_drawing_io.dart';
 
 part 'sheet_package_fidelity.dart';
 
+bool _hasOtherPartReference(
+  OpcPackage package,
+  String targetUri, {
+  String? ignoredSourceUri,
+  String? ignoredRelationshipId,
+}) {
+  bool references(RelationshipCollection relationships) {
+    return relationships.items.any((relationship) {
+      if (relationships.sourcePartUri == ignoredSourceUri &&
+          relationship.id == ignoredRelationshipId) {
+        return false;
+      }
+      return relationship.targetMode == RelationshipTargetMode.internal &&
+          relationships.resolve(relationship) == targetUri;
+    });
+  }
+
+  return references(package.packageRelationships) ||
+      package.parts.any(
+        (part) => references(package.relationshipsFor(part.uri)),
+      );
+}
+
+PackagePart? _sheetCommentsPart(
+  SmlWorksheet sheet,
+  OpcPackage package,
+  String sheetUri,
+) {
+  final relationships = package.relationshipsFor(sheetUri);
+  final links = relationships.byType(RelationshipTypes.comments).toList();
+  if (links.length > 1) {
+    throw const FormatException('Multiple worksheet comments relationships.');
+  }
+  PackagePart? part;
+  if (links.isEmpty) {
+    // Older Quds packages omitted the relationship. Keep that bounded fallback
+    // only for a genuine comments part not owned by another relationship.
+    part = package.getPart('/xl/comments${sheet.sheetId}.xml');
+    if (part == null ||
+        part.contentType != OfficeContentTypes.sheetComments ||
+        _hasOtherPartReference(package, part.uri)) {
+      return null;
+    }
+  } else {
+    final link = links.single;
+    final target = Uri.tryParse(link.target);
+    if (link.targetMode != RelationshipTargetMode.internal ||
+        target == null ||
+        target.path.isEmpty ||
+        target.hasScheme ||
+        target.hasAuthority ||
+        target.hasQuery ||
+        target.hasFragment) {
+      throw const FormatException(
+        'Invalid internal worksheet comments target.',
+      );
+    }
+    part = package.getPart(relationships.resolve(link));
+    if (part == null || part.contentType != OfficeContentTypes.sheetComments) {
+      throw const FormatException(
+        'Missing or invalid worksheet comments part.',
+      );
+    }
+  }
+  final reader = XmlPullReader(part.readText());
+  while (reader.next()) {
+    if (reader.eventType != XmlEventType.startElement) continue;
+    if (reader.localName == 'comments' &&
+        (reader.namespaceUri.isEmpty ||
+            reader.namespaceUri == OfficeNamespaces.x)) {
+      return part;
+    }
+    break;
+  }
+  throw const FormatException('Invalid worksheet comments root element.');
+}
+
 /// Class SheetDeserializer.
 class SheetDeserializer {
   /// Font lookup stays with the caller; null leaves the documented 7px fallback.
@@ -568,9 +645,7 @@ class SheetDeserializer {
     OpcPackage package,
     String sheetUri,
   ) {
-    final PackagePart? comments = package.getPart(
-      '/xl/comments${sheet.sheetId}.xml',
-    );
+    final PackagePart? comments = _sheetCommentsPart(sheet, package, sheetUri);
     if (comments != null) {
       final XmlPullReader reader = XmlPullReader(comments.readText());
       final List<String> authors = <String>[];
@@ -708,6 +783,16 @@ class SheetSerializer {
   /// write API.
   OpcPackage write(SmlWorkbook book, {bool recalculate = true}) {
     book.package?.assertUnsignedForEditing();
+    final sourcePackage = book.package;
+    if (sourcePackage != null) {
+      // Reject malformed comments ownership before any package parts change.
+      for (final sheet in book.sheets) {
+        final sourceUri = sheet.sourcePartUri;
+        if (sourceUri != null) {
+          _sheetCommentsPart(sheet, sourcePackage, sourceUri);
+        }
+      }
+    }
     book.applyResolvedColumnMetrics();
     if (recalculate) {
       FormulaDepGraph(book).recalculate();
@@ -820,10 +905,43 @@ class SheetSerializer {
   }
 
   static void _writeSheetExtras(SmlWorksheet sheet, OpcPackage package) {
-    if (sheet.comments.isNotEmpty) {
+    final sheetUri = sheet.sourcePartUri!;
+    final relationships = package.relationshipsFor(sheetUri);
+    final commentsPart = _sheetCommentsPart(sheet, package, sheetUri);
+    final commentsLink = relationships.firstByType(RelationshipTypes.comments);
+    final legacyPart = package.getPart('/xl/comments${sheet.sheetId}.xml');
+    // Removing an authored link can make an unrelated legacy-named part the
+    // fallback on the next import. Retain an authoritative empty part in that
+    // case, preserving the decoy and avoiding deleted comments resurfacing.
+    final keepEmptyAuthority =
+        commentsPart != null &&
+        legacyPart != null &&
+        legacyPart.uri != commentsPart.uri &&
+        legacyPart.contentType == OfficeContentTypes.sheetComments &&
+        !_hasOtherPartReference(package, legacyPart.uri);
+    if (sheet.comments.isNotEmpty || keepEmptyAuthority) {
+      // A shared part must not be overwritten through only one worksheet's
+      // model. Give this sheet its own part while retaining the other owner.
+      String? retainedUri = commentsPart?.uri;
+      if (retainedUri != null &&
+          _hasOtherPartReference(
+            package,
+            retainedUri,
+            ignoredSourceUri: sheetUri,
+            ignoredRelationshipId: commentsLink?.id,
+          )) {
+        retainedUri = null;
+      }
+      var uri = retainedUri ?? '/xl/comments${sheet.sheetId}.xml';
+      if (retainedUri == null) {
+        var suffix = 1;
+        while (package.getPart(uri) != null) {
+          uri = '/xl/comments${sheet.sheetId}_${suffix++}.xml';
+        }
+      }
       final XmlWriter w = XmlWriter();
       w.writeStartDocument();
-      w.writeStartElement('comments');
+      w.writeStartElement('comments', namespaceUri: OfficeNamespaces.x);
       // CT_Comments requires <authors> before <commentList>, and each comment's
       // author is an index into that table (not a name attribute).
       // Retain first-seen order while keeping large imported comment sets
@@ -845,13 +963,15 @@ class SheetSerializer {
         w.writeAttribute('ref', comment.ref.a1);
         w.writeAttribute('authorId', '${authors[comment.author]}');
         w.writeStartElement('text');
+        w.writeStartElement('t');
+        w.writeAttribute('xml:space', 'preserve');
         w.writeText(comment.text);
+        w.writeEndElement();
         w.writeEndElement();
         w.writeEndElement();
       }
       w.writeEndElement();
       w.writeEndElement();
-      final String uri = '/xl/comments${sheet.sheetId}.xml';
       final PackagePart? existing = package.getPart(uri);
       if (existing == null) {
         package.createPart(
@@ -864,16 +984,18 @@ class SheetSerializer {
           ..contentType = OfficeContentTypes.sheetComments
           ..writeText(w.toXml());
       }
-      if (sheet.sourcePartUri != null) {
-        final RelationshipCollection rels = package.relationshipsFor(
-          sheet.sourcePartUri!,
+      if (commentsLink == null || relationships.resolve(commentsLink) != uri) {
+        if (commentsLink != null) relationships.removeById(commentsLink.id);
+        relationships.add(
+          id: commentsLink?.id,
+          type: RelationshipTypes.comments,
+          target: OpcUris.relativize(sheetUri, uri),
         );
-        if (rels.firstByType(RelationshipTypes.comments) == null) {
-          rels.add(
-            type: RelationshipTypes.comments,
-            target: '../comments${sheet.sheetId}.xml',
-          );
-        }
+      }
+    } else if (commentsPart != null) {
+      if (commentsLink != null) relationships.removeById(commentsLink.id);
+      if (!_hasOtherPartReference(package, commentsPart.uri)) {
+        package.deletePart(commentsPart.uri);
       }
     }
     if (sheet.tables.isNotEmpty) {

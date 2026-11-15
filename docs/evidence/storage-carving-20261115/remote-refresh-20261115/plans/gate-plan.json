@@ -7,7 +7,10 @@
     "CrispCloud joined source": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
     "Quds fetched main": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
     "Quds merged source": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
-    "Parser merged source": "08296edbee08da013a8ff718798972552ccd03f7"
+    "Parser merged source": "08296edbee08da013a8ff718798972552ccd03f7",
+    "Quds final joined source": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+    "CrispCloud additional evidence merge": "7c1c925028d66f8109c628b8c17a0d4f1d70cb73",
+    "Parser evidence history merge": "fe916bf41eb7ecb6845f68b90c76c83d8f062a04"
   },
   "manifests": {
     "app-suites.txt": {
@@ -25,8 +28,10 @@
     },
     "engine-suites.txt": {
       "prior_count": 22,
-      "count": 22,
-      "additions": []
+      "count": 23,
+      "additions": [
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart"
+      ]
     },
     "analysis-app-files.txt": {
       "prior_count": 76,
@@ -35,8 +40,12 @@
     },
     "analysis-engine-files.txt": {
       "prior_count": 16,
-      "count": 16,
-      "additions": []
+      "count": 19,
+      "additions": [
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+      ]
     },
     "analysis-cli-files.txt": {
       "prior_count": 1,
@@ -72,6 +81,7 @@
     "editor",
     "engine",
     "scripted-oracle",
+    "comments-oracle",
     "source-integrity",
     "png-portable",
     "navigation-capture",
@@ -90,6 +100,8 @@
   ],
   "concrete_addition_rationale": {
     "office_fidelity_golden_test and office_structure_goldens_test": "Current Quds main adds reviewed Linux references. Run real comparison without updating or relaxing them.",
-    "ODS reader and app routes": "Current main adds strict merge-placeholder and 10,000-comment admission bounds."
+    "ODS reader and app routes": "Current main adds strict merge-placeholder and 10,000-comment admission bounds.",
+    "comments namespace, text and ownership regressions": "Confirmed independent-reader text loss, relocated comments ignored, and deleted comments resurrecting. Tests include malformed targets, shared parts, collisions and legacy fallback.",
+    "comments-oracle": "Generate three fresh XLSX cycles and read six exact comment texts/authors with independent XML and openpyxl checks."
   }
 }
