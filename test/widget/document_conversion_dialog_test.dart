@@ -36,8 +36,9 @@ void main() {
         if (find
             .byKey(const ValueKey('conversion-review'))
             .evaluate()
-            .isNotEmpty)
+            .isNotEmpty) {
           break;
+        }
       }
       expect(find.textContaining('OCR'), findsWidgets);
       final save = find.byKey(const ValueKey('conversion-save'));

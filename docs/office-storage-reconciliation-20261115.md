@@ -149,3 +149,27 @@ The [continuation receipts](evidence/storage-carving-20261115/resume-0806/README
 record exact source identities, merge checks and the current execution block.
 No fresh runtime or manifest SHA-256 rehash is claimed: local commands cannot
 start on the full filesystem. Prior test observations remain historical.
+
+## 09:14 UTC source refresh and ODS corrections
+
+The current continuation incorporates app main `6fcc4497` and all six incoming
+ODF PR #116 commits through `bda0374b`. The remote audit covers all 11 branches
+and 20 recently updated PRs; superseded branches contain no unique omitted
+implementation. The previous 41 executable-mode corrections are retained.
+
+Quds main `793c64ac` incorporates the incoming ODS source and the earlier Linux
+goldens. Canonical integration `1c1b0af8e20bb02f7d18b4e6cb116328f4342332`
+retains both that main and the earlier qualification branch as parents. It fixes
+internal blank-row truncation, double-counted covered merge cells, and formula
+rewrites that altered quoted strings or sheet identifiers. Focused development
+runs reproduced the defects and then passed all 17 cases with strict scoped
+analysis. The app preview also preserves row/column positions and leading empty
+CSV rows, with four added host regression cases.
+
+Guarded synchronization changes exactly the canonical reader and its test,
+retaining all 2,223 managed files and standalone parser `d422fa99`. The local
+toolchain is restored, app/CLI resolution enforces unchanged committed locks,
+and package-local development graphs are retained. The source-only gate now
+includes host inventory controls; the scripted-output oracle follows the real
+engine artifact generator. Fresh combined runtime acceptance is recorded in
+`evidence/storage-carving-20261115/local-resume-20261115T1010/`.

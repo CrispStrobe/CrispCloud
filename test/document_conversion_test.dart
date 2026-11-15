@@ -96,7 +96,7 @@ void main() {
     expect(result.notices.join(' '), contains('unencrypted'));
   });
   test('UTF-16 CSV input uses the shared text decoder', () async {
-    final text = 'name,value\nAlpha,42';
+    const text = 'name,value\nAlpha,42';
     final encoded = Uint8List.fromList([
       255,
       254,

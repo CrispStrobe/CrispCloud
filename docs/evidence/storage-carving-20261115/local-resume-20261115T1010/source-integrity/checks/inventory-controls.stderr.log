@@ -1,0 +1,26 @@
+test_arbitrary_package_name_cannot_expand_clean_scope (test_inventory.InventoryTest.test_arbitrary_package_name_cannot_expand_clean_scope) ... ok
+test_clean_preflights_every_path_before_any_deletion (test_inventory.InventoryTest.test_clean_preflights_every_path_before_any_deletion) ... ok
+test_clean_refuses_symlinked_parent_directory (test_inventory.InventoryTest.test_clean_refuses_symlinked_parent_directory) ... ok
+test_clean_removes_only_known_files_and_receipt (test_inventory.InventoryTest.test_clean_removes_only_known_files_and_receipt) ... ok
+test_cli_refuses_wrong_package_before_cleaning_any_artifact (test_inventory.InventoryTest.test_cli_refuses_wrong_package_before_cleaning_any_artifact) ... ok
+test_complete_inventory_receipt_records_real_bytes_and_manifest (test_inventory.InventoryTest.test_complete_inventory_receipt_records_real_bytes_and_manifest) ... ok
+test_default_package_root_does_not_depend_on_cwd (test_inventory.InventoryTest.test_default_package_root_does_not_depend_on_cwd) ... ok
+test_duplicate_empty_or_miscounted_manifest_fails (test_inventory.InventoryTest.test_duplicate_empty_or_miscounted_manifest_fails) ... ok
+test_editor_manifest_cannot_clean_engine_root (test_inventory.InventoryTest.test_editor_manifest_cannot_clean_engine_root) ... ok
+test_editor_manifest_requires_explicit_package_selection (test_inventory.InventoryTest.test_editor_manifest_requires_explicit_package_selection) ... ok
+test_empty_or_truncated_zip_never_counts_as_evidence (test_inventory.InventoryTest.test_empty_or_truncated_zip_never_counts_as_evidence) ... ok
+test_empty_zip_is_not_an_office_package (test_inventory.InventoryTest.test_empty_zip_is_not_an_office_package) ... ok
+test_failed_run_replaces_prior_success_receipt (test_inventory.InventoryTest.test_failed_run_replaces_prior_success_receipt) ... ok
+test_manifest_cycle_definition_cannot_silently_shrink (test_inventory.InventoryTest.test_manifest_cycle_definition_cannot_silently_shrink) ... ok
+test_manifest_paths_cannot_escape_or_target_other_build_files (test_inventory.InventoryTest.test_manifest_paths_cannot_escape_or_target_other_build_files) ... ok
+test_missing_build_cannot_pass (test_inventory.InventoryTest.test_missing_build_cannot_pass) ... ok
+test_same_count_with_wrong_name_fails_exact_membership (test_inventory.InventoryTest.test_same_count_with_wrong_name_fails_exact_membership) ... ok
+test_selected_editor_inventory_and_receipt_use_editor_package (test_inventory.InventoryTest.test_selected_editor_inventory_and_receipt_use_editor_package) ... ok
+test_unlisted_whole_directory_is_not_silently_ignored (test_inventory.InventoryTest.test_unlisted_whole_directory_is_not_silently_ignored) ... ok
+test_whole_missing_group_fails_even_when_other_groups_pass (test_inventory.InventoryTest.test_whole_missing_group_fails_even_when_other_groups_pass) ... ok
+test_wrong_package_is_rejected_before_mutation (test_inventory.InventoryTest.test_wrong_package_is_rejected_before_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.030s
+
+OK

@@ -1,0 +1,73 @@
+{
+  "after_inputs": {
+    ".dart_tool/package_config.json": {
+      "sha256": "fe1af4f25ddc2b97a6bab19a1970cb42836960b70baafe1fb5029b31185f29f8",
+      "size": 59405
+    },
+    ".dart_tool/package_graph.json": {
+      "sha256": "e5428055c188f2baf66b2fea2b111f6b9e867e982aa8eaddcf11e20a6f8d63a7",
+      "size": 52197
+    },
+    "pubspec.lock": {
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "size": 63283
+    },
+    "pubspec.yaml": {
+      "sha256": "919401d5798e93e98a3905a5009b54445998f061d2ca37f6f4b3c5c065f04784",
+      "size": 11439
+    }
+  },
+  "before_inputs": {
+    ".dart_tool/package_config.json": {
+      "missing": true
+    },
+    ".dart_tool/package_graph.json": {
+      "missing": true
+    },
+    "pubspec.lock": {
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "size": 63283
+    },
+    "pubspec.yaml": {
+      "sha256": "919401d5798e93e98a3905a5009b54445998f061d2ca37f6f4b3c5c065f04784",
+      "size": 11439
+    }
+  },
+  "command": [
+    "flutter",
+    "--no-version-check",
+    "--suppress-analytics",
+    "pub",
+    "get",
+    "--enforce-lockfile"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "elapsed_seconds": 397.4330154449999,
+  "environment": {
+    "CARGO_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/cargo-home",
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ROOT": "/workspace/scratch/aed049b7e8bd/toolchains/flutter",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "LD_LIBRARY_PATH": "/workspace/scratch/aed049b7e8bd/toolchains/lib:/workspace/scratch/aed049b7e8bd/toolchains/native/usr/lib/x86_64-linux-gnu",
+    "PATH": "/workspace/scratch/aed049b7e8bd/toolchains/bin:/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "PUB_CACHE": "/workspace/scratch/aed049b7e8bd/toolchains/pub-cache",
+    "TMPDIR": "/workspace/scratch/aed049b7e8bd/toolchains/tmp",
+    "XDG_CACHE_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/cache",
+    "XDG_CONFIG_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/config"
+  },
+  "finished_at": "2026-11-15T09:27:57.038263+00:00",
+  "lock_enforcement": true,
+  "lock_unchanged": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "pubspec_unchanged": true,
+  "resolution_success": true,
+  "returncode": 0,
+  "schema": 1,
+  "scope": "Dependency setup only; application source may change concurrently. Not runtime qualification.",
+  "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e",
+  "source_head_at_start": "6cd7ec9d24d3951b563c92c4507d6ca9382e9508",
+  "source_tree_at_start": "c74e6416763a2a62cb075e2dc92b8ad3e3a4b0ae",
+  "started_at": "2026-11-15T09:21:19.605291+00:00",
+  "status": "completed"
+}

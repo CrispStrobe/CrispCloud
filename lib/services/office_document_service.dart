@@ -1078,7 +1078,7 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
     plainText: plain,
     markdownHeadings: headings,
     textHeadings: textHeadings,
-    csv: csv.toString().trimRight(),
+    csv: csv.toString().replaceFirst(RegExp(r'\n+$'), ''),
     rawXml: _capRaw(xml, 'content.xml'),
   );
 }

@@ -1,0 +1,14 @@
+{
+  "base_commit": "793c64ac4fc2e896706aa65c13eaa70bd27f7267",
+  "inputs": {
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": {
+      "sha256": "51825c538765185697576907169e66c49fbfb818893004e2c59918dd24907f38",
+      "git_blob": "0866f7078cfc7eb3fb88dad71609893ac9db8c9d"
+    },
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "sha256": "45a4c25c12c6364832ac4803abcf4ef15d375b02a91c3943c46b2a790dae4ede",
+      "git_blob": "32537eef9f098ddf284adfcc84cf8c4dd48e0272"
+    }
+  },
+  "development_only": true
+}

@@ -1,0 +1,5 @@
+#!/bin/sh
+export TMPDIR='/workspace/scratch/aed049b7e8bd/toolchains/tmp'
+export CARGO_HOME='/workspace/scratch/aed049b7e8bd/toolchains/cargo-home'
+export PATH='/workspace/scratch/aed049b7e8bd/toolchains/rust/bin':"$PATH"
+exec '/workspace/scratch/aed049b7e8bd/toolchains/rust/bin/rustdoc' "$@"

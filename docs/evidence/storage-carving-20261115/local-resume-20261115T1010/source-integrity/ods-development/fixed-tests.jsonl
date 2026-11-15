@@ -1,0 +1,37 @@
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.1","pid":6,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"test/ods_sheet_reader_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading test/ods_sheet_reader_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"count":1,"time":7,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1220}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":15,"line":null,"column":null,"url":null},"type":"group","time":1222}
+{"test":{"id":3,"name":"reads ODS values, formulas, styles and merges","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":14,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1222}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1360}
+{"test":{"id":4,"name":"an imported ODS saves as a readable .xlsx","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":39,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1360}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1444}
+{"test":{"id":5,"name":"keeps internal repeated blank rows without expanding trailing padding","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":51,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1445}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1464}
+{"test":{"id":6,"name":"blank runs retain the row limit without materializing empty cells","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":93,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1465}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1467}
+{"test":{"id":7,"name":"horizontal merge consumes explicit placeholder once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":129,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1467}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1472}
+{"test":{"id":8,"name":"horizontal merge consumes omitted placeholder once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":129,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1473}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1478}
+{"test":{"id":9,"name":"horizontal merge consumes repeated placeholders once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":129,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1478}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1481}
+{"test":{"id":10,"name":"horizontal merge consumes additional covered column once","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":129,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1481}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1484}
+{"test":{"id":11,"name":"a new origin clears unconsumed merge placeholders","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":150,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1484}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1487}
+{"test":{"id":12,"name":"merge spans and repeated covered cells respect the column limit","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":170,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1488}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1490}
+{"test":{"id":13,"name":"formula translation preserves literals in of:=\"a;b\"","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":195,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1490}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1493}
+{"test":{"id":14,"name":"formula translation preserves literals in of:=\"literal [.A1];COM.MICROSOFT.SUM\"","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":195,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1493}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1496}
+{"test":{"id":15,"name":"formula translation preserves literals in of:=IF([.A1]=\"a;b\";\"say \"\"[.B2];\"\"\";COM.MICROSOFT.SUM([.A1:.A2];1))","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":195,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1496}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1499}
+{"test":{"id":16,"name":"formula translation preserves literals in of:=CONCATENATE(\"\";\"a;b\";\"[.A1]\")","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":195,"column":5,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1499}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1502}
+{"test":{"id":17,"name":"rejects a non-ODF package","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":209,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/ods_sheet_reader_test.dart"},"type":"testStart","time":1502}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1504}
+{"success":true,"type":"done","time":1508}

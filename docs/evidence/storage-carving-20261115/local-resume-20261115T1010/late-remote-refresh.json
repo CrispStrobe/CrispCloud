@@ -1,0 +1,485 @@
+{
+  "schema_version": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "previous_audit_cutoff_utc": "2026-11-15T09:14:57Z",
+  "branch_snapshot_utc": "2026-11-15T09:32:53Z",
+  "audit_completed_utc": "2026-11-15T09:36:42Z",
+  "compared_checkpoint": "27436428e0c3d8bc826a152e8f68125aa8753bce",
+  "write_authorization": "Parent authorized this evidence-only write after completing and saving the 52-file app analysis receipt at 81582d9d; no source mutation or runtime work was performed by this audit.",
+  "sources": {
+    "branches": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100&page=1",
+    "recent_prs": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&sort=updated&direction=desc&per_page=25&page=1"
+  },
+  "branches": [
+    {
+      "name": "codex/office-recovery-20261115",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/codex/office-recovery-20261115",
+      "change": "unchanged",
+      "previous_sha": "d97705dabbdae5969a67bf4bf74b6c604d934419"
+    },
+    {
+      "name": "feature/new-documents-history-20261115",
+      "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/feature/new-documents-history-20261115",
+      "change": "unchanged",
+      "previous_sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+    },
+    {
+      "name": "fix/excel-legacy-xls",
+      "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/fix/excel-legacy-xls",
+      "change": "unchanged",
+      "previous_sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25"
+    },
+    {
+      "name": "fix/odf-final",
+      "sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/fix/odf-final",
+      "change": "unchanged",
+      "previous_sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649"
+    },
+    {
+      "name": "integrate/consistency-20261115",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/consistency-20261115",
+      "change": "unchanged",
+      "previous_sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334"
+    },
+    {
+      "name": "integrate/legacy-xls-preview-20261115",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/legacy-xls-preview-20261115",
+      "change": "unchanged",
+      "previous_sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+    },
+    {
+      "name": "integrate/odf-integration-20261115",
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/odf-integration-20261115",
+      "change": "new_branch",
+      "previous_sha": null
+    },
+    {
+      "name": "integrate/office-goldens-20261115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/office-goldens-20261115",
+      "change": "unchanged",
+      "previous_sha": "74f97cba657d43f18f6e95553a465d23e21ceb20"
+    },
+    {
+      "name": "integrate/word-inline-pictures-20261115",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/word-inline-pictures-20261115",
+      "change": "unchanged",
+      "previous_sha": "bb981ec37c40369ba15bacdd9c21c520807a200c"
+    },
+    {
+      "name": "integration/office-reconcile-storage-20261115",
+      "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integration/office-reconcile-storage-20261115",
+      "change": "unchanged",
+      "previous_sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb"
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "sha": "27436428e0c3d8bc826a152e8f68125aa8753bce",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integration/storage-carving-20261115",
+      "change": "advanced",
+      "previous_sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f"
+    },
+    {
+      "name": "integration/storage-carving-local-qualification-20261115",
+      "sha": "02d2142e1b962b0076470f4976742ec48f128e1f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integration/storage-carving-local-qualification-20261115",
+      "change": "new_branch",
+      "previous_sha": null
+    },
+    {
+      "name": "main",
+      "sha": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/main",
+      "change": "advanced",
+      "previous_sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a"
+    }
+  ],
+  "updated_prs": [
+    {
+      "number": 111,
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "state": "open",
+      "draft": true,
+      "updated_at": "2026-11-15T09:31:32Z",
+      "head_ref": "integration/storage-carving-20261115",
+      "head_sha": "27436428e0c3d8bc826a152e8f68125aa8753bce",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/111"
+    },
+    {
+      "number": 117,
+      "title": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T09:24:04Z",
+      "head_ref": "integrate/odf-integration-20261115",
+      "head_sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "merged_at": "2026-11-15T09:24:04Z",
+      "merge_commit_sha": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/117"
+    }
+  ],
+  "main": {
+    "head": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+    "status": "diverged",
+    "ahead_by": 2,
+    "behind_by": 35,
+    "common_base": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+    "commits": [
+      {
+        "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+        "subject": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+        "committed_at": "2026-11-15T09:23:43Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/a8e350d94e120c7422ade4e4caa4e92a2c4e461a"
+      },
+      {
+        "sha": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+        "subject": "Merge pull request #117 from CrispStrobe/integrate/odf-integration-20261115",
+        "committed_at": "2026-11-15T09:24:03Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/ab7f1536e77b0bc15d546e229fc802e4edaa1079"
+      }
+    ],
+    "disposition": "Merge ancestry while preserving the more recent integrated app and canonical ODS corrections.",
+    "unique_functional_behavior": "None relative to compared_checkpoint. PR #117's STL/3MF dotted extensions already occur in storage commit 229c6a86; current internal_viewer_test already asserts 18 enum values. Its only difference there is the test description.",
+    "older_canonical_pin": "793c64ac4fc2e896706aa65c13eaa70bd27f7267",
+    "preservation": "Do not replace current 1c1b0af8 ODS correction with the older main pin or older service/test blobs.",
+    "pr116_status": "PR #116 remains open at bda0374b6f773e8797ffa09c24020ef22fb6b649; merged PR #117 is a separately reconciled commit."
+  },
+  "qualification": {
+    "branch": "integration/storage-carving-local-qualification-20261115",
+    "head": "02d2142e1b962b0076470f4976742ec48f128e1f",
+    "status": "diverged",
+    "ahead_by": 5,
+    "behind_by": 3,
+    "common_base": "e0221c2034cf56cac6c9566c8ff7b65ed41518a2",
+    "commits": [
+      {
+        "sha": "cc501cc4420b1933b5068727226e4c05d02b5fa7",
+        "subject": "merge: integrate ODS editing and ODT ODP previews [skip ci]",
+        "committed_at": "2026-11-15T09:17:19Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/cc501cc4420b1933b5068727226e4c05d02b5fa7"
+      },
+      {
+        "sha": "a0466f418d378c6d65212613414b4955183e43c6",
+        "subject": "merge: retain concurrent integration checkpoints and source audit [skip ci]",
+        "committed_at": "2026-11-15T09:18:37Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/a0466f418d378c6d65212613414b4955183e43c6"
+      },
+      {
+        "sha": "504f75dc55bd5907e9eeb1d48831e89b74c35c5b",
+        "subject": "test(office): cover ODS copy saves and revision ownership [skip ci]",
+        "committed_at": "2026-11-15T09:21:00Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/504f75dc55bd5907e9eeb1d48831e89b74c35c5b"
+      },
+      {
+        "sha": "3ec323ac838a9f3917874151454c68319da180b1",
+        "subject": "fix(office): preserve ODF preview coordinates and bounded output [skip ci]",
+        "committed_at": "2026-11-15T09:26:16Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/3ec323ac838a9f3917874151454c68319da180b1"
+      },
+      {
+        "sha": "02d2142e1b962b0076470f4976742ec48f128e1f",
+        "subject": "fix(office): sync qualified bounded ODS importer and preserve copy saves [skip ci]",
+        "committed_at": "2026-11-15T09:30:14Z",
+        "url": "https://github.com/CrispStrobe/CrispCloud/commit/02d2142e1b962b0076470f4976742ec48f128e1f"
+      }
+    ],
+    "changed_paths": [
+      {
+        "path": "docs/apple-export-policy.json",
+        "status": "modified"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/app-suites.txt",
+        "status": "modified"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/SETUP.md",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/launcher.py",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.command.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.environment.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.exit-code.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.native-assets.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.stderr.log",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.stdout.jsonl.gz",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/native-bootstrap.summary.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/.dart_tool/package_config.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/.dart_tool/package_graph.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_editor/.dart_tool/package_config.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_editor/.dart_tool/package_graph.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_editor/pubspec.lock",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_editor/pubspec.yaml",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_engine/.dart_tool/package_config.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_engine/.dart_tool/package_graph.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_engine/pubspec.lock",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/packages/quds_office_engine/pubspec.yaml",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/pubspec.lock",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/resolution/pubspec.yaml",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/setup-receipt.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/cargo.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/clang.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/dart.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/flutter.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/node.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/python.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/environment/versions/rustc.txt",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/git-content-verification.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/odf-preview-tests.jsonl.gz",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/odf-preview-tests.stderr.log",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/ods-editor-development.jsonl.gz",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/ods-editor-development.stderr.log",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/office-pr116-source-comparison.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/office-sync-applied.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/office-sync-plan.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/evidence/storage-carving-20261115/local-qualification-20261115/remote-audit.json",
+        "status": "added"
+      },
+      {
+        "path": "docs/office-engine-strategy.md",
+        "status": "modified"
+      },
+      {
+        "path": "lib/services/office_document_service.dart",
+        "status": "modified"
+      },
+      {
+        "path": "packages/QUDS_FORKS.md",
+        "status": "modified"
+      },
+      {
+        "path": "packages/quds_office_engine/CHANGELOG.md",
+        "status": "modified"
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "status": "modified"
+      },
+      {
+        "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "status": "modified"
+      },
+      {
+        "path": "test/office_document_service_test.dart",
+        "status": "modified"
+      },
+      {
+        "path": "test/widget/ods_editor_workflow_test.dart",
+        "status": "added"
+      },
+      {
+        "path": "tool/office_fidelity_manifest.json",
+        "status": "modified"
+      }
+    ],
+    "conflicting_content_paths": [
+      "docs/apple-export-policy.json",
+      "lib/services/office_document_service.dart",
+      "packages/QUDS_FORKS.md",
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "test/office_document_service_test.dart",
+      "tool/office_fidelity_manifest.json"
+    ],
+    "mode_differences": [],
+    "distinct_work": [
+      "Namespace-aware ODS/ODT table extraction with grouped/header rows, alternate prefixes and numeric boolean values.",
+      "Workbook-global app preview budgets: 128 tables, 200000 rendered cells including Markdown padding, and 8 MiB expanded text.",
+      "Explicit refusal of meaningful data outside supported row/column limits or excessive expansion instead of silently returning a clipped table.",
+      "Substantial canonical ODS reader changes for vertical merges, named styles.xml and inherited styles, explicit spaces, formula literals, input/XML/style/work budgets and bounded unsupported-profile refusal.",
+      "Four end-to-end ODS editor tests covering successful XLSX copy, picker cancellation, browser-download outcome, and newer edits during the picker.",
+      "38 separate evidence files retained under docs/evidence/storage-carving-20261115/local-qualification-20261115; approximately 380930 bytes."
+    ]
+  },
+  "canonical_source": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "current_pin": "1c1b0af8e20bb02f7d18b4e6cb116328f4342332",
+    "incoming_pin": "fe500e2bf50aae3098040ee0308221db2ae0d9f6",
+    "incoming_branch": "integration/storage-odf-qualification-20261115",
+    "status": "diverged",
+    "common_base": "793c64ac4fc2e896706aa65c13eaa70bd27f7267",
+    "incoming_unique_commits": 1,
+    "current_unique_commits": 1,
+    "commits": [
+      {
+        "sha": "fe500e2bf50aae3098040ee0308221db2ae0d9f6",
+        "subject": "fix(sheet): preserve ODS coordinates and bound repeated import work [skip ci]",
+        "committed_at": "2026-11-15T09:27:07Z",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/commit/fe500e2bf50aae3098040ee0308221db2ae0d9f6"
+      }
+    ],
+    "changed_paths": [
+      "packages/quds_office_engine/CHANGELOG.md",
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+    ],
+    "managed_file_count": 2223,
+    "standalone_parser_pin": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+    "required_action": "Reconcile both canonical commits in the Quds repository, retain current 17-test regression coverage and incoming bounded profile, then synchronize managed files and manifest to the resulting exact canonical commit."
+  },
+  "app_reconciliation_decisions": [
+    "Preserve incoming namespace/group/value handling and global expansion budgets.",
+    "Adopt incoming explicit refusal for meaningful content outside supported coordinates; revise the current clipping-expectation test accordingly without weakening coordinate assertions.",
+    "Preserve current newline-only CSV separator trimming and leading-blank/whitespace regression: incoming trimRight() would lose trailing cell whitespace.",
+    "Preserve current compatibility with missing covered-cell placeholders while consuming explicit/repeated placeholders once; incoming physical-cell-only counting supersedes its earlier missing-placeholder test.",
+    "Retain both current service regressions and distinct incoming preview/ODS-editor tests; update/deduplicate app suite manifest.",
+    "Refresh reviewed export/source fingerprints after the resolved source is frozen."
+  ],
+  "incoming_receipts": {
+    "directory": "docs/evidence/storage-carving-20261115/local-qualification-20261115",
+    "odf_preview": {
+      "actual_tests": 27,
+      "loader_events": 1,
+      "done_success": true,
+      "failures": 0,
+      "source_binding": "No source fingerprints in raw JSONL; development evidence only"
+    },
+    "ods_editor": {
+      "actual_tests": 4,
+      "loader_events": 1,
+      "done_success": true,
+      "failures": 0,
+      "source_binding": "No source fingerprints in raw JSONL; development evidence only"
+    },
+    "bootstrap": {
+      "actual_tests": 63,
+      "loader_events": 1,
+      "done_success": true,
+      "classification": "Development/bootstrap only, not final source-bound qualification"
+    },
+    "source_binding": "Bootstrap is explicitly development-only. Service/editor JSONL has successful done events but contains no commit/tree fingerprint; these receipts cannot establish acceptance for the later reconciled source.",
+    "historical_mode_audit": "office-pr116-source-comparison.json records 41 mode-only differences on PR #116, not new drift on the incoming qualification head. Exact current-vs-qualification tree comparison found no mode differences.",
+    "preservation": "Merge all incoming evidence unchanged in its distinct directory, alongside the current local-resume evidence."
+  },
+  "next_actions": [
+    "Merge latest main without downgrading existing code or canonical pins.",
+    "Merge qualification branch; reconcile the seven differing-content paths while preserving all distinct evidence and tests.",
+    "Synchronize the reconciled canonical engine and refresh source/manifest/review fingerprints.",
+    "Run final source-bound qualification on the reconciled source, saving each receipt immediately."
+  ],
+  "subsequent_local_fetch": {
+    "qualification_branch_head": "8a4cc8b6",
+    "production_commit": "02d2142e1b962b0076470f4976742ec48f128e1f",
+    "note": "The fetch after the API snapshot also contains the incoming editor and engine receipts commit. Its new files will be retained as predecessor-source evidence."
+  }
+}

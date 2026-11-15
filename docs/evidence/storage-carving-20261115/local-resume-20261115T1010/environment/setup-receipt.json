@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-11-15T09:17:54.875514+00:00",
+  "purpose": "Local qualification toolchain setup only; no app runtime acceptance is claimed.",
+  "toolchain_root": "/workspace/scratch/aed049b7e8bd/toolchains",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "flutter_archive": {
+    "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.8-stable.tar.xz",
+    "size": 1581444364,
+    "sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+    "verified_against": "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json"
+  },
+  "flutter_git_head": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "flutter_tooling_cache": {
+    "method": "dart pub cache preload using the official SDK archive bundled .pub-preload-cache, then dart pub --directory flutter/packages/flutter_tools get --offline",
+    "app_dependencies_resolved": false
+  },
+  "linux_precache": {
+    "command": "flutter --no-version-check --suppress-analytics precache --linux --no-android --no-ios --no-web --no-macos --no-windows --verbose",
+    "returncode": 0,
+    "elapsed_reported_ms": 48
+  },
+  "native_probes": {
+    "normal_environment": "C and Rust compile/link/run passed",
+    "filtered_environment": "C and Rust compile/link/run passed with PATH only; native launchers restore workspace TMPDIR/cache/loader settings",
+    "initial_attempt": "Filtered Clang probe initially could not create a temporary file; adding TMPDIR to real-tool launchers resolved this. No compiler or source was substituted."
+  },
+  "setup_attempts": [
+    {
+      "command": "flutter precache --linux",
+      "outcome": "cancelled during tool cache initialization, exit 130"
+    },
+    {
+      "command": "flutter --no-version-check --suppress-analytics precache --linux --no-android --no-ios --no-web --no-macos --no-windows --verbose",
+      "outcome": "cancelled while SDK flutter_tools pub dependencies were being resolved; offline preload completed afterward; final identical precache passed"
+    }
+  ],
+  "library_probe": "ldd on flutter_tester resolved all shared libraries",
+  "system_sqlite_link": {
+    "workspace_path": "/workspace/scratch/aed049b7e8bd/toolchains/lib/libsqlite3.so",
+    "target": "/lib/x86_64-linux-gnu/libsqlite3.so.0",
+    "used_for": "Available system SQLite; no production package or hook settings changed during setup"
+  },
+  "application_sources_changed": false,
+  "native_hooks_disabled": false,
+  "disk_free_bytes_at_recording": 49439088640
+}
