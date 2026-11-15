@@ -67,7 +67,7 @@ Future<Uint8List> newDocumentBytes(
       book.addFile(
         ArchiveFile.string(
           'EPUB/book.opf',
-          '<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:${DateTime.now().microsecondsSinceEpoch}</dc:identifier><dc:title>${xml(title)}</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">${DateTime.now().toUtc().toIso8601String().split('.').first}Z</meta></metadata><manifest><item id="chapter" href="chapter.xhtml" media-type="application/xhtml+xml"/><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/></manifest><spine><itemref idref="chapter"/></spine></package>',
+          '<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:crispcloud:book:${DateTime.now().microsecondsSinceEpoch}</dc:identifier><dc:title>${xml(title)}</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">${DateTime.now().toUtc().toIso8601String().split('.').first}Z</meta></metadata><manifest><item id="chapter" href="chapter.xhtml" media-type="application/xhtml+xml"/><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/></manifest><spine><itemref idref="chapter"/></spine></package>',
         ),
       );
       book.addFile(
@@ -101,13 +101,15 @@ String validateNewDocumentName(String name, NewDocumentKind kind) {
       'Choose a simple filename without path separators.',
     );
   }
-  if (kind == NewDocumentKind.text)
+  if (kind == NewDocumentKind.text) {
     return name.contains('.') ? name : '$name.txt';
+  }
   if (!name.toLowerCase().endsWith('.${kind.extension}')) {
-    if (name.contains('.'))
+    if (name.contains('.')) {
       throw FormatException(
         'Use the .${kind.extension} extension for this editor.',
       );
+    }
     return '$name.${kind.extension}';
   }
   return name;
@@ -122,11 +124,13 @@ Future<FileItem> createNewDocument({
 }) async {
   final valid = validateNewDocumentName(name, kind);
   checkIntegrityCurrent(backend, null);
-  if (!backend.paths.isAbsolute(directory))
+  if (!backend.paths.isAbsolute(directory)) {
     throw StateError('Reopen the destination folder first.');
+  }
   final output = backend.paths.join(directory, valid);
-  if (!backend.samePath(backend.paths.dirname(output), directory))
+  if (!backend.samePath(backend.paths.dirname(output), directory)) {
     throw StateError('The destination changed.');
+  }
   final listed = await backend.list(directory);
   checkIntegrityCurrent(backend, null);
   if (listed.any(
@@ -134,8 +138,9 @@ Future<FileItem> createNewDocument({
       f.path ?? backend.paths.join(directory, f.name),
       output,
     ),
-  ))
+  )) {
     throw StateError('A file already exists: $valid');
+  }
   final bytes =
       content ??
       await newDocumentBytes(
@@ -145,7 +150,8 @@ Future<FileItem> createNewDocument({
   await writeIntegrityBytes(backend, output, bytes, replace: false);
   final saved = await backend.stat(output);
   checkIntegrityCurrent(backend, null);
-  if (saved == null || saved.isFolder || saved.isSymlink == true)
+  if (saved == null || saved.isFolder || saved.isSymlink == true) {
     throw StateError('The new document could not be verified.');
+  }
   return saved.copyWith(path: output);
 }

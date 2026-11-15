@@ -8,9 +8,11 @@ import 'package:pdf_document/pdf_document.dart' as pdf;
 import 'package:quds_office_editor/quds_office_editor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   test(
     'every offered document is accepted by its real editor parser',
     () async {

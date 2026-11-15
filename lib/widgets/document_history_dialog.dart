@@ -33,28 +33,31 @@ Future<void> showDocumentHistoryDialog(
     final panel = ref.read(panelProvider(side));
     final file = request.entry.file;
     final origin = panel.resolveStorageReference(file.storage, file.path);
-    if (origin == null)
+    if (origin == null) {
       throw StateError(
         'Reconnect the original storage account before reopening this file.',
       );
+    }
     final backend = fileOperationBackend(
       source: origin.source,
       local: ref.read(localFileServiceProvider),
       isCurrent: () => origin.isCurrent,
     );
     final fresh = await backend.stat(file.path);
-    if (!origin.isCurrent || fresh == null || fresh.isFolder)
+    if (!origin.isCurrent || fresh == null || fresh.isFolder) {
       throw StateError('This file is unavailable at its original location.');
+    }
     final directory = backend.paths.dirname(file.path);
     await panel.navigateToPath(directory, origin: origin);
     if (!origin.isCurrent || !context.mounted) return;
     final listed = (panel.files ?? <FileItem>[])
         .where((f) => f.path == file.path || f.name == fresh.name)
         .firstOrNull;
-    if (listed == null)
+    if (listed == null) {
       throw StateError(
         'Refresh the original folder before reopening this file.',
       );
+    }
     panel.restoreCursorAndFocus(listed);
     if (request.edit) {
       await showFileEditorDialog(context, ref, listed, side);
@@ -64,13 +67,15 @@ Future<void> showDocumentHistoryDialog(
         file: listed,
         side: side,
       );
-      if (action == InternalViewerAction.edit && context.mounted)
+      if (action == InternalViewerAction.edit && context.mounted) {
         await showFileEditorDialog(context, ref, listed, side);
+      }
     }
   } catch (error) {
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('$error')));
+    }
   }
 }
 
@@ -102,8 +107,9 @@ class _DocumentHistoryDialogState extends ConsumerState<DocumentHistoryDialog> {
       ref.read(documentHistoryProvider).exportJson(),
       fileName: 'crispcloud-recent-files.json',
     );
-    if (mounted && result != null)
+    if (mounted && result != null) {
       setState(() => _message = documentTr(context, 'List saved.'));
+    }
   }
 
   Future<void> _load() async {
@@ -115,12 +121,14 @@ class _DocumentHistoryDialogState extends ConsumerState<DocumentHistoryDialog> {
     );
     if (result == null || !mounted) return;
     final file = result.files.single;
-    if (file.size > DocumentHistory.maxImportBytes || file.readStream == null)
+    if (file.size > DocumentHistory.maxImportBytes || file.readStream == null) {
       throw const FormatException('Choose a history JSON file up to 8 MiB.');
+    }
     final bytes = <int>[];
     await for (final chunk in file.readStream!) {
-      if (bytes.length + chunk.length > DocumentHistory.maxImportBytes)
+      if (bytes.length + chunk.length > DocumentHistory.maxImportBytes) {
         throw const FormatException('History exceeds 8 MiB.');
+      }
       bytes.addAll(chunk);
     }
     final raw = utf8.decode(bytes);
@@ -156,8 +164,9 @@ class _DocumentHistoryDialogState extends ConsumerState<DocumentHistoryDialog> {
         ),
       ),
     );
-    if (accepted == true && mounted)
+    if (accepted == true && mounted) {
       await ref.read(documentHistoryProvider).importJson(raw, replace: replace);
+    }
   }
 
   Future<void> _purge() async {

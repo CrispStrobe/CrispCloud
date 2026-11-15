@@ -74,16 +74,18 @@ Future<void> showDocumentConversionDialog(
     final listed = (panel.files ?? <FileItem>[])
         .where((f) => f.path == created.path || f.name == created.name)
         .firstOrNull;
-    if (listed == null)
+    if (listed == null) {
       throw StateError(
         'The converted copy was saved. Refresh its original folder to open it.',
       );
+    }
     panel.restoreCursorAndFocus(listed);
     if (context.mounted) await showFileEditorDialog(context, ref, listed, side);
   } catch (error) {
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('$error')));
+    }
   }
 }
 
@@ -141,8 +143,9 @@ class _DocumentConversionDialogState extends State<DocumentConversionDialog> {
   }
 
   void _install(String name, Uint8List bytes) {
-    if (bytes.length > documentConversionInputLimit)
+    if (bytes.length > documentConversionInputLimit) {
       throw const FormatException('Choose a file up to 64 MiB.');
+    }
     setState(() {
       _sourceName = name;
       _bytes = bytes;
@@ -171,12 +174,14 @@ class _DocumentConversionDialogState extends State<DocumentConversionDialog> {
     );
     if (result == null || !mounted) return;
     final file = result.files.single;
-    if (file.size > documentConversionInputLimit || file.readStream == null)
+    if (file.size > documentConversionInputLimit || file.readStream == null) {
       throw const FormatException('Choose a file up to 64 MiB.');
+    }
     final out = BytesBuilder(copy: false);
     await for (final chunk in file.readStream!) {
-      if (out.length + chunk.length > documentConversionInputLimit)
+      if (out.length + chunk.length > documentConversionInputLimit) {
         throw const FormatException('Conversion input exceeds 64 MiB.');
+      }
       out.add(chunk);
     }
     if (mounted) _install(file.name, out.takeBytes());
@@ -188,17 +193,19 @@ class _DocumentConversionDialogState extends State<DocumentConversionDialog> {
       extension: _target!,
       password: _password.text.isEmpty ? null : _password.text,
     );
-    if (mounted)
+    if (mounted) {
       setState(() {
         _result = result;
         _reviewed = result.notices.isEmpty;
       });
+    }
   });
   Future<void> _save() => _work(() async {
     final result = _result!;
     final name = _name.text;
-    if (!name.toLowerCase().endsWith('.${result.extension}'))
+    if (!name.toLowerCase().endsWith('.${result.extension}')) {
       throw FormatException('Use a .${result.extension} filename.');
+    }
     final file = await widget.onSave(result, name);
     if (mounted) Navigator.pop(context, file);
   });

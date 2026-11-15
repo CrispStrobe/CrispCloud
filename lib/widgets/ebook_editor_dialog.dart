@@ -698,8 +698,9 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           !_sourceDraft &&
           !_metadataDraft;
       if (outcome == EbookSaveOutcome.savedOriginal) _activity?.edited();
-      if (outcome == EbookSaveOutcome.savedCopy && name != null)
+      if (outcome == EbookSaveOutcome.savedCopy && name != null) {
         _activity?.editedSibling(name);
+      }
       _reportOutcome(outcome);
       _scheduleMenu();
       return outcome == EbookSaveOutcome.savedOriginal && !_dirty;

@@ -341,8 +341,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (popAfter &&
           mounted &&
           !_dirty &&
-          ModalRoute.of(context)?.isCurrent == true)
+          ModalRoute.of(context)?.isCurrent == true) {
         Navigator.of(context).pop();
+      }
       return;
     }
     setState(() => _saving = true);

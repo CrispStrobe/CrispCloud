@@ -19,8 +19,9 @@ Future<void> showNewDocumentDialog(BuildContext context, WidgetRef ref) async {
   try {
     final origin = panel.captureCurrentOrigin();
     if (origin.source is! LocalPanelSource &&
-        origin.source is! RemotePanelSource)
+        origin.source is! RemotePanelSource) {
       throw StateError('Choose a writable local or connected cloud folder.');
+    }
     final directory = origin.source.currentPath;
     final backend = fileOperationBackend(
       source: origin.source,
@@ -60,22 +61,24 @@ Future<void> showNewDocumentDialog(BuildContext context, WidgetRef ref) async {
           edited: true,
         );
     if (!context.mounted) return;
-    if (!origin.isCurrent)
+    if (!origin.isCurrent) {
       throw StateError(
         'The document was created. Reconnect its original storage to open it.',
       );
+    }
     await panel.navigateToPath(directory, origin: origin);
     final listed = (panel.files ?? <FileItem>[])
         .where(
           (f) => f.path == created.file.path || f.name == created.file.name,
         )
         .firstOrNull;
-    if (listed == null)
+    if (listed == null) {
       throw StateError(
         'The document was created. Refresh its original folder to open it.',
       );
+    }
     panel.restoreCursorAndFocus(listed);
-    if (context.mounted)
+    if (context.mounted) {
       await showFileEditorDialog(
         context,
         ref,
@@ -86,11 +89,13 @@ Future<void> showNewDocumentDialog(BuildContext context, WidgetRef ref) async {
             created.kind == NewDocumentKind.markdown ||
             created.kind == NewDocumentKind.csv,
       );
+    }
   } catch (error) {
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(localizedProviderError(context, error))),
       );
+    }
   }
 }
 
@@ -136,11 +141,12 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
       final result = await widget.onCreate(_kind, name);
       if (mounted) Navigator.pop(context, result);
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = '$error';
           _working = false;
         });
+      }
     }
   }
 

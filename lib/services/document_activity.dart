@@ -42,8 +42,9 @@ DocumentActivity? captureDocumentActivity(
     if (origin == null ||
         !origin.isCurrent ||
         (origin.source is! LocalPanelSource &&
-            origin.source is! RemotePanelSource))
+            origin.source is! RemotePanelSource)) {
       return null;
+    }
     final backend = fileOperationBackend(
       source: origin.source,
       local: ref.read(localFileServiceProvider),

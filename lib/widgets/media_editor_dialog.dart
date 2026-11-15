@@ -203,8 +203,9 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       final inputPath = await store.stage();
       if (!mounted) return;
       final info = await backend.probe(inputPath);
-      if (info.kind != kind)
+      if (info.kind != kind) {
         throw const MediaEditException(MediaEditFailure.invalidMedia);
+      }
       final peaks = kind == MediaKind.audio
           ? await backend.waveform(inputPath)
           : const <double>[];
@@ -220,11 +221,12 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       });
     } catch (error, stack) {
       _log.warn('Could not open media', error, stack);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _errorKey = _messageFor(error, 'Could not open media');
         });
+      }
     } finally {
       _loadInProgress = false;
       _scheduleMenu();
@@ -399,8 +401,9 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
           edit: revision.edit,
           cancellation: cancellation,
           onProgress: (value) {
-            if (mounted && value.isFinite)
+            if (mounted && value.isFinite) {
               setState(() => _progress = value.clamp(0, 1).toDouble());
+            }
           },
         );
         cancellation.throwIfCancelled();
@@ -424,8 +427,9 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
           _lastFileName = null;
         });
         // Refresh the panel only; the captured store always owns the destination.
-        if (widget.storeOverride == null)
+        if (widget.storeOverride == null) {
           ref.read(panelProvider(widget.side)).refreshFiles();
+        }
       } else {
         setState(() => _previewingRendered = true);
       }
@@ -433,10 +437,11 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       if (mounted) setState(() => _statusKey = 'Export cancelled');
     } catch (error, stack) {
       _log.warn('Could not export media', error, stack);
-      if (mounted)
+      if (mounted) {
         setState(
           () => _errorKey = _messageFor(error, 'Could not export media'),
         );
+      }
     } finally {
       // A completed native file is not retained until the host's independent
       // probe/validation succeeds. Remove it immediately after a failure so
@@ -455,8 +460,9 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       }
       _cancellation = null;
       if (mounted) {
-        if (revision != null)
+        if (revision != null) {
           session.finishExport(revision, persisted: persisted);
+        }
         setState(() {
           _working = false;
           _saving = false;
@@ -526,7 +532,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
 
   String _messageFor(Object error, String fallback) {
     if (error is _MediaOpenMessage) return error.message;
-    if (error is MediaStoreException)
+    if (error is MediaStoreException) {
       return switch (error.reason) {
         MediaStoreFailure.accountChanged =>
           'The storage account changed. Reopen the file before exporting.',
@@ -549,6 +555,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
           'This media format cannot be edited on this platform.',
         _ => fallback,
       };
+    }
     return fallback;
   }
 

@@ -7,6 +7,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'csv_spreadsheet_import.dart';
 import 'new_document.dart';
+import 'editor_document.dart';
 import 'office_pdf_service.dart';
 
 class DocumentConversionResult {
@@ -236,7 +237,7 @@ Future<DocumentConversionResult> _convert(
       return _bounded(DocumentConversionResult(bytes, target, notices: notes));
     }
   } else if (source == 'csv' || source == 'tsv') {
-    final text = utf8.decode(bytes);
+    final text = EditorDocument.decode(bytes).text;
     if (target == 'xlsx') {
       return _bounded(
         DocumentConversionResult(
@@ -263,7 +264,7 @@ Future<DocumentConversionResult> _convert(
     'pptx',
     'pptm',
   ].contains(source)) {
-    bytes = await _textWord(utf8.decode(bytes));
+    bytes = await _textWord(EditorDocument.decode(bytes).text);
   }
   if (target == 'docx') {
     return _bounded(DocumentConversionResult(bytes, target, notices: notes));

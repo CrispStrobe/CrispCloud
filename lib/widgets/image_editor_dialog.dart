@@ -402,8 +402,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
 
   void _onGestureEnd(List<Layer> layers) {
     final editor = _editorKey.currentState;
-    if (editor == null || layers.isEmpty || !editor.isLayerBeingTransformed)
+    if (editor == null || layers.isEmpty || !editor.isLayerBeingTransformed) {
       return;
+    }
     final history = editor.stateManager;
     final active = history.stateHistory[history.historyPointer];
     // Gesture history is created before the drag, then mutated in place.
@@ -571,8 +572,9 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       if (!mounted || overlay == null) return;
       final codec = await ui.instantiateImageCodec(overlay.displayBytes);
       try {
-        if (codec.frameCount != 1)
+        if (codec.frameCount != 1) {
           throw const ImageEditException(ImageEditFailure.animatedImage);
+        }
         final frame = await codec.getNextFrame();
         frame.image.dispose();
       } finally {
@@ -585,17 +587,19 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         editor.context,
         onError: (error, _) => imageError = error,
       );
-      if (imageError != null)
+      if (imageError != null) {
         throw const ImageEditException(ImageEditFailure.invalidImage);
+      }
       if (!mounted) return;
       editor.addLayer(imageOverlayLayer(overlay));
     } catch (error, stack) {
       _log.warn('Could not add image overlay', error, stack);
-      if (mounted)
+      if (mounted) {
         _showMessage(
           _messageFor(error, 'Could not add image overlay'),
           error: true,
         );
+      }
     } finally {
       if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
@@ -637,11 +641,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
     } catch (error, stack) {
       _log.warn('Could not save project copy', error, stack);
-      if (mounted)
+      if (mounted) {
         _showMessage(
           _messageFor(error, 'Could not save project copy'),
           error: true,
         );
+      }
     } finally {
       if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
@@ -694,11 +699,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
     } catch (error, stack) {
       _log.warn('Could not export image copy', error, stack);
-      if (mounted)
+      if (mounted) {
         _showMessage(
           _messageFor(error, 'Could not export image copy'),
           error: true,
         );
+      }
     } finally {
       if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();

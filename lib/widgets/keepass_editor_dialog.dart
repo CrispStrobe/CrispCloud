@@ -212,6 +212,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         !identical(oldWidget.origin, widget.origin) ||
         !identical(oldWidget.bytesOverride, widget.bytesOverride)) {
       _releaseSecrets();
+      _activity = null;
       _encrypted = null;
       _target = null;
       _encryptedRevision = 0;

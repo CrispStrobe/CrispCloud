@@ -75,11 +75,12 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
   }
 
   void _progressChanged(int done, int? total) {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _progress = done;
         _total = total;
       });
+    }
   }
 
   Future<void> _open() async {
@@ -105,11 +106,12 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         _error = null;
       });
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _error = error.toString();
         });
+      }
     }
   }
 
@@ -206,7 +208,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         name,
         cancelled: () => _cancelled,
       );
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -214,6 +216,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
             ),
           ),
         );
+      }
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {

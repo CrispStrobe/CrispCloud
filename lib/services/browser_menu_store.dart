@@ -60,10 +60,11 @@ class BrowserMenuStore extends ChangeNotifier {
           final updated = _layout.withDocumentCommands();
           if (!identical(updated, _layout)) {
             if (!await _storage.write(backupKey, _layout.encode()) ||
-                !await _storage.write(currentKey, updated.encode()))
+                !await _storage.write(currentKey, updated.encode())) {
               throw StateError(
                 'Could not add document commands to the saved menu.',
               );
+            }
             _layout = updated;
           }
           await _storage.write(marker, '1');

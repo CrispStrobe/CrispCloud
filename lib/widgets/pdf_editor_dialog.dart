@@ -575,8 +575,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
             : (bytes) => _store!.saveCopy(bytes, copyName),
       );
       if (outcome == PdfSaveOutcome.savedOriginal) _activity?.edited();
-      if (outcome == PdfSaveOutcome.savedCopy && copyName != null)
+      if (outcome == PdfSaveOutcome.savedCopy && copyName != null) {
         _activity?.editedSibling(copyName);
+      }
       if (!mounted) return outcome;
       if (outcome != PdfSaveOutcome.savedOriginal) {
         _lastCopyRevision = savedRevision;
