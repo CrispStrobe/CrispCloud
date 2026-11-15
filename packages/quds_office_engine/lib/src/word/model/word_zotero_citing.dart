@@ -199,8 +199,9 @@ final class WordZoteroCitingSession {
   /// Document.displayAlert is handled by the host UI, with Zotero's exact
   /// button return codes. It must not be silently acknowledged here.
   Object? handle(String command, List<dynamic> args) {
-    if (_complete)
+    if (_complete) {
       throw StateError('The Zotero transaction is already complete.');
+    }
     if (command == 'Application.getActiveDocument') {
       _arity(args, 0);
       return <String, Object>{
@@ -265,8 +266,9 @@ final class WordZoteroCitingSession {
         final seen = <String>{};
         for (var i = 0; i < ids.length; i++) {
           final field = _field(ids[i]);
-          if (!seen.add(field.id))
+          if (!seen.add(field.id)) {
             throw const FormatException('Zotero repeated a conversion.');
+          }
           final type = _noteType(types[i]);
           if (type != field.noteType) _assertCanConvert(field, type);
           changes.add((field, type));
@@ -328,8 +330,9 @@ final class WordZoteroCitingSession {
         return null;
       case 'Field.setText':
         _arity(args, 4);
-        if (args[3] is! bool)
+        if (args[3] is! bool) {
           throw const FormatException('Invalid Zotero result format.');
+        }
         final field = _field(args[1]);
         final text = _string(args[2]);
         field.formatted = args[3] == true
@@ -348,8 +351,9 @@ final class WordZoteroCitingSession {
   /// Collect output limitations after all setCode/setText calls, whose order
   /// is controlled by Zotero, and before the host offers its result review.
   void prepareReview() {
-    if (!_complete)
+    if (!_complete) {
       throw StateError('Zotero has not completed this operation.');
+    }
     for (final field in _fields.where((f) => !f.deleted && !f.unlinked)) {
       final formatted = field.formatted;
       if (formatted == null) continue;
@@ -380,11 +384,13 @@ final class WordZoteroCitingSession {
     if (_applied || WordZoteroDocumentData.read(document) != _originalData) {
       throw StateError('The Zotero document changed while formatting.');
     }
-    final body = _flowParagraphs(document.sections.expand((s) => s.blocks))
-        .toList();
+    final body = _flowParagraphs(
+      document.sections.expand((s) => s.blocks),
+    ).toList();
     if (body.length != _body.length ||
-        Iterable<int>.generate(body.length)
-            .any((i) => !identical(body[i], _body[i])) ||
+        Iterable<int>.generate(
+          body.length,
+        ).any((i) => !identical(body[i], _body[i])) ||
         _sourceTexts.entries.any((e) => e.key.text != e.value)) {
       throw StateError('The document changed while Zotero was open.');
     }
@@ -406,8 +412,9 @@ final class WordZoteroCitingSession {
   /// Applies a completed result. Call only inside the editor's rollback/undo
   /// boundary; a throwing application must restore all affected model state.
   void apply() {
-    if (!_complete)
+    if (!_complete) {
       throw StateError('Zotero has not completed this operation.');
+    }
     assertUnchanged();
     prepareReview();
     // Descending source positions keep the original handles/offsets valid.
@@ -415,8 +422,9 @@ final class WordZoteroCitingSession {
       if (!field.changed) continue;
       final original = field.original;
       if (original == null) {
-        if (!field.deleted)
+        if (!field.deleted) {
           _insertResult(field, field.anchor, field.anchorOffset);
+        }
         continue;
       }
       if (field.deleted) {
@@ -480,11 +488,13 @@ final class WordZoteroCitingSession {
     WordContentControls.assertCanEdit(anchor, offset, offset);
     final instruction = _toNative(field.code);
     if (_kind(field) == ZoteroFieldKind.bibliography) {
-      if (field.noteType != 0)
+      if (field.noteType != 0) {
         throw UnsupportedError('A bibliography must be in the document body.');
+      }
       final slot = WordTree.flowHost(document, anchor);
-      if (slot == null)
+      if (slot == null) {
         throw StateError('The bibliography insertion point changed.');
+      }
       final paragraph = WordZotero.bibliography(
         text: field.text,
         metadata: WordZotero.metadataOf(instruction),
@@ -597,14 +607,16 @@ final class WordZoteroCitingSession {
                 .where((f) => identical(f.note, note) && f.original != null)
                 .length !=
             1 ||
-        original.paragraph.contentControlWrappers.isNotEmpty)
+        original.paragraph.contentControlWrappers.isNotEmpty) {
       return false;
+    }
     final paragraph = original.paragraph;
     if ((paragraph.text.substring(0, original.start) +
             paragraph.text.substring(original.end))
         .trim()
-        .isNotEmpty)
+        .isNotEmpty) {
       return false;
+    }
     return paragraph.inlines.every(
       (inline) =>
           inline is WmlNoteMarker ||
@@ -624,12 +636,13 @@ final class WordZoteroCitingSession {
       var value = a.bodyIndex.compareTo(b.bodyIndex);
       if (value == 0) value = a.anchorOffset.compareTo(b.anchorOffset);
       if (value == 0) value = a.noteOrder.compareTo(b.noteOrder);
-      if (value == 0)
+      if (value == 0) {
         value = a.original == null
             ? -1
             : b.original == null
             ? 1
             : a.id.compareTo(b.id);
+      }
       return value;
     });
 
@@ -688,11 +701,13 @@ final class WordZoteroCitingSession {
   }
 
   _CitingField _field(Object? id) {
-    if (id is! String)
+    if (id is! String) {
       throw const FormatException('Zotero returned an invalid field identity.');
+    }
     final field = _fields.where((f) => f.id == id && !f.deleted).firstOrNull;
-    if (field == null)
+    if (field == null) {
       throw const FormatException('Zotero addressed an unknown field.');
+    }
     return field;
   }
 
@@ -705,16 +720,18 @@ final class WordZoteroCitingSession {
     final native = _toNative(code);
     final kind = WordZotero.kindOfInstruction(native);
     final data = WordZotero.metadataOf(native);
-    if (kind == null || data == null)
+    if (kind == null || data == null) {
       throw const FormatException('Zotero returned invalid citation metadata.');
+    }
     if (kind == ZoteroFieldKind.citation) ZoteroCitation.fromJson(data);
   }
 
   static String _toHttp(String native) {
     final kind = WordZotero.kindOfInstruction(native);
     final data = WordZotero.metadataOf(native);
-    if (kind == null || data == null)
+    if (kind == null || data == null) {
       throw const FormatException('Invalid native Zotero field.');
+    }
     return kind == ZoteroFieldKind.citation
         ? 'ITEM CSL_CITATION ${jsonEncode(data)}'
         : 'BIBL ${jsonEncode(data)} CSL_BIBLIOGRAPHY';
@@ -737,27 +754,31 @@ final class WordZoteroCitingSession {
       a.end == b.end &&
       a.instruction == b.instruction;
   static void _arity(List<dynamic> args, int length) {
-    if (args.length != length)
+    if (args.length != length) {
       throw const FormatException('Zotero returned invalid command arguments.');
+    }
   }
 
   static String _string(Object? value) {
-    if (value is! String || value.length > 8 * 1024 * 1024)
+    if (value is! String || value.length > 8 * 1024 * 1024) {
       throw const FormatException(
         'Zotero returned an invalid or oversized value.',
       );
+    }
     return value;
   }
 
   static int _noteType(Object? value) {
-    if (value is! int || value < 0 || value > 2)
+    if (value is! int || value < 0 || value > 2) {
       throw const FormatException('Zotero returned an unsupported note type.');
+    }
     return value;
   }
 
   static void _httpType(Object? value) {
-    if (value != 'Http')
+    if (value != 'Http') {
       throw UnsupportedError('This Zotero field type is not supported.');
+    }
   }
 
   static Iterable<WmlParagraph> _flowParagraphs(
