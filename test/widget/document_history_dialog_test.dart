@@ -28,7 +28,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.byKey(const ValueKey('history-purge')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('history-mobile-actions')),
+      findsOneWidget,
+    );
   });
   testWidgets('purge requires confirmation and clears persisted entries', (
     tester,

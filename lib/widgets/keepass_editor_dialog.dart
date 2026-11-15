@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
 import 'dart:async';
@@ -136,6 +137,7 @@ class _CustomFieldDraft {
 
 class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     with WidgetsBindingObserver {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   final _masterPassword = TextEditingController();
   final _search = TextEditingController();
@@ -268,6 +270,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       if (!mounted || generation != _generation) return;
       setState(() {
         _activity?.opened();
+        _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
         _encrypted = Uint8List.fromList(bytes);
         _loading = false;
       });
@@ -1403,6 +1406,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
 
   @override
   void dispose() {
+    _workspace?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _releaseSecrets(disposing: true);
     _encrypted = null;

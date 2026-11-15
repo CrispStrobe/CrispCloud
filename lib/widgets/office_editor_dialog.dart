@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 // lib/widgets/office_editor_dialog.dart
 //
@@ -140,6 +141,7 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   OfficeController? _controller;
   OfficeEditorKind _kind = OfficeEditorKind.unsupported;
@@ -182,6 +184,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     final ProviderContainer? container = _providerContainer;
     final OfficeEditorMenuActions? actions = _menuActions;
     _menuActions = null;
@@ -305,6 +308,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _loading = false;
       });
       _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _registerMenu();
     } catch (e, st) {
       _log.warn('office editor load failed', e, st);

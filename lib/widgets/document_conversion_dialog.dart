@@ -1,3 +1,5 @@
+import '../services/document_workspace_session.dart';
+
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -19,6 +21,7 @@ Future<void> showDocumentConversionDialog(
   BuildContext context,
   WidgetRef ref,
 ) async {
+  if (!await closeDocumentWorkspace(context) || !context.mounted) return;
   try {
     final side = ref.read(activePanelProvider);
     final panel = ref.read(panelProvider(side));

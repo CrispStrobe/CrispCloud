@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 // lib/widgets/file_editor_dialog.dart
 //
@@ -283,6 +284,7 @@ class _FileEditorPage extends ConsumerStatefulWidget {
 }
 
 class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   static const _log = Log('FileEditor');
   static const _autoSaveDelay = Duration(seconds: 30);
@@ -343,6 +345,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     final container = _providerContainer;
     final actions = _menuActions;
     _menuActions = null;
@@ -633,6 +636,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
       final document = EditorDocument.decode(bytes, encoding: encodingOverride);
       _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _closeEditor);
       _applyDocument(document, bytes);
       setState(() {
         _loading = false;

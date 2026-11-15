@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
 import 'dart:async';
@@ -81,6 +82,7 @@ class PdfEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   final _messenger = GlobalKey<ScaffoldMessengerState>();
   final _viewer = PdfViewerController();
@@ -154,6 +156,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     _clearMenu();
     _providerContainer = null;
     _viewer.removeListener(_publishMenu);
@@ -426,6 +429,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
         ..addListener(_onSessionChanged);
       _controller!.addListener(_onRevision);
       _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
       setState(() => _loading = false);
       _publishMenu();
     } catch (error, stack) {

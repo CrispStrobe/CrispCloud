@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
 import 'dart:async';
@@ -60,6 +61,7 @@ class HexFileEditorPage extends StatefulWidget {
 }
 
 class _HexFileEditorPageState extends State<HexFileEditorPage> {
+  DocumentWorkspaceSession? _workspace;
   HexFileSession? _session;
   HexEditorController? _controller;
   bool _loading = true, _saving = false, _cancelled = false, _disposed = false;
@@ -96,6 +98,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         return;
       }
       widget.activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _session = session;
       _controller = HexEditorController(
         HexDocument(session.source),
@@ -403,6 +406,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     _disposed = true;
     _cancelled = true;
     final controller = _controller, session = _session;

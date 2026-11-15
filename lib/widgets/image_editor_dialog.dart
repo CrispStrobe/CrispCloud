@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
 import 'dart:async';
@@ -77,6 +78,7 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   late final GlobalKey<ProImageEditorState> _editorKey =
       widget.editorKey ?? GlobalKey<ProImageEditorState>();
@@ -135,6 +137,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     final container = _container;
     final actions = _menuActions;
     scheduleMicrotask(() {
@@ -335,6 +338,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       _session?.removeListener(_scheduleRefresh);
       _session?.dispose();
       _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _session = ImageEditSession(initialBytes: bytes, format: info.format)
         ..addListener(_scheduleRefresh);
       _historyTokens = Expando<int>();

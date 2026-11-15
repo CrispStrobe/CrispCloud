@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
 import 'dart:async';
@@ -84,6 +85,7 @@ class MediaEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   static const _log = Log('MediaEditor');
   final _controlsKey = GlobalKey<MediaEditorControlsState>();
@@ -213,6 +215,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
       _session?.removeListener(_refresh);
       _session?.dispose();
       _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
       _session = MediaEditSession(info)..addListener(_refresh);
       setState(() {
         _inputPath = inputPath;
@@ -561,6 +564,7 @@ class _MediaEditorDialogState extends ConsumerState<MediaEditorDialog> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     _cancellation?.cancel();
     _session?.removeListener(_refresh);
     _session?.dispose();

@@ -1,3 +1,5 @@
+import '../services/document_workspace_session.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,6 +16,7 @@ import 'file_editor_dialog.dart';
 import 'document_conversion_dialog.dart';
 
 Future<void> showNewDocumentDialog(BuildContext context, WidgetRef ref) async {
+  if (!await closeDocumentWorkspace(context) || !context.mounted) return;
   final side = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(side));
   try {

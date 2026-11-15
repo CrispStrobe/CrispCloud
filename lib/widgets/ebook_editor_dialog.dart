@@ -1,3 +1,4 @@
+import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
 import 'dart:async';
@@ -123,6 +124,7 @@ class EbookEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
+  DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   final _reader = CrispEbookController();
   final _chapterReader = EbookChapterReaderController();
@@ -236,6 +238,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     _annotationTimer?.cancel();
     _conversionToken?.cancel();
     final annotations = _annotations;
@@ -400,6 +403,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       if (!mounted) return;
       if (document != null) _installDocument(document);
       _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
       _annotationIdentity =
           _store?.documentId ??
           '${origin?.storageId ?? 'attachment'}:${widget.file.path ?? _name}';
