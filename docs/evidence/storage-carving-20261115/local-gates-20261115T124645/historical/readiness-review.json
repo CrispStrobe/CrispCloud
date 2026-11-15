@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "scope": "Read-only preflight/source-coverage review; no runtime acceptance claimed.",
+  "source_freeze_announced": "48432b5d0eb22caf365e8659e44ab74cb6aa5a46",
+  "canonical_office": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+  "canonical_parser_source": "09c8b3731edb60bf6e5309578260af36b9433570",
+  "counts": {
+    "app-suites.txt": 63,
+    "analysis-editor-files.txt": 4,
+    "ods-geometry-suites.txt": 2,
+    "analysis-engine-files.txt": 16,
+    "host-focus-suites.txt": 6,
+    "navigation-suites.txt": 1,
+    "analysis-app-files.txt": 72,
+    "engine-suites.txt": 22,
+    "analysis-cli-files.txt": 1,
+    "editor-suites.txt": 9
+  },
+  "changed_production_dart_since_prior_qualification": [
+    "lib/l10n/legacy_word_conversion_strings.dart",
+    "lib/main.dart",
+    "lib/screens/about_dialog.dart",
+    "lib/services/app_legal_notices.dart",
+    "lib/services/document_conversion.dart",
+    "lib/services/legacy_word_copy.dart",
+    "lib/services/pdf_font_licenses.dart",
+    "lib/services/platform_runtime_licenses.dart",
+    "lib/services/word_conversion_inspection.dart",
+    "lib/widgets/internal_viewer_dialog.dart",
+    "lib/widgets/legacy_word_conversion_dialog.dart",
+    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+    "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+    "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+    "packages/quds_office_engine/tool/fidelity/word_steps.dart"
+  ],
+  "changed_suite_files_since_prior_qualification": [
+    "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
+    "packages/quds_office_engine/test/sml_styles_date_test.dart",
+    "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+    "test/app_legal_notices_test.dart",
+    "test/document_conversion_test.dart",
+    "test/legacy_word_conversion_strings_test.dart",
+    "test/local_odf_corpus_test.dart",
+    "test/office_document_service_test.dart",
+    "test/pdf_font_licenses_test.dart",
+    "test/platform_runtime_licenses_test.dart",
+    "test/widget/document_conversion_dialog_test.dart",
+    "test/widget/ods_viewer_workflow_test.dart",
+    "test/widget/structured_legacy_word_conversion_dialog_test.dart",
+    "test/word_conversion_inspection_test.dart"
+  ],
+  "uncovered_production_dart": [],
+  "uncovered_changed_suite_files_excluding_explicit_corpus": [],
+  "excluded_external_corpus": [
+    "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+    "test/local_odf_corpus_test.dart"
+  ],
+  "provenance_patch_files": [
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_portable_current.py",
+      "sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "size": 4454,
+      "existing_source_sha256": null
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py",
+      "sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "size": 4349,
+      "existing_source_sha256": null
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py",
+      "sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+      "size": 12271,
+      "existing_source_sha256": "e6304df783419d63545691bfd8fab95e79510832ecca0e8c430393b1d6004071"
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/toolchain_launcher.sh",
+      "sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "size": 203,
+      "existing_source_sha256": "5e150bb00a6dbede2015e7cbd8524b6122b468f7b6f9304aca13e51847be5b1b"
+    },
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/verify_navigation_capture.py",
+      "sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "size": 7053,
+      "existing_source_sha256": "05e2f0aeb455f6ab7d03fb13a79b2e6e57c0ac375af60e843e71332ca4d1c644"
+    }
+  ],
+  "syntax_checks": [
+    "Python ast.parse on all four Python files",
+    "bash -n on launcher",
+    "git apply --check before authorized root application"
+  ],
+  "app_mutations_by_reviewer": false,
+  "readiness_conclusion": "Proceed with scoped local qualification; no further cohort expansion recommended. Raw passing machine events and saved gate receipts determine acceptance.",
+  "subsequent_gate_finding": {
+    "gate": "analysis-app",
+    "qualified": false,
+    "issues": {
+      "host_dialog_nullable_access": 4,
+      "host_dialog_rethrow_lint": 1,
+      "main_deprecated_enable": 1
+    },
+    "host_correction": "evidence-review/host-nullability/fix.patch",
+    "source_cohort_change": false,
+    "status": "failed raw gate being saved by root before correction; fresh strict acceptance pending"
+  }
+}

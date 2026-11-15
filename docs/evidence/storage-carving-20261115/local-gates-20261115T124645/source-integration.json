@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-15T12:54:34.240986+00:00",
+  "observed_app_source": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "parent_checkpoint": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+  "branch": "integration/storage-carving-local-20261115124645",
+  "intended_office_pin": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+  "intended_parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "managed_files": 2334,
+  "source_changes_relative_to_observed_app": [
+    "Exactly three prior ODS regression bodies restored,93 added lines; no production change relative to41885.",
+    "Office manifest commit/branch and single test-file hash updated; unrelated file ordering retained.",
+    "QUDS_FORKS current pin and restored coverage explained."
+  ],
+  "resolution_receipt": "resolution/receipt.json",
+  "parser_linkage": "canonical-parser-observed-pin/canonical-parser-observed-pin-qualification.json",
+  "qualification": "pending fresh recorded host gates",
+  "ci": "No polling,waiting or restart; incremental commits use [skip ci]."
+}

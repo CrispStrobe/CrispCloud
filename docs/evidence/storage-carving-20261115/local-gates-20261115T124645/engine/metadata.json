@@ -1,0 +1,86 @@
+{
+  "after_entries_sha256": "d2bd19e6a71516db69ce0ad6d43527940965831a775ad8fd10758d5378afe0e5",
+  "after_git": {
+    "head": "1f3fb17e0ece1ba2debce476d5f1bf2477cd342a",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/oracle-report.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/edited.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/roundtrip-1.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/roundtrip-2.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/roundtrip-3.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/edited.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/roundtrip-1.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/roundtrip-2.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/roundtrip-3.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/edited.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/roundtrip-1.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/roundtrip-2.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/roundtrip-3.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine/command.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine/metadata.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine/suites.txt\n",
+    "tree": "59d0cad89fb076a6d7760f507ce9f0d43f711d43",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/engine-suites.txt": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-delta-queue-20261114/run_delta_qualification.py": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "before_entries_sha256": "d2bd19e6a71516db69ce0ad6d43527940965831a775ad8fd10758d5378afe0e5",
+  "before_git": {
+    "head": "1f3fb17e0ece1ba2debce476d5f1bf2477cd342a",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/oracle-report.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/edited.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/roundtrip-1.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/roundtrip-2.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/sheet/roundtrip-3.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/edited.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/roundtrip-1.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/roundtrip-2.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/slide/roundtrip-3.pptx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/edited.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/roundtrip-1.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/roundtrip-2.docx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/engine-prior-build/fidelity-scripted/word/roundtrip-3.docx\n",
+    "tree": "59d0cad89fb076a6d7760f507ce9f0d43f711d43",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/engine-suites.txt": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-delta-queue-20261114/run_delta_qualification.py": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "command": [
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "test",
+    "--reporter",
+    "json",
+    "--concurrency=2",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_wrap_text_fidelity_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/legacy_sheet_reader_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_authored_number_format_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_cell_state_preservation_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_import_fidelity_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/word_inline_picture_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/word_heading_apply_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/inline_field_fidelity_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/story_media_fidelity_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/word_picture_distance_fidelity_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/legacy_word_document_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/legacy_word_conversion_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/scripted_workflows_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_time_number_format_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/office_pdf_export_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sml_styles_date_test.dart",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/test/sheet_comments_schema_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine",
+  "elapsed_seconds": 8.701030841999454,
+  "finished_at": "2026-11-15T13:06:18.866022+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8619,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T13:06:10.163380+00:00",
+  "suite_count": 22,
+  "postprocessing": {
+    "success": true,
+    "produced_files_sha256": "d8e3798f990b731db9980f0c8f3913ebba3dacebb4bb677f775eadfb93e9086c"
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "excluded_first_attempt": {
+    "command.json": {
+      "bytes": 727,
+      "sha256": "34ac95ed11da794e9612eeff4416226013d1a58d428897a9da24b86f06ddcddc",
+      "git_blob": "351f6366c7b26fde4b51a121ca89c4c8482a892a",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/command.json"
+    },
+    "inputs-after.json.gz": {
+      "bytes": 155461,
+      "sha256": "56acc34aaa37186455bdebf6052a52296277f48bbc5e5880bce0017543679de2",
+      "git_blob": "4c7d9b77ced21c096d3b965737fbfc49193a642e",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/inputs-after.json.gz"
+    },
+    "inputs-before.json.gz": {
+      "bytes": 155461,
+      "sha256": "8c4bf61b89d13f653763174663e8eef332dd13fbc159955b7e396516c4dc9829",
+      "git_blob": "81e5436011b6d27d135c8d80a8e7f4a3e2d491dc",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/inputs-before.json.gz"
+    },
+    "metadata.json": {
+      "bytes": 3313,
+      "sha256": "4b6fc98f1b3a819d2d5e9536487c8451972c65dfd20977b0b8fc7dfe6fcd1960",
+      "git_blob": "9339737dd79b6a3a85bfe06f871d7e45b1ea7fb3",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/metadata.json"
+    },
+    "stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/stderr.log"
+    },
+    "stdout.jsonl": {
+      "bytes": 30860,
+      "sha256": "4383b8a9238e7d6e6bd3bbf5674b2544bc2c68869c5b98cb269b685f2824e9a6",
+      "git_blob": "88d5baa6097c4795e66744a6a88b3921bb52f818",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/stdout.jsonl"
+    },
+    "suites.txt": {
+      "bytes": 60,
+      "sha256": "33a5433d54fa39b126a0ac6f7d414d9942d8492cc4716d686143eb9325266e25",
+      "git_blob": "7f198c6c1cedfb7fd2e746b018b7d4f45e38ca3f",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/suites.txt"
+    },
+    "summary.json": {
+      "bytes": 1170,
+      "sha256": "477a944adcd9d172927eefe304c99fa7d27fac9a80a09032f54b78fb1f607ecf",
+      "git_blob": "aae82faf3cdb6e12f857e779be76bab770f856f0",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/summary.json"
+    },
+    "artifacts-sha256.json": {
+      "bytes": 1008,
+      "sha256": "35fe6eda29af3d12d1629ab233ccbf12d13c9c76022aff2f9348cb39c2fec7d5",
+      "git_blob": "61313e7615f1a79cd3a549d9531967e15f6c64e3",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt/artifacts-sha256.json"
+    }
+  },
+  "ods_runtime": {
+    "command.json": {
+      "bytes": 875,
+      "sha256": "1530c65bd5eb1a72ae6cd32e8171aaa158dd3f1e40207ec01ee687c2125f25e7",
+      "git_blob": "52383ac6512425403d72d2a79a8e83820cbf1773",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/command.json"
+    },
+    "inputs-after.json.gz": {
+      "bytes": 155461,
+      "sha256": "7b427ac270c89198b7d7a6d954ee8ace9df8cc274627b8f351975b47ddb6a2ff",
+      "git_blob": "ad6a86d8a08bc6ff5d032a7e4c28468ad6aa98cc",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/inputs-after.json.gz"
+    },
+    "inputs-before.json.gz": {
+      "bytes": 155459,
+      "sha256": "4ef74612023daac91c087b9cb20a6a5de4d84f5f0719406812b188671a5dea74",
+      "git_blob": "2af29ae3a5cb78a5a60822d8974ce855de588315",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/inputs-before.json.gz"
+    },
+    "metadata.json": {
+      "bytes": 3386,
+      "sha256": "80709d12f22dfbe28babe385727db89052c3e14895eb037e502b6de18a6a31cd",
+      "git_blob": "df060aaa5c4330291021516edf5644731833245b",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/metadata.json"
+    },
+    "stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/stderr.log"
+    },
+    "stdout.jsonl": {
+      "bytes": 31005,
+      "sha256": "d64caeff66b09a089cdb38c415a60e321b7379812d2ab2693679ac6a8b46a21b",
+      "git_blob": "a3c9b41ad4d09d1407712ef144c628900dbe95ab",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/stdout.jsonl"
+    },
+    "suites.txt": {
+      "bytes": 60,
+      "sha256": "33a5433d54fa39b126a0ac6f7d414d9942d8492cc4716d686143eb9325266e25",
+      "git_blob": "7f198c6c1cedfb7fd2e746b018b7d4f45e38ca3f",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/suites.txt"
+    },
+    "summary.json": {
+      "bytes": 751,
+      "sha256": "c699c2515d82da0adc805dac2b3d8dfc8a9a09c1df56a71fa1182f27e07ee1e2",
+      "git_blob": "f95aa99a55f70f09b29a706ce6bd54d1e7bf95bd",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/summary.json"
+    },
+    "artifacts-sha256.json": {
+      "bytes": 1007,
+      "sha256": "1011c46e8c570c421b07a97541f421782877bb0b243a01e5dbd9e91c6ddebf43",
+      "git_blob": "1ce9f41a1f21d8134073e3e9ec2190474c26b258",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final/artifacts-sha256.json"
+    }
+  },
+  "strict_analysis": {
+    "command.json": {
+      "bytes": 349,
+      "sha256": "033b269429a02920b556222731341d3d6337d00e67531987c988a1cf790bc884",
+      "git_blob": "d31a19d4e4f5822765781f92204f75de06397235",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/command.json"
+    },
+    "inputs-after.json.gz": {
+      "bytes": 155460,
+      "sha256": "765ea65224dde4d74cdfe0080b90c032379e2e72d7a8fefaaad523eb3756abf4",
+      "git_blob": "0ec25de3a4b593bf0d6da68aadb362b66089ccd8",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/inputs-after.json.gz"
+    },
+    "inputs-before.json.gz": {
+      "bytes": 155460,
+      "sha256": "ccc92794cbd654130f20802f8513e903f43431412303d73bc2817015fa0240b7",
+      "git_blob": "f6c7dccc224afbf692ae1fa11038ba7b66b60e30",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/inputs-before.json.gz"
+    },
+    "metadata.json": {
+      "bytes": 2813,
+      "sha256": "affc4f3db0b92df2d305f1463e0e5e32c6e4c6e4af39bbc74b020e3db00059be",
+      "git_blob": "b73cffd479c6b5119322c2d6b64378f56b7512a3",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/metadata.json"
+    },
+    "stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/stderr.log"
+    },
+    "stdout.log": {
+      "bytes": 601,
+      "sha256": "4a64ad9b7aa06a654fa5eac9e7b0d3f69c936b8875e964a7b071cf742b82ba08",
+      "git_blob": "da161fc827168a8e78c41b5f1028b19fcc412ca7",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/stdout.log"
+    },
+    "artifacts-sha256.json": {
+      "bytes": 760,
+      "sha256": "deea2f07d4c79453d84c75e831690ee22b711ce4287a71f7a01eff9dc52cb864",
+      "git_blob": "052fb61873cb879310367e1af281be2472f87ec4",
+      "remote_path": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis/artifacts-sha256.json"
+    }
+  }
+}
