@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, LicenseRegistry, LicenseEntryWithLineBreaks;
 import 'package:crisp_storage/crisp_storage.dart' show smbLicense;
+import 'package:cryptography/cryptography.dart' show Cryptography;
 import 'package:cryptography_flutter/cryptography_flutter.dart';
 import 'package:flutter/services.dart' show BrowserContextMenu;
 import 'package:path_provider/path_provider.dart';
@@ -362,7 +363,7 @@ Future<void> _startCrispCloud() async {
     // (Android Keystore / Apple CryptoKit) — ~1000 MB/s vs ~1-9 MB/s pure-Dart
     // for file encryption. No-op on web (which uses WebCrypto directly).
     if (!kIsWeb) {
-      FlutterCryptography.enable();
+      Cryptography.freezeInstance(FlutterCryptography.defaultInstance);
     }
 
     // Disable browser context menu on web so our custom context menu works.

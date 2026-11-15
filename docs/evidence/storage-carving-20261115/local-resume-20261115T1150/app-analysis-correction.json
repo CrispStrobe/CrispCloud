@@ -1,0 +1,22 @@
+{
+  "failed_gate": "analysis-app",
+  "receipt_commit": "5431b2f422319f52e31300977dc261b114166413",
+  "analysis_issues": {
+    "errors": 4,
+    "infos": 2
+  },
+  "dialog_correction": {
+    "path": "lib/widgets/legacy_word_conversion_dialog.dart",
+    "existing_source_sha256": "5152c02f7ddb25f71a9841e7eba503dbcfd9ff36dc5604fef8c082245de3c8ad",
+    "sha256": "dcfd0386cdea08eff40183477615be11d6183ac1b833226e18844e21eee983bf",
+    "size": 29470,
+    "reason": "Explicitly promote a stable local recovery result and retain a nonnullable conversion result across the async branch; use rethrow to preserve original exception/stack. No recovery policy or test-cohort change."
+  },
+  "startup_correction": {
+    "path": "lib/main.dart",
+    "before": "FlutterCryptography.enable();",
+    "after": "Cryptography.freezeInstance(FlutterCryptography.defaultInstance);",
+    "evidence": "Installed locked cryptography_flutter2.3.4 enable() contains exactly Cryptography.freezeInstance(defaultInstance). The replacement preserves the existing explicit native implementation freeze; Flutter automatic registration alone would not freeze it. cryptography is already a direct dependency; declarations/locks unchanged."
+  },
+  "scope": "Compile/type/lint corrections only; existing regression cohort unchanged."
+}
