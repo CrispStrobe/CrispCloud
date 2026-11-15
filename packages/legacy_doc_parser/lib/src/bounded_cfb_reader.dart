@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import 'legacy_word_file_kind.dart';
 import 'dart:typed_data';
 
 import 'compound/cfbf_reader.dart'
@@ -91,7 +92,7 @@ class BoundedCfbReader {
     const free = 0xffffffff;
     const end = 0xfffffffe;
     if (bytes.length < 512 || !CfbfFile.isCfbf(bytes)) {
-      throw const FormatException('Not a compound document');
+      throw LegacyWordNotCompoundException(sniffLegacyWordFile(bytes));
     }
     final data = ByteData.sublistView(bytes);
     int u16(int offset) => data.getUint16(offset, Endian.little);

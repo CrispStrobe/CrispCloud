@@ -15,6 +15,7 @@ class LegacyWordCopy {
     this.extension = 'docx',
     this.converterName,
     this.inspection,
+    this.recoveredTextOnly = false,
   });
 
   final String fileName;
@@ -22,7 +23,12 @@ class LegacyWordCopy {
   final String extension;
   final String? converterName;
   final WordConversionInspection? inspection;
-  bool get isTextOnly => converterName == null;
+
+  /// The structured parser could not recover this document. Only its bounded
+  /// main-body text was recovered, regardless of the method originally chosen.
+  final bool recoveredTextOnly;
+
+  bool get isTextOnly => recoveredTextOnly || converterName == null;
 }
 
 /// Backwards-compatible name for callers of the original text-copy workflow.

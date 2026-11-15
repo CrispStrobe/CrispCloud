@@ -5,8 +5,8 @@ test overlay and manifests after reconciling the incoming application and
 canonical branches. Resolve dependencies with the pinned environment, preserve
 app and CLI locks, then save the complete source remotely before starting gates.
 
-The selected cohorts grow from 49/7/17 to **54 app / 9 editor / 19 engine suites**.
-Strict analysis covers **63 app / 12 engine / 4 editor / 1 CLI files**. The added
+The selected cohorts grow from 49/7/17 to **63 app / 9 editor / 20 engine suites**.
+Strict analysis covers **72 app / 15 engine / 4 editor / 1 CLI files**. The added
 files and concrete reasons are recorded in `gate-plan.json`. Two optional local
 corpus scanners are preserved as source but excluded from mandatory execution;
 their no-input behavior is not qualification evidence.
@@ -92,8 +92,24 @@ not the new preview acceptance.
 The recovered 996-case receipts, original Office oracle, source checks and
 VM/compiled-JS PNG proof were independently revalidated at their exact prior
 source. They remain useful predecessor evidence, but the new ODS, Word and
-notice changes require this new scoped qualification. Test totals must be read
+notice and newly discovered standalone parser PR14–18 changes require this new scoped qualification. Test totals must be read
 from completed raw machine reports, never predicted from the prior counts.
 Native macOS toolbar execution, other platforms, external Office rendering and
 broad Open XML schema certification remain separate scopes. No GitHub Actions
 run needs to be awaited, polled or restarted for this plan.
+
+## Legacy Word recovery integration
+
+Apply the separately reviewed host overlay only after the canonical parser
+reconciliation is synced. It connects the new `recoveredTextOnly` result to
+copy classification, explicit recovery review and localized full-loss consent.
+Strict source feature inspection remains unchanged; an unreadable source is
+represented as unknown, not as a source without macros or auxiliary stories.
+Word 6/95 and directory-damaged files may choose a bounded text-only DOCX route;
+DOCM/native choices remain unavailable when the source inventory is unknown.
+
+`host-focus-suites.txt` is a six-suite targeted correction check, separate from
+the final app cohort. The final 63-suite app run includes all six, so targeted
+counts must not be added to the acceptance total. The overlay adds generated
+fixtures and nine regression cases across existing suites, plus localization
+assertions; final counts come from raw machine events.

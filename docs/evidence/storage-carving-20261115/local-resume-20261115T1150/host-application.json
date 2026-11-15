@@ -1,0 +1,68 @@
+{
+  "source_checkpoint": "dca83f902dd92fd6338ded42394a2c37ccdc909a",
+  "files": [
+    {
+      "path": "lib/l10n/legacy_word_conversion_strings.dart",
+      "sha256": "b7270ccbd95eb841ff0d488b5554202f8be84144d031ed37fd2611056f8093b9",
+      "size": 28345,
+      "existing_source_sha256": "fe32670491d9d91b7dd511b6a331c23c88c0d0e8933e1d918dcdfd398dfb34be"
+    },
+    {
+      "path": "lib/services/document_conversion.dart",
+      "sha256": "1eb80c7cc6b702eda8bea5a38281dcf433b9a2efa4c52d2f4e33b2e0b4349452",
+      "size": 9556,
+      "existing_source_sha256": "38c0a79e717cd1e71c39583dea5fe2e54147d4d13b7f1bd7e664868419c7f12a"
+    },
+    {
+      "path": "lib/services/legacy_word_copy.dart",
+      "sha256": "704952997f248daaa0e55b632e21bed9930568c1dd05a094dd4a9f6cdf3090de",
+      "size": 2573,
+      "existing_source_sha256": "4122b50fccd4fe2795c2eab45c4a1b67bbb64440956390f322546a78222123d8"
+    },
+    {
+      "path": "lib/services/word_conversion_inspection.dart",
+      "sha256": "ca1a3507afe9a89b1fafcfe211471f3209e9df5685cc97983ff17c08223c4250",
+      "size": 32658,
+      "existing_source_sha256": "32feb6faf05b37b2f8128b746c1e690913b549c255ccfd01e636c39619bb0fc6"
+    },
+    {
+      "path": "lib/widgets/legacy_word_conversion_dialog.dart",
+      "sha256": "5152c02f7ddb25f71a9841e7eba503dbcfd9ff36dc5604fef8c082245de3c8ad",
+      "size": 29344,
+      "existing_source_sha256": "c97a72a118af62876972d5cd13f3708b3c81d58faa398d3c05a69998a2dfed81"
+    },
+    {
+      "path": "test/document_conversion_test.dart",
+      "sha256": "3a7f29e1409ffe35c5fadb809a2748f4c1159f0a6ebfb8bb51ebe97fbd1354e3",
+      "size": 5450,
+      "existing_source_sha256": "f7f6f0068f87a0a78b15806dbc92262feff0261b0e0d65474b3a12db1fe8a3fc"
+    },
+    {
+      "path": "test/legacy_word_conversion_strings_test.dart",
+      "sha256": "77fcac71e3e753ff26949fc618db9637b439df0f0004d811e0aa998a5ffe2254",
+      "size": 2547,
+      "existing_source_sha256": "91be2809ba3e97b13dcae1fa920550962064b51d3f2732fca00448737bbe9bd4"
+    },
+    {
+      "path": "test/support/legacy_word_recovery_fixture.dart",
+      "sha256": "abba313e836dbe28876fdbef8d5133e19c2e65ddb13174e08718e7f280fa5e27",
+      "size": 1920,
+      "existing_source_sha256": null
+    },
+    {
+      "path": "test/widget/structured_legacy_word_conversion_dialog_test.dart",
+      "sha256": "c6bca60745ba73cc058449912c2b3cb6e99d8efdf66d264296953b92f1778011",
+      "size": 18230,
+      "existing_source_sha256": "f382254d1e4e80ba25c7cbb4d111c06bf9c2959b7d3336bc57f46a9020ca5b73"
+    },
+    {
+      "path": "test/word_conversion_inspection_test.dart",
+      "sha256": "9c139173dc371e506bcb728a43fdc72e738ed35649bcfeaa26a223b33ecf667b",
+      "size": 49170,
+      "existing_source_sha256": "5e44d2ba939be35e5ca02b4a63879531c289768cd90afa0f645feea26c5b34a1"
+    }
+  ],
+  "old_source_hash_guards": true,
+  "readback_sha256_verified": true,
+  "staged": false
+}

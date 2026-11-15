@@ -1,0 +1,162 @@
+{
+  "observed_at": {
+    "current_time": "2026-11-15 11:24:07 UTC"
+  },
+  "scope": "Finite source refresh before qualification; later source changes are outside this cutoff.",
+  "repositories": {
+    "app": [
+      {
+        "ref": "refs/heads/codex/office-recovery-20261115",
+        "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419"
+      },
+      {
+        "ref": "refs/heads/continuation/storage-qualification-20261115T1000",
+        "sha": "0c574677be7749969d5c9230a5c036fde95cd87e"
+      },
+      {
+        "ref": "refs/heads/feature/new-documents-history-20261115",
+        "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      },
+      {
+        "ref": "refs/heads/fix/excel-legacy-xls",
+        "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25"
+      },
+      {
+        "ref": "refs/heads/fix/odf-final",
+        "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a"
+      },
+      {
+        "ref": "refs/heads/fix/ods-date-styles",
+        "sha": "b0e0f1746e5042f9dfced8ab471222d33bcb63a0"
+      },
+      {
+        "ref": "refs/heads/integrate/consistency-20261115",
+        "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334"
+      },
+      {
+        "ref": "refs/heads/integrate/legacy-xls-preview-20261115",
+        "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+      },
+      {
+        "ref": "refs/heads/integrate/odf-integration-20261115",
+        "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a"
+      },
+      {
+        "ref": "refs/heads/integrate/ods-fixes-20261115",
+        "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7"
+      },
+      {
+        "ref": "refs/heads/integrate/ods-style-20261115",
+        "sha": "f74f1fceb9959b1197fc21218e047240f215ba75"
+      },
+      {
+        "ref": "refs/heads/integrate/office-goldens-20261115",
+        "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20"
+      },
+      {
+        "ref": "refs/heads/integrate/word-inline-pictures-20261115",
+        "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c"
+      },
+      {
+        "ref": "refs/heads/integration/office-reconcile-storage-20261115",
+        "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb"
+      },
+      {
+        "ref": "refs/heads/integration/storage-carving-20261115",
+        "sha": "dca83f902dd92fd6338ded42394a2c37ccdc909a"
+      },
+      {
+        "ref": "refs/heads/integration/storage-carving-local-qualification-20261115",
+        "sha": "dacd3e584abe885058f9dddbde8493976647e5d3"
+      },
+      {
+        "ref": "refs/heads/main",
+        "sha": "4933ffc21f4aadab3e699c65585ae3c2121e26fd"
+      }
+    ],
+    "quds": [
+      {
+        "ref": "refs/heads/codex/office-recovery-20261115",
+        "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0"
+      },
+      {
+        "ref": "refs/heads/feat/word-like-selection",
+        "sha": "e8227569a3b90fb21db598483690bd13fe74ddef"
+      },
+      {
+        "ref": "refs/heads/fix/excel-legacy-import",
+        "sha": "b6d2c58783fd296103e8de5f1f5f089f2379bc1c"
+      },
+      {
+        "ref": "refs/heads/fix/odf-legacy-spreadsheets",
+        "sha": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661"
+      },
+      {
+        "ref": "refs/heads/fix/word-heading-like-word",
+        "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+      },
+      {
+        "ref": "refs/heads/fix/word-inline-pictures",
+        "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193"
+      },
+      {
+        "ref": "refs/heads/fix/word-shape-no-textbox",
+        "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a"
+      },
+      {
+        "ref": "refs/heads/fix/word-steps-vocabulary",
+        "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8"
+      },
+      {
+        "ref": "refs/heads/integration/office-storage-reconcile-20261115",
+        "sha": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca"
+      },
+      {
+        "ref": "refs/heads/integration/storage-carving-qualification-20261115",
+        "sha": "cd56ae1550f37367ef5ec921d124211c7d7e224b"
+      },
+      {
+        "ref": "refs/heads/integration/storage-odf-qualification-20261115",
+        "sha": "cb9f7a5793c9a4e7415cd9e52c91509ea3304252"
+      },
+      {
+        "ref": "refs/heads/main",
+        "sha": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d"
+      }
+    ],
+    "parser": [
+      {
+        "ref": "refs/heads/fix/accept-word98-mac-nfib",
+        "sha": "3dc1a8578af290096c05fe6d428983eb1f82f19a"
+      },
+      {
+        "ref": "refs/heads/fix/name-the-real-format",
+        "sha": "9f61e030d320c9086556d3368d6233d25574fdab"
+      },
+      {
+        "ref": "refs/heads/fix/recover-comments-bookmarks",
+        "sha": "89555522726432b1449f0d26e701376ec6f59a27"
+      },
+      {
+        "ref": "refs/heads/fix/recover-text-from-damaged-compound",
+        "sha": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8"
+      },
+      {
+        "ref": "refs/heads/fix/word-written-hyperlinks",
+        "sha": "d422fa99a3a84830794f0e2dc332d59f923779f7"
+      },
+      {
+        "ref": "refs/heads/fix/word6-95-text-import",
+        "sha": "120a3cc93776263c37a501d78a9688c0f6d66932"
+      },
+      {
+        "ref": "refs/heads/integration/storage-carving-parser-20261115",
+        "sha": "5ba4993c24c88eb366ffbb4f5e16b8da6b418064"
+      },
+      {
+        "ref": "refs/heads/main",
+        "sha": "7df906d2643d1fec39c49fc795733316a49f3278"
+      }
+    ]
+  }
+}

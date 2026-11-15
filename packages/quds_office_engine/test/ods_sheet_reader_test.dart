@@ -809,10 +809,7 @@ void defaultAndTimeTests() {
       final sheet = current.firstSheet;
       expect(sheet.columnWidths.keys, [0]);
       expect(sheet.exportColumnWidth(0), closeTo(96 / 7.4, 1e-10));
-      expect(
-        sheet.columnWidth(1),
-        SmlWorksheet.columnWidthFromExcel(0.8898 * 96 / 7.4),
-      );
+      expect(sheet.columnWidth(1), 81);
     }
   });
 

@@ -31,6 +31,25 @@ LegacyWordStructuredConversion _convertStructuredWord(
   recover: true,
 );
 
+typedef _LegacyWordInput = ({
+  LegacyWordSourceInspection? source,
+  LegacyWordStructuredConversion? recovery,
+});
+
+_LegacyWordInput _inspectConversionSource(Uint8List bytes) {
+  try {
+    return (source: inspectLegacyWordSource(bytes), recovery: null);
+  } on WordConversionInspectionException catch (error) {
+    // Keep the strict source-inspection result meaningful. A supported older
+    // Word file or damaged compound directory may still yield bounded text,
+    // but its missing feature inventory cannot establish preservation.
+    if (error.issue != WordConversionInspectionIssue.invalidInput) rethrow;
+    final recovery = _convertStructuredWord((bytes: bytes, docm: false));
+    if (!recovery.recoveredTextOnly) throw error;
+    return (source: null, recovery: recovery);
+  }
+}
+
 /// Creates a separate copy. Structured and installed conversions are reviewed
 /// before saving; the explicit text-only choice retains its copy workflow.
 Future<LegacyWordCopy?> showLegacyWordConversionDialog(
@@ -88,6 +107,7 @@ class _LegacyWordConversionDialogState
   );
   List<InstalledOfficeInstallation> _installations = const [];
   LegacyWordSourceInspection? _source;
+  LegacyWordStructuredConversion? _sourceRecovery;
   InstalledOfficeOutput _output = InstalledOfficeOutput.docx;
   String? _method;
   LegacyWordCopy? _prepared;
@@ -105,6 +125,7 @@ class _LegacyWordConversionDialogState
   bool get _textOnly => _method == 'text';
   bool get _structured => _method == 'structured';
   bool get _builtIn => _textOnly || _structured;
+  bool get _hasSource => _source != null || _sourceRecovery != null;
   bool get _busy => _converting || _saving || _previewing;
   InstalledOfficeConversion get _converter =>
       widget.convert ??
@@ -136,14 +157,20 @@ class _LegacyWordConversionDialogState
 
   Future<void> _initialize() async {
     try {
-      final source = await compute(inspectLegacyWordSource, widget.bytes);
+      final input = await compute(_inspectConversionSource, widget.bytes);
       List<InstalledOfficeInstallation> available;
-      try {
-        available =
-            await (widget.discover ??
-                () => discoverInstalledOfficeConverters())();
-      } catch (_) {
+      if (input.source == null) {
+        // Recovered text is explicitly reviewed as DOCX. Do not offer native
+        // or DOCM conversion with an unknown source feature inventory.
         available = const [];
+      } else {
+        try {
+          available =
+              await (widget.discover ??
+                  () => discoverInstalledOfficeConverters())();
+        } catch (_) {
+          available = const [];
+        }
       }
       if (!mounted) return;
       available =
@@ -158,7 +185,8 @@ class _LegacyWordConversionDialogState
                 .compareTo(b.kind == InstalledOfficeKind.microsoftWord ? 0 : 1),
           );
       setState(() {
-        _source = source;
+        _source = input.source;
+        _sourceRecovery = input.recovery;
         _installations = available;
         _checking = false;
         if (available.isNotEmpty) _changeMethod('0');
@@ -219,20 +247,20 @@ class _LegacyWordConversionDialogState
   Future<void> _convert() async {
     if (_busy ||
         _checking ||
-        _source == null ||
+        !_hasSource ||
         (!_builtIn && _installation == null)) {
       return;
     }
     try {
       final extension = _textOnly ? 'docx' : _output.extension;
-      final name = validateLegacyWordCopyName(_name.text, extension: extension);
+      var name = validateLegacyWordCopyName(_name.text, extension: extension);
       setState(() {
         _converting = true;
         _saveError = false;
         _previewError = false;
         _error = null;
       });
-      if (_textOnly) {
+      if (_textOnly && _sourceRecovery == null) {
         final bytes = await compute(convertLegacyWordToDocx, widget.bytes);
         if (!mounted) return;
         await _save(LegacyWordCopy(fileName: name, bytes: bytes));
@@ -240,12 +268,15 @@ class _LegacyWordConversionDialogState
       }
       final Uint8List bytes;
       final String converterName;
+      var recoveredTextOnly = false;
       List<LegacyWordConversionLimitation> limitations = const [];
-      if (_structured) {
-        final result = await compute(_convertStructuredWord, (
-          bytes: widget.bytes,
-          docm: _output == InstalledOfficeOutput.docm,
-        ));
+      if (_structured || _sourceRecovery != null) {
+        final result =
+            _sourceRecovery ??
+            await compute(_convertStructuredWord, (
+              bytes: widget.bytes,
+              docm: _output == InstalledOfficeOutput.docm,
+            ));
         if (!mounted) return;
         if (result.extension != extension) {
           throw const WordConversionInspectionException(
@@ -254,9 +285,17 @@ class _LegacyWordConversionDialogState
         }
         bytes = Uint8List.fromList(result.bytes).asUnmodifiableView();
         limitations = List.unmodifiable(result.limitations);
-        converterName = LegacyWordConversionStrings(
+        recoveredTextOnly = result.recoveredTextOnly;
+        final strings = LegacyWordConversionStrings(
           Localizations.localeOf(context),
-        ).builtInName;
+        );
+        converterName = recoveredTextOnly
+            ? strings.recoveredName
+            : strings.builtInName;
+        if (recoveredTextOnly && _automaticName) {
+          name = suggestedLegacyWordCopyName(widget.sourceName, textOnly: true);
+          _name.text = name;
+        }
       } else {
         final installation = _installation!;
         final result = await _converter(
@@ -278,7 +317,7 @@ class _LegacyWordConversionDialogState
       final report = await inspectConvertedWord(
         bytes,
         extension: extension,
-        source: _source!,
+        source: _source,
       );
       if (!mounted) return;
       setState(() {
@@ -288,6 +327,7 @@ class _LegacyWordConversionDialogState
           extension: extension,
           converterName: converterName,
           inspection: report,
+          recoveredTextOnly: recoveredTextOnly,
         );
         _limitations = limitations;
         _converting = false;
@@ -365,6 +405,7 @@ class _LegacyWordConversionDialogState
         extension: copy.extension,
         converterName: copy.converterName,
         inspection: copy.inspection,
+        recoveredTextOnly: copy.recoveredTextOnly,
       );
       setState(() {
         _saving = true;
@@ -463,11 +504,13 @@ class _LegacyWordConversionDialogState
     final canConvert =
         !_checking &&
         !_busy &&
-        _source != null &&
+        _hasSource &&
         (_builtIn || _installation != null);
     final requiresAcknowledgement =
         prepared != null &&
-        (_structured || prepared.inspection!.losses.isNotEmpty);
+        (prepared.recoveredTextOnly ||
+            _structured ||
+            prepared.inspection!.losses.isNotEmpty);
     final canSave =
         !_busy && prepared != null && (!requiresAcknowledgement || _acceptLoss);
     return PopScope(
@@ -487,7 +530,10 @@ class _LegacyWordConversionDialogState
                   if (_checking)
                     Text(strings.text('checking'))
                   else ...[
-                    if (_installations.isEmpty && _source != null) ...[
+                    if (_sourceRecovery != null) ...[
+                      Text(textStrings.recoveredNotice),
+                      const SizedBox(height: 12),
+                    ] else if (_installations.isEmpty && _source != null) ...[
                       Text(textStrings.unavailable),
                       const SizedBox(height: 12),
                     ],
@@ -513,16 +559,17 @@ class _LegacyWordConversionDialogState
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        DropdownMenuItem(
-                          value: 'structured',
-                          child: Text(textStrings.structuredMethod),
-                        ),
+                        if (_source != null)
+                          DropdownMenuItem(
+                            value: 'structured',
+                            child: Text(textStrings.structuredMethod),
+                          ),
                         DropdownMenuItem(
                           value: 'text',
                           child: Text(strings.text('textOnly')),
                         ),
                       ],
-                      onChanged: _busy || _source == null
+                      onChanged: _busy || !_hasSource
                           ? null
                           : (value) => setState(() => _changeMethod(value)),
                     ),
@@ -632,12 +679,17 @@ class _LegacyWordConversionDialogState
                   if (requiresAcknowledgement) ...[
                     const SizedBox(height: 16),
                     Text(
-                      _structured
+                      _structured || prepared.recoveredTextOnly
                           ? textStrings.limitationsTitle
                           : strings.text('losses'),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    if (_structured) ...[
+                    if (prepared.recoveredTextOnly) ...[
+                      const SizedBox(height: 6),
+                      Text(textStrings.recoveredNotice),
+                      const SizedBox(height: 6),
+                      Text(textStrings.lossNotice),
+                    ] else if (_structured) ...[
                       const SizedBox(height: 6),
                       Text(textStrings.structuredNotice),
                       const SizedBox(height: 6),
@@ -658,7 +710,9 @@ class _LegacyWordConversionDialogState
                       contentPadding: EdgeInsets.zero,
                       value: _acceptLoss,
                       title: Text(
-                        _structured
+                        prepared.recoveredTextOnly
+                            ? textStrings.recoveredAcceptLoss
+                            : _structured
                             ? textStrings.structuredAcceptLoss
                             : strings.text('acceptLoss'),
                       ),

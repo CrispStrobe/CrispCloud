@@ -13,6 +13,9 @@ List<String> _structuredLabels(LegacyWordConversionStrings strings) => [
   strings.structuredAcceptLoss,
   strings.unavailable,
   strings.limitationsTitle,
+  strings.recoveredName,
+  strings.recoveredNotice,
+  strings.recoveredAcceptLoss,
   for (final limitation in LegacyWordConversionLimitation.values)
     strings.limitation(limitation),
 ];
@@ -55,6 +58,11 @@ void main() {
         contains('original VBA project bytes may remain as inert evidence'),
       );
       expect(fallback.structuredMacroNotice, contains('never runs macros'));
+      expect(
+        fallback.recoveredNotice,
+        contains('only the recovered main body text'),
+      );
+      expect(fallback.recoveredAcceptLoss, contains('text-only copy'));
     },
   );
 }

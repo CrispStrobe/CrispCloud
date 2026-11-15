@@ -61,3 +61,12 @@ test/pdf_font_licenses_test.dart
 test/platform_runtime_licenses_test.dart
 test/widget/internal_viewer_widget_test.dart
 test/widget/ods_viewer_workflow_test.dart
+lib/l10n/legacy_word_conversion_strings.dart
+lib/services/legacy_word_copy.dart
+lib/services/word_conversion_inspection.dart
+lib/widgets/legacy_word_conversion_dialog.dart
+test/document_conversion_test.dart
+test/legacy_word_conversion_strings_test.dart
+test/word_conversion_inspection_test.dart
+test/widget/structured_legacy_word_conversion_dialog_test.dart
+test/support/legacy_word_recovery_fixture.dart

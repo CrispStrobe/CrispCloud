@@ -52,3 +52,12 @@ test/pdf_font_licenses_test.dart
 test/platform_runtime_licenses_test.dart
 test/widget/internal_viewer_widget_test.dart
 test/widget/ods_viewer_workflow_test.dart
+test/legacy_word_preview_test.dart
+test/legacy_word_structured_conversion_test.dart
+test/word_conversion_inspection_test.dart
+test/widget/legacy_word_story_preview_test.dart
+test/widget/structured_legacy_word_conversion_dialog_test.dart
+test/widget/legacy_word_routing_test.dart
+test/legacy_word_copy_target_test.dart
+test/legacy_word_conversion_strings_test.dart
+test/widget/legacy_word_conversion_dialog_test.dart

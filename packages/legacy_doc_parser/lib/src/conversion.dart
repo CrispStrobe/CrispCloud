@@ -73,6 +73,7 @@ class LegacyWordStructuredConversion {
     this.fieldMode = LegacyWordFieldMode.preserve,
     Map<String, int> preservedCounts = const {},
     List<String> signatureEvidenceParts = const [],
+    this.recoveredTextOnly = false,
   }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView(),
        limitations = List.unmodifiable(limitations),
        preservedCounts = Map.unmodifiable(preservedCounts),
@@ -91,6 +92,13 @@ class LegacyWordStructuredConversion {
   /// signature parts. A converted document must be verified or signed anew.
   final List<String> signatureEvidenceParts;
   bool get signatureValidityClaimed => false;
+
+  /// Structured conversion was impossible (a destroyed compound directory,
+  /// a Word 6.0/95 file, or structure that contradicts itself) and [bytes]
+  /// holds only the main-body text (see [recoverLegacyWordText] and
+  /// [extractLegacyWordText]). Every limitation is listed. Only with
+  /// `recover: true`.
+  final bool recoveredTextOnly;
 }
 
 enum LegacyWordConversionIssue { invalidName, invalidText, tooComplex }
@@ -128,11 +136,40 @@ LegacyWordStructuredConversion convertLegacyWord(
   LegacyWordOutputFormat format = LegacyWordOutputFormat.docx,
   LegacyWordFieldMode fieldMode = LegacyWordFieldMode.preserve,
   bool recover = false,
-}) => convertLegacyWordDocument(
-  parseLegacyWordDocument(bytes, recover: recover),
-  format: format,
-  fieldMode: fieldMode,
-);
+}) {
+  final LegacyWordDocument document;
+  try {
+    document = parseLegacyWordDocument(bytes, recover: recover);
+  } on FormatException {
+    // With [recover], a file whose compound directory is destroyed still
+    // yields its text when the WordDocument stream itself is intact.
+    if (!recover || format != LegacyWordOutputFormat.docx) rethrow;
+    // Then any file whose text is readable although its structure is not
+    // (Word 6.0/95 files have no structured reader at all).
+    final text = recoverLegacyWordText(bytes) ?? _plainTextOrNull(bytes);
+    if (text == null) rethrow;
+    return LegacyWordStructuredConversion(
+      bytes: _plainTextDocx(text),
+      limitations: LegacyWordConversionLimitation.values,
+      format: format,
+      fieldMode: fieldMode,
+      recoveredTextOnly: true,
+    );
+  }
+  return convertLegacyWordDocument(
+    document,
+    format: format,
+    fieldMode: fieldMode,
+  );
+}
+
+String? _plainTextOrNull(Uint8List bytes) {
+  try {
+    return extractLegacyWordText(bytes);
+  } on FormatException {
+    return null;
+  }
+}
 
 /// Serializes an already parsed document using the same bounded writer.
 LegacyWordStructuredConversion convertLegacyWordDocument(
@@ -144,8 +181,10 @@ LegacyWordStructuredConversion convertLegacyWordDocument(
 
 /// Explicit text-only conversion, retained for callers that choose to omit
 /// structure and formatting. Referenced main-body text is read from the DOC.
-Uint8List convertLegacyWordToDocx(Uint8List bytes) {
-  final text = extractLegacyWordText(bytes);
+Uint8List convertLegacyWordToDocx(Uint8List bytes) =>
+    _plainTextDocx(extractLegacyWordText(bytes));
+
+Uint8List _plainTextDocx(String text) {
   _validatePlainTextBudget(text);
   final xml = _BoundedWordXml();
   xml.add(_wordDocumentStart);

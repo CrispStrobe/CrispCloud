@@ -1,0 +1,12 @@
+{
+  "canonical_office": "cd56ae1550f37367ef5ec921d124211c7d7e224b",
+  "standalone_parser": "5ba4993c24c88eb366ffbb4f5e16b8da6b418064",
+  "managed_files": 2259,
+  "status": "development checkpoint before finite-cutoff ODS date/comment reconciliation",
+  "host_review": "incoming/host-recovery-independent-review.json",
+  "known_failures_retained": [
+    "ods-geometry-baseline",
+    "ods-geometry-baseline-2"
+  ],
+  "parser_failures_remote": "00fe6b3117bb39076ad8130b56538bd048c96569"
+}

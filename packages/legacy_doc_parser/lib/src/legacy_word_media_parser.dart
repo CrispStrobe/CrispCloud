@@ -519,12 +519,7 @@ class _WordMediaReader {
       }
       _notice(
         LegacyWordMediaIssue.unsupportedDrawing,
-        _reference(
-          _tablePath,
-          offset,
-          0,
-          header ? 'PlcfSpaHdr' : 'PlcfSpaMom',
-        ),
+        _reference(_tablePath, offset, 0, header ? 'PlcfSpaHdr' : 'PlcfSpaMom'),
       );
       return;
     }

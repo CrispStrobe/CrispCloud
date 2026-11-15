@@ -148,7 +148,7 @@ class _StructuredWordParser {
         section.endCp,
     };
     _readNumberingOrOmit();
-    _readBookmarks();
+    _readBookmarksOrOmit();
     _readFieldTables();
     _readAuxiliaryStories();
     _validateBookmarkStories();

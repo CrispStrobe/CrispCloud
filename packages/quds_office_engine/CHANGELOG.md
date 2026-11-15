@@ -8,7 +8,9 @@ All notable changes to `quds_office_engine` are documented here.
   bounded namespace-aware parsing. Keep inherited empty-cell padding sparse,
   retain explicit formatted blanks, and reject stored cells hidden inside an
   earlier vertical merge. New regressions bind native column widths, default
-  geometry and currency symbols to an XLSX copy round trip.
+  geometry and currency symbols to an XLSX copy round trip. New worksheets now
+  write retained default/base column widths in native units; existing native
+  sheet-format attributes remain intact.
 - Accept Word OOXML formatting vocabulary, preserve all underline styles, and
   continue character formatting after splitting a paragraph at its end.
 

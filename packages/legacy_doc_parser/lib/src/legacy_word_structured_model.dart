@@ -28,6 +28,9 @@ enum LegacyWordWarning {
   headersFootersOmitted,
   notesOmitted,
   commentsOmitted,
+
+  /// The bookmark table contradicted itself; bookmarks were not converted.
+  bookmarksOmitted,
   textboxesOmitted,
   macrosOmitted,
   revisionMetadataIncomplete,

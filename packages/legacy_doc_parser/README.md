@@ -135,3 +135,32 @@ by [Quds](https://github.com/CrispStrobe/quds_office_suite) and
 License: [Mozilla Public License 2.0](LICENSE). Third-party components and
 fixtures retain their applicable MIT, 0BSD and other notices; see
 [NOTICE](NOTICE) and [third_party](third_party/).
+
+## Bounded text recovery
+
+`convertLegacyWord(source, recover: true)` may return a text-only DOCX when
+structured conversion fails but an independently bounded main-body piece table
+or supported Word 6/95 text profile can still be read. Check
+`recoveredTextOnly` and present all reported limitations before saving a copy.
+This fallback does not preserve formatting, pictures, auxiliary stories,
+macros or signatures; DOCM and template conversion still require structured
+parsing. Encrypted/obfuscated Word97+ input remains refused.
+
+`recoverLegacyWordText` admits at most 64 MiB of input, a 32 MiB referenced
+stream extent, a 16 MiB CLX and 4 Mi main-body UTF-16 units. Across candidate
+attempts it admits at most 4096 candidates, 64 MiB of chain/CLX work and 8 Mi
+declared character units, including rejected candidates. Contradictory
+positive `cbMac` bounds are refused. A null result can mean unrecoverable
+structure or exhausted recovery limits; it is not proof that no text exists.
+
+Word 98 Mac uses the Word97 layout and is recognized by structured, plain-text
+and damaged-container readers. Word6/95 text-only import supports `fExtChar`
+UTF-16 with scalar validation, Mac Roman, and Windows1252 for ANSI charset
+with an unspecified/legacy locale or explicit en-US locale. Other 8-bit
+charset/locale declarations are refused explicitly. Full Word6/95 formatting
+and additional legacy code-page decoders remain outside this profile.
+
+Opt-in comment recovery drops only the contradictory comment feature; valid
+bookmarks and fields at the start of the following story remain owned by that
+story. Real-format classification remains available for mislabeled non-CFB
+input through `sniffLegacyWordFile` and `LegacyWordNotCompoundException`.

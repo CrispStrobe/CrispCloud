@@ -80,6 +80,7 @@ def main():
         return {'files':len(manifest),'manifest_sha256':sha((path/'artifacts-sha256.json').read_bytes()),'exact_inventory':True}
 
     reviews=[]
+    input_snapshots={}
     for gate in args.gate:
         path=directory(gate)
         manifest=artifacts(path)
@@ -90,6 +91,11 @@ def main():
         assert digest==before['entries_sha256']==after['entries_sha256']==meta['before_entries_sha256']==meta['after_entries_sha256']
         assert before['count']==after['count']==meta['input_count']==len(before['entries'])
         assert all(before['entries'].get(name)==value for name,value in current.items()),(gate,'current source bytes differ')
+        # Resolution graphs are intentionally ignored by Git, but they affect
+        # which package implementation executed. Compare them to the current
+        # graph as well as the recorder's before/after copies.
+        assert fingerprints(before['entries'])==before['entries'],(gate,'current source/resolution input differs')
+        input_snapshots[digest]=before['entries']
         assert meta['before_tools']==meta['after_tools']
         current_tool_count=0
         for name,expected in meta['before_tools'].items():
@@ -107,6 +113,7 @@ def main():
         assert command['argv']==meta['command'] and command['cwd']==meta['cwd']
         review={'gate':gate,'tested_head':meta['before_git']['head'],'artifacts':manifest,
                 'source_paths_compared':len(current),'source_resolution_digest':digest,
+                'current_source_and_resolution_paths_compared':len(before['entries']),
                 'recorded_inputs_tools_and_head_stable':True,'current_tools_verified':current_tool_count,
                 'current_source_bytes_blobs_and_modes_equal':True,'success':True}
         if (path/'suites.txt').exists():
@@ -137,8 +144,11 @@ def main():
             review['analyzed_files']=sum(arg.endswith('.dart') for arg in meta['command'])
         reviews.append(review)
     other_artifacts={name:artifacts(directory(name)) for name in args.artifact_dir}
+    assert len(input_snapshots)==1,'selected gates do not share one source/resolution snapshot'
     assert git('rev-parse','HEAD').decode().strip()==head
     assert fingerprints(current_tree)==current
+    for entries in input_snapshots.values():
+        assert fingerprints(entries)==entries,'source/resolution changed during audit'
     result={'schema':1,'at':datetime.now(timezone.utc).isoformat(),'review_head':head,
             'reviewer_sha256':sha(Path(__file__).read_bytes()),'gates':reviews,
             'additional_artifacts':other_artifacts,'success':True,

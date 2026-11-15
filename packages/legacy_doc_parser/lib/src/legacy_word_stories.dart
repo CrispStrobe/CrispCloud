@@ -93,7 +93,7 @@ extension _WordStories on _StructuredWordParser {
   void _readAuxiliaryStories() {
     _readNotes(false);
     _readNotes(true);
-    _readComments();
+    _readCommentsOrOmit();
     _readHeaders();
     _readTextboxesOrOmit(false);
     _readTextboxesOrOmit(true);
@@ -113,6 +113,52 @@ extension _WordStories on _StructuredWordParser {
   /// chains cannot be validated, Word still opens the document. Omit that
   /// story set (rolling back anything it added) and declare the omission
   /// instead of refusing the whole document.
+  /// Comments are auxiliary like text boxes: when their markers or records
+  /// contradict each other, keep the document and omit the comments
+  /// (rolling back what the failed read added) with a declared warning.
+  void _readCommentsOrOmit() {
+    final storyCount = stories.length;
+    final referenceCount = commentReferences.length;
+    final anchors = {..._referenceAnchors};
+    final markers = {..._commentMarkerCps};
+    final warningsBefore = {...warnings};
+    try {
+      _readComments();
+    } on FormatException {
+      if (!recover) rethrow;
+      stories.removeRange(storyCount, stories.length);
+      commentReferences.removeRange(referenceCount, commentReferences.length);
+      _referenceAnchors
+        ..clear()
+        ..addAll(anchors);
+      _commentMarkerCps
+        ..clear()
+        ..addAll(markers);
+      final start = _storyBase(2);
+      final end = start + source.storyLengths[2];
+      // Story ownership is half-open: an annotation starting exactly at end
+      // belongs to the following endnote story, which may already be parsed.
+      bool inside(int cp) => cp >= start && cp < end;
+      bookmarks.removeWhere((b) => inside(b.startCp));
+      fields.removeWhere((f) => inside(f.startCp));
+      warnings
+        ..retainAll(warningsBefore)
+        ..add(LegacyWordWarning.commentsOmitted);
+    }
+  }
+
+  /// A bookmark name table that contradicts its ranges (over-long or
+  /// duplicate names, wrong counts) loses only the bookmarks.
+  void _readBookmarksOrOmit() {
+    try {
+      _readBookmarks();
+    } on FormatException {
+      if (!recover) rethrow;
+      bookmarks.clear();
+      warnings.add(LegacyWordWarning.bookmarksOmitted);
+    }
+  }
+
   void _readTextboxesOrOmit(bool header) {
     final storyCount = stories.length;
     final referenceCount = textboxReferences.length;
