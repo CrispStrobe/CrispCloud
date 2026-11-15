@@ -3660,7 +3660,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         lowerName.endsWith('.pot') ||
         lowerName.endsWith('.rtf') ||
         lowerName.endsWith('.doc') ||
-        lowerName.endsWith('.dot');
+        lowerName.endsWith('.dot') ||
+        lowerName.endsWith('.odt') ||
+        lowerName.endsWith('.ods') ||
+        lowerName.endsWith('.odp');
     final options = <_OfficeView>[
       if (document.deck != null) _OfficeView.slides,
       if (!legacyOffice) _OfficeView.pdf,
