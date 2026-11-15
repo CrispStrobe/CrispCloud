@@ -38,7 +38,8 @@ RENDERED_ROOTS = (('build', 'fidelity-host'), ('build', 'fidelity'),
 # explicitly enumerated files in these acceptance roots may be schema-only.
 SCHEMA_ONLY_ROOTS = (('build', 'office-fill-host-acceptance'),
                     ('build', 'office-sheet-state-acceptance'),
-                    ('build', 'office-style-history-acceptance'))
+                    ('build', 'office-style-history-acceptance'),
+                    ('build', 'office-sheet-navigation-acceptance'))
 
 
 def reference_entries():
