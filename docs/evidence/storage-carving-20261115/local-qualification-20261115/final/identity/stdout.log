@@ -1,0 +1,16 @@
+{
+  "verified_at": "2026-11-15T09:53:46.469459+00:00",
+  "app_commit": "f19709b4b60a2dd22878ecbe8fb15785ccbba535",
+  "app_tree": "7b238b90aa247fc365228a795db6405dfb1b445a",
+  "quds_pin": "07842b7a116e64c75ed7e0945a6f74a9f4bdfccd",
+  "parser_pin": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+  "declared_file_count": 2223,
+  "counts": {
+    "quds": 491,
+    "parser": 1732
+  },
+  "verified_file_count": 2223,
+  "failures": [],
+  "success": true,
+  "scope": "Saved Git blob identities and modes against exact canonical pins, plus complete declared working-file SHA-256 and Git identity; no runtime qualification claim."
+}

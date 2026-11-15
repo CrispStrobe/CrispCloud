@@ -1,0 +1,4 @@
+packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart
+packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart
+packages/quds_office_editor/test/word_operation_history_test.dart
+packages/quds_office_editor/test/word_split_identity_test.dart

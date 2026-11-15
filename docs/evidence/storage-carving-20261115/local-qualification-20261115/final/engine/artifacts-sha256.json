@@ -1,0 +1,34 @@
+{
+  "command.json": {
+    "sha256": "2889944db78f5411b9d7f8daf7309769496b9c5bde42e473acd695760149271a",
+    "size": 3931
+  },
+  "inputs-after.json.gz": {
+    "sha256": "15078cbe6fe07d1b2ef51d2122d25dbaa9d3a5980f056b0667d306086a4ee9f3",
+    "size": 446119
+  },
+  "inputs-before.json.gz": {
+    "sha256": "4d343c397c7be79e6eee01f18c73353de44d98aa0ce3fc73c4afc31b327a7cb1",
+    "size": 446119
+  },
+  "metadata.json": {
+    "sha256": "09a0d2a77a7ed32b9b1145f6c394edc4a613468ad151eef76a709dd81f7734ad",
+    "size": 11161
+  },
+  "stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "stdout.jsonl": {
+    "sha256": "44dfcd38ab19cf0aac689b49e00bed1b8470b80c8b7f4310ea78c38066a960a6",
+    "size": 81065
+  },
+  "suites.txt": {
+    "sha256": "32e12a744e9c2dc0e8a8848e9e9e010151b249a99d416fa4b2e5e3161e009977",
+    "size": 1066
+  },
+  "summary.json": {
+    "sha256": "02edb4e203ce9aec909690f02ab08a5f2fefb4ccff834a3e7e88e8ffb6fae70e",
+    "size": 4768
+  }
+}

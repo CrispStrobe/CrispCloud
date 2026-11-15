@@ -1,0 +1,230 @@
+diff --git a/docs/archive-png-carving.md b/docs/archive-png-carving.md
+index ff063d3d..ff4b94c0 100644
+--- a/docs/archive-png-carving.md
++++ b/docs/archive-png-carving.md
+@@ -131,14 +131,15 @@ or future profiles.
+ 
+ ### Current qualification status
+ 
+-The combined source was saved at `97e6aa18` after incorporating newer main,
+-worksheet-navigation and document-workspace changes. Source and merge checks
+-are retained in the
+-[08:06 UTC continuation record](evidence/storage-carving-20261115/resume-0806/README.md).
+-Fresh runtime qualification remains pending because the current workspace
+-exhausted disk capacity before the test tools could run. The current app
+-manifest covers 41 suites, including the incoming document-workspace tests.
+-The earlier handoff totals are not substituted for results on this source.
++The continued integration includes main through `ab7f1536`, the shared storage
++checkpoint `65e462b1`, ODF preview and ODS editing, and the reconciled canonical
++Office corrections. Current source identities, recorded commands, raw results
++and any remaining qualification limits are in the
++[local qualification record](evidence/storage-carving-20261115/local-qualification-20261115/README.md).
++
++Earlier attempts and their failures remain attached to their original source
++revisions. A historical pass is not substituted for a current gate. Native
++Linux tests and portable VM/JavaScript checks have separate acceptance scopes.
+ 
+ Format references consulted:
+ 
+diff --git a/docs/office-storage-reconciliation-20261115.md b/docs/office-storage-reconciliation-20261115.md
+index 0935aeda..424c30f8 100644
+--- a/docs/office-storage-reconciliation-20261115.md
++++ b/docs/office-storage-reconciliation-20261115.md
+@@ -173,3 +173,22 @@ and package-local development graphs are retained. The source-only gate now
+ includes host inventory controls; the scripted-output oracle follows the real
+ engine artifact generator. Fresh combined runtime acceptance is recorded in
+ `evidence/storage-carving-20261115/local-resume-20261115T1010/`.
++
++## Reconciled local qualification continuation
++
++The saved continuation retains main `ab7f1536`, shared storage `65e462b1`,
++and all their historical receipts. Quds source `07842b7a116e64c75ed7e0945a6f74a9f4bdfccd`
++merges the bounded ODS import corrections with the concurrent quoted-reference
++fix; the standalone parser remains `d422fa99`. All 2,223 managed files retain
++canonical blob identities and modes. Four Office const lint fixes and two app
++test lint fixes are included without changing runtime dependencies.
++
++ODS import preserves merged coordinates, blank-row positions and quoted sheet
++identifiers, and explicitly refuses missing covered cells, unsupported formula
++replication and exhausted work budgets. App CSV previews also preserve final
++cell whitespace. The new host workflow checks that ODS editing exports an XLSX
++copy while retaining the source and correctly owning the exported revision.
++
++[Current source-bound qualification and raw receipts](evidence/storage-carving-20261115/local-qualification-20261115/README.md)
++are separate from all earlier results. The previous 02d2142e runtime passes and
++its six strict-analysis findings remain intact under their original gate paths.
+diff --git a/lib/services/office_document_service.dart b/lib/services/office_document_service.dart
+index 66fa366a..0b47bb83 100644
+--- a/lib/services/office_document_service.dart
++++ b/lib/services/office_document_service.dart
+@@ -936,7 +936,6 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
+     final rowRepeat = _odfRepeat(row, 'number-rows-repeated');
+     final cells = <String>[];
+     var column = 0;
+-    var pendingCoveredColumns = 0;
+     var textLength = 0;
+     for (final cell in row.childElements.where(
+       (element) =>
+@@ -944,27 +943,11 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
+           (element.localName == 'table-cell' ||
+               element.localName == 'covered-table-cell'),
+     )) {
++      final covered = cell.localName == 'covered-table-cell';
+       final repeat = _odfRepeat(cell, 'number-columns-repeated');
+-      if (cell.localName == 'covered-table-cell') {
+-        // Merged origins already reserved these coordinates. Explicit covered
+-        // placeholders consume that reservation instead of counting it twice.
+-        final reserved = repeat < pendingCoveredColumns
+-            ? repeat
+-            : pendingCoveredColumns;
+-        pendingCoveredColumns -= reserved;
+-        final uncovered = repeat - reserved;
+-        column = uncovered > _odsMaxCols - column
+-            ? _odsMaxCols + 1
+-            : column + uncovered;
+-        continue;
+-      }
+-      // Keep compatibility with producers that omit covered placeholders:
+-      // the next origin still begins after the previous merged footprint.
+-      pendingCoveredColumns = 0;
+-      final span = _odfRepeat(cell, 'number-columns-spanned');
+-      final value = _odsCellValue(cell);
++      final value = covered ? '' : _odsCellValue(cell);
+       if (value.isNotEmpty) {
+-        if (column >= _odsMaxCols || repeat > (_odsMaxCols - column) ~/ span) {
++        if (column >= _odsMaxCols || repeat > _odsMaxCols - column) {
+           throw const FormatException('ODF preview exceeds the column limit');
+         }
+         if (rowIndex >= _odsMaxRows || rowRepeat > _odsMaxRows - rowIndex) {
+@@ -972,24 +955,14 @@ List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
+         }
+         textLength += value.length * repeat;
+         cells.addAll(List<String>.filled(column - cells.length, ''));
+-        for (var r = 0; r < repeat; r++) {
+-          if (r > 0) cells.addAll(List<String>.filled(span - 1, ''));
+-          cells.add(value);
+-        }
++        cells.addAll(List<String>.filled(repeat, value));
+       }
+-      // Saturate empty padding before multiplication, without allocating its
+-      // expanded span. A later meaningful cell outside the grid is refused.
+-      final footprint = repeat > _odsMaxCols ~/ span
+-          ? _odsMaxCols + 1
+-          : repeat * span;
+-      pendingCoveredColumns = span == 1
+-          ? 0
+-          : footprint > _odsMaxCols
+-          ? _odsMaxCols + 1
+-          : footprint - repeat;
+-      column = footprint > _odsMaxCols - column
++      // ODF 1.3 §9.1.5: each anchor and covered cell occupies its own grid
++      // position. Adding the anchor's span here would count coverage twice.
++      // Saturation retains an out-of-range position without expanding padding.
++      column = repeat > _odsMaxCols - column
+           ? _odsMaxCols + 1
+-          : column + footprint;
++          : column + repeat;
+     }
+     if (cells.isNotEmpty) {
+       final rowCount = rowIndex + rowRepeat;
+diff --git a/test/document_conversion_test.dart b/test/document_conversion_test.dart
+index e787320c..f06f5e1b 100644
+--- a/test/document_conversion_test.dart
++++ b/test/document_conversion_test.dart
+@@ -96,7 +96,7 @@ void main() {
+     expect(result.notices.join(' '), contains('unencrypted'));
+   });
+   test('UTF-16 CSV input uses the shared text decoder', () async {
+-    final text = 'name,value\nAlpha,42';
++    const text = 'name,value\nAlpha,42';
+     final encoded = Uint8List.fromList([
+       255,
+       254,
+diff --git a/test/office_document_service_test.dart b/test/office_document_service_test.dart
+index 782edfab..26212729 100644
+--- a/test/office_document_service_test.dart
++++ b/test/office_document_service_test.dart
+@@ -482,27 +482,6 @@ void odfTests() {
+     expect(doc.note, contains('Invalid ODF number-rows-repeated'));
+   });
+ 
+-  test('ODS with a merged cell keeps following columns aligned', () async {
+-    const xml =
+-        '''
+-<office:document-content $namespaces>
+-  <office:body><office:spreadsheet>
+-    <table:table>
+-      <table:table-row>
+-        <table:table-cell table:number-columns-spanned="2"><text:p>Wide</text:p></table:table-cell>
+-        <table:table-cell office:value-type="float" office:value="7"/>
+-      </table:table-row>
+-    </table:table>
+-  </office:spreadsheet></office:body>
+-</office:document-content>
+-''';
+-    final doc = await parseOfficeDocument(
+-      _zip({'content.xml': xml}),
+-      'merged.ods',
+-    );
+-    expect(doc.csv!.split('\n').first, 'Wide,,7');
+-  });
+-
+   test(
+     'ODS preserves internal blank runs and trims trailing padding',
+     () async {
+@@ -592,11 +571,9 @@ void odfTests() {
+     expect(doc.csv!.split('\n'), ['Wide,,7', 'Wider,,,8']);
+   });
+ 
+-  test(
+-    'ODS refuses later data when empty padding exceeds the row limit',
+-    () async {
+-      const xml =
+-          '''
++  test('ODS empty padding still counts toward the logical row limit', () async {
++    const xml =
++        '''
+ <office:document-content $namespaces>
+   <office:body><office:spreadsheet>
+     <table:table>
+@@ -611,16 +588,15 @@ void odfTests() {
+   </office:spreadsheet></office:body>
+ </office:document-content>
+ ''';
+-      final doc = await parseOfficeDocument(
+-        _zip({'content.xml': xml}),
+-        'limit.ods',
+-      );
+-      expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+-      expect(doc.note, contains('ODF preview exceeds the row limit'));
+-      expect(doc.csv, isNull);
+-      expect(doc.markdown, isEmpty);
+-    },
+-  );
++    final doc = await parseOfficeDocument(
++      _zip({'content.xml': xml}),
++      'limit.ods',
++    );
++    expect(doc.fallback, OfficePreviewFallback.extractionFailed);
++    expect(doc.csv, isNull);
++    expect(doc.markdown, isNot(contains('Inside')));
++    expect(doc.markdown, isNot(contains('Outside')));
++  });
+ 
+   test('ODT renders lists and ODF table cells', () async {
+     const xml =
+diff --git a/test/widget/document_conversion_dialog_test.dart b/test/widget/document_conversion_dialog_test.dart
+index cbaa69a3..c835e387 100644
+--- a/test/widget/document_conversion_dialog_test.dart
++++ b/test/widget/document_conversion_dialog_test.dart
+@@ -36,8 +36,9 @@ void main() {
+         if (find
+             .byKey(const ValueKey('conversion-review'))
+             .evaluate()
+-            .isNotEmpty)
++            .isNotEmpty) {
+           break;
++        }
+       }
+       expect(find.textContaining('OCR'), findsWidgets);
+       final save = find.byKey(const ValueKey('conversion-save'));

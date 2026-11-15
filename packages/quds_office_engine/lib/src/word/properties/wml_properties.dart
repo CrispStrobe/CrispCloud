@@ -2,10 +2,91 @@
 // Measurements are stored in points (1 twip = 1/20 pt, w:sz is half-points).
 
 /// Enum WmlJustification.
-enum WmlJustification { left, right, center, justify, distributed }
+enum WmlJustification {
+  left,
+  right,
+  center,
+  justify,
+  distributed;
+
+  /// Accepts the Dart name or the OOXML `w:jc` value (`both`, `start`,
+  /// `end`).
+  static WmlJustification parse(String value) => switch (value) {
+    'both' => justify,
+    'start' => left,
+    'end' => right,
+    _ => values.byName(value),
+  };
+}
 
 /// Enum WmlUnderline.
-enum WmlUnderline { none, single, double, dotted, wavy }
+enum WmlUnderline {
+  none('none'),
+  single('single'),
+  double('double'),
+  dotted('dotted'),
+  wavy('wave'),
+  words('words'),
+  thick('thick'),
+  dottedHeavy('dottedHeavy'),
+  dash('dash'),
+  dashedHeavy('dashedHeavy'),
+  dashLong('dashLong'),
+  dashLongHeavy('dashLongHeavy'),
+  dotDash('dotDash'),
+  dashDotHeavy('dashDotHeavy'),
+  dotDotDash('dotDotDash'),
+  dashDotDotHeavy('dashDotDotHeavy'),
+  wavyHeavy('wavyHeavy'),
+  wavyDouble('wavyDouble');
+
+  const WmlUnderline(this.xmlValue);
+
+  /// The `w:u/@w:val` value (ST_Underline).
+  final String xmlValue;
+
+  /// Reads `w:u/@w:val`; a missing or unknown value is a single underline.
+  static WmlUnderline fromXml(String? value) {
+    for (final WmlUnderline u in values) {
+      if (u.xmlValue == value) return u;
+    }
+    return single;
+  }
+
+  /// Accepts the Dart name or the OOXML value (`wavy` or `wave`).
+  static WmlUnderline parse(String value) {
+    for (final WmlUnderline u in values) {
+      if (u.name == value || u.xmlValue == value) return u;
+    }
+    throw ArgumentError.value(value, 'underline', 'Unknown underline style');
+  }
+
+  /// Drawn with a thicker stroke.
+  bool get isHeavy => switch (this) {
+    thick ||
+    dottedHeavy ||
+    dashedHeavy ||
+    dashLongHeavy ||
+    dashDotHeavy ||
+    dashDotDotHeavy ||
+    wavyHeavy => true,
+    _ => false,
+  };
+
+  /// Dash pattern in multiples of the stroke width; empty for solid,
+  /// double and wavy strokes.
+  List<num> get dashPattern => switch (this) {
+    dotted || dottedHeavy => const <num>[1, 1],
+    dash || dashedHeavy => const <num>[4, 2],
+    dashLong || dashLongHeavy => const <num>[8, 3],
+    dotDash || dashDotHeavy => const <num>[4, 2, 1, 2],
+    dotDotDash || dashDotDotHeavy => const <num>[4, 2, 1, 2, 1, 2],
+    _ => const <num>[],
+  };
+
+  /// Painted as a wave.
+  bool get isWavy => this == wavy || this == wavyHeavy || this == wavyDouble;
+}
 
 /// Enum WmlLineSpacingRule.
 enum WmlLineSpacingRule { auto, exact, atLeast }

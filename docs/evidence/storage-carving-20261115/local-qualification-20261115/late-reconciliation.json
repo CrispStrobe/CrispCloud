@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-15T09:40:59.361858+00:00",
+  "prior_checkpoint": "85e2b4f34c37fb0fc0ff2e627ad255c13f1af9c7",
+  "main": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+  "shared_storage": "65e462b12e4524d88b4dd7d7ecfe43cd471b638d",
+  "retained": "All nonoverlapping historical evidence and parent ancestry; own namespace-aware bounded ODF implementation and ODS copy workflow tests",
+  "adopted_app": [
+    "Preserve final CSV cell whitespace while removing trailing output newlines",
+    "Incoming cached formula and repeated covered-cell fixtures",
+    "Incoming out-of-range fixture with explicit refusal instead of successful truncation"
+  ],
+  "canonical_followup": "Quoted sheet-identifier preservation, literal/reference roundtrip coverage, missing covered-cell refusal, four strict-analysis const fixes",
+  "app_lint_fixes": [
+    "const UTF-16 CSV fixture",
+    "braces around conversion-dialog wait break"
+  ],
+  "qualification": "Earlier raw results remain attached to 02d2142e; final combined source requires fresh exact-revision gates"
+}

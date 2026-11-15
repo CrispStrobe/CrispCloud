@@ -131,14 +131,15 @@ or future profiles.
 
 ### Current qualification status
 
-The combined source was saved at `97e6aa18` after incorporating newer main,
-worksheet-navigation and document-workspace changes. Source and merge checks
-are retained in the
-[08:06 UTC continuation record](evidence/storage-carving-20261115/resume-0806/README.md).
-Fresh runtime qualification remains pending because the current workspace
-exhausted disk capacity before the test tools could run. The current app
-manifest covers 41 suites, including the incoming document-workspace tests.
-The earlier handoff totals are not substituted for results on this source.
+Current source identities, local qualification commands, raw results and remaining
+gates are maintained in the
+[latest continuation record](evidence/storage-carving-20261115/local-resume-20261115T1150/README.md).
+The integration preserves main through `4933ffc2`, the later ODF branch, the
+worksheet and document-workspace work, and all parallel qualification receipts.
+
+Earlier attempts and their failures remain attached to their original source
+revisions. A historical pass is not substituted for a current gate. Native
+Linux tests and portable VM/JavaScript checks have separate acceptance scopes.
 
 Format references consulted:
 

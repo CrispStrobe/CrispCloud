@@ -31,6 +31,9 @@ class OdsSheetFormatException implements Exception {
 
 /// Reads an `.ods` package into [SmlWorkbook].
 abstract final class OdsSheetReader {
+  static const double _odfMaxDigitWidthPx = 7.4;
+  static const double _odfDefaultColumnWidthIn = 0.8898;
+  static const double _odfDefaultRowHeightPoints = 14.95;
   static const int _maxRows = 100000;
   static const int _maxColumns = 4096;
   static const _office = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
@@ -109,6 +112,9 @@ abstract final class OdsSheetReader {
             : name,
         sheetId: book.sheets.length + 1,
       );
+      sheet.importDefaultColumnWidth(
+        excelWidth: _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx,
+      );
       final columnDefaults = _readColumns(table, sheet, styles, budget);
       var rowIndex = 0;
       final pendingRowHeights = <({int start, int count, double height})>[];
@@ -179,8 +185,8 @@ abstract final class OdsSheetReader {
           // Parse values and formulas once, then resolve each column's style.
           // Repetition can cross columns with different default cell styles.
           final content = _readCellContent(element);
-          final defaultStyle =
-              _attribute(element, 'style-name', _table) ?? rowDefault;
+          final explicitStyle = _attribute(element, 'style-name', _table);
+          final defaultStyle = explicitStyle ?? rowDefault;
           for (final run in _cellStyleRuns(
             column,
             repeat,
@@ -195,6 +201,8 @@ abstract final class OdsSheetReader {
               styles,
               numberStyles,
               budget,
+              preserveEmptyStyle:
+                  explicitStyle != null && explicitStyle != 'Default',
             );
             if (cell != null || colSpan > 1 || rowSpan > 1) {
               if (run.column + run.repeat + colSpan - 1 > _maxColumns ||
@@ -251,6 +259,8 @@ abstract final class OdsSheetReader {
         }
         if (rowHeight != null &&
             rowHeight > 0 &&
+            (entries.isNotEmpty ||
+                (rowHeight - _odfDefaultRowHeightPoints).abs() > 0.1) &&
             rowIndex + rowRepeat <= _maxRows) {
           final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
           if (entries.isEmpty && rowRepeat > 1) {
@@ -273,6 +283,14 @@ abstract final class OdsSheetReader {
             for (final entry in entries) {
               for (var c = 0; c < entry.repeat; c++) {
                 final ref = SmlCellRef(entry.column + c, rowIndex + r);
+                if (sheet.merges.isNotEmpty) {
+                  budget.mergeCoverage(sheet.merges.length);
+                  if (sheet.merges.any((merge) => merge.containsRef(ref))) {
+                    throw const OdsSheetFormatException(
+                      'Stored cell inside a merge requires a covered-cell token',
+                    );
+                  }
+                }
                 if (entry.cell case final source?) {
                   _copyCell(source, sheet.cell(ref));
                 }
@@ -387,9 +405,16 @@ abstract final class OdsSheetReader {
       final end = (column + repeat).clamp(0, _maxColumns);
       final count = (end - column).clamp(0, _maxColumns);
       if (width != null && width > 0) {
-        budget.dimensions(count);
-        for (var i = 0; i < count; i++) {
-          sheet.setColumnWidth(column + i, width * 96 / 72);
+        // Retain the native Excel character units used by ODF producers so
+        // an XLSX round trip does not apply a second pixel conversion.
+        final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
+        final defaultChars =
+            _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
+        if ((chars - defaultChars).abs() > 0.05) {
+          budget.dimensions(count);
+          for (var i = 0; i < count; i++) {
+            sheet.importColumnWidth(column + i, chars);
+          }
         }
       }
       if (cellStyle != null) {
@@ -492,8 +517,9 @@ abstract final class OdsSheetReader {
     SmlStyleSheet engineStyles,
     Map<String, XmlElement> styles,
     Map<String, XmlElement> numberStyles,
-    _OdsBudget budget,
-  ) {
+    _OdsBudget budget, {
+    required bool preserveEmptyStyle,
+  }) {
     final (:value, :formula, :valueType) = content;
     // The named Default style on empty spreadsheet padding is not cell data.
     if (value == null &&
@@ -525,15 +551,19 @@ abstract final class OdsSheetReader {
       numberStyles,
       valueType,
     );
+    // Inherited column/row defaults apply to real cells, but materializing
+    // every cell of a 16k-column padding run would create millions of empty
+    // cells. Only an explicit, non-default cell style can stand alone.
     final styled =
-        bold ||
-        fontSize != null ||
-        color != null ||
-        fill != null ||
-        align != SmlHAlign.general ||
-        wrap ||
-        family != null ||
-        numFmt != null;
+        preserveEmptyStyle &&
+        (bold ||
+            fontSize != null ||
+            color != null ||
+            fill != null ||
+            align != SmlHAlign.general ||
+            wrap ||
+            family != null ||
+            numFmt != null);
 
     if (value == null && formula == null && !styled) return null;
 
@@ -665,7 +695,21 @@ abstract final class OdsSheetReader {
       case 'percentage-style':
         return '${_zeros(style)}%';
       case 'currency-style':
-        return '#,##0.00';
+        final symbol = _descendants(
+          style,
+          'currency-symbol',
+          _number,
+        ).map((element) => element.text).firstOrNull;
+        final decimals = _decimals(style);
+        final base = '#,##0${decimals == 0 ? '' : '.${'0' * decimals}'}';
+        if (symbol == r'$') {
+          return r'[$$-409]'
+              '$base'
+              r';[red]-[$$-409]'
+              '$base';
+        }
+        if (symbol == null || symbol.isEmpty) return base;
+        return '"$symbol"$base';
       case 'date-style':
         return 'DD.MM.YYYY';
       case 'time-style':
@@ -951,6 +995,7 @@ class _OdsBudget {
   int _xmlEvents = 0;
   int _cellText = 0;
   int _styleWork = 0;
+  int _mergeCoverageWork = 0;
 
   void cells(int count) {
     if (count > 200000 - _cells) {
@@ -982,6 +1027,13 @@ class _OdsBudget {
       throw const OdsSheetFormatException('ODS style work limit');
     }
     _styleWork += count;
+  }
+
+  void mergeCoverage(int count) {
+    if (count > 4000000 - _mergeCoverageWork) {
+      throw const OdsSheetFormatException('ODS merge coverage work limit');
+    }
+    _mergeCoverageWork += count;
   }
 
   void merge() {

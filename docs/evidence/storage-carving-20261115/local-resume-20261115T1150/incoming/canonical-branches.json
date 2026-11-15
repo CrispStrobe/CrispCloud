@@ -1,0 +1,369 @@
+{
+  "observed_utc": "2026-11-15T10:52:38.224900+00:00",
+  "integration": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+  "branches": [
+    {
+      "ref": "refs/remotes/origin/codex/office-recovery-20261115",
+      "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+      "ancestor_of_integration": true,
+      "base_only_commits": 47,
+      "branch_only_commits": 0,
+      "merge_bases": [
+        "f31cf308013ceb4527e3f4de677785894bb1bfc0"
+      ],
+      "changes_since_common_base": [],
+      "commits": []
+    },
+    {
+      "ref": "refs/remotes/origin/feat/word-like-selection",
+      "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+      "ancestor_of_integration": true,
+      "base_only_commits": 50,
+      "branch_only_commits": 0,
+      "merge_bases": [
+        "e8227569a3b90fb21db598483690bd13fe74ddef"
+      ],
+      "changes_since_common_base": [],
+      "commits": []
+    },
+    {
+      "ref": "refs/remotes/origin/fix/excel-legacy-import",
+      "sha": "b6d2c58783fd296103e8de5f1f5f089f2379bc1c",
+      "ancestor_of_integration": false,
+      "base_only_commits": 41,
+      "branch_only_commits": 2,
+      "merge_bases": [
+        "4b51c5c098041f3f4243ca911660ef6083ba6ed7"
+      ],
+      "changes_since_common_base": [
+        "packages/quds_office_engine/lib/quds_office_engine.dart",
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ],
+      "commits": [
+        "b6d2c58783fd296103e8de5f1f5f089f2379bc1c 2026-11-15T09:50:15+01:00 chore(sheet): format the ODS reader and tests",
+        "9b81058f0e11bf866e3057a6f2f9a6c9a8ece0e2 2026-11-15T09:43:21+01:00 feat(sheet): read OpenDocument spreadsheets into the workbook model"
+      ]
+    },
+    {
+      "ref": "refs/remotes/origin/fix/odf-legacy-spreadsheets",
+      "sha": "e033226bd2d53d1a818c6771ce347c23e6056857",
+      "ancestor_of_integration": false,
+      "base_only_commits": 6,
+      "branch_only_commits": 10,
+      "merge_bases": [
+        "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+        "793c64ac4fc2e896706aa65c13eaa70bd27f7267"
+      ],
+      "changes_since_common_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods",
+        "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ],
+      "commits": [
+        "e033226bd2d53d1a818c6771ce347c23e6056857 2026-11-15T11:45:04+01:00 fix(sheet): preserve ODS default column geometry",
+        "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d 2026-11-15T11:18:30+01:00 Merge branch 'fix/odf-legacy-spreadsheets' into main",
+        "d3f2eefbe9385ebeb9731593063304130c0a8d83 2026-11-15T11:13:16+01:00 fix(sheet): preserve ODS repeated spaces and line breaks",
+        "87e5914694232c1b178f2af5ce5f9d6507ec20e8 2026-11-15T11:02:22+01:00 fix(sheet): keep ODS currency symbols and negative sections",
+        "f6bb43fa67e61807a434544b124b83ca79069b8e 2026-11-15T10:53:45+01:00 fix(sheet): skip empty ODS padding without losing rows",
+        "c2b64ecb23c271dd5ce0bb0a527f6e26cbe226e3 2026-11-15T10:52:59+01:00 Merge branch 'fix/odf-legacy-spreadsheets' into main",
+        "ad412fe7b9df3b7d9d7e628cf2301ef22c0545db 2026-11-15T10:48:18+01:00 Add a live legacy/ODS spreadsheet corpus smoke test",
+        "a1f533202ce2250a543b3f97164c56db4e7d197c 2026-11-15T10:46:55+01:00 Restore main without the vocabulary work in progress",
+        "742f0c3188b5712630ab86b0ba6685f9f9e33b86 2026-11-15T10:46:25+01:00 Keep the ODS position fix separate from vocabulary work",
+        "f5fe2e8ecf41992678e80f8e5178d734f830e846 2026-11-15T10:45:09+01:00 Preserve covered-cell and repeated-row positions in ODS imports"
+      ]
+    },
+    {
+      "ref": "refs/remotes/origin/fix/word-heading-like-word",
+      "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+      "ancestor_of_integration": true,
+      "base_only_commits": 50,
+      "branch_only_commits": 0,
+      "merge_bases": [
+        "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+      ],
+      "changes_since_common_base": [],
+      "commits": []
+    },
+    {
+      "ref": "refs/remotes/origin/fix/word-inline-pictures",
+      "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+      "ancestor_of_integration": true,
+      "base_only_commits": 17,
+      "branch_only_commits": 0,
+      "merge_bases": [
+        "4637ddce4154f4b50105c7322fedc1c75fd02193"
+      ],
+      "changes_since_common_base": [],
+      "commits": []
+    },
+    {
+      "ref": "refs/remotes/origin/fix/word-shape-no-textbox",
+      "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+      "ancestor_of_integration": true,
+      "base_only_commits": 50,
+      "branch_only_commits": 0,
+      "merge_bases": [
+        "5278aafd512640608fe06b8f7d357c4cffe8520a"
+      ],
+      "changes_since_common_base": [],
+      "commits": []
+    },
+    {
+      "ref": "refs/remotes/origin/fix/word-steps-vocabulary",
+      "sha": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+      "ancestor_of_integration": false,
+      "base_only_commits": 6,
+      "branch_only_commits": 6,
+      "merge_bases": [
+        "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+        "793c64ac4fc2e896706aa65c13eaa70bd27f7267"
+      ],
+      "changes_since_common_base": [
+        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+        "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+        "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+        "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+        "packages/quds_office_engine/tool/fidelity/word_steps.dart"
+      ],
+      "commits": [
+        "b6d27c84a72d622f670a7e646e36ba4bd920cfc8 2026-11-15T11:28:58+01:00 Accept OOXML step vocabulary, keep all Word underline styles, continue formatting after a split",
+        "c2b64ecb23c271dd5ce0bb0a527f6e26cbe226e3 2026-11-15T10:52:59+01:00 Merge branch 'fix/odf-legacy-spreadsheets' into main",
+        "ad412fe7b9df3b7d9d7e628cf2301ef22c0545db 2026-11-15T10:48:18+01:00 Add a live legacy/ODS spreadsheet corpus smoke test",
+        "a1f533202ce2250a543b3f97164c56db4e7d197c 2026-11-15T10:46:55+01:00 Restore main without the vocabulary work in progress",
+        "742f0c3188b5712630ab86b0ba6685f9f9e33b86 2026-11-15T10:46:25+01:00 Keep the ODS position fix separate from vocabulary work",
+        "f5fe2e8ecf41992678e80f8e5178d734f830e846 2026-11-15T10:45:09+01:00 Preserve covered-cell and repeated-row positions in ODS imports"
+      ]
+    },
+    {
+      "ref": "refs/remotes/origin/integration/office-storage-reconcile-20261115",
+      "sha": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+      "ancestor_of_integration": false,
+      "base_only_commits": 23,
+      "branch_only_commits": 1,
+      "merge_bases": [
+        "fd749d8ee140be623597493cdbc05ce20f1f5151",
+        "5278aafd512640608fe06b8f7d357c4cffe8520a",
+        "4f7d0e0064cb430cc14e3daca663cffade777938",
+        "1f30a823b30678e3684c98fee6a2cd5c4945c4f2"
+      ],
+      "changes_since_common_base": [
+        "README.md",
+        "docs/evidence/office-worksheet-navigation-20261115/README.md",
+        "docs/evidence/office-worksheet-navigation-20261115/acceptance.json",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/input-payloads/packages/quds_office_editor/test/sheet_navigation_controller_test.dart.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/input-payloads/packages/quds_office_editor/test/sheet_navigation_widget_test.dart.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline-initial/receipt.json",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/input-payloads/packages/quds_office_editor/test/sheet_navigation_controller_test.dart.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/input-payloads/packages/quds_office_editor/test/sheet_navigation_widget_test.dart.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-baseline/receipt.json",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-positive/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-positive/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-positive/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-positive/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-positive/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/canonical-positive/receipt.json",
+        "docs/evidence/office-worksheet-navigation-20261115/engine-analysis/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/engine-analysis/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/engine-analysis/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/engine-analysis/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/engine-analysis/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/engine-analysis/receipt.json",
+        "docs/evidence/office-worksheet-navigation-20261115/example-positive/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/example-positive/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/example-positive/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/example-positive/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/example-positive/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/example-positive/receipt.json",
+        "docs/evidence/office-worksheet-navigation-20261115/record_gate.py",
+        "docs/evidence/office-worksheet-navigation-20261115/scoped-analysis/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/scoped-analysis/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/scoped-analysis/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/scoped-analysis/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/scoped-analysis/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/scoped-analysis/receipt.json",
+        "docs/evidence/office-worksheet-navigation-20261115/shared-find-positive/command.log.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/shared-find-positive/input-payloads/.dart_tool/package_config.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/shared-find-positive/input-payloads/.dart_tool/package_graph.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/shared-find-positive/input-payloads/pubspec.lock.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/shared-find-positive/input-sha256.json.gz",
+        "docs/evidence/office-worksheet-navigation-20261115/shared-find-positive/receipt.json",
+        "docs/office-worksheet-navigation-20261114.md",
+        "docs/office-worksheet-navigation-20261115.md",
+        "packages/legacy_doc_parser/UPSTREAM.json",
+        "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart",
+        "packages/legacy_doc_parser/test/legacy_word_external_hyperlink_test.dart",
+        "packages/quds_office_editor/example/lib/studio_find_pane.dart",
+        "packages/quds_office_editor/example/lib/suite_workspace.dart",
+        "packages/quds_office_editor/example/test/studio_sheet_navigation_test.dart",
+        "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+        "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+        "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+        "packages/quds_office_editor/lib/src/embed/office_editors.dart",
+        "packages/quds_office_editor/lib/src/embed/office_theme.dart",
+        "packages/quds_office_editor/test/goldens/word_selection_macOS.png",
+        "packages/quds_office_editor/test/goldens/word_selection_windows.png",
+        "packages/quds_office_editor/test/sheet_navigation_controller_test.dart",
+        "packages/quds_office_editor/test/sheet_navigation_widget_test.dart",
+        "packages/quds_office_editor/test/word_selection_paint_test.dart",
+        "packages/quds_office_engine/lib/quds_office_engine.dart",
+        "packages/quds_office_engine/lib/src/office/office_find.dart",
+        "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+        "packages/quds_office_engine/lib/src/word/model/wml_clone.dart",
+        "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+        "packages/quds_office_engine/lib/src/word/model/word_field_spans.dart",
+        "packages/quds_office_engine/lib/src/word/model/word_revision.dart",
+        "packages/quds_office_engine/lib/src/word/model/word_styles.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_drawing_io.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_frame_io.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_heading_io.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_style_cascade.dart",
+        "packages/quds_office_engine/test/styleless_import_fidelity_test.dart",
+        "packages/quds_office_engine/test/word_auxiliary_content_control_test.dart",
+        "packages/quds_office_engine/test/word_content_control_fidelity_test.dart",
+        "packages/quds_office_engine/test/word_field_span_test.dart",
+        "packages/quds_office_engine/test/word_heading_apply_test.dart",
+        "packages/quds_office_engine/test/word_preserved_header_test.dart",
+        "packages/quds_office_engine/test/word_revision_scaling_test.dart",
+        "packages/quds_office_engine/test/word_shape_without_textbox_test.dart",
+        "packages/quds_office_engine/tool/fidelity/word_steps.dart"
+      ],
+      "commits": [
+        "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca 2026-11-15T07:22:31+01:00 merge(office): reconcile current sources for CrispCloud storage continuation"
+      ]
+    },
+    {
+      "ref": "refs/remotes/origin/integration/storage-carving-qualification-20261115",
+      "sha": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+      "ancestor_of_integration": true,
+      "base_only_commits": 0,
+      "branch_only_commits": 0,
+      "merge_bases": [
+        "3479cd809ca0e92ef165e8faaf48780720b8f17f"
+      ],
+      "changes_since_common_base": [],
+      "commits": []
+    },
+    {
+      "ref": "refs/remotes/origin/integration/storage-odf-qualification-20261115",
+      "sha": "cb9f7a5793c9a4e7415cd9e52c91509ea3304252",
+      "ancestor_of_integration": false,
+      "base_only_commits": 4,
+      "branch_only_commits": 5,
+      "merge_bases": [
+        "fbe879e811b57805583d658523b73320c7149d04",
+        "1c1b0af8e20bb02f7d18b4e6cb116328f4342332"
+      ],
+      "changes_since_common_base": [
+        "docs/evidence/ods-import-20261115/reconciliation/README.md",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/artifacts-sha256.json",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/command.json",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/inputs-after.json.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/inputs-before.json.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/metadata.json",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/stderr.log",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile-analysis/stdout.log",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/artifacts-sha256.json",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/command.json",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/inputs-after.json.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/inputs-before.json.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/metadata.json",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/stderr.log",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/stdout.log",
+        "docs/evidence/ods-import-20261115/reconciliation/canonical-ods-reconcile/summary.json",
+        "docs/evidence/ods-import-20261115/reconciliation/late-reader-diff.patch.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/late-reader-test-diff.patch.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/late-reference-probe.dart.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/late-reference-probe.json.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/manifest-sha256.json",
+        "docs/evidence/ods-import-20261115/reconciliation/ods-late-reconcile-development-analysis.log.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/ods-late-reconcile-development.jsonl.gz",
+        "docs/evidence/ods-import-20261115/reconciliation/remote-save-receipt.json",
+        "docs/evidence/ods-import-20261115/reconciliation/source-reconciliation.json",
+        "docs/evidence/ods-import-20261115/token-boundary/README.md",
+        "docs/evidence/ods-import-20261115/token-boundary/baseline-regression-tests.dart.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/artifacts-sha256.json",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/command.json",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/inputs-after.json.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/inputs-before.json.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/metadata.json",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/stderr.log",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary-analysis/stdout.log",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/artifacts-sha256.json",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/command.json",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/inputs-after.json.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/inputs-before.json.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/metadata.json",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/stderr.log",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/stdout.log",
+        "docs/evidence/ods-import-20261115/token-boundary/canonical-ods-token-boundary/summary.json",
+        "docs/evidence/ods-import-20261115/token-boundary/manifest-sha256.json",
+        "docs/evidence/ods-import-20261115/token-boundary/ods-token-boundary-baseline-receipt.json.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/ods-token-boundary-baseline.jsonl.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/ods-token-boundary-development-analysis.log.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/ods-token-boundary-development.jsonl.gz",
+        "docs/evidence/ods-import-20261115/token-boundary/remote-save-receipt.json",
+        "docs/evidence/ods-import-20261115/token-boundary/source.patch.gz",
+        "packages/quds_office_engine/CHANGELOG.md",
+        "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ],
+      "commits": [
+        "cb9f7a5793c9a4e7415cd9e52c91509ea3304252 2026-11-15T10:51:02+01:00 test(sheet): preserve ODS token-boundary qualification receipts [skip ci]",
+        "07842b7a116e64c75ed7e0945a6f74a9f4bdfccd 2026-11-15T10:48:09+01:00 fix(sheet): preserve namespace text inside custom formula identifiers [skip ci]",
+        "a83b2464ea081f70a69aaf3dfa746c269f9f993c 2026-11-15T10:45:56+01:00 test(sheet): preserve reconciled ODS qualification receipts [skip ci]",
+        "3fd05efadee4eed9a6e64b3f3dcc58755ebd0af2 2026-11-15T10:43:35+01:00 merge(sheet): reconcile ODS formula references and merged-cell boundaries [skip ci]",
+        "926113e82330887c059283bf315edd5212c5efe1 2026-11-15T10:37:00+01:00 style(office): satisfy strict host const analysis [skip ci]"
+      ]
+    },
+    {
+      "ref": "refs/remotes/origin/main",
+      "sha": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
+      "ancestor_of_integration": false,
+      "base_only_commits": 6,
+      "branch_only_commits": 9,
+      "merge_bases": [
+        "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+        "793c64ac4fc2e896706aa65c13eaa70bd27f7267"
+      ],
+      "changes_since_common_base": [
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods",
+        "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ],
+      "commits": [
+        "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d 2026-11-15T11:18:30+01:00 Merge branch 'fix/odf-legacy-spreadsheets' into main",
+        "d3f2eefbe9385ebeb9731593063304130c0a8d83 2026-11-15T11:13:16+01:00 fix(sheet): preserve ODS repeated spaces and line breaks",
+        "87e5914694232c1b178f2af5ce5f9d6507ec20e8 2026-11-15T11:02:22+01:00 fix(sheet): keep ODS currency symbols and negative sections",
+        "f6bb43fa67e61807a434544b124b83ca79069b8e 2026-11-15T10:53:45+01:00 fix(sheet): skip empty ODS padding without losing rows",
+        "c2b64ecb23c271dd5ce0bb0a527f6e26cbe226e3 2026-11-15T10:52:59+01:00 Merge branch 'fix/odf-legacy-spreadsheets' into main",
+        "ad412fe7b9df3b7d9d7e628cf2301ef22c0545db 2026-11-15T10:48:18+01:00 Add a live legacy/ODS spreadsheet corpus smoke test",
+        "a1f533202ce2250a543b3f97164c56db4e7d197c 2026-11-15T10:46:55+01:00 Restore main without the vocabulary work in progress",
+        "742f0c3188b5712630ab86b0ba6685f9f9e33b86 2026-11-15T10:46:25+01:00 Keep the ODS position fix separate from vocabulary work",
+        "f5fe2e8ecf41992678e80f8e5178d734f830e846 2026-11-15T10:45:09+01:00 Preserve covered-cell and repeated-row positions in ODS imports"
+      ]
+    }
+  ]
+}

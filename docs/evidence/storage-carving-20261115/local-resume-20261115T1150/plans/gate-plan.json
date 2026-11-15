@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "status": "prepared for post-merge clean saved source; not execution results",
+  "source_inputs": {
+    "CrispCloud prior qualified integration": "59466d8b48f329362ab88e9da5e195c849557069",
+    "CrispCloud main": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+    "CrispCloud fix/odf-final": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+    "Quds prior pin": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+    "Quds main": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
+    "Quds PR24": "e033226bd2d53d1a818c6771ce347c23e6056857",
+    "Quds PR25": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8"
+  },
+  "manifests": {
+    "app-suites.txt": {
+      "prior_count": 49,
+      "count": 54,
+      "additions": [
+        "test/app_legal_notices_test.dart",
+        "test/pdf_font_licenses_test.dart",
+        "test/platform_runtime_licenses_test.dart",
+        "test/widget/internal_viewer_widget_test.dart",
+        "test/widget/ods_viewer_workflow_test.dart"
+      ]
+    },
+    "editor-suites.txt": {
+      "prior_count": 7,
+      "count": 9,
+      "additions": [
+        "packages/quds_office_editor/test/word_operation_history_test.dart",
+        "packages/quds_office_editor/test/word_split_identity_test.dart"
+      ]
+    },
+    "engine-suites.txt": {
+      "prior_count": 17,
+      "count": 19,
+      "additions": [
+        "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+        "packages/quds_office_engine/test/office_pdf_export_test.dart"
+      ]
+    },
+    "analysis-app-files.txt": {
+      "prior_count": 53,
+      "count": 63,
+      "additions": [
+        "lib/main.dart",
+        "lib/screens/about_dialog.dart",
+        "lib/services/app_legal_notices.dart",
+        "lib/services/pdf_font_licenses.dart",
+        "lib/services/platform_runtime_licenses.dart",
+        "test/app_legal_notices_test.dart",
+        "test/pdf_font_licenses_test.dart",
+        "test/platform_runtime_licenses_test.dart",
+        "test/widget/internal_viewer_widget_test.dart",
+        "test/widget/ods_viewer_workflow_test.dart"
+      ]
+    },
+    "analysis-engine-files.txt": {
+      "prior_count": 5,
+      "count": 12,
+      "additions": [
+        "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+        "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+        "packages/quds_office_engine/tool/fidelity/word_steps.dart",
+        "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+        "packages/quds_office_engine/test/office_pdf_export_test.dart"
+      ]
+    },
+    "analysis-cli-files.txt": {
+      "prior_count": 1,
+      "count": 1,
+      "additions": []
+    },
+    "analysis-editor-files.txt": {
+      "prior_count": 0,
+      "count": 4,
+      "additions": [
+        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+        "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+        "packages/quds_office_editor/test/word_operation_history_test.dart",
+        "packages/quds_office_editor/test/word_split_identity_test.dart"
+      ]
+    }
+  },
+  "additional_test_overlay": "test/widget/ods_viewer_workflow_test.dart",
+  "excluded_corpus_suites": [
+    {
+      "path": "test/local_odf_corpus_test.dart",
+      "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+    },
+    {
+      "path": "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart",
+      "reason": "Opt-in external corpus harness probes HOME Documents/Downloads; no approved private corpus provided and it passes vacuously when none exists. Preserve source, do not execute or count."
+    }
+  ],
+  "ordered_gates": [
+    "analysis-app",
+    "analysis-engine",
+    "analysis-editor",
+    "analysis-cli",
+    "app",
+    "editor",
+    "engine",
+    "scripted-oracle",
+    "source-integrity",
+    "bundled-notices",
+    "png-portable",
+    "navigation-capture",
+    "navigation-independent-review"
+  ],
+  "rules": [
+    "Freeze and remotely checkpoint complete reconciled source before recording acceptance.",
+    "Use the just-saved exact current commit for each subsequent gate; no commits, dependency resolution, checkout changes or source edits while a gate runs.",
+    "Record raw output and machine suite manifests with record_gate.py, retain failures, and save each completed gate immediately with [skip ci].",
+    "The changed shared Office source justifies rerunning existing complete selected cohorts plus the narrowly added suites.",
+    "Run engine scripted_workflows_test before the independent Office oracle; retain the actual 12 produced documents.",
+    "Do not wait for or restart Actions.",
+    "Keep navigation preview run separate from ordinary app counts and inspect the two genuine PNGs and font/source receipts.",
+    "No native-hook disabling or fake library substitution.",
+    "Do not execute external local-corpus harnesses or count their empty/no-input behavior as acceptance."
+  ],
+  "concrete_addition_rationale": {
+    "app legal/PDF-font/runtime-license suites": "New bundled attribution/asset wiring and runtime registry source arriving from main.",
+    "internal_viewer_widget_test": "Existing shared F3 routes could regress when adding ODS grid preference/fallback.",
+    "ods_viewer_workflow_test": "New two-case deterministic native ODS F3 grid/fallback and display-name route regression.",
+    "word_operation_history_test and word_split_identity_test": "Canonical PR25 changes paragraph-split formatting state; check split/type/undo/redo/bookmark identities.",
+    "word_steps_vocabulary_test": "Canonical PR25 new OOXML vocabulary/18 underline styles/format continuation behavior.",
+    "office_pdf_export_test": "Canonical PR25 rewrites underline rendering in Office PDF output.",
+    "bundled notices Python verifier and guards": "Incoming source-reviewed asset/text inventory must still match merged source and fail on stale/truncated notices."
+  }
+}

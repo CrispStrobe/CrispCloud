@@ -1,0 +1,68 @@
+[
+  {
+    "number": 18,
+    "state": "open",
+    "draft": false,
+    "title": "Import the text of Word 6.0/95 files; text-only fallback under recover",
+    "head": "fix/word6-95-text-import",
+    "head_sha": "120a3cc93776263c37a501d78a9688c0f6d66932",
+    "base": "fix/recover-text-from-damaged-compound",
+    "updated_at": "2026-11-15T10:53:32Z",
+    "merged_at": null
+  },
+  {
+    "number": 17,
+    "state": "open",
+    "draft": false,
+    "title": "Recover: omit contradictory comments or bookmarks instead of refusing",
+    "head": "fix/recover-comments-bookmarks",
+    "head_sha": "89555522726432b1449f0d26e701376ec6f59a27",
+    "base": "main",
+    "updated_at": "2026-11-15T10:46:52Z",
+    "merged_at": null
+  },
+  {
+    "number": 16,
+    "state": "open",
+    "draft": false,
+    "title": "Read Word 98 for Mac files (nFib 0x00C2)",
+    "head": "fix/accept-word98-mac-nfib",
+    "head_sha": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
+    "base": "main",
+    "updated_at": "2026-11-15T10:39:48Z",
+    "merged_at": null
+  },
+  {
+    "number": 15,
+    "state": "open",
+    "draft": false,
+    "title": "Recover the text of Word files whose compound directory is destroyed",
+    "head": "fix/recover-text-from-damaged-compound",
+    "head_sha": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
+    "base": "main",
+    "updated_at": "2026-11-15T10:35:34Z",
+    "merged_at": null
+  },
+  {
+    "number": 14,
+    "state": "open",
+    "draft": false,
+    "title": "Name the real format of files that are not compound documents",
+    "head": "fix/name-the-real-format",
+    "head_sha": "9f61e030d320c9086556d3368d6233d25574fdab",
+    "base": "main",
+    "updated_at": "2026-11-15T10:11:31Z",
+    "merged_at": null
+  },
+  {
+    "number": 13,
+    "state": "closed",
+    "draft": false,
+    "title": "Keep hyperlinks that Word 2010+ writes with empty binary data",
+    "head": "fix/word-written-hyperlinks",
+    "head_sha": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+    "base": "main",
+    "updated_at": "2026-11-15T06:13:01Z",
+    "merged_at": "2026-11-15T06:13:00Z"
+  }
+]

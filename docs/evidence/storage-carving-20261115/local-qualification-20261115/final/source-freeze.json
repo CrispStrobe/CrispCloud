@@ -1,0 +1,15 @@
+{
+  "saved_at": "2026-11-15T09:50:01.528886+00:00",
+  "source_commit": "f19709b4b60a2dd22878ecbe8fb15785ccbba535",
+  "source_tree": "7b238b90aa247fc365228a795db6405dfb1b445a",
+  "branch": "integration/storage-carving-local-qualification-20261115",
+  "main_cutoff": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+  "shared_cutoff": "65e462b12e4524d88b4dd7d7ecfe43cd471b638d",
+  "quds_pin": "07842b7a116e64c75ed7e0945a6f74a9f4bdfccd",
+  "parser_pin": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+  "strict_dart_files": 117,
+  "app_suites": 49,
+  "editor_suites": 7,
+  "engine_suites": 15,
+  "note": "Only receipt files may be saved while gates run; local HEAD and source remain frozen."
+}

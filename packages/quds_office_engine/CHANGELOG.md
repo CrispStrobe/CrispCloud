@@ -4,6 +4,14 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Reconcile current ODS geometry, currency and explicit whitespace imports with
+  bounded namespace-aware parsing. Keep inherited empty-cell padding sparse,
+  retain explicit formatted blanks, and reject stored cells hidden inside an
+  earlier vertical merge. New regressions bind native column widths, default
+  geometry and currency symbols to an XLSX copy round trip.
+- Accept Word OOXML formatting vocabulary, preserve all underline styles, and
+  continue character formatting after splitting a paragraph at its end.
+
 - Apply ODS cell style precedence from explicit cell, row default and column
   default styles, including repeated cells that cross differing column styles.
   Default-style padding remains sparse and column style bookkeeping shares the
@@ -25,7 +33,10 @@ All notable changes to `quds_office_engine` are documented here.
   Input and combined XML each cap at 64 MiB; XML nesting/events and style work
   have separate limits. Repeated formulas, matrix formulas, repeated merged
   anchors, overlapping merges, nested tables and covered cells that contain
-  stored data explicitly decline. This is a bounded ODS-to-XLSX import profile,
+  stored data explicitly decline. Ordinary stored cells inside earlier merged
+  coverage also decline when the required covered-cell token is missing.
+  Preserve quoted sheet identifiers in converted formulas, including names
+  with punctuation, through XLSX saves. This is a bounded ODS-to-XLSX import profile,
   not roundtrip preservation of arbitrary ODF features.
 
 - Preserve imported typed formula caches through unsupported dependencies,
