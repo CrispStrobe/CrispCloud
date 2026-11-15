@@ -59,3 +59,31 @@ Use local focused tests, static analysis and available platform smoke checks.
 Push incremental checkpoints to the remote feature branch. GitHub Actions may
 remain queued on the free tier; development and completion do not wait on that
 queue. Record unexecuted platform checks explicitly.
+
+## Local validation results
+
+The implementation at `44434bad` was checked with the repository's pinned
+Flutter 3.47.8 / Dart 3.13.7 toolchain on Linux on 15 November 2026.
+
+| Check | Result |
+| --- | --- |
+| Native terminal regression cohort | 229 passed, 2 platform-specific skips across 22 test files |
+| Actual Linux PTY | Passed TTY allocation, ANSI/final output, resize, Unicode input/output, Ctrl+C and disposal checks |
+| Screen command resolver | Passed POSIX shell fixtures for exact IDs/names, duplicate/missing/unavailable sessions, prefix collisions, bounds and quoting |
+| Static analysis | No issues across all 28 changed Dart files |
+| Formatting and whitespace | Clean; all 28 Dart files already formatted |
+| Dependency resolution | Pinned lockfile resolution succeeded; dependency manifests and lockfile unchanged |
+| CI configuration | YAML parsed and referenced terminal test paths verified; new suites included in Chrome, Windows and macOS jobs |
+| Visual layout | Actual widgets rendered and inspected at desktop and narrow Android sizes using synthetic connections; split layout, collapsed mobile view, search highlights and extra keys checked |
+| Browser execution | Blocked before startup: Chromium aborted at `process_singleton_posix.cc:297` with `socket() failed: Operation not permitted (1)`; browser tests did not execute |
+
+The two native skips are the Windows ConPTY test and the macOS-only interactive
+shell smoke test. The visual fixtures are UI checks, not live SSH/tmux/screen
+connections or physical-device tests. Production cleanup remained unchanged;
+test streams now explicitly complete cancellation on Flutter's simulated clock.
+
+Live SSH gateway/host sessions, physical Android/iOS keyboard/IME behavior,
+signed macOS and packaged Windows remain release smoke checks. A local attempt
+to start tmux/screen persistence was blocked by this workspace's Unix-socket
+restrictions; resolver fixture success does not certify live persistence.
+No GitHub Actions result was awaited or required for this continuation.
