@@ -1,6 +1,5 @@
 import 'package:crisp_cloud/widgets/new_document_dialog.dart';
 import 'package:crisp_cloud/services/new_document.dart';
-import 'package:crisp_cloud/models/file_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -64,7 +63,7 @@ void main() {
         MaterialApp(
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(1.5)),
+                .copyWith(textScaler: const TextScaler.linear(1.5)),
             child: child!,
           ),
           home: Scaffold(

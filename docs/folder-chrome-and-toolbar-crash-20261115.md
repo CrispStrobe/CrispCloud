@@ -31,3 +31,7 @@ hide/show, release of detached toolbars and queued teardown rejection. The same
 check runs in the existing macOS CI test job. This isolates the observed failing
 ownership path; it does not establish the cause of arbitrary native memory
 corruption elsewhere or promise that every possible app crash is eliminated.
+
+The isolated legacy control also completed 900 updates without crashing. The
+intermittent crash therefore has not been reproduced by this harness; longer
+interactive use of the full app remains necessary to confirm the mitigation.
