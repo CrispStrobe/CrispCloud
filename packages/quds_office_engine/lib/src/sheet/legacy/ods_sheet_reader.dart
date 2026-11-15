@@ -103,6 +103,9 @@ abstract final class OdsSheetReader {
           if (_is(style, 'style', _style)) {
             final family = _attribute(style, 'family', _style);
             if (family != null) styles['$family:$name'] = style;
+          } else if (_is(style, 'default-style', _style)) {
+            final family = _attribute(style, 'family', _style);
+            if (family != null) styles['$family:'] = style;
           } else if (style.namespaceUri == _number) {
             numberStyles[name] = style;
           }
@@ -1087,6 +1090,7 @@ abstract final class OdsSheetReader {
   ) {
     final result = <XmlElement>[];
     final seen = <String>{};
+    final defaultStyle = styles['$family:'];
     while (name != null) {
       if (!seen.add(name) || seen.length > 32) {
         throw const OdsSheetFormatException(
@@ -1098,6 +1102,9 @@ abstract final class OdsSheetReader {
       result.add(style);
       name = _attribute(style, 'parent-style-name', _style);
     }
+    // ODF default styles carry the document's Normal font and other fallback
+    // properties; append them after the named chain so explicit styles win.
+    if (defaultStyle != null) result.add(defaultStyle);
     return result;
   }
 
