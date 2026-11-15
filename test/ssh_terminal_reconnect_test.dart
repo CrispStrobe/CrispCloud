@@ -606,10 +606,16 @@ void main() {
     expect(find.byKey(const ValueKey('terminal-ssh-add-jump')), findsOneWidget);
     // Use the real form submission to prove hidden old mode is cleared.
     await tester.tap(find.text('Connect'));
-    // Replacing the active connection drains its stream and closes the route
-    // before listing sessions. Wait for those futures and the picker animation.
-    await tester.pumpAndSettle();
-    expect(find.byType(SshMultiplexerSessionsDialog), findsOneWidget);
+    // Drain reconnect cleanup until the picker appears. The terminal remains
+    // connecting while that picker is open, so its progress cannot settle.
+    for (var frame = 0;
+        frame < 30 && find.byType(SshMultiplexerSessionsDialog).evaluate().isEmpty;
+        frame++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(SshMultiplexerSessionsDialog), findsOneWidget,
+        reason: 'status=${terminal.status}, requests=${service.requests.length}, '
+            'discoveries=${service.discoveries.length}');
     expect(service.discoveries, [SshMultiplexer.screen]);
     expect(terminal.label, 'alice@host.example');
     expect(service.shellOptions, hasLength(1));
