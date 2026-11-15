@@ -246,11 +246,11 @@ class _OfficeFindBarState extends State<OfficeFindBar> {
                           decoration: InputDecoration(
                             hintText: context.tr('Replace with'),
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 6,
                             ),
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),

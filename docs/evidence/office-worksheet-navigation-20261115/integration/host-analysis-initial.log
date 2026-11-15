@@ -1,0 +1,8 @@
+Command: dart analyze lib/widgets/office_worksheet_bar.dart lib/l10n/office_worksheet_strings.dart lib/widgets/office_editor_dialog.dart lib/widgets/office_editor_find_bar.dart test/widget/office_sheet_navigation_workflow_test.dart
+Working directory: CrispCloud
+
+   info - lib/widgets/office_editor_find_bar.dart:249:45 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - lib/widgets/office_editor_find_bar.dart:253:37 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - test/widget/office_sheet_navigation_workflow_test.dart:3:8 - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart'. Try removing the import directive. - unnecessary_import
+
+3 issues found.

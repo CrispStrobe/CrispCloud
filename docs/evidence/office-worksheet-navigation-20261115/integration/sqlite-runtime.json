@@ -1,0 +1,9 @@
+{
+  "alias": "/workspace/scratch/9b322cd05399/toolchain/lib/libsqlite3.so",
+  "link_target": "/lib/x86_64-linux-gnu/libsqlite3.so.0",
+  "resolved_library": "/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6",
+  "sha256": "14c4418a06c5c2e30f5fb57bc8add93762236ae17898c6708984cf15e680ca71",
+  "bytes": 1571096,
+  "version": "3.46.1",
+  "LD_LIBRARY_PATH": "/workspace/scratch/9b322cd05399/toolchain/lib"
+}
