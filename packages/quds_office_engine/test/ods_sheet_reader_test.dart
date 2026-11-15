@@ -18,6 +18,7 @@ Uint8List _ods(
   String styles = '',
   String? namedStyles,
   Map<String, List<int>> parts = const <String, List<int>>{},
+  String extra = '',
 }) {
   final zip = ZipWriter();
   const bindings =
@@ -33,7 +34,7 @@ Uint8List _ods(
     utf8.encode(
       '<o:document-content $bindings>'
       '<o:automatic-styles>$styles</o:automatic-styles>'
-      '<o:body><o:spreadsheet>$tables</o:spreadsheet></o:body>'
+      '<o:body><o:spreadsheet>$tables$extra</o:spreadsheet></o:body>'
       '</o:document-content>',
     ),
   );
@@ -268,6 +269,7 @@ void main() {
   hiddenStateTests();
   conditionalFormatTests();
   validationTests();
+  metadataTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1647,6 +1649,27 @@ void conditionalFormatTests() {
 }
 
 void validationTests() {
+  test('ODS range-source list validations resolve across sheets', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        't:content-validation-name="v"><x:p>Pick</x:p></t:table-cell>'
+        '</t:table-row><t:content-validations>'
+        '<t:content-validation t:name="v" '
+        't:condition="of:cell-content-is-in-list(\$Lists.\$A\$1:.\$A\$2)"/>'
+        '</t:content-validations></t:table>'
+        '<t:table t:name="Lists"><t:table-row><t:table-cell>'
+        '<x:p>Red</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell><x:p>Green</x:p></t:table-cell>'
+        '</t:table-row></t:table>',
+      ),
+    );
+    final validation = book.sheets.first.validations.single;
+    expect(validation.listItems, ['Red', 'Green']);
+    expect(validation.accepts('Green'), isTrue);
+    expect(validation.accepts('Blue'), isFalse);
+  });
+
   test('ODS list validations become typed XLSX validations', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
@@ -1680,5 +1703,63 @@ void validationTests() {
 
     final reopened = SheetDeserializer().readBytes(saved);
     expect(reopened.sheets.first.validations.first.listItems, ['Red', 'Green']);
+  });
+}
+
+void metadataTests() {
+  test('ODS print areas, titles, names and autofilter survive save', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data" t:print-ranges="Data.A1:Data.B3">'
+        '<t:table-row><t:table-cell><x:p>Name</x:p></t:table-cell>'
+        '<t:table-cell><x:p>Qty</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell><x:p>A</x:p></t:table-cell>'
+        '<t:table-cell o:value-type="float" o:value="1"><x:p>1</x:p>'
+        '</t:table-cell></t:table-row>'
+        '<t:named-expressions>'
+        '<t:named-expression t:name="Excel_BuiltIn_Print_Titles" '
+        't:expression="[\$Data.\$1:.\$1];[\$Data.\$A:.\$A]"/>'
+        '</t:named-expressions></t:table>',
+        extra:
+            '<t:named-expressions><t:named-range t:name="Sales" '
+            't:cell-range-address="\$Data.\$A\$2:.\$B\$3"/></t:named-expressions>'
+            '<t:database-ranges><t:database-range '
+            't:target-range-address="Data.A1:Data.B3"/></t:database-ranges>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    String rangeA1(SmlRange range) => '${range.start.a1}:${range.end.a1}';
+    expect(rangeA1(sheet.printArea!), 'A1:B3');
+    expect(rangeA1(sheet.printTitleRows!), 'A1:A1');
+    expect(rangeA1(sheet.printTitleCols!), 'A1:A1');
+    expect(rangeA1(sheet.autoFilter!.range), 'A1:B3');
+    expect(book.namedRanges.single.name, 'Sales');
+    expect(book.namedRanges.single.sheetName, 'Data');
+    expect(
+      '${book.namedRanges.single.range.start.a1}:'
+          '${book.namedRanges.single.range.end.a1}',
+      'A2:B3',
+    );
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final workbookXml = utf8.decode(
+      archive.findFile('xl/workbook.xml')!.content as List<int>,
+    );
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(workbookXml, contains('_xlnm.Print_Area'));
+    expect(workbookXml, contains('_xlnm.Print_Titles'));
+    expect(workbookXml, contains('Sales'));
+    expect(sheetXml, contains('autoFilter'));
+
+    final reopened = SheetDeserializer().readBytes(saved);
+    final restored = reopened.sheets.first;
+    expect(rangeA1(restored.printArea!), 'A1:B3');
+    expect(rangeA1(restored.printTitleRows!), 'A1:A1');
+    expect(rangeA1(restored.printTitleCols!), 'A1:A1');
+    expect(rangeA1(restored.autoFilter!.range), 'A1:B3');
+    expect(reopened.namedRanges.single.name, 'Sales');
   });
 }

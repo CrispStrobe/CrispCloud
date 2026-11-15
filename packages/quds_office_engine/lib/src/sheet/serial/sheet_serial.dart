@@ -216,6 +216,10 @@ class SheetDeserializer {
         _applyPrintTitles(book, raw.trim(), scope);
         continue;
       }
+      if (name == '_xlnm.Print_Area') {
+        _applyPrintArea(book, raw.trim(), scope);
+        continue;
+      }
       final localSheetId = scope == null ? null : (int.tryParse(scope) ?? -1);
       final attributes = <String, String>{
         for (final attribute in element.attributes)
@@ -303,6 +307,35 @@ class SheetDeserializer {
         final int c1 = SmlCellRef.parse('${cols.group(2)}1').col;
         sheet.printTitleCols = SmlRange(SmlCellRef(c0, 0), SmlCellRef(c1, 0));
       }
+    }
+  }
+
+  static void _applyPrintArea(
+    SmlWorkbook book,
+    String raw,
+    String? localSheetId,
+  ) {
+    if (raw.isEmpty) return;
+    SmlWorksheet? sheet;
+    final idx = int.tryParse(localSheetId ?? '');
+    if (idx != null && idx >= 0 && idx < book.sheets.length) {
+      sheet = book.sheets[idx];
+    }
+    final bang = raw.lastIndexOf('!');
+    if (bang <= 0) return;
+    var sheetName = raw.substring(0, bang).trim();
+    if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
+      sheetName = sheetName
+          .substring(1, sheetName.length - 1)
+          .replaceAll("''", "'");
+    }
+    sheet ??= book.sheetByName(sheetName);
+    if (sheet == null) return;
+    final ref = raw.substring(bang + 1).replaceAll('\$', '').trim();
+    try {
+      sheet.printArea = SmlRange.parse(ref);
+    } on FormatException {
+      // Leave an unparseable print area untouched.
     }
   }
 
@@ -1182,7 +1215,9 @@ class SheetSerializer {
         (book.definedNames.isNotEmpty ||
             book.sheets.any(
               (SmlWorksheet s) =>
-                  s.printTitleRows != null || s.printTitleCols != null,
+                  s.printTitleRows != null ||
+                  s.printTitleCols != null ||
+                  s.printArea != null,
             ))) {
       w.writeStartElement('definedNames');
       for (final name in book.definedNames) {
@@ -1197,6 +1232,21 @@ class SheetSerializer {
       }
       for (int i = 0; i < book.sheets.length; i++) {
         final SmlWorksheet sheet = book.sheets[i];
+        if (sheet.printArea != null) {
+          String absolute(SmlCellRef cell) => cell.a1.replaceFirstMapped(
+            RegExp(r'^([A-Z]+)(\d+)$'),
+            (match) => '\$${match[1]}\$${match[2]}',
+          );
+          final area = sheet.printArea!;
+          final ref = area.isSingleCell
+              ? absolute(area.start)
+              : '${absolute(area.start)}:${absolute(area.end)}';
+          w.writeStartElement('definedName');
+          w.writeAttribute('name', '_xlnm.Print_Area');
+          w.writeAttribute('localSheetId', '$i');
+          w.writeText("'${sheet.name.replaceAll("'", "''")}'!$ref");
+          w.writeEndElement();
+        }
         final List<String> parts = <String>[];
         if (sheet.printTitleRows != null) {
           final SmlRange r = sheet.printTitleRows!;

@@ -26,6 +26,12 @@ typedef _OdsImage = ({
   double width,
   double height,
 });
+typedef _OdsValidation = ({
+  List<String> items,
+  bool allowBlank,
+  SmlRange? sourceRange,
+  String? sourceSheet,
+});
 typedef _OdsCellContent = ({
   Object? value,
   String? formula,
@@ -153,6 +159,14 @@ abstract final class OdsSheetReader {
           ),
         ) ??
         _odfDefaultRowHeightPoints;
+    final pendingValidations =
+        <
+          ({
+            SmlWorksheet sheet,
+            List<SmlCellRef> refs,
+            _OdsValidation definition,
+          })
+        >[];
     for (final table in tables) {
       final name = _attribute(table, 'name', _table)?.trim();
       final tableStyle = _styleChain(
@@ -169,6 +183,16 @@ abstract final class OdsSheetReader {
             _property(tableStyle, 'table-properties', 'display', _table) ==
             'false',
       );
+      final printRanges = _attribute(table, 'print-ranges', _table);
+      if (printRanges != null) {
+        for (final part in printRanges.split(RegExp(r'\s+'))) {
+          final parsed = _odsRangeAddress(part);
+          if (parsed != null && parsed.sheet == sheet.name) {
+            sheet.printArea = parsed.range;
+            break;
+          }
+        }
+      }
       sheet.importDefaultColumnWidth(
         excelWidth: defaultColumnWidthPoints * 96 / 72 / _odfMaxDigitWidthPx,
       );
@@ -456,32 +480,48 @@ abstract final class OdsSheetReader {
       for (final definition in validationDefinitions.entries) {
         final refs = validationRefs[definition.key];
         if (refs == null || refs.isEmpty) continue;
-        refs.sort(
-          (a, b) =>
-              a.row == b.row ? a.col.compareTo(b.col) : a.row.compareTo(b.row),
-        );
-        var index = 0;
-        while (index < refs.length) {
-          var end = index;
-          while (end + 1 < refs.length &&
-              refs[end + 1].row == refs[index].row &&
-              refs[end + 1].col == refs[end].col + 1) {
-            end++;
-          }
-          budget.validation();
-          sheet.validations.add(
-            SmlDataValidation(
-              range: SmlRange.parse('${refs[index].a1}:${refs[end].a1}'),
-              kind: SmlValidationKind.list,
-              formula1: definition.value.items.join(','),
-              allowBlank: definition.value.allowBlank,
-            ),
-          );
-          index = end + 1;
+        if (definition.value.items.isEmpty &&
+            definition.value.sourceRange != null) {
+          pendingValidations.add((
+            sheet: sheet,
+            refs: refs,
+            definition: definition.value,
+          ));
+          continue;
         }
+        _addListValidations(
+          sheet,
+          refs,
+          definition.value.items,
+          definition.value.allowBlank,
+          budget,
+        );
       }
       book.sheets.add(sheet);
     }
+    for (final pending in pendingValidations) {
+      final definition = pending.definition;
+      final sourceName = definition.sourceSheet;
+      final sourceRange = definition.sourceRange;
+      if (sourceName == null || sourceRange == null) continue;
+      final source = book.sheetByName(sourceName);
+      if (source == null) continue;
+      final items = <String>[];
+      for (final ref in sourceRange.cells) {
+        final value = source.cellOrNull(ref)?.asString ?? '';
+        if (value.isNotEmpty && !items.contains(value)) items.add(value);
+        if (items.length >= 1000) break;
+      }
+      if (items.isEmpty) continue;
+      _addListValidations(
+        pending.sheet,
+        pending.refs,
+        items,
+        definition.allowBlank,
+        budget,
+      );
+    }
+    _readOdsNamedMetadata(spreadsheet, book);
     return book;
   }
 
@@ -616,9 +656,42 @@ abstract final class OdsSheetReader {
     return defaults;
   }
 
-  static Map<String, ({List<String> items, bool allowBlank})>
-  _readValidationDefinitions(XmlElement table) {
-    final definitions = <String, ({List<String> items, bool allowBlank})>{};
+  static void _addListValidations(
+    SmlWorksheet sheet,
+    List<SmlCellRef> refs,
+    List<String> items,
+    bool allowBlank,
+    _OdsBudget budget,
+  ) {
+    refs.sort(
+      (a, b) =>
+          a.row == b.row ? a.col.compareTo(b.col) : a.row.compareTo(b.row),
+    );
+    var index = 0;
+    while (index < refs.length) {
+      var end = index;
+      while (end + 1 < refs.length &&
+          refs[end + 1].row == refs[index].row &&
+          refs[end + 1].col == refs[end].col + 1) {
+        end++;
+      }
+      budget.validation();
+      sheet.validations.add(
+        SmlDataValidation(
+          range: SmlRange.parse('${refs[index].a1}:${refs[end].a1}'),
+          kind: SmlValidationKind.list,
+          formula1: items.join(','),
+          allowBlank: allowBlank,
+        ),
+      );
+      index = end + 1;
+    }
+  }
+
+  static Map<String, _OdsValidation> _readValidationDefinitions(
+    XmlElement table,
+  ) {
+    final definitions = <String, _OdsValidation>{};
     for (final validation in _descendants(
       table,
       'content-validation',
@@ -632,22 +705,141 @@ abstract final class OdsSheetReader {
         dotAll: true,
       ).firstMatch(condition);
       if (match == null) continue;
+      final argument = match.group(1)!.trim();
       final items = <String>[];
-      for (final raw in match.group(1)!.split(';')) {
-        var item = raw.trim();
-        if (item.length >= 2 && item.startsWith('"') && item.endsWith('"')) {
-          item = item.substring(1, item.length - 1).replaceAll('""', '"');
+      SmlRange? sourceRange;
+      String? sourceSheet;
+      if (argument.contains(':') &&
+          !argument.contains(';') &&
+          !argument.contains('"')) {
+        final parsed = _odsRangeAddress(argument);
+        sourceRange = parsed?.range;
+        sourceSheet = parsed?.sheet;
+      } else {
+        for (final raw in argument.split(';')) {
+          var item = raw.trim();
+          if (item.length >= 2 && item.startsWith('"') && item.endsWith('"')) {
+            item = item.substring(1, item.length - 1).replaceAll('""', '"');
+          }
+          if (item.isNotEmpty) items.add(item);
         }
-        if (item.isNotEmpty) items.add(item);
       }
-      if (items.isEmpty) continue;
+      if (items.isEmpty && sourceRange == null) continue;
       definitions[name] = (
         items: items,
         allowBlank:
             _attribute(validation, 'allow-empty-cell', _table) != 'false',
+        sourceRange: sourceRange,
+        sourceSheet: sourceSheet,
       );
     }
     return definitions;
+  }
+
+  static void _readOdsNamedMetadata(XmlElement spreadsheet, SmlWorkbook book) {
+    int? localScope(XmlElement element) {
+      XmlElement? parent = element.parent;
+      while (parent != null) {
+        if (_is(parent, 'table', _table)) {
+          final name = _attribute(parent, 'name', _table);
+          if (name == null) return null;
+          final index = book.sheets.indexWhere(
+            (sheet) => sheet.name.toLowerCase() == name.toLowerCase(),
+          );
+          return index < 0 ? null : index;
+        }
+        parent = parent.parent;
+      }
+      return null;
+    }
+
+    for (final element in _descendants(spreadsheet, 'named-range', _table)) {
+      final name = _attribute(element, 'name', _table);
+      final address = _attribute(element, 'cell-range-address', _table);
+      if (name == null || address == null) continue;
+      if (name == 'Excel_BuiltIn_Print_Area') {
+        final parsed = _odsRangeAddress(address);
+        final sheet = parsed == null ? null : book.sheetByName(parsed.sheet);
+        if (sheet != null && sheet.printArea == null) {
+          sheet.printArea = parsed!.range;
+        }
+        continue;
+      }
+      if (name.startsWith('Excel_BuiltIn_')) continue;
+      final parsed = _odsRangeAddress(address);
+      if (parsed == null || book.sheetByName(parsed.sheet) == null) continue;
+      book.namedRanges.add(
+        SmlNamedRange(
+          name: name,
+          sheetName: parsed.sheet,
+          range: parsed.range,
+          localSheetId: localScope(element),
+        ),
+      );
+    }
+
+    for (final element in _descendants(
+      spreadsheet,
+      'named-expression',
+      _table,
+    )) {
+      if (_attribute(element, 'name', _table) != 'Excel_BuiltIn_Print_Titles') {
+        continue;
+      }
+      final expression = _attribute(element, 'expression', _table);
+      if (expression != null) _applyOdsPrintTitles(book, expression);
+    }
+
+    for (final element in _descendants(spreadsheet, 'database-range', _table)) {
+      final target = _attribute(element, 'target-range-address', _table);
+      final parsed = _odsRangeAddress(target);
+      final sheet = parsed == null ? null : book.sheetByName(parsed.sheet);
+      if (sheet != null && sheet.autoFilter == null) {
+        sheet.autoFilter = SmlAutoFilter(range: parsed!.range);
+      }
+    }
+  }
+
+  static void _applyOdsPrintTitles(SmlWorkbook book, String expression) {
+    for (final raw in expression.split(';')) {
+      var token = raw.trim();
+      if (token.startsWith('[') && token.endsWith(']')) {
+        token = token.substring(1, token.length - 1);
+      }
+      final parts = token.split(':');
+      if (parts.length != 2) continue;
+      final left = parts[0].trim();
+      final right = parts[1].trim();
+      final dot = left.lastIndexOf('.');
+      if (dot <= 0) continue;
+      var sheetName = left.substring(0, dot);
+      if (sheetName.startsWith('\$')) sheetName = sheetName.substring(1);
+      if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
+        sheetName = sheetName
+            .substring(1, sheetName.length - 1)
+            .replaceAll("''", "'");
+      }
+      final start = left.substring(dot + 1).replaceAll('\$', '');
+      var end = right.replaceAll('\$', '');
+      if (end.startsWith('.')) end = end.substring(1);
+      final sheet = book.sheetByName(sheetName);
+      if (sheet == null) continue;
+      final rowStart = int.tryParse(start);
+      final rowEnd = int.tryParse(end);
+      if (rowStart != null && rowEnd != null) {
+        sheet.printTitleRows = SmlRange(
+          SmlCellRef(0, rowStart - 1),
+          SmlCellRef(0, rowEnd - 1),
+        );
+        continue;
+      }
+      final colStart = SmlCellRef.parse('${start}1').col;
+      final colEnd = SmlCellRef.parse('${end}1').col;
+      sheet.printTitleCols = SmlRange(
+        SmlCellRef(colStart, 0),
+        SmlCellRef(colEnd, 0),
+      );
+    }
   }
 
   static List<SmlConditionalRule> _readConditionalFormats(
@@ -748,33 +940,57 @@ abstract final class OdsSheetReader {
     return rules;
   }
 
-  static SmlRange? _odsConditionalRange(String? raw) {
+  static ({String sheet, SmlRange range})? _odsRangeAddress(String? raw) {
     if (raw == null || raw.isEmpty) return null;
-    final parts = raw.split(':');
-    if (parts.length != 2) return null;
-    ({String sheet, String cell})? point(String value) {
-      final text = value.trim();
-      final dot = text.lastIndexOf('.');
-      if (dot <= 0 || dot >= text.length - 1) return null;
-      var sheetName = text.substring(0, dot);
-      final cell = text.substring(dot + 1).replaceAll('\$', '');
+    final text = raw.trim().replaceAll(' ', '');
+    final parts = text.split(':');
+    if (parts.length > 2 || parts.isEmpty) return null;
+    ({String sheet, String cell})? point(
+      String value, {
+      String? fallbackSheet,
+    }) {
+      var part = value.trim();
+      if (part.startsWith('.') && fallbackSheet != null) {
+        part = part.substring(1);
+      }
+      final dot = part.lastIndexOf('.');
+      String sheetName;
+      String cell;
+      if (dot <= 0) {
+        if (fallbackSheet == null) return null;
+        sheetName = fallbackSheet;
+        cell = part;
+      } else {
+        sheetName = part.substring(0, dot);
+        cell = part.substring(dot + 1);
+      }
       if (sheetName.startsWith('\$')) sheetName = sheetName.substring(1);
       if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
         sheetName = sheetName
             .substring(1, sheetName.length - 1)
             .replaceAll("''", "'");
       }
+      cell = cell.replaceAll('\$', '');
       if (!RegExp(r'^[A-Za-z]+[0-9]+$').hasMatch(cell)) return null;
       return (sheet: sheetName, cell: cell);
     }
 
     final start = point(parts[0]);
-    final end = point(parts[1]);
-    if (start == null || end == null || start.sheet != end.sheet) {
-      return null;
+    if (start == null) return null;
+    if (parts.length == 1) {
+      final cell = SmlRange.parse('${start.cell}:${start.cell}');
+      return (sheet: start.sheet, range: cell);
     }
-    return SmlRange.parse('${start.cell}:${end.cell}');
+    final end = point(parts[1], fallbackSheet: start.sheet);
+    if (end == null || end.sheet != start.sheet) return null;
+    return (
+      sheet: start.sheet,
+      range: SmlRange.parse('${start.cell}:${end.cell}'),
+    );
   }
+
+  static SmlRange? _odsConditionalRange(String? raw) =>
+      _odsRangeAddress(raw)?.range;
 
   static Iterable<({int column, int repeat, String? styleName})> _cellStyleRuns(
     int column,
