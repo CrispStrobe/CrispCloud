@@ -1,0 +1,647 @@
+{
+  "baseline_main": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+  "previous_terminal": "064bd3cec06477f4b58c5afdce2c228c940cb316",
+  "integrated_head": "b6ca0b1f33122098078ce1be7050a8265fbdccfd",
+  "branch_count": 27,
+  "recent_pr_count": 50,
+  "branches": [
+    {
+      "branch": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "codex/terminal-screen-workspace",
+      "sha": "b6ca0b1f33122098078ce1be7050a8265fbdccfd",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "codex/zotero-support-20261115",
+      "sha": "32abdd0f9219486be60d82f97d79d0040e1fee2b",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "included_in_ancestry": true
+    },
+    {
+      "branch": "main",
+      "sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+      "included_in_ancestry": true
+    }
+  ],
+  "recent_prs": [
+    {
+      "number": 149,
+      "state": "open",
+      "merged": false,
+      "title": "Integrate Zotero references into the Word editor",
+      "head": "codex/zotero-support-20261115",
+      "sha": "32abdd0f9219486be60d82f97d79d0040e1fee2b",
+      "base_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 148,
+      "state": "closed",
+      "merged": true,
+      "title": "Document ODS list validations and current pin",
+      "head": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "base_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 147,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS list validations",
+      "head": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "base_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 146,
+      "state": "closed",
+      "merged": true,
+      "title": "Document complete conditional format subset",
+      "head": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "base_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 145,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor contains-text and duplicate conditional rules",
+      "head": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "base_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 144,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor conditional dxf styles",
+      "head": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "base_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 143,
+      "state": "closed",
+      "merged": false,
+      "title": "Vendor the UTF-16 custom XML bibliography fix",
+      "head": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "base_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 142,
+      "state": "closed",
+      "merged": true,
+      "title": "Document numeric ODS conditional formats",
+      "head": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "base_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 141,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor numeric conditional comparators",
+      "head": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "base_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 140,
+      "state": "open",
+      "merged": false,
+      "title": "Extend terminal workspace with screen, tabs, split views, search and SSH profiles",
+      "head": "codex/terminal-screen-workspace",
+      "sha": "064bd3cec06477f4b58c5afdce2c228c940cb316",
+      "base_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 139,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS conditional formats",
+      "head": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "base_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 138,
+      "state": "closed",
+      "merged": true,
+      "title": "Record ODS hidden-state and current Quds pin",
+      "head": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "base_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 137,
+      "state": "closed",
+      "merged": true,
+      "title": "Hide hidden worksheets in the worksheet selector",
+      "head": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "base_sha": "d86ec1903e66a9086b3b350740a07cc16a66971b",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 136,
+      "state": "closed",
+      "merged": true,
+      "title": "Extend SSH terminals with key authentication, tmux sessions and reconnect",
+      "head": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "base_sha": "a7898dcc47ce216f280a34be2a23035e3bd99887",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 135,
+      "state": "closed",
+      "merged": true,
+      "title": "Show ODT header and footer text",
+      "head": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "base_sha": "7a1360488b6869f25a3bf895b4700eb2b27c38a6",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 134,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS hidden row and column state",
+      "head": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "base_sha": "6642f7f93d49b3832dc6e0e338ad4826180dcefc",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 133,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS default style and geometry fixes",
+      "head": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "base_sha": "d88ad4c1840c74b5e4fc3aa61a0b7acd629bf72b",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 132,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS default cell styles",
+      "head": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "base_sha": "497d78e5416430b8e67403292e2f0919e7d76e67",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 131,
+      "state": "closed",
+      "merged": true,
+      "title": "Read ODT named styles from styles.xml",
+      "head": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "base_sha": "1ac50bf5db8ef9329513ebe081a7b76fcbe8c0fb",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 130,
+      "state": "closed",
+      "merged": true,
+      "title": "Record the verified current Office source pin",
+      "head": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "base_sha": "d71d28a1c9c5ccabccce9ae3656acf16f7778e6e",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 129,
+      "state": "closed",
+      "merged": true,
+      "title": "Keep text-box labels in ODT previews",
+      "head": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "base_sha": "06dbac88b1a06517eb448ca9914ee5d082f6d763",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 128,
+      "state": "closed",
+      "merged": true,
+      "title": "Render bounded ODT pictures inline",
+      "head": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "base_sha": "1a75df641893a8e89f06227a0bd3e620d85aa3b9",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 127,
+      "state": "closed",
+      "merged": true,
+      "title": "Document ODS pictures and exact host goldens",
+      "head": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "base_sha": "aa94ab21419187a67a21f0ea23a3b2efaca18e9b",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 126,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS picture import",
+      "head": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "base_sha": "1c31389a663e1b6136e0bc85f3e2324ec907e0ea",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 125,
+      "state": "closed",
+      "merged": true,
+      "title": "Open ODS files in the Quds grid with a typed fallback",
+      "head": "integrate/ods-grid-20261115",
+      "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "base_sha": "3fc52c8ad50c1218825ffb732338ad0a9806aead",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 124,
+      "state": "closed",
+      "merged": true,
+      "title": "Edit macro-enabled and template spreadsheets",
+      "head": "feat/xlsm-edit",
+      "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "base_sha": "3fc52c8ad50c1218825ffb732338ad0a9806aead",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 123,
+      "state": "closed",
+      "merged": true,
+      "title": "Sync Quds 6d7c696 and cover the new underline styles",
+      "head": "integrate/quds-6d7c696-20261115",
+      "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "base_sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 122,
+      "state": "closed",
+      "merged": true,
+      "title": "Show ODS in the Quds grid with a typed table fallback",
+      "head": "fix/ods-grid-main",
+      "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "base_sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 121,
+      "state": "closed",
+      "merged": true,
+      "title": "Extend bundled VeraCrypt and TrueCrypt browsing with PIM, keyfiles and native Argon2id",
+      "head": "feature/veracrypt-compatibility-20261115",
+      "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "base_sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 120,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS date styles and comments",
+      "head": "fix/ods-date-styles",
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "base_sha": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 119,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor ODS style/date fixes and live ODF corpus coverage",
+      "head": "integrate/ods-style-20261115",
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "base_sha": "d1bf2e41652c15025ae1da0653d308fb4e00e2d3",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 118,
+      "state": "closed",
+      "merged": true,
+      "title": "Preserve ODS cell positions and cover ODS copy saves",
+      "head": "integrate/ods-fixes-20261115",
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "base_sha": "861d63f6a8391fcffbd2a969eaea4e77ddddb148",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 117,
+      "state": "closed",
+      "merged": true,
+      "title": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+      "head": "integrate/odf-integration-20261115",
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "base_sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 116,
+      "state": "closed",
+      "merged": false,
+      "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+      "head": "fix/odf-final",
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "base_sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 115,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor host-specific selection golden references",
+      "head": "integrate/office-goldens-20261115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "base_sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 114,
+      "state": "closed",
+      "merged": true,
+      "title": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "head": "integrate/legacy-xls-preview-20261115",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "base_sha": "8bf1a11fead48a7466c94495d90a28ebf3697323",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 113,
+      "state": "closed",
+      "merged": false,
+      "title": "Integrate the new document workspace and spreadsheet wrap-text",
+      "head": "integrate/consistency-20261115",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "base_sha": "5b7daacc3eaaed09670c105627af420caac5ebe2",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 112,
+      "state": "closed",
+      "merged": true,
+      "title": "Vendor the current Quds Word fixes, including inline pictures",
+      "head": "integrate/word-inline-pictures-20261115",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "base_sha": "fa030137fd203467d5560b68b767019194b95ebd",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 111,
+      "state": "closed",
+      "merged": true,
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "head": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "base_sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 110,
+      "state": "closed",
+      "merged": true,
+      "title": "Add draft-safe worksheet navigation and complete host validation",
+      "head": "codex/office-recovery-20261115",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "base_sha": "8a24763fb4b2c720ff6b617cebbea8971191bdca",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 109,
+      "state": "closed",
+      "merged": true,
+      "title": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+      "head": "fix/legacy-doc-recover",
+      "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "base_sha": "8a24763fb4b2c720ff6b617cebbea8971191bdca",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 108,
+      "state": "closed",
+      "merged": true,
+      "title": "Open legacy .xls workbooks as XLSX",
+      "head": "fix/excel-legacy-xls",
+      "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "base_sha": "8a24763fb4b2c720ff6b617cebbea8971191bdca",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 107,
+      "state": "closed",
+      "merged": true,
+      "title": "feat(storage): add reviewed S3 block reuse to queued copies",
+      "head": "integration/storage-delta-20261114",
+      "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "base_sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 106,
+      "state": "closed",
+      "merged": true,
+      "title": "Add shared queued HTTP payload limits for G29",
+      "head": "integration/storage-bandwidth-20261114",
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "base_sha": "022ac6c91ccaa86f1d36a4d8cc1b20733037a67d",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 105,
+      "state": "closed",
+      "merged": true,
+      "title": "Preserve comparison backpressure and prompt read errors",
+      "head": "integration/storage-binary-20261114",
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "base_sha": "6ecf25262aaa4dd2bc9ea59a396dc708c2048948",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 104,
+      "state": "closed",
+      "merged": true,
+      "title": "Bind binary comparison navigation to verified bounded snapshots",
+      "head": "integration/storage-binary-20261114",
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "base_sha": "9e025c440b4d9a247844bcf4d6edf08a34aeeb30",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 103,
+      "state": "closed",
+      "merged": false,
+      "title": "Add bounded read-only NTFS filesystem image browsing",
+      "head": "integration/storage-ntfs-20261114",
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "base_sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 102,
+      "state": "closed",
+      "merged": true,
+      "title": "Add bounded read-only ext filesystem image browsing",
+      "head": "integration/storage-ext-20261114",
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "base_sha": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 101,
+      "state": "closed",
+      "merged": true,
+      "title": "Add FAT/UDF image browsing, LZFSE, ZIP recovery and partition tools",
+      "head": "integration/storage-capabilities-20261114",
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "base_sha": "14e022eb51c417803a1913131e78912a8a19b3be",
+      "included_in_ancestry": true
+    },
+    {
+      "number": 100,
+      "state": "closed",
+      "merged": true,
+      "title": "Integrate all saved branch work and extend archive/container support",
+      "head": "integration/archive-containers-20261113",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "base_sha": "e13fb727e4cfe785219c1ef31206d2fbefa8d6c9",
+      "included_in_ancestry": true
+    }
+  ],
+  "method": "Actual Zotero merge; history-only parents for eight exact whole-tree squash equivalents and superseded UTF16 PR143, whose implementation and tests match current sources. Current Quds pin retained. No CI results awaited."
+}
