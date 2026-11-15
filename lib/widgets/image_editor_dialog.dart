@@ -839,11 +839,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   }
 
   void _showMessage(String key, {bool error = false, String? details}) {
+    final label = context.imageTr(key);
+    final message = details == null ? label : '$label: $details';
     _messenger.currentState?.showSnackBar(
       SnackBar(
-        content: Text(
-          '${context.imageTr(key)}${details == null ? '' : ': $details'}',
-        ),
+        content: Text(message),
         backgroundColor: error ? Theme.of(context).colorScheme.error : null,
       ),
     );
