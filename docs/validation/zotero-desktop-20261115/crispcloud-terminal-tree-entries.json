@@ -1,0 +1,387 @@
+{
+  "repository_full_name": "CrispStrobe/CrispCloud",
+  "base_tree_sha": "a29518fdb925fbad26b03fadb403b436f34f523b",
+  "first_parent_sha": "32abdd0f9219486be60d82f97d79d0040e1fee2b",
+  "second_parent_sha": "064bd3cec06477f4b58c5afdce2c228c940cb316",
+  "main_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+  "all_tree_responses_complete": true,
+  "main_leaf_count": 12098,
+  "terminal_changed_count": 31,
+  "zotero_changed_count": 42,
+  "overlap": [
+    "docs/terminal-parity.md"
+  ],
+  "overlap_resolution": "Use terminal branch's current docs/terminal-parity.md; retained terminal implementation and test validation record supersedes early documentation copied into Zotero branch.",
+  "no_production_overlap": true,
+  "preserve_main_check": "Both branch heads descend from current main. Applying terminal-vs-main leaf changes onto full Zotero tree retains all other main/Zotero leaves. No deletion entries.",
+  "entries": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2965bfcaf71e1dffec83d026ab3b931599262456"
+    },
+    {
+      "path": "docs/terminal-parity.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d09ddbed3d9fd9b83db46da57877fd41dc31dd45"
+    },
+    {
+      "path": "docs/terminal.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bf4b7770e89e25ab24821cf66a23a4a746d4451"
+    },
+    {
+      "path": "lib/l10n/screen_terminal_strings.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "24f4a1550e91ed08eb1a20ab7c9e99ab20068796"
+    },
+    {
+      "path": "lib/l10n/terminal_controls_strings.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0935b5b40247eef1dbd73945fa8afc68c8a5f55d"
+    },
+    {
+      "path": "lib/l10n/terminal_search_strings.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2eabbdd9a337e52a688e72f7745298f443c0129"
+    },
+    {
+      "path": "lib/models/screen_session_options.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e13f79159f14876917a20fb10136ea876c51c73"
+    },
+    {
+      "path": "lib/models/ssh_terminal_config.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cd559b31d835822c41700006ab18ba589ddcf175"
+    },
+    {
+      "path": "lib/models/ssh_terminal_profile.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "21b1302b0fd391c0e7ebdb3d7d14df9ff8b79b25"
+    },
+    {
+      "path": "lib/providers/ssh_terminal_profiles_provider.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25cbba9ca6e2985f21d607e96995bf911d9eb112"
+    },
+    {
+      "path": "lib/providers/ssh_terminal_provider.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a36fa1cf832c6cee74f2f878cd17654f7ee1d2a0"
+    },
+    {
+      "path": "lib/services/ssh_terminal_profiles.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f28a8029becef29133479f501463f183f2dbb83d"
+    },
+    {
+      "path": "lib/services/ssh_terminal_service.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b17b4e41384eaac041e1d821e02994a4e51a11a"
+    },
+    {
+      "path": "lib/services/terminal_search.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f184e2b8aed0c16e8ac9c856bdd43dedddb49581"
+    },
+    {
+      "path": "lib/widgets/ssh_terminal_connect_dialog.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e63e02e971c6a4c9d3ca427267a61a4d0688feae"
+    },
+    {
+      "path": "lib/widgets/ssh_terminal_profiles_dialog.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e105b4584864b448199f34ee6805ac1499011693"
+    },
+    {
+      "path": "lib/widgets/terminal_panel.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4eead907985df35a747487773c79b5880244a72"
+    },
+    {
+      "path": "lib/widgets/terminal_search_bar.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "54de3aede6d9d137e2fcde1156796156ac337adf"
+    },
+    {
+      "path": "lib/widgets/terminal_tabs.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57cfd09c4d3ff0f473059c136463ae7ad8bd8329"
+    },
+    {
+      "path": "test/screen_session_command_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d9adb836861434a3833980f4a2a3bdb96fe1a2b1"
+    },
+    {
+      "path": "test/screen_session_options_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aaa70023473a10af2d3127995b6e189a138d4874"
+    },
+    {
+      "path": "test/ssh_terminal_connect_dialog_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ec5dce70bdeddd0291c3d6a3569c2df47ffca78"
+    },
+    {
+      "path": "test/ssh_terminal_profiles_dialog_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "875abd0f396b9a731bec18e94d6c3ba0501e4e31"
+    },
+    {
+      "path": "test/ssh_terminal_profiles_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "93e39346f95810b2752c2fd52df576c1507d7890"
+    },
+    {
+      "path": "test/ssh_terminal_reconnect_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7b2dbf539542cc9e235a41573670925612653827"
+    },
+    {
+      "path": "test/ssh_terminal_transport_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50e0b9dfe56669f6b3de61968a1170984c09b2e3"
+    },
+    {
+      "path": "test/terminal_panel_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5ad2a4bda1bcf4b5205ecf3b772d15a1a200a59"
+    },
+    {
+      "path": "test/terminal_search_bar_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f6249be7009ecacb2dd84676ccd9cfff68677009"
+    },
+    {
+      "path": "test/terminal_search_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fc7241615d91bab9f7b7bf103e65c87f52092eaa"
+    },
+    {
+      "path": "test/terminal_tabs_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "204345305273af5169e00ff3190db273cf09503e"
+    },
+    {
+      "path": "test/terminal_widget_test.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ce8fa0ca9e14d4bca4a1d1d4e0150121b3f4e4f8"
+    }
+  ],
+  "changes": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "status": "modified",
+      "base_blob": "7618b91052734b0ff5880a3d7b364e72bd18a766",
+      "terminal_blob": "2965bfcaf71e1dffec83d026ab3b931599262456",
+      "zotero_blob": "7618b91052734b0ff5880a3d7b364e72bd18a766"
+    },
+    {
+      "path": "docs/terminal-parity.md",
+      "status": "added",
+      "terminal_blob": "d09ddbed3d9fd9b83db46da57877fd41dc31dd45",
+      "zotero_blob": "db005010f491d8c3504044c7734812d26f2caeb2"
+    },
+    {
+      "path": "docs/terminal.md",
+      "status": "modified",
+      "base_blob": "d7b48208a9b0ac144f89eeca6a03e6c6ef82927a",
+      "terminal_blob": "4bf4b7770e89e25ab24821cf66a23a4a746d4451",
+      "zotero_blob": "d7b48208a9b0ac144f89eeca6a03e6c6ef82927a"
+    },
+    {
+      "path": "lib/l10n/screen_terminal_strings.dart",
+      "status": "added",
+      "terminal_blob": "24f4a1550e91ed08eb1a20ab7c9e99ab20068796"
+    },
+    {
+      "path": "lib/l10n/terminal_controls_strings.dart",
+      "status": "added",
+      "terminal_blob": "0935b5b40247eef1dbd73945fa8afc68c8a5f55d"
+    },
+    {
+      "path": "lib/l10n/terminal_search_strings.dart",
+      "status": "added",
+      "terminal_blob": "f2eabbdd9a337e52a688e72f7745298f443c0129"
+    },
+    {
+      "path": "lib/models/screen_session_options.dart",
+      "status": "added",
+      "terminal_blob": "6e13f79159f14876917a20fb10136ea876c51c73"
+    },
+    {
+      "path": "lib/models/ssh_terminal_config.dart",
+      "status": "modified",
+      "base_blob": "ed91f668bd815b6d035b442f1c0125557c4d9db3",
+      "terminal_blob": "cd559b31d835822c41700006ab18ba589ddcf175",
+      "zotero_blob": "ed91f668bd815b6d035b442f1c0125557c4d9db3"
+    },
+    {
+      "path": "lib/models/ssh_terminal_profile.dart",
+      "status": "added",
+      "terminal_blob": "21b1302b0fd391c0e7ebdb3d7d14df9ff8b79b25"
+    },
+    {
+      "path": "lib/providers/ssh_terminal_profiles_provider.dart",
+      "status": "added",
+      "terminal_blob": "25cbba9ca6e2985f21d607e96995bf911d9eb112"
+    },
+    {
+      "path": "lib/providers/ssh_terminal_provider.dart",
+      "status": "modified",
+      "base_blob": "d9641af21fa1869c697a1322d53043509615355a",
+      "terminal_blob": "a36fa1cf832c6cee74f2f878cd17654f7ee1d2a0",
+      "zotero_blob": "d9641af21fa1869c697a1322d53043509615355a"
+    },
+    {
+      "path": "lib/services/ssh_terminal_profiles.dart",
+      "status": "added",
+      "terminal_blob": "f28a8029becef29133479f501463f183f2dbb83d"
+    },
+    {
+      "path": "lib/services/ssh_terminal_service.dart",
+      "status": "modified",
+      "base_blob": "ff317400d83bdf7115651a355eaf179add99addb",
+      "terminal_blob": "2b17b4e41384eaac041e1d821e02994a4e51a11a",
+      "zotero_blob": "ff317400d83bdf7115651a355eaf179add99addb"
+    },
+    {
+      "path": "lib/services/terminal_search.dart",
+      "status": "added",
+      "terminal_blob": "f184e2b8aed0c16e8ac9c856bdd43dedddb49581"
+    },
+    {
+      "path": "lib/widgets/ssh_terminal_connect_dialog.dart",
+      "status": "modified",
+      "base_blob": "e4baed0be92c118330f672e7f18a8f9ac1c42b61",
+      "terminal_blob": "e63e02e971c6a4c9d3ca427267a61a4d0688feae",
+      "zotero_blob": "e4baed0be92c118330f672e7f18a8f9ac1c42b61"
+    },
+    {
+      "path": "lib/widgets/ssh_terminal_profiles_dialog.dart",
+      "status": "added",
+      "terminal_blob": "e105b4584864b448199f34ee6805ac1499011693"
+    },
+    {
+      "path": "lib/widgets/terminal_panel.dart",
+      "status": "modified",
+      "base_blob": "c489822773e9a10e800f69234e5f28663bee7d87",
+      "terminal_blob": "d4eead907985df35a747487773c79b5880244a72",
+      "zotero_blob": "c489822773e9a10e800f69234e5f28663bee7d87"
+    },
+    {
+      "path": "lib/widgets/terminal_search_bar.dart",
+      "status": "added",
+      "terminal_blob": "54de3aede6d9d137e2fcde1156796156ac337adf"
+    },
+    {
+      "path": "lib/widgets/terminal_tabs.dart",
+      "status": "added",
+      "terminal_blob": "57cfd09c4d3ff0f473059c136463ae7ad8bd8329"
+    },
+    {
+      "path": "test/screen_session_command_test.dart",
+      "status": "added",
+      "terminal_blob": "d9adb836861434a3833980f4a2a3bdb96fe1a2b1"
+    },
+    {
+      "path": "test/screen_session_options_test.dart",
+      "status": "added",
+      "terminal_blob": "aaa70023473a10af2d3127995b6e189a138d4874"
+    },
+    {
+      "path": "test/ssh_terminal_connect_dialog_test.dart",
+      "status": "modified",
+      "base_blob": "65fc6fb0fd08a73f8189193636345adbfd8de4a6",
+      "terminal_blob": "9ec5dce70bdeddd0291c3d6a3569c2df47ffca78",
+      "zotero_blob": "65fc6fb0fd08a73f8189193636345adbfd8de4a6"
+    },
+    {
+      "path": "test/ssh_terminal_profiles_dialog_test.dart",
+      "status": "added",
+      "terminal_blob": "875abd0f396b9a731bec18e94d6c3ba0501e4e31"
+    },
+    {
+      "path": "test/ssh_terminal_profiles_test.dart",
+      "status": "added",
+      "terminal_blob": "93e39346f95810b2752c2fd52df576c1507d7890"
+    },
+    {
+      "path": "test/ssh_terminal_reconnect_test.dart",
+      "status": "modified",
+      "base_blob": "a7dca4e05d49e44d7c57d0951478a0e22d4dd6a5",
+      "terminal_blob": "7b2dbf539542cc9e235a41573670925612653827",
+      "zotero_blob": "a7dca4e05d49e44d7c57d0951478a0e22d4dd6a5"
+    },
+    {
+      "path": "test/ssh_terminal_transport_test.dart",
+      "status": "modified",
+      "base_blob": "21b980d89896f790a11af1299946b27c2ae9edea",
+      "terminal_blob": "50e0b9dfe56669f6b3de61968a1170984c09b2e3",
+      "zotero_blob": "21b980d89896f790a11af1299946b27c2ae9edea"
+    },
+    {
+      "path": "test/terminal_panel_test.dart",
+      "status": "modified",
+      "base_blob": "5581a11c3ac5950dfb130e20ee395e6721ef3073",
+      "terminal_blob": "c5ad2a4bda1bcf4b5205ecf3b772d15a1a200a59",
+      "zotero_blob": "5581a11c3ac5950dfb130e20ee395e6721ef3073"
+    },
+    {
+      "path": "test/terminal_search_bar_test.dart",
+      "status": "added",
+      "terminal_blob": "f6249be7009ecacb2dd84676ccd9cfff68677009"
+    },
+    {
+      "path": "test/terminal_search_test.dart",
+      "status": "added",
+      "terminal_blob": "fc7241615d91bab9f7b7bf103e65c87f52092eaa"
+    },
+    {
+      "path": "test/terminal_tabs_test.dart",
+      "status": "added",
+      "terminal_blob": "204345305273af5169e00ff3190db273cf09503e"
+    },
+    {
+      "path": "test/terminal_widget_test.dart",
+      "status": "modified",
+      "base_blob": "ffc5a58e0b2e73c104a2e7fd2735b1c3126e74c9",
+      "terminal_blob": "ce8fa0ca9e14d4bca4a1d1d4e0150121b3f4e4f8",
+      "zotero_blob": "ffc5a58e0b2e73c104a2e7fd2735b1c3126e74c9"
+    }
+  ]
+}

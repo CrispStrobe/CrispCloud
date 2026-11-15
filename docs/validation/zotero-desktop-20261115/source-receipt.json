@@ -1,0 +1,23 @@
+{
+  "created_at_utc": "2026-11-15T20:02:27Z",
+  "files": [
+    {
+      "canonical_path": "/workspace/scratch/fc55a57aa1fd/quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "tested_path": "/workspace/scratch/fc55a57aa1fd/zotero-core-validation/lib/src/zotero/zotero_client.dart",
+      "sha256": "729b9d431b05d559e831699e761752459ea29c27caf940e9844d026d5ffdf897",
+      "unchanged_copy": true
+    },
+    {
+      "canonical_path": "/workspace/scratch/fc55a57aa1fd/quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+      "tested_path": "/workspace/scratch/fc55a57aa1fd/zotero-core-validation/lib/src/zotero/zotero_models.dart",
+      "sha256": "172663c7fef76d0fa5a1f9977c82c7df83500e9a15f1599ee9ca79ab80c3357b",
+      "unchanged_copy": true
+    },
+    {
+      "canonical_path": "/workspace/scratch/fc55a57aa1fd/quds_office_suite/packages/quds_office_engine/test/zotero_client_test.dart",
+      "tested_path": "/workspace/scratch/fc55a57aa1fd/zotero-core-validation/test/zotero_client_test.dart",
+      "sha256": "8502e4921897cfa3f9c89170f64dd6e60e97e7eecba886935bf6db64fb76ad68",
+      "unchanged_copy": true
+    }
+  ]
+}

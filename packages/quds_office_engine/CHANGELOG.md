@@ -4,6 +4,11 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add a credential-free desktop Zotero API client with fixed loopback routing,
+  API version checks, database identity pinning, bounded pagination and local
+  CSL response normalization. Separate local request aliases from persistent
+  numeric or unsynced item identities; never create `/users/0` citation URIs.
+
 - Add Zotero CSL citation and bibliography field inspection, bounded JSON
   metadata, embedded CSL items, explicit cached-text insertion/editing, and
   deliberate unlinking. Write native complex ADDIN fields and preserve rich

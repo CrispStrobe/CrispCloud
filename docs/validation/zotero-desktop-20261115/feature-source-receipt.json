@@ -1,0 +1,100 @@
+{
+  "quds_code_commit": "1cc4d251ebeb3e0cce205805e9183396da0c0df4",
+  "crispcloud_code_commit": "3c4cd0e24ab36f4fd88363cbc8521455bda811c6",
+  "terminal_followup_integration": "a8379652a775956fccec6ffba09cbb1c6b213793",
+  "source_files": {
+    "quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_client.dart": {
+      "sha256": "729b9d431b05d559e831699e761752459ea29c27caf940e9844d026d5ffdf897",
+      "git_blob_sha1": "520ceb361c1ce83a93424a332628ae49c17c0498",
+      "bytes": 23464
+    },
+    "quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_models.dart": {
+      "sha256": "172663c7fef76d0fa5a1f9977c82c7df83500e9a15f1599ee9ca79ab80c3357b",
+      "git_blob_sha1": "e7686d0ed50900abceee6cc3a3b4da4648d858a9",
+      "bytes": 6444
+    },
+    "quds_office_suite/packages/quds_office_engine/test/zotero_client_test.dart": {
+      "sha256": "8502e4921897cfa3f9c89170f64dd6e60e97e7eecba886935bf6db64fb76ad68",
+      "git_blob_sha1": "2d3865b659402ee316092c76e6abc719baaa04ac",
+      "bytes": 34065
+    },
+    "quds_office_suite/packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart": {
+      "sha256": "d5efd9595c8b25913c0326bc8a3d80843a9900807db5833e3a09b219d8479b65",
+      "git_blob_sha1": "567360a3ae54bb7afa4701142797a9631a58a407",
+      "bytes": 61021
+    },
+    "quds_office_suite/packages/quds_office_editor/lib/src/embed/word_zotero_format.dart": {
+      "sha256": "643963b733970bc0734fe3904434fb546dcd34da7b7968a3802f89af8e001861",
+      "git_blob_sha1": "ffc32f5e7fbd6a0af27cf51d2588652e95dfb120",
+      "bytes": 9226
+    },
+    "quds_office_suite/packages/quds_office_editor/test/word_zotero_dialog_test.dart": {
+      "sha256": "1dc21c5f079b7da54b140b76cdeaeccf66c82df1ccf1664e873473e245654161",
+      "git_blob_sha1": "1b6731ae3f1fd6acf521ce68a6e238ff69b0452e",
+      "bytes": 24299
+    },
+    "quds_office_suite/packages/quds_office_editor/test/word_zotero_format_test.dart": {
+      "sha256": "ab3ceafd76c03dbbb01ae8b1202e023c46348433d2dd92495b0f86b9493fda14",
+      "git_blob_sha1": "b471105e74b3bc873efdad08e359d0e302a9076e",
+      "bytes": 15227
+    },
+    "quds_office_suite/packages/quds_office_editor/example/lib/studio_zotero.dart": {
+      "sha256": "9c5cd8b0c9ada6f2ac9b90365e48c512fa1e274c3672f4b1f07b6e156cdffd1f",
+      "git_blob_sha1": "a86e25147301f82bd012785b1be0372273b523ba",
+      "bytes": 3509
+    },
+    "quds_office_suite/packages/quds_office_editor/example/lib/studio_zotero_local_io.dart": {
+      "sha256": "663f326abc531c917d48eb02f41579777e2d2fd6c15c480b73950876e09b3d3a",
+      "git_blob_sha1": "8a99108c6e82f68c1914793f37ef58b55061c58c",
+      "bytes": 307
+    },
+    "quds_office_suite/packages/quds_office_editor/example/lib/studio_zotero_local_stub.dart": {
+      "sha256": "4ba8a13b674d397584924030df9d06be6a63fd0a4473a0ce53300b73f1ce6ef7",
+      "git_blob_sha1": "e8e714667c894b1f3bf094b81f1808b7083345d3",
+      "bytes": 213
+    },
+    "quds_office_suite/packages/quds_office_editor/example/lib/suite_workspace.dart": {
+      "sha256": "fbed2ebce17494169d5fefef3eb47c7abeb174ae43da400d3fd2d3bbfd52b8b5",
+      "git_blob_sha1": "13e18711f80609db0a267ec6325b26687a5d2d3d",
+      "bytes": 304549
+    },
+    "quds_office_suite/packages/quds_office_engine/CHANGELOG.md": {
+      "sha256": "6c51bf955a65e4d02943f1c453491ea2f2590c095a0b29afd329fc6211dc9c4d",
+      "git_blob_sha1": "05db50e60b147d405e5b894e30529dbf5d3a104f",
+      "bytes": 44483
+    },
+    "quds_office_suite/packages/quds_office_editor/CHANGELOG.md": {
+      "sha256": "2b3bebfbbd7018f06ef42ff5baadc2d078f91808a32c5b7c9bc74a03b4934008",
+      "git_blob_sha1": "27fda2c7bfee634da113d461c0cd3830a26145cb",
+      "bytes": 26245
+    },
+    "CrispCloud/lib/services/office_zotero.dart": {
+      "sha256": "a359e56bedeef51383713df1cd5fa66b06712bb9a82f398e6196eddb2845ccf0",
+      "git_blob_sha1": "796cecf1270c0417aee2917c57db4ed3245322dd",
+      "bytes": 3023
+    },
+    "CrispCloud/lib/services/office_zotero_transport.dart": {
+      "sha256": "d5916f5524542f15f8efbb9cae9dc8f8eb3c931b01d16422f8cc2b3f8761d394",
+      "git_blob_sha1": "5516534131a311aa65ba32abaf981e0a00f9e0e5",
+      "bytes": 6441
+    },
+    "CrispCloud/lib/widgets/office_editor_dialog.dart": {
+      "sha256": "b7c73e29ac4e3e1026d2c45d9fd48fd5944cfe61c751805670797d09fbe1a5ab",
+      "git_blob_sha1": "a6dab48b8e57d9b4d20c70950cf906dca7c37265",
+      "bytes": 30472
+    },
+    "CrispCloud/test/office_zotero_test.dart": {
+      "sha256": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+      "git_blob_sha1": "2d433076fd2e2e50c3a215f385cc0a7b8ad59530",
+      "bytes": 19986
+    }
+  },
+  "syntax_check": {
+    "tool": "official Dart3.13.7 format --output=none",
+    "files": 12,
+    "result": "All12 files parsed. One original Studio formatting difference was reported but no source was changed.",
+    "log": "ui-syntax.log",
+    "scope": "Syntax only, not Flutter type analysis or execution."
+  },
+  "actions_awaited": false
+}

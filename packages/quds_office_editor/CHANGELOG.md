@@ -4,6 +4,11 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Offer explicit online/desktop library selection in native hosts. Browse and
+  cite local Zotero sources without an API key, preserve unsynced CSL links,
+  and label sources without persistent identities as offline embedded records.
+  Studio uses a direct loopback client; hosts opt in via `localTransport`.
+
 - Add a shared Zotero references workspace: personal/group libraries, collection
   browsing and search, paged results, linked citation clusters, source locators,
   offline CSL JSON import/export, and complete selected-library bibliographies.
@@ -11,7 +16,7 @@ All notable changes to `quds_office_editor` are documented here.
   store. Citation editing, refresh and unlink participate in undo/redo and save
   revisions; asynchronous writes reject a changed document or caret. Basic
   author-year formatting is explicit, with no claim to a full CSL processor or
-  Zotero desktop integration. Rich/unsupported native fields remain preserved.
+  the native Zotero HTTP citing adapter. Rich/unsupported native fields remain preserved.
 
 - Preserve explicit spreadsheet font-color intent through undo/redo and cell
   snapshots. Setting the currently resolved theme color creates a direct color;

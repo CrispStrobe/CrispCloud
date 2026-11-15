@@ -1,0 +1,14 @@
+[
+  {
+    "path": ".dart_tool/zotero_client_test.dill",
+    "size": 6721824,
+    "sha256": "50b0fb0bf4615862854fe43aafbc729030a9764386e6350f2f33764b72d614a4",
+    "removed_after_successful_test_for_space": true
+  },
+  {
+    "path": ".dart_tool/host_transport_test.dill",
+    "size": 6877424,
+    "sha256": "bd811d33ff90d3c08e64471f20c2e23728290f57cf223cafdd4d8db1eea3fd52",
+    "removed_after_successful_test_for_space": true
+  }
+]

@@ -1,0 +1,187 @@
+{
+  "repository_full_name": "CrispStrobe/quds_office_suite",
+  "audited_at": "2026-11-15T19:56:48.483Z",
+  "main_sha": "c210315bee537776b556ae9885e907483b6df7bd",
+  "zotero_sha": "1d9552697d2850cbc3b5a7f73daf44a442c4901b",
+  "main_is_ancestor_of_zotero": {
+    "status": "ahead",
+    "ahead_by": 14,
+    "behind_by": 0,
+    "merge_base": "c210315bee537776b556ae9885e907483b6df7bd"
+  },
+  "branches": [
+    {
+      "name": "codex/zotero-support-20261115",
+      "sha": "1d9552697d2850cbc3b5a7f73daf44a442c4901b"
+    },
+    {
+      "name": "feat/conditional-dxf",
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c"
+    },
+    {
+      "name": "feat/conditional-operators",
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf"
+    },
+    {
+      "name": "feat/conditional-text",
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da"
+    },
+    {
+      "name": "feat/ods-conditional",
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c"
+    },
+    {
+      "name": "feat/ods-default-geometry",
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9"
+    },
+    {
+      "name": "feat/ods-default-style",
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736"
+    },
+    {
+      "name": "feat/ods-images",
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080"
+    },
+    {
+      "name": "feat/ods-validations",
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15"
+    },
+    {
+      "name": "feat/sheet-hidden-sheets",
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18"
+    },
+    {
+      "name": "feat/sheet-hidden-state",
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4"
+    },
+    {
+      "name": "fix/utf16-custom-xml",
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b"
+    },
+    {
+      "name": "main",
+      "sha": "c210315bee537776b556ae9885e907483b6df7bd"
+    }
+  ],
+  "ancestor_checks": [
+    {
+      "branch": "feat/ods-default-geometry",
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 15,
+      "merge_base": "912f26f21446ef9bdbf4f542535438dae0ded9a9"
+    },
+    {
+      "branch": "feat/ods-default-style",
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 16,
+      "merge_base": "49b447324159595c59e64d8425b54a09f79ec736"
+    },
+    {
+      "branch": "feat/ods-images",
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 24,
+      "merge_base": "7fe296e29e2e1b173580f6854507fc060cb4f080"
+    },
+    {
+      "branch": "feat/sheet-hidden-state",
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 14,
+      "merge_base": "46850ae47e0241733750decb22417a0150e4b0e4"
+    },
+    {
+      "branch": "fix/utf16-custom-xml",
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 16,
+      "merge_base": "09a05d7d60d2a2e1d2547487ad4545c50472834b"
+    }
+  ],
+  "squash_tree_checks": [
+    {
+      "branch": "feat/conditional-dxf",
+      "pr": 37,
+      "head_sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "head_tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7",
+      "merged_sha": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+      "merged_tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7",
+      "equal": true
+    },
+    {
+      "branch": "feat/conditional-operators",
+      "pr": 36,
+      "head_sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "head_tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c",
+      "merged_sha": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+      "merged_tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c",
+      "equal": true
+    },
+    {
+      "branch": "feat/conditional-text",
+      "pr": 38,
+      "head_sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "head_tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5",
+      "merged_sha": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+      "merged_tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5",
+      "equal": true
+    },
+    {
+      "branch": "feat/ods-conditional",
+      "pr": 35,
+      "head_sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "head_tree": "47d4ae8a5d5924172d69091459b200a3a989296c",
+      "merged_sha": "1d7fee380def59d5a766cab106e519952d5c3292",
+      "merged_tree": "cbe82f4a6fe8d4f4e889d981929bedb7b54d894e",
+      "equal": false
+    },
+    {
+      "branch": "feat/ods-validations",
+      "pr": 39,
+      "head_sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "head_tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5",
+      "merged_sha": "c210315bee537776b556ae9885e907483b6df7bd",
+      "merged_tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5",
+      "equal": true
+    },
+    {
+      "branch": "feat/sheet-hidden-sheets",
+      "pr": 33,
+      "head_sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "head_tree": "a13b612fdd31c9bc54d5f8bb05c92867e92d541d",
+      "merged_sha": "3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa",
+      "merged_tree": "a13b612fdd31c9bc54d5f8bb05c92867e92d541d",
+      "equal": true
+    }
+  ],
+  "ods_conditional_exception": {
+    "note": "PR #35 branch predates concurrent UTF-16 PR #34. Its squash tree differs from branch only in two bibliography files, which exactly match the UTF-16 fix and current main. All three conditional-format changed files match the squash merge. No missing feature content.",
+    "differences": [
+      {
+        "path": "packages/quds_office_engine/lib/src/word/serial/word_bibliography_io.dart",
+        "branch_blob": "ebc9a615d9e1af8b3d7b868b8fda665c24553059",
+        "merged_blob": "43e306e64efa02413a32a11ffda506ca92d4213d",
+        "utf16_blob": "43e306e64efa02413a32a11ffda506ca92d4213d",
+        "main_blob": "43e306e64efa02413a32a11ffda506ca92d4213d",
+        "merge_retains_utf16": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_bibliography_fidelity_test.dart",
+        "branch_blob": "bbc9220476a586ceafb93104604bf3158789134d",
+        "merged_blob": "8aba55937e96cfd2832f3a65eea333d5e44c8a6a",
+        "utf16_blob": "8aba55937e96cfd2832f3a65eea333d5e44c8a6a",
+        "main_blob": "8aba55937e96cfd2832f3a65eea333d5e44c8a6a",
+        "merge_retains_utf16": true
+      }
+    ]
+  },
+  "conclusion": "Five true ancestors, five full-tree-identical squash merges, one feature-equivalent squash merge retaining concurrent UTF-16 fix. Current main fully included in Zotero head. No additional implementation changes require integration.",
+  "actions_waited": false
+}

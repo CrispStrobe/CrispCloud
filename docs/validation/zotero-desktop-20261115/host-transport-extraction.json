@@ -1,0 +1,14 @@
+{
+  "scope": "Exact unchanged production office_zotero_transport.dart compiled with its genuine http dependency and the canonical Zotero core client. The host test transport group, _Client class and request helpers are copied verbatim; imports use package:test and exclude unrelated Flutter controller and credential tests. This does not compile the host widget/provider graph or run native Flutter acceptance.",
+  "production_source": "CrispCloud/lib/services/office_zotero_transport.dart",
+  "production_sha256": "d5916f5524542f15f8efbb9cae9dc8f8eb3c931b01d16422f8cc2b3f8761d394",
+  "staged_source_sha256": "d5916f5524542f15f8efbb9cae9dc8f8eb3c931b01d16422f8cc2b3f8761d394",
+  "test_source": "CrispCloud/test/office_zotero_test.dart",
+  "test_source_sha256": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+  "test_harness_sha256": "d05ff0419575312f610c926748e7962f47017573e106fbfc21cca64a1ffc8236",
+  "verbatim_test_sections": {
+    "client_sha256": "35065e201f0b9b75e0e85e176679f61a2d70b2fd5c54fc0a701f3b3f7c3f1242",
+    "request_helpers_sha256": "c57cc022fc1d6cd35d4f898f5bba7835f8a5b4d8a77a38035bba34c9aa05e8ca",
+    "transport_group_sha256": "4f2f6d27d0fbf49287f6502238ea0c16f699400fe13d70679969d528765dbb0b"
+  }
+}

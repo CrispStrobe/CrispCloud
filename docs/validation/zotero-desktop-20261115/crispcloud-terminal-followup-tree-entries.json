@@ -1,0 +1,59 @@
+{
+  "repository_full_name": "CrispStrobe/CrispCloud",
+  "base_tree_sha": "51e71da04a8d3dc2db8dab83f0c117093ae7dc0d",
+  "first_parent_sha": "3c4cd0e24ab36f4fd88363cbc8521455bda811c6",
+  "second_parent_sha": "b0b3334b2160ee7d43378d730803f32781a53968",
+  "previous_terminal_head": "064bd3cec06477f4b58c5afdce2c228c940cb316",
+  "main_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+  "git_merge_base": "32abdd0f9219486be60d82f97d79d0040e1fee2b",
+  "equivalent_merge_trees": {
+    "terminal_merge_commit": "b6ca0b1f33122098078ce1be7050a8265fbdccfd",
+    "zotero_merge_commit": "670c4628008dd6e98775dfcf08ddf917efdd81ca",
+    "both_tree_sha": "b4211c5ffa50f9050b4ec2e85442c718ea0cee6c"
+  },
+  "terminalNewChangedPaths": [
+    "docs/validation/terminal-20261115/integration.json",
+    "lib/services/terminal_session.dart",
+    "lib/services/terminal_shell_integration.dart"
+  ],
+  "zoteroChangedPaths": [
+    "lib/services/office_zotero.dart",
+    "lib/services/office_zotero_transport.dart",
+    "lib/widgets/office_editor_dialog.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+    "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+    "packages/quds_office_editor/test/word_zotero_format_test.dart",
+    "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+    "packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+    "packages/quds_office_engine/test/zotero_client_test.dart",
+    "test/office_zotero_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "overlap": [],
+  "terminalSessionPriorBlob": "b46b64b5f9dd95e59b103490027e40103d442cd9",
+  "terminalSessionCurrentZoteroBlob": "b46b64b5f9dd95e59b103490027e40103d442cd9",
+  "entries": [
+    {
+      "path": "docs/validation/terminal-20261115/integration.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8271e9d6f11142f2ad38ecacf988d8aa2f5418e1"
+    },
+    {
+      "path": "lib/services/terminal_session.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70f60863b0f7d731cd43d02867176f030b4c0665"
+    },
+    {
+      "path": "lib/services/terminal_shell_integration.dart",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f35299e9af0ee1b361356a4a2a22356c4c814b12"
+    }
+  ],
+  "preservation": "New terminal merge b6ca and earlier Zotero merge670c have exactly equal full tree hashes. Terminal b0b3334 modifies/adds only these3 paths; current Zotero3c4 modifies12 wholly disjoint paths from the equivalent tree. Build on current Zotero full tree and apply only entries to preserve current desktop Zotero source and vendor pin. No deletions; all modes verified from Git tree entries.",
+  "remote_mutations": false,
+  "actions_queried_or_awaited": false
+}
