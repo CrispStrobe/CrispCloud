@@ -307,8 +307,8 @@ class RustSmbSession implements SmbTransport {
     try {
       if (onBytes != null) {
         // The bridge reports 0 until the download knows its starting offset,
-        // then bytes + 1. Report that starting point once (0 on restart, the
-        // partial length on resume), then only real changes, so a resumed
+        // then bytes + 1. Polls may coalesce the starting offset with later
+        // reads; report only known positions and real changes, so a resumed
         // transfer never jumps back to empty.
         int? reported;
         timer = Timer.periodic(const Duration(milliseconds: 100), (_) {

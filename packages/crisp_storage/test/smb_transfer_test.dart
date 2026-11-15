@@ -31,11 +31,11 @@ void main() {
         // No server exists yet. Caching this failed Future would poison every
         // subsequent operation, even after the server comes back online.
         await expectLater(session.browse(''), throwsA(isA<RemoteException>()));
-        server = await Process.start(python!, [
-          'tool/smb_fixture.py',
-          root.path,
-          '$port',
-        ]);
+        server = await Process.start(
+          python!,
+          ['tool/smb_fixture.py', root.path, '$port'],
+          environment: {'CRISP_SMB_FIXTURE_DELAY': '0.03'},
+        );
         final errors = StringBuffer();
         final stderr = server.stderr
             .transform(utf8.decoder)
@@ -86,7 +86,10 @@ void main() {
           limit: data.length,
           onBytes: progress.add,
         );
-        expect(progress.first, prefix);
+        // Rust progress is coalesced: it may already have advanced past the
+        // validated resume offset, but must never move backwards.
+        expect(progress.first, greaterThanOrEqualTo(prefix));
+        expect(progress, orderedEquals([...progress]..sort()));
         expect(progress.last, data.length);
         expect(await output.readAsBytes(), data);
 
@@ -99,7 +102,8 @@ void main() {
           limit: data.length,
           onBytes: progress.add,
         );
-        expect(progress.first, 0);
+        expect(progress.first, inInclusiveRange(0, 3));
+        expect(progress.last, 3);
         expect(await output.readAsBytes(), [9, 8, 7]);
         await expectLater(
           session.download(path, output, limit: 2),

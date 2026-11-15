@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
+import 'package:crisp_storage/crisp_storage.dart' show parseSmbBackend;
 
 import '../config/cli_config.dart';
 
@@ -52,13 +53,15 @@ class ProvidersCommand extends Command<int> {
     for (final name in names) {
       final cfg = config.providerConfig(name) ?? {};
       final type = cfg['type'] as String? ?? '?';
+      final smbBackend = type == 'smb'
+          ? parseSmbBackend(cfg['smbBackend'])?.name
+          : null;
 
       // Build a safe summary — omit credentials
       String info = '';
       switch (type.toLowerCase()) {
         case 'smb':
-          info =
-              '${cfg['url'] ?? ''} [${cfg['smbBackend'] ?? 'build default'}]';
+          info = '${cfg['url'] ?? ''} [${smbBackend ?? 'build default'}]';
         case 's3':
           info = '${cfg['endpoint'] ?? ''}/${cfg['bucket'] ?? ''}';
         case 'sftp':
@@ -73,7 +76,11 @@ class ProvidersCommand extends Command<int> {
       rows.add({
         'name': name,
         'type': type,
-        if (type == 'smb') 'smbBackend': cfg['smbBackend'],
+        if (type == 'smb') ...{
+          'smbBackend': smbBackend,
+          'savedSmbBackend': cfg['smbBackend'],
+          'effectiveSmbBackend': 'rust',
+        },
         'info': info,
         'default': name == defaultProv,
       });

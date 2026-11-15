@@ -21,7 +21,7 @@ void main() {
       if (const bool.fromEnvironment('CRISP_ENABLE_FUSE')) {
         expect(
           optional.single.paragraphs.map((p) => p.text).join('\n'),
-          contains('GNU LESSER GENERAL PUBLIC LICENSE'),
+          contains('GNU LIBRARY GENERAL PUBLIC LICENSE'),
         );
       } else {
         expect(optional, isEmpty);

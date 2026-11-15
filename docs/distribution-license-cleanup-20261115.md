@@ -11,7 +11,7 @@ The default native transport is now the existing `crisp_smb` Rust engine backed
 by `smb2` 0.43.0. The Dart libsmb2 adapter, native downloader/build recipes and
 `dart_smb2` dependency are removed. Existing `libsmb2` and `auto` profile values
 migrate to Rust. A missing Rust library produces an actionable failure; there
-is no LGPL fallback or second authentication attempt. Signing and the default
+is no LGPL fallback or automatic second authentication attempt. Signing and the default
 SMB3 encryption requirement are preserved. Old resume validators are not reused
 under a different transport. A cancelled native download session is retired
 after its operation finishes; the facade reconnects lazily on a later explicit
@@ -108,10 +108,21 @@ platform binary inspection; it is not a universal licence or patent audit.
   executing the replacement signal-table generator and retaining Bison's
   adjacent exception.
 - Optional FUSE helper: universal signature verified when enabled; default
-  rebuild removes the generated helper. No FUSE filesystem was mounted.
-- Native SMB bridge release compilation passed. The initial live test caught
-  cancelled-session reuse; the facade fix and final live acceptance are recorded
-  separately when complete.
+  rebuild removes the generated helper. The optional mount suite passed 68
+  tests; its notice title assertion was corrected to the original Library GPL
+  v2 wording and the focused bundled-notice test passed. No FUSE filesystem
+  was mounted.
+- Native SMB bridge release compilation passed. Both authenticated shared
+  transport tests pass, including cancellation followed by explicit resume,
+  source replacement, bounded reads and encryption refusal. The test server
+  delays reads so cancellation tests cannot accidentally finish before polling.
+- CLI acceptance: 21 tests passed, including real authenticated file operations
+  through every legacy setting. JSON distinguishes the effective Rust engine
+  from the original saved setting without rewriting configuration while listing.
+- Live host acceptance: five tests passed, covering authenticated file-manager
+  operations, the default FUSE compile guard and actual bundled notice loading.
+- Rebuilt iOS shell: device/simulator compilation and all 379 native assertions
+  passed against real ios_system + Dash, including detach/access-lease cases.
 - Reviewed SMB Cargo grant/evidence check covers 143 packages. Existing packaged
   storage notices verify 318 dependency versions across both native graphs.
 - Crypto release controls: 42 passed. Source checks retain Filen and Internxt
@@ -119,6 +130,5 @@ platform binary inspection; it is not a universal licence or patent audit.
 - Scoped storage/CLI analyzers passed. Full application-library analysis has
   zero errors, the same 26 existing warnings as the baseline, and 209 infos.
 
-Native iOS shell execution, final app startup/signing and hosted CI are separate
-acceptance gates. These source and unit results do not assert that those gates
-have completed.
+Final macOS app startup/signing and hosted CI remain separate acceptance gates.
+These source and native-shell results do not assert that those gates completed.

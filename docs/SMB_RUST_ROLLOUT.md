@@ -85,7 +85,7 @@ with `TooManyHandles`, matching libsmb2's behavior under concurrent use.
 Rust-to-disk downloads keep file bytes native, cap reads at 256 KiB and use four
 read-ahead requests. Native writes complete before progress advances; cancellation
 cannot leave a background file write racing a new resume. Progress is coalesced
-at 100 ms with a final value. A callback exception cancels the native session. The shared facade retires it
+at 100 ms with a final value; fast reads may coalesce the initial offset. A callback exception cancels the native session. The shared facade retires it
 after the failed operation completes; a later explicit resume opens a new
 native session. It never automatically replays the failed operation. There is one download per session and eight file handles
 maximum. Stream consumers receive bounded typed byte buffers and backpressure.
