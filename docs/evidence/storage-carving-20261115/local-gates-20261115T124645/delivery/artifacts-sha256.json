@@ -1,0 +1,26 @@
+{
+  "README.md": {
+    "size": 1568,
+    "sha256": "c0fc1f6aaf6e43cfabcbe376e3d6eeb671a1800b685c9b7922b01c61c1eb46d8"
+  },
+  "github-readback.json": {
+    "size": 1043,
+    "sha256": "8976e972629892d45c3a1952daea902069349f84f256d76e2da12adf28001692"
+  },
+  "integration-return.json": {
+    "size": 1399,
+    "sha256": "cdd9b1660ee0718da4fc58f92a9c72fe30badfce49da6bf0818acf928c8267e2"
+  },
+  "pr111-before.json": {
+    "size": 5900,
+    "sha256": "eec2b12776d0dd4ee6468bc1b491ed2b2b44eb20c834bde30906b6808ebf93eb"
+  },
+  "pr111-body.md": {
+    "size": 8280,
+    "sha256": "92e84964e18b06f19af4b94c3046f90127234f491113f7eeefbfa03d43485f84"
+  },
+  "summary-review.json": {
+    "size": 656,
+    "sha256": "8a7c811c68f5e30f0a084eaf06052e9f3ef6b30f12a6e21883e17c5aaa1ce9f7"
+  }
+}
