@@ -21,7 +21,20 @@ The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
 PowerPoint file, editing it and saving it must not silently change or lose
 content.
 
-## Current integrated state (14 November 2026)
+## Current integrated state (15 November 2026)
+
+The storage continuation mirrors canonical integration
+`01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca` on
+`integration/office-storage-reconcile-20261115` and the unchanged standalone
+legacy parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`. All 2,214 managed files
+match those sources. This combines canonical main `4f7d0e0`, worksheet
+navigation, the latest legacy Excel palette import, Word shapes without text
+boxes, heading inheritance and theme shading. App-side worksheet navigation
+and the reviewed DOC recovery/import routes are retained. Source reconciliation
+does not by itself qualify the complete Office rendering workflow; current
+checks are recorded in [the integration record](../docs/office-storage-reconciliation-20261115.md).
+
+## Previous integrated state (14 November 2026)
 
 The app mirrors Quds main `5133ce0343cb7c9456f852a4e760c771294ae6de` and standalone
 legacy parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`; all 2,194 managed files

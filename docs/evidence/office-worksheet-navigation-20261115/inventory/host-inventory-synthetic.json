@@ -1,0 +1,44 @@
+{
+  "source_before": "40235bf6d6c0cc399b72ba06212c7911ef53a257",
+  "rendered_outputs_preserved": 146,
+  "pinned_references_preserved": 3,
+  "old_schema_artifacts_preserved": 27,
+  "new_schema_artifacts": [
+    {
+      "path": "build/office-sheet-navigation-acceptance/source.xlsx",
+      "role": "authored_input"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/switched-draft.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rename.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rename-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rename-redo.xlsx",
+      "role": "host_output"
+    }
+  ],
+  "synthetic_inventory_expected": 182,
+  "synthetic_inventory_verified": 182,
+  "synthetic_rendered_verified": 149,
+  "synthetic_schema_verified": 33,
+  "scope": "Synthetic package inventory and scope controls only; not host-save or SDK validation evidence.",
+  "files": {
+    "tool/office_host_evidence.py": "d44f8de394c8b84351c758c632369743e91298fba3a5fadb41f1d975ef5c38c7",
+    "tool/office_host_evidence.json": "104d546db87a13fc6e61f8fae4f9f96c4dde2b698882ccf1446753497cd1a108",
+    "tool/test_office_host_evidence.py": "737f72c4d54c9121a6924a4281b5b2790832f313ca54b1c7541f4c77b5e642af",
+    "tool/check_office_fidelity.sh": "6df34a6e0cf83f214e75b1ef5810d8cb366d9367ca05edc15f69da4c30309bab",
+    ".github/workflows/office-fidelity.yml": "5f2c1e54f6fe23f5bfd4bda1dc359666baa77f06a90c609069e5fb4c9cdf9d10"
+  }
+}

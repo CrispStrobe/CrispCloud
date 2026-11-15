@@ -38,7 +38,8 @@ RENDERED_ROOTS = (('build', 'fidelity-host'), ('build', 'fidelity'),
 # explicitly enumerated files in these acceptance roots may be schema-only.
 SCHEMA_ONLY_ROOTS = (('build', 'office-fill-host-acceptance'),
                     ('build', 'office-sheet-state-acceptance'),
-                    ('build', 'office-style-history-acceptance'))
+                    ('build', 'office-style-history-acceptance'),
+                    ('build', 'office-sheet-navigation-acceptance'))
 
 
 def reference_entries():
@@ -187,20 +188,23 @@ def clean(root):
         target.unlink(missing_ok=True)
 
 
-def inspect(root):
+def inspect(root, *, downloaded_artifacts=False):
     root = root.resolve()
     expected = expected_paths()
     references = {entry['path']: entry for entry in reference_entries()}
     schema_only = {entry['path']: entry for entry in schema_only_entries()}
-    # GitHub artifact downloads may add a directory around the original tree.
-    # Match the complete build/... suffix, never a filename from engine output.
-    bases = {
-        directory.parent.parent
-        for anchor in ('fidelity-host', *(parts[1] for parts in SCHEMA_ONLY_ROOTS))
-        for directory in root.rglob(anchor)
-        if directory.is_dir() and directory.parent.name == 'build'
-    }
-    bases.add(root)
+    # A checkout contains historical receipts whose build/ trees must neither
+    # duplicate nor substitute for the outputs of this run. Only explicitly
+    # selected artifact downloads may discover wrapper directories.
+    bases = {root}
+    if downloaded_artifacts:
+        # Match complete build/... suffixes, never filenames from engine output.
+        bases.update(
+            directory.parent.parent
+            for anchor in ('fidelity-host', *(parts[1] for parts in SCHEMA_ONLY_ROOTS))
+            for directory in root.rglob(anchor)
+            if directory.is_dir() and directory.parent.name == 'build'
+        )
     files = []
     failures = []
     used_bases = set()
@@ -251,6 +255,7 @@ def inspect(root):
                 failures.append(f'Unexpected host Office output: {file.relative_to(base)}')
     authored_inputs = sum(entry['role'] == 'authored_input' for entry in schema_only.values())
     return {
+        'layout': 'downloaded_artifacts' if downloaded_artifacts else 'checkout',
         'expected': len(expected),
         'verified': len(files),
         'expected_host_outputs': len(expected) - len(references) - authored_inputs,
@@ -274,12 +279,14 @@ def main():
     parser.add_argument('command', choices=['clean', 'verify'])
     parser.add_argument('--root', type=Path, default=ROOT)
     parser.add_argument('--report', type=Path)
+    parser.add_argument('--downloaded-artifacts', action='store_true',
+                        help='discover and validate artifact wrapper roots instead of only the current checkout outputs')
     args = parser.parse_args()
     if args.command == 'clean':
         clean(args.root)
         print(f'Cleared only {len(expected_paths())} declared host outputs and receipt')
         return 0
-    report = inspect(args.root)
+    report = inspect(args.root, downloaded_artifacts=args.downloaded_artifacts)
     output = args.report or args.root / REPORT
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2) + '\n')

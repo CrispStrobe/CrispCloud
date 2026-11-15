@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show TargetPlatform;
+
 /// How the host wants the surface to behave when embedded.
 enum OfficeInteractionMode {
   /// Scroll/zoom only. No caret, handles, IME, or mutations.
@@ -34,6 +36,7 @@ class OfficeTheme {
     required this.slideBackground,
     required this.focusRing,
     this.fontFamily,
+    this.textSelectionFill,
   });
 
   /// canvasBackground API.
@@ -89,6 +92,41 @@ class OfficeTheme {
 
   /// fontFamily API.
   final String? fontFamily;
+
+  /// Translucent fill for selected document text (Word canvas: text runs,
+  /// whole table cells and pictures inside a text selection).
+  ///
+  /// Null uses [wordTextSelectionFill] for the running platform, so the
+  /// selection looks like Word's there. [selectionFill] stays the accent
+  /// used for grid, slide and object selections.
+  final Color? textSelectionFill;
+
+  /// [textSelectionFill], or Word's own selection colour on [platform].
+  Color textSelectionFillFor(TargetPlatform platform) =>
+      textSelectionFill ??
+      wordTextSelectionFill(
+        platform,
+        dark: pageBackground.computeLuminance() < 0.4,
+      );
+
+  /// Word's text-selection colour as a translucent fill (text is never
+  /// inverted; it stays readable through the tint).
+  ///
+  /// * macOS / iOS: the system highlight Word for Mac uses — light blue,
+  ///   `#B3D7FF` over a white page.
+  /// * Windows and everything else: Word 365's neutral grey, `#C8C8C8`
+  ///   over a white page.
+  static Color wordTextSelectionFill(
+    TargetPlatform platform, {
+    bool dark = false,
+  }) {
+    final bool apple =
+        platform == TargetPlatform.macOS || platform == TargetPlatform.iOS;
+    if (dark) {
+      return apple ? const Color(0x995B8FD6) : const Color(0x40FFFFFF);
+    }
+    return apple ? const Color(0x4D0379FF) : const Color(0x37000000);
+  }
 
   /// light API.
   static const OfficeTheme light = OfficeTheme(
@@ -151,6 +189,7 @@ class OfficeTheme {
     snapGuide: Color(0xFF00FFFF),
     slideBackground: Color(0xFF000000),
     focusRing: Color(0xFFFFFF00),
+    textSelectionFill: Color(0x99FFFF00),
   );
 
   /// copyWith API.
@@ -173,6 +212,7 @@ class OfficeTheme {
     Color? slideBackground,
     Color? focusRing,
     String? fontFamily,
+    Color? textSelectionFill,
   }) {
     return OfficeTheme(
       canvasBackground: canvasBackground ?? this.canvasBackground,
@@ -193,6 +233,7 @@ class OfficeTheme {
       slideBackground: slideBackground ?? this.slideBackground,
       focusRing: focusRing ?? this.focusRing,
       fontFamily: fontFamily ?? this.fontFamily,
+      textSelectionFill: textSelectionFill ?? this.textSelectionFill,
     );
   }
 }

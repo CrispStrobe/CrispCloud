@@ -10,7 +10,8 @@ import office_host_evidence as evidence
 
 ACCEPTANCE_DIRECTORIES = ('office-fill-host-acceptance',
                           'office-sheet-state-acceptance',
-                          'office-style-history-acceptance')
+                          'office-style-history-acceptance',
+                          'office-sheet-navigation-acceptance')
 
 
 def package(file, extension=None, main=None):
@@ -61,9 +62,29 @@ class HostEvidenceTest(unittest.TestCase):
 
     def test_artifact_download_wrapper_preserves_complete_relative_paths(self):
         self.populate(self.root / 'downloaded-artifact')
+        report = evidence.inspect(self.root, downloaded_artifacts=True)
+        self.assertEqual(report['failures'], [])
+        self.assertEqual(report['verified'], len(evidence.expected_paths()))
+        self.assertEqual(report['layout'], 'downloaded_artifacts')
+
+    def test_checkout_ignores_archived_artifacts_and_still_requires_current_outputs(self):
+        self.populate()
+        self.populate(self.root / 'docs/evidence/previous/run')
         report = evidence.inspect(self.root)
         self.assertEqual(report['failures'], [])
         self.assertEqual(report['verified'], len(evidence.expected_paths()))
+        self.assertEqual(report['layout'], 'checkout')
+        self.assertTrue(all(item['file'] == item['path'] for item in report['files']))
+        name = evidence.expected_paths()[0]
+        (self.root / name).unlink()
+        report = evidence.inspect(self.root)
+        self.assertEqual(report['failures'], [f'{name}: expected one file, found 0'])
+
+    def test_checkout_does_not_accept_an_archived_tree_when_no_current_outputs_exist(self):
+        self.populate(self.root / 'docs/evidence/previous/run')
+        report = evidence.inspect(self.root)
+        self.assertEqual(report['verified'], 0)
+        self.assertEqual(len(report['failures']), len(evidence.expected_paths()))
 
     def test_references_are_distinct_from_actual_host_exports(self):
         self.populate()
@@ -134,7 +155,7 @@ class HostEvidenceTest(unittest.TestCase):
                 duplicate = self.root / 'second' / name
                 duplicate.parent.mkdir(parents=True, exist_ok=True)
                 duplicate.write_bytes((first / name).read_bytes())
-                report = evidence.inspect(self.root)
+                report = evidence.inspect(self.root, downloaded_artifacts=True)
                 self.assertIn(f'{name}: expected one file, found 2', report['failures'])
                 duplicate.unlink()
 
@@ -145,7 +166,7 @@ class HostEvidenceTest(unittest.TestCase):
                 name = f'build/{directory}/unreviewed.xlsx'
                 extra = self.root / 'extra-wrapper' / name
                 package(extra)
-                report = evidence.inspect(self.root)
+                report = evidence.inspect(self.root, downloaded_artifacts=True)
                 self.assertEqual(report['verified'], report['expected'])
                 self.assertEqual(report['failures'], [f'Unexpected host Office output: {name}'])
                 extra.unlink()
@@ -217,7 +238,7 @@ class HostEvidenceTest(unittest.TestCase):
     def test_duplicate_complete_artifacts_fail(self):
         self.populate(self.root / 'first')
         self.populate(self.root / 'second')
-        self.assertTrue(evidence.inspect(self.root)['failures'])
+        self.assertTrue(evidence.inspect(self.root, downloaded_artifacts=True)['failures'])
 
     def test_extra_output_and_invalid_zip_fail(self):
         self.populate()
