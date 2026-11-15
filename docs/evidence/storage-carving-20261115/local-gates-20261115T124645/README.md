@@ -1,3 +1,5 @@
+> **Continuation update:** observed incoming commit `3e9560c9` adds comment-part namespace/relationship handling. The earlier local gates below belong to source `96634597`. Final source qualification is pending the reviewed comment correction and a new source freeze; these earlier counts are not acceptance for changed source.
+
 # Local qualification plan — isolated continuation, 15 November 2026
 
 **Status: local qualification in progress on saved source `966345971a50ef93bcb67ed32060c8176b4d2949`. Only completed receipts establish passing results.**

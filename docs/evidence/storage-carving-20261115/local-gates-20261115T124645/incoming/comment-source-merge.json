@@ -1,0 +1,19 @@
+{
+  "ours": "22c4f42acc575bee8f5119a4803af13b57ef7cbc",
+  "observed_incoming": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "resolved_tree_before_new_evidence": "5fbd5192731bd12fb9f7eba05b75c3ee95601cb3",
+  "conflicts_resolved_from_incoming": [
+    "packages/QUDS_FORKS.md",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "non_evidence_tree_equals_incoming": true,
+  "preserved_local_gate_paths": 120,
+  "incoming_canonical_pin": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+  "parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "status": "Pending final qualification. Canonical reviewer is probing a concrete new-sheet comment-part ownership/preflight edge before final source freeze.",
+  "prior_runtime_scope": "Source966:903app/249engine/105editor passed; earlier labels remain predecessor evidence.",
+  "raw_evidence_preservation": {
+    "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/incoming/parallel-branch-audit/ods-regressions.patch",
+    "note": "Inherited raw patch contains a literal whitespace context line; its bytes are preserved. Whitespace checking excludes only that known raw artifact."
+  }
+}

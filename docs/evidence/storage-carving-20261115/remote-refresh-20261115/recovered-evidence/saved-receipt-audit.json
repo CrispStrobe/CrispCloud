@@ -1,0 +1,572 @@
+{
+  "additional_artifacts": {
+    "navigation-independent-review-final-artifacts": {
+      "exact_inventory_and_hashes": true,
+      "file_count": 11,
+      "manifest_sha256": "964d8f98bed94d7ef02ea09a422e55ea22e9c76204166006364e5a9d8b973ff3"
+    },
+    "png-portable-final-artifacts": {
+      "exact_inventory_and_hashes": true,
+      "file_count": 21,
+      "manifest_sha256": "b8ee80829d4ed066df61c2dac709e5b61a6d7c7367a8e99659cfc66daa3f1238"
+    },
+    "scripted-oracle-final-artifacts": {
+      "exact_inventory_and_hashes": true,
+      "file_count": 18,
+      "manifest_sha256": "1e61e7f6644143c49661530d4a39b36be01e68da57c26b79331bfd0851e8d891"
+    },
+    "source-integrity-final-details": {
+      "exact_inventory_and_hashes": true,
+      "file_count": 28,
+      "manifest_sha256": "b2fd68f6e04b8dff4bbbca162add4c6db1265bd7bc9f39d5af1039ca7d1ae3a8"
+    }
+  },
+  "at": "2026-11-15T12:33:42.929994+00:00",
+  "audited_commit": "cc92423bb98789239380864d5e8343c19c25e815",
+  "common_saved_input_digest": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "counts": {
+    "primary_app_tests": 903,
+    "primary_editor_tests": 101,
+    "primary_engine_tests": 249,
+    "primary_total": 1253,
+    "separate_navigation_repeat_tests": 12
+  },
+  "gates": [
+    {
+      "analyzed_files": 76,
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "7f1a048b78b99d9dab2f1cb7245406737521096dd5ddaf18de680a9f13ce983c"
+      },
+      "gate": "analysis-app-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "20ee83ff965d5433aeb528ae84debdb304edcf4a"
+    },
+    {
+      "analyzed_files": 16,
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "212fe2e67651c24c2fb4f19ece388bf64cd81a0e5bba0ee75315f47715341855"
+      },
+      "gate": "analysis-engine-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "91d8e8ba1331ecce1419b8fba61f92b72291fe60"
+    },
+    {
+      "analyzed_files": 4,
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "560ad2f95e777de2acc8f1b79c6913f9d8fad8f33652fc932f5e4fe094e203fc"
+      },
+      "gate": "analysis-editor-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "5d6a9e32206bc39c7514b1863b9a96cc00c12099"
+    },
+    {
+      "analyzed_files": 1,
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "a5f7524f646133c695ea996f72f346fdee87207386e3b2f93e952a9ca6566c8d"
+      },
+      "gate": "analysis-cli-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "1985e2113a1b61ac36315759f2061ad8d8ace8f3"
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 8,
+        "manifest_sha256": "352ccdb6a3e3cc579c9b1791564ef50133148db7598f2e88235a74cafdc9477c"
+      },
+      "complete_unique_machine_events": true,
+      "gate": "app-retry-1",
+      "hidden_success_events": 73,
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "suites": 65,
+      "tested_head": "5869f75908a4192ada1934a0f4cdcf16a526ef9e",
+      "tests": 903
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 9,
+        "manifest_sha256": "83be060f6ebbbaeaf5aac68eda627a7231bc37f5d076c122bd3dc917be9d1775"
+      },
+      "complete_unique_machine_events": true,
+      "gate": "engine-final",
+      "hidden_success_events": 22,
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "produced_files": 12,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "suites": 22,
+      "tested_head": "50b493c0261436d4b36f2273e87004b4091f0de2",
+      "tests": 249
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 8,
+        "manifest_sha256": "2123319608579bf086d259c98651eefdb4f90489bff9bc430f9d3efffefd81c1"
+      },
+      "complete_unique_machine_events": true,
+      "gate": "editor-final",
+      "hidden_success_events": 11,
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "suites": 9,
+      "tested_head": "d9e65ff1e8ee63b68087ea445408282e9e699584",
+      "tests": 101
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "d47b9271fd7501dd55af5546287ad6149f3ed18986316c46048fcec2877f76a3"
+      },
+      "gate": "scripted-oracle-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "231f3e6b267bc97aec63fd96a0a3234bd0887ea2"
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "388bf7fc64d81e703a22c4876e792e261fa53f61b88a541577e4dc1b65d9dfce"
+      },
+      "gate": "source-integrity-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "cf5b50c6bcab5f9c69283ed8296ce100de912251"
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "475019303cc89b1c6e3a2595c20e404273700057dc9fbc4e09e1b7bacff45a0d"
+      },
+      "gate": "png-portable-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "a01995044a9ba7078d1d248e95aa684834afce2e"
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 9,
+        "manifest_sha256": "d24d1492c869d5d957a30d9b5b99b7f5f887a1c8167521bed0d3cf7f02de0fc7"
+      },
+      "complete_unique_machine_events": true,
+      "gate": "navigation-capture-final",
+      "hidden_success_events": 3,
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "produced_files": 10,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "suites": 1,
+      "tested_head": "6fec638c9386be139c288e5bf07b020b71b24473",
+      "tests": 12
+    },
+    {
+      "artifact_inventory": {
+        "exact_inventory_and_hashes": true,
+        "file_count": 6,
+        "manifest_sha256": "33ac25ba51ee5d7717e26c886953cfc1d68b66ea00e32b5263d77392fed38f60"
+      },
+      "gate": "navigation-independent-review-final",
+      "immutable_source_bytes_blobs_modes_equal": true,
+      "recorded_input_count": 8588,
+      "recorded_inputs_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+      "recorded_inputs_tools_head_stable": true,
+      "source_files_verified": 8577,
+      "success": true,
+      "tested_head": "8c235f9e27d1086cdef177b93f6d0bf45f30e386"
+    }
+  ],
+  "recorded_tool_audit": [
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-app-files.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-app-files.txt",
+      "sha256": "743fdb517e7752fdf2d59ef56dd336f679dc713fa28c966024e4eb2464f975aa",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py",
+      "sha256": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/record_gate.py",
+      "sha256": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/environment/env.sh",
+      "sha256": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+      "status": "verified_against_retained_original_environment"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "status": "recorded_before_after_hash_only_binary_unavailable"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-engine-files.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-engine-files.txt",
+      "sha256": "5e39cc6dd12c9ba6d792757312cea389bf6cf885ec73eaa9572bb0e57a6837c9",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-editor-files.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-editor-files.txt",
+      "sha256": "c102db0225e6d62523a1eb7f0e57f792d72ec13d691a8605153b4d6391f6d146",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/cli/.dart_tool/package_config.json",
+      "sha256": "6f1d84d92c2b41964b18bfbe58b495f000db4ab3feee9610b7547b9cbc70a4bd",
+      "status": "recorded_before_after_hash_only_not_retained"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/cli/.dart_tool/package_graph.json",
+      "sha256": "3d1ba6b1b90c4a49bb47b1be2cfc9fccdd0ef53d6fe453c694a4902b86320621",
+      "status": "recorded_before_after_hash_only_not_retained"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-cli-files.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/analysis-cli-files.txt",
+      "sha256": "084097b0d4c960b2686d7e116980573c9b8d32f9a083a36804c01564bcdbe393",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/app-suites.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/app-suites.txt",
+      "sha256": "6c7975878e1f087f846356c10b0b0558c8fa42f3d56ec0c18d600322d29c669c",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-delta-queue-20261114/run_delta_qualification.py",
+      "retained_path": "docs/evidence/storage-delta-queue-20261114/run_delta_qualification.py",
+      "sha256": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/artifacts/engine/linux-x64/flutter_tester",
+      "sha256": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f",
+      "status": "recorded_before_after_hash_only_binary_unavailable"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter",
+      "sha256": "7d486c33b30a0cf1ea5146231c68bb8f966cdb4e087c5cd8b37e14513f536e7d",
+      "status": "recorded_before_after_hash_only_binary_unavailable"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/engine-suites.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/engine-suites.txt",
+      "sha256": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/editor-suites.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/editor-suites.txt",
+      "sha256": "cff5aec5aa94fa5d420fdfe66ecab102d953aa26f0902d7642788db778b40609",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/artifacts-sha256.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/artifacts-sha256.json",
+      "sha256": "83be060f6ebbbaeaf5aac68eda627a7231bc37f5d076c122bd3dc917be9d1775",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/command.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/command.json",
+      "sha256": "531ae366b5ad202b2513a87b13f350c41716eb7174b860b7771e9390548c0815",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-after.json.gz",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-after.json.gz",
+      "sha256": "fa6d4d801a28e2cc2ecbcf288d182d43a82010c49c42173467672e8f56039e5e",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-before.json.gz",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/inputs-before.json.gz",
+      "sha256": "ba5770da6e2dc9c82e9644b544dc71eb4520ec289d9068eaca4e8ec0a1f239a9",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/metadata.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/metadata.json",
+      "sha256": "989a609413b6726352b7ea4e4ab6a7142bb2e6cfb76ec903c34894ac2ec66725",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/produced-files.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/produced-files.json",
+      "sha256": "1c7f27f99410c16bc90e7536614adb0ff316c7a41ae4fab421e75c5696e1597e",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stderr.log",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stdout.jsonl",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/stdout.jsonl",
+      "sha256": "3bc107ead0bbcffb84c9af076a658dac9c3abd3f56ddb3a9d9406993517e7782",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/suites.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/suites.txt",
+      "sha256": "8a55bb96b686971d27731c95b294d2f911d74ea1f8f9e7c24fcd30b0fd4f7290",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/summary.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/engine-final/summary.json",
+      "sha256": "16038c77d913b775f91c87a189cea0e09f94d78cd7e1bd7490668bf56319ad06",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_scripted_oracle_current.py",
+      "sha256": "7368d4cfab107f2258baaf8bbdd8aa9f18fbba00cdfb9123035eb77154d2e202",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_only_controls.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_only_controls.py",
+      "sha256": "b46072a271f6de845adc8d70597476df68694325b991df7fa341e09fb8868da3",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py",
+      "sha256": "7ff013ed61816c122cd812292708ba134409e4621b04133d7fa9cf258e401347",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_source_and_notices.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_source_and_notices.py",
+      "sha256": "f234fd0a2b01b96048d63c2c51403393887673a4dc127a99803f7034826334f9",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d",
+      "status": "verified_against_available_exact_binary"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_portable_current.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_portable_current.py",
+      "sha256": "08d00137579b6bb85c624c87d684c820bae83531ab7e3fbf1d2fc20f852021fb",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/toolchain_launcher.sh",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/toolchain_launcher.sh",
+      "sha256": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/navigation-suites.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/navigation-suites.txt",
+      "sha256": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/office-worksheet-navigation-20261115/resume/hosted-7e5af83c/integrity/verify_hosted_artifacts.py",
+      "retained_path": "docs/evidence/office-worksheet-navigation-20261115/resume/hosted-7e5af83c/integrity/verify_hosted_artifacts.py",
+      "sha256": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/artifacts-sha256.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/artifacts-sha256.json",
+      "sha256": "d24d1492c869d5d957a30d9b5b99b7f5f887a1c8167521bed0d3cf7f02de0fc7",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/command.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/command.json",
+      "sha256": "b5eeb5b0c353162912ec2030e5a2db45fc67fc027996ba5dec23f4bb19006426",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/inputs-after.json.gz",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/inputs-after.json.gz",
+      "sha256": "dfce335c0a5734dc3271d54ab59a33bcbff6b425dcd98af29d5a0c4664d91eb6",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/inputs-before.json.gz",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/inputs-before.json.gz",
+      "sha256": "5c8edc661186c863778efb89b0422eb2628e83b8f006fa0f15688e15caf904ce",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/metadata.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/metadata.json",
+      "sha256": "c608126fa0b5f2374308206381f4912f5d9f3b90e290795af29631c06d8d13d5",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/produced-files.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/produced-files.json",
+      "sha256": "dd2a92fda5a6c11f69d60c068fc0632b0fdad1a09d80a4c90e07593691cf617d",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/stderr.log",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/stderr.log",
+      "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/stdout.jsonl",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/stdout.jsonl",
+      "sha256": "1a3b56f2132d25aabfa5a370bed39f2563d49346ce0db60cfd0932c9c05a0309",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/suites.txt",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/suites.txt",
+      "sha256": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/summary.json",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/summary.json",
+      "sha256": "4209da303a60573add48ab2da20ba53fd02fd6718401fab86fb25580e7ae4fb6",
+      "status": "verified_against_pinned_repository_blob"
+    },
+    {
+      "recorded_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/verify_navigation_capture.py",
+      "retained_path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/verify_navigation_capture.py",
+      "sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+      "status": "verified_against_pinned_repository_blob"
+    }
+  ],
+  "review_script_sha256": "26f91089d12e142f708680b735075f024f715d06dd3af474b036c0f00844a637",
+  "schema": 1,
+  "scope": "Independent immutable Git source/mode and saved raw receipt, artifact index, command, input consistency and complete machine-event audit. No Dart/Flutter rerun. Current missing historical dependency graphs and binaries are not reconstructed or certified. Repeated navigation tests excluded from primary cohort total.",
+  "source_paths_verified": 8577,
+  "success": true,
+  "unretained_resolution_inputs": {
+    ".dart_tool/package_config.json": {
+      "kind": "file",
+      "sha256": "204d6b16b77c43994d3a84643b3649efe64fb5fa957ee36b8abe074c286591a0",
+      "size": 59405
+    },
+    ".dart_tool/package_graph.json": {
+      "kind": "file",
+      "sha256": "e5428055c188f2baf66b2fea2b111f6b9e867e982aa8eaddcf11e20a6f8d63a7",
+      "size": 52197
+    },
+    "packages/legacy_doc_parser/.dart_tool/package_config.json": {
+      "kind": "file",
+      "sha256": "b8da91cc7d6b9ee7f60a672e68e251cf4752a0a5a6a9a2577d55218500a8b1bf",
+      "size": 11850
+    },
+    "packages/legacy_doc_parser/.dart_tool/package_graph.json": {
+      "kind": "file",
+      "sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+      "size": 8935
+    },
+    "packages/legacy_doc_parser/pubspec.lock": {
+      "kind": "file",
+      "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+      "size": 12536
+    },
+    "packages/quds_office_editor/.dart_tool/package_config.json": {
+      "kind": "file",
+      "sha256": "63485671a8fb2d7443d8b40988bf3975e6a418925dfad92444e9b71058172de1",
+      "size": 9733
+    },
+    "packages/quds_office_editor/.dart_tool/package_graph.json": {
+      "kind": "file",
+      "sha256": "fa8e469d3e7648bb072a3e6e50aa150f4f4b98e7e13d66671f69b34180ce946c",
+      "size": 7021
+    },
+    "packages/quds_office_editor/pubspec.lock": {
+      "kind": "file",
+      "sha256": "29e3da52f589163abf9e2207a8ce75dbcef43640444f96789208c8ddda43341a",
+      "size": 9775
+    },
+    "packages/quds_office_engine/.dart_tool/package_config.json": {
+      "kind": "file",
+      "sha256": "000d668b06c154cbfc09a8bf63efa0c7a46f8814b372c4ddc3ee3e3a7d137d6a",
+      "size": 11802
+    },
+    "packages/quds_office_engine/.dart_tool/package_graph.json": {
+      "kind": "file",
+      "sha256": "94316f544671ecd89fdc0db71e098e8b6116ea09e05bd70364fbaefbb0539c35",
+      "size": 8899
+    },
+    "packages/quds_office_engine/pubspec.lock": {
+      "kind": "file",
+      "sha256": "0332e894dbbb6b891b909bca49d50e5382381fabdc30bf57a81ca84a3da23618",
+      "size": 12486
+    }
+  }
+}

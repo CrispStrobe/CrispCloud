@@ -1,0 +1,36 @@
+{
+  "scope": "Independent read of owner focused raw events and metadata, not a re-execution of owner gate",
+  "source": "fd14d8a68477165e7ca3317b647f403f2308e353",
+  "tree": "a5cb6713e63d59fc96784bdb141a8a290a80c887",
+  "input_count": 3060,
+  "before_after_digest_equal": true,
+  "reported_stable": true,
+  "raw_visible_tests": [
+    {
+      "id": 3,
+      "name": "clearing relocated comments cannot expose a legacy decoy",
+      "result": "success",
+      "skipped": false
+    },
+    {
+      "id": 4,
+      "name": "clearing shared relocated comments cannot expose a legacy decoy",
+      "result": "success",
+      "skipped": false
+    }
+  ],
+  "done": [
+    {
+      "success": true,
+      "type": "done",
+      "time": 1920
+    }
+  ],
+  "raw_errors": [],
+  "file_hashes": {
+    "stdout.jsonl": "c3ae373baf8c8b6219d6bcbabdf678774026e6feffbb9901220f27926de0c3e9",
+    "metadata.json": "56110abe9a585bd946c73cd32dae0ab6493db5613532471906ea665b9d76d3e7",
+    "summary.json": "e71e6ed93a186f4bd46fb655af46d3db4d6183991fc590ca549d1edb0f09a6c6",
+    "artifacts-sha256.json": "9aa4295799e15c890762ba1a989505c1fe0366459abaee3f546b9626da900b00"
+  }
+}

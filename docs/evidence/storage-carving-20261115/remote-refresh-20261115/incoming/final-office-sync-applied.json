@@ -1,0 +1,13 @@
+{
+  "from": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+  "to": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+  "write": [
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+    "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2336,
+  "applied": true
+}

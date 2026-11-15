@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "oracle": "Python zipfile CRC + exact source SHA256 + Pillow decoded pixels",
+  "fixtureManifestSha256": "cbebefcd3bf1567a9720396090e48932ed0be30111a2b6e3587190255de37791",
+  "candidateReceiptSha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+  "cases": [
+    {
+      "name": "damaged-regions",
+      "archiveBytes": 3256,
+      "archiveSha256": "39a3468055776716a5668bb7d1f3bff48abae85dbf421ae02328a2449b637262",
+      "verifiedPngs": 2
+    },
+    {
+      "name": "deflate-window",
+      "archiveBytes": 79496,
+      "archiveSha256": "a97604a1e9c9fe1534d800c3cefad5c93480d47f9d0e4b01e0323c29164f958c",
+      "verifiedPngs": 1
+    },
+    {
+      "name": "false-signature",
+      "archiveBytes": 2260,
+      "archiveSha256": "b714c5590221775111284c3acb761e5d9499272305a8082cb8bcbf1a1fb9c9b5",
+      "verifiedPngs": 1
+    },
+    {
+      "name": "malformed-image-data",
+      "archiveBytes": 3574,
+      "archiveSha256": "c9a0d54d9248821e2c31b05aa981e527e863bdb3aa2b0e1fcb3c706fb6318e34",
+      "verifiedPngs": 1
+    },
+    {
+      "name": "nested-signature",
+      "archiveBytes": 2286,
+      "archiveSha256": "56c04f06b1077f1d67375f82582da6ed43a64f889782df891a198079b4935dab",
+      "verifiedPngs": 1
+    },
+    {
+      "name": "pillow-metadata",
+      "archiveBytes": 1967,
+      "archiveSha256": "8003c0bf562dbfc2bf17f8a081f02a8ec506253fd24691ada10d727edcc48868",
+      "verifiedPngs": 1
+    },
+    {
+      "name": "read-boundary",
+      "archiveBytes": 2659,
+      "archiveSha256": "9817bedbe8441b1c18ec0b5f71ca30f9d5ce54f08fd13e2be118bce860901a29",
+      "verifiedPngs": 2
+    },
+    {
+      "name": "unsupported-profiles",
+      "archiveBytes": 3610,
+      "archiveSha256": "1fe8da386ec8e619433842cfd366e9f358d4b1998ef8183b2721c36d04d9f057",
+      "verifiedPngs": 1
+    }
+  ],
+  "passed": 8,
+  "verifiedPngs": 10,
+  "wrongExpectedHashRejected": true
+}

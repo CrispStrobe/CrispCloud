@@ -1,0 +1,44 @@
+[
+  {
+    "path": "lib/providers/veracrypt_mount_provider.dart",
+    "base_blob": "2e9ad46bd4e91b8af34c3deb3bfb4c5a2d45ac8a",
+    "head_blob": "2e9ad46bd4e91b8af34c3deb3bfb4c5a2d45ac8a",
+    "unchanged": true
+  },
+  {
+    "path": "lib/services/veracrypt_mount_service.dart",
+    "base_blob": "67dda7cd1b32568bdef10fff21d35465b6e20a3c",
+    "head_blob": "67dda7cd1b32568bdef10fff21d35465b6e20a3c",
+    "unchanged": true
+  },
+  {
+    "path": "lib/services/veracrypt_service.dart",
+    "base_blob": "433d1b17d5b82938ec6aaca90c7d83ae6e45f80d",
+    "head_blob": "433d1b17d5b82938ec6aaca90c7d83ae6e45f80d",
+    "unchanged": true
+  },
+  {
+    "path": "test/veracrypt_header_vectors_test.dart",
+    "base_blob": "9e0a4f9dbc6f8a24862ca59d3143852ca87ccca4",
+    "head_blob": "9e0a4f9dbc6f8a24862ca59d3143852ca87ccca4",
+    "unchanged": true
+  },
+  {
+    "path": "test/veracrypt_live_test.dart",
+    "base_blob": "738274e04f78f4b7ead7564b73e181ecc0a0c72f",
+    "head_blob": "738274e04f78f4b7ead7564b73e181ecc0a0c72f",
+    "unchanged": true
+  },
+  {
+    "path": "test/veracrypt_mount_test.dart",
+    "base_blob": "137b94dee8c6eda97ff5f08a60f22e8c9e94ee78",
+    "head_blob": "137b94dee8c6eda97ff5f08a60f22e8c9e94ee78",
+    "unchanged": true
+  },
+  {
+    "path": "test/veracrypt_test.dart",
+    "base_blob": "74e76f48df24ae02f4414a92264247c0a1e7e7e6",
+    "head_blob": "74e76f48df24ae02f4414a92264247c0a1e7e7e6",
+    "unchanged": true
+  }
+]

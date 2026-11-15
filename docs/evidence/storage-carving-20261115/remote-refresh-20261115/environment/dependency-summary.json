@@ -1,0 +1,84 @@
+{
+  "recorded_at": "2026-11-15T12:40:53.959834+00:00",
+  "scope": "Dependency setup only; not runtime qualification.",
+  "attempts": [
+    {
+      "attempt": "01-app-locked",
+      "receipt": "dependencies/01-app-locked/receipt.json",
+      "cwd": "/workspace/scratch/0b93849cdeb9/CrispCloud",
+      "status": "completed",
+      "returncode": 0,
+      "resolution_success": false,
+      "pubspec_unchanged": false,
+      "lock_unchanged": true,
+      "lock_enforcement": true,
+      "source_head_at_start": "822b37a27dde9ac18a074aa6a7c032b7177a5520",
+      "source_head_at_end": "2a3d04ca39e310c01912fab415b3ab1b69425a41"
+    },
+    {
+      "attempt": "02-cli-locked",
+      "receipt": "dependencies/02-cli-locked/receipt.json",
+      "cwd": "/workspace/scratch/0b93849cdeb9/CrispCloud/cli",
+      "status": "completed",
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": true,
+      "lock_enforcement": true,
+      "source_head_at_start": "822b37a27dde9ac18a074aa6a7c032b7177a5520",
+      "source_head_at_end": "137c95de221a0e30b14b59613b2f23447dcc57da"
+    },
+    {
+      "attempt": "03-parser-dev",
+      "receipt": "dependencies/03-parser-dev/receipt.json",
+      "cwd": "/workspace/scratch/0b93849cdeb9/CrispCloud/packages/legacy_doc_parser",
+      "status": "completed",
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": false,
+      "lock_enforcement": false,
+      "source_head_at_start": "137c95de221a0e30b14b59613b2f23447dcc57da",
+      "source_head_at_end": "2a3d04ca39e310c01912fab415b3ab1b69425a41"
+    },
+    {
+      "attempt": "04-engine-dev",
+      "receipt": "dependencies/04-engine-dev/receipt.json",
+      "cwd": "/workspace/scratch/0b93849cdeb9/CrispCloud/packages/quds_office_engine",
+      "status": "completed",
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": false,
+      "lock_enforcement": false,
+      "source_head_at_start": "137c95de221a0e30b14b59613b2f23447dcc57da",
+      "source_head_at_end": "2a3d04ca39e310c01912fab415b3ab1b69425a41"
+    },
+    {
+      "attempt": "05-editor-dev",
+      "receipt": "dependencies/05-editor-dev/receipt.json",
+      "cwd": "/workspace/scratch/0b93849cdeb9/CrispCloud/packages/quds_office_editor",
+      "status": "completed",
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": false,
+      "lock_enforcement": false,
+      "source_head_at_start": "137c95de221a0e30b14b59613b2f23447dcc57da",
+      "source_head_at_end": "2a3d04ca39e310c01912fab415b3ab1b69425a41"
+    },
+    {
+      "attempt": "06-app-final-locked",
+      "receipt": "dependencies/06-app-final-locked/receipt.json",
+      "cwd": "/workspace/scratch/0b93849cdeb9/CrispCloud",
+      "status": "completed",
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": true,
+      "lock_enforcement": true,
+      "source_head_at_start": "2a3d04ca39e310c01912fab415b3ab1b69425a41",
+      "source_head_at_end": "41885d7d1d67348f5abe3579b99d9d2951fc909f"
+    }
+  ]
+}

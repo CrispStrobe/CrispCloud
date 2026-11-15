@@ -1,0 +1,23 @@
+[
+  {
+    "repository": "CrispStrobe/CrispCloud",
+    "result": "fulfilled",
+    "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&head=CrispStrobe%3Aintegration%2Fstorage-carving-local-20261115124645&per_page=100",
+    "content": "[]",
+    "isError": false
+  },
+  {
+    "repository": "CrispStrobe/quds_office_suite",
+    "result": "fulfilled",
+    "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/pulls?state=all&head=CrispStrobe%3Aintegration%2Fods-regression-restore-20261115T1246&per_page=100",
+    "content": "[]",
+    "isError": false
+  },
+  {
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "result": "fulfilled",
+    "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/pulls?state=all&head=CrispStrobe%3Aqualification%2Fparser-observed-08296ed-20261115&per_page=100",
+    "content": "[]",
+    "isError": false
+  }
+]

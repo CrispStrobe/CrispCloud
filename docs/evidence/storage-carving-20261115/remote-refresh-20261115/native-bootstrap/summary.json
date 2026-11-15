@@ -1,0 +1,39 @@
+{
+  "done_events": [
+    {
+      "success": true,
+      "time": 6636,
+      "type": "done"
+    }
+  ],
+  "done_success": true,
+  "errors": [],
+  "hidden_test_done": 1,
+  "missing_suites": [],
+  "non_json_lines": 1,
+  "non_object_json_lines": 1,
+  "nonpassing_requested_suites": [],
+  "qualification_success": true,
+  "suites": [
+    {
+      "errors": 0,
+      "failed": 0,
+      "observed": true,
+      "other_results": 0,
+      "passed": 3,
+      "path": "test/native_file_primitives_test.dart",
+      "result": "passed",
+      "skipped": 0,
+      "tests": 3
+    }
+  ],
+  "totals": {
+    "errors": 0,
+    "failed": 0,
+    "other_results": 0,
+    "passed": 3,
+    "skipped": 0,
+    "tests": 3
+  },
+  "unexpected_suites": []
+}

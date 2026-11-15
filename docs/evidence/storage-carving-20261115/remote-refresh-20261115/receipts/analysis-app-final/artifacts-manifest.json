@@ -1,0 +1,48 @@
+{
+  "archive": {
+    "file": "artifacts.tar.xz",
+    "sha256": "a981c343495f07bfd0d11cc0ab58d4f0b76ca0c73f4b7fa3e45dc11521d08c3d",
+    "size": 456736
+  },
+  "every_member_reverified": true,
+  "file_count": 7,
+  "label": "analysis-app-final",
+  "members": {
+    "analysis-app-final/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "1516bb308e624d64e353eba37f00a4d32f1c4fcb5a878a204615b1df3ff605f0",
+      "size": 762
+    },
+    "analysis-app-final/command.json": {
+      "mode": 420,
+      "sha256": "d4f7fbd9932e58ed8a68e50dddd684166a0452f4c6c0e1f0879acc8327c1b1a4",
+      "size": 7014
+    },
+    "analysis-app-final/inputs-after.json.gz": {
+      "mode": 420,
+      "sha256": "6ce6040d4d141aec1d8bcbd40e16c58c8a0f40f4170c5f2c71b9f12b6512dfca",
+      "size": 452458
+    },
+    "analysis-app-final/inputs-before.json.gz": {
+      "mode": 420,
+      "sha256": "6643fa61095aac3ed5f512533f0b8812238989aeeebc5d3b53f1f9c3fa2f79e0",
+      "size": 452458
+    },
+    "analysis-app-final/metadata.json": {
+      "mode": 420,
+      "sha256": "cccf10a47e7988e1c19b9d43f879ec4a2d7c4f73a00bb326e081a334e610459e",
+      "size": 7254
+    },
+    "analysis-app-final/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "analysis-app-final/stdout.log": {
+      "mode": 420,
+      "sha256": "f82c1d41f9fdadb4dcceee62dcc21dbfaac8b8ee69c2d6144fbde4e016e4814a",
+      "size": 2365
+    }
+  },
+  "schema": 1
+}

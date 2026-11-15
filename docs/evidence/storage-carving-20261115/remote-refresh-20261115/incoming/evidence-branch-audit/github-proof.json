@@ -1,0 +1,64 @@
+{
+  "observed_utc": "2026-11-15T12:55:45.360Z",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch_list_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100",
+  "matching_branches": [
+    {
+      "name": "feature/veracrypt-compatibility-20261115",
+      "commit": {
+        "sha": "7c1c925028d66f8109c628b8c17a0d4f1d70cb73",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/7c1c925028d66f8109c628b8c17a0d4f1d70cb73"
+      },
+      "protected": false
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "commit": {
+        "sha": "7d0de79eeb5932e355e66af0be073d58f9fcf3c4",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/7d0de79eeb5932e355e66af0be073d58f9fcf3c4"
+      },
+      "protected": false
+    },
+    {
+      "name": "main",
+      "commit": {
+        "sha": "686318626e209220011f7da194cfe4e41ca4adeb",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/686318626e209220011f7da194cfe4e41ca4adeb"
+      },
+      "protected": false
+    }
+  ],
+  "exact_head_pr_list": {
+    "content": "[]",
+    "title": "pulls",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&head=CrispStrobe:feature/veracrypt-compatibility-20261115&per_page=100",
+    "display_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&head=CrispStrobe:feature/veracrypt-compatibility-20261115&per_page=100",
+    "display_title": "pulls",
+    "structuredContent": {
+      "title": "pulls",
+      "content": "[]",
+      "display_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&head=CrispStrobe:feature/veracrypt-compatibility-20261115&per_page=100"
+    }
+  },
+  "exact_head_pr_search": {
+    "issues": []
+  },
+  "keyword_pr_numbers": [
+    {
+      "number": 18,
+      "title": "Runtime polish: hex fonts, inline rename, editor choice, sandbox terminal, App Store guards",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/18"
+    },
+    {
+      "number": 24,
+      "title": "Replace process helpers with native APIs; document export compliance",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/24"
+    },
+    {
+      "number": 25,
+      "title": "Audit encryption, preserve providers, and document no-report store releases",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/25"
+    }
+  ]
+}

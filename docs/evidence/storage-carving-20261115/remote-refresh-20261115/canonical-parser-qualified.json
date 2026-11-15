@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "canonical_parser_source": "08296edbee08da013a8ff718798972552ccd03f7",
+  "qualification_commit": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+  "qualification_summary_url": "https://github.com/CrispStrobe/legacy-doc-parser/blob/09a4a531a4aa210a638a220de45c9d53d44c84e1/doc/evidence/incoming-reconcile-20261115/summary.json",
+  "source_pin_remains_fixed": true,
+  "evidence_only_later_commit": true,
+  "canonical_recorded_summary": {
+    "source_commit": "08296edbee08da013a8ff718798972552ccd03f7",
+    "source_tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb",
+    "source_parents": [
+      "57442c79239fb4d483e274e0ebb04f34686beb6c",
+      "ea82b13dcb0abbd151995cb7d2881789ed137286"
+    ],
+    "merge_resolution": "Keep qualified explicit FormatException/CfbfException helper; add current-main compound recovery regression. Production bytes unchanged versus continuation.",
+    "runtime": {
+      "suite_count": 144,
+      "totals": {
+        "errors": 0,
+        "failed": 0,
+        "other_results": 0,
+        "passed": 4132,
+        "skipped": 0,
+        "tests": 4132
+      },
+      "missing_suites": [],
+      "unexpected_suites": [],
+      "nonpassing_requested_suites": [],
+      "qualification_success": true,
+      "elapsed_seconds": 45.91251653600011,
+      "stable_inputs_and_commit": true
+    },
+    "strict_analysis": {
+      "file_count": 18,
+      "returncode": 0,
+      "qualification_success": true,
+      "stable_inputs_and_commit": true
+    },
+    "dependencies": {
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": true,
+      "restored_historical_lock": {
+        "source_path": "doc/evidence/storage-carving-reconcile-20261115/dependency-setup/after/pubspec.lock.gz",
+        "source_commit": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "restored_path": "pubspec.lock",
+        "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+        "size": 12536,
+        "purpose": "Reuse recorded standalone graph; pub get will enforce this lock"
+      }
+    },
+    "tools": {
+      "dart": "3.13.7",
+      "flutter_distribution": "3.47.8",
+      "tool_hashes_recorded": true
+    },
+    "archive": {
+      "path": "artifacts.tar.xz",
+      "sha256": "353e4386a5e0a9fec060e2f75ff113a08a392febd565c32c2edcec074981c95d",
+      "size": 206644,
+      "member_count": 32,
+      "manifest": "artifacts-manifest.json",
+      "verified": true
+    },
+    "scope": "Native Dart unit inventory and strict analysis only; no native Office rendering, broad schema, browser parity or GitHub Actions claim."
+  }
+}
