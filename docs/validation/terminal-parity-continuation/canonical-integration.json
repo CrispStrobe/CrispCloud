@@ -1,0 +1,113 @@
+{
+  "host_squash_equivalence": [
+    {
+      "pr": 153,
+      "branch": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "squash": "2f88409f0817172cd29c94e4682d03e9e29a2c54",
+      "tree": "7ed6df2eef27a893f464e3755f3749ada077e7b8"
+    },
+    {
+      "pr": 154,
+      "branch": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "squash": "01f7fc778cb3f401f4d261c3de2eccfee91547f6",
+      "tree": "c98dbbd5dac0d6ad34cf27fc4c087d507285b8b6"
+    }
+  ],
+  "canonical_repository": "CrispStrobe/quds_office_suite",
+  "zotero_source": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+  "combined_source": "3304f42ee17b52659a82d5714dcc730184050960",
+  "compare": {
+    "repository_full_name": "CrispStrobe/quds_office_suite",
+    "base": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+    "head": "3304f42ee17b52659a82d5714dcc730184050960",
+    "status": "ahead",
+    "ahead_by": 14,
+    "behind_by": 0,
+    "total_commits": 14,
+    "too_large": null,
+    "base_commit": {
+      "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "html_url": "https://github.com/CrispStrobe/quds_office_suite/commit/8855b88a96b5c94349e3b5278c339228a1688c3e"
+    },
+    "merge_base_commit": {
+      "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/8855b88a96b5c94349e3b5278c339228a1688c3e",
+      "html_url": "https://github.com/CrispStrobe/quds_office_suite/commit/8855b88a96b5c94349e3b5278c339228a1688c3e"
+    },
+    "files": [
+      {
+        "filename": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "status": "modified",
+        "additions": 12,
+        "deletions": 0,
+        "changes": 12,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+        "status": "modified",
+        "additions": 6,
+        "deletions": 0,
+        "changes": 6,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "status": "modified",
+        "additions": 22,
+        "deletions": 2,
+        "changes": 24,
+        "previous_filename": null
+      },
+      {
+        "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "status": "modified",
+        "additions": 47,
+        "deletions": 0,
+        "changes": 47,
+        "previous_filename": null
+      }
+    ]
+  },
+  "git_commit": {
+    "sha": "3304f42ee17b52659a82d5714dcc730184050960",
+    "node_id": "C_kwDOVjGvydoAKDMzMDRmNDJlZTE3YjUyNjU5YTgyZDU3MTRkY2M3MzAxODQwNTA5NjA",
+    "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/git/commits/3304f42ee17b52659a82d5714dcc730184050960",
+    "html_url": "https://github.com/CrispStrobe/quds_office_suite/commit/3304f42ee17b52659a82d5714dcc730184050960",
+    "author": {
+      "name": "CrispStrobe",
+      "email": "cze+github@mailbox.org",
+      "date": "2026-11-15T22:12:03Z"
+    },
+    "committer": {
+      "name": "CrispStrobe",
+      "email": "cze+github@mailbox.org",
+      "date": "2026-11-15T22:12:03Z"
+    },
+    "tree": {
+      "sha": "108e757e4d507edf590c6e37c1829e26e6bcab1e",
+      "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/git/trees/108e757e4d507edf590c6e37c1829e26e6bcab1e"
+    },
+    "message": "Merge remote-tracking branch 'origin/codex/zotero-support-20261115' into integrate/current-quds-20261115",
+    "parents": [
+      {
+        "sha": "3d193455894c563bb96ecd3ef6170a1533a0a9f4",
+        "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/git/commits/3d193455894c563bb96ecd3ef6170a1533a0a9f4",
+        "html_url": "https://github.com/CrispStrobe/quds_office_suite/commit/3d193455894c563bb96ecd3ef6170a1533a0a9f4"
+      },
+      {
+        "sha": "8855b88a96b5c94349e3b5278c339228a1688c3e",
+        "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/git/commits/8855b88a96b5c94349e3b5278c339228a1688c3e",
+        "html_url": "https://github.com/CrispStrobe/quds_office_suite/commit/8855b88a96b5c94349e3b5278c339228a1688c3e"
+      }
+    ],
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  }
+}

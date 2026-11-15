@@ -1,0 +1,22 @@
+{
+  "checked_at_utc": "2026-11-15T22:14:59.137938+00:00",
+  "status": "passed",
+  "source_commit": "3304f42ee17b52659a82d5714dcc730184050960",
+  "source_tree": "108e757e4d507edf590c6e37c1829e26e6bcab1e",
+  "canonical_tree_truncated": false,
+  "manifest_sha256": "dadfb5b6ca9a36308266c64c6dfcaa19216dde79445d22a2410769fe50d71b7c",
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "counts": {
+    "managed_sha256": 2384,
+    "quds_canonical_blobs": 527,
+    "legacy_sha256": 1857
+  },
+  "mismatches": [],
+  "scope": "All 2384 managed paths freshly SHA256 hashed. All 527 managed Quds files compared by Git blob SHA1, mode and byte size to the complete canonical recursive tree. Standalone legacy parser 1857 file digests checked, source pin preserved. No runtime validation implied.",
+  "quds_source_inventory_sha256": "4ea2ab78dfbcaa58dc7b2396a0d97ccf9e09e9f886f5d9653b6404a37073bdd4"
+}

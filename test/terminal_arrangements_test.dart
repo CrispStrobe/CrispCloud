@@ -231,6 +231,86 @@ void main() {
         );
       }
     });
+
+    test('nested arrangements retain hidden tabs and active inner leaves', () {
+      final layout = TerminalPaneSplit(
+        axis: TerminalSplitAxis.horizontal,
+        fraction: 0.6,
+        first: TerminalPaneSplit(
+          axis: TerminalSplitAxis.vertical,
+          fraction: 0.7,
+          first: TerminalPaneLeaf(2),
+          second: TerminalPaneLeaf(0),
+        ),
+        second: TerminalPaneLeaf(3),
+      );
+      final arrangement = TerminalArrangement(
+        name: 'Nested',
+        tabs: List.generate(
+          4,
+          (index) => TerminalArrangementTab(name: '$index'),
+        ),
+        activeIndex: 0,
+        layout: layout,
+      );
+      final restored = TerminalArrangement.fromJson(
+        jsonDecode(jsonEncode(arrangement.toJson())),
+      );
+      expect(restored.layout, layout);
+      expect(restored.activeIndex, 0);
+      expect(restored.firstIndex, 2);
+      expect(restored.secondIndex, 3);
+      expect(restored.splitFraction, 0.6);
+      expect(restored.tabs, hasLength(4));
+      expect(restored.layout.contains(1), isFalse);
+      for (final invalid in [TerminalPaneLeaf(4), TerminalPaneLeaf(1)]) {
+        expect(
+          () => TerminalArrangement(
+            name: 'Invalid active or index',
+            tabs: arrangement.tabs,
+            activeIndex: 0,
+            layout: invalid,
+          ),
+          throwsFormatException,
+        );
+      }
+    });
+
+    test('rejects contradictory or missing nested layout data', () {
+      final arrangement = TerminalArrangement(
+        name: 'Split',
+        tabs: List.generate(3, (_) => TerminalArrangementTab()),
+        activeIndex: 1,
+        layout: TerminalPaneSplit(
+          axis: TerminalSplitAxis.vertical,
+          first: TerminalPaneLeaf(0),
+          second: TerminalPaneLeaf(1),
+        ),
+      );
+      for (final change in <Map<String, Object?>>[
+        {'layout': null},
+        {'layout': []},
+        {'layout': TerminalPaneLeaf(0).toJson()},
+        {'firstIndex': 2},
+        {'secondIndex': 2},
+        {'splitAxis': 'horizontal'},
+        {'splitFraction': 0.6},
+        {'activeIndex': 2},
+      ]) {
+        expect(
+          () => TerminalArrangement.fromJson(
+            jsonDecode(jsonEncode({...arrangement.toJson(), ...change})),
+          ),
+          throwsFormatException,
+        );
+      }
+      final missing = arrangement.toJson()..remove('layout');
+      expect(
+        () => TerminalArrangement.fromJson(missing, requireLayout: true),
+        throwsFormatException,
+      );
+      expect(TerminalArrangement.fromJson(missing).layout, arrangement.layout);
+    });
   });
 
   group('arrangement store', () {
@@ -278,6 +358,57 @@ void main() {
       );
     });
 
+    test('reads legacy v1 and migrates all records on the next save', () async {
+      final old = {
+        'name': 'Legacy',
+        'tabs': [
+          TerminalArrangementTab(name: 'First').toJson(),
+          TerminalArrangementTab(name: 'Second').toJson(),
+          TerminalArrangementTab(name: 'Hidden').toJson(),
+        ],
+        'activeIndex': 0,
+        'firstIndex': 1,
+        'secondIndex': 0,
+        'splitAxis': 'vertical',
+        'splitFraction': 0.65,
+      };
+      raw = jsonEncode({
+        'version': 1,
+        'arrangements': [old],
+      });
+      final before = raw;
+      final legacy = (await store.load()).single;
+      expect(legacy.layout.leafIds, [1, 0]);
+      expect(legacy.layout.splitAt('')!.axis, TerminalSplitAxis.vertical);
+      expect(legacy.layout.splitAt('')!.fraction, 0.65);
+      expect(raw, before, reason: 'Reading does not mutate persisted data');
+      expect(writes, 0);
+      final nested = TerminalArrangement(
+        name: 'New nested layout',
+        tabs: List.generate(3, (_) => TerminalArrangementTab()),
+        activeIndex: 2,
+        layout: TerminalPaneLeaf(0)
+            .splitLeaf(0, 1, TerminalSplitAxis.horizontal)
+            .splitLeaf(1, 2, TerminalSplitAxis.vertical),
+      );
+      await store.save(nested);
+      final encoded = jsonDecode(raw!);
+      expect(encoded['version'], 2);
+      expect(
+        (encoded['arrangements'] as List).every(
+          (entry) => entry['layout'] is Map,
+        ),
+        isTrue,
+      );
+      final restored = await store.load();
+      expect(restored.first.layout, legacy.layout);
+      expect(restored.first.tabs, hasLength(3));
+      expect(restored.last.layout, nested.layout);
+      await store.delete(nested.name);
+      expect((await store.load()).single.layout, legacy.layout);
+      expect(jsonDecode(raw!)['version'], 2);
+    });
+
     test(
       'bounds saved arrangements but permits replacement at capacity',
       () async {
@@ -307,12 +438,18 @@ void main() {
         for (final invalid in [
           '{bad json',
           'null',
-          jsonEncode({'version': 2, 'arrangements': []}),
+          jsonEncode({'version': 3, 'arrangements': []}),
           jsonEncode({'version': 1.0, 'arrangements': []}),
           jsonEncode({'version': 1, 'arrangements': 'invalid'}),
           jsonEncode({
             'version': 1,
             'arrangements': [null],
+          }),
+          jsonEncode({
+            'version': 2,
+            'arrangements': [
+              _arrangement('Missing layout').toJson()..remove('layout'),
+            ],
           }),
           jsonEncode({
             'version': 1,

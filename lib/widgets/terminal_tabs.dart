@@ -61,11 +61,11 @@ class TerminalTabs extends ConsumerStatefulWidget {
 class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   final _tabs = <_TerminalTab>[];
   int _nextId = 1;
-  late int _first;
-  int? _second;
+  late TerminalPaneLayout _layout;
   late int _active;
-  Axis _axis = Axis.horizontal;
-  double _splitFraction = 0.5;
+  bool _zoomed = false;
+  final _lastPaneBounds = <int, Rect>{};
+  Map<int, Rect> _visiblePaneBounds = const {};
   bool _closing = false;
   bool _arranging = false;
   int _focusRequest = 0;
@@ -84,7 +84,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
           ref.read(focusAreaProvider) == FocusArea.terminal,
     )..addListener(_broadcastChanged);
     final tab = _makeTab(widget.session);
-    _first = _active = tab.id;
+    _active = tab.id;
+    _layout = TerminalPaneLeaf(tab.id);
   }
 
   _TerminalTab _makeTab([TerminalSession? initial]) {
@@ -142,9 +143,9 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     if (!identical(oldWidget.session, widget.session)) {
       _releaseTabs();
       final tab = _makeTab(widget.session);
-      _first = _active = tab.id;
-      _second = null;
-      _splitFraction = 0.5;
+      _active = tab.id;
+      _layout = TerminalPaneLeaf(tab.id);
+      _zoomed = false;
     }
   }
 
@@ -155,6 +156,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       if (tab.owned) tab.session.dispose();
     }
     _tabs.clear();
+    _lastPaneBounds.clear();
+    _visiblePaneBounds = const {};
   }
 
   void _activate(int id) {
@@ -163,12 +166,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
     setState(() {
       _focusRequest++;
-      if (id != _first && id != _second) {
-        if (_active == _second) {
-          _second = id;
-        } else {
-          _first = id;
-        }
+      if (!_layout.contains(id)) {
+        _layout = _layout.replaceLeaf(_active, id);
       }
       _active = id;
     });
@@ -182,22 +181,79 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
 
   void _split(Axis axis) {
     if (_arranging || _closing) return;
-    if (_second == null && _tabs.length >= TerminalTabs.maxTabs) return;
+    if (_tabs.length >= TerminalTabs.maxTabs) return;
+    ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
     setState(() {
-      _axis = axis;
-      if (_second == null) {
-        final tab = _makeTab();
-        _second = _active = tab.id;
-      }
+      final tab = _makeTab();
+      _layout = _layout.splitLeaf(
+        _active,
+        tab.id,
+        axis == Axis.horizontal
+            ? TerminalSplitAxis.horizontal
+            : TerminalSplitAxis.vertical,
+      );
+      _active = tab.id;
+      _zoomed = false;
+      _focusRequest++;
     });
   }
 
   void _singlePane() {
     if (_arranging || _closing) return;
     setState(() {
-      _first = _active;
-      _second = null;
+      _layout = TerminalPaneLeaf(_active);
+      _zoomed = false;
+      _focusRequest++;
     });
+  }
+
+  void _toggleZoom() {
+    if (_arranging || _closing || _layout.leafIds.length < 2) return;
+    setState(() {
+      _zoomed = !_zoomed;
+      _focusRequest++;
+    });
+  }
+
+  void _cyclePane(int step) {
+    final ids = _layout.leafIds;
+    if (ids.length < 2) return;
+    _activate(ids[(ids.indexOf(_active) + step) % ids.length]);
+  }
+
+  void _navigatePane(LogicalKeyboardKey direction) {
+    final current = _visiblePaneBounds[_active];
+    if (current == null || _visiblePaneBounds.length < 2) {
+      // Zoom and compact layouts keep the full pane order available.
+      _cyclePane(
+        direction == LogicalKeyboardKey.arrowLeft ||
+                direction == LogicalKeyboardKey.arrowUp
+            ? -1
+            : 1,
+      );
+      return;
+    }
+    final horizontal =
+        direction == LogicalKeyboardKey.arrowLeft ||
+        direction == LogicalKeyboardKey.arrowRight;
+    final positive =
+        direction == LogicalKeyboardKey.arrowRight ||
+        direction == LogicalKeyboardKey.arrowDown;
+    int? next;
+    var nearest = double.infinity;
+    for (final entry in _visiblePaneBounds.entries) {
+      if (entry.key == _active) continue;
+      final delta = entry.value.center - current.center;
+      final along = horizontal ? delta.dx : delta.dy;
+      if (positive ? along <= 0 : along >= 0) continue;
+      final across = horizontal ? delta.dy.abs() : delta.dx.abs();
+      final score = along.abs() + across * 2;
+      if (score < nearest) {
+        next = entry.key;
+        nearest = score;
+      }
+    }
+    if (next != null) _activate(next);
   }
 
   String _label(_TerminalTab tab) {
@@ -280,13 +336,12 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       tab.session.removeListener(_changed);
       setState(() {
         _tabs.remove(tab);
-        if (_first == tab.id) {
-          _first = _second ?? _tabs.first.id;
-          _second = null;
-        } else if (_second == tab.id) {
-          _second = null;
-        }
-        if (_active == tab.id) _active = _first;
+        _layout =
+            _layout.removeLeaf(tab.id) ?? TerminalPaneLeaf(_tabs.first.id);
+        if (_active == tab.id) _active = _layout.leafIds.first;
+        if (_layout.leafIds.length == 1) _zoomed = false;
+        _lastPaneBounds.remove(tab.id);
+        _focusRequest++;
       });
       if (tab.owned) tab.session.dispose();
     } finally {
@@ -312,14 +367,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         TerminalArrangementTab(name: tab.name, paneState: tab.paneState),
     ],
     activeIndex: _tabs.indexWhere((tab) => tab.id == _active),
-    firstIndex: _tabs.indexWhere((tab) => tab.id == _first),
-    secondIndex: _second == null
-        ? null
-        : _tabs.indexWhere((tab) => tab.id == _second),
-    splitAxis: _axis == Axis.horizontal
-        ? TerminalSplitAxis.horizontal
-        : TerminalSplitAxis.vertical,
-    splitFraction: _splitFraction,
+    layout: _layout.mapIds((id) => _tabs.indexWhere((tab) => tab.id == id)),
   );
 
   void _notice(String message) {
@@ -434,15 +482,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         _tabs
           ..clear()
           ..addAll(restored);
-        _first = restored[arrangement.firstIndex].id;
-        _second = arrangement.secondIndex == null
-            ? null
-            : restored[arrangement.secondIndex!].id;
+        _layout = arrangement.layout.mapIds((index) => restored[index].id);
         _active = restored[arrangement.activeIndex].id;
-        _axis = arrangement.splitAxis == TerminalSplitAxis.horizontal
-            ? Axis.horizontal
-            : Axis.vertical;
-        _splitFraction = arrangement.splitFraction;
+        _zoomed = false;
+        _lastPaneBounds.clear();
         _focusRequest++;
       });
       for (final tab in previous) {
@@ -457,7 +500,6 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     }
   }
 
-
   Future<void> _chooseBroadcastGroup() async {
     if (_arranging || _closing) return;
     final candidates = <TerminalBroadcastTarget>[];
@@ -468,7 +510,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       candidates.add(
         TerminalBroadcastTarget(
           id: tab.id,
-          label: '${_tabs.indexOf(tab) + 1}. $label'
+          label:
+              '${_tabs.indexOf(tab) + 1}. $label'
               '${destination == null || destination == label ? '' : ' — $destination'}',
           session: tab.session,
         ),
@@ -482,14 +525,22 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       context: context,
       builder: (_) => TerminalBroadcastDialog(
         candidates: candidates,
-        initiallySelected: _broadcast.targets.map((target) => target.id).toSet(),
+        initiallySelected: _broadcast.targets
+            .map((target) => target.id)
+            .toSet(),
       ),
     );
-    if (!mounted || chosen == null || !widget.visible || _arranging || _closing) {
+    if (!mounted ||
+        chosen == null ||
+        !widget.visible ||
+        _arranging ||
+        _closing) {
       return;
     }
     if (!_broadcast.start(chosen)) {
-      _broadcastNotice('Connections changed. Choose the broadcast group again.');
+      _broadcastNotice(
+        'Connections changed. Choose the broadcast group again.',
+      );
     }
   }
 
@@ -523,7 +574,9 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                     children: [
                       Text(
                         context
-                            .terminalBroadcastTr('Broadcasting to {count} terminals')
+                            .terminalBroadcastTr(
+                              'Broadcasting to {count} terminals',
+                            )
                             .replaceAll('{count}', '${targets.length}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -570,10 +623,25 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   KeyEventResult _onWorkspaceKey(KeyEvent event) {
     if (_arranging) return KeyEventResult.handled;
     final keyboard = HardwareKeyboard.instance;
-    if (keyboard.isAltPressed) return KeyEventResult.ignored;
     final apple =
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.iOS;
+    final direction = const [
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.arrowDown,
+    ].contains(event.logicalKey);
+    if (keyboard.isAltPressed) {
+      final paneModifier =
+          (keyboard.isControlPressed && !keyboard.isMetaPressed) ||
+          (apple && keyboard.isMetaPressed && !keyboard.isControlPressed);
+      if (direction && paneModifier && !keyboard.isShiftPressed) {
+        if (event is KeyDownEvent) _navigatePane(event.logicalKey);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
     final command = apple
         ? keyboard.isMetaPressed && !keyboard.isControlPressed
         : keyboard.isControlPressed &&
@@ -581,13 +649,46 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               keyboard.isShiftPressed;
     final newTab = command && event.logicalKey == LogicalKeyboardKey.keyT;
     final closeTab = command && event.logicalKey == LogicalKeyboardKey.keyW;
+    final splitSide =
+        command &&
+        event.logicalKey == LogicalKeyboardKey.keyD &&
+        (!apple || !keyboard.isShiftPressed);
+    final splitBelow =
+        command &&
+        (apple
+            ? keyboard.isShiftPressed &&
+                  event.logicalKey == LogicalKeyboardKey.keyD
+            : event.logicalKey == LogicalKeyboardKey.keyE);
+    final zoom =
+        command &&
+        event.logicalKey == LogicalKeyboardKey.enter &&
+        keyboard.isShiftPressed;
+    final cyclePane =
+        command &&
+        (event.logicalKey == LogicalKeyboardKey.bracketLeft ||
+            event.logicalKey == LogicalKeyboardKey.bracketRight) &&
+        (!apple || !keyboard.isShiftPressed);
     final cycle =
         keyboard.isControlPressed &&
         !keyboard.isMetaPressed &&
         event.logicalKey == LogicalKeyboardKey.tab;
-    if (!newTab && !closeTab && !cycle) return KeyEventResult.ignored;
+    if (!newTab &&
+        !closeTab &&
+        !cycle &&
+        !splitSide &&
+        !splitBelow &&
+        !zoom &&
+        !cyclePane) {
+      return KeyEventResult.ignored;
+    }
     if (event is KeyDownEvent) {
       if (newTab) _addTab();
+      if (splitSide) _split(Axis.horizontal);
+      if (splitBelow) _split(Axis.vertical);
+      if (zoom) _toggleZoom();
+      if (cyclePane) {
+        _cyclePane(event.logicalKey == LogicalKeyboardKey.bracketLeft ? -1 : 1);
+      }
       if (closeTab) {
         unawaited(_closeTab(_tabs.firstWhere((tab) => tab.id == _active)));
       }
@@ -598,6 +699,129 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       }
     }
     return KeyEventResult.handled;
+  }
+
+  void _resizePaneSplit(
+    _PaneDivider divider,
+    double delta, {
+    bool balance = false,
+  }) {
+    if (_arranging || _closing || !widget.visible) return;
+    final current = _layout.splitAt(divider.path);
+    if (current == null ||
+        current.axis != divider.split.axis ||
+        !listEquals(current.first.leafIds, divider.split.first.leafIds) ||
+        !listEquals(current.second.leafIds, divider.split.second.leafIds)) {
+      return;
+    }
+    final effective = current.fraction.clamp(divider.lower, divider.upper);
+    final fraction = balance
+        ? 0.5
+        : (effective + delta / divider.usable)
+              .clamp(
+                TerminalPaneLayout.minimumFraction,
+                TerminalPaneLayout.maximumFraction,
+              )
+              .toDouble();
+    setState(() => _layout = _layout.withSplitFraction(divider.path, fraction));
+  }
+
+  Widget _buildPanes(Size size) {
+    final geometry = _PaneGeometry(
+      _layout,
+      size,
+      active: _active,
+      zoomed: _zoomed,
+    );
+    final full = Offset.zero & size;
+    _visiblePaneBounds = geometry.panes;
+    _lastPaneBounds.addAll(geometry.panes);
+    return ColoredBox(
+      color: Theme.of(context).dividerColor,
+      child: Stack(
+        children: [
+          // Keep every viewport under the same parent and stable key. Only its
+          // rectangle changes; nested splits never reparent terminal state.
+          for (final tab in _tabs)
+            Positioned.fromRect(
+              key: ValueKey('terminal-pane-${tab.id}'),
+              rect: geometry.panes[tab.id] ?? _lastPaneBounds[tab.id] ?? full,
+              child: Offstage(
+                offstage: !geometry.panes.containsKey(tab.id),
+                child: ExcludeFocus(
+                  excluding: !widget.visible || _arranging || tab.id != _active,
+                  child: IgnorePointer(
+                    ignoring: _arranging,
+                    child: TerminalPanel(
+                      key: tab.key,
+                      session: tab.session,
+                      autoStart: tab.start,
+                      initialPaneState: tab.paneState,
+                      onPaneStateChanged: (state) {
+                        if (_tabs.contains(tab)) tab.paneState = state;
+                      },
+                      embedded: true,
+                      visible:
+                          widget.visible && geometry.panes.containsKey(tab.id),
+                      active: tab.id == _active && !_arranging,
+                      focusRequest: _focusRequest,
+                      isActivePane: () =>
+                          mounted &&
+                          widget.visible &&
+                          !_arranging &&
+                          _active == tab.id,
+                      onActivate: () => _activate(tab.id),
+                      onWorkspaceKey: _onWorkspaceKey,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          for (final divider in geometry.dividers)
+            Positioned.fromRect(
+              key: ValueKey('terminal-divider-position-${divider.path}'),
+              rect: divider.bounds,
+              child: Semantics(
+                label: context.terminalArrangementTr('Resize split'),
+                value: '${(divider.fraction * 100).round()}%',
+                onIncrease: () =>
+                    _resizePaneSplit(divider, divider.usable * 0.05),
+                onDecrease: () =>
+                    _resizePaneSplit(divider, -divider.usable * 0.05),
+                child: MouseRegion(
+                  cursor: divider.horizontal
+                      ? SystemMouseCursors.resizeLeftRight
+                      : SystemMouseCursors.resizeUpDown,
+                  child: Tooltip(
+                    message: context.terminalArrangementTr(
+                      'Drag to resize. Double-click to balance.',
+                    ),
+                    child: GestureDetector(
+                      key: ValueKey(
+                        divider.path.isEmpty
+                            ? 'terminal-split-divider'
+                            : 'terminal-split-divider-${divider.path}',
+                      ),
+                      behavior: HitTestBehavior.opaque,
+                      onHorizontalDragUpdate: divider.horizontal
+                          ? (details) =>
+                                _resizePaneSplit(divider, details.delta.dx)
+                          : null,
+                      onVerticalDragUpdate: !divider.horizontal
+                          ? (details) =>
+                                _resizePaneSplit(divider, details.delta.dy)
+                          : null,
+                      onDoubleTap: () =>
+                          _resizePaneSplit(divider, 0, balance: true),
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _tabBar() => Material(
@@ -693,6 +917,13 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               ),
             ),
           ),
+          if (_zoomed)
+            IconButton(
+              key: const ValueKey('terminal-restore-panes'),
+              tooltip: context.terminalControlsTr('Restore panes'),
+              onPressed: _toggleZoom,
+              icon: const Icon(Icons.zoom_in_map, size: 20),
+            ),
           IconButton(
             key: const ValueKey('terminal-new-tab'),
             tooltip: context.terminalControlsTr('New terminal'),
@@ -714,6 +945,12 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   _split(Axis.vertical);
                 case 'single':
                   _singlePane();
+                case 'zoom':
+                  _toggleZoom();
+                case 'previous-pane':
+                  _cyclePane(-1);
+                case 'next-pane':
+                  _cyclePane(1);
                 case 'rename':
                   unawaited(
                     _rename(_tabs.firstWhere((tab) => tab.id == _active)),
@@ -727,7 +964,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                 case 'move-right':
                   _moveTab(1);
                 case 'balance':
-                  setState(() => _splitFraction = 0.5);
+                  setState(() => _layout = _layout.balance());
                 case 'broadcast':
                   unawaited(_chooseBroadcastGroup());
               }
@@ -735,18 +972,37 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
             itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'horizontal',
-                enabled: _second != null || _tabs.length < TerminalTabs.maxTabs,
+                enabled: _tabs.length < TerminalTabs.maxTabs,
                 child: Text(context.terminalControlsTr('Split side by side')),
               ),
               PopupMenuItem(
                 value: 'vertical',
-                enabled: _second != null || _tabs.length < TerminalTabs.maxTabs,
+                enabled: _tabs.length < TerminalTabs.maxTabs,
                 child: Text(context.terminalControlsTr('Split top and bottom')),
               ),
               PopupMenuItem(
                 value: 'single',
-                enabled: _second != null,
+                enabled: _layout.leafIds.length > 1,
                 child: Text(context.terminalControlsTr('Single pane')),
+              ),
+              PopupMenuItem(
+                value: 'zoom',
+                enabled: _layout.leafIds.length > 1,
+                child: Text(
+                  context.terminalControlsTr(
+                    _zoomed ? 'Restore panes' : 'Zoom active pane',
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'previous-pane',
+                enabled: _layout.leafIds.length > 1,
+                child: Text(context.terminalControlsTr('Previous pane')),
+              ),
+              PopupMenuItem(
+                value: 'next-pane',
+                enabled: _layout.leafIds.length > 1,
+                child: Text(context.terminalControlsTr('Next pane')),
               ),
               PopupMenuItem(
                 value: 'rename',
@@ -768,7 +1024,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               ),
               PopupMenuItem(
                 value: 'balance',
-                enabled: _second != null,
+                enabled: _layout.leafIds.length > 1,
                 child: Text(context.terminalArrangementTr('Balance panes')),
               ),
               const PopupMenuDivider(),
@@ -785,7 +1041,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               const PopupMenuDivider(),
               PopupMenuItem(
                 value: 'broadcast',
-                enabled: _tabs.where((tab) => tab.session.isConnected).length >= 2,
+                enabled:
+                    _tabs.where((tab) => tab.session.isConnected).length >= 2,
                 child: Text(context.terminalBroadcastTr('Broadcast input')),
               ),
             ],
@@ -848,160 +1105,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, area) {
-                    // A narrow/short viewport presents the active pane alone while
-                    // preserving the requested split and both live connections.
-                    final split =
-                        _second != null &&
-                        (_axis == Axis.horizontal
-                            ? area.maxWidth >= 560
-                            : area.maxHeight >= 260);
-                    const gap = 8.0;
-                    final extent = _axis == Axis.horizontal
-                        ? area.maxWidth
-                        : area.maxHeight;
-                    final usable = math.max(1.0, extent - gap);
-                    final minimum = _axis == Axis.horizontal ? 220.0 : 120.0;
-                    final lower = math.max(
-                      0.2,
-                      math.min(0.5, minimum / usable),
-                    );
-                    final fraction = _splitFraction.clamp(lower, 1 - lower);
-                    final firstExtent = usable * fraction;
-                    final secondExtent = usable - firstExtent;
-                    void resize(double delta) {
-                      if (_arranging) return;
-                      setState(() {
-                        _splitFraction = (fraction + delta / usable)
-                            .clamp(lower, 1 - lower)
-                            .toDouble();
-                      });
-                    }
-
-                    return ColoredBox(
-                      color: Theme.of(context).dividerColor,
-                      child: Stack(
-                        children: [
-                          for (final tab in _tabs)
-                            Positioned(
-                              key: ValueKey('terminal-pane-${tab.id}'),
-                              left:
-                                  split &&
-                                      tab.id == _second &&
-                                      _axis == Axis.horizontal
-                                  ? firstExtent + gap
-                                  : 0,
-                              top:
-                                  split &&
-                                      tab.id == _second &&
-                                      _axis == Axis.vertical
-                                  ? firstExtent + gap
-                                  : 0,
-                              width: split && _axis == Axis.horizontal
-                                  ? tab.id == _second
-                                        ? secondExtent
-                                        : firstExtent
-                                  : area.maxWidth,
-                              height: split && _axis == Axis.vertical
-                                  ? tab.id == _second
-                                        ? secondExtent
-                                        : firstExtent
-                                  : area.maxHeight,
-                              child: Offstage(
-                                offstage: split
-                                    ? tab.id != _first && tab.id != _second
-                                    : tab.id != _active,
-                                child: ExcludeFocus(
-                                  excluding:
-                                      !widget.visible ||
-                                      _arranging ||
-                                      tab.id != _active,
-                                  child: IgnorePointer(
-                                    ignoring: _arranging,
-                                    child: TerminalPanel(
-                                      key: tab.key,
-                                      session: tab.session,
-                                      autoStart: tab.start,
-                                      initialPaneState: tab.paneState,
-                                      onPaneStateChanged: (state) {
-                                        if (_tabs.contains(tab)) {
-                                          tab.paneState = state;
-                                        }
-                                      },
-                                      embedded: true,
-                                      visible:
-                                          widget.visible &&
-                                          (split
-                                              ? tab.id == _first ||
-                                                    tab.id == _second
-                                              : tab.id == _active),
-                                      active: tab.id == _active && !_arranging,
-                                      focusRequest: _focusRequest,
-                                      isActivePane: () =>
-                                          mounted &&
-                                          widget.visible &&
-                                          !_arranging &&
-                                          _active == tab.id,
-                                      onActivate: () => _activate(tab.id),
-                                      onWorkspaceKey: _onWorkspaceKey,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          if (split)
-                            Positioned(
-                              left: _axis == Axis.horizontal ? firstExtent : 0,
-                              top: _axis == Axis.vertical ? firstExtent : 0,
-                              width: _axis == Axis.horizontal
-                                  ? gap
-                                  : area.maxWidth,
-                              height: _axis == Axis.vertical
-                                  ? gap
-                                  : area.maxHeight,
-                              child: Semantics(
-                                label: context.terminalArrangementTr(
-                                  'Resize split',
-                                ),
-                                value: '${(fraction * 100).round()}%',
-                                onIncrease: () => resize(usable * 0.05),
-                                onDecrease: () => resize(-usable * 0.05),
-                                child: MouseRegion(
-                                  cursor: _axis == Axis.horizontal
-                                      ? SystemMouseCursors.resizeLeftRight
-                                      : SystemMouseCursors.resizeUpDown,
-                                  child: Tooltip(
-                                    message: context.terminalArrangementTr(
-                                      'Drag to resize. Double-click to balance.',
-                                    ),
-                                    child: GestureDetector(
-                                      key: const ValueKey(
-                                        'terminal-split-divider',
-                                      ),
-                                      behavior: HitTestBehavior.opaque,
-                                      onHorizontalDragUpdate:
-                                          _axis == Axis.horizontal
-                                          ? (details) =>
-                                                resize(details.delta.dx)
-                                          : null,
-                                      onVerticalDragUpdate:
-                                          _axis == Axis.vertical
-                                          ? (details) =>
-                                                resize(details.delta.dy)
-                                          : null,
-                                      onDoubleTap: () {
-                                        if (!_arranging) {
-                                          setState(() => _splitFraction = 0.5);
-                                        }
-                                      },
-                                      child: const SizedBox.expand(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
+                    return _buildPanes(area.biggest);
                   },
                 ),
               ),
@@ -1019,4 +1123,113 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     _releaseTabs();
     super.dispose();
   }
+}
+
+/// Layout geometry is separate from the widget hierarchy so a split never
+/// destroys a terminal view. When the requested layout cannot fit, only the
+/// active pane is shown; its topology and the other live sessions are retained.
+class _PaneGeometry {
+  _PaneGeometry(
+    TerminalPaneLayout layout,
+    Size size, {
+    required int active,
+    required bool zoomed,
+  }) {
+    final minimum = _minimum(layout);
+    final bounds = Offset.zero & size;
+    if (zoomed || size.width < minimum.width || size.height < minimum.height) {
+      panes[active] = bounds;
+    } else {
+      _place(layout, bounds, '');
+    }
+  }
+
+  static const gap = 8.0;
+  final panes = <int, Rect>{};
+  final dividers = <_PaneDivider>[];
+
+  static Size _minimum(TerminalPaneLayout node) => switch (node) {
+    TerminalPaneLeaf() => const Size(220, 120),
+    TerminalPaneSplit(:final axis, :final first, :final second) =>
+      switch (axis) {
+        TerminalSplitAxis.horizontal => Size(
+          _minimum(first).width + gap + _minimum(second).width,
+          math.max(_minimum(first).height, _minimum(second).height),
+        ),
+        TerminalSplitAxis.vertical => Size(
+          math.max(_minimum(first).width, _minimum(second).width),
+          _minimum(first).height + gap + _minimum(second).height,
+        ),
+      },
+  };
+
+  void _place(TerminalPaneLayout node, Rect bounds, String path) {
+    if (node is TerminalPaneLeaf) {
+      panes[node.id] = bounds;
+      return;
+    }
+    final split = node as TerminalPaneSplit;
+    final horizontal = split.axis == TerminalSplitAxis.horizontal;
+    final firstMinimum = _minimum(split.first);
+    final secondMinimum = _minimum(split.second);
+    final usable = (horizontal ? bounds.width : bounds.height) - gap;
+    final lower =
+        (horizontal ? firstMinimum.width : firstMinimum.height) / usable;
+    final upper =
+        1 - (horizontal ? secondMinimum.width : secondMinimum.height) / usable;
+    // Minimum pane sizes can temporarily clamp a saved proportion. Keep the
+    // saved value so widening the workspace restores the user's original ratio.
+    final fraction = split.fraction
+        .clamp(lower, math.max(lower, upper))
+        .toDouble();
+    final firstExtent = usable * fraction;
+    final secondExtent = usable - firstExtent;
+    final first = horizontal
+        ? Rect.fromLTWH(bounds.left, bounds.top, firstExtent, bounds.height)
+        : Rect.fromLTWH(bounds.left, bounds.top, bounds.width, firstExtent);
+    final divider = horizontal
+        ? Rect.fromLTWH(first.right, bounds.top, gap, bounds.height)
+        : Rect.fromLTWH(bounds.left, first.bottom, bounds.width, gap);
+    final second = horizontal
+        ? Rect.fromLTWH(divider.right, bounds.top, secondExtent, bounds.height)
+        : Rect.fromLTWH(
+            bounds.left,
+            divider.bottom,
+            bounds.width,
+            secondExtent,
+          );
+    dividers.add(
+      _PaneDivider(
+        path: path,
+        split: split,
+        bounds: divider,
+        usable: usable,
+        lower: lower,
+        upper: math.max(lower, upper),
+        fraction: fraction,
+      ),
+    );
+    _place(split.first, first, '${path}0');
+    _place(split.second, second, '${path}1');
+  }
+}
+
+class _PaneDivider {
+  const _PaneDivider({
+    required this.path,
+    required this.split,
+    required this.bounds,
+    required this.usable,
+    required this.lower,
+    required this.upper,
+    required this.fraction,
+  });
+  final String path;
+  final TerminalPaneSplit split;
+  final Rect bounds;
+  final double usable;
+  final double lower;
+  final double upper;
+  final double fraction;
+  bool get horizontal => split.axis == TerminalSplitAxis.horizontal;
 }
