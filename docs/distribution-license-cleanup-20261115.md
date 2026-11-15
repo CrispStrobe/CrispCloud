@@ -54,8 +54,9 @@ and command manifest remain the runtime boundary; unused `less` is not enabled.
 ## Optional macOS mounts
 
 Default builds omit the native macFUSE/FUSE-T bridge and its UI choices.
-Use `flutter build macos --dart-define=CRISP_ENABLE_FUSE=true` to opt in.
-The Xcode phase reads that same define. An incremental default build removes
+Use `python3 tool/macos_distribution.py build --profile github --fuse` to opt in.
+The Xcode phase verifies the native/Dart profile agreement and the FUSE define.
+App Store builds reject the helper even if it is accidentally requested. An incremental default build removes
 an old generated helper, preventing accidental carryover from an opted-in build.
 The optional source keeps its LGPL libfuse headers and their complete notices;
 this exception is deliberate and does not apply to the removed SMB backend.

@@ -83,6 +83,14 @@ mkents() {  # mkents <source .entitlements> <bundle id> <out>
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $TEAM" "$3"
 }
 
+DISTRIBUTION_PROFILE=$(python3 tool/macos_distribution.py profile --app "$APP")
+APP_ENTITLEMENTS=macos/Runner/Release.entitlements
+HELPER_ENTITLEMENTS=macos/Runner/FuseBridge.entitlements
+if [ "$DISTRIBUTION_PROFILE" = github ]; then
+  APP_ENTITLEMENTS=macos/Runner/Direct.entitlements
+  HELPER_ENTITLEMENTS=macos/Runner/DirectFuse.entitlements
+fi
+
 EXT="$APP/Contents/PlugIns/FinderExtension.appex"
 cp "$APP_PROFILE" "$APP/Contents/embedded.provisionprofile"
 [ -d "$EXT" ] && cp "$EXT_PROFILE" "$EXT/Contents/embedded.provisionprofile"
@@ -90,7 +98,7 @@ cp "$APP_PROFILE" "$APP/Contents/embedded.provisionprofile"
 # Nested first, same order and entitlements as .github/workflows/macos-release.yml.
 HELPER="$APP/Contents/Resources/crispcloud_fuse_bridge"
 if [ -x "$HELPER" ]; then
-  codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --sign "$IDENT" --entitlements macos/Runner/FuseBridge.entitlements "$HELPER"
+  codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --sign "$IDENT" --options runtime --entitlements "$HELPER_ENTITLEMENTS" "$HELPER"
 fi
 find "$APP/Contents/Frameworks" -maxdepth 1 -name '*.framework' -print0 2>/dev/null \
   | xargs -0 -I{} codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" {}
@@ -100,7 +108,7 @@ if [ -d "$EXT" ]; then
   mkents macos/FinderExtension/FinderExtension.entitlements "$EXT_BUNDLE_ID" "$WORK/ext.plist"
   codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/ext.plist" "$EXT"
 fi
-mkents macos/Runner/Release.entitlements "$BUNDLE_ID" "$WORK/app-ents.plist"
+mkents "$APP_ENTITLEMENTS" "$BUNDLE_ID" "$WORK/app-ents.plist"
 codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/app-ents.plist" "$APP"
 
 codesign --verify --deep --strict "$APP"

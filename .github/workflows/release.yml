@@ -393,7 +393,7 @@ jobs:
 
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
-      - run: flutter build macos --release --dart-define=APP_VERSION="${{ needs.create-release.outputs.app_version }}" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
+      - run: python3 tool/macos_distribution.py build --profile github --fuse -- --dart-define=APP_VERSION="${{ needs.create-release.outputs.app_version }}" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
       # ── macOS Code Signing Placeholder ──────────────────────────────────
       # Uncomment and configure the steps below to enable Developer ID signing.
@@ -417,12 +417,12 @@ jobs:
       #     codesign --deep --force --verify --verbose \
       #       --sign "Developer ID Application: Your Name (YOURTEAMID)" \
       #       --options runtime \
-      #       --entitlements macos/Runner/Release.entitlements \
+      #       --entitlements macos/Runner/Direct.entitlements \
       #       "build/macos/Build/Products/Release/CrispCloud.app"
       # ────────────────────────────────────────────────────────────────────
 
       - name: Check distribution component boundary
-        run: python3 tool/check_distribution_components.py --artifact build/macos/Build/Products/Release/CrispCloud.app
+        run: python3 tool/macos_distribution.py verify --profile github --app build/macos/Build/Products/Release/CrispCloud.app
 
       - name: Package macOS build (.zip + .dmg)
         run: |

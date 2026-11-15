@@ -1229,7 +1229,13 @@
     "test/widget/veracrypt_unlock_dialog_test.dart",
     "test/widget/veracrypt_viewer_test.dart",
     "tool/check_veracrypt.sh",
-    "tool/run_dart_web_probe.cjs"
+    "tool/run_dart_web_probe.cjs",
+    "macos/Runner.xcodeproj/project.pbxproj",
+    "macos/Runner/Configs/AppInfo.xcconfig",
+    "macos/Runner/Direct.entitlements",
+    "macos/Runner/DirectFuse.entitlements",
+    "tool/macos_distribution.py",
+    "tool/sign_macos_local.sh"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",

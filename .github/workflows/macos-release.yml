@@ -174,7 +174,7 @@ jobs:
           # FLUTTER_BUILD_NAME/NUMBER are defined only for the Runner target, so
           # the Finder extension's Info.plist would resolve CFBundleVersion to
           # empty (ITMS-90360/90056 on the iOS side). Inject globally.
-          PATH="/usr/bin:$PATH" flutter build macos --release --no-pub \
+          PATH="/usr/bin:$PATH" python3 tool/macos_distribution.py build --profile appstore -- --no-pub \
             --build-name="$VER" --build-number="$BUILD" \
             --dart-define=APP_VERSION="$VER" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
@@ -322,7 +322,7 @@ jobs:
             2>&1 | tail -20
 
       - name: Check distribution component boundary
-        run: python3 tool/check_distribution_components.py --artifact build/macos/Build/Products/Release/CrispCloud.app
+        run: python3 tool/macos_distribution.py verify --profile appstore --app build/macos/Build/Products/Release/CrispCloud.app
 
       - name: Upload to App Store Connect
         if: github.event_name == 'push' || inputs.dry_run == false

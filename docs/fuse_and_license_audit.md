@@ -1,8 +1,10 @@
 # FUSE components and license audit
 
-Current default builds omit the native helper. Compile with
-`--dart-define=CRISP_ENABLE_FUSE=true` to enable the optional integration;
-this flag controls both the UI and Xcode helper phase. The existing rclone NFS
+App Store/default builds omit the native helper. Compile with
+`python3 tool/macos_distribution.py build --profile github --fuse` to enable
+the optional integration in the unsandboxed macOS build. The wrapper sets
+`CRISP_ENABLE_FUSE=true` for both the UI and Xcode helper phase; App Store
+profiles reject that flag. See [distribution profiles](distribution-profiles.md). The existing rclone NFS
 option remains available independently. The runtimes are never bundled.
 
 As of this audit the macOS bridge is CrispCloud source (`macos/fuse_bridge.c`).

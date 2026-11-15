@@ -9,7 +9,7 @@ fi
 root="$(cd "$(dirname "$0")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/cc-fuse-signing.XXXXXX")"
 trap 'rm -rf "$fixture"' EXIT
-DART_DEFINES=Q1JJU1BfRU5BQkxFX0ZVU0U9dHJ1ZQ== SRCROOT="$root/macos" TARGET_BUILD_DIR="$fixture" \
+CRISP_BUILD_PROFILE=github DART_DEFINES=Q1JJU1BfRElTVFJJQlVUSU9OPWdpdGh1Yg==,Q1JJU1BfRU5BQkxFX0ZVU0U9dHJ1ZQ== SRCROOT="$root/macos" TARGET_BUILD_DIR="$fixture" \
   UNLOCALIZED_RESOURCES_FOLDER_PATH=Resources \
   EXPANDED_CODE_SIGN_IDENTITY=- sh "$root/macos/build_fuse_bridge.sh"
 helper="$fixture/Resources/crispcloud_fuse_bridge"
@@ -22,13 +22,12 @@ import sys
 with open(sys.argv[1], 'rb') as source:
     actual = plistlib.load(source)
 expected = {
-    'com.apple.security.app-sandbox': True,
-    'com.apple.security.inherit': True,
+    'com.apple.security.cs.disable-library-validation': True,
 }
 assert actual == expected, f'Unexpected helper entitlements: {actual}'
 PYENTS
 lipo "$helper" -verify_arch arm64 x86_64
-echo 'Universal FUSE helper signature and sandbox inheritance verified'
+echo 'Universal direct-distribution FUSE helper signature verified'
 
 # Rebuilding with defaults must remove the previously opted-in generated helper.
 SRCROOT="$root/macos" TARGET_BUILD_DIR="$fixture" \

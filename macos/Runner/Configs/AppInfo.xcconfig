@@ -18,3 +18,8 @@ PRODUCT_BUNDLE_IDENTIFIER = com.CrispStrobe.cloud
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 CrispCloud. All rights reserved.
+
+// Default release is sandboxed; the build wrapper overrides only Runner.
+CRISP_BUILD_PROFILE = appstore
+CRISP_APP_ENTITLEMENTS = Runner/Release.entitlements
+#include? "../../Flutter/ephemeral/Distribution.xcconfig"
