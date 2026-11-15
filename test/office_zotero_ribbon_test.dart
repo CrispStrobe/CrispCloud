@@ -50,7 +50,7 @@ void main() {
 
     await tester.tap(find.text('Insert').last);
     await tester.pumpAndSettle();
-    expect(find.text('References'), findsOneWidget);
+    expect(find.byTooltip('References'), findsOneWidget);
     await tester.tap(find.text('Zotero'));
     expect(calls, 2);
 

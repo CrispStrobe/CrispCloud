@@ -49,7 +49,7 @@ String zoteroHtmlToPlainText(String html) {
             'rsquo': '’',
             'ldquo': '“',
             'rdquo': '”',
-          }[entity] ??
+          }[entity.toLowerCase()] ??
           match[0]!;
     },
   );
@@ -95,11 +95,20 @@ String zoteroBasicBibliography(List<ZoteroCitationItem> items) {
   final unique = <String, Map<String, dynamic>>{};
   for (final item in items) {
     final data = item.itemData;
-    if (data != null)
+    final address = item.uris
+        .map(ZoteroSourceAddress.parse)
+        .whereType<ZoteroSourceAddress>()
+        .firstOrNull;
+    if (data != null) {
       unique.putIfAbsent(
-        item.uris.isEmpty ? 'csl:${item.id}' : item.uris.first,
+        address != null
+            ? address.library.itemUri(address.key).toString()
+            : item.uris.isEmpty
+            ? 'csl:${item.id}'
+            : item.uris.first,
         () => data,
       );
+    }
   }
   final records = unique.values.toList()
     ..sort(

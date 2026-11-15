@@ -352,4 +352,122 @@ void main() {
       );
     }
   });
+
+  test('unknown field attributes and instruction-run properties stay opaque', () {
+    final package = _fixture();
+    final source = package.getPart('/word/document.xml')!;
+    source.writeText(
+      source
+          .readText()
+          .replaceFirst(
+            'w:dirty="0"',
+            'w:dirty="0" xmlns:future="urn:zotero:future" future:dirty="retain"',
+          )
+          .replaceFirst(
+            '<w:r><w:instrText xml:space="preserve"> ADDIN',
+            '<w:r><w:rPr><w:color w:val="123456"/></w:rPr><w:instrText xml:space="preserve"> ADDIN',
+          ),
+    );
+    var document = WordDeserializer().read(package);
+    for (var cycle = 0; cycle < 3; cycle++) {
+      expect(WordZotero.fields(document).first.run, isNull);
+      expect(WordZotero.fields(document).first.canEdit, isFalse);
+      final saved = WordSerializer().write(document);
+      final xml = saved.getPart('/word/document.xml')!.readText();
+      expect(xml, contains('future:dirty="retain"'));
+      expect(xml, contains('w:color w:val="123456"'));
+      document = WordDeserializer().readBytes(saved.save());
+    }
+  });
+
+  test(
+    'canonical URI aliases deduplicate embedded items without rewriting metadata',
+    () {
+      final document = WmlDocument.empty();
+      final paragraph = document.paragraphs.single;
+      for (final entry in <String, String>{
+        'http': 'http://zotero.org/users/42/items/ABCD1234',
+        'https': 'https://zotero.org/users/42/items/ABCD1234',
+        'www': 'https://www.zotero.org/users/42/items/ABCD1234',
+        'group': 'http://zotero.org/groups/42/items/ABCD1234',
+      }.entries) {
+        WordZotero.insertCitation(
+          paragraph,
+          ZoteroCitation(
+            citationId: entry.key,
+            plainCitation: '(${entry.key})',
+            items: <ZoteroCitationItem>[
+              ZoteroCitationItem.fromJson(<String, dynamic>{
+                'id': 17,
+                'uris': <String>[entry.value],
+                'itemData': <String, dynamic>{
+                  'id': 17,
+                  'type': 'book',
+                  'title': entry.key,
+                },
+              }),
+            ],
+          ),
+        );
+      }
+      final before = WordZotero.fields(
+        document,
+      ).map((field) => field.instruction).toList();
+      expect(
+        WordZotero.embeddedItems(document).map((item) => item['title']),
+        <String>['http', 'group'],
+      );
+      expect(
+        WordZotero.fields(document).map((field) => field.instruction),
+        before,
+      );
+      final reopened = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(document),
+      );
+      expect(WordZotero.embeddedItems(reopened), hasLength(2));
+      expect(
+        WordZotero.fields(reopened)[2].citation!.items.single.uris.single,
+        'https://www.zotero.org/users/42/items/ABCD1234',
+      );
+    },
+  );
+
+  test(
+    'citations in notes and header stories retain their ownership on save',
+    () async {
+      var document = WmlDocument.empty(text: 'Body');
+      final note = WordNotes.insert(
+        document,
+        document.paragraphs.single,
+        endnote: false,
+        text: 'Note ',
+      );
+      WordZotero.insertCitation(
+        note.paragraphs.single,
+        _citation('note', '(Note source)'),
+      );
+      final header = WmlParagraph(
+        inlines: <WmlInline>[WmlRun(text: 'Header ')],
+      );
+      document.sections.single.header.add(header);
+      WordZotero.insertCitation(header, _citation('header', '(Header source)'));
+      for (var cycle = 0; cycle < 3; cycle++) {
+        document = WordDeserializer().readBytes(
+          await OfficeIsolateSave.word(document),
+        );
+        expect(
+          WordZotero.fields(
+            document,
+          ).map((field) => field.citation!.citationId),
+          <String>['header', 'note'],
+        );
+        expect(document.paragraphs.single.text, 'Body1');
+        expect(document.footnotes.single.text, contains('Note (Note source)'));
+        expect(
+          document.sections.single.header.single.text,
+          'Header (Header source)',
+        );
+      }
+    },
+  );
 }

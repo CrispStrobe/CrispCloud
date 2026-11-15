@@ -778,6 +778,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         !controller.config.allowsMutation) {
       return;
     }
+    controller.commitPendingEdits();
+    final target = officeZoteroEditTarget(controller);
     _zoteroOpen = true;
     OfficeZoteroTransport? transport;
     try {
@@ -802,6 +804,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       if (!mounted ||
           !identical(controller, _controller) ||
+          officeZoteroEditTarget(controller) != target ||
           !controller.config.allowsMutation) {
         return;
       }

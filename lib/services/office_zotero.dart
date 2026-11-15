@@ -3,9 +3,36 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:quds_office_editor/quds_office_editor.dart'
+    show WordEditorController;
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'secure_storage_service.dart';
+
+/// Captures the intended insertion target before asynchronous credential I/O.
+/// Layout-only notifications preserve this value; document, content, story or
+/// selection changes invalidate it even when the controller is still mounted.
+Object officeZoteroEditTarget(WordEditorController controller) => (
+  document: controller.document,
+  revision: controller.contentRevision,
+  caret: controller.caret,
+  paragraph: controller.caret.paragraphIndex,
+  offset: controller.caret.logicalIndex,
+  anchorParagraph: controller.caret.selectionAnchorParagraph,
+  anchorOffset: controller.caret.selectionAnchor,
+  headerFooter: controller.isEditingHeaderFooter,
+  footer: controller.isEditingFooter,
+  section: controller.isEditingHeaderFooter
+      ? controller.editingSectionIndex
+      : null,
+  comment: controller.isEditingComment ? controller.selectedComment : null,
+  frame: controller.selectedFrame,
+  editingFrame: controller.editingFrame,
+  table: controller.selectedTable,
+  tableBand: controller.selectedTableBand,
+  visual: controller.selectedVisual,
+  equation: controller.selectedEquation,
+);
 
 /// Host-owned HTTP boundary for the shared, read-only Zotero client.
 ///
@@ -14,16 +41,16 @@ import 'secure_storage_service.dart';
 /// proxy and TLS policy. No request or response content is logged here.
 class OfficeZoteroTransport {
   OfficeZoteroTransport({
-    required http.Client Function() createClient,
+    required this.createClient,
     this.requestTimeout = const Duration(seconds: 20),
     this.maxResponseBytes = 8 * 1024 * 1024,
-  }) : _createClient = createClient {
+  }) {
     if (requestTimeout <= Duration.zero || maxResponseBytes <= 0) {
       throw ArgumentError('Zotero transport limits must be positive.');
     }
   }
 
-  final http.Client Function() _createClient;
+  final http.Client Function() createClient;
   final Duration requestTimeout;
   final int maxResponseBytes;
   final Set<http.Client> _clients = <http.Client>{};
@@ -46,7 +73,7 @@ class OfficeZoteroTransport {
 
     http.Client? client;
     try {
-      client = _createClient();
+      client = createClient();
       _clients.add(client);
       final outbound = http.Request('GET', uri)
         ..followRedirects = false

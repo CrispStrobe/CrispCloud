@@ -5,6 +5,8 @@ import 'package:crisp_cloud/services/office_zotero.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:quds_office_editor/quds_office_editor.dart'
+    show WordEditorController;
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 class _Client extends http.BaseClient {
@@ -47,6 +49,42 @@ ZoteroHttpRequest _request([String? uri]) => ZoteroHttpRequest(
 );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'credential loading target rejects changed documents and selections',
+    () {
+      final controller = WordEditorController(
+        document: WmlDocument.empty(text: 'Original target'),
+      );
+      addTearDown(controller.dispose);
+      final original = officeZoteroEditTarget(controller);
+      controller.relayout();
+      expect(officeZoteroEditTarget(controller), original);
+
+      controller.caret.logicalIndex = 3;
+      expect(officeZoteroEditTarget(controller), isNot(original));
+      controller.caret.logicalIndex = 0;
+      final unselected = officeZoteroEditTarget(controller);
+      controller.caret.selectionAnchor = 4;
+      expect(officeZoteroEditTarget(controller), isNot(unselected));
+      controller.caret.collapseSelection();
+
+      final beforeEdit = officeZoteroEditTarget(controller);
+      controller.insertText('Changed');
+      controller.commitPendingEdits();
+      expect(officeZoteroEditTarget(controller), isNot(beforeEdit));
+
+      final body = officeZoteroEditTarget(controller);
+      controller.beginHeaderFooterEdit(0, footer: false);
+      expect(officeZoteroEditTarget(controller), isNot(body));
+
+      final oldDocument = officeZoteroEditTarget(controller);
+      controller.document = WmlDocument.empty(text: 'Replaced');
+      expect(officeZoteroEditTarget(controller), isNot(oldDocument));
+    },
+  );
+
   group('Zotero transport boundary', () {
     test(
       'sends API-key header only to Zotero and never follows redirects',

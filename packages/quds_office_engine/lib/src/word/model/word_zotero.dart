@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
+import '../../xml/xml_reader.dart';
 import '../properties/wml_properties.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
@@ -209,6 +212,7 @@ final class WmlZoteroField {
     this.wholeParagraph = false,
     this.locked = false,
     this.nested = false,
+    this.opaqueMetadata = false,
     List<WmlInline> contents = const <WmlInline>[],
     Map<WmlParagraph, List<WmlFieldBoundary>>? boundaries,
   }) : _contents = contents,
@@ -227,6 +231,7 @@ final class WmlZoteroField {
   final bool wholeParagraph;
   final bool locked;
   final bool nested;
+  final bool opaqueMetadata;
   final List<WmlInline> _contents;
   final Map<WmlParagraph, List<WmlFieldBoundary>> _boundaries;
 
@@ -238,6 +243,7 @@ final class WmlZoteroField {
       isValid &&
       !locked &&
       !nested &&
+      !opaqueMetadata &&
       paragraphs.length == 1 &&
       _contents.every(
         (inline) =>
@@ -400,14 +406,28 @@ abstract final class WordZotero {
   /// Distinct embedded CSL items, with their full original JSON preserved.
   static List<Map<String, dynamic>> embeddedItems(WmlDocument document) {
     final seen = <String>{};
-    return <Map<String, dynamic>>[
-      for (final field in fields(document))
-        for (final item
-            in field.citation?.items ?? const <ZoteroCitationItem>[])
-          if (item.itemData != null &&
-              seen.add(item.uris.isNotEmpty ? item.uris.first : '${item.id}'))
-            item.itemData!,
-    ];
+    final items = <Map<String, dynamic>>[];
+    for (final field in fields(document)) {
+      for (final item
+          in field.citation?.items ?? const <ZoteroCitationItem>[]) {
+        if (item.itemData == null) continue;
+        final identities = item.uris.isEmpty
+            ? <String>['id:${item.id}']
+            : <String>[for (final uri in item.uris) _itemIdentity(uri)];
+        final duplicate = identities.any(seen.contains);
+        seen.addAll(identities);
+        if (!duplicate) items.add(item.itemData!);
+      }
+    }
+    return items;
+  }
+
+  static String _itemIdentity(String value) {
+    final uri = Uri.tryParse(value);
+    if (uri != null && ZoteroCitationItem._isItemUri(value)) {
+      return 'zotero:${uri.path}';
+    }
+    return value;
   }
 
   /// Explicitly replaces a citation and its cache; unknown metadata can be
@@ -605,6 +625,7 @@ abstract final class WordZotero {
                       boundaries: field.boundaries,
                       nested: field.nested,
                       locked: field.locked,
+                      opaqueMetadata: field.opaqueMetadata,
                     ),
                   );
                 }
@@ -655,6 +676,7 @@ abstract final class WordZotero {
     bool wholeParagraph = false,
     bool nested = false,
     bool locked = false,
+    bool opaqueMetadata = false,
   }) {
     final metadata = metadataOf(instruction);
     final kind = kindOfInstruction(instruction)!;
@@ -680,6 +702,7 @@ abstract final class WordZotero {
       wholeParagraph: wholeParagraph,
       nested: nested,
       locked: locked,
+      opaqueMetadata: opaqueMetadata,
       contents: contents,
       boundaries: boundaries,
     );
@@ -698,6 +721,7 @@ final class _OpenField {
   bool separated = false;
   bool nested = false;
   bool locked = false;
+  bool opaqueMetadata = false;
 
   void addParagraph(WmlParagraph paragraph) {
     if (!identical(paragraphs.last, paragraph)) {
@@ -712,6 +736,31 @@ final class _OpenField {
       locked = RegExp(
         r'fldLock\s*=\s*["\x27](?:1|true|on)["\x27]',
       ).hasMatch(boundary.sourceXml ?? '');
+    }
+    if (boundary.runPropertiesXml?.trim().isNotEmpty == true) {
+      opaqueMetadata = true;
+    }
+    if (boundary.sourceXml != null) {
+      try {
+        final source = XmlDocument.parse(boundary.sourceXml!).root;
+        if (source != null &&
+            (source.children.isNotEmpty ||
+                source.attributes.any(
+                  (attribute) =>
+                      attribute.prefix != 'xmlns' &&
+                      attribute.qualifiedName != 'xmlns' &&
+                      (attribute.namespaceUri != OfficeNamespaces.w ||
+                          !<String>{
+                            'fldCharType',
+                            'fldLock',
+                            'dirty',
+                          }.contains(attribute.localName)),
+                ))) {
+          opaqueMetadata = true;
+        }
+      } on XmlParseException {
+        opaqueMetadata = true;
+      }
     }
   }
 }

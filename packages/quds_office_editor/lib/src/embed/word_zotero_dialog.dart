@@ -95,6 +95,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   int? _moreCollections;
   var _publicGroup = true;
   var _busy = false;
+  var _reviewing = false;
   String? _error;
   String? _notice;
   final _selected = <String, ZoteroCitationItem>{};
@@ -280,6 +281,22 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     );
   });
 
+  void _remember(bool remember) {
+    if (remember) {
+      setState(() => _session.rememberKey = true);
+      return;
+    }
+    _run(() async {
+      if (widget.persistApiKey != null) await widget.persistApiKey!(null);
+      if (mounted)
+        setState(() {
+          _session.rememberKey = false;
+          _notice =
+              'The saved key was removed. This connection is session-only.';
+        });
+    });
+  }
+
   Future<void> _selectItem(ZoteroItem item, bool selected) => _run(() async {
     if (!selected) {
       setState(() => _selected.remove(item.sourceId));
@@ -307,10 +324,35 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     WmlZoteroField? field,
   }) => _run(() async {
     _checkTarget();
-    final result = await showDialog<ZoteroCitation>(
-      context: context,
-      builder: (_) =>
-          _CitationComposer(items: items, existing: field?.citation),
+    _saveFormat();
+    final address = items.length == 1
+        ? items.single.uris
+              .map(ZoteroSourceAddress.parse)
+              .whereType<ZoteroSourceAddress>()
+              .firstOrNull
+        : null;
+    final result = await _showReview<ZoteroCitation>(
+      (_) => _CitationComposer(
+        items: items,
+        existing: field?.citation,
+        style: _session.style,
+        loadStyleSnapshot: address == null || _client == null
+            ? null
+            : () async {
+                final item = await _client!.item(
+                  address.library,
+                  address.key,
+                  style: _session.style,
+                  locale: _session.locale,
+                );
+                final text = zoteroHtmlToPlainText(item.citationHtml ?? '');
+                if (text.isEmpty)
+                  throw const FormatException(
+                    'No formatted citation was returned.',
+                  );
+                return text;
+              },
+      ),
     );
     if (!mounted || result == null) return;
     _write(
@@ -319,6 +361,15 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
           : _controller.updateZoteroCitation(field, result),
     );
   });
+
+  Future<T?> _showReview<T>(WidgetBuilder builder) async {
+    setState(() => _reviewing = true);
+    try {
+      return await showDialog<T>(context: context, builder: builder);
+    } finally {
+      if (mounted) setState(() => _reviewing = false);
+    }
+  }
 
   void _saveFormat() {
     _session.style = _style.text.trim();
@@ -485,9 +536,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   Future<String?> _reviewText(String title, String initial) async {
     final text = TextEditingController(text: initial);
     try {
-      return await showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
+      return await _showReview<String>(
+        (context) => AlertDialog(
           title: Text(title),
           content: SizedBox(
             width: 620,
@@ -524,9 +574,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return Dialog(
+      insetPadding: const EdgeInsets.all(16),
       child: SizedBox(
         width: 980,
-        height: min(760, size.height - 64),
+        height: max(160, min(760, size.height - 32)),
         child: DefaultTabController(
           length: 3,
           child: Column(
@@ -555,13 +606,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 ),
               ),
               const TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 tabs: [
                   Tab(text: 'Library'),
                   Tab(text: 'Document'),
                   Tab(text: 'Import CSL JSON'),
                 ],
               ),
-              if (_busy) const LinearProgressIndicator(minHeight: 2),
+              if (_busy && !_reviewing)
+                const LinearProgressIndicator(minHeight: 2),
               if (!_canEdit)
                 _banner(
                   _controller.document.trackRevisions
@@ -572,7 +626,17 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
               if (_notice != null) _banner(_notice!),
               Expanded(
                 child: TabBarView(
-                  children: [_libraryTab(), _documentTab(), _importTab()],
+                  children: [
+                    _scrollableTab(
+                      _libraryTab(),
+                      minHeight: size.width < 600 ? 820 : 660,
+                    ),
+                    _scrollableTab(
+                      _documentTab(),
+                      minHeight: size.width < 600 ? 680 : 500,
+                    ),
+                    _scrollableTab(_importTab(), minHeight: 600),
+                  ],
                 ),
               ),
             ],
@@ -581,6 +645,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       ),
     );
   }
+
+  Widget _scrollableTab(Widget child, {required double minHeight}) =>
+      LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: SizedBox(
+            height: max(minHeight, constraints.maxHeight),
+            child: child,
+          ),
+        ),
+      );
 
   Widget _banner(String text, {bool error = false}) => Container(
     width: double.infinity,
@@ -641,11 +715,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                     value: _session.rememberKey,
                     onChanged: _busy
                         ? null
-                        : (value) => setState(
-                            () => _session.rememberKey = value ?? false,
-                          ),
+                        : (value) => _remember(value ?? false),
                   ),
-                  const Text('Remember key on this device'),
+                  const Text('Remember key when connecting'),
                 ],
               ),
             if (_session.apiKey != null)
@@ -1143,6 +1215,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   : () => _run(() async {
                       final items = zoteroImportCslJson(_import.text);
                       setState(() {
+                        _selected.removeWhere(
+                          (key, _) => key.startsWith('import:'),
+                        );
                         _imported
                           ..clear()
                           ..addAll(items);
@@ -1198,9 +1273,16 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
 }
 
 class _CitationComposer extends StatefulWidget {
-  const _CitationComposer({required this.items, this.existing});
+  const _CitationComposer({
+    required this.items,
+    this.existing,
+    this.loadStyleSnapshot,
+    this.style = 'apa',
+  });
   final List<ZoteroCitationItem> items;
   final ZoteroCitation? existing;
+  final Future<String> Function()? loadStyleSnapshot;
+  final String style;
   @override
   State<_CitationComposer> createState() => _CitationComposerState();
 }
@@ -1209,6 +1291,8 @@ class _CitationComposerState extends State<_CitationComposer> {
   late List<ZoteroCitationItem> _items;
   late final TextEditingController _text;
   var _basic = true;
+  var _loading = false;
+  String? _error;
   @override
   void initState() {
     super.initState();
@@ -1237,6 +1321,30 @@ class _CitationComposerState extends State<_CitationComposer> {
     });
   }
 
+  Future<void> _loadStyle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final text = await widget.loadStyleSnapshot!();
+      if (mounted)
+        setState(() {
+          _basic = false;
+          _text.text = text;
+        });
+    } catch (error) {
+      if (mounted)
+        setState(
+          () => _error = error is ZoteroApiException
+              ? error.message
+              : 'The style preview could not be loaded. Your current text was kept.',
+        );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: Text(
@@ -1258,6 +1366,7 @@ class _CitationComposerState extends State<_CitationComposer> {
               _sourceOptions(index),
             const SizedBox(height: 12),
             DropdownButtonFormField<bool>(
+              key: ValueKey(_basic),
               initialValue: _basic,
               decoration: const InputDecoration(
                 labelText: 'Citation text format',
@@ -1269,12 +1378,33 @@ class _CitationComposerState extends State<_CitationComposer> {
                   child: Text('Custom text / preserve current format'),
                 ),
               ],
-              onChanged: (value) => setState(() {
-                _basic = value!;
-                if (_basic) _text.text = zoteroBasicCitation(_items);
-              }),
+              onChanged: _loading
+                  ? null
+                  : (value) => setState(() {
+                      _basic = value!;
+                      if (_basic) _text.text = zoteroBasicCitation(_items);
+                    }),
             ),
             const SizedBox(height: 10),
+            if (widget.loadStyleSnapshot != null) ...[
+              OutlinedButton(
+                onPressed: _loading ? null : _loadStyle,
+                child: Text(
+                  _loading
+                      ? 'Loading style preview…'
+                      : 'Use ${widget.style} single-source preview',
+                ),
+              ),
+              const Text(
+                'Individual preview only. Review locators and document numbering before inserting.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+            if (_error != null)
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             TextField(
               key: const ValueKey('zotero-citation-preview'),
               controller: _text,
@@ -1301,28 +1431,30 @@ class _CitationComposerState extends State<_CitationComposer> {
         child: const Text('Cancel'),
       ),
       FilledButton(
-        onPressed: () {
-          if (_text.text.trim().isEmpty) return;
-          final existing = widget.existing;
-          final citation = existing == null
-              ? ZoteroCitation(
-                  citationId:
-                      'Q${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${Random.secure().nextInt(1 << 30).toRadixString(36)}',
-                  items: _items,
-                  plainCitation: _text.text,
-                )
-              : existing.withItems(_items, plainCitation: _text.text);
-          Navigator.pop(
-            context,
-            ZoteroCitation.fromJson({
-              ...citation.toJson(),
-              'properties': {
-                ...citation.properties,
-                'qudsFormat': _basic ? 'basic-author-year' : 'custom',
+        onPressed: _loading
+            ? null
+            : () {
+                if (_text.text.trim().isEmpty) return;
+                final existing = widget.existing;
+                final citation = existing == null
+                    ? ZoteroCitation(
+                        citationId:
+                            'Q${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${Random.secure().nextInt(1 << 30).toRadixString(36)}',
+                        items: _items,
+                        plainCitation: _text.text,
+                      )
+                    : existing.withItems(_items, plainCitation: _text.text);
+                Navigator.pop(
+                  context,
+                  ZoteroCitation.fromJson({
+                    ...citation.toJson(),
+                    'properties': {
+                      ...citation.properties,
+                      'qudsFormat': _basic ? 'basic-author-year' : 'custom',
+                    },
+                  }),
+                );
               },
-            }),
-          );
-        },
         child: Text(
           widget.existing == null ? 'Insert citation' : 'Update citation',
         ),

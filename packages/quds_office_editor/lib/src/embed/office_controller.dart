@@ -6942,6 +6942,19 @@ class WordEditorController extends OfficeController {
 
   void _commitZoteroChange(List<WmlParagraph> paragraphs, VoidCallback mutate) {
     _assertZoteroTrackingMode();
+    final touched = Set<WmlParagraph>.identity()..addAll(paragraphs);
+    if (document.revisions.any(
+      (revision) =>
+          revision.accepted == null &&
+          touched.contains(
+            revision.targetParagraph ??
+                WordRevisions.resolveParagraph(document, revision),
+          ),
+    )) {
+      throw UnsupportedError(
+        'Accept or reject tracked changes in this paragraph before editing Zotero fields.',
+      );
+    }
     final before =
         <
           WmlParagraph,

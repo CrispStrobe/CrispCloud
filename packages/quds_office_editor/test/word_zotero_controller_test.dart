@@ -351,4 +351,74 @@ void main() {
     expect(controller.contentRevision, revision);
     expect(controller.canUndo, isFalse);
   });
+
+  test(
+    'pending revisions protect affected paragraphs even when tracking is off',
+    () {
+      final document = _twoFields();
+      final paragraph = document.paragraphs.single;
+      final change = WmlRevision(
+        id: 1,
+        kind: WmlRevisionKind.insert,
+        paragraphIndex: 0,
+        targetParagraph: paragraph,
+        start: 0,
+        end: 6,
+        text: 'Before',
+      );
+      document.revisions.add(change);
+      final controller = _controller(document: document);
+      final before = paragraph.text;
+      final revision = controller.contentRevision;
+      final field = controller.zoteroFields.first;
+      expect(document.trackRevisions, isFalse);
+      expect(
+        () =>
+            controller.updateZoteroCitation(field, _citation('a', '(Changed)')),
+        throwsUnsupportedError,
+      );
+      expect(() => controller.unlinkZoteroField(field), throwsUnsupportedError);
+      expect(
+        () => controller.insertZoteroCitation(_citation('new', '(New)')),
+        throwsUnsupportedError,
+      );
+      expect(paragraph.text, before);
+      expect(document.revisions.single, same(change));
+      expect(change.start, 0);
+      expect(change.end, 6);
+      expect(controller.contentRevision, revision);
+      expect(controller.canUndo, isFalse);
+    },
+  );
+
+  test(
+    'pending changes in other paragraphs do not block an independent citation edit',
+    () {
+      final document = _twoFields();
+      final other = WmlParagraph(
+        inlines: <WmlInline>[WmlRun(text: 'Other change')],
+      );
+      document.sections.single.blocks.add(other);
+      document.revisions.add(
+        WmlRevision(
+          id: 2,
+          kind: WmlRevisionKind.insert,
+          paragraphIndex: 1,
+          targetParagraph: other,
+          start: 0,
+          end: 5,
+          text: 'Other',
+        ),
+      );
+      final controller = _controller(document: document);
+      final field = controller.zoteroFields.first;
+      controller.updateZoteroCitation(field, _citation('a', '(Changed)'));
+      expect(controller.zoteroFields.first.cachedText, '(Changed)');
+      expect(document.revisions.single.targetParagraph, same(other));
+      expect(document.revisions.single.end, 5);
+      controller.undo();
+      expect(controller.zoteroFields.first.cachedText, '(A)');
+      expect(document.revisions.single.end, 5);
+    },
+  );
 }

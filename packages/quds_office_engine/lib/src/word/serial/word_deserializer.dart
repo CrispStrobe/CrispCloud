@@ -1642,6 +1642,12 @@ class WordDeserializer {
         bool? dirty;
         for (final member in packet) {
           if (member is WmlFieldBoundary) {
+            // Code-run properties and foreign field attributes are opaque
+            // source metadata. Keep their boundary packet if atomizing would
+            // discard them, even though the displayed cache is a single run.
+            if (member.runPropertiesXml?.trim().isNotEmpty == true) {
+              valid = false;
+            }
             if (member.kind == WmlFieldBoundaryKind.instruction) {
               if (separated) valid = false;
               instruction.write(member.text);
@@ -1659,11 +1665,12 @@ class WordDeserializer {
                       (a) =>
                           a.prefix != 'xmlns' &&
                           a.qualifiedName != 'xmlns' &&
-                          !<String>{
-                            'fldCharType',
-                            'fldLock',
-                            'dirty',
-                          }.contains(a.localName),
+                          (a.namespaceUri != OfficeNamespaces.w ||
+                              !<String>{
+                                'fldCharType',
+                                'fldLock',
+                                'dirty',
+                              }.contains(a.localName)),
                     )) {
                   valid = false;
                 }
