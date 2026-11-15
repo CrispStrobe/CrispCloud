@@ -4446,6 +4446,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           data: markdown,
           selectable: true,
           padding: const EdgeInsets.all(12),
+          sizedImageBuilder: (config) {
+            final data = config.uri.data;
+            if (data != null) {
+              return Image.memory(
+                data.contentAsBytes(),
+                width: config.width,
+                height: config.height,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Text(config.alt ?? 'Image'),
+              );
+            }
+            return Image.network(
+              config.uri.toString(),
+              width: config.width,
+              height: config.height,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Text(config.alt ?? 'Image'),
+            );
+          },
         );
       case _OfficeView.text:
         return _buildOfficeText(document, theme);
