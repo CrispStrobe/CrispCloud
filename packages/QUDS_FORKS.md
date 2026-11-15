@@ -23,9 +23,9 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `5532d598499eceac0a75098fda3d54bfd9515ed0` on `main`
+The app mirrors Quds `3d255f0f5c37af3efbaf69b29f4fcfc869de3eaa` on `main`
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,362 managed files
+all 2,363 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -36,11 +36,13 @@ reports limitations; converted legacy documents save separately as OOXML.
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
-default and column default styles retain their precedence. Absolute sheet references,
-clock components and elapsed time formats survive XLSX saves. Forty-nine focused
-ODS development tests and 36 related formatter/formula tests pass. Their retained
-baseline failures and passing runs are development evidence; the combined host
-qualification remains separately source-bound in the storage evidence.
+default and column default styles retain their precedence; the document Normal
+style and default column/row geometry are applied when no explicit style exists.
+ODS pictures import as worksheet drawings, and hidden rows, columns and sheets
+survive an ODS→XLSX save. Absolute sheet references, clock components and
+elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 488
+tests; the combined host qualification remains separately source-bound in the
+storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
 and Excel wrap-text support. Import preserves the correct wrap flag for each
