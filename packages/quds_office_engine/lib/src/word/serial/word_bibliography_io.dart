@@ -131,7 +131,7 @@ abstract final class WordBibliographyIo {
     for (final uri in candidates.toSet()) {
       final part = package.getPart(uri);
       if (part == null) continue;
-      final root = _parse(part.readText());
+      final root = _parse(_decodePart(part.readBytes()));
       if (root?.localName == 'Sources' && root?.namespaceUri == _namespace) {
         return (part: part, root: root!);
       }
@@ -145,6 +145,62 @@ abstract final class WordBibliographyIo {
     } on XmlParseException {
       return null;
     }
+  }
+
+  /// OOXML permits XML parts in UTF-8 or UTF-16. Custom XML produced by
+  /// Word can be UTF-16LE with a BOM even when every WordprocessingML part is
+  /// UTF-8; decoding those bytes as UTF-8 would reject an otherwise valid
+  /// document while probing for bibliography ownership.
+  static String _decodePart(List<int> bytes) {
+    String utf16(int offset, bool littleEndian) {
+      final units = <int>[];
+      for (var i = offset; i + 1 < bytes.length; i += 2) {
+        units.add(
+          littleEndian
+              ? bytes[i] | (bytes[i + 1] << 8)
+              : (bytes[i] << 8) | bytes[i + 1],
+        );
+      }
+      final runes = <int>[];
+      for (var i = 0; i < units.length; i++) {
+        final unit = units[i];
+        if (unit >= 0xd800 &&
+            unit <= 0xdbff &&
+            i + 1 < units.length &&
+            units[i + 1] >= 0xdc00 &&
+            units[i + 1] <= 0xdfff) {
+          runes.add(
+            0x10000 +
+                ((unit - 0xd800) << 10) +
+                (units[i + 1] - 0xdc00),
+          );
+          i++;
+        } else {
+          runes.add(unit);
+        }
+      }
+      return String.fromCharCodes(runes);
+    }
+
+    if (bytes.length >= 2 && bytes[0] == 0xff && bytes[1] == 0xfe) {
+      return utf16(2, true);
+    }
+    if (bytes.length >= 2 && bytes[0] == 0xfe && bytes[1] == 0xff) {
+      return utf16(2, false);
+    }
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xef &&
+        bytes[1] == 0xbb &&
+        bytes[2] == 0xbf) {
+      return utf8.decode(bytes.sublist(3));
+    }
+    if (bytes.length >= 4 && bytes[0] == 0x3c && bytes[1] == 0) {
+      return utf16(0, true);
+    }
+    if (bytes.length >= 4 && bytes[0] == 0 && bytes[1] == 0x3c) {
+      return utf16(0, false);
+    }
+    return utf8.decode(bytes);
   }
 
   static String _allocateUri(OpcPackage package) {
