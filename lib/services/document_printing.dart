@@ -80,7 +80,12 @@ Uint8List imagePrintPdf(Uint8List bytes, String title) {
   }
   final decoder = image.findDecoderForData(bytes);
   final info = decoder?.startDecode(bytes);
-  if (info == null || info.width * info.height > 40000000) {
+  if (info == null ||
+      info.width <= 0 ||
+      info.height <= 0 ||
+      info.width > 16384 ||
+      info.height > 16384 ||
+      info.width > 40000000 ~/ info.height) {
     throw const FormatException('Image cannot be printed safely.');
   }
   final decoded = decoder!.decodeFrame(0);
@@ -88,7 +93,13 @@ Uint8List imagePrintPdf(Uint8List bytes, String title) {
     throw const FormatException('Image could not be decoded.');
   }
   final png = Uint8List.fromList(image.encodePng(decoded));
-  final raster = office.PdfImageCodec.decode(png)!;
+  if (png.length > printInputLimit) {
+    throw const FormatException('Decoded image exceeds the print size limit.');
+  }
+  final raster = office.PdfImageCodec.decode(png);
+  if (raster == null) {
+    throw const FormatException('Image could not be prepared for printing.');
+  }
   const pageWidth = 595.28, pageHeight = 841.89, margin = 28.35;
   final scale = math.min(
     (pageWidth - margin * 2) / raster.width,
