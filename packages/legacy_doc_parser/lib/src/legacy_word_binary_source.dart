@@ -72,7 +72,7 @@ class _BinarySource {
       throw const FormatException('This is not a Word binary document.');
     }
     version = word.u16(2);
-    if (!const {0xc1, 0xd9, 0x101, 0x10c, 0x112}.contains(version)) {
+    if (!const {0xc1, 0xc2, 0xd9, 0x101, 0x10c, 0x112}.contains(version)) {
       throw const FormatException(
         'This older Word binary version is not supported. Save it as DOCX.',
       );

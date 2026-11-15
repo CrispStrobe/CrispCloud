@@ -4298,6 +4298,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       decoration: first.underline == WmlUnderline.none
           ? TextDecoration.none
           : TextDecoration.underline,
+      decorationStyle: underlineStyleFor(first.underline),
+      decorationThickness: first.underline.isHeavy ? 2 : null,
     )..layout();
     final double paintX = PaintRunText.runPaintOrigin(
       run,

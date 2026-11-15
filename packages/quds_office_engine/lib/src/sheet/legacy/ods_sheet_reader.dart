@@ -31,6 +31,9 @@ class OdsSheetFormatException implements Exception {
 
 /// Reads an `.ods` package into [SmlWorkbook].
 abstract final class OdsSheetReader {
+  static const double _odfMaxDigitWidthPx = 7.4;
+  static const double _odfDefaultColumnWidthIn = 0.8898;
+  static const double _odfDefaultRowHeightPoints = 14.95;
   static const int _maxRows = 100000;
   static const int _maxColumns = 4096;
   static const _office = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
@@ -109,6 +112,9 @@ abstract final class OdsSheetReader {
             : name,
         sheetId: book.sheets.length + 1,
       );
+      sheet.importDefaultColumnWidth(
+        excelWidth: _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx,
+      );
       final columnDefaults = _readColumns(table, sheet, styles, budget);
       var rowIndex = 0;
       final pendingRowHeights = <({int start, int count, double height})>[];
@@ -137,6 +143,7 @@ abstract final class OdsSheetReader {
                 SmlCell? cell,
               })
             >[];
+        final rowMerges = <SmlMerge>[];
         var column = 0;
         var pendingCovered = 0;
         for (final element in row.childElements) {
@@ -160,9 +167,11 @@ abstract final class OdsSheetReader {
             column += repeat - reserved;
             continue;
           }
-          // Keep compatibility with producers that omit covered placeholders:
-          // a new ordinary origin begins after the preceding reserved span.
-          pendingCovered = 0;
+          if (pendingCovered > 0) {
+            throw const OdsSheetFormatException(
+              'Stored cell inside a merge requires a covered-cell token',
+            );
+          }
           final colSpan = _repeat(element, 'number-columns-spanned');
           final rowSpan = _repeat(element, 'number-rows-spanned');
           if (_repeat(element, 'number-matrix-columns-spanned') > 1 ||
@@ -214,6 +223,31 @@ abstract final class OdsSheetReader {
                   'Repeated formulas are not supported',
                 );
               }
+              if (sheet.merges.isNotEmpty || rowMerges.isNotEmpty) {
+                budget.mergeCoverage(sheet.merges.length + rowMerges.length);
+                final occupied = SmlMerge(
+                  c0: run.column,
+                  r0: rowIndex,
+                  c1: run.column + run.repeat - 1,
+                  r1: rowIndex + rowRepeat - 1,
+                );
+                if (sheet.merges.any((merge) => merge.overlaps(occupied)) ||
+                    rowMerges.any((merge) => merge.overlaps(occupied))) {
+                  throw const OdsSheetFormatException(
+                    'Stored cell inside a merge requires a covered-cell token',
+                  );
+                }
+              }
+              if (colSpan > 1 || rowSpan > 1) {
+                rowMerges.add(
+                  SmlMerge(
+                    c0: run.column,
+                    r0: rowIndex,
+                    c1: run.column + colSpan - 1,
+                    r1: rowIndex + rowRepeat + rowSpan - 2,
+                  ),
+                );
+              }
               if (cell != null) {
                 final count = run.repeat * rowRepeat;
                 budget.cells(count);
@@ -251,6 +285,8 @@ abstract final class OdsSheetReader {
         }
         if (rowHeight != null &&
             rowHeight > 0 &&
+            (entries.isNotEmpty ||
+                (rowHeight - _odfDefaultRowHeightPoints).abs() > 0.1) &&
             rowIndex + rowRepeat <= _maxRows) {
           final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
           if (entries.isEmpty && rowRepeat > 1) {
@@ -389,7 +425,12 @@ abstract final class OdsSheetReader {
       if (width != null && width > 0) {
         budget.dimensions(count);
         for (var i = 0; i < count; i++) {
-          sheet.setColumnWidth(column + i, width * 96 / 72);
+          final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
+          final defaultChars =
+              _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
+          if ((chars - defaultChars).abs() > 0.05) {
+            sheet.importColumnWidth(column + i, chars);
+          }
         }
       }
       if (cellStyle != null) {
@@ -665,9 +706,15 @@ abstract final class OdsSheetReader {
       case 'percentage-style':
         return '${_zeros(style)}%';
       case 'currency-style':
-        return '#,##0.00';
+        final symbol = _descendants(
+          style,
+          'currency-symbol',
+          _number,
+        ).firstOrNull?.text;
+        final base = '#,##${_zeros(style)}';
+        return symbol == null || symbol.isEmpty ? base : '"$symbol"$base';
       case 'date-style':
-        return 'DD.MM.YYYY';
+        return _dateFormat(style);
       case 'time-style':
         return _timeFormat(style);
       case 'number-style':
@@ -712,6 +759,43 @@ abstract final class OdsSheetReader {
     }
     if (seconds != null) return elapsed ? leading(seconds, 's') : 'ss';
     return 'h:mm:ss';
+  }
+
+  /// Renders an ODF date-style in its authored component order. Dates were
+  /// previously forced to DD.MM.YYYY, which silently rewrote ISO and US dates.
+  static String _dateFormat(XmlElement style) {
+    final buffer = StringBuffer();
+    for (final child in style.childElements) {
+      if (child.namespaceUri != _number) continue;
+      switch (child.localName) {
+        case 'year':
+          buffer.write(child.getAttribute('style') == 'short' ? 'YY' : 'YYYY');
+        case 'month':
+          if (child.getAttribute('textual') == 'true') {
+            buffer.write('MMM');
+          } else {
+            buffer.write(child.getAttribute('style') == 'short' ? 'M' : 'MM');
+          }
+        case 'day':
+          buffer.write(child.getAttribute('style') == 'short' ? 'D' : 'DD');
+        case 'day-of-week':
+          buffer.write('DDD');
+        case 'hours':
+          buffer.write('HH');
+        case 'minutes':
+          buffer.write('MM');
+        case 'seconds':
+          buffer.write('SS');
+        case 'am-pm':
+          buffer.write('AM/PM');
+        case 'text':
+          // The reader skips whitespace-only text nodes, so an empty
+          // number:text is a separator (usually a space).
+          final literal = child.text;
+          buffer.write(literal.isEmpty ? ' ' : literal);
+      }
+    }
+    return buffer.isEmpty ? 'DD.MM.YYYY' : buffer.toString();
   }
 
   static String _zeros(XmlElement style) {
@@ -951,6 +1035,7 @@ class _OdsBudget {
   int _xmlEvents = 0;
   int _cellText = 0;
   int _styleWork = 0;
+  int _mergeCoverageWork = 0;
 
   void cells(int count) {
     if (count > 200000 - _cells) {
@@ -982,6 +1067,13 @@ class _OdsBudget {
       throw const OdsSheetFormatException('ODS style work limit');
     }
     _styleWork += count;
+  }
+
+  void mergeCoverage(int count) {
+    if (count > 4000000 - _mergeCoverageWork) {
+      throw const OdsSheetFormatException('ODS merge coverage work limit');
+    }
+    _mergeCoverageWork += count;
   }
 
   void merge() {

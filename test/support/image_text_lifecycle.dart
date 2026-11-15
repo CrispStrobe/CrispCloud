@@ -198,6 +198,48 @@ void registerImageTextLifecycleTests({bool live = false}) {
         : TargetPlatformVariant.desktop(),
   );
   testWidgets(
+    'disposing while Text opens rejects late callbacks',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final store = _Store();
+      final key = GlobalKey<ProImageEditorState>();
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: ImageEditorDialog(
+              file: FileItem(
+                name: store.displayName,
+                path: store.path,
+                isFolder: false,
+              ),
+              side: PanelSide.local,
+              storeOverride: store,
+              editorKey: key,
+              enableIsolateGeneration: false,
+            ),
+          ),
+        ),
+      );
+      final text = find.byKey(const ValueKey('image-text'));
+      await _until(
+        tester,
+        () =>
+            text.evaluate().isNotEmpty &&
+            tester.widget<TextButton>(text).onPressed != null,
+      );
+      await tester.ensureVisible(text);
+      await tester.tap(text);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.takeException(), isNull);
+      expect(store.writes, 0);
+    },
+    variant: live
+        ? const TargetPlatformVariant({TargetPlatform.macOS})
+        : TargetPlatformVariant.desktop(),
+  );
+
+  testWidgets(
     'visible crop corner target resizes both axes without selecting an edge',
     (tester) async {
       SharedPreferences.setMockInitialValues({});

@@ -1264,6 +1264,9 @@ extension _WordStories on _StructuredWordWriter {
           limitations.add(LegacyWordConversionLimitation.notesComments);
         case LegacyWordWarning.commentsOmitted:
           limitations.add(LegacyWordConversionLimitation.notesComments);
+        case LegacyWordWarning.bookmarksOmitted:
+          // Cross-references and links lose their targets.
+          limitations.add(LegacyWordConversionLimitation.fieldsLists);
         case LegacyWordWarning.macrosOmitted:
           if ((counts['vbaProjects'] ?? 0) == 0) {
             limitations.add(LegacyWordConversionLimitation.macrosSignatures);

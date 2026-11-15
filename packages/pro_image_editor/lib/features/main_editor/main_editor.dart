@@ -665,6 +665,7 @@ class ProImageEditorState extends State<ProImageEditor>
     }
     mainEditorCallbacks?.onInit?.call();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (!mounted) return;
       mainEditorCallbacks?.onAfterViewInit?.call();
       _calcAppBarHeight();
     });
@@ -710,7 +711,7 @@ class ProImageEditorState extends State<ProImageEditor>
 
   @override
   void setState(void Function() fn) {
-    if (!mounted) return;
+    if (!mounted || _rebuildController.isClosed) return;
     _rebuildController.add(null);
     super.setState(fn);
   }
@@ -2255,6 +2256,7 @@ class ProImageEditorState extends State<ProImageEditor>
     if (layerInteractionManager.layersAreSelectable(configs) &&
         layerInteraction.initialSelected) {
       if (isSubEditorOpen) await _pageOpenCompleter.future;
+      if (!mounted || _controllers.uiLayerCtrl.isClosed) return;
       layerInteractionManager.addSelectedLayer(id);
       _checkInteractiveViewer();
       _controllers.uiLayerCtrl.add(null);

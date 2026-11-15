@@ -256,6 +256,8 @@ abstract final class PaintRunText {
     String? themeFamily,
     Color? color,
     TextDecoration? decoration,
+    TextDecorationStyle? decorationStyle,
+    double? decorationThickness,
   }) {
     return TextPainter(
       text: TextSpan(
@@ -272,6 +274,8 @@ abstract final class PaintRunText {
           fontStyle: first.italic ? FontStyle.italic : FontStyle.normal,
           color: color,
           decoration: decoration,
+          decorationStyle: decorationStyle,
+          decorationThickness: decorationThickness,
           height: 1.0,
         ),
       ),
@@ -713,3 +717,23 @@ abstract final class PaintRunText {
         (cu >= 0x08D3 && cu <= 0x08FF);
   }
 }
+
+/// Flutter's closest decoration for Word's underline styles.
+TextDecorationStyle underlineStyleFor(WmlUnderline underline) =>
+    switch (underline) {
+      WmlUnderline.double => TextDecorationStyle.double,
+      WmlUnderline.dotted ||
+      WmlUnderline.dottedHeavy => TextDecorationStyle.dotted,
+      WmlUnderline.wavy ||
+      WmlUnderline.wavyHeavy ||
+      WmlUnderline.wavyDouble => TextDecorationStyle.wavy,
+      WmlUnderline.dash ||
+      WmlUnderline.dashedHeavy ||
+      WmlUnderline.dashLong ||
+      WmlUnderline.dashLongHeavy ||
+      WmlUnderline.dotDash ||
+      WmlUnderline.dashDotHeavy ||
+      WmlUnderline.dotDotDash ||
+      WmlUnderline.dashDotDotHeavy => TextDecorationStyle.dashed,
+      _ => TextDecorationStyle.solid,
+    };
