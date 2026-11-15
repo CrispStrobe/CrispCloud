@@ -23,7 +23,7 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `8815cec` on `main`
+The app mirrors Quds `9f1efe0` on `main`
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
 all 2,363 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
@@ -38,10 +38,10 @@ counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; numeric conditional formats are
-imported, painted in the grid and serialized. Hidden rows, columns and sheets
+ODS pictures import as worksheet drawings; conditional formats (numeric, contains-text and duplicate) are imported,
+painted in the grid and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 491
+elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 492
 tests; the combined host qualification remains separately source-bound in the
 storage evidence.
 
