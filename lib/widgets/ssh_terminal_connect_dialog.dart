@@ -2,14 +2,16 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/screen_terminal_strings.dart';
 import '../l10n/terminal_strings.dart';
+import '../models/screen_session_options.dart';
 import '../models/ssh_terminal_config.dart';
 import '../models/tmux_session_options.dart';
 import '../services/ssh_gateway.dart';
 
 export '../models/ssh_terminal_config.dart';
 
-enum _SessionMode { shell, createOrAttach, attach }
+enum _SessionMode { shell, createOrAttach, attach, createScreen, attachScreen }
 
 /// Native apps connect directly; browsers require a user-supplied gateway.
 /// Reconnect details prefill the form without restoring any credentials.
@@ -37,6 +39,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
   final _passphrase = TextEditingController();
   final _gateway = TextEditingController();
   final _tmuxName = TextEditingController(text: 'crispcloud');
+  final _screenName = TextEditingController(text: 'crispcloud');
   SshTerminalAuthentication _authentication =
       SshTerminalAuthentication.password;
   _SessionMode _sessionMode = _SessionMode.shell;
@@ -63,6 +66,13 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
           ? _SessionMode.attach
           : _SessionMode.createOrAttach;
     }
+    final screen = initial.screen;
+    if (screen != null && tmux == null) {
+      _screenName.text = screen.sessionName;
+      _sessionMode = screen.mode == ScreenSessionMode.attach
+          ? _SessionMode.attachScreen
+          : _SessionMode.createScreen;
+    }
   }
 
   void _submit() {
@@ -80,14 +90,26 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
         privateKey: usesKey ? _privateKey.text : '',
         passphrase: usesKey ? _passphrase.text : '',
         gateway: _showGateway && gateway.isNotEmpty ? Uri.parse(gateway) : null,
-        tmux: _sessionMode == _SessionMode.shell
-            ? null
-            : TmuxSessionOptions(
+        tmux:
+            _sessionMode == _SessionMode.attach ||
+                _sessionMode == _SessionMode.createOrAttach
+            ? TmuxSessionOptions(
                 sessionName: _tmuxName.text.trim(),
                 mode: _sessionMode == _SessionMode.attach
                     ? TmuxSessionMode.attach
                     : TmuxSessionMode.createOrAttach,
-              ),
+              )
+            : null,
+        screen:
+            _sessionMode == _SessionMode.createScreen ||
+                _sessionMode == _SessionMode.attachScreen
+            ? ScreenSessionOptions(
+                sessionName: _screenName.text.trim(),
+                mode: _sessionMode == _SessionMode.attachScreen
+                    ? ScreenSessionMode.attach
+                    : ScreenSessionMode.create,
+              )
+            : null,
       ),
     );
   }
@@ -387,12 +409,27 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  DropdownMenuItem(
+                    value: _SessionMode.createScreen,
+                    child: Text(
+                      context.screenTr('Create new screen'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: _SessionMode.attachScreen,
+                    child: Text(
+                      context.screenTr('Attach existing screen'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _sessionMode = value);
                 },
               ),
-              if (_sessionMode != _SessionMode.shell) ...[
+              if (_sessionMode == _SessionMode.createOrAttach ||
+                  _sessionMode == _SessionMode.attach) ...[
                 const SizedBox(height: 8),
                 TextFormField(
                   key: const ValueKey('terminal-ssh-tmux-name'),
@@ -416,6 +453,50 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                 Text(
                   context.terminalTr(
                     'tmux must be installed on the server. Sessions keep running when you disconnect.',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+              if (_sessionMode == _SessionMode.createScreen ||
+                  _sessionMode == _SessionMode.attachScreen) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  key: const ValueKey('terminal-ssh-screen-name'),
+                  controller: _screenName,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: InputDecoration(
+                    labelText: context.screenTr(
+                      _sessionMode == _SessionMode.attachScreen
+                          ? 'screen session name or PID.name'
+                          : 'screen session name',
+                    ),
+                    errorMaxLines: 5,
+                  ),
+                  validator: (value) {
+                    final name = value?.trim() ?? '';
+                    if (_sessionMode == _SessionMode.attachScreen) {
+                      return ScreenSessionOptions.isValidAttachTarget(name)
+                          ? null
+                          : context.screenTr(
+                              'Use a session name (1–64 ASCII letters, digits, _ or -), or a full PID.name.',
+                            );
+                    }
+                    return ScreenSessionOptions.isValidSessionName(name)
+                        ? null
+                        : context.terminalTr(
+                            'Use 1–64 ASCII letters, digits, _ or -; do not start with -.',
+                          );
+                  },
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.screenTr(
+                    _sessionMode == _SessionMode.attachScreen
+                        ? 'Attach uses an exact name or full PID.name from screen -ls. Other displays stay connected.'
+                        : 'screen must be installed on the server. New sessions keep running when you disconnect.',
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -447,6 +528,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
     _passphrase.dispose();
     _gateway.dispose();
     _tmuxName.dispose();
+    _screenName.dispose();
     super.dispose();
   }
 }

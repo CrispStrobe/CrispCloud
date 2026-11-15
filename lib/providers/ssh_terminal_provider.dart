@@ -5,6 +5,7 @@
 import 'package:crisp_storage/crisp_storage.dart' show HostKeyPrompt;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/screen_session_options.dart';
 import '../models/tmux_session_options.dart';
 import '../services/ssh_terminal_service.dart';
 import 'core_providers.dart';
@@ -119,8 +120,14 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     int width = 80,
     int height = 24,
     TmuxSessionOptions? tmux,
-  }) =>
-      _service.startShell(sessionId, width: width, height: height, tmux: tmux);
+    ScreenSessionOptions? screen,
+  }) => _service.startShell(
+    sessionId,
+    width: width,
+    height: height,
+    tmux: tmux,
+    screen: screen,
+  );
 
   /// Delegates to [SshTerminalService.writeToShell].
   Future<void> writeToShell(String sessionId, String input) =>

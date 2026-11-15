@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
+import 'package:crisp_cloud/l10n/screen_terminal_strings.dart';
 import 'package:crisp_cloud/l10n/terminal_strings.dart';
+import 'package:crisp_cloud/models/screen_session_options.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/widgets/ssh_terminal_connect_dialog.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ const _passphrase = ValueKey('terminal-ssh-passphrase');
 const _gateway = ValueKey('terminal-ssh-gateway');
 const _sessionMode = ValueKey('terminal-ssh-session-mode');
 const _tmuxName = ValueKey('terminal-ssh-tmux-name');
+const _screenName = ValueKey('terminal-ssh-screen-name');
 
 void main() {
   test('reconnect details retain the target and mode but no credentials', () {
@@ -345,6 +348,115 @@ void main() {
     expect(find.byKey(_tmuxName), findsNothing);
     await _submit(tester);
     expect(submitted.single!.tmux, isNull);
+  });
+
+  testWidgets(
+    'screen create validates names and discards a previous tmux choice',
+    (tester) async {
+      final submitted = await _open(tester);
+      await _enterTarget(tester);
+      await _select(tester, _sessionMode, 'Create or attach tmux');
+      await _enter(tester, _tmuxName, 'old-tmux');
+      await _select(tester, _sessionMode, 'Create new screen');
+      expect(find.byKey(_tmuxName), findsNothing);
+      for (final name in ['-R', 'two words', 'work;id', '123.work']) {
+        await _enter(tester, _screenName, name);
+        await _submit(tester);
+        expect(submitted, isEmpty, reason: name);
+      }
+      await _enter(tester, _screenName, ' build_2 ');
+      await _submit(tester);
+      expect(submitted.single!.screen?.sessionName, 'build_2');
+      expect(submitted.single!.screen?.mode, ScreenSessionMode.create);
+      expect(submitted.single!.tmux, isNull);
+    },
+  );
+
+  testWidgets(
+    'screen attach accepts full IDs and reconnect preserves mode without secrets',
+    (tester) async {
+      final submitted = await _open(
+        tester,
+        initial: const SshTerminalConfig(
+          host: 'ssh.example',
+          port: 2222,
+          username: 'alice',
+          password: 'old-secret',
+          screen: ScreenSessionOptions(
+            sessionName: '123.pts-0.server',
+            mode: ScreenSessionMode.attach,
+          ),
+        ),
+      );
+      expect(
+        _editable(tester, _screenName).controller!.text,
+        '123.pts-0.server',
+      );
+      expect(_editable(tester, _password).controller!.text, isEmpty);
+      expect(find.byKey(_tmuxName), findsNothing);
+      await _enter(tester, _screenName, 'alice/work');
+      await _submit(tester);
+      expect(submitted, isEmpty);
+      await _enter(tester, _screenName, '456.work');
+      await _submit(tester);
+      expect(submitted.single!.screen?.sessionName, '456.work');
+      expect(submitted.single!.screen?.mode, ScreenSessionMode.attach);
+      expect(submitted.single!.tmux, isNull);
+    },
+  );
+
+  testWidgets('switching from screen to plain shell discards its target', (
+    tester,
+  ) async {
+    final submitted = await _open(
+      tester,
+      initial: const SshTerminalConfig(
+        host: 'ssh.example',
+        port: 22,
+        username: 'alice',
+        screen: ScreenSessionOptions(sessionName: 'work'),
+      ),
+    );
+    await _select(tester, _sessionMode, 'Remote shell');
+    expect(find.byKey(_screenName), findsNothing);
+    await _submit(tester);
+    expect(submitted.single!.screen, isNull);
+    expect(submitted.single!.tmux, isNull);
+  });
+
+  testWidgets('screen controls fit narrow screens', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 640);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await _open(tester);
+    await _select(tester, _sessionMode, 'Attach existing screen');
+    await _enter(tester, _screenName, '123.pts-0.server');
+    expect(tester.takeException(), isNull);
+    expect(find.text('Connect').hitTestable(), findsOneWidget);
+    expect(find.text('Cancel').hitTestable(), findsOneWidget);
+  });
+
+  test('Screen controls are translated in every supported locale', () {
+    const keys = [
+      'Create new screen',
+      'Attach existing screen',
+      'screen session name',
+      'screen session name or PID.name',
+      'Detach from screen',
+      'screen must be installed on the server. New sessions keep running when you disconnect.',
+      'Attach uses an exact name or full PID.name from screen -ls. Other displays stay connected.',
+      'Use a session name (1–64 ASCII letters, digits, _ or -), or a full PID.name.',
+    ];
+    for (final locale in AppLocalizations.supportedLocales) {
+      final strings = ScreenTerminalStrings(locale.languageCode);
+      for (final key in keys) {
+        expect(strings.text(key), isNotEmpty);
+        if (locale.languageCode != 'en') {
+          expect(strings.text(key), isNot(key), reason: '$locale: $key');
+        }
+      }
+    }
   });
 
   testWidgets('key and tmux mode still require a safe browser gateway', (

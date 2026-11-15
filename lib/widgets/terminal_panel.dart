@@ -8,11 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm2/xterm.dart';
 
 import '../l10n/terminal_strings.dart';
+import '../l10n/terminal_controls_strings.dart';
+import '../l10n/screen_terminal_strings.dart';
 import '../l10n/terminal_mount_error_strings.dart';
 import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_workspace_provider.dart';
+import '../providers/ssh_terminal_profiles_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
 import '../services/terminal_backends.dart';
@@ -26,6 +29,9 @@ import '../services/terminal_workspace_service.dart';
 import 'terminal_workspace_dialog.dart';
 import 'external_terminal_dialog.dart';
 import 'ssh_terminal_connect_dialog.dart';
+import 'ssh_terminal_profiles_dialog.dart';
+import 'terminal_tabs.dart';
+import 'terminal_search_bar.dart';
 import '../l10n/external_terminal_strings.dart';
 
 export '../models/ssh_terminal_config.dart';
@@ -58,18 +64,36 @@ class _TerminalPanelHostState extends ConsumerState<TerminalPanelHost> {
       maintainState: true,
       child: ExcludeFocus(
         excluding: !visible,
-        child: TerminalPanel(visible: visible, session: widget.session),
+        child: TerminalTabs(visible: visible, session: widget.session),
       ),
     );
   }
 }
 
 class TerminalPanel extends ConsumerStatefulWidget {
-  const TerminalPanel({super.key, this.session, this.visible = true});
+  const TerminalPanel({
+    super.key,
+    this.session,
+    this.visible = true,
+    this.active = true,
+    this.embedded = false,
+    this.autoStart = false,
+    this.focusRequest = 0,
+    this.isActivePane,
+    this.onActivate,
+    this.onWorkspaceKey,
+  });
 
   /// An injected session remains caller-owned and is not automatically opened.
   final TerminalSession? session;
   final bool visible;
+  final bool active;
+  final bool embedded;
+  final bool autoStart;
+  final int focusRequest;
+  final bool Function()? isActivePane;
+  final VoidCallback? onActivate;
+  final KeyEventResult Function(KeyEvent event)? onWorkspaceKey;
 
   @override
   ConsumerState<TerminalPanel> createState() => _TerminalPanelState();
@@ -78,12 +102,18 @@ class TerminalPanel extends ConsumerStatefulWidget {
 enum _PanelAction {
   local,
   reconnect,
+  profiles,
+  saveProfile,
   external,
   stage,
   workspaces,
   review,
   copy,
   paste,
+  find,
+  zoomIn,
+  zoomOut,
+  zoomReset,
   disconnect,
   hide,
 }
@@ -92,6 +122,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   final _focus = FocusNode(debugLabel: 'Terminal input');
   final _controller = TerminalController();
   final _scroll = ScrollController();
+  final _terminalViewKey = GlobalKey<TerminalViewState>();
   final _menuOwner = Object();
   late TerminalSession _session;
   late bool _ownsSession;
@@ -109,6 +140,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   // Reconnect remembers the destination and session mode, never credentials.
   SshTerminalConfig? _lastSshConfig;
   Terminal? _tmuxTerminal;
+  Terminal? _screenTerminal;
+  bool _showSearch = false;
+  bool _searchFits = true;
+  bool _preferSearchFocus = false;
+  int _searchFocusRequest = 0;
+  double _fontSize = 13;
   int _connectionRequest = 0;
 
   bool get _desktop =>
@@ -128,10 +165,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       };
 
   bool get _canDisconnect => _session.canDisconnect;
+  bool get _activePane =>
+      widget.active && (widget.isActivePane?.call() ?? true);
 
   bool get _usingTmux =>
       _session.kind == TerminalSessionKind.ssh &&
       identical(_tmuxTerminal, _session.terminal);
+
+  bool get _usingScreen =>
+      _session.kind == TerminalSessionKind.ssh &&
+      identical(_screenTerminal, _session.terminal);
 
   bool get _canCopy =>
       _controller.selectionFor(_session.terminal.buffer) != null;
@@ -149,8 +192,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _attachSession(widget.session);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (widget.visible) _focus.requestFocus();
-      if (_ownsSession) {
+      if (widget.visible && widget.active) _focus.requestFocus();
+      if (_ownsSession || widget.autoStart) {
         unawaited(_startLocal());
       } else {
         _focusIfVisible();
@@ -205,15 +248,17 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _detachTitleHandler();
       if (_ownsSession) _session.dispose();
       _attachSession(widget.session);
-      if (_ownsSession) {
+      if (_ownsSession || widget.autoStart) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(_startLocal());
         });
       }
     }
-    if (!widget.visible) {
+    if (!widget.visible || !widget.active) {
       _focus.unfocus();
-    } else if (!oldWidget.visible) {
+    } else if (!oldWidget.visible ||
+        !oldWidget.active ||
+        oldWidget.focusRequest != widget.focusRequest) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _focusIfVisible());
     }
     _scheduleMenuUpdate();
@@ -229,9 +274,27 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void _focusIfVisible() {
     if (mounted &&
         widget.visible &&
+        _activePane &&
+        !(_showSearch && _searchFits && _preferSearchFocus) &&
         _focusAreaState.state == FocusArea.terminal) {
       _focus.requestFocus();
     }
+  }
+
+  void _activateInput() {
+    if (_preferSearchFocus) setState(() => _preferSearchFocus = false);
+    widget.onActivate?.call();
+    _focusAreaState.state = FocusArea.terminal;
+    if (widget.active) _focus.requestFocus();
+  }
+
+  void _activateSearch() {
+    setState(() {
+      _preferSearchFocus = true;
+      _searchFocusRequest++;
+    });
+    widget.onActivate?.call();
+    _focusAreaState.state = FocusArea.terminal;
   }
 
   void _onInputFocusChanged() {
@@ -255,7 +318,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _menuUpdateScheduled = false;
       if (!mounted) return;
       final current = _menuState.state;
-      if (!widget.visible || !_focus.hasFocus) {
+      if (!widget.visible || !widget.active || !_focus.hasFocus) {
         if (identical(current?.owner, _menuOwner)) _menuState.state = null;
         return;
       }
@@ -280,7 +343,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _performMenuAction(TerminalMenuAction action) {
-    if (!mounted || !widget.visible || !_focus.hasFocus) return;
+    if (!mounted || !widget.visible || !widget.active || !_focus.hasFocus) {
+      return;
+    }
     switch (action) {
       case TerminalMenuAction.copy:
         unawaited(_copySelection());
@@ -422,15 +487,29 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     );
   }
 
-  Future<void> _connectSsh({bool reconnect = false}) async {
+  Future<void> _connectSsh({
+    bool reconnect = false,
+    SshTerminalConfig? initialConfig,
+  }) async {
     if (_session.isConnecting) return;
+    _activateInput();
     final config = await showDialog<SshTerminalConfig>(
       context: context,
       builder: (_) => SshTerminalConnectDialog(
-        initialConfig: reconnect ? _lastSshConfig : null,
+        initialConfig: initialConfig ?? (reconnect ? _lastSshConfig : null),
       ),
     );
     if (!mounted || config == null || !widget.visible) return;
+    try {
+      config.validateSessionOptions();
+    } on ArgumentError {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.terminalControlsTr('Invalid session settings')),
+        ),
+      );
+      return;
+    }
     _connectionRequest++;
     _workspace = null;
     _lastSshConfig = config.withoutSecrets();
@@ -499,6 +578,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             width: columns,
             height: rows,
             tmux: config.tmux,
+            screen: config.screen,
           );
           return SshTerminalConnection(_ssh, session.id, stream);
         } catch (_) {
@@ -509,13 +589,46 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       kind: TerminalSessionKind.ssh,
       label:
           '${config.username}@${config.host}'
-          '${config.tmux == null ? '' : ' · tmux: ${config.tmux!.sessionName}'}',
+          '${config.tmux == null ? '' : ' · tmux: ${config.tmux!.sessionName}'}'
+          '${config.screen == null ? '' : ' · screen: ${config.screen!.sessionName}'}',
     );
     connectingTerminal = _session.terminal;
     _tmuxTerminal = config.tmux == null ? null : connectingTerminal;
+    _screenTerminal = config.screen == null ? null : connectingTerminal;
     await connecting;
     if (mounted && identical(_session.terminal, connectingTerminal)) {
       _focusIfVisible();
+    }
+  }
+
+  Future<void> _showProfiles() async {
+    final config = await showDialog<SshTerminalConfig>(
+      context: context,
+      builder: (_) => SshTerminalProfilesDialog(
+        store: ref.read(sshTerminalProfilesProvider),
+      ),
+    );
+    if (mounted && widget.visible && config != null) {
+      await _connectSsh(initialConfig: config.withoutSecrets());
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final config = _lastSshConfig;
+    if (config == null) return;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => SaveSshTerminalProfileDialog(
+        store: ref.read(sshTerminalProfilesProvider),
+        config: config.withoutSecrets(),
+      ),
+    );
+    if (mounted && saved == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.terminalControlsTr('Saved SSH profile')),
+        ),
+      );
     }
   }
 
@@ -532,11 +645,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   Future<void> _paste() async {
-    if (!_session.isConnected || !widget.visible) return;
+    if (!_session.isConnected || !widget.visible || !_activePane) return;
     final terminal = _session.terminal;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (!mounted ||
         !widget.visible ||
+        !_activePane ||
+        !_focus.hasFocus ||
+        _focusAreaState.state != FocusArea.terminal ||
         !_session.isConnected ||
         !identical(terminal, _session.terminal)) {
       return;
@@ -551,6 +667,42 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   KeyEventResult _onTerminalKey(FocusNode node, KeyEvent event) {
     final keyboard = HardwareKeyboard.instance;
+    final workspaceResult = widget.onWorkspaceKey?.call(event);
+    if (workspaceResult != null && workspaceResult != KeyEventResult.ignored) {
+      return workspaceResult;
+    }
+    final apple =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final command =
+        !keyboard.isAltPressed &&
+        (apple
+            ? keyboard.isMetaPressed && !keyboard.isControlPressed
+            : keyboard.isControlPressed &&
+                  keyboard.isShiftPressed &&
+                  !keyboard.isMetaPressed);
+    if (command) {
+      final key = event.logicalKey;
+      final find = key == LogicalKeyboardKey.keyF;
+      final zoomIn =
+          key == LogicalKeyboardKey.equal ||
+          key == LogicalKeyboardKey.add ||
+          key == LogicalKeyboardKey.numpadAdd;
+      final zoomOut =
+          key == LogicalKeyboardKey.minus ||
+          key == LogicalKeyboardKey.numpadSubtract;
+      final reset =
+          key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0;
+      if (find || zoomIn || zoomOut || reset) {
+        if (event is KeyDownEvent) {
+          if (find) _openSearch();
+          if (zoomIn) _setFontSize(_fontSize + 1);
+          if (zoomOut) _setFontSize(_fontSize - 1);
+          if (reset) _setFontSize(13);
+        }
+        return KeyEventResult.handled;
+      }
+    }
     final action = ref
         .read(keyboardShortcutServiceProvider)
         .resolveBrowser(
@@ -586,8 +738,26 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     return KeyEventResult.ignored;
   }
 
+  void _setFontSize(double size) {
+    setState(() => _fontSize = size.clamp(8.0, 32.0));
+  }
+
+  void _openSearch() {
+    setState(() => _showSearch = true);
+    _activateSearch();
+  }
+
+  void _closeSearch() {
+    setState(() {
+      _showSearch = false;
+      _preferSearchFocus = false;
+    });
+    _focusIfVisible();
+  }
+
   void _sendKey(TerminalKey key, {bool ctrl = false}) {
     if (!_session.isConnected) return;
+    _activateInput();
     _session.terminal.keyInput(key, ctrl: ctrl);
     _focusIfVisible();
   }
@@ -645,11 +815,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _performAction(_PanelAction action) {
+    _activateInput();
     switch (action) {
       case _PanelAction.local:
         unawaited(_startLocal());
       case _PanelAction.reconnect:
         unawaited(_connectSsh(reconnect: true));
+      case _PanelAction.profiles:
+        unawaited(_showProfiles());
+      case _PanelAction.saveProfile:
+        unawaited(_saveProfile());
       case _PanelAction.external:
         unawaited(showExternalTerminalDialog(context, ref));
       case _PanelAction.stage:
@@ -662,6 +837,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         unawaited(_copySelection());
       case _PanelAction.paste:
         unawaited(_paste());
+      case _PanelAction.find:
+        _openSearch();
+      case _PanelAction.zoomIn:
+        _setFontSize(_fontSize + 1);
+      case _PanelAction.zoomOut:
+        _setFontSize(_fontSize - 1);
+      case _PanelAction.zoomReset:
+        _setFontSize(13);
       case _PanelAction.disconnect:
         unawaited(_session.disconnect());
       case _PanelAction.hide:
@@ -690,11 +873,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     final title = _title?.isNotEmpty == true
         ? '$connectionLabel: $_title'
         : connectionLabel;
-    final focused = ref.watch(focusAreaProvider) == FocusArea.terminal;
+    final focused =
+        widget.active && ref.watch(focusAreaProvider) == FocusArea.terminal;
     return GestureDetector(
       onTap: () {
-        _focusAreaState.state = FocusArea.terminal;
-        _focusIfVisible();
+        _activateInput();
       },
       child: Material(
         color: focused
@@ -745,14 +928,42 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   PopupMenuButton<_PanelAction>(
                     key: const ValueKey('terminal-actions'),
                     tooltip: context.terminalTr('Terminal actions'),
+                    onOpened: _activateInput,
                     onSelected: _performAction,
                     itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: _PanelAction.profiles,
+                        enabled: !_session.isConnecting,
+                        child: Text(
+                          context.terminalControlsTr('Saved SSH profiles'),
+                        ),
+                      ),
+                      if (_lastSshConfig != null)
+                        PopupMenuItem(
+                          value: _PanelAction.saveProfile,
+                          child: Text(
+                            context.terminalControlsTr('Save SSH profile'),
+                          ),
+                        ),
                       if (_lastSshConfig != null)
                         PopupMenuItem(
                           value: _PanelAction.reconnect,
                           enabled: !_session.isConnecting,
                           child: Text(context.terminalTr('Reconnect SSH')),
                         ),
+                      PopupMenuItem(
+                        value: _PanelAction.disconnect,
+                        enabled: _canDisconnect,
+                        child: Text(
+                          _usingScreen
+                              ? context.screenTr('Detach from screen')
+                              : context.terminalTr(
+                                  _usingTmux
+                                      ? 'Detach from tmux'
+                                      : 'Disconnect',
+                                ),
+                        ),
+                      ),
                       PopupMenuItem(
                         value: _PanelAction.local,
                         child: Text(
@@ -817,12 +1028,30 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         child: Text(context.terminalTr('Paste')),
                       ),
                       PopupMenuItem(
-                        value: _PanelAction.disconnect,
-                        enabled: _canDisconnect,
+                        value: _PanelAction.find,
                         child: Text(
-                          context.terminalTr(
-                            _usingTmux ? 'Detach from tmux' : 'Disconnect',
-                          ),
+                          context.terminalControlsTr('Find in terminal'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.zoomIn,
+                        enabled: _fontSize < 32,
+                        child: Text(
+                          context.terminalControlsTr('Increase font size'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.zoomOut,
+                        enabled: _fontSize > 8,
+                        child: Text(
+                          context.terminalControlsTr('Decrease font size'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.zoomReset,
+                        enabled: _fontSize != 13,
+                        child: Text(
+                          context.terminalControlsTr('Reset font size'),
                         ),
                       ),
                       PopupMenuItem(
@@ -851,6 +1080,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     const keys = <(String, TerminalKey, bool)>[
       ('Esc', TerminalKey.escape, false),
       ('Tab', TerminalKey.tab, false),
+      ('Ctrl+A', TerminalKey.keyA, true),
       ('Ctrl+B', TerminalKey.keyB, true),
       ('Ctrl+C', TerminalKey.keyC, true),
       ('Ctrl+D', TerminalKey.keyD, true),
@@ -915,46 +1145,83 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               ? math.min(available, constraints.maxHeight)
               : available,
         );
-        final height = requestedHeight
-            .clamp(math.min(140.0, maximum), maximum)
-            .toDouble();
-        final showExtraKeys = _mobile && height >= 140;
+        final height = widget.embedded && constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : requestedHeight
+                  .clamp(math.min(140.0, maximum), maximum)
+                  .toDouble();
+        final wasSearchVisible = _showSearch && _searchFits;
+        _searchFits = height >= (constraints.maxWidth < 300 ? 150 : 110);
+        final showSearch = _showSearch && _searchFits;
+        if (wasSearchVisible && !showSearch) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _focusIfVisible(),
+          );
+        }
+        final showExtraKeys = _mobile && height >= (showSearch ? 190 : 140);
         return SizedBox(
           key: const ValueKey('terminal-panel'),
           height: height,
           child: Column(
             children: [
-              MouseRegion(
-                cursor: SystemMouseCursors.resizeUpDown,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onVerticalDragUpdate: (details) {
-                    ref
-                        .read(terminalHeightProvider.notifier)
-                        .state = (height - details.delta.dy)
-                        .clamp(math.min(140.0, maximum), maximum)
-                        .toDouble();
-                  },
-                  child: Container(
-                    height: 6,
-                    color: Theme.of(context).dividerColor,
-                    alignment: Alignment.center,
+              if (!widget.embedded)
+                MouseRegion(
+                  cursor: SystemMouseCursors.resizeUpDown,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragUpdate: (details) {
+                      ref
+                          .read(terminalHeightProvider.notifier)
+                          .state = (height - details.delta.dy)
+                          .clamp(math.min(140.0, maximum), maximum)
+                          .toDouble();
+                    },
                     child: Container(
-                      width: 40,
-                      height: 2,
-                      color: Theme.of(context).colorScheme.outline,
+                      height: 6,
+                      color: Theme.of(context).dividerColor,
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 40,
+                        height: 2,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ),
                 ),
-              ),
               _buildHeader(),
+              if (_showSearch)
+                Visibility(
+                  visible: showSearch,
+                  maintainState: true,
+                  child: TerminalSearchBar(
+                    active:
+                        showSearch &&
+                        widget.visible &&
+                        widget.active &&
+                        ref.watch(focusAreaProvider) == FocusArea.terminal,
+                    autofocus: _preferSearchFocus,
+                    focusRequest: widget.focusRequest + _searchFocusRequest,
+                    onWorkspaceKey: widget.onWorkspaceKey,
+                    onActivate: _activateSearch,
+                    terminal: _session.terminal,
+                    controller: _controller,
+                    scrollController: _scroll,
+                    lineHeight: () =>
+                        _terminalViewKey
+                            .currentState
+                            ?.renderTerminal
+                            .lineHeight ??
+                        16,
+                    onClose: _closeSearch,
+                  ),
+                ),
               Expanded(
                 child: Stack(
                   children: [
                     Positioned.fill(
                       child: Listener(
                         behavior: HitTestBehavior.translucent,
-                        onPointerDown: (_) => _focus.requestFocus(),
+                        onPointerDown: (_) => _activateInput(),
                         child: Focus(
                           canRequestFocus: false,
                           skipTraversal: true,
@@ -964,6 +1231,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                               KeyEventResult.skipRemainingHandlers,
                           child: TerminalView(
                             _session.terminal,
+                            key: _terminalViewKey,
                             controller: _controller,
                             focusNode: _focus,
                             scrollController: _scroll,
@@ -972,9 +1240,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                             deleteDetection: _mobile,
                             keyboardType: TextInputType.multiline,
                             keyboardAppearance: Brightness.dark,
-                            textStyle: const TerminalStyle(
+                            textStyle: TerminalStyle(
                               fontFamily: 'AppMono',
-                              fontSize: 13,
+                              fontSize: _fontSize,
                             ),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,

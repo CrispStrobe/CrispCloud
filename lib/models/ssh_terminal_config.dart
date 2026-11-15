@@ -1,3 +1,4 @@
+import 'screen_session_options.dart';
 import 'tmux_session_options.dart';
 
 enum SshTerminalAuthentication { password, privateKey }
@@ -17,6 +18,7 @@ class SshTerminalConfig {
     this.authentication = SshTerminalAuthentication.password,
     this.gateway,
     this.tmux,
+    this.screen,
   });
 
   final String host;
@@ -28,6 +30,31 @@ class SshTerminalConfig {
   final SshTerminalAuthentication authentication;
   final Uri? gateway;
   final TmuxSessionOptions? tmux;
+  final ScreenSessionOptions? screen;
+
+  /// Validate mutually exclusive launch options before replacing a connection.
+  void validateSessionOptions() {
+    if (tmux != null && screen != null) {
+      throw ArgumentError('Choose either tmux or screen, not both');
+    }
+    final tmuxOptions = tmux;
+    if (tmuxOptions != null &&
+        !TmuxSessionOptions.isValidSessionName(tmuxOptions.sessionName)) {
+      throw ArgumentError.value(
+        tmuxOptions.sessionName,
+        'tmux',
+        'Invalid tmux name',
+      );
+    }
+    final screenOptions = screen;
+    if (screenOptions != null && !screenOptions.isValid) {
+      throw ArgumentError.value(
+        screenOptions.sessionName,
+        'screen',
+        'Invalid screen target',
+      );
+    }
+  }
 
   SshTerminalConfig withoutSecrets() => SshTerminalConfig(
     host: host,
@@ -36,5 +63,6 @@ class SshTerminalConfig {
     authentication: authentication,
     gateway: gateway,
     tmux: tmux,
+    screen: screen,
   );
 }

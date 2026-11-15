@@ -19,7 +19,9 @@ import 'package:crisp_cloud/widgets/terminal_panel.dart';
 import 'package:crisp_cloud/widgets/terminal_process_native.dart' as proc;
 
 class _Connection implements TerminalConnection {
-  final controller = StreamController<String>();
+  // An explicit cancellation future stays on the widget test's clock instead
+  // of using Dart's shared root-zone completed future.
+  final controller = StreamController<String>(onCancel: () async {});
   final finished = Completer<int?>();
   final input = <String>[];
 
@@ -147,9 +149,11 @@ void main() {
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
-      // Stream cancellation can complete on the real event loop rather than
-      // the widget clock; do not await that transport cleanup inside FakeAsync.
-      await tester.runAsync(session.disconnect);
+      // This fake transport was created on the widget clock. Initiate cleanup
+      // on that same clock and pump its cancellation futures before awaiting.
+      final disconnecting = session.disconnect();
+      await tester.pump();
+      await disconnecting;
       session.dispose();
       container.dispose();
     },

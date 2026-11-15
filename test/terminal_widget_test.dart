@@ -354,6 +354,111 @@ void main() {
   );
 
   testWidgets(
+    'font shortcuts resize only the viewport and reset without sending shell input',
+    (tester) async {
+      await mount(tester);
+      final before = session.columns;
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.equal);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(
+        tester
+            .widget<TerminalView>(find.byType(TerminalView))
+            .textStyle
+            .fontSize,
+        14,
+      );
+      expect(session.columns, lessThan(before));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit0);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(
+        tester
+            .widget<TerminalView>(find.byType(TerminalView))
+            .textStyle
+            .fontSize,
+        13,
+      );
+      expect(connection.input.join(), isEmpty);
+      expect(connection.closeCount, 0);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
+
+  testWidgets(
+    'find shortcut isolates query input and preserves query while the viewport is cramped',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      await mount(tester);
+      connection.controller.add('first needle\r\nsecond needle\r\n');
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const ValueKey('terminal-search-query')),
+        'needle',
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.text('1/2'), findsOneWidget);
+      expect(connection.input.join(), isEmpty);
+      tester.view.physicalSize = const Size(800, 245);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('terminal-search-query')), findsNothing);
+      expect(
+        tester
+            .widget<TerminalView>(find.byType(TerminalView))
+            .focusNode!
+            .hasFocus,
+        isTrue,
+      );
+      tester.view.physicalSize = const Size(800, 600);
+      await tester.pump();
+      await tester.pump();
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey('terminal-search-query')),
+            )
+            .controller!
+            .text,
+        'needle',
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('terminal-search-query')), findsNothing);
+      expect(
+        tester
+            .widget<TerminalView>(find.byType(TerminalView))
+            .focusNode!
+            .hasFocus,
+        isTrue,
+      );
+      expect(connection.input.join(), isEmpty);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
+
+  testWidgets(
     'native phone keyboard keeps a usable viewport and control keys',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
