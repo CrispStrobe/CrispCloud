@@ -141,20 +141,26 @@ LegacyWordStructuredConversion convertLegacyWord(
   try {
     document = parseLegacyWordDocument(bytes, recover: recover);
   } on FormatException {
-    // With [recover], a file whose compound directory is destroyed still
-    // yields its text when the WordDocument stream itself is intact.
-    if (!recover || format != LegacyWordOutputFormat.docx) rethrow;
-    // Then any file whose text is readable although its structure is not
-    // (Word 6.0/95 files have no structured reader at all).
-    final text = recoverLegacyWordText(bytes) ?? _plainTextOrNull(bytes);
-    if (text == null) rethrow;
-    return LegacyWordStructuredConversion(
-      bytes: _plainTextDocx(text),
-      limitations: LegacyWordConversionLimitation.values,
+    final recovered = _recoverTextOnlyConversion(
+      bytes,
       format: format,
       fieldMode: fieldMode,
-      recoveredTextOnly: true,
+      recover: recover,
     );
+    if (recovered == null) rethrow;
+    return recovered;
+  } on CfbfException {
+    // Directory/stream damage reported by the compound reader is a typed
+    // structural failure too. Keep unrelated exceptions and writer errors out
+    // of this fallback, and preserve the original refusal if recovery fails.
+    final recovered = _recoverTextOnlyConversion(
+      bytes,
+      format: format,
+      fieldMode: fieldMode,
+      recover: recover,
+    );
+    if (recovered == null) rethrow;
+    return recovered;
   }
   return convertLegacyWordDocument(
     document,
@@ -163,10 +169,34 @@ LegacyWordStructuredConversion convertLegacyWord(
   );
 }
 
+LegacyWordStructuredConversion? _recoverTextOnlyConversion(
+  Uint8List bytes, {
+  required LegacyWordOutputFormat format,
+  required LegacyWordFieldMode fieldMode,
+  required bool recover,
+}) {
+  if (!recover || format != LegacyWordOutputFormat.docx) return null;
+  // A damaged directory can still leave bounded, referenced main-body text.
+  // Intact compounds with unsupported structures, including Word 6.0/95, use
+  // the ordinary text reader after raw recovery fails. Both readers retain
+  // their existing admission, encoding and encryption checks.
+  final text = recoverLegacyWordText(bytes) ?? _plainTextOrNull(bytes);
+  if (text == null) return null;
+  return LegacyWordStructuredConversion(
+    bytes: _plainTextDocx(text),
+    limitations: LegacyWordConversionLimitation.values,
+    format: format,
+    fieldMode: fieldMode,
+    recoveredTextOnly: true,
+  );
+}
+
 String? _plainTextOrNull(Uint8List bytes) {
   try {
     return extractLegacyWordText(bytes);
   } on FormatException {
+    return null;
+  } on CfbfException {
     return null;
   }
 }

@@ -19,12 +19,12 @@
     "Quds PR24 final observed": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
     "Quds current integrated pin": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
     "Parser main final observed": "7df906d2643d1fec39c49fc795733316a49f3278",
-    "Parser current integrated pin": "09c8b3731edb60bf6e5309578260af36b9433570"
+    "Parser current integrated pin": "9bdcc7eba3f1ce80b7d834d7740895774eeca615"
   },
   "manifests": {
     "app-suites.txt": {
       "prior_count": 49,
-      "count": 63,
+      "count": 65,
       "additions": [
         "test/app_legal_notices_test.dart",
         "test/pdf_font_licenses_test.dart",
@@ -39,7 +39,9 @@
         "test/widget/legacy_word_routing_test.dart",
         "test/legacy_word_copy_target_test.dart",
         "test/legacy_word_conversion_strings_test.dart",
-        "test/widget/legacy_word_conversion_dialog_test.dart"
+        "test/widget/legacy_word_conversion_dialog_test.dart",
+        "test/office_ribbon_controls_i18n_test.dart",
+        "test/widget/office_font_fidelity_test.dart"
       ]
     },
     "editor-suites.txt": {
@@ -63,7 +65,7 @@
     },
     "analysis-app-files.txt": {
       "prior_count": 53,
-      "count": 72,
+      "count": 76,
       "additions": [
         "lib/main.dart",
         "lib/screens/about_dialog.dart",
@@ -83,7 +85,11 @@
         "test/legacy_word_conversion_strings_test.dart",
         "test/word_conversion_inspection_test.dart",
         "test/widget/structured_legacy_word_conversion_dialog_test.dart",
-        "test/support/legacy_word_recovery_fixture.dart"
+        "test/support/legacy_word_recovery_fixture.dart",
+        "lib/l10n/office_ribbon_control_strings.dart",
+        "lib/widgets/office_editor_ribbon.dart",
+        "lib/widgets/office_editor_dialogs.dart",
+        "test/office_ribbon_controls_i18n_test.dart"
       ]
     },
     "analysis-engine-files.txt": {
@@ -157,7 +163,8 @@
     "Keep navigation preview run separate from ordinary app counts and inspect the two genuine PNGs and font/source receipts.",
     "No native-hook disabling or fake library substitution.",
     "Do not execute external local-corpus harnesses or count their empty/no-input behavior as acceptance.",
-    "Standalone parser qualification is owned by qualification_setup; include its current merged source and retained raw results, never treat an unchanged main branch as proof that open PR14-18 are absent."
+    "Standalone parser qualification is owned by qualification_setup; include its current merged source and retained raw results, never treat an unchanged main branch as proof that open PR14-18 are absent.",
+    "The failed first app run and earlier source passes remain predecessor evidence; all final accepted gates rerun after the host enum and typed compound-exception corrections."
   ],
   "concrete_addition_rationale": {
     "app legal/PDF-font/runtime-license suites": "New bundled attribution/asset wiring and runtime registry source arriving from main.",
@@ -174,6 +181,7 @@
     "Legacy conversion localization suite": "Recovery label, explicit notice and acceptance text exist in all nine supported languages without falling back to English.",
     "sheet_normal_font_metrics_test and model/serializer": "Reproduced 81px-to-64px ODS copy-save loss; new direct/isolate save cycles verify explicit, base-only and zero default widths without changing existing native attributes.",
     "sml_styles_date_test": "Authored ODS date order/literals, full month and weekday rendering; literal semicolons must not become number-format sections.",
-    "sheet_comments_schema_test": "New ODS annotations reach XLSX comment serialization; retain author-table, content-type, and worksheet-relationship schema checks."
+    "sheet_comments_schema_test": "New ODS annotations reach XLSX comment serialization; retain author-table, content-type, and worksheet-relationship schema checks.",
+    "Expanded underline host choices": "Canonical enum now has18styles. Exercise all real ribbon choices, Font no-op Apply and DOCX reopen, with complete localized labels. Existing imported/mixed-font fidelity protects untouched formatting."
   }
 }

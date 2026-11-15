@@ -61,3 +61,5 @@ test/widget/legacy_word_routing_test.dart
 test/legacy_word_copy_target_test.dart
 test/legacy_word_conversion_strings_test.dart
 test/widget/legacy_word_conversion_dialog_test.dart
+test/office_ribbon_controls_i18n_test.dart
+test/widget/office_font_fidelity_test.dart

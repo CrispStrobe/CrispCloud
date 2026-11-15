@@ -1,0 +1,58 @@
+{
+  "done_events": [
+    {
+      "success": false,
+      "time": 1053,
+      "type": "done"
+    }
+  ],
+  "done_success": false,
+  "errors": [
+    {
+      "error": "CfbfException: Invalid compound root directory",
+      "isFailure": false,
+      "stackTrace": "package:legacy_doc_parser/src/compound/cfbf_reader.dart 620:7           CfbfFile._readDirectory\npackage:legacy_doc_parser/src/compound/cfbf_reader.dart 158:46          new CfbfFile.open\npackage:legacy_doc_parser/src/compound/cfbf_reader.dart 182:16          new CfbfFile.fromBytes\npackage:legacy_doc_parser/src/bounded_cfb_reader.dart 29:22             new BoundedCfbReader\npackage:legacy_doc_parser/src/legacy_word_binary_source.dart 65:16      new _BinarySource\npackage:legacy_doc_parser/src/legacy_word_structured_parser.dart 40:29  readStructuredLegacyWord\npackage:legacy_doc_parser/src/legacy_word_document.dart 25:7            parseLegacyWordDocument\npackage:legacy_doc_parser/src/conversion.dart 142:16                    convertLegacyWord\ntest/compound_directory_recovery_test.dart 63:24                        main.<fn>\n",
+      "testID": 4,
+      "time": 1025,
+      "type": "error"
+    },
+    {
+      "error": "CfbfException: Invalid compound root directory",
+      "isFailure": false,
+      "stackTrace": "package:legacy_doc_parser/src/compound/cfbf_reader.dart 620:7           CfbfFile._readDirectory\npackage:legacy_doc_parser/src/compound/cfbf_reader.dart 158:46          new CfbfFile.open\npackage:legacy_doc_parser/src/compound/cfbf_reader.dart 182:16          new CfbfFile.fromBytes\npackage:legacy_doc_parser/src/bounded_cfb_reader.dart 29:22             new BoundedCfbReader\npackage:legacy_doc_parser/src/legacy_word_binary_source.dart 65:16      new _BinarySource\npackage:legacy_doc_parser/src/legacy_word_structured_parser.dart 40:29  readStructuredLegacyWord\npackage:legacy_doc_parser/src/legacy_word_document.dart 25:7            parseLegacyWordDocument\npackage:legacy_doc_parser/src/conversion.dart 142:16                    convertLegacyWord\npackage:legacy_doc_parser/src/conversion.dart 130:7                     convertLegacyWordToStructuredDocx\ntest/compound_directory_recovery_test.dart 83:24                        main.<fn>\n",
+      "testID": 5,
+      "time": 1029,
+      "type": "error"
+    }
+  ],
+  "hidden_test_done": 1,
+  "missing_suites": [],
+  "non_json_lines": 0,
+  "non_object_json_lines": 0,
+  "nonpassing_requested_suites": [
+    "test/compound_directory_recovery_test.dart"
+  ],
+  "qualification_success": false,
+  "suites": [
+    {
+      "errors": 2,
+      "failed": 2,
+      "observed": true,
+      "other_results": 0,
+      "passed": 7,
+      "path": "test/compound_directory_recovery_test.dart",
+      "result": "failed",
+      "skipped": 0,
+      "tests": 9
+    }
+  ],
+  "totals": {
+    "errors": 2,
+    "failed": 2,
+    "other_results": 0,
+    "passed": 7,
+    "skipped": 0,
+    "tests": 9
+  },
+  "unexpected_suites": []
+}

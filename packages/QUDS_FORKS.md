@@ -25,7 +25,7 @@ content.
 
 The app mirrors Quds `c17098d65fe5f6e2bdf9999389deb2a6b508d928` on
 `integration/storage-carving-qualification-20261115` and standalone
-legacy parser `09c8b3731edb60bf6e5309578260af36b9433570`; all 2,274 managed files
+legacy parser `9bdcc7eba3f1ce80b7d834d7740895774eeca615`; all 2,303 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -76,6 +76,11 @@ Annotation text remains separate from cell values and is charged to the shared
 expansion budgets. Native default/base column geometry survives repeated copies.
 The standalone parser pin merges its observed main ancestry and retains bounded
 legacy Word text recovery with explicit host review before a separate copy.
+
+The host exposes all 18 native underline styles in both ribbon and Font controls,
+with localized labels and unchanged-style save/reopen checks. Typed malformed
+compound-directory exceptions use the parser's existing bounded, opt-in text
+recovery; strict/default, DOCM and encrypted-input refusals remain intact.
 
 ## Spreadsheet audit checkpoint (14 November 2026)
 

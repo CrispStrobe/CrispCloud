@@ -2210,13 +2210,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 value: style,
                 height: 30,
                 child: Text(
-                  OfficeRibbonControlStrings(context).text(switch (style) {
-                    WmlUnderline.none => 'None',
-                    WmlUnderline.single => 'Single',
-                    WmlUnderline.double => 'Double',
-                    WmlUnderline.dotted => 'Dotted',
-                    WmlUnderline.wavy => 'Wavy',
-                  }),
+                  OfficeRibbonControlStrings(context).underline(style),
                   style: const TextStyle(fontSize: 12),
                 ),
               ),

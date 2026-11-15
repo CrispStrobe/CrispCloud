@@ -1,0 +1,39 @@
+{
+  "at": "2026-11-15T12:08:40.165769+00:00",
+  "failed_app_receipt_commit": "f729580667816cf27c924e3308f1eb2e385007c0",
+  "failed_app_totals": {
+    "tests": 742,
+    "passed": 722,
+    "failed": 20,
+    "errors": 20,
+    "skipped": 0
+  },
+  "classified_causes": {
+    "shared_ribbon_compile_errors": 18,
+    "typed_compound_recovery_errors": 2,
+    "unclassified": 0
+  },
+  "additional_static_finding": "Font dialog admitted only5styles while initialValue could be any of18; fixed with the shared exhaustive label/choice map.",
+  "canonical_office": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+  "standalone_parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+  "managed_files": 2303,
+  "host_overlay": "underline-overlay-manifest.json",
+  "independent_host_review": "underline-overlay-independent-review.json",
+  "parser_failed_new_baseline": "ac4c88ca6f4d583d3e7f66cfe7f4ee797b1766b6",
+  "parser_new_regression_checks": 9,
+  "final_cohorts": {
+    "app": 65,
+    "editor": 9,
+    "engine": 22,
+    "parser": 144
+  },
+  "final_analysis_files": {
+    "app": 76,
+    "editor": 4,
+    "engine": 16,
+    "cli": 1,
+    "parser": 18
+  },
+  "app_and_cli_resolution": "host-runtime-fix-resolution/receipt.json",
+  "status": "Combined source correction checkpoint; final host qualification follows under fresh gate labels."
+}

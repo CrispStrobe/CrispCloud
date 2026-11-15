@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "scope": "Independent read-only code/locale/test review; runtime remains pending.",
+  "source_overlay": "/workspace/scratch/1e19fe1d39ae/underline-host-overlay",
+  "file_hashes_verified": [
+    {
+      "path": "lib/l10n/office_ribbon_control_strings.dart",
+      "before_sha256": "611c97ca06d518ed88f2bf36dcfd423eb8e6c6ef6e93a95984af81de1e10f1b1",
+      "after_sha256": "6c7b9ad97443bb2fee3ae5ed559ecc8c3920d0916624d4a86a88e5d006a61a37"
+    },
+    {
+      "path": "lib/widgets/office_editor_ribbon.dart",
+      "before_sha256": "beafb4f1e94d71628d016de7f48b1dd4918c3c72ab3552242a0ec5b19165fc70",
+      "after_sha256": "ef7016b6242cb5d377f8faa7107426f18a0bde1ab97f1599575772ef21d8bfd7"
+    },
+    {
+      "path": "lib/widgets/office_editor_dialogs.dart",
+      "before_sha256": "c637be47a1f13c1fd4acfa7491fcb986aaabf1edb927630d0315a31afc7937fe",
+      "after_sha256": "6a64775620ef547ab10f17cc1fee79dc04d61cf500ed64d2c0fd843349463eed"
+    },
+    {
+      "path": "test/office_ribbon_controls_i18n_test.dart",
+      "before_sha256": "7383b6eea848dd3bf64abd4f3178c6c2ba49344524fa492098e2e202395c622b",
+      "after_sha256": "53665a16078d4c98e43e2bd16df72792a1df611d8209dcab5404fafb698ff4bb"
+    }
+  ],
+  "enum_label_mapping": {
+    "none": "None",
+    "single": "Single",
+    "double": "Double",
+    "dotted": "Dotted",
+    "wavy": "Wavy",
+    "words": "Words only",
+    "thick": "Thick",
+    "dottedHeavy": "Heavy dotted",
+    "dash": "Dashed",
+    "dashedHeavy": "Heavy dashed",
+    "dashLong": "Long dashed",
+    "dashLongHeavy": "Heavy long dashed",
+    "dotDash": "Dot-dash",
+    "dashDotHeavy": "Heavy dot-dash",
+    "dotDotDash": "Dot-dot-dash",
+    "dashDotDotHeavy": "Heavy dot-dot-dash",
+    "wavyHeavy": "Heavy wavy",
+    "wavyDouble": "Double wavy"
+  },
+  "supported_non_english_locales": [
+    "ar",
+    "de",
+    "es",
+    "fr",
+    "ja",
+    "ko",
+    "pt",
+    "zh"
+  ],
+  "complete_distinct_labels_each_locale": 18,
+  "all_eighteen_enum_values_in_both_controls": true,
+  "new_test_checks": [
+    "actual popup selection for every enum value",
+    "distinct translated menu labels in all eight locale maps",
+    "font dialog accepts each current value",
+    "unchanged Font Apply preserves contentRevision",
+    "DOCX save/reopen preserves the chosen underline and authored text",
+    "framework exceptions checked and reopened controllers disposed"
+  ],
+  "existing_font_fidelity_suite_scope": "Independently authored OOXML, imported half-points/mixed formatting, unchanged Apply and selective edits checked through repeated exported ZIP/XML cycles.",
+  "review_conclusion": "No concrete correctness, label, locale-coverage or no-op preservation defect found. Apply the scoped overlay after saved failed gate; run both required suites and strict analysis of all four changed paths.",
+  "runtime_tests_run_by_reviewer": false,
+  "repository_mutations": false
+}

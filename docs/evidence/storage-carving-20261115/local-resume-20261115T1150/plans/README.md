@@ -5,8 +5,8 @@ test overlay and manifests after reconciling the incoming application and
 canonical branches. Resolve dependencies with the pinned environment, preserve
 app and CLI locks, then save the complete source remotely before starting gates.
 
-The selected cohorts grow from 49/7/17 to **63 app / 9 editor / 22 engine suites**.
-Strict analysis covers **72 app / 16 engine / 4 editor / 1 CLI files**. The added
+The selected cohorts grow from 49/7/17 to **65 app / 9 editor / 22 engine suites**.
+Strict analysis covers **76 app / 16 engine / 4 editor / 1 CLI files**. The added
 files and concrete reasons are recorded in `gate-plan.json`. Two optional local
 corpus scanners are preserved as source but excluded from mandatory execution;
 their no-input behavior is not qualification evidence.
@@ -132,3 +132,10 @@ Current portable and scripted-oracle copies live in this plans directory; the
 historical evidence drivers remain unchanged. Portable output now has a complete
 recursive size/SHA-256 index. These provenance changes do not expand runtime
 cohorts or count prerequisite executions twice.
+
+The full app run exposed two integration defects: an expanded underline enum in
+existing host controls and a typed malformed-compound exception bypassing the
+parser recovery path. The updated cohort adds the ribbon localization/selection
+and imported/mixed font suites; both ribbon and Font dialog retain every style.
+The parser adds nine canonical admission/refusal controls and now has 144 suites.
+All accepted gates must follow the saved combined correction, with fresh labels.

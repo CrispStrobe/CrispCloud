@@ -1,27 +1,64 @@
 # Latest integration continuation
 
-## Saved integration scope
+## Saved source scope
 
-Current main through `4933ffc2`, ODF `7dec00fb`, both parallel qualification histories, and all observed canonical Office and parser work are incorporated. The finite final refresh includes app PR 120 through `c8fd8d76` (including `b0e0f174`), canonical ODS dates/comments through `9cc8c6e9`, and parser main `7df906d2`. Exact ancestry, overlapping-file equivalence and resolution are recorded in `incoming/late-refresh-audit.json` and `final-source-reconciliation.json`. Later upstream work is outside this recorded cohort.
+All **53 relevant heads** in the finite incoming inventories are accounted for:
+49 are ancestors and four have explicit supersession proofs. Current main through
+`4933ffc2`, app PR 120 through `c8fd8d76`, canonical ODS dates/comments through
+`9cc8c6e9`, parser main `7df906d2`, and the earlier parallel qualification
+histories remain preserved. See `incoming/incoming-closure.json`; subsequent
+correction commits descend from that audited source. No later upstream refresh
+is included.
 
-The app mirrors canonical Office `c17098d65fe5f6e2bdf9999389deb2a6b508d928` and standalone parser `09c8b3731edb60bf6e5309578260af36b9433570`; all **2,274 managed files** match their source pins. The latest source is checkpointed before runtime qualification.
+The app mirrors canonical Office **c17098d65fe5f6e2bdf9999389deb2a6b508d928** and
+standalone parser **9bdcc7eba3f1ce80b7d834d7740895774eeca615**. All **2,303 managed
+files** match these source pins.
 
-## Corrections and preserved failures
+## Defects reproduced and corrected
 
-The ODS baseline first exposed a duplicate test helper, then reproduced default columns shrinking from **81px to 64px** after copy-save. Both failed gates remain unchanged. The canonical correction preserves native default/base geometry and tests repeated direct and isolate saves. The late date/comment integration preserves authored date order and literals, month/weekday rendering, and namespace-aware bounded annotations kept separate from cell values. Comment-author serialization uses one insertion-ordered index, retaining original IDs while avoiding repeated linear searches.
+- ODS copy-save lost native default width: 81px became 64px. The canonical
+  correction preserves default/base geometry through direct and isolate saves.
+- Incoming ODS dates and annotations preserve authored order and literals, and
+  keep comments separate from cell values under shared text, grid and work
+  bounds. Author serialization retains first-seen IDs with indexed lookup.
+- Parser recovery work and input bounds, declared encodings, authoritative
+  stream bounds and half-open story cleanup retain their earlier fixes.
+- The first complete app run exposed 18 suite-loading errors from the expanded
+  underline enum and two errors from typed malformed-compound exceptions. The
+  raw 742-case failed run is saved at `f7295806`, with every error classified.
+- Both ribbon and Font controls now expose all 18 underline styles with complete
+  localized labels. A regression selects each style, applies Font unchanged,
+  and saves/reopens DOCX. Imported and mixed-font fidelity is also included.
+- Typed `CfbfException` reaches only the existing opt-in bounded DOCX text
+  recovery. Nine new canonical tests cover both recovery entry points and the
+  strict/default, DOCM, encryption, FIB, size, source and private-tail boundaries.
 
-The parser baseline reproduced 13 failures in 16 targeted cases. Canonical corrections cover cumulative recovery work/input bounds, authoritative stream bounds, Word6 Unicode/declared encoding handling, Word98 identification and half-open story cleanup. All 17 revised targeted regressions pass on the identical production/test bytes retained by the current source pin. The standalone parser also passes strict analysis of 17 changed Dart files and all **4,122 tests across 143 suites**, with zero failures/errors/skips. Those receipts are saved at `2341b86397093a2f8d3efb23eb9a8b81006550c3`; `canonical-parser-qualification.json` verifies that later commits only add evidence. The host graph is qualified separately.
+## Qualification status
 
-The host now represents unreadable source inventory as unknown, propagates explicit text-only recovery classification, requires localized loss disclosure and acknowledgement, and retains create-only copy saving and retry ownership. A separate source review covers this host integration.
+Final host cohorts contain **65 app / 9 editor / 22 engine suites**. Strict
+analysis covers **76 app / 16 engine / 4 editor / 1 CLI files**. The standalone
+parser passes all **4,131 tests in 144 suites**, its 18-file strict analysis and
+all nine new admission/refusal controls. Raw final receipts are saved at
+`57442c79239fb4d483e274e0ebb04f34686beb6c`; the source pin stays fixed. See
+`canonical-parser-current-qualification.json` for exact raw summaries and proof
+that later parser commits only add evidence.
 
-## Local qualification in progress
+Host gates are rerun after the combined underline and parser corrections.
+Earlier passing checks and every failure remain predecessor evidence and do not
+inflate current acceptance totals. `host-runtime-corrections.json` binds the
+corrections and expanded scope. App and CLI locked offline resolution passes
+with committed locks unchanged. Five real ELF native assets were built by the
+first app run; their manifest and identities are retained in
+`native-build-receipt.json`.
 
-The final selected cohorts contain **63 app / 9 editor / 22 engine suites**. Strict analysis covers **72 app / 16 engine / 4 editor / 1 CLI files**. The standalone parser runs all 143 unit suites under its separately recorded development dependency graph. Test counts will come from completed raw machine reports, not the predecessor totals.
-
-Remaining source-bound gates include strict analysis, the selected runtime cohorts, independent checks of actual Office outputs, source/notices controls, actual VM and compiled-JavaScript PNG recovery, and real font-backed worksheet navigation captures with independent artifact and visual review. Development runs and retries never inflate final acceptance totals.
-
-App and CLI locked offline resolution passes with their committed locks unchanged. Native hooks remain enabled and use the verified real toolchain. Each completed gate, including failures, is saved remotely before the next gate. Checkpoint commits use `[skip ci]`; no GitHub Actions run is awaited or restarted.
+Each completed gate is saved remotely before the next. Source, tool and resolved
+input identities are checked before and after execution. Generated Office and
+navigation outputs are bound to their generator receipts. Checkpoint commits
+use `[skip ci]`. No GitHub Actions run is awaited, polled or restarted.
 
 ## Evidence boundaries
 
-The independently revalidated predecessor evidence comprises 996 tests, Office output/oracle checks, source controls and VM/JavaScript PNG proof on its original source. Those raw receipts remain preserved and are not acceptance for this newer combined source. External native Office applications, other operating systems and broad Open XML schema certification remain separate scopes. Two optional HOME-scanning corpus harnesses are preserved without execution or vacuous acceptance.
+The independently revalidated predecessor 996-case milestone retains its exact
+old source scope. External Office applications, other operating systems and
+broad Open XML schema certification remain separate scopes. Two optional
+HOME-scanning corpus harnesses are retained without execution or vacuous counts.
