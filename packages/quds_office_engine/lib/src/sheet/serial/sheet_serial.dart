@@ -1079,6 +1079,7 @@ class SheetSerializer {
     OpcPackage package,
     String sheetUri,
   ) {
+    final sourceXml = package.getPart(sheetUri)?.readText();
     final preserveValidations =
         sheet.sourceValidationState != null &&
         sheet.sourceValidationState == sheet.validationState();
@@ -1093,6 +1094,7 @@ class SheetSerializer {
       w.writeNamespace('r', OfficeNamespaces.r);
     }
     _writeSheetViews(w, sheet);
+    _writeSheetFormat(w, sheet, sourceXml);
     _writeCols(w, sheet);
     w.writeStartElement('sheetData');
     final Set<int> rowKeys = <int>{
@@ -1283,22 +1285,43 @@ class SheetSerializer {
       }
     }
     w.writeEndElement();
-    return _preserveSheetParts(
-      package.getPart(sheetUri)?.readText(),
-      w.toXml(),
-      {
-        'sheetViews',
-        'cols',
-        'sheetData',
-        'sheetProtection',
-        'autoFilter',
-        if (!preserveConditional) 'conditionalFormatting',
-        if (!preserveValidations) 'dataValidations',
-        'mergeCells',
-        'headerFooter',
-        'drawing',
+    return _preserveSheetParts(sourceXml, w.toXml(), {
+      'sheetViews',
+      'cols',
+      'sheetData',
+      'sheetProtection',
+      'autoFilter',
+      if (!preserveConditional) 'conditionalFormatting',
+      if (!preserveValidations) 'dataValidations',
+      'mergeCells',
+      'headerFooter',
+      'drawing',
+    }, _worksheetOrder);
+  }
+
+  static void _writeSheetFormat(
+    XmlWriter w,
+    SmlWorksheet sheet,
+    String? sourceXml,
+  ) {
+    final width = sheet.nativeDefaultColumnWidth;
+    final base = sheet.nativeBaseColumnWidth;
+    if (width == null && base == null) return;
+    // Existing native XML can contain additional sheet defaults that are not
+    // modeled here. Leave that complete element to _preserveSheetParts.
+    if (sourceXml != null &&
+        sourceXml.trim().isNotEmpty &&
+        XmlDocument.parse(sourceXml).root?.firstChild('sheetFormatPr') !=
+            null) {
+      return;
+    }
+    w.writeEmptyElement(
+      'sheetFormatPr',
+      attributes: <String, String>{
+        'defaultRowHeight': '${SmlWorksheet.defaultRowHeightPx * 72 / 96}',
+        if (width != null) 'defaultColWidth': '$width',
+        if (base != null) 'baseColWidth': '$base',
       },
-      _worksheetOrder,
     );
   }
 

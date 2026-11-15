@@ -20,4 +20,11 @@ void main() {
     expect(formatExcelDate(date, 'dd.mm.yyyy hh:mm'), '02.01.2024 12:30');
     expect(formatExcelDate(date, 'h:mm AM/PM'), '12:30 PM');
   });
+
+  test('escaped quotes and semicolons stay literal in number formats', () {
+    expect(applyNumberFormat(45293, r'\"YYYY\"'), '"2024"');
+    expect(applyNumberFormat(12.5, '0.0";x";[Red](0.0)'), '12.5;x');
+    expect(applyNumberFormat(12.5, r'0.0\;x;[Red](0.0)'), '12.5;x');
+    expect(applyNumberFormat(-12.5, '0.0";x";[Red](0.0)'), 'RED:(12.5)');
+  });
 }

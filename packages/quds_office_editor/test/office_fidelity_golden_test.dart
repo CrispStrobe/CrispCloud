@@ -83,7 +83,11 @@ void main() {
       expect(picturePainted, isTrue, reason: 'Fixture picture must be visible');
       await expectLater(
         find.byKey(const ValueKey<String>('document')),
-        matchesGoldenFile('goldens/office_fidelity_word.png'),
+        matchesGoldenFile(
+          Platform.isLinux
+              ? 'goldens/linux/office_fidelity_word.png'
+              : 'goldens/office_fidelity_word.png',
+        ),
       );
       doc = WordDeserializer().readBytes(WordSerializer().writeBytes(doc));
     }

@@ -538,6 +538,12 @@ class SmlWorksheet {
   double? _nativeDefaultColumnWidth;
   int? _nativeBaseColumnWidth;
 
+  /// Imported default column width in native Excel character units.
+  double? get nativeDefaultColumnWidth => _nativeDefaultColumnWidth;
+
+  /// Imported base column width as a character count, before pixel padding.
+  int? get nativeBaseColumnWidth => _nativeBaseColumnWidth;
+
   /// Active 96-dpi Normal-font metric. Seven is an explicit unresolved fallback.
   int get maximumDigitWidthPx => _maximumDigitWidthPx;
 
@@ -557,7 +563,9 @@ class SmlWorksheet {
         : base * maximumDigitWidthPx + 5.0;
   }
 
-  /// Retains native sheetFormatPr values; the serializer keeps their source XML.
+  /// Retains native sheetFormatPr values without converting their units.
+  /// The serializer preserves existing source XML, or writes these values
+  /// when constructing a new worksheet such as an imported ODS copy.
   void importDefaultColumnWidth({double? excelWidth, int? baseCharacters}) {
     if (excelWidth != null && (!excelWidth.isFinite || excelWidth < 0)) {
       throw ArgumentError.value(excelWidth, 'excelWidth');

@@ -148,6 +148,82 @@ void main() {
     expect(omitted.firstSheet.columnWidth(3), 64);
   });
 
+  for (final profile
+      in <({String name, double? width, int? base, double pixels})>[
+        (name: 'explicit', width: 10.25, base: 8, pixels: 72),
+        (name: 'base-only', width: null, base: 8, pixels: 61),
+        (name: 'zero', width: 0, base: null, pixels: 0),
+      ]) {
+    test(
+      'new ${profile.name} default widths survive three copy saves',
+      () async {
+        var book = SmlWorkbook();
+        book.firstSheet.importDefaultColumnWidth(
+          excelWidth: profile.width,
+          baseCharacters: profile.base,
+        );
+        book.firstSheet.cellA1('A1').value = 'Keep native units';
+        for (var cycle = 1; cycle <= 3; cycle++) {
+          final bytes = cycle == 2
+              ? await OfficeIsolateSave.workbook(book, recalculate: false)
+              : SheetSerializer().writeBytes(book, recalculate: false);
+          final package = OpcPackage.openBytes(bytes);
+          final root = XmlDocument.parse(
+            package.getPart('/xl/worksheets/sheet1.xml')!.readText(),
+          ).root!;
+          final formats = root.childrenNamed('sheetFormatPr');
+          expect(formats, hasLength(1));
+          final format = formats.single;
+          expect(
+            format.getAttribute('defaultColWidth'),
+            profile.width?.toString(),
+          );
+          expect(format.getAttribute('baseColWidth'), profile.base?.toString());
+          expect(format.getAttribute('defaultRowHeight'), '15.0');
+          final order = root.childElements
+              .map((child) => child.localName)
+              .toList();
+          expect(
+            order.indexOf('sheetFormatPr'),
+            lessThan(order.indexOf('sheetData')),
+          );
+          book = SheetDeserializer().read(package);
+          expect(book.firstSheet.nativeDefaultColumnWidth, profile.width);
+          expect(book.firstSheet.nativeBaseColumnWidth, profile.base);
+          expect(book.firstSheet.columnWidth(0), profile.pixels);
+        }
+      },
+    );
+  }
+
+  test(
+    'existing native sheet format attributes remain complete and unique',
+    () {
+      final package = _native();
+      final part = package.getPart('/xl/worksheets/sheet1.xml')!;
+      final original = XmlDocument.parse(part.readText());
+      final format = original.root!.firstChild('sheetFormatPr')!;
+      format.setAttribute('outlineLevelCol', '3');
+      format.setAttribute('thickBottom', '1');
+      format.setAttribute('defaultRowHeight', '18.75');
+      final expected = <String, String>{
+        for (final attribute in format.attributes)
+          attribute.localName: attribute.value,
+      };
+      part.writeText(original.toXmlString());
+      final book = SheetDeserializer().read(package);
+      final saved = SheetSerializer().write(book, recalculate: false);
+      final formats = XmlDocument.parse(
+        saved.getPart('/xl/worksheets/sheet1.xml')!.readText(),
+      ).root!.childrenNamed('sheetFormatPr');
+      expect(formats, hasLength(1));
+      expect(<String, String>{
+        for (final attribute in formats.single.attributes)
+          attribute.localName: attribute.value,
+      }, expected);
+    },
+  );
+
   test('zero native default width cannot divide hit-testing by zero', () {
     final source = _native();
     final part = source.getPart('/xl/worksheets/sheet1.xml')!;
