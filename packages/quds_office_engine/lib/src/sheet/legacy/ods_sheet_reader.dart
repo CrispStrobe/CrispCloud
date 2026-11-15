@@ -13,6 +13,7 @@ import 'dart:typed_data';
 
 import '../../opc/zip/zip_reader.dart';
 import '../../xml/xml_node.dart';
+import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import '../styles/sml_styles.dart';
 
@@ -361,7 +362,12 @@ abstract final class OdsSheetReader {
             family != null ||
             numFmt != null);
 
-    if (value == null && formula == null && !styled) return null;
+    final annotation = element.childElements
+        .where((child) => child.localName == 'annotation')
+        .firstOrNull;
+    if (value == null && formula == null && !styled && annotation == null) {
+      return null;
+    }
 
     final cell = sheet.cell(ref);
     if (value != null) {
@@ -397,6 +403,27 @@ abstract final class OdsSheetReader {
       wrapText: wrap,
     );
     cell.hasExplicitStyleIndex = true;
+    if (annotation != null) {
+      final text = _text(annotation).trim();
+      if (text.isNotEmpty &&
+          !sheet.comments.any(
+            (comment) =>
+                comment.ref.col == ref.col && comment.ref.row == ref.row,
+          )) {
+        final author = annotation.childElements
+            .where((child) => child.localName == 'creator')
+            .firstOrNull
+            ?.text
+            .trim();
+        sheet.comments.add(
+          SmlComment(
+            ref: ref,
+            text: text,
+            author: author == null || author.isEmpty ? 'Quds Office' : author,
+          ),
+        );
+      }
+    }
     return cell;
   }
 
@@ -493,7 +520,9 @@ abstract final class OdsSheetReader {
           buffer.write(child.getAttribute('style') == 'short' ? 'YY' : 'YYYY');
         case 'month':
           if (child.getAttribute('textual') == 'true') {
-            buffer.write(child.getAttribute('style') == 'short' ? 'MMM' : 'MMMM');
+            buffer.write(
+              child.getAttribute('style') == 'short' ? 'MMM' : 'MMMM',
+            );
           } else {
             buffer.write(child.getAttribute('style') == 'short' ? 'M' : 'MM');
           }
