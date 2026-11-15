@@ -1362,9 +1362,12 @@ class SheetSerializer {
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeAttribute('allowBlank', rule.allowBlank ? '1' : '0');
-        if (rule.formula1.isNotEmpty) {
+        final formula1 = rule.kind == SmlValidationKind.list
+            ? '"${rule.listItems.join(',')}"'
+            : rule.formula1;
+        if (formula1.isNotEmpty) {
           w.writeStartElement('formula1');
-          w.writeText(rule.formula1);
+          w.writeText(formula1);
           w.writeEndElement();
         }
         if (rule.formula2.isNotEmpty) {
