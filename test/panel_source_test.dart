@@ -180,7 +180,7 @@ void main() {
       const src = ContainerPanelSource(
         containerPath: '/data/secure.vc',
         innerPath: '',
-        parent: const LocalPanelSource('/data'),
+        parent: LocalPanelSource('/data'),
         unlockSession: Object(),
       );
       expect(src.displayName, contains('secure.vc'));
@@ -207,7 +207,7 @@ void main() {
       const src = ContainerPanelSource(
         containerPath: '/a.vc',
         innerPath: 'docs/',
-        parent: const LocalPanelSource('/'),
+        parent: LocalPanelSource('/'),
         unlockSession: Object(),
       );
       expect(src.currentPath, 'docs/');
@@ -565,7 +565,7 @@ void main() {
       const src = ContainerPanelSource(
         containerPath: '/vault.vc',
         innerPath: '',
-        parent: const LocalPanelSource('/'),
+        parent: LocalPanelSource('/'),
         unlockSession: Object(),
       );
       final json = src.toJson();
@@ -577,7 +577,7 @@ void main() {
       const src = ContainerPanelSource(
         containerPath: '/vault.hc',
         innerPath: 'docs/',
-        parent: const LocalPanelSource('/'),
+        parent: LocalPanelSource('/'),
         unlockSession: Object(),
       );
       final json = src.toJson();

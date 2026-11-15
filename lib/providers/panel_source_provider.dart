@@ -72,6 +72,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   final PanelSide side;
   int _sourceRevision = 0;
+  List<PanelSource>? _deferredContainerReleases;
 
   PanelSourceNotifier(this.side) : super(const LocalPanelSource('/')) {
     _restore();
@@ -88,6 +89,48 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
     _releaseContainers(state, keeping: source);
     state = source;
     _persist();
+  }
+
+  /// Transfers two captured pane locations without closing either session
+  /// between assignments. Source listeners may dispose or navigate a pane;
+  /// cleanup uses the sources still owned by the surviving panes afterward.
+  bool swapSourcesWith(
+    PanelSourceNotifier other, {
+    required PanelSource incoming,
+    required PanelSource otherIncoming,
+  }) {
+    if (identical(this, other) ||
+        !mounted ||
+        !other.mounted ||
+        _deferredContainerReleases != null ||
+        other._deferredContainerReleases != null) {
+      return false;
+    }
+    final releases = <PanelSource>[state, other.state, incoming, otherIncoming];
+    _deferredContainerReleases = other._deferredContainerReleases = releases;
+    final revision = ++_sourceRevision;
+    final otherRevision = ++other._sourceRevision;
+    try {
+      state = incoming;
+      // A listener's newer navigation or disposal must win over this swap.
+      if (other.mounted && other._sourceRevision == otherRevision) {
+        other.state = otherIncoming;
+      }
+      return mounted &&
+          other.mounted &&
+          _sourceRevision == revision &&
+          other._sourceRevision == otherRevision &&
+          identical(state, incoming) &&
+          identical(other.state, otherIncoming);
+    } finally {
+      _deferredContainerReleases = other._deferredContainerReleases = null;
+      _closeUnretainedContainers(
+        releases,
+        keeping: [if (mounted) state, if (other.mounted) other.state],
+      );
+      if (mounted) _persist();
+      if (other.mounted) other._persist();
+    }
   }
 
   /// Navigate inside the current source to a sub-path.
@@ -129,9 +172,10 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
         options: options,
         headerLocation: headerLocation,
         // A later directory navigation cancels a pending unlock, but must not
-        // invalidate the reader after its session has been adopted by the pane.
+        // invalidate an adopted session, including one transferred to another
+        // pane. Explicit session ownership controls its lifetime from then on.
         isCancelled: () =>
-            !mounted || (!adopted && revision != _sourceRevision),
+            !adopted && (!mounted || revision != _sourceRevision),
       );
       if (!mounted || revision != _sourceRevision) {
         await service.lockContainer(unlocked);
@@ -161,27 +205,47 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   /// Navigation within a container keeps its session. Leaving its source tree
   /// or disposing the pane closes every no-longer-reachable container session.
   void _releaseContainers(PanelSource source, {PanelSource? keeping}) {
-    final retained = <Object>{};
-    PanelSource? cursor = keeping;
+    final deferred = _deferredContainerReleases;
+    if (deferred != null) {
+      deferred.add(source);
+      return;
+    }
+    _closeUnretainedContainers(
+      [source],
+      keeping: [if (keeping != null) keeping],
+    );
+  }
+
+  static Iterable<ContainerPanelSource> _containersIn(
+    PanelSource source,
+  ) sync* {
+    PanelSource? cursor = source;
     while (cursor != null) {
-      if (cursor is ContainerPanelSource) retained.add(cursor.unlockSession);
+      if (cursor is ContainerPanelSource) yield cursor;
       cursor = switch (cursor) {
         final ArchivePanelSource s => s.parent,
         final ContainerPanelSource s => s.parent,
         _ => null,
       };
     }
-    cursor = source;
-    while (cursor != null) {
-      if (cursor is ContainerPanelSource &&
-          !retained.contains(cursor.unlockSession)) {
-        unawaited(const PanelSourceService().lockContainer(cursor));
+  }
+
+  static void _closeUnretainedContainers(
+    Iterable<PanelSource> sources, {
+    required Iterable<PanelSource> keeping,
+  }) {
+    final retained = Set<Object>.identity();
+    for (final source in keeping) {
+      retained.addAll(_containersIn(source).map((s) => s.unlockSession));
+    }
+    final released = Set<Object>.identity();
+    for (final source in sources) {
+      for (final container in _containersIn(source)) {
+        if (!retained.contains(container.unlockSession) &&
+            released.add(container.unlockSession)) {
+          unawaited(const PanelSourceService().lockContainer(container));
+        }
       }
-      cursor = switch (cursor) {
-        final ArchivePanelSource s => s.parent,
-        final ContainerPanelSource s => s.parent,
-        _ => null,
-      };
     }
   }
 

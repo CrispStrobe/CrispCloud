@@ -4446,10 +4446,17 @@ class PanelNotifier extends ChangeNotifier {
       other._archiveFrames.clear();
       _settingSwapSource = other._settingSwapSource = true;
       try {
-        _ref.read(panelSourceProvider(side).notifier).setSource(right.source);
-        other._ref
-            .read(panelSourceProvider(other.side).notifier)
-            .setSource(left.source);
+        final sources = _ref.read(panelSourceProvider(side).notifier);
+        final otherSources = other._ref.read(
+          panelSourceProvider(other.side).notifier,
+        );
+        if (!sources.swapSourcesWith(
+          otherSources,
+          incoming: right.source,
+          otherIncoming: left.source,
+        )) {
+          return false;
+        }
       } finally {
         _settingSwapSource = other._settingSwapSource = false;
       }
