@@ -129,3 +129,23 @@ This last canonical change contains only the test harness, two PNG references
 and their provenance. The 2,220-file host mirror retains exactly the engine
 implementation qualified at canonical `dcefdc05`. Failed development receipts
 and the subsequent source-bound qualification remain separately identifiable.
+
+## 08:06 UTC continuation: current branches and Git modes
+
+The continuation preserves current main `5b7daacc`, navigation through
+`d97705da`, and document workspace/history `ab94bedb`. The production source
+checkpoint is `97e6aa18`; newer evidence-only integration is `488478cc`.
+The incoming document work does not change managed package bytes or pins.
+
+Independent committed-object comparison verifies all 2,220 managed files
+against Quds `b23d0336` and parser `d422fa99`. It also found 41 Quds Dart
+files marked executable in the host but not in the canonical source.
+Checkpoint `6e9284e3` corrects those modes to `100644`, preserving every
+blob. All canonical modes now agree. The existing checker enforced upstream
+modes only for the standalone parser; this separate audit extends the mode
+comparison without changing that checker.
+
+The [continuation receipts](evidence/storage-carving-20261115/resume-0806/README.md)
+record exact source identities, merge checks and the current execution block.
+No fresh runtime or manifest SHA-256 rehash is claimed: local commands cannot
+start on the full filesystem. Prior test observations remain historical.

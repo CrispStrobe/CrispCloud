@@ -129,6 +129,17 @@ systems, mobile execution, physical-device access, large-file carving, JPEG,
 PDF, arbitrary fragments and FAT/NTFS undelete remain separate qualifications
 or future profiles.
 
+### Current qualification status
+
+The combined source was saved at `97e6aa18` after incorporating newer main,
+worksheet-navigation and document-workspace changes. Source and merge checks
+are retained in the
+[08:06 UTC continuation record](evidence/storage-carving-20261115/resume-0806/README.md).
+Fresh runtime qualification remains pending because the current workspace
+exhausted disk capacity before the test tools could run. The current app
+manifest covers 41 suites, including the incoming document-workspace tests.
+The earlier handoff totals are not substituted for results on this source.
+
 Format references consulted:
 
 - [W3C PNG Third Edition](https://www.w3.org/TR/2025/REC-png-3-20250624/).

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "attempted_source": "c68c03aed83027b3cf7392255fa8e92e7f5477fa",
+  "qualified_source": null,
+  "executed_test_suites": 0,
+  "outcome": "environment_blocked_before_qualification",
+  "observations": [
+    "Initial available capacity was approximately 613 MiB before repository recovery.",
+    "A filtered no-checkout Git clone and fetch of branch/PR heads completed.",
+    "Sparse checkout reduced optional historical evidence, but the filesystem subsequently exhausted its remaining capacity.",
+    "Local merge failed with unable to create temporary file: No space left on device.",
+    "All subsequent sandboxed commands and patch reads failed before execution."
+  ],
+  "shell_error": "bwrap: Can't create file /workspace/scratch/9fec03274514/.git: No space left on device",
+  "cleanup": {
+    "scope": "only the fresh recoverable clone created by this continuation",
+    "sandboxed": "could not start",
+    "elevated": "rejected by approval policy: sandbox_approval false; elevated permissions cannot be requested",
+    "computer_use": "runtime unavailable"
+  },
+  "prepared_sdk_downloads": 0,
+  "reported_prior_results": "User handoff and historical PROGRESS entries only; final c68c03ae raw receipts were not present on the recovered branch.",
+  "prohibited_substitutions": [
+    "Do not label previous counts as results for the combined source.",
+    "Do not disable native hooks or substitute fake libraries.",
+    "Do not wait for GitHub Actions."
+  ],
+  "resume_requirement": "Restore writable capacity or use a fresh workspace with room for the pinned Flutter/Dart SDK, dependency caches, and real native builds.",
+  "all_new_source_changes_saved_remotely": true
+}

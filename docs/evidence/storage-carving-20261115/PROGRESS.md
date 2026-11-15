@@ -1,5 +1,23 @@
 # PNG carving continuation — 15 November 2026
 
+## Current saved state — 08:06 UTC continuation
+
+Source `97e6aa18` incorporates current main, newer navigation work and the
+new document-workspace/history branch. Documentation checkpoint `488478cc`
+also retains the latest navigation status. All 2,220 Office blob identities,
+sizes and canonical modes agree after correcting 41 executable flags.
+The app qualification manifest now includes 41 suites.
+
+**Fresh runtime qualification is blocked by exhausted workspace capacity.**
+No test suite executed in this continuation. The final raw receipts described
+in the pasted handoff were not present at recovered `c68c03ae`; historical
+counts below are not final acceptance for the new combined source. No GitHub
+Actions run was awaited.
+
+See [the saved continuation and exact remaining gates](resume-0806/README.md)
+and [its execution blocker](resume-0806/execution-blocker.json).
+The sections below preserve the preceding checkpoint history.
+
 ## Recovered starting point
 
 The interrupted turn left `integration/storage-carving-20261115` at

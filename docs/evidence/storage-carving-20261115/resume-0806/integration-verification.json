@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "navigation_merge": {
+    "source_commit": "c4fd1613d5146c7f1d822955309d375debb70998",
+    "tree_sha": "e99470032734943ecd9c1197c23fde44b799520b",
+    "expected_files": 10393,
+    "actual_files": 10393,
+    "mismatches": [],
+    "extra_paths": [],
+    "success": true
+  },
+  "source_union": {
+    "source_commit": "97e6aa18625e74169c085085ecaecd9adf917283",
+    "tree_sha": "44e273534652889ccb4945709360bb9cf4d2e723",
+    "total_files": 10413,
+    "expected_files": 10413,
+    "unintended_paths": [],
+    "mismatches": [],
+    "exact_blob_comparisons": 10409,
+    "custom_content_paths": [
+      "README.md",
+      "lib/models/browser_menu_layout.dart",
+      "lib/screens/file_browser_screen.dart",
+      "lib/widgets/command_palette.dart"
+    ],
+    "success": true
+  },
+  "new_document_hunk_controls": [
+    {
+      "path": "README.md",
+      "hunks": 1,
+      "exact_base_to_incoming_verified": true,
+      "unique_context_matches": true,
+      "reverse_merge_reconstructs_original": true,
+      "merged_length": 31582
+    },
+    {
+      "path": "lib/models/browser_menu_layout.dart",
+      "hunks": 2,
+      "exact_base_to_incoming_verified": true,
+      "unique_context_matches": true,
+      "reverse_merge_reconstructs_original": true,
+      "merged_length": 13487
+    },
+    {
+      "path": "lib/screens/file_browser_screen.dart",
+      "hunks": 8,
+      "exact_base_to_incoming_verified": true,
+      "unique_context_matches": true,
+      "reverse_merge_reconstructs_original": true,
+      "merged_length": 119035
+    },
+    {
+      "path": "lib/widgets/command_palette.dart",
+      "hunks": 2,
+      "exact_base_to_incoming_verified": true,
+      "unique_context_matches": true,
+      "reverse_merge_reconstructs_original": true,
+      "merged_length": 40004
+    }
+  ],
+  "readback_of_merged_files": [
+    {
+      "path": "README.md",
+      "blob": "d639c54313460e5a35b9f99c266ab9e85d7e03d5",
+      "exact_content_match": true
+    },
+    {
+      "path": "lib/models/browser_menu_layout.dart",
+      "blob": "9fa0f41b4f2d06e8b0c8eea82e60669c91d129a5",
+      "exact_content_match": true
+    },
+    {
+      "path": "lib/screens/file_browser_screen.dart",
+      "blob": "bf4d0c489c7ee069c5d629606a4000e67d46891a",
+      "exact_content_match": true
+    },
+    {
+      "path": "lib/widgets/command_palette.dart",
+      "blob": "c3090dc78a9f1c0ce9e5ea0f689417b8676faa7a",
+      "exact_content_match": true
+    }
+  ],
+  "main_ancestry": {
+    "source": "97e6aa18625e74169c085085ecaecd9adf917283",
+    "main": "5b7daacc3eaaed09670c105627af420caac5ebe2",
+    "status": "ahead",
+    "ahead": 27,
+    "behind": 0
+  },
+  "app_suite_manifest": {
+    "previous": 31,
+    "incoming": 10,
+    "combined": 41,
+    "runtime_result": "not run"
+  },
+  "source_runtime_acceptance": false
+}

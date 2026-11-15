@@ -29,3 +29,13 @@ test/widget/office_save_fidelity_test.dart
 test/widget/pdf_floating_toolbars_test.dart
 test/pdf_selection_note_test.dart
 test/pdf_operations_host_test.dart
+test/browser_menu_store_test.dart
+test/document_conversion_test.dart
+test/document_history_test.dart
+test/new_document_test.dart
+test/widget/active_pane_frame_test.dart
+test/widget/document_conversion_dialog_test.dart
+test/widget/document_history_dialog_test.dart
+test/widget/document_history_editor_integration_test.dart
+test/widget/document_workspace_session_test.dart
+test/widget/new_document_dialog_test.dart

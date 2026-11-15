@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "cutoff_utc": "2026-11-15T08:06:34Z",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch": "integration/storage-carving-20261115",
+  "recovered_commit": "c68c03aed83027b3cf7392255fa8e92e7f5477fa",
+  "source_checkpoint": "97e6aa18625e74169c085085ecaecd9adf917283",
+  "source_tree": "44e273534652889ccb4945709360bb9cf4d2e723",
+  "navigation_evidence_checkpoint": "488478ccf5221854066d362082b4260a9fa709e6",
+  "remote_refs": [
+    {
+      "branch": "main",
+      "sha": "5b7daacc3eaaed09670c105627af420caac5ebe2",
+      "disposition": "merged; Word implementation already included by canonical pin"
+    },
+    {
+      "branch": "codex/office-recovery-20261115",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "disposition": "merged; four source/evidence commits through 52f2dec4 plus final documentation checkpoint"
+    },
+    {
+      "branch": "feature/new-documents-history-20261115",
+      "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "disposition": "six commits merged; 37 files; four shared files combined with exact context"
+    },
+    {
+      "branch": "fix/excel-legacy-xls",
+      "sha": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8",
+      "disposition": "already an ancestor of recovered checkpoint"
+    },
+    {
+      "branch": "integrate/word-inline-pictures-20261115",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "disposition": "included through main merge"
+    },
+    {
+      "branch": "integration/office-reconcile-storage-20261115",
+      "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "disposition": "already an ancestor of recovered checkpoint"
+    }
+  ],
+  "prs": [
+    {
+      "number": 111,
+      "state": "open",
+      "draft": true,
+      "role": "active storage integration"
+    },
+    {
+      "number": 110,
+      "state": "open",
+      "draft": true,
+      "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "role": "included source and evidence; separate PR state retained"
+    },
+    {
+      "number": 112,
+      "state": "closed",
+      "merged": true,
+      "head": "bb981ec37c40369ba15bacdd9c21c520807a200c"
+    },
+    {
+      "number": 108,
+      "state": "closed",
+      "merged": true,
+      "head": "a77364501d274e0fde2e9fffeefb121258ae9614"
+    },
+    {
+      "number": 109,
+      "state": "closed",
+      "merged": true,
+      "head": "1b7680583ac69649b17287ab68738288fec10f51"
+    }
+  ],
+  "canonical": {
+    "quds": {
+      "repository": "CrispStrobe/quds_office_suite",
+      "pin": "b23d033620f07cf2659209eff4c4c8e2d71ee89c",
+      "observed_main": "800e3850fbcb8d551193b471e1ef2724781a5267",
+      "disposition": "retain b23d pin: main has identical production bytes and older selection references; all advertised feature source incorporated"
+    },
+    "parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "pin": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+      "disposition": "main and feature head unchanged"
+    }
+  },
+  "checkpoints": [
+    {
+      "sha": "469862e4d59bcec3e5d4c4b659bac05e4c7f3733",
+      "purpose": "merge current main"
+    },
+    {
+      "sha": "c4fd1613d5146c7f1d822955309d375debb70998",
+      "purpose": "merge four navigation commits"
+    },
+    {
+      "sha": "6e9284e3bf748b686216589835edb13975399ede",
+      "purpose": "correct 41 canonical executable flags without changing bytes"
+    },
+    {
+      "sha": "97e6aa18625e74169c085085ecaecd9adf917283",
+      "purpose": "merge new document workspace/history branch"
+    },
+    {
+      "sha": "488478ccf5221854066d362082b4260a9fa709e6",
+      "purpose": "merge latest navigation documentation"
+    }
+  ],
+  "hosted_ci_waited_on": false,
+  "runtime_qualification": "not executed in this continuation; blocked by exhausted workspace"
+}
