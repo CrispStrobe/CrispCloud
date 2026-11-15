@@ -75,7 +75,7 @@ class ActivePaneFrame extends ConsumerWidget {
         key: ValueKey('active-pane-frame-${side.name}'),
         decoration: BoxDecoration(
           border: Border.all(
-            width: 3,
+            width: 1,
             color: dropTarget
                 ? colors.tertiary
                 : active
@@ -83,7 +83,7 @@ class ActivePaneFrame extends ConsumerWidget {
                 : colors.outlineVariant,
           ),
         ),
-        child: Padding(padding: const EdgeInsets.all(3), child: child),
+        child: Padding(padding: const EdgeInsets.all(1), child: child),
       ),
     );
   }

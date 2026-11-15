@@ -66,6 +66,7 @@ void main() {
                 as Border;
         final leftSize = tester.getSize(find.text('Left'));
         expect(border(PanelSide.local).top.color, theme.colorScheme.primary);
+        expect(border(PanelSide.local).top.width, 1);
         await tester.tap(find.text('Right'));
         await tester.pump();
         expect(border(PanelSide.remote).top.color, theme.colorScheme.primary);
