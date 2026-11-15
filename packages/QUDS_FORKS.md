@@ -39,10 +39,13 @@ counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text, begins/ends-with and duplicate) and list validations
-are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
-survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 495
+ODS pictures import as worksheet drawings. Conditional formats (numeric,
+between, contains-text, begins/ends-with and duplicate) and list/range-source
+validations are imported; conditional formats are painted and serialized with
+dxf styling. Print areas/titles, named ranges and basic database-range
+autofilters round-trip through XLSX. Hidden rows, columns and sheets survive an
+ODS→XLSX save. Absolute sheet references, clock components and
+elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 497
 tests; the combined host qualification remains separately source-bound in the
 storage evidence.
 
