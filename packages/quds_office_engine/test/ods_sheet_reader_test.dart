@@ -12,12 +12,20 @@ const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
 const _fo = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
 const _number = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
 
-Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
+Uint8List _ods(
+  String tables, {
+  String styles = '',
+  String? namedStyles,
+  Map<String, List<int>> parts = const <String, List<int>>{},
+}) {
   final zip = ZipWriter();
   const bindings =
       'xmlns:o="$_office" xmlns:t="$_table" '
       'xmlns:x="$_text" xmlns:s="$_style" xmlns:f="$_fo" xmlns:dc="http://purl.org/dc/elements/1.1/" '
-      'xmlns:e="urn:test:extension"';
+      'xmlns:e="urn:test:extension" '
+      'xmlns:dr="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+      'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" '
+      'xmlns:xl="http://www.w3.org/1999/xlink"';
   zip.addFile(
     'content.xml',
     utf8.encode(
@@ -27,6 +35,9 @@ Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
       '</o:document-content>',
     ),
   );
+  for (final entry in parts.entries) {
+    zip.addFile(entry.key, entry.value);
+  }
   if (namedStyles != null) {
     zip.addFile(
       'styles.xml',
@@ -968,6 +979,99 @@ void main() {
 }
 
 void defaultAndTimeTests() {
+  test('currency symbols survive namespaced import and XLSX saves', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-row>'
+        '<t:table-cell t:style-name="usd" o:value-type="currency" '
+        'o:value="1234.5"/>'
+        '<t:table-cell t:style-name="usd" o:value-type="currency" '
+        'o:value="-1234.5"/>'
+        '<t:table-cell t:style-name="eur" o:value-type="currency" '
+        'o:value="5"/>'
+        '</t:table-row></t:table>',
+        styles:
+            '<n:currency-style xmlns:n="$_number" s:name="USD">'
+            '<e:currency-symbol>wrong</e:currency-symbol>'
+            '<n:currency-symbol>\$</n:currency-symbol>'
+            '<n:number n:decimal-places="2" n:grouping="true"/>'
+            '</n:currency-style>'
+            '<n:currency-style xmlns:n="$_number" s:name="EUR">'
+            '<n:currency-symbol>€</n:currency-symbol>'
+            '<n:number n:decimal-places="2"/>'
+            '</n:currency-style>'
+            '<s:style s:name="usd" s:family="table-cell" '
+            's:data-style-name="USD"/>'
+            '<s:style s:name="eur" s:family="table-cell" '
+            's:data-style-name="EUR"/>',
+      ),
+    );
+    for (final current in [book, await _roundTrip(book)]) {
+      for (final expected in {
+        'A1': r'$1,234.50',
+        'B1': r'-$1,234.50',
+        'C1': '€5.00',
+      }.entries) {
+        final cell = current.firstSheet.cellA1(expected.key);
+        expect(
+          current.styles!.format(cell.value, cell.styleIndex),
+          expected.value,
+        );
+      }
+    }
+  });
+
+  test('inherited styled padding stays sparse while explicit blanks survive', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:default-cell-style-name="inherited" '
+        't:number-columns-repeated="4096"/>'
+        '<t:table-row t:default-cell-style-name="inherited" '
+        't:style-name="defaultHeight" t:number-rows-repeated="4000">'
+        '<t:table-cell t:number-columns-repeated="4096"/></t:table-row>'
+        '<t:table-row><t:table-cell o:value-type="float" o:value="9"/>'
+        '<t:table-cell t:style-name="accent"/></t:table-row></t:table>',
+        styles:
+            '<s:style s:name="inherited" s:family="table-cell">'
+            '<s:text-properties f:font-size="14pt"/></s:style>'
+            '<s:style s:name="accent" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#FF0000"/></s:style>'
+            '<s:style s:name="defaultHeight" s:family="table-row">'
+            '<s:table-row-properties s:row-height="14.95pt"/></s:style>',
+      ),
+    );
+    expect(book.firstSheet.rowHeights, isEmpty);
+    for (final current in [book, await _roundTrip(book)]) {
+      final sheet = current.firstSheet;
+      expect(sheet.allCells, hasLength(2));
+      expect(sheet.cellA1('A4001').value, 9);
+      expect(sheet.cellA1('A4001').fontSize, 14);
+      final blank = sheet.cellA1('B4001');
+      expect(current.styles!.fillAt(blank.styleIndex), 'FF0000');
+    }
+  });
+
+  test('ODS native column geometry survives a new XLSX copy', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-column t:style-name="wide"/>'
+        '<t:table-column t:style-name="normal" t:number-columns-repeated="4095"/>'
+        '<t:table-row>${_value('value')}</t:table-row></t:table>',
+        styles:
+            '<s:style s:name="wide" s:family="table-column">'
+            '<s:table-column-properties s:column-width="1in"/></s:style>'
+            '<s:style s:name="normal" s:family="table-column">'
+            '<s:table-column-properties s:column-width="0.8898in"/></s:style>',
+      ),
+    );
+    for (final current in [book, await _roundTrip(book)]) {
+      final sheet = current.firstSheet;
+      expect(sheet.columnWidths.keys, [0]);
+      expect(sheet.exportColumnWidth(0), closeTo(96 / 7.4, 1e-10));
+      expect(sheet.columnWidth(1), 81);
+    }
+  });
+
   test('cell then row then per-column styles survive repeated cells', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
@@ -1208,5 +1312,33 @@ void edgeTests() {
       ),
       '02.01.2024',
     );
+  });
+}
+
+void imageTests() {
+  final png = base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+  );
+
+  test('ODS pictures become worksheet drawings and survive save', () async {
+    final source = _ods(
+      '<t:table t:name="Data"><t:table-row><t:table-cell>'
+      '<dr:frame dr:name="Logo" svg:width="2in" svg:height="1in">'
+      '<dr:image xl:href="Pictures/p.png"/></dr:frame>'
+      '</t:table-cell></t:table-row></t:table>',
+      parts: {'Pictures/p.png': png},
+    );
+    final book = OdsSheetReader.readBytes(source);
+    final drawing = book.sheets.first.drawings.single;
+    expect(drawing.visual.title, 'Logo');
+    expect(drawing.visual.imageBytes, png);
+    expect(drawing.visual.width, closeTo(144, 0.01));
+    expect(drawing.visual.height, closeTo(72, 0.01));
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final reopened = SheetDeserializer().readBytes(saved);
+    final restored = reopened.sheets.first.drawings.single;
+    expect(restored.visual.imageBytes, png);
+    expect(restored.visual.width, closeTo(144, 0.01));
   });
 }
