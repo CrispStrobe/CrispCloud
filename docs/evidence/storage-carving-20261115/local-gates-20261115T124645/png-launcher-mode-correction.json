@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "failed_label": "png-portable-final",
+  "failed_saved_commit": "44a7339a7c7aecb96601b32712e9a7131e694e1a",
+  "source_commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/toolchain_launcher.sh",
+  "old_mode": "100644",
+  "new_mode": "100755",
+  "blob": "b1acc440530e964c52bb91ffce5744894359492f",
+  "sha256_unchanged": "ecde6ef0e330d75ce4e4c5c2add188d91c0176c516c181b46d376d4bca79efc4",
+  "reference_mode": "100755 in remote-refresh/plans/toolchain_launcher.sh, same Git blob",
+  "source_driver_dependencies_changed": false,
+  "retry_label": "png-portable-final-2",
+  "scope": "Correct launcher execution permission only. First attempt failed before Dart; retained raw receipts are excluded from acceptance. Other gates did not invoke this launcher."
+}

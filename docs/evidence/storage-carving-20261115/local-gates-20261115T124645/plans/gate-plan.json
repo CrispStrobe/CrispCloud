@@ -228,12 +228,21 @@
     "scripted-oracle": "scripted-oracle-final",
     "comments-oracle": "comments-oracle-final",
     "source-integrity": "source-integrity-final",
-    "png-portable": "png-portable-final",
+    "png-portable": "png-portable-final-2",
     "navigation-capture": "navigation-capture-final",
     "navigation-independent-review": "navigation-independent-review-final"
   },
   "source966_receipts": {
     "status": "preserved predecessor scope only",
     "label_rule": "Plain labels remain tied to source966; only fresh -final labels qualify the corrected final source."
-  }
+  },
+  "failed_gate_attempts": [
+    {
+      "label": "png-portable-final",
+      "saved_commit": "44a7339a7c7aecb96601b32712e9a7131e694e1a",
+      "reason": "Evidence launcher saved mode100644 caused PermissionError before first Dart process; not a product runtime failure.",
+      "accepted": false,
+      "retry_label": "png-portable-final-2"
+    }
+  ]
 }
