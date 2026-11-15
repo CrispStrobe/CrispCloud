@@ -274,18 +274,21 @@ abstract class OfficeController extends ChangeNotifier {
 
   /// find API.
   List<OfficeFindHit> find(OfficeFindOptions options) {
-    findSession
-      ..active = true
-      ..options = options
-      ..hits = collectFindHits(options)
-      ..index = findSession.hits.isEmpty ? -1 : 0;
-    final OfficeFindHit? hit = findSession.current;
+    final List<OfficeFindHit> hits = collectFindHits(options);
+    final OfficeFindHit? hit = hits.isEmpty ? null : hits.first;
     if (hit != null) {
       revealFindHit(hit);
     }
+    // A rejected reveal (for example, an invalid worksheet draft) must not
+    // replace the previous query, result list or selected result.
+    findSession
+      ..active = true
+      ..options = options
+      ..hits = hits
+      ..index = hits.isEmpty ? -1 : 0;
     onFindResult?.call(hit);
     notifyListeners();
-    return findSession.hits;
+    return hits;
   }
 
   /// findNext API.
@@ -297,17 +300,22 @@ abstract class OfficeController extends ChangeNotifier {
       }
       return findSession.current;
     }
+    final int nextIndex;
     if (findSession.index + 1 < findSession.hits.length) {
-      findSession.index++;
+      nextIndex = findSession.index + 1;
     } else if (wrap && findSession.hits.isNotEmpty) {
-      findSession.index = 0;
+      nextIndex = 0;
     } else {
       return findSession.current;
     }
-    final OfficeFindHit? hit = findSession.current;
+    final OfficeFindHit? hit =
+        nextIndex >= 0 && nextIndex < findSession.hits.length
+        ? findSession.hits[nextIndex]
+        : null;
     if (hit != null) {
       revealFindHit(hit);
     }
+    findSession.index = nextIndex;
     onFindResult?.call(hit);
     notifyListeners();
     return hit;
@@ -318,15 +326,22 @@ abstract class OfficeController extends ChangeNotifier {
     if (findSession.hits.isEmpty) {
       return findNext(wrap: wrap);
     }
+    final int previousIndex;
     if (findSession.index > 0) {
-      findSession.index--;
+      previousIndex = findSession.index - 1;
     } else if (wrap && findSession.hits.isNotEmpty) {
-      findSession.index = findSession.hits.length - 1;
+      previousIndex = findSession.hits.length - 1;
+    } else {
+      previousIndex = findSession.index;
     }
-    final OfficeFindHit? hit = findSession.current;
+    final OfficeFindHit? hit =
+        previousIndex >= 0 && previousIndex < findSession.hits.length
+        ? findSession.hits[previousIndex]
+        : null;
     if (hit != null) {
       revealFindHit(hit);
     }
+    findSession.index = previousIndex;
     onFindResult?.call(hit);
     notifyListeners();
     return hit;
@@ -7635,11 +7650,9 @@ class SheetEditorController extends OfficeController {
     if (_hasPendingEdits) {
       final SmlWorksheet target = _cellEditSheet ?? sheet;
       final SmlCell cell = _cellEditCell ?? target.cell(activeCell);
-      lastValidationError = _cellInputError(
-        target,
-        cell,
-        cellEditor.formulaBar,
-      );
+      lastValidationError = config.allowsMutation
+          ? _cellInputError(target, cell, cellEditor.formulaBar)
+          : 'The editor is read-only.';
       if (lastValidationError != null) {
         // Retain the visible draft if a save cannot apply it to the workbook.
         notifyListeners();
@@ -7668,10 +7681,16 @@ class SheetEditorController extends OfficeController {
     return OfficeIsolateSave.workbook(workbook, password: password);
   }
 
-  /// setActiveSheet API.
+  /// Selects the clamped worksheet index after committing any changed draft.
+  /// Rejected drafts remain on their original worksheet. Selecting the current
+  /// worksheet is a no-op, including its selection, viewport and editor state.
   void setActiveSheet(int index) {
-    commitCellEdit();
-    _activeSheet = index.clamp(0, workbook.sheets.length - 1);
+    final int next = index.clamp(0, workbook.sheets.length - 1);
+    if (next == _activeSheet) {
+      return;
+    }
+    commitPendingEdits();
+    _activeSheet = next;
     selectedDrawingIndex = null;
     selection.selectCell(const SmlCellRef(0, 0));
     viewport.origin = Offset.zero;
@@ -9472,6 +9491,12 @@ class SheetEditorController extends OfficeController {
   @override
   /// revealFindHit API.
   void revealFindHit(OfficeFindHit hit) {
+    final String? a1 = hit.a1;
+    final SmlCellRef? target = a1 == null ? null : SmlCellRef.parse(a1);
+    // A find result can move the selected cell without changing worksheets.
+    // Finish the draft before either move; setActiveSheet intentionally does
+    // nothing when its effective target is already the active worksheet.
+    commitPendingEdits();
     final String? sheetName = hit.sheetName;
     if (sheetName != null) {
       for (int i = 0; i < workbook.sheets.length; i++) {
@@ -9481,10 +9506,10 @@ class SheetEditorController extends OfficeController {
         }
       }
     }
-    final String? a1 = hit.a1;
-    if (a1 != null) {
-      selection.selectCell(SmlCellRef.parse(a1));
-      ensureCellVisible(SmlCellRef.parse(a1));
+    if (target != null) {
+      selectedDrawingIndex = null;
+      selection.selectCell(target);
+      ensureCellVisible(target);
     }
     notifyListeners();
   }

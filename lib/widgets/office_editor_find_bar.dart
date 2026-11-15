@@ -8,6 +8,7 @@ import 'package:quds_office_editor/quds_office_editor.dart';
 
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_replace_status_strings.dart';
+import '../l10n/office_worksheet_strings.dart';
 
 class OfficeFindBar extends StatefulWidget {
   const OfficeFindBar({
@@ -57,13 +58,32 @@ class _OfficeFindBarState extends State<OfficeFindBar> {
   }
 
   OfficeFindOptions get _options => OfficeFindOptions(
-        query: _query.text,
-        replaceWith: _replaceWith.text,
-        matchCase: _matchCase,
-        wholeWord: _wholeWord,
-      );
+    query: _query.text,
+    replaceWith: _replaceWith.text,
+    matchCase: _matchCase,
+    wholeWord: _wholeWord,
+  );
 
-  void _search() {
+  bool _navigate(VoidCallback operation) {
+    try {
+      operation();
+      setState(() {});
+      return true;
+    } on StateError catch (error) {
+      final controller = widget.controller;
+      if (controller is! SheetEditorController ||
+          controller.lastValidationError == null ||
+          error.message != controller.lastValidationError) {
+        rethrow;
+      }
+      // Find can reveal a different cell or worksheet. Failed draft commits
+      // remain editable and must not escape through a UI callback.
+      setState(() {});
+      return false;
+    }
+  }
+
+  bool _search() {
     final String query = _query.text;
     if (query.isEmpty) {
       widget.controller.findSession
@@ -73,40 +93,46 @@ class _OfficeFindBarState extends State<OfficeFindBar> {
         ..active = true;
       setState(() {});
       widget.controller.refresh();
-      return;
+      return true;
     }
-    widget.controller.find(_options);
-    setState(() {});
+    return _navigate(() => widget.controller.find(_options));
+  }
+
+  bool get _hasCurrentSearch {
+    final options = widget.controller.findSession.options;
+    return options != null &&
+        options.query == _query.text &&
+        options.matchCase == _matchCase &&
+        options.wholeWord == _wholeWord;
   }
 
   void _next() {
     if (_query.text.isEmpty) return;
-    if (widget.controller.findSession.options?.query != _query.text) {
-      _search();
+    if (!_hasCurrentSearch) {
+      if (!_search()) return;
     }
-    widget.controller.findNext();
-    setState(() {});
+    _navigate(widget.controller.findNext);
   }
 
   void _previous() {
     if (_query.text.isEmpty) return;
-    if (widget.controller.findSession.options?.query != _query.text) {
-      _search();
+    if (!_hasCurrentSearch) {
+      if (!_search()) return;
     }
-    widget.controller.findPrevious();
-    setState(() {});
+    _navigate(widget.controller.findPrevious);
   }
 
   void _replace() {
     if (_query.text.isEmpty) return;
-    widget.controller.replace(_options);
-    setState(() {});
+    _navigate(() => widget.controller.replace(_options));
   }
 
   void _replaceAll() {
     if (_query.text.isEmpty) return;
-    final int count = widget.controller.replaceAll(_options);
-    setState(() {});
+    var count = 0;
+    if (!_navigate(() => count = widget.controller.replaceAll(_options))) {
+      return;
+    }
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
         content: Text(
@@ -129,114 +155,141 @@ class _OfficeFindBarState extends State<OfficeFindBar> {
     final String count = _query.text.isEmpty
         ? ''
         : total == 0
-            ? context.tr('No results')
-            : '${session.index + 1} / $total';
+        ? context.tr('No results')
+        : '${session.index + 1} / $total';
 
-    return Material(
-      color: theme.colorScheme.surfaceContainerHigh,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          child: Row(
-            children: <Widget>[
-              SizedBox(
-                width: 220,
-                height: 32,
-                child: TextField(
-                  controller: _query,
-                  focusNode: _queryFocus,
-                  style: const TextStyle(fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: context.tr('Find'),
-                    isDense: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    border: const OutlineInputBorder(),
-                    suffixText: count,
-                    suffixStyle: const TextStyle(fontSize: 10),
-                  ),
-                  onChanged: (_) => _search(),
-                  onSubmitted: (_) => _next(),
-                ),
-              ),
-              const SizedBox(width: 4),
-              _IconAction(
-                icon: Icons.keyboard_arrow_up,
-                tooltip: context.tr('Previous match'),
-                onPressed: _previous,
-              ),
-              _IconAction(
-                icon: Icons.keyboard_arrow_down,
-                tooltip: context.tr('Next match'),
-                onPressed: _next,
-              ),
-              _ToggleAction(
-                label: 'Aa',
-                tooltip: context.tr('Match case'),
-                selected: _matchCase,
-                onPressed: () {
-                  setState(() => _matchCase = !_matchCase);
-                  _search();
-                },
-              ),
-              _ToggleAction(
-                label: 'ab',
-                tooltip: context.tr('Whole words'),
-                selected: _wholeWord,
-                onPressed: () {
-                  setState(() => _wholeWord = !_wholeWord);
-                  _search();
-                },
-              ),
-              if (widget.showReplace) ...<Widget>[
-                const SizedBox(width: 6),
-                _ToggleAction(
-                  icon: Icons.find_replace,
-                  tooltip: context.tr('Replace'),
-                  selected: _replaceOpen,
-                  onPressed: () =>
-                      setState(() => _replaceOpen = !_replaceOpen),
-                ),
-                if (_replaceOpen) ...<Widget>[
-                  const SizedBox(width: 4),
+    final controller = widget.controller;
+    final blocked =
+        controller is SheetEditorController &&
+        controller.cellEditor.editing &&
+        controller.lastValidationError != null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: theme.colorScheme.surfaceContainerHigh,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              child: Row(
+                children: <Widget>[
                   SizedBox(
-                    width: 190,
+                    width: 220,
                     height: 32,
                     child: TextField(
-                      controller: _replaceWith,
+                      controller: _query,
+                      focusNode: _queryFocus,
                       style: const TextStyle(fontSize: 12),
                       decoration: InputDecoration(
-                        hintText: context.tr('Replace with'),
+                        hintText: context.tr('Find'),
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 6,
                         ),
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        suffixText: count,
+                        suffixStyle: const TextStyle(fontSize: 10),
                       ),
+                      onChanged: (_) => _search(),
+                      onSubmitted: (_) => _next(),
                     ),
                   ),
-                  TextButton(
-                    onPressed: _replace,
-                    child: Text(context.tr('Replace')),
+                  const SizedBox(width: 4),
+                  _IconAction(
+                    icon: Icons.keyboard_arrow_up,
+                    tooltip: context.tr('Previous match'),
+                    onPressed: _previous,
                   ),
-                  TextButton(
-                    onPressed: _replaceAll,
-                    child: Text(context.tr('All')),
+                  _IconAction(
+                    icon: Icons.keyboard_arrow_down,
+                    tooltip: context.tr('Next match'),
+                    onPressed: _next,
+                  ),
+                  _ToggleAction(
+                    label: 'Aa',
+                    tooltip: context.tr('Match case'),
+                    selected: _matchCase,
+                    onPressed: () {
+                      setState(() => _matchCase = !_matchCase);
+                      _search();
+                    },
+                  ),
+                  _ToggleAction(
+                    label: 'ab',
+                    tooltip: context.tr('Whole words'),
+                    selected: _wholeWord,
+                    onPressed: () {
+                      setState(() => _wholeWord = !_wholeWord);
+                      _search();
+                    },
+                  ),
+                  if (widget.showReplace) ...<Widget>[
+                    const SizedBox(width: 6),
+                    _ToggleAction(
+                      icon: Icons.find_replace,
+                      tooltip: context.tr('Replace'),
+                      selected: _replaceOpen,
+                      onPressed: () =>
+                          setState(() => _replaceOpen = !_replaceOpen),
+                    ),
+                    if (_replaceOpen) ...<Widget>[
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 190,
+                        height: 32,
+                        child: TextField(
+                          controller: _replaceWith,
+                          style: const TextStyle(fontSize: 12),
+                          decoration: InputDecoration(
+                            hintText: context.tr('Replace with'),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _replace,
+                        child: Text(context.tr('Replace')),
+                      ),
+                      TextButton(
+                        onPressed: _replaceAll,
+                        child: Text(context.tr('All')),
+                      ),
+                    ],
+                  ],
+                  const SizedBox(width: 4),
+                  _IconAction(
+                    icon: Icons.close,
+                    tooltip: context.tr('Close find'),
+                    onPressed: _close,
                   ),
                 ],
-              ],
-              const SizedBox(width: 4),
-              _IconAction(
-                icon: Icons.close,
-                tooltip: context.tr('Close find'),
-                onPressed: _close,
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        if (blocked)
+          Semantics(
+            liveRegion: true,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text(
+                OfficeWorksheetStrings(context)
+                    .text(OfficeWorksheetStrings.pendingEdit),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

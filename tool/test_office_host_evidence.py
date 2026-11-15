@@ -10,7 +10,8 @@ import office_host_evidence as evidence
 
 ACCEPTANCE_DIRECTORIES = ('office-fill-host-acceptance',
                           'office-sheet-state-acceptance',
-                          'office-style-history-acceptance')
+                          'office-style-history-acceptance',
+                          'office-sheet-navigation-acceptance')
 
 
 def package(file, extension=None, main=None):

@@ -106,6 +106,7 @@ jobs:
             build/office-fill-host-acceptance/
             build/office-sheet-state-acceptance/
             build/office-style-history-acceptance/
+            build/office-sheet-navigation-acceptance/
             packages/quds_office_engine/build/fidelity*
   external-schema:
     needs: host-roundtrip

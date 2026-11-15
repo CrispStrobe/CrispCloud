@@ -273,6 +273,30 @@
     {
       "path": "build/office-style-history-acceptance/native-redo.xlsx",
       "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/source.xlsx",
+      "role": "authored_input"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/switched-draft.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rename.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rename-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-navigation-acceptance/rename-redo.xlsx",
+      "role": "host_output"
     }
   ]
 }
