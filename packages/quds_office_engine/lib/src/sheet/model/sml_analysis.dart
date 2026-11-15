@@ -105,7 +105,11 @@ class SmlDataValidation {
     if (kind != SmlValidationKind.list) {
       return const <String>[];
     }
-    return formula1
+    var source = formula1.trim();
+    if (source.length >= 2 && source.startsWith('"') && source.endsWith('"')) {
+      source = source.substring(1, source.length - 1).replaceAll('""', '"');
+    }
+    return source
         .split(RegExp(r'[,،]'))
         .map((String item) => item.trim())
         .where((String item) => item.isNotEmpty)
@@ -170,6 +174,7 @@ class SmlConditionalRule {
     this.formula = '',
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
+    this.dxfId,
   });
 
   /// range API.
@@ -186,6 +191,9 @@ class SmlConditionalRule {
 
   /// fontRgb API.
   String fontRgb;
+
+  /// Generated differential-style id, assigned during serialization.
+  int? dxfId;
 
   /// matches API.
   bool matches(SmlCell cell, SmlWorksheet sheet) {

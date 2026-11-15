@@ -1099,6 +1099,18 @@ class SheetSerializer {
       return;
     }
     final SmlStyleSheet styles = book.styles ?? SmlStyleSheet();
+    final generatedDxfs = <({String fillRgb, String fontRgb})>[];
+    final generateDxfs = book.sheets.every(
+      (sheet) => sheet.sourceConditionalFormatState == null,
+    );
+    if (generateDxfs) {
+      for (final sheet in book.sheets) {
+        for (final rule in sheet.conditionalFormats) {
+          rule.dxfId = generatedDxfs.length;
+          generatedDxfs.add((fillRgb: rule.fillRgb, fontRgb: rule.fontRgb));
+        }
+      }
+    }
     for (final SmlWorksheet sheet in book.sheets) {
       for (final SmlCell cell in sheet.allCells) {
         // Defaults can be an intentional edit away from an imported style.
@@ -1123,10 +1135,16 @@ class SheetSerializer {
       package.createPart(
         '/xl/styles.xml',
         OfficeContentTypes.sheetStyles,
-        utf8.encode(styles.toXml()),
+        utf8.encode(
+          styles.toXml(dxfs: generateDxfs ? generatedDxfs : const []),
+        ),
       );
     } else {
-      package.getPart('/xl/styles.xml')!.writeText(styles.toXml());
+      package
+          .getPart('/xl/styles.xml')!
+          .writeText(
+            styles.toXml(dxfs: generateDxfs ? generatedDxfs : const []),
+          );
     }
     final RelationshipCollection rels = package.relationshipsFor(
       '/xl/workbook.xml',
@@ -1344,9 +1362,12 @@ class SheetSerializer {
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeAttribute('allowBlank', rule.allowBlank ? '1' : '0');
-        if (rule.formula1.isNotEmpty) {
+        final formula1 = rule.kind == SmlValidationKind.list
+            ? '"${rule.listItems.join(',')}"'
+            : rule.formula1;
+        if (formula1.isNotEmpty) {
           w.writeStartElement('formula1');
-          w.writeText(rule.formula1);
+          w.writeText(formula1);
           w.writeEndElement();
         }
         if (rule.formula2.isNotEmpty) {
@@ -1366,18 +1387,32 @@ class SheetSerializer {
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeStartElement('cfRule');
-        w.writeAttribute('type', 'cellIs');
-        w.writeAttribute('operator', switch (rule.kind) {
-          SmlConditionalKind.greaterThan => 'greaterThan',
-          SmlConditionalKind.greaterOrEqual => 'greaterThanOrEqual',
-          SmlConditionalKind.lessThan => 'lessThan',
-          SmlConditionalKind.lessOrEqual => 'lessThanOrEqual',
-          SmlConditionalKind.equal => 'equal',
-          SmlConditionalKind.notEqual => 'notEqual',
-          SmlConditionalKind.contains => 'containsText',
-          SmlConditionalKind.duplicate => 'duplicateValues',
-        });
-        if (rule.formula.isNotEmpty) {
+        switch (rule.kind) {
+          case SmlConditionalKind.contains:
+            w.writeAttribute('type', 'containsText');
+            w.writeAttribute('operator', 'containsText');
+            w.writeAttribute('text', rule.formula);
+          case SmlConditionalKind.duplicate:
+            w.writeAttribute('type', 'duplicateValues');
+          default:
+            w.writeAttribute('type', 'cellIs');
+            w.writeAttribute('operator', switch (rule.kind) {
+              SmlConditionalKind.greaterThan => 'greaterThan',
+              SmlConditionalKind.greaterOrEqual => 'greaterThanOrEqual',
+              SmlConditionalKind.lessThan => 'lessThan',
+              SmlConditionalKind.lessOrEqual => 'lessThanOrEqual',
+              SmlConditionalKind.equal => 'equal',
+              SmlConditionalKind.notEqual => 'notEqual',
+              SmlConditionalKind.contains ||
+              SmlConditionalKind.duplicate => throw StateError('handled above'),
+            });
+        }
+        if (rule.dxfId case final dxfId?) {
+          w.writeAttribute('dxfId', '$dxfId');
+        }
+        if (rule.kind != SmlConditionalKind.contains &&
+            rule.kind != SmlConditionalKind.duplicate &&
+            rule.formula.isNotEmpty) {
           w.writeStartElement('formula');
           w.writeText(rule.formula);
           w.writeEndElement();
