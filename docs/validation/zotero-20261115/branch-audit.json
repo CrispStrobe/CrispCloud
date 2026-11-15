@@ -1,0 +1,425 @@
+{
+  "method": "Read-only local graph ancestry and git cherry stable patch comparison, plus live GitHub PR metadata. No branches or PRs merged by audit.",
+  "repositories": [
+    {
+      "name": "quds_office_suite",
+      "baseline": "1d7fee380def59d5a766cab106e519952d5c3292",
+      "audited_main": "c210315bee537776b556ae9885e907483b6df7bd",
+      "branches": [
+        {
+          "branch": "feat/conditional-dxf",
+          "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 3,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/conditional-operators",
+          "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 4,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/conditional-text",
+          "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 2,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/ods-conditional",
+          "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+          "head_newer_than_baseline": false,
+          "ahead": 1,
+          "behind": 7,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/ods-default-geometry",
+          "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 15,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/ods-default-style",
+          "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 16,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/ods-images",
+          "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 24,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/ods-validations",
+          "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 1,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/sheet-hidden-sheets",
+          "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "head_newer_than_baseline": false,
+          "ahead": 1,
+          "behind": 8,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/sheet-hidden-state",
+          "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 14,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/utf16-custom-xml",
+          "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 16,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        }
+      ]
+    },
+    {
+      "name": "CrispCloud",
+      "baseline": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+      "audited_main": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+      "branches": [
+        {
+          "branch": "codex/ssh-terminal-tmux",
+          "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 23,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "codex/terminal-screen-workspace",
+          "sha": "4a76740493ec7c7ed6177ac21e803d571c500fa1",
+          "head_newer_than_baseline": true,
+          "ahead": 6,
+          "behind": 5,
+          "classification": "distinct git patch",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 5
+        },
+        {
+          "branch": "docs/conditional-complete",
+          "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 3,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "docs/conditional-formats",
+          "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 6,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "docs/ods-hidden-state",
+          "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "head_newer_than_baseline": false,
+          "ahead": 1,
+          "behind": 9,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "docs/ods-pictures",
+          "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 268,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "docs/ods-validations",
+          "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 1,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "docs/office-pin-20261115",
+          "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 36,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/hidden-sheets-ui",
+          "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "head_newer_than_baseline": false,
+          "ahead": 1,
+          "behind": 10,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/odt-headers",
+          "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 29,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/odt-images",
+          "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 267,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/odt-styles",
+          "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 34,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "feat/odt-textboxes",
+          "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 266,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/conditional-dxf-vendor",
+          "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 5,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/conditional-operators-vendor",
+          "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 7,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/conditional-text-vendor",
+          "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 4,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/hidden-state-vendor",
+          "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 29,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/ods-conditional-vendor",
+          "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 8,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/ods-default-geometry-vendor",
+          "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 30,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/ods-default-style-vendor",
+          "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 31,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/ods-images-vendor",
+          "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 271,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "fix/ods-validations-vendor",
+          "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 2,
+          "classification": "patch-equivalent",
+          "equivalent_nonmerge_patches": 1,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "integrate/utf16-custom-xml-20261115",
+          "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "head_newer_than_baseline": true,
+          "ahead": 1,
+          "behind": 8,
+          "classification": "distinct git patch",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 1
+        },
+        {
+          "branch": "integration/storage-carving-20261115",
+          "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 123,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        },
+        {
+          "branch": "integration/storage-carving-local-20261115124645",
+          "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+          "head_newer_than_baseline": false,
+          "ahead": 0,
+          "behind": 124,
+          "classification": "ancestor",
+          "equivalent_nonmerge_patches": 0,
+          "distinct_nonmerge_patches": 0
+        }
+      ]
+    }
+  ],
+  "verified_merged_new_prs": {
+    "quds_office_suite": [
+      36,
+      37,
+      38,
+      39
+    ],
+    "CrispCloud": [
+      139,
+      141,
+      142,
+      144,
+      145,
+      146,
+      147,
+      148
+    ]
+  },
+  "superseded": {
+    "repository": "CrispStrobe/CrispCloud",
+    "pr": 143,
+    "state": "closed",
+    "merged": false,
+    "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+    "reason": "PR closure comment explicitly marks superseded by newer Quds pin. Implementation and regression-test Git blobs match current main exactly; only old pin bookkeeping differs.",
+    "matching_blobs": {
+      "packages/quds_office_engine/lib/src/word/serial/word_bibliography_io.dart": "43e306e64efa02413a32a11ffda506ca92d4213d",
+      "packages/quds_office_engine/test/word_bibliography_fidelity_test.dart": "8aba55937e96cfd2832f3a65eea333d5e44c8a6a"
+    },
+    "action": "Leave closed; do not merge obsolete pin."
+  },
+  "active_distinct_work": {
+    "repository": "CrispStrobe/CrispCloud",
+    "pr": 140,
+    "state": "open",
+    "draft": true,
+    "branch": "codex/terminal-screen-workspace",
+    "fetched_head": "4a76740493ec7c7ed6177ac21e803d571c500fa1",
+    "live_api_head": "798c667a21a863150e1e0be816955de03dd1a7d3",
+    "live_updated_at": "2026-11-15T19:31:45Z",
+    "fetched_head_ahead": 6,
+    "fetched_head_behind": 5,
+    "distinct_nonmerge_patches": 5,
+    "changed_files_at_fetched_head": 31,
+    "action": "Preserve active draft separately; do not merge into Zotero task."
+  }
+}

@@ -23,15 +23,24 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `c210315` on `main`
+The app mirrors Quds `1d9552697d2850cbc3b5a7f73daf44a442c4901b`
+on `codex/zotero-support-20261115`, including canonical main `c210315`,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,363 managed files
+all 2,374 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
+
+Zotero support adds a shared references workspace, a read-only Web API client,
+offline CSL import/export, guarded DOCX citation and bibliography fields, and
+undoable editing. CrispCloud supplies its selected proxy/TLS transport and
+optional existing credential store. See [usage and formatting limits](../docs/zotero.md)
+and [source-bound local validation](../docs/zotero-validation.md). This adds
+targeted Zotero qualification; earlier storage and spreadsheet results retain
+their original source identities.
 
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax

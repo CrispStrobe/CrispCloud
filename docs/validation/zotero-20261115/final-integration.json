@@ -1,0 +1,29 @@
+{
+  "recorded_at_utc": "2026-11-15T19:41:00.775670+00:00",
+  "quds_final_source": "1d9552697d2850cbc3b5a7f73daf44a442c4901b",
+  "quds_tested_code": "9da9c638bfe3bf932a70b2268dc16ef783fc009a",
+  "quds_final_source_changes_from_tested_code": [
+    "docs/validation/zotero-20261115/SETUP.md",
+    "docs/validation/zotero-20261115/analysis.json",
+    "docs/validation/zotero-20261115/branch-audit.json",
+    "docs/validation/zotero-20261115/editor.log",
+    "docs/validation/zotero-20261115/engine.log",
+    "docs/validation/zotero-20261115/ods-reader.log",
+    "docs/validation/zotero-20261115/receipt.json",
+    "docs/zotero-support.md",
+    "docs/zotero-validation.md"
+  ],
+  "crispcloud_tested_code": "803537e0c1e5dc3acf4c3659a37515dfb78224d7",
+  "host_source_hashes_still_match_receipt": true,
+  "managed_file_count": 2374,
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "manifest_sha256": "bcb106b64067dd79b2bcb2c0b4ee7a30517b837145e3535eab7414be9bb41f10",
+  "vendor_guard_exit_code": 0,
+  "vendor_guard_log_sha256": "49f20586b64faf9f8e0bb45f69d4b9e84e800c8f8a7f2dbcac8b62b1f6bbb9c6",
+  "github_actions_awaited": false
+}

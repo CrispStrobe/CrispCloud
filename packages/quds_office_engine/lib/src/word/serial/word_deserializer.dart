@@ -21,6 +21,7 @@ import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../model/word_tree.dart';
+import '../model/word_zotero.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
 import 'word_bookmark_io.dart';
@@ -1553,8 +1554,12 @@ class WordDeserializer {
 
   /// Decide, once a paragraph is complete, how its fields are represented.
   void _settleFieldSpans(WmlParagraph paragraph) {
+    final collapsedZotero = _collapseZoteroFields(paragraph);
     final boundaries = paragraph.inlines.whereType<WmlFieldBoundary>().toList();
-    if (boundaries.isEmpty) return;
+    if (boundaries.isEmpty) {
+      if (collapsedZotero) _clearParagraphField(paragraph);
+      return;
+    }
     bool strip() {
       paragraph.inlines.removeWhere((inline) => inline is WmlFieldBoundary);
       return true;
@@ -1588,18 +1593,138 @@ class WordDeserializer {
         (firstContent < 0 || begin < firstContent) &&
         (lastContent < 0 || end > lastContent) &&
         (paragraph.properties.fieldInstruction ?? '').trim().isNotEmpty;
-    if (simple) {
+    if (simple &&
+        WordZotero.kindOfInstruction(paragraph.properties.fieldInstruction) ==
+            null) {
       strip();
       return;
     }
     // Inexact for the paragraph model: keep the spans and drop the
     // paragraph-level reading, which would otherwise wrap all text.
-    paragraph.properties
-      ..fieldInstruction = null
-      ..fieldBegin = false
-      ..fieldSeparate = false
-      ..fieldEnd = false
-      ..pageNumberField = false;
+    _clearParagraphField(paragraph);
+  }
+
+  void _clearParagraphField(WmlParagraph paragraph) => paragraph.properties
+    ..fieldInstruction = null
+    ..fieldBegin = false
+    ..fieldSeparate = false
+    ..fieldEnd = false
+    ..pageNumberField = false;
+
+  /// A Zotero field with exactly one ordinary cached run has an exact atomic
+  /// representation. Rich, nested, malformed, or cross-paragraph fields keep
+  /// their original boundary packets instead of flattening their formatting.
+  bool _collapseZoteroFields(WmlParagraph paragraph) {
+    final replacements = <({int start, int end, WmlRun run})>[];
+    var depth = 0;
+    var start = -1;
+    var nested = false;
+    for (var index = 0; index < paragraph.inlines.length; index++) {
+      final inline = paragraph.inlines[index];
+      if (inline is! WmlFieldBoundary) continue;
+      if (inline.kind == WmlFieldBoundaryKind.begin) {
+        if (depth == 0) {
+          start = index;
+          nested = false;
+        } else {
+          nested = true;
+        }
+        depth++;
+      } else if (inline.kind == WmlFieldBoundaryKind.end && depth > 0) {
+        depth--;
+        if (depth != 0 || nested || start < 0) continue;
+        final packet = paragraph.inlines.sublist(start, index + 1);
+        final instruction = StringBuffer();
+        WmlRun? cache;
+        var separated = false;
+        var valid = true;
+        bool locked = false;
+        bool? dirty;
+        for (final member in packet) {
+          if (member is WmlFieldBoundary) {
+            // Code-run properties and foreign field attributes are opaque
+            // source metadata. Keep their boundary packet if atomizing would
+            // discard them, even though the displayed cache is a single run.
+            if (member.runPropertiesXml?.trim().isNotEmpty == true) {
+              valid = false;
+            }
+            if (member.kind == WmlFieldBoundaryKind.instruction) {
+              if (separated) valid = false;
+              instruction.write(member.text);
+            } else {
+              if (member.kind == WmlFieldBoundaryKind.separate) {
+                if (separated) valid = false;
+                separated = true;
+              }
+              final source = member.sourceXml == null
+                  ? null
+                  : XmlDocument.parse(member.sourceXml!).root;
+              if (source != null) {
+                if (source.children.isNotEmpty ||
+                    source.attributes.any(
+                      (a) =>
+                          a.prefix != 'xmlns' &&
+                          a.qualifiedName != 'xmlns' &&
+                          (a.namespaceUri != OfficeNamespaces.w ||
+                              !<String>{
+                                'fldCharType',
+                                'fldLock',
+                                'dirty',
+                              }.contains(a.localName)),
+                    )) {
+                  valid = false;
+                }
+                if (member.kind == WmlFieldBoundaryKind.begin) {
+                  bool enabled(String? value) =>
+                      value == '1' || value == 'true' || value == 'on';
+                  locked = enabled(
+                    source.getAttribute(
+                      'fldLock',
+                      namespaceUri: OfficeNamespaces.w,
+                    ),
+                  );
+                  final marker = source.getAttribute(
+                    'dirty',
+                    namespaceUri: OfficeNamespaces.w,
+                  );
+                  dirty = marker == null ? null : enabled(marker);
+                }
+              }
+            }
+          } else if (member is WmlRun &&
+              separated &&
+              cache == null &&
+              member.fieldInstruction == null &&
+              member.noteRefId == null &&
+              member.inlineVisual == null &&
+              member.hyperlink == null) {
+            cache = member;
+          } else {
+            valid = false;
+          }
+        }
+        final code = instruction.toString();
+        if (!valid ||
+            cache == null ||
+            !separated ||
+            WordZotero.metadataOf(code) == null) {
+          continue;
+        }
+        cache
+          ..fieldInstruction = code
+          ..fieldLocked = locked
+          ..fieldDirty = dirty;
+        replacements.add((start: start, end: index + 1, run: cache));
+      }
+    }
+    for (final replacement in replacements.reversed) {
+      paragraph.inlines.replaceRange(
+        replacement.start,
+        replacement.end,
+        <WmlInline>[replacement.run],
+      );
+    }
+    return replacements.isNotEmpty;
   }
 
   static const String _inlinePictureChar = '\uFFFC';

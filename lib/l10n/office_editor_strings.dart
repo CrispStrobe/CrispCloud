@@ -10,12 +10,15 @@ import 'package:flutter/widgets.dart';
 import 'office_ribbon_common_strings.dart';
 import 'office_fallback_strings.dart';
 import 'office_recovery_strings.dart';
+import 'office_zotero_strings.dart';
 
 class OfficeEditorStrings {
   const OfficeEditorStrings._();
 
   static String translate(BuildContext context, String english) {
     final String code = Localizations.localeOf(context).languageCode;
+    final String? zotero = OfficeZoteroStrings.lookup(code, english);
+    if (zotero != null) return zotero;
     final String? recovery = OfficeRecoveryStrings.lookup(code, english);
     if (recovery != null) return recovery;
     final Map<String, String>? map = _translations[code];
