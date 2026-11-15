@@ -174,26 +174,29 @@ void main() {
 
   testWidgets('split resize accessibility describes and applies each step', (tester) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    await mount(tester);
-    await layout(tester, 'Split side by side');
-    final resize = find.byWidgetPredicate(
-      (widget) => widget is Semantics && widget.properties.label == 'Resize split',
-    );
-    Semantics control() => tester.widget<Semantics>(resize);
-    expect(control().properties.value, '50%');
-    expect(control().properties.increasedValue, '55%');
-    expect(control().properties.decreasedValue, '45%');
-    control().properties.onIncrease!();
-    await tester.pump();
-    expect(control().properties.value, '55%');
-    expect(control().properties.increasedValue, '60%');
-    expect(control().properties.decreasedValue, '50%');
-    control().properties.onDecrease!();
-    await tester.pump();
-    expect(control().properties.value, '50%');
-    expect(tester.takeException(), isNull);
-    await unmount(tester);
+    try {
+      await mount(tester);
+      await layout(tester, 'Split side by side');
+      final resize = find.byWidgetPredicate(
+        (widget) => widget is Semantics && widget.properties.label == 'Resize split',
+      );
+      Semantics control() => tester.widget<Semantics>(resize);
+      expect(control().properties.value, '50%');
+      expect(control().properties.increasedValue, '55%');
+      expect(control().properties.decreasedValue, '45%');
+      control().properties.onIncrease!();
+      await tester.pump();
+      expect(control().properties.value, '55%');
+      expect(control().properties.increasedValue, '60%');
+      expect(control().properties.decreasedValue, '50%');
+      control().properties.onDecrease!();
+      await tester.pump();
+      expect(control().properties.value, '50%');
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    } finally {
+      semantics.dispose();
+    }
   });
 
   testWidgets('split panes are visible and only the clicked pane owns focus', (
