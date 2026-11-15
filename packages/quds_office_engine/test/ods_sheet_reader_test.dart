@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
@@ -25,7 +26,8 @@ Uint8List _ods(
       'xmlns:e="urn:test:extension" '
       'xmlns:dr="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
       'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" '
-      'xmlns:xl="http://www.w3.org/1999/xlink"';
+      'xmlns:xl="http://www.w3.org/1999/xlink" '
+      'xmlns:cal="urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0"';
   zip.addFile(
     'content.xml',
     utf8.encode(
@@ -264,6 +266,7 @@ void main() {
   defaultStyleTests();
   defaultGeometryTests();
   hiddenStateTests();
+  conditionalFormatTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1437,5 +1440,42 @@ void hiddenStateTests() {
     expect(saved.hiddenRows, contains(0));
     expect(saved.rowHeightAt(0), 0);
     expect(saved.cellA1('A2').value, 'Visible');
+  });
+}
+
+void conditionalFormatTests() {
+  test('ODS conditional formats import and serialize', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        'o:value-type="float" o:value="5"><x:p>5</x:p></t:table-cell>'
+        '</t:table-row><cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" cal:value="&gt;3"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final rule = book.sheets.first.conditionalFormats.single;
+    expect(rule.kind, SmlConditionalKind.greaterThan);
+    expect(rule.formula, '3');
+    expect(rule.fillRgb, '00FF00');
+    expect(rule.range.start.a1, 'A1');
+    expect(rule.range.end.a1, 'A10');
+    final sheet = book.sheets.first;
+    expect(rule.matches(sheet.cellA1('A1'), sheet), isTrue);
+    sheet.cellA1('A1').value = 2;
+    expect(rule.matches(sheet.cellA1('A1'), sheet), isFalse);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('conditionalFormatting'));
+    expect(sheetXml, contains('greaterThan'));
   });
 }

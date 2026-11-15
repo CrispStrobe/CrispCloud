@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
@@ -14,6 +15,16 @@ const _unrelatedSources =
     '<audit xmlns="urn:crispcloud:unrelated">Keep sources.xml exactly</audit>';
 const _props =
     '<ds:datastoreItem xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml" ds:itemID="{6AD1A1C2-1B2A-4DFB-A9AD-000000000001}"><ds:schemaRefs><ds:schemaRef ds:uri="$_b"/></ds:schemaRefs></ds:datastoreItem>';
+
+Uint8List _utf16le(String text) {
+  final bytes = <int>[0xff, 0xfe];
+  for (final unit in text.codeUnits) {
+    bytes
+      ..add(unit & 0xff)
+      ..add((unit >> 8) & 0xff);
+  }
+  return Uint8List.fromList(bytes);
+}
 
 OpcPackage _source({bool native = true}) {
   final package = OpcPackage.empty();
@@ -384,4 +395,14 @@ void main() {
       expect(saved.getPart('/customXml/item1.xml')!.readText(), _unrelatedItem);
     },
   );
+
+  test('UTF-16LE custom XML does not block bibliography import', () {
+    final package = _source();
+    final encoded = _utf16le(_unrelatedItem);
+    package.getPart('/customXml/item1.xml')!.writeBytes(encoded);
+    final document = WordDeserializer().read(package);
+    expect(document.citations, isNotEmpty);
+    final saved = WordSerializer().write(document);
+    expect(saved.getPart('/customXml/item1.xml')!.readBytes(), encoded);
+  });
 }

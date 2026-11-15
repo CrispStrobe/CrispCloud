@@ -728,6 +728,15 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
     return -1;
   }
 
+  SmlConditionalRule? _conditionalRule(SmlCell cell) {
+    for (final rule in sheet.conditionalFormats) {
+      if (rule.range.containsRef(cell.ref) && rule.matches(cell, sheet)) {
+        return rule;
+      }
+    }
+    return null;
+  }
+
   void _paintCellRange(
     Canvas canvas, {
     required int r0,
@@ -754,7 +763,8 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         final SmlCell? styled = sheet.cellOrNull(
           SmlCellRef(merge?.c0 ?? c, merge?.r0 ?? r),
         );
-        final Color? fill = _rgbColor(styled?.fillRgb);
+        final conditional = styled == null ? null : _conditionalRule(styled);
+        final Color? fill = _rgbColor(conditional?.fillRgb ?? styled?.fillRgb);
         final Color? band = fill == null ? _tableBand(c, r) : null;
         if (fill != null) {
           canvas.drawRect(cell, ui.Paint()..color = fill);
@@ -827,10 +837,11 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
         }
         final bool isEdit = editing && _isEditCell(c, r, merge);
         final SmlCell data = sheet.cell(SmlCellRef(textCol, textRow));
+        final conditional = _conditionalRule(data);
         final String label = isEdit
             ? editText
             : (cellLabel?.call(data) ?? data.asString);
-        final Color? fill = _rgbColor(data.fillRgb);
+        final Color? fill = _rgbColor(conditional?.fillRgb ?? data.fillRgb);
         if (!isEdit && fill != null && _isFillMark(label)) {
           continue;
         }
@@ -841,7 +852,7 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
             label,
             isEdit: isEdit,
             align: data.horizontalAlign,
-            color: _rgbColor(data.fontRgb),
+            color: _rgbColor(conditional?.fontRgb ?? data.fontRgb),
             bold: data.fontBold,
             fontSize: data.fontSize,
           );
