@@ -21,6 +21,8 @@ Uint8List _zip(Map<String, String> files) {
 
 void main() {
   odfTests();
+  odtRichTests();
+  odpTests();
   test('DOCX produces Markdown with headings, bold runs and tables', () async {
     const xml = '''
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -310,5 +312,123 @@ void odfTests() {
     expect(doc.markdown, contains('- Two'));
     expect(doc.markdown, contains('Alpha'));
     expect(doc.markdown, contains('| Alpha | x | x |'));
+  });
+}
+
+void odtRichTests() {
+  test('ODT renders inline styles, links, notes and ordered lists', () async {
+    const xml = '''
+<office:document-content
+  xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+  xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+  xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <office:automatic-styles>
+    <style:style style:name="T1" style:family="text">
+      <style:text-properties fo:font-weight="bold"/>
+    </style:style>
+    <style:style style:name="T2" style:family="text">
+      <style:text-properties fo:font-style="italic"/>
+    </style:style>
+    <text:list-style style:name="L1">
+      <text:list-level-style-number text:level="1"/>
+    </text:list-style>
+    <text:list-style style:name="L2">
+      <text:list-level-style-bullet text:level="1"/>
+    </text:list-style>
+  </office:automatic-styles>
+  <office:body><office:text>
+    <text:h text:outline-level="1">Title</text:h>
+    <text:p>Hello <text:span text:style-name="T1">bold</text:span> and
+      <text:span text:style-name="T2">italic</text:span>
+      <text:a xlink:href="https://example.com">link</text:a><text:note
+        text:note-class="footnote" text:id="fn1"><text:note-citation>1</text:note-citation><text:note-body><text:p>Footnote text.</text:p></text:note-body></text:note>
+    </text:p>
+    <text:list text:style-name="L1">
+      <text:list-item><text:p>First</text:p></text:list-item>
+      <text:list-item><text:p>Second</text:p></text:list-item>
+    </text:list>
+    <text:list text:style-name="L2">
+      <text:list-item><text:p>Bullet</text:p>
+        <text:list text:style-name="L2">
+          <text:list-item><text:p>Nested</text:p></text:list-item>
+        </text:list>
+      </text:list-item>
+    </text:list>
+  </office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'rich.odt');
+    expect(doc.markdown, contains('# Title'));
+    expect(doc.markdown, contains('**bold**'));
+    expect(doc.markdown, contains('*italic*'));
+    expect(doc.markdown, contains('[link](https://example.com)'));
+    expect(doc.markdown, contains('[1]'));
+    expect(doc.markdown, contains('1. First'));
+    expect(doc.markdown, contains('2. Second'));
+    expect(doc.markdown, contains('- Bullet'));
+    expect(doc.markdown, contains('  - Nested'));
+    expect(doc.markdown, contains('1. Footnote text.'));
+  });
+}
+
+void odpTests() {
+  test('ODP exposes slide size, positioned text, fills and notes', () async {
+    const xml = '''
+<office:document-content
+  xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+  xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+  xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
+  xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0"
+  xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+  xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <office:automatic-styles>
+    <style:page-layout style:name="PM1">
+      <style:page-layout-properties fo:page-width="20cm" fo:page-height="15cm"/>
+    </style:page-layout>
+    <style:style style:name="gr1" style:family="graphic">
+      <style:graphic-properties draw:fill-color="#ffeeaa"/>
+    </style:style>
+    <style:style style:name="P1" style:family="paragraph">
+      <style:text-properties fo:font-size="24pt" fo:font-weight="bold" fo:color="#112233"/>
+    </style:style>
+  </office:automatic-styles>
+  <office:body><office:presentation>
+    <draw:page draw:name="Slide1">
+      <draw:frame draw:style-name="gr1" svg:x="1cm" svg:y="2cm"
+        svg:width="10cm" svg:height="3cm">
+        <draw:text-box>
+          <text:p text:style-name="P1">Hello</text:p>
+          <text:p>World</text:p>
+        </draw:text-box>
+      </draw:frame>
+      <presentation:notes>
+        <draw:frame svg:x="0cm" svg:y="0cm" svg:width="2cm" svg:height="2cm">
+          <draw:text-box><text:p>Speaker note</text:p></draw:text-box>
+        </draw:frame>
+      </presentation:notes>
+    </draw:page>
+  </office:presentation></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'deck.odp');
+    expect(doc.kind, OfficeDocumentKind.presentation);
+    expect(doc.deck, isNotNull);
+    expect(doc.deck!.widthEmu, 7200000);
+    expect(doc.deck!.heightEmu, 5400000);
+    final shape = doc.deck!.slides.single.shapes.single;
+    expect(shape.x, 360000);
+    expect(shape.y, 720000);
+    expect(shape.width, 3600000);
+    expect(shape.height, 1080000);
+    expect(shape.text, 'Hello\nWorld');
+    expect(shape.fontSizePt, 24);
+    expect(shape.bold, isTrue);
+    expect(shape.textColorHex, '112233');
+    expect(shape.fillColorHex, 'FFEEAA');
+    expect(doc.markdown, contains('*Notes: Speaker note*'));
   });
 }

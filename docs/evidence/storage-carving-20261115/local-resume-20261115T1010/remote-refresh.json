@@ -1,0 +1,567 @@
+{
+  "schema_version": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "checkpoint_sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+  "cutoff_utc": "2026-11-15T09:14:57Z",
+  "scope": "All 11 remote branches; all 20 PRs updated since 2026-11-14T00:00:00Z, sorted by update time; first 100 PR results extend earlier than this cutoff.",
+  "sources": {
+    "branches": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100&page=1",
+    "pull_requests": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&sort=updated&direction=desc&per_page=100&page=1",
+    "superseded_pr113": "https://github.com/CrispStrobe/CrispCloud/pull/113#issuecomment-6891607112"
+  },
+  "branches": [
+    {
+      "name": "codex/office-recovery-20261115",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/codex/office-recovery-20261115",
+      "disposition": "already_in_checkpoint",
+      "reason": "Head is an ancestor of the user-supplied integration checkpoint.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 44,
+        "merge_base": "d97705dabbdae5969a67bf4bf74b6c604d934419"
+      }
+    },
+    {
+      "name": "feature/new-documents-history-20261115",
+      "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/feature/new-documents-history-20261115",
+      "disposition": "already_in_checkpoint",
+      "reason": "Head is an ancestor of the user-supplied integration checkpoint.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 26,
+        "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      }
+    },
+    {
+      "name": "fix/excel-legacy-xls",
+      "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/fix/excel-legacy-xls",
+      "disposition": "superseded_source",
+      "reason": "PR #116 rebases and extends this source. Of 59 paths changed since its integration merge base, 52 match integration/main/PR #116 exactly. Seven remaining paths were reviewed: all differences retain newer DOC recovery, workspace activity/session/save handling, worksheet navigation, ODF PDF-tab exclusion, expanded tests or newer provenance; no unique implementation is omitted.",
+      "comparison_to_checkpoint": {
+        "status": "diverged",
+        "ahead_by": 6,
+        "behind_by": 50,
+        "merge_base": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8"
+      }
+    },
+    {
+      "name": "fix/odf-final",
+      "sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/fix/odf-final",
+      "disposition": "incorporate",
+      "reason": "PR #116 has 6 commits beyond main common base 50bbece22c9e4d85ac239cf1f6bed15430f36f01; adds ODS editing, rich ODT/ODP preview and regression coverage.",
+      "comparison_to_checkpoint": {
+        "status": "diverged",
+        "ahead_by": 16,
+        "behind_by": 24,
+        "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      }
+    },
+    {
+      "name": "integrate/consistency-20261115",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/consistency-20261115",
+      "disposition": "superseded_source",
+      "reason": "Closed PR #113 explicitly superseded by main 723ab5b43c88e96489a81c13bd427f7c404af87c. All 19 changed code/test paths match integration/main/PR #116 exactly; only historical pin documentation and manifest differ.",
+      "comparison_to_checkpoint": {
+        "status": "diverged",
+        "ahead_by": 2,
+        "behind_by": 24,
+        "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      }
+    },
+    {
+      "name": "integrate/legacy-xls-preview-20261115",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/legacy-xls-preview-20261115",
+      "disposition": "included_by_main",
+      "reason": "Merged PR #114; head is an ancestor of refreshed main.",
+      "comparison_to_checkpoint": {
+        "status": "diverged",
+        "ahead_by": 5,
+        "behind_by": 24,
+        "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      }
+    },
+    {
+      "name": "integrate/office-goldens-20261115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/office-goldens-20261115",
+      "disposition": "included_by_main",
+      "reason": "Merged PR #115; head is an ancestor of refreshed main; affected Office code/goldens already match integration blobs.",
+      "comparison_to_checkpoint": {
+        "status": "diverged",
+        "ahead_by": 9,
+        "behind_by": 24,
+        "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      }
+    },
+    {
+      "name": "integrate/word-inline-pictures-20261115",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integrate/word-inline-pictures-20261115",
+      "disposition": "already_in_checkpoint",
+      "reason": "Head is an ancestor of the user-supplied integration checkpoint.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 31,
+        "merge_base": "bb981ec37c40369ba15bacdd9c21c520807a200c"
+      }
+    },
+    {
+      "name": "integration/office-reconcile-storage-20261115",
+      "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integration/office-reconcile-storage-20261115",
+      "disposition": "already_in_checkpoint",
+      "reason": "Head is an ancestor of the user-supplied integration checkpoint.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 43,
+        "merge_base": "59b6a50990c4a368e03cd4d03b8075248edc6ffb"
+      }
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/integration/storage-carving-20261115",
+      "disposition": "checkpoint",
+      "reason": "User-supplied remote checkpoint remains current at refresh."
+    },
+    {
+      "name": "main",
+      "sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/tree/main",
+      "disposition": "incorporate",
+      "reason": "15 incoming commits contain new-document follow-up fixes, merged PRs #114/#115, compact folder chrome and native toolbar lifetime fixes.",
+      "comparison_to_checkpoint": {
+        "status": "diverged",
+        "ahead_by": 15,
+        "behind_by": 24,
+        "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      }
+    }
+  ],
+  "recent_pull_requests": [
+    {
+      "number": 116,
+      "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+      "state": "open",
+      "draft": false,
+      "created_at": "2026-11-15T09:01:55Z",
+      "updated_at": "2026-11-15T09:01:55Z",
+      "merged_at": null,
+      "head_ref": "fix/odf-final",
+      "head_sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+      "merge_commit_sha": "8f6b832311b452214901dbebf56c32835d1cb82b",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/116",
+      "disposition": "incorporate",
+      "reason": "New open ODF follow-up."
+    },
+    {
+      "number": 108,
+      "title": "Open legacy .xls workbooks as XLSX",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-15T04:32:45Z",
+      "updated_at": "2026-11-15T08:54:45Z",
+      "merged_at": "2026-11-15T06:27:18Z",
+      "head_ref": "fix/excel-legacy-xls",
+      "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "merge_commit_sha": "d764308cf77b535265a15c5065bbe4a0d66e227f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/108",
+      "disposition": "already_in_checkpoint",
+      "reason": "Existing head ancestry/integration lineage accounts for this work."
+    },
+    {
+      "number": 115,
+      "title": "Vendor host-specific selection golden references",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-15T08:42:59Z",
+      "updated_at": "2026-11-15T08:43:07Z",
+      "merged_at": "2026-11-15T08:43:07Z",
+      "head_ref": "integrate/office-goldens-20261115",
+      "head_sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "merge_commit_sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/115",
+      "disposition": "included_by_main",
+      "reason": "Merged into refreshed main."
+    },
+    {
+      "number": 114,
+      "title": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-15T08:38:22Z",
+      "updated_at": "2026-11-15T08:38:34Z",
+      "merged_at": "2026-11-15T08:38:34Z",
+      "head_ref": "integrate/legacy-xls-preview-20261115",
+      "head_sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "merge_commit_sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/114",
+      "disposition": "included_by_main",
+      "reason": "Merged into refreshed main."
+    },
+    {
+      "number": 113,
+      "title": "Integrate the new document workspace and spreadsheet wrap-text",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-15T08:15:09Z",
+      "updated_at": "2026-11-15T08:20:04Z",
+      "merged_at": null,
+      "head_ref": "integrate/consistency-20261115",
+      "head_sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "merge_commit_sha": "62a1c521030ce2eafbf71adaaac6bfd8b1bf7362",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/113",
+      "disposition": "superseded_source",
+      "reason": "Explicitly superseded by main; exact changed-code equality confirmed."
+    },
+    {
+      "number": 111,
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "state": "open",
+      "draft": true,
+      "created_at": "2026-11-15T06:35:26Z",
+      "updated_at": "2026-11-15T08:10:10Z",
+      "merged_at": null,
+      "head_ref": "integration/storage-carving-20261115",
+      "head_sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/111",
+      "disposition": "current_work",
+      "reason": "Continue draft integration branch; do not merge PR into main as part of this refresh."
+    },
+    {
+      "number": 110,
+      "title": "Add draft-safe worksheet navigation and complete host validation",
+      "state": "open",
+      "draft": true,
+      "created_at": "2026-11-15T06:27:09Z",
+      "updated_at": "2026-11-15T08:06:52Z",
+      "merged_at": null,
+      "head_ref": "codex/office-recovery-20261115",
+      "head_sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "merge_commit_sha": "b58c06ab56c350361c433eb4b46a7020e35596e2",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/110",
+      "disposition": "already_in_checkpoint",
+      "reason": "Existing head ancestry/integration lineage accounts for this work."
+    },
+    {
+      "number": 112,
+      "title": "Vendor the current Quds Word fixes, including inline pictures",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-15T07:17:58Z",
+      "updated_at": "2026-11-15T07:18:18Z",
+      "merged_at": "2026-11-15T07:18:17Z",
+      "head_ref": "integrate/word-inline-pictures-20261115",
+      "head_sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "merge_commit_sha": "5b7daacc3eaaed09670c105627af420caac5ebe2",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/112",
+      "disposition": "already_in_checkpoint",
+      "reason": "Existing head ancestry/integration lineage accounts for this work."
+    },
+    {
+      "number": 109,
+      "title": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-15T04:41:47Z",
+      "updated_at": "2026-11-15T06:29:51Z",
+      "merged_at": "2026-11-15T06:27:18Z",
+      "head_ref": "fix/legacy-doc-recover",
+      "head_sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "merge_commit_sha": "22f4d709dff82447ea80fe6bcdd2f10d076e0c93",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/109",
+      "disposition": "already_in_checkpoint",
+      "reason": "Existing head ancestry/integration lineage accounts for this work."
+    },
+    {
+      "number": 107,
+      "title": "feat(storage): add reviewed S3 block reuse to queued copies",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T21:10:40Z",
+      "updated_at": "2026-11-15T06:29:51Z",
+      "merged_at": "2026-11-14T22:32:06Z",
+      "head_ref": "integration/storage-delta-20261114",
+      "head_sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "merge_commit_sha": "1981907636f8bf59fc8a631cbc97d7950b8c1dd5",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/107",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 72
+      }
+    },
+    {
+      "number": 106,
+      "title": "Add shared queued HTTP payload limits for G29",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T19:20:07Z",
+      "updated_at": "2026-11-14T20:37:33Z",
+      "merged_at": "2026-11-14T20:12:42Z",
+      "head_ref": "integration/storage-bandwidth-20261114",
+      "head_sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "merge_commit_sha": "d40ca389c009803c1f811458215a1c7e8d6a0973",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/106",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 130
+      }
+    },
+    {
+      "number": 103,
+      "title": "Add bounded read-only NTFS filesystem image browsing",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T12:51:54Z",
+      "updated_at": "2026-11-14T18:42:30Z",
+      "merged_at": null,
+      "head_ref": "integration/storage-ntfs-20261114",
+      "head_sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "merge_commit_sha": "3700b81fbc5562eb05c487abb18457c299511a7d",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/103",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 185
+      }
+    },
+    {
+      "number": 105,
+      "title": "Preserve comparison backpressure and prompt read errors",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T17:52:02Z",
+      "updated_at": "2026-11-14T17:57:42Z",
+      "merged_at": "2026-11-14T17:55:45Z",
+      "head_ref": "integration/storage-binary-20261114",
+      "head_sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "merge_commit_sha": "1ba3d652f931aed719c55e7afc37d006d9956bdf",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/105",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 146
+      }
+    },
+    {
+      "number": 104,
+      "title": "Bind binary comparison navigation to verified bounded snapshots",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T17:11:32Z",
+      "updated_at": "2026-11-14T17:33:23Z",
+      "merged_at": "2026-11-14T17:33:23Z",
+      "head_ref": "integration/storage-binary-20261114",
+      "head_sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "merge_commit_sha": "54605abbfc01fea25c153e4bece48122a0757895",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/104",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 172
+      }
+    },
+    {
+      "number": 102,
+      "title": "Add bounded read-only ext filesystem image browsing",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T12:17:48Z",
+      "updated_at": "2026-11-14T14:07:52Z",
+      "merged_at": "2026-11-14T13:44:27Z",
+      "head_ref": "integration/storage-ext-20261114",
+      "head_sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "merge_commit_sha": "4936c9cc65ea8dce32e8552f31d16b1c8771233f",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/102",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 192
+      }
+    },
+    {
+      "number": 101,
+      "title": "Add FAT/UDF image browsing, LZFSE, ZIP recovery and partition tools",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-14T05:08:29Z",
+      "updated_at": "2026-11-14T14:07:51Z",
+      "merged_at": "2026-11-14T11:37:29Z",
+      "head_ref": "integration/storage-capabilities-20261114",
+      "head_sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "merge_commit_sha": "e14782e3cd6c2bdc7d4620319c485234a7e8c7c8",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/101",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 205
+      }
+    },
+    {
+      "number": 100,
+      "title": "Integrate all saved branch work and extend archive/container support",
+      "state": "closed",
+      "draft": false,
+      "created_at": "2026-11-13T21:08:36Z",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": "2026-11-13T22:13:16Z",
+      "head_ref": "integration/archive-containers-20261113",
+      "head_sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "merge_commit_sha": "81639c44da5c9c905e5bcbe8d04308fce7bda17a",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/100",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 243
+      }
+    },
+    {
+      "number": 97,
+      "title": "Expand Commander archive workflows on the shared operation queue",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-13T09:49:28Z",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": "2026-11-13T21:42:42Z",
+      "head_ref": "feature/archive-commander-parity-20261113",
+      "head_sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "merge_commit_sha": "1918dfd665a1914150d23e49de10abccb6ddbb76",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/97",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 322
+      }
+    },
+    {
+      "number": 95,
+      "title": "Improve document fonts, preview alternatives, and legacy DOC recovery",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-13T05:08:20Z",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": "2026-11-13T21:42:43Z",
+      "head_ref": "feature/apache-file-viewer-20261113",
+      "head_sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "merge_commit_sha": "3d47583736eee67e5236f6c602c57846535ec54c",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/95",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 318
+      }
+    },
+    {
+      "number": 84,
+      "title": "Consolidate Linux ebook host readiness and platform parity recovery",
+      "state": "closed",
+      "draft": true,
+      "created_at": "2026-11-12T14:45:27Z",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "merged_at": null,
+      "head_ref": "feature/ebook-parity-canary-20261112",
+      "head_sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "merge_commit_sha": null,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/84",
+      "disposition": "already_in_checkpoint",
+      "reason": "PR head is an actual ancestor of checkpoint, including PRs closed without a direct GitHub merge.",
+      "comparison_to_checkpoint": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 623
+      }
+    }
+  ],
+  "integration_plan": {
+    "order": [
+      "main at 6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+      "fix/odf-final at bda0374b6f773e8797ffa09c24020ef22fb6b649"
+    ],
+    "push_after_each_gate": true,
+    "commit_marker": "[skip ci]",
+    "actions_policy": "Do not wait for or restart GitHub Actions."
+  },
+  "main_overlap": {
+    "common_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+    "different_content_on_both_sides": [
+      "docs/apple-export-policy.json",
+      "docs/crypto-inventory.json",
+      "packages/QUDS_FORKS.md",
+      "tool/office_fidelity_manifest.json"
+    ],
+    "both_sides_changed_identical_blobs": 23,
+    "incoming_diff_paths": 53,
+    "incoming_paths_differing_from_checkpoint": 30,
+    "existing_office_dart_mode_normalizations_to_preserve": 41,
+    "required_mode": "100644"
+  },
+  "incoming_findings": [
+    {
+      "severity": "compilation_blocker",
+      "ref": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+      "path": "test/office_document_service_test.dart",
+      "url": "https://github.com/CrispStrobe/CrispCloud/blob/bda0374b6f773e8797ffa09c24020ef22fb6b649/test/office_document_service_test.dart",
+      "finding": "void odfTests() is declared twice at lines 233 and 318. Blocks 233-317 and 318-402 are byte-for-byte identical including separator.",
+      "required_resolution": "Remove one identical duplicated declaration; retain the single main() invocation and all ODT/ODP tests.",
+      "validation_status": "Source duplication independently verified; no Flutter/Dart runtime executed by this audit."
+    },
+    {
+      "severity": "stale_documentation",
+      "path": "packages/QUDS_FORKS.md",
+      "finding": "PR #116 retains current-state prose naming Quds 59c7c07 and 2,220 managed files, while its manifest pins e002b958 and lists 2,223 files.",
+      "required_resolution": "Update current-state provenance to the canonical source selected for final integration; preserve historical checkpoint sections."
+    }
+  ],
+  "canonical_odf_source": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "old_checkpoint": "b23d033620f07cf2659209eff4c4c8e2d71ee89c",
+    "incoming_pin": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+    "incoming_branch": "fix/odf-legacy-spreadsheets",
+    "comparison_url": "https://github.com/CrispStrobe/quds_office_suite/compare/b23d033620f07cf2659209eff4c4c8e2d71ee89c...e002b9584bead9761fac8c7cf818431966d1b1c3",
+    "incoming_is_descendant": true,
+    "ahead_by": 6,
+    "changed_paths": [
+      "packages/quds_office_engine/lib/quds_office_engine.dart",
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods",
+      "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+    ],
+    "managed_manifest_files": 2223,
+    "standalone_parser_pin": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+    "stale_excel_branch_parser_pin": "f9d10b5a5e68b4216892d64622caa8b0a15c7afd"
+  },
+  "result": "The two planned merges account for all new source work; no additional unique implementation remains in superseded branches or recently updated closed PR heads."
+}
