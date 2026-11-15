@@ -7386,6 +7386,17 @@ class SheetEditorController extends OfficeController {
       commitOnNewline: true,
     );
     this.workbook.resolveColumnMetrics(columnMetricsResolver);
+    if (this.workbook.sheets.isNotEmpty) {
+      final active = this
+          .workbook
+          .sheets[_activeSheet.clamp(0, this.workbook.sheets.length - 1)];
+      if (active.hidden) {
+        final firstVisible = this.workbook.sheets.indexWhere(
+          (sheet) => !sheet.hidden,
+        );
+        if (firstVisible >= 0) _activeSheet = firstVisible;
+      }
+    }
     recalculateWorkbook();
   }
 
@@ -7643,7 +7654,8 @@ class SheetEditorController extends OfficeController {
     cancelCellEdit();
     workbook = opened;
     workbook.resolveColumnMetrics(columnMetricsResolver);
-    _activeSheet = 0;
+    _activeSheet = workbook.sheets.indexWhere((sheet) => !sheet.hidden);
+    if (_activeSheet < 0) _activeSheet = 0;
     selectedDrawingIndex = null;
     selection.selectCell(const SmlCellRef(0, 0));
     viewport.origin = Offset.zero;

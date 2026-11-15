@@ -78,6 +78,13 @@ class _OfficeWorksheetBarState extends State<OfficeWorksheetBar> {
       builder: (context, _) {
         final controller = widget.controller;
         final sheets = controller.workbook.sheets;
+        final visibleIndexes = <int>[
+          for (var i = 0; i < sheets.length; i++)
+            if (!sheets[i].hidden) i,
+        ];
+        final activeVisible = visibleIndexes.contains(
+          controller.activeSheetIndex,
+        );
         // Sheet layout direction is document content, not chrome direction.
         return Directionality(
           textDirection: WidgetsLocalizations.of(context).textDirection,
@@ -101,11 +108,11 @@ class _OfficeWorksheetBarState extends State<OfficeWorksheetBar> {
                                 key: const Key('office-worksheet-selector'),
                                 focusNode: _selectorFocus,
                                 isExpanded: true,
-                                value: sheets.isEmpty
-                                    ? null
+                                value: !activeVisible
+                                    ? visibleIndexes.firstOrNull
                                     : controller.activeSheetIndex,
                                 items: [
-                                  for (var i = 0; i < sheets.length; i++)
+                                  for (final i in visibleIndexes)
                                     DropdownMenuItem(
                                       value: i,
                                       child: Text(
@@ -115,7 +122,9 @@ class _OfficeWorksheetBarState extends State<OfficeWorksheetBar> {
                                       ),
                                     ),
                                 ],
-                                onChanged: sheets.isEmpty ? null : _select,
+                                onChanged: visibleIndexes.isEmpty
+                                    ? null
+                                    : _select,
                               ),
                             ),
                           ),

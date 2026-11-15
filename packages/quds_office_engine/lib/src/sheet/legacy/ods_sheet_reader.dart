@@ -61,8 +61,7 @@ abstract final class OdsSheetReader {
   static const _dc = 'http://purl.org/dc/elements/1.1/';
   static const _fo =
       'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
-  static const _drawing =
-      'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
+  static const _drawing = 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
   static const _svg =
       'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0';
   static const _xlink = 'http://www.w3.org/1999/xlink';
@@ -154,15 +153,22 @@ abstract final class OdsSheetReader {
         _odfDefaultRowHeightPoints;
     for (final table in tables) {
       final name = _attribute(table, 'name', _table)?.trim();
+      final tableStyle = _styleChain(
+        styles,
+        'table',
+        _attribute(table, 'style-name', _table),
+      );
       final sheet = SmlWorksheet(
         name: name == null || name.isEmpty
             ? 'Sheet${book.sheets.length + 1}'
             : name,
         sheetId: book.sheets.length + 1,
+        hidden:
+            _property(tableStyle, 'table-properties', 'display', _table) ==
+            'false',
       );
       sheet.importDefaultColumnWidth(
-        excelWidth:
-            defaultColumnWidthPoints * 96 / 72 / _odfMaxDigitWidthPx,
+        excelWidth: defaultColumnWidthPoints * 96 / 72 / _odfMaxDigitWidthPx,
       );
       final columnDefaults = _readColumns(
         table,
@@ -343,8 +349,7 @@ abstract final class OdsSheetReader {
         }
         if (rowHeight != null &&
             rowHeight > 0 &&
-            (hasData ||
-                (rowHeight - defaultRowHeightPoints).abs() > 0.1) &&
+            (hasData || (rowHeight - defaultRowHeightPoints).abs() > 0.1) &&
             rowIndex + rowRepeat <= _maxRows) {
           final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
           if (entries.isEmpty && rowRepeat > 1) {
@@ -550,7 +555,8 @@ abstract final class OdsSheetReader {
       if (hidden && count > 0) {
         budget.dimensions(count);
         for (var i = 0; i < count; i++) {
-          (sheet.columnProperties[column + i] ??= <String, String>{})['hidden'] =
+          (sheet.columnProperties[column + i] ??=
+                  <String, String>{})['hidden'] =
               '1';
         }
       }

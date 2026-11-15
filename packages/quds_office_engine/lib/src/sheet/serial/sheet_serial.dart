@@ -157,7 +157,11 @@ class SheetDeserializer {
         'id',
         namespaceUri: OfficeNamespaces.r,
       );
-      final SmlWorksheet sheet = SmlWorksheet(name: name, sheetId: id);
+      final SmlWorksheet sheet = SmlWorksheet(name: name, sheetId: id)
+        ..hidden = switch (reader.getAttribute('state')) {
+          'hidden' || 'veryHidden' => true,
+          _ => false,
+        };
       if (rid != null) {
         final PackageRelationship? rel = rels.byId(rid);
         if (rel != null) {
@@ -1152,6 +1156,7 @@ class SheetSerializer {
       w.writeAttribute('name', s.name);
       w.writeAttribute('sheetId', '${s.sheetId}');
       w.writeAttribute('r:id', sheetIds[i]);
+      if (s.hidden) w.writeAttribute('state', 'hidden');
       w.writeEndElement();
     }
     w.writeEndElement();

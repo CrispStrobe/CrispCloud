@@ -401,6 +401,7 @@ class SmlWorksheet {
     required this.sheetId,
     this.sourcePartUri,
     this.rightToLeft = false,
+    this.hidden = false,
     this.freezeRows = 0,
     this.freezeCols = 0,
     Map<int, SmlRow>? rows,
@@ -438,6 +439,9 @@ class SmlWorksheet {
 
   /// Original owning part, retained when worksheets are reordered.
   String? sourcePartUri;
+
+  /// Whether the worksheet tab is hidden in the workbook.
+  bool hidden;
 
   /// Imported native rule groups remain intact while their editable projection
   /// is unchanged. A reference-only rename rebases these snapshots atomically.
