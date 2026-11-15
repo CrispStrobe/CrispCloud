@@ -429,7 +429,20 @@ abstract final class OdsSheetReader {
       case 'percentage-style':
         return '${_zeros(style)}%';
       case 'currency-style':
-        return '#,##0.00';
+        final symbol = _descendants(
+          style,
+          'currency-symbol',
+        ).map(_text).whereType<String>().firstOrNull;
+        final decimals = _decimals(style);
+        final base = '#,##0${decimals == 0 ? '' : '.${'0' * decimals}'}';
+        if (symbol == r'$') {
+          return r'[$$-409]'
+              '$base'
+              r';[red]-[$$-409]'
+              '$base';
+        }
+        if (symbol == null || symbol.isEmpty) return base;
+        return '"$symbol"$base';
       case 'date-style':
         return 'DD.MM.YYYY';
       case 'time-style':
