@@ -1,0 +1,27 @@
+{
+  "source_commit": "1a86e790080c174c27a283b7ac49913ca1fa91f0",
+  "helper_sha256": "d44f8de394c8b84351c758c632369743e91298fba3a5fadb41f1d975ef5c38c7",
+  "expected_success": 182,
+  "observed_verified": 180,
+  "failures": [
+    "build/fidelity-host/back-save.docx: expected one file, found 2",
+    "build/office-fill-host-acceptance/saved-1.xlsx: expected one file, found 2"
+  ],
+  "scope": "Synthetic current output with real historical archive path shape; behavioral baseline, no schema acceptance claim.",
+  "existing_controls": {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_office_host_evidence.py"
+    ],
+    "exit_code": 0,
+    "tests": 23,
+    "log_sha256": "1b64b454ef58a0ffe04d49eec41c66be1e3d0c12094c600a4884a5b850dbc4a9",
+    "test_source_sha256": "737f72c4d54c9121a6924a4281b5b2790832f313ca54b1c7541f4c77b5e642af"
+  }
+}

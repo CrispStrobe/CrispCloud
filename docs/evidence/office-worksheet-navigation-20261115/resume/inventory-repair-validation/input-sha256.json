@@ -1,0 +1,8 @@
+{
+  "test/fixtures/office_native_workflows/native-sheet-expected.xlsx": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+  "test/fixtures/office_native_workflows/native-slide-expected.pptx": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+  "test/fixtures/office_native_workflows/native-word-expected.docx": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+  "tool/office_host_evidence.json": "104d546db87a13fc6e61f8fae4f9f96c4dde2b698882ccf1446753497cd1a108",
+  "tool/office_host_evidence.py": "fb65f35ea5e0cacd93e49b769d6a6adcd42c7dbb2c9e48298fcbacb830376b5d",
+  "tool/test_office_host_evidence.py": "12442be143b77aca356aa52b3fa4b83d9cae99c6404cb1a921d39b4389fd83c5"
+}
