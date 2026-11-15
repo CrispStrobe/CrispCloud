@@ -73,7 +73,7 @@ def generate(metadata_directory=None):
             grouped.setdefault(part.strip(), []).append(f'{key[0]} (native storage)')
     for text, names in grouped.items():
         sections.append('\n'.join(sorted(set(names))) + '\n\n' + text)
-    data = (SEPARATOR.join(sections) + '\n').encode()
+    data = (SEPARATOR.join(sections) + '\n').replace('\r\n', '\n').encode()
     OUTPUT.write_bytes(data)
     manifest = {'schema_version': 1, 'scope': 'Union of both audited locked native-storage graphs, including platform/build dependencies; not a per-artifact reachability claim.',
                 'inputs': inputs(), 'notices_sha256': digest(data), 'packages': [{'name': n, 'version': v} for n, v in sorted(packages)]}
