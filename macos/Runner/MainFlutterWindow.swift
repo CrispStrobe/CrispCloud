@@ -50,6 +50,7 @@ class MainFlutterWindow: NSWindow, NSDraggingSource {
   }
 
   override func close() {
+    WindowLifecycleDiagnostics.record("main_window_close_requested")
     browserToolbarController?.invalidate()
     if let monitor = fileDragMonitor { NSEvent.removeMonitor(monitor) }
     fileDragMonitor = nil
@@ -68,6 +69,7 @@ class MainFlutterWindow: NSWindow, NSDraggingSource {
   }
 
   override func awakeFromNib() {
+    WindowLifecycleDiagnostics.record("main_window_awake")
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
@@ -353,5 +355,27 @@ final class BrowserToolbarController: NSObject, NSToolbarDelegate {
     guard !closed, sender.isEnabled, let id = sender.representedObject as? String,
           specifications.contains(where: { ($0["id"] as? String) == id && ($0["enabled"] as? Bool != false) }) else { return }
     channel.invokeMethod("action", arguments: id)
+  }
+}
+
+// Persistent breadcrumbs distinguish a normal window/app termination from an
+// OS crash/kill even when LaunchServices did not retain Flutter stdout.
+enum WindowLifecycleDiagnostics {
+  static func record(_ event: String) {
+    guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+    let directory = support.appendingPathComponent("com.CrispStrobe.cloud", isDirectory: true)
+    let file = directory.appendingPathComponent("window_lifecycle.log")
+    let title = Bundle.main.bundleURL.lastPathComponent
+    let stack = Thread.callStackSymbols.prefix(16).joined(separator: "\n")
+    let message = "\(ISO8601DateFormatter().string(from: Date())) pid=\(ProcessInfo.processInfo.processIdentifier) app=\(title) \(event)\n\(stack)\n\n"
+    do {
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      var data = (try? Data(contentsOf: file)) ?? Data()
+      if data.count > 256 * 1024 { data = Data(data.suffix(128 * 1024)) }
+      data.append(Data(message.utf8))
+      try data.write(to: file, options: .atomic)
+    } catch {
+      NSLog("[WindowLifecycle] %@ (could not persist diagnostics: %@)", event, String(describing: error))
+    }
   }
 }

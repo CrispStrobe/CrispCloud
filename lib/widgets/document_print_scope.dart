@@ -114,8 +114,9 @@ class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
       if (mounted) {
         setState(() => _running = false);
         if ((_route?.isCurrent ?? true) &&
-            previousFocus?.context?.mounted == true)
+            previousFocus?.context?.mounted == true) {
           previousFocus?.requestFocus();
+        }
       }
     }
   }

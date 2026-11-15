@@ -3114,14 +3114,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             : ViewerTextDecoder(_encodingOverride!)
                   .add(source, 0, last: true)
                   .text;
-      } else if (mode == ViewerMode.email)
+      } else if (mode == ViewerMode.email) {
         text = _emailMessage?.searchText;
-      else if (mode == ViewerMode.office)
+      } else if (mode == ViewerMode.office) {
         text = _officeDoc?.plainText;
-      else if (mode == ViewerMode.markdown || mode == ViewerMode.html)
-        text = _richText;
-      else
+      } else {
         text = _decodedText;
+      }
       if (text == null) {
         final source = await _readDocumentBytes(8 * 1024 * 1024, _prepareToken);
         if (source == null) throw StateError('Text is unavailable.');

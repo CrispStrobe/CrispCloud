@@ -1755,10 +1755,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     for (final chapter in document.chapters.where((c) => c.linear)) {
       final text = document.readText(chapter.path);
       total += utf8.encode(text).length;
-      if (total > 8 * 1024 * 1024)
+      if (total > 8 * 1024 * 1024) {
         throw const FormatException(
           'Book printing is limited to 8 MiB of text.',
         );
+      }
       content.write(text);
     }
     final bytes = await richTextPrintPdf(content.toString(), _name);
