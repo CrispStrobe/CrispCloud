@@ -31,7 +31,9 @@ sibling text boxes. Legacy VML pictures, shapes and rules retain their source
 content for export; their native rendering and editing remain unsupported.
 Legacy DOC preview and conversion recover supported damaged auxiliary features
 with explicit diagnostics, retain Word-written hyperlinks, and recognize RTF
-content named `.doc`/`.dot`. Supported legacy Excel `.xls`/`.xlt` workbooks open
+content named `.doc`/`.dot`. Supported Word 6/95 and damaged-compound inputs can
+produce a separately reviewed text-only DOCX copy; this does not reconstruct
+rich formatting or page layout. Supported legacy Excel `.xls`/`.xlt` workbooks open
 in the spreadsheet editor and save as separate XLSX copies. It also includes undoable worksheet direction, frozen panes,
 grid edits and selection formatting, plus more tolerant DOCX bookmark and measurement
 imports. Cell identity is retained across sorting and grid undo. Imported control-ID

@@ -35,6 +35,20 @@ persisted settings and bounded session-only history. See
   pinned source repositories. Packaged notices verify 318 native dependency
   versions and all 14 bundled Office fonts.
 - Native AppKit toolbar stress: 900 updates and queued teardown checks passed.
+- Native macOS image/printing integration: all five cases passed against the
+  real Flutter engine, including repeated Text lifecycle, injected failure and
+  retry, disposal while opening, diagonal crop and print plugin registration.
+  macOS reported a foregrounding failure; the native test window was exercised
+  in the background, not by a manual user session.
+- Follow-up host recovery/ODS/ribbon/notification tests: 18 passed. The host
+  ribbon now exposes every shared underline value in all nine locales.
+- Compound-parser exception recovery: 27 focused parser tests passed, including
+  preservation of strict rejection and DOCM restrictions. Both local ODS/XLS
+  corpus tests passed with the final import implementation.
+- Print generation and oversized-dimension refusal: two tests passed. The
+  image guard checks dimensions without an overflowing pixel multiplication.
+- Full application-library analysis reported zero errors and warnings; 233
+  informational style/deprecation diagnostics remain in the existing tree.
 
 No new macOS crash report accompanied the reported Text-tool exit. The disposed
 viewer-provider cleanup error was observed and corrected, but the original
@@ -44,8 +58,10 @@ last-window closure from an OS crash report without logging document contents.
 
 The first native integration build ran out of internal disk space before
 launch. Generated build output was moved to the attached build volume and the
-native test was retried. Native test/build results are recorded separately from
-widget results; no physical print job is submitted by the checks.
+native test was retried. An incomplete generated Flutter framework left by the
+failed build was restored from the pinned SDK. The native test then passed.
+Native results remain separate from widget results; no physical print job was
+submitted by these checks.
 
 Historical feature evidence remains source-bound to its original snapshots;
 it is not certification of this later combined tree. Hosted CI remains a
