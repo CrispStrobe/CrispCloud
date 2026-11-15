@@ -249,6 +249,10 @@ void registerImageTextLifecycleTests({bool live = false}) {
       await gesture.moveTo(point);
       await tester.pump();
       await gesture.down(point);
+      // Establish the recognizer, then wait through the engine's intentional
+      // scale-start debounce before sending the actual resize movement.
+      await gesture.moveBy(const Offset(-2, -2));
+      await tester.pump(const Duration(milliseconds: 200));
       await gesture.moveBy(const Offset(-48, -19));
       await tester.pump();
       expect(crop.cropRect.width, lessThan(before.width));
