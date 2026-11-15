@@ -1,9 +1,8 @@
 // lib/services/veracrypt_service.dart
 //
-// VeraCrypt container detection and header parsing.
-//
-// NOTE: Full volume mount is an OS-level operation via the `veracrypt` CLI.
-// This service handles header parsing, detection, and key derivation only.
+// Portable, read-only VeraCrypt / TrueCrypt AES-XTS container cryptography.
+// Passwords and volume keys belong to an ephemeral unlock session; metadata
+// models never contain key material. Native OS mounts remain a separate API.
 //
 // VeraCrypt volume header layout (512 bytes):
 //   [0..63]    Salt (64 bytes) — passed to PBKDF2 key derivation
@@ -114,6 +113,15 @@ class VeraCryptVolumeHeader {
   /// Total volume size in bytes.
   final int volumeSize;
 
+  /// True for a native TrueCrypt header, not a converted VeraCrypt header.
+  final bool trueCryptMode;
+
+  /// Zero for an ordinary volume; otherwise the hidden volume's byte length.
+  final int hiddenVolumeSize;
+
+  final int requiredVersion;
+  final int flags;
+
   const VeraCryptVolumeHeader({
     required this.salt,
     required this.encryptedAreaOffset,
@@ -123,6 +131,10 @@ class VeraCryptVolumeHeader {
     required this.encryptionAlgorithmId,
     required this.hashAlgorithmId,
     required this.volumeSize,
+    this.trueCryptMode = false,
+    this.hiddenVolumeSize = 0,
+    this.requiredVersion = 0,
+    this.flags = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -134,6 +146,10 @@ class VeraCryptVolumeHeader {
     'encryptionAlgorithmId': encryptionAlgorithmId,
     'hashAlgorithmId': hashAlgorithmId,
     'volumeSize': volumeSize,
+    'trueCryptMode': trueCryptMode,
+    'hiddenVolumeSize': hiddenVolumeSize,
+    'requiredVersion': requiredVersion,
+    'flags': flags,
   };
 
   @override
@@ -142,83 +158,194 @@ class VeraCryptVolumeHeader {
       'encAlgo=$encryptionAlgorithmId, hashAlgo=$hashAlgorithmId)';
 }
 
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
+/// Supported derivations for the bundled AES-XTS reader. Auto deliberately
+/// excludes Argon2id: selecting it explicitly avoids surprise 416 MiB work on
+/// every wrong PBKDF2 password. No PIM or KDF is discoverable from the salt.
+enum VeraCryptKdf {
+  auto,
+  sha512,
+  sha256,
+  whirlpool,
+  ripemd160,
+  argon2id;
 
-/// VeraCrypt container detection, header parsing, and key derivation.
+  String get displayName => switch (this) {
+    auto => 'Automatic (PBKDF2)',
+    sha512 => 'SHA-512',
+    sha256 => 'SHA-256',
+    whirlpool => 'Whirlpool',
+    ripemd160 => 'RIPEMD-160',
+    argon2id => 'Argon2id',
+  };
+}
+
+/// Per-attempt credentials and resource policy. These must never be persisted
+/// or logged. The caller owns [keyfiles]; this service never modifies them.
 ///
-/// Supported encryption algorithm: AES-256-XTS only.
-/// Supported KDF algorithms: SHA-512, SHA-256, Whirlpool.
+/// The default Argon2 budget permits PIM 0/12 (416 MiB, six passes), and PIMs
+/// through 82 (at most 1 GiB / 64 passes). A higher pass budget is explicit,
+/// with an absolute 1024-pass ceiling. Budgets never alter derived parameters:
+/// an over-budget volume is refused, not retried with weaker settings.
+class VeraCryptUnlockOptions {
+  final VeraCryptKdf kdf;
+  final int pim;
+  final List<Uint8List> keyfiles;
+  final bool trueCryptMode;
+  final int maxArgon2MemoryKiB;
+  final int maxArgon2Iterations;
+
+  const VeraCryptUnlockOptions({
+    this.kdf = VeraCryptKdf.auto,
+    this.pim = 0,
+    this.keyfiles = const [],
+    this.trueCryptMode = false,
+    this.maxArgon2MemoryKiB = 1048576,
+    this.maxArgon2Iterations = 64,
+  });
+
+  @override
+  String toString() => 'VeraCryptUnlockOptions(credentials redacted)';
+}
+
+/// An explicit resource failure, distinguishable from incorrect credentials.
+class VeraCryptResourceLimitException implements Exception {
+  final String message;
+  const VeraCryptResourceLimitException(this.message);
+
+  @override
+  String toString() => 'VeraCryptResourceLimitException: $message';
+}
+
+class VeraCryptArgon2Parameters {
+  final int memoryKiB;
+  final int iterations;
+  const VeraCryptArgon2Parameters({
+    required this.memoryKiB,
+    required this.iterations,
+  });
+
+  int get memoryMiB => memoryKiB ~/ 1024;
+  int get parallelism => 1;
+  int get outputLength => 192;
+}
+
+/// An ephemeral, read-only AES-XTS key owner. It exposes no keys, password,
+/// keyfiles or serialization API. Call [dispose] when locking the container.
 ///
-/// This parser covers version-5 file-container headers with default PBKDF2
-/// parameters. Cascades, other KDFs, custom PIMs and keyfiles are not supported.
-/// Full mount operations are delegated to the OS-level `veracrypt` CLI.
+/// Owned key byte buffers are overwritten on disposal. Dart strings, VM
+/// copies, and PointyCastle's internal expanded keys cannot be guaranteed to
+/// disappear immediately from managed memory; this is best-effort erasure.
+class VeraCryptUnlockedVolume {
+  final VeraCryptVolumeHeader header;
+  final Uint8List _primaryKey;
+  final Uint8List _secondaryKey;
+  bool _closed = false;
+
+  VeraCryptUnlockedVolume._(this.header, Uint8List decryptedHeader)
+    : _primaryKey = Uint8List.fromList(
+        Uint8List.sublistView(decryptedHeader, 192, 224),
+      ),
+      _secondaryKey = Uint8List.fromList(
+        Uint8List.sublistView(decryptedHeader, 224, 256),
+      );
+
+  bool get isClosed => _closed;
+
+  /// Decrypt whole 512-byte data units at an absolute container byte offset.
+  /// The volume's logical sector size does not change XTS's 512-byte units.
+  /// Callers handle unaligned file reads by widening and slicing the result.
+  Uint8List decryptDataUnits(
+    Uint8List ciphertext, {
+    required int absoluteByteOffset,
+  }) {
+    if (_closed) throw StateError('The encrypted container is locked.');
+    if (absoluteByteOffset < header.encryptedAreaOffset ||
+        absoluteByteOffset > VeraCryptService.maxExactOffset ||
+        absoluteByteOffset % 512 != 0 ||
+        ciphertext.length % 512 != 0) {
+      throw ArgumentError('Data reads must use aligned 512-byte units.');
+    }
+    final relativeOffset = absoluteByteOffset - header.encryptedAreaOffset;
+    if (relativeOffset > header.encryptedAreaSize ||
+        ciphertext.length > header.encryptedAreaSize - relativeOffset) {
+      throw RangeError('Data read exceeds the encrypted volume.');
+    }
+    final plaintext = Uint8List(ciphertext.length);
+    final engine = _AesXtsDecryptor(_primaryKey, _secondaryKey);
+    try {
+      for (var offset = 0; offset < ciphertext.length; offset += 512) {
+        engine.decryptUnit(
+          ciphertext,
+          offset,
+          512,
+          plaintext,
+          offset,
+          (absoluteByteOffset + offset) ~/ 512,
+        );
+      }
+      return plaintext;
+    } catch (_) {
+      _wipe(plaintext);
+      rethrow;
+    } finally {
+      engine.dispose();
+    }
+  }
+
+  void dispose() {
+    if (_closed) return;
+    _closed = true;
+    _wipe(_primaryKey);
+    _wipe(_secondaryKey);
+  }
+
+  void close() => dispose();
+
+  @override
+  String toString() =>
+      'VeraCryptUnlockedVolume(${_closed ? 'locked' : 'open'})';
+}
+
+/// AES-XTS file-container support with PointyCastle's MIT crypto primitives.
+/// This does not support cascades, system encryption, or in-place encryption.
+/// Current BLAKE2s/Streebog headers require another implementation.
 class VeraCryptService {
   static const int _headerSize = 512;
   static const int _saltSize = 64;
-  static const int _encryptedHeaderOffset = 64;
+  static const int maxPim = 2147468;
+  static const int maxKeyfiles = 64;
+  static const int maxKeyfileBytes = 1048576;
 
-  // Magic "VERA" at offset 0 inside decrypted area
-  static const List<int> _magic = [0x56, 0x45, 0x52, 0x41];
+  /// Largest integer represented exactly by every supported Dart backend.
+  static const int maxExactOffset = 9007199254740991;
 
-  // VeraCrypt default PBKDF2 iterations per hash algorithm
-  static const Map<String, int> _defaultIterations = {
-    'SHA-512': 500000,
-    'SHA-256': 500000,
-    'Whirlpool': 500000,
+  static const _legacyKdfs = {
+    'SHA-512': VeraCryptKdf.sha512,
+    'SHA-256': VeraCryptKdf.sha256,
+    'Whirlpool': VeraCryptKdf.whirlpool,
   };
 
-  // ---------------------------------------------------------------------------
-  // Detection
-  // ---------------------------------------------------------------------------
-
-  /// Returns true if [path] looks like a VeraCrypt container.
-  ///
-  /// Detection criteria:
-  /// 1. File extension is `.vc` or `.hc` (case-insensitive), OR
-  /// 2. [fileSize] is at least 512 bytes (enough for the header).
-  ///
-  /// Both criteria must hold when [fileSize] is provided.
+  /// A filename/size hint only: encrypted containers have no visible magic.
   static bool detectContainer(String path, {int? fileSize}) {
-    final ext = _extension(path).toLowerCase();
-    final hasVeraCryptExt = ext == '.vc' || ext == '.hc';
-
     if (fileSize != null && fileSize < _headerSize) return false;
-    return hasVeraCryptExt || (fileSize != null && fileSize >= _headerSize);
+    return _hasContainerExtension(path) ||
+        (fileSize != null && fileSize >= _headerSize);
   }
 
-  /// Strict detection: requires known extension AND minimum file size.
-  static bool detectContainerStrict(String path, int fileSize) {
-    final ext = _extension(path).toLowerCase();
-    return (ext == '.vc' || ext == '.hc') && fileSize >= _headerSize;
-  }
+  static bool detectContainerStrict(String path, int fileSize) =>
+      _hasContainerExtension(path) && fileSize >= _headerSize;
 
-  // ---------------------------------------------------------------------------
-  // Header parsing
-  // ---------------------------------------------------------------------------
+  static bool _hasContainerExtension(String path) =>
+      const ['.vc', '.hc', '.tc'].contains(_extension(path).toLowerCase());
 
-  /// Parse the first 512 bytes of a VeraCrypt volume.
-  ///
-  /// [headerBytes] must be exactly 512 bytes (the raw/unencrypted area).
-  /// Returns a [VeraCryptVolumeHeader] with the salt extracted.
-  /// The encrypted portion (bytes 64–511) is returned as-is; use
-  /// [tryDecryptHeader] to parse the full header after decryption.
-  ///
-  /// Throws [FormatException] if [headerBytes] is shorter than 512 bytes.
+  /// Extract salt only. None of the returned zero-valued metadata is trusted
+  /// volume geometry until [unlockHeader] has successfully checked a header.
   static VeraCryptVolumeHeader parseHeader(Uint8List headerBytes) {
     if (headerBytes.length < _headerSize) {
-      throw FormatException(
-        'VeraCrypt header must be at least $_headerSize bytes, '
-        'got ${headerBytes.length}',
-      );
+      throw const FormatException('A container header needs 512 bytes.');
     }
-
-    final salt = headerBytes.sublist(0, _saltSize);
-
-    // Return a partial header — the encrypted area is opaque until decrypted
     return VeraCryptVolumeHeader(
-      salt: salt,
+      salt: Uint8List.fromList(headerBytes.sublist(0, _saltSize)),
       encryptedAreaOffset: 0,
       encryptedAreaSize: 0,
       sectorSize: 512,
@@ -229,300 +356,545 @@ class VeraCryptService {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Key derivation
-  // ---------------------------------------------------------------------------
-
-  /// Derive the header decryption key from [password] and [salt] using
-  /// PBKDF2 with the specified [hashAlgorithm] and [iterations].
-  ///
-  /// Supported hash algorithms: 'SHA-512', 'SHA-256', 'Whirlpool'.
-  /// Returns 64 bytes (512 bits) suitable for AES-256-XTS (two 256-bit keys).
+  /// Legacy PBKDF2 API, retained for callers that explicitly provide an
+  /// iteration count. New credentials use [deriveHeaderKey] and a KDF/PIM.
   static Uint8List deriveKey(
     String password,
     Uint8List salt, {
     String hashAlgorithm = 'SHA-512',
     int? iterations,
   }) {
-    if (!_defaultIterations.containsKey(hashAlgorithm)) {
-      throw ArgumentError.value(
-        hashAlgorithm,
-        'hashAlgorithm',
-        'Unsupported VeraCrypt KDF',
-      );
+    final kdf = _legacyKdfs[hashAlgorithm];
+    if (kdf == null) {
+      throw ArgumentError('Unsupported legacy PBKDF2 algorithm.');
     }
-    if (salt.length != _saltSize) {
-      throw ArgumentError('VeraCrypt header salt must be 64 bytes');
-    }
-    final iters = iterations ?? _defaultIterations[hashAlgorithm]!;
-    if (iters < 1) {
-      throw ArgumentError.value(iters, 'iterations', 'Must be positive');
-    }
-    final passwordBytes = Uint8List.fromList(utf8.encode(password));
-
-    final Digest digest;
-    final int blockLength;
-    switch (hashAlgorithm) {
-      case 'SHA-256':
-        digest = SHA256Digest();
-        blockLength = 64;
-        break;
-      case 'Whirlpool':
-        digest = WhirlpoolDigest();
-        blockLength = 64;
-        break;
-      case 'SHA-512':
-        digest = SHA512Digest();
-        blockLength = 128;
-        break;
-      default:
-        throw ArgumentError.value(hashAlgorithm, 'hashAlgorithm');
-    }
-
-    final params = Pbkdf2Parameters(salt, iters, 64); // 512 bits output
-    final kdf = PBKDF2KeyDerivator(HMac(digest, blockLength));
-    kdf.init(params);
-    return kdf.process(passwordBytes);
+    return deriveHeaderKey(
+      password,
+      salt,
+      options: VeraCryptUnlockOptions(kdf: kdf),
+      testIterations: iterations,
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // Header decryption
-  // ---------------------------------------------------------------------------
+  /// Header keys for AES-XTS (64 bytes). Argon2 always derives 192 bytes first,
+  /// then takes the prefix: requesting 64 bytes directly is incompatible.
+  ///
+  /// [testIterations] is a legacy test seam for PBKDF2 only. It cannot be
+  /// combined with a PIM or Argon2id, and application unlock paths omit it.
+  static Uint8List deriveHeaderKey(
+    String password,
+    Uint8List salt, {
+    VeraCryptUnlockOptions options = const VeraCryptUnlockOptions(
+      kdf: VeraCryptKdf.sha512,
+    ),
+    int? testIterations,
+  }) {
+    _validateOptions(options, testIterations: testIterations);
+    if (options.kdf == VeraCryptKdf.auto) {
+      throw ArgumentError('Choose one KDF when deriving a header key.');
+    }
+    if (salt.length != _saltSize) {
+      throw ArgumentError('Container header salt must be 64 bytes.');
+    }
+    final effectivePassword = applyKeyfiles(
+      password,
+      options.keyfiles,
+      trueCryptMode: options.trueCryptMode,
+    );
+    try {
+      return _deriveBytes(
+        effectivePassword,
+        salt,
+        options.kdf,
+        options,
+        testIterations: testIterations,
+      );
+    } finally {
+      _wipe(effectivePassword);
+    }
+  }
 
-  /// Attempt to decrypt the VeraCrypt volume header with [password].
+  static VeraCryptArgon2Parameters argon2Parameters(int pim) {
+    _validatePim(pim);
+    final effective = pim == 0 ? 12 : pim;
+    final memoryMiB = effective >= 31 ? 1024 : 64 + (effective - 1) * 32;
+    final passes = effective <= 31
+        ? 3 + (effective - 1) ~/ 3
+        : 13 + effective - 31;
+    return VeraCryptArgon2Parameters(
+      memoryKiB: memoryMiB * 1024,
+      iterations: passes,
+    );
+  }
+
+  static int pbkdf2Iterations(
+    VeraCryptKdf kdf, {
+    int pim = 0,
+    bool trueCryptMode = false,
+  }) {
+    _validatePim(pim);
+    if (kdf == VeraCryptKdf.auto || kdf == VeraCryptKdf.argon2id) {
+      throw ArgumentError('Choose a PBKDF2 hash.');
+    }
+    if (trueCryptMode) {
+      if (pim != 0) throw ArgumentError('TrueCrypt does not use a PIM.');
+      if (kdf == VeraCryptKdf.sha256) {
+        throw ArgumentError('TrueCrypt does not support SHA-256.');
+      }
+      return kdf == VeraCryptKdf.ripemd160 ? 2000 : 1000;
+    }
+    if (pim != 0) return 15000 + 1000 * pim;
+    return kdf == VeraCryptKdf.ripemd160 ? 655331 : 500000;
+  }
+
+  static void _validatePim(int pim) {
+    if (pim < 0 || pim > maxPim) {
+      throw ArgumentError('PIM must be between zero and 2147468.');
+    }
+  }
+
+  static void _validateOptions(
+    VeraCryptUnlockOptions options, {
+    int? testIterations,
+  }) {
+    _validatePim(options.pim);
+    if (options.keyfiles.length > maxKeyfiles) {
+      throw ArgumentError('At most 64 keyfiles are supported per unlock.');
+    }
+    if (options.keyfiles.any((bytes) => bytes.isEmpty)) {
+      throw ArgumentError('A keyfile must contain at least one byte.');
+    }
+    if (options.trueCryptMode &&
+        (options.pim != 0 ||
+            options.kdf == VeraCryptKdf.sha256 ||
+            options.kdf == VeraCryptKdf.argon2id)) {
+      throw ArgumentError('TrueCrypt requires its legacy hashes and no PIM.');
+    }
+    if (testIterations != null &&
+        (testIterations < 1 ||
+            testIterations > 2147483647 ||
+            options.pim != 0 ||
+            options.kdf == VeraCryptKdf.argon2id)) {
+      throw ArgumentError(
+        'A test iteration override requires PBKDF2, a positive count and no PIM.',
+      );
+    }
+    if (options.maxArgon2MemoryKiB < 65536 ||
+        options.maxArgon2MemoryKiB > 1048576 ||
+        options.maxArgon2Iterations < 1 ||
+        options.maxArgon2Iterations > 1024) {
+      throw ArgumentError('Invalid Argon2 resource budget.');
+    }
+    if (options.kdf == VeraCryptKdf.argon2id) {
+      final cost = argon2Parameters(options.pim);
+      if (cost.memoryKiB > options.maxArgon2MemoryKiB ||
+          cost.iterations > options.maxArgon2Iterations) {
+        throw const VeraCryptResourceLimitException(
+          'The selected Argon2 settings exceed the unlock resource budget.',
+        );
+      }
+    }
+  }
+
+  /// VeraCrypt's binary keyfile mix. No normalization is applied to passwords.
+  /// CRC state is raw (no final XOR); both pool and password mixing use byte
+  /// addition modulo 256. Only the first MiB of each keyfile contributes.
+  /// Returned bytes are owned by the caller and should be wiped after use.
+  static Uint8List applyKeyfiles(
+    String password,
+    List<Uint8List> keyfiles, {
+    bool trueCryptMode = false,
+  }) {
+    if (keyfiles.length > maxKeyfiles || keyfiles.any((k) => k.isEmpty)) {
+      throw ArgumentError('Supply between one and 64 nonempty keyfiles.');
+    }
+    final passwordBytes = Uint8List.fromList(utf8.encode(password));
+    final maxLength = trueCryptMode ? 64 : 128;
+    if (passwordBytes.length > maxLength) {
+      _wipe(passwordBytes);
+      throw ArgumentError('The password exceeds the format byte-length limit.');
+    }
+    if (keyfiles.isEmpty) return passwordBytes;
+    final poolSize = passwordBytes.length <= 64 ? 64 : 128;
+    final pool = Uint8List(poolSize);
+    try {
+      for (final keyfile in keyfiles) {
+        var crc = 0xffffffff;
+        var cursor = 0;
+        final length = keyfile.length < maxKeyfileBytes
+            ? keyfile.length
+            : maxKeyfileBytes;
+        for (var i = 0; i < length; i++) {
+          crc = _crcTable[(crc ^ keyfile[i]) & 0xff] ^ (crc >>> 8);
+          for (final shift in const [24, 16, 8, 0]) {
+            pool[cursor] = (pool[cursor] + ((crc >>> shift) & 0xff)) & 0xff;
+            cursor = (cursor + 1) % poolSize;
+          }
+        }
+      }
+      final mixed = Uint8List(poolSize)
+        ..setRange(0, passwordBytes.length, passwordBytes);
+      for (var i = 0; i < poolSize; i++) {
+        mixed[i] = (mixed[i] + pool[i]) & 0xff;
+      }
+      return mixed;
+    } finally {
+      _wipe(pool);
+      _wipe(passwordBytes);
+    }
+  }
+
+  static final List<int> _crcTable = List<int>.generate(256, (index) {
+    var crc = index;
+    for (var bit = 0; bit < 8; bit++) {
+      crc = (crc >>> 1) ^ ((crc & 1) == 0 ? 0 : 0xedb88320);
+    }
+    return crc;
+  }, growable: false);
+
+  static Uint8List _deriveBytes(
+    Uint8List password,
+    Uint8List salt,
+    VeraCryptKdf kdf,
+    VeraCryptUnlockOptions options, {
+    int? testIterations,
+  }) {
+    if (kdf == VeraCryptKdf.argon2id) {
+      final cost = argon2Parameters(options.pim);
+      final generator = Argon2BytesGenerator();
+      Uint8List? fullKey;
+      try {
+        generator.init(
+          Argon2Parameters(
+            Argon2Parameters.ARGON2_id,
+            salt,
+            desiredKeyLength: 192,
+            memory: cost.memoryKiB,
+            iterations: cost.iterations,
+            lanes: 1,
+            version: Argon2Parameters.ARGON2_VERSION_13,
+          ),
+        );
+        fullKey = generator.process(password);
+        return Uint8List.fromList(Uint8List.sublistView(fullKey, 0, 64));
+      } on OutOfMemoryError {
+        throw const VeraCryptResourceLimitException(
+          'There is not enough memory for the selected Argon2 settings.',
+        );
+      } finally {
+        if (fullKey != null) _wipe(fullKey);
+        // PointyCastle clears its working blocks on a completed derivation.
+        // Its API has no public reset for a failure during allocation/work.
+      }
+    }
+    final (digest, blockLength) = switch (kdf) {
+      VeraCryptKdf.sha512 => (SHA512Digest(), 128),
+      VeraCryptKdf.sha256 => (SHA256Digest(), 64),
+      VeraCryptKdf.whirlpool => (WhirlpoolDigest(), 64),
+      VeraCryptKdf.ripemd160 => (RIPEMD160Digest(), 64),
+      _ => throw ArgumentError('Choose an explicit header KDF.'),
+    };
+    final iterations =
+        testIterations ??
+        pbkdf2Iterations(
+          kdf,
+          pim: options.pim,
+          trueCryptMode: options.trueCryptMode,
+        );
+    final generator = PBKDF2KeyDerivator(HMac(digest, blockLength))
+      ..init(Pbkdf2Parameters(salt, iterations, 64));
+    return generator.process(password);
+  }
+
+  /// Unlock one selected header slot. The reader chooses primary/backup/hidden
+  /// positions and supplies the full host length. The header XTS tweak is zero
+  /// at every slot; data tweaks use absolute container offsets instead.
   ///
-  /// Tries all supported hash algorithms and returns the first successfully
-  /// parsed [VeraCryptVolumeHeader], or null if no combination works.
-  ///
-  /// Checks the magic, both format CRC-32 checksums, version and basic geometry.
-  /// VeraCrypt XTS headers do not provide cryptographic authentication; CRCs
-  /// detect accidental corruption and are not a substitute for an AEAD tag.
-  ///
-  /// [testIterations] may be provided to override the PBKDF2 iteration count
-  /// for each hash algorithm — useful only for unit tests where full iteration
-  /// counts would make tests impractically slow.
+  /// Returns null for wrong credentials, corrupt headers or unsupported header
+  /// geometry. Invalid options and resource failures propagate to the caller.
+  /// Auto tries supported PBKDF2 hashes only; Argon2id must be selected.
+  static VeraCryptUnlockedVolume? unlockHeader(
+    Uint8List headerBytes,
+    String password, {
+    VeraCryptUnlockOptions options = const VeraCryptUnlockOptions(),
+    int? containerSizeBytes,
+    int? testIterations,
+  }) {
+    _validateOptions(options, testIterations: testIterations);
+    if (containerSizeBytes != null &&
+        (containerSizeBytes < 262656 || containerSizeBytes > maxExactOffset)) {
+      throw ArgumentError('Invalid file-container size.');
+    }
+    if (headerBytes.length < _headerSize) return null;
+    final effectivePassword = applyKeyfiles(
+      password,
+      options.keyfiles,
+      trueCryptMode: options.trueCryptMode,
+    );
+    final salt = Uint8List.fromList(headerBytes.sublist(0, _saltSize));
+    final candidates = options.kdf != VeraCryptKdf.auto
+        ? [options.kdf]
+        : options.trueCryptMode
+        ? [VeraCryptKdf.sha512, VeraCryptKdf.ripemd160, VeraCryptKdf.whirlpool]
+        : [
+            VeraCryptKdf.sha512,
+            VeraCryptKdf.sha256,
+            VeraCryptKdf.whirlpool,
+            VeraCryptKdf.ripemd160,
+          ];
+    try {
+      for (final candidate in candidates) {
+        final key = _deriveBytes(
+          effectivePassword,
+          salt,
+          candidate,
+          options,
+          testIterations: testIterations,
+        );
+        final clear = Uint8List(448);
+        final engine = _AesXtsDecryptor(
+          Uint8List.sublistView(key, 0, 32),
+          Uint8List.sublistView(key, 32, 64),
+        );
+        try {
+          engine.decryptUnit(headerBytes, 64, 448, clear, 0, 0);
+          final metadata = _parseDecryptedHeader(
+            clear,
+            salt,
+            candidate,
+            trueCryptMode: options.trueCryptMode,
+            containerSizeBytes: containerSizeBytes,
+          );
+          if (metadata != null)
+            return VeraCryptUnlockedVolume._(metadata, clear);
+        } finally {
+          engine.dispose();
+          _wipe(clear);
+          _wipe(key);
+        }
+      }
+      return null;
+    } finally {
+      _wipe(effectivePassword);
+      _wipe(salt);
+    }
+  }
+
+  /// Backwards-compatible metadata-only API. Any successfully decrypted keys
+  /// are immediately disposed; use [unlockHeader] to own a read session.
   static VeraCryptVolumeHeader? tryDecryptHeader(
     Uint8List headerBytes,
     String password, {
     int? testIterations,
+    VeraCryptUnlockOptions options = const VeraCryptUnlockOptions(),
+    int? containerSizeBytes,
   }) {
-    if (headerBytes.length < _headerSize) return null;
-
-    for (final hashAlgo in getSupportedHashAlgorithms()) {
-      final result = _tryDecryptWithAlgo(
-        headerBytes,
-        password,
-        hashAlgo,
-        testIterations,
-      );
-      if (result != null) return result;
-    }
-    return null;
-  }
-
-  /// Try decrypting with a specific hash algorithm.
-  static VeraCryptVolumeHeader? _tryDecryptWithAlgo(
-    Uint8List headerBytes,
-    String password,
-    String hashAlgorithm,
-    int? testIterations,
-  ) {
+    final volume = unlockHeader(
+      headerBytes,
+      password,
+      options: options,
+      containerSizeBytes: containerSizeBytes,
+      testIterations: testIterations,
+    );
+    if (volume == null) return null;
     try {
-      final salt = headerBytes.sublist(0, _saltSize);
-      final encryptedArea = headerBytes.sublist(
-        _encryptedHeaderOffset,
-        _headerSize,
-      );
-
-      // Derive 64-byte key: first 32 = primary key, next 32 = tweak key (XTS)
-      final keyMaterial = deriveKey(
-        password,
-        salt,
-        hashAlgorithm: hashAlgorithm,
-        iterations: testIterations,
-      );
-      final key1 = keyMaterial.sublist(0, 32);
-      final key2 = keyMaterial.sublist(32, 64);
-
-      // Decrypt with AES-256-XTS (sector 0)
-      final decrypted = _aesXtsDecrypt(
-        encryptedArea,
-        key1,
-        key2,
-        sectorIndex: 0,
-      );
-
-      // Verify magic "VERA"
-      if (!_checkMagic(decrypted)) return null;
-
-      return _parseDecryptedHeader(decrypted, salt, hashAlgorithm);
-    } catch (_) {
-      return null;
+      return volume.header;
+    } finally {
+      volume.dispose();
     }
   }
 
-  /// Parse the decrypted header area into a [VeraCryptVolumeHeader].
   static VeraCryptVolumeHeader? _parseDecryptedHeader(
-    Uint8List decrypted,
+    Uint8List clear,
     Uint8List salt,
-    String hashAlgorithm,
-  ) {
-    final bd = ByteData.sublistView(decrypted);
-
-    // Offsets below are relative to byte 64 in the complete 512-byte header.
-    // CRC-32s cover both the header fields and the encrypted volume keys.
-    if (bd.getUint32(8, Endian.big) != getCrc32(decrypted.sublist(192, 448)) ||
-        bd.getUint32(188, Endian.big) != getCrc32(decrypted.sublist(0, 188))) {
+    VeraCryptKdf kdf, {
+    required bool trueCryptMode,
+    int? containerSizeBytes,
+  }) {
+    final magic = trueCryptMode
+        ? const [84, 82, 85, 69]
+        : const [86, 69, 82, 65];
+    for (var i = 0; i < 4; i++) {
+      if (clear[i] != magic[i]) return null;
+    }
+    final data = ByteData.sublistView(clear);
+    if (data.getUint32(8, Endian.big) !=
+            getCrc32(Uint8List.sublistView(clear, 192, 448)) ||
+        data.getUint32(188, Endian.big) !=
+            getCrc32(Uint8List.sublistView(clear, 0, 188))) {
       return null;
     }
-    final version = bd.getUint16(4, Endian.big);
-    final sectorSize = bd.getUint32(64, Endian.big);
-    final encryptedAreaOffset = bd.getInt64(44, Endian.big);
-    final encryptedAreaSize = bd.getInt64(52, Endian.big);
-    final volumeSize = bd.getInt64(36, Endian.big);
-    if (version != 5 ||
-        sectorSize < 512 ||
-        sectorSize > 4096 ||
-        sectorSize % 512 != 0 ||
+    final version = data.getUint16(4, Endian.big);
+    final requiredVersion = data.getUint16(6, Endian.big);
+    if (trueCryptMode) {
+      if ((version != 4 && version != 5) ||
+          requiredVersion < 0x0600 ||
+          requiredVersion > 0x071a)
+        return null;
+    } else if (version != 5 || requiredVersion > 0x0126) {
+      return null;
+    }
+    final flags = data.getUint32(60, Endian.big);
+    // Neither system, partially/in-place encrypted nor future flag layouts
+    // have the data geometry implemented by this read-only file reader.
+    if (flags != 0) return null;
+    final sectorSize = version == 4 ? 512 : data.getUint32(64, Endian.big);
+    if (sectorSize != 512 && sectorSize != 4096) return null;
+    final volumeSize = _readExactUint64(data, 36);
+    final dataOffset = _readExactUint64(data, 44);
+    final dataSize = _readExactUint64(data, 52);
+    final hiddenSize = _readExactUint64(data, 28);
+    if (volumeSize == null ||
+        dataOffset == null ||
+        dataSize == null ||
+        hiddenSize == null ||
         volumeSize <= 0 ||
-        encryptedAreaOffset < 0 ||
-        encryptedAreaSize <= 0 ||
-        encryptedAreaSize > volumeSize ||
+        dataSize <= 0 ||
+        dataSize != volumeSize ||
+        dataOffset < 131072 ||
+        dataSize > maxExactOffset - dataOffset ||
         volumeSize % sectorSize != 0 ||
-        encryptedAreaOffset % sectorSize != 0 ||
-        encryptedAreaSize % sectorSize != 0) {
+        dataOffset % sectorSize != 0 ||
+        dataSize % sectorSize != 0 ||
+        (hiddenSize != 0 && hiddenSize != volumeSize))
       return null;
+    if (containerSizeBytes != null) {
+      final dataLimit = containerSizeBytes - 131072;
+      if (dataOffset > dataLimit || dataSize > dataLimit - dataOffset)
+        return null;
     }
-    // The successful trial identifies the algorithm and KDF. Reading these
-    // values from offsets 260/268 would instead expose random volume-key bytes.
-    const hashIds = {'SHA-512': 1, 'Whirlpool': 2, 'SHA-256': 3};
-
     return VeraCryptVolumeHeader(
-      salt: salt,
-      encryptedAreaOffset: encryptedAreaOffset,
-      encryptedAreaSize: encryptedAreaSize,
+      salt: Uint8List.fromList(salt),
+      encryptedAreaOffset: dataOffset,
+      encryptedAreaSize: dataSize,
       sectorSize: sectorSize,
       version: version,
-      encryptionAlgorithmId:
-          1, // AES-256-XTS is the only candidate implemented.
-      hashAlgorithmId: hashIds[hashAlgorithm]!,
+      encryptionAlgorithmId: 1,
+      hashAlgorithmId: switch (kdf) {
+        VeraCryptKdf.sha512 => 1,
+        VeraCryptKdf.whirlpool => 2,
+        VeraCryptKdf.sha256 => 3,
+        VeraCryptKdf.ripemd160 => 4,
+        VeraCryptKdf.argon2id => 5,
+        VeraCryptKdf.auto => throw StateError('KDF was not resolved.'),
+      },
       volumeSize: volumeSize,
+      trueCryptMode: trueCryptMode,
+      hiddenVolumeSize: hiddenSize,
+      requiredVersion: requiredVersion,
+      flags: flags,
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // AES-256-XTS decryption
-  // ---------------------------------------------------------------------------
-
-  /// Decrypt a 512-byte sector using AES-256-XTS.
-  static Uint8List _aesXtsDecrypt(
-    Uint8List ciphertext,
-    Uint8List key1,
-    Uint8List key2, {
-    int sectorIndex = 0,
-  }) {
-    // XTS tweak: sector index as 128-bit little-endian integer
-    final tweak = Uint8List(16);
-    final tweakBd = ByteData.sublistView(tweak);
-    tweakBd.setUint64(0, sectorIndex, Endian.little);
-
-    // Encrypt tweak with key2
-    final aes2 = AESEngine()..init(true, KeyParameter(key2));
-    final encTweak = Uint8List(16);
-    aes2.processBlock(tweak, 0, encTweak, 0);
-
-    // AES decrypt each 16-byte block with XTS
-    final aes1 = AESEngine()..init(false, KeyParameter(key1));
-    final plaintext = Uint8List(ciphertext.length);
-    var tweakArr = encTweak;
-
-    for (var i = 0; i < ciphertext.length; i += 16) {
-      final block = Uint8List(16);
-      for (var k = 0; k < 16; k++) {
-        block[k] = ciphertext[i + k] ^ tweakArr[k];
-      }
-      final decBlock = Uint8List(16);
-      aes1.processBlock(block, 0, decBlock, 0);
-      for (var k = 0; k < 16; k++) {
-        plaintext[i + k] = decBlock[k] ^ tweakArr[k];
-      }
-      // Multiply tweak by 2 in GF(2^128)
-      tweakArr = _gf128Multiply2(tweakArr);
-    }
-    return plaintext;
+  /// Do not call getInt64/getUint64 on web and then check: by that point an
+  /// unsafe value may already have been rounded by the JavaScript backend.
+  static int? _readExactUint64(ByteData data, int offset) {
+    final high = data.getUint32(offset, Endian.big);
+    if (high > 0x1fffff) return null;
+    return high * 0x100000000 + data.getUint32(offset + 4, Endian.big);
   }
 
-  /// Multiply a 128-bit GF(2^128) element by 2 (polynomial x mod x^128 + x^7 + x^2 + x + 1).
-  static Uint8List _gf128Multiply2(Uint8List input) {
-    final output = Uint8List(16);
-    var carry = 0;
-    for (var i = 0; i < 16; i++) {
-      final b = input[i];
-      output[i] = ((b << 1) | carry) & 0xFF;
-      carry = (b >> 7) & 1;
-    }
-    if (carry != 0) {
-      output[0] ^= 0x87; // irreducible polynomial constant
-    }
-    return output;
-  }
-
-  static bool _checkMagic(Uint8List decrypted) {
-    if (decrypted.length < 4) return false;
-    for (var i = 0; i < _magic.length; i++) {
-      if (decrypted[i] != _magic[i]) return false;
-    }
-    return true;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Supported algorithms
-  // ---------------------------------------------------------------------------
-
-  /// Returns list of supported encryption algorithm names.
   static List<String> getSupportedAlgorithms() => const ['AES-256-XTS'];
 
-  /// Returns list of supported hash/KDF algorithm names.
   static List<String> getSupportedHashAlgorithms() => const [
     'SHA-512',
     'SHA-256',
     'Whirlpool',
+    'RIPEMD-160',
+    'Argon2id',
   ];
 
-  /// Map an encryption algorithm ID (from the volume header) to a human-readable name.
-  static String encryptionAlgorithmName(int id) {
-    const names = <int, String>{
-      1: 'AES-256-XTS',
-      2: 'Serpent-256-XTS',
-      3: 'Twofish-256-XTS',
-      4: 'AES-Twofish',
-      5: 'AES-Twofish-Serpent',
-      6: 'Serpent-AES',
-      7: 'Serpent-Twofish-AES',
-      8: 'Twofish-Serpent',
-    };
-    return names[id] ?? 'Unknown ($id)';
-  }
+  static String encryptionAlgorithmName(int id) =>
+      const <int, String>{
+        1: 'AES-256-XTS',
+        2: 'Serpent-256-XTS',
+        3: 'Twofish-256-XTS',
+        4: 'AES-Twofish',
+        5: 'AES-Twofish-Serpent',
+        6: 'Serpent-AES',
+        7: 'Serpent-Twofish-AES',
+        8: 'Twofish-Serpent',
+      }[id] ??
+      'Unknown ($id)';
 
-  /// Map a hash algorithm ID (from the volume header) to a human-readable name.
-  static String hashAlgorithmName(int id) {
-    const names = <int, String>{
-      1: 'SHA-512',
-      2: 'Whirlpool',
-      3: 'SHA-256',
-      4: 'RIPEMD-160',
-    };
-    return names[id] ?? 'Unknown ($id)';
-  }
-
-  // ---------------------------------------------------------------------------
-  // Utilities
-  // ---------------------------------------------------------------------------
+  static String hashAlgorithmName(int id) =>
+      const <int, String>{
+        1: 'SHA-512',
+        2: 'Whirlpool',
+        3: 'SHA-256',
+        4: 'RIPEMD-160',
+        5: 'Argon2id',
+      }[id] ??
+      'Unknown ($id)';
 
   static String _extension(String path) {
     final name = path.replaceAll('\\', '/').split('/').last;
     final dot = name.lastIndexOf('.');
-    if (dot < 0) return '';
-    return name.substring(dot);
+    return dot < 0 ? '' : name.substring(dot);
+  }
+}
+
+void _wipe(Uint8List bytes) => bytes.fillRange(0, bytes.length, 0);
+
+/// One read's temporary AES schedules and block scratch. No ciphertext
+/// stealing is needed: headers (448 bytes) and data units (512) are aligned.
+class _AesXtsDecryptor {
+  final AESEngine _data = AESEngine();
+  final AESEngine _tweaks = AESEngine();
+  final Uint8List _index = Uint8List(16);
+  final Uint8List _tweak = Uint8List(16);
+  final Uint8List _block = Uint8List(16);
+  final Uint8List _decoded = Uint8List(16);
+
+  _AesXtsDecryptor(Uint8List primary, Uint8List secondary) {
+    _data.init(false, KeyParameter(primary));
+    _tweaks.init(true, KeyParameter(secondary));
+  }
+
+  void decryptUnit(
+    Uint8List input,
+    int inputOffset,
+    int length,
+    Uint8List output,
+    int outputOffset,
+    int unitNumber,
+  ) {
+    _wipe(_index);
+    // Encode without 64-bit shifts, which JavaScript cannot represent.
+    var remaining = unitNumber;
+    for (var i = 0; i < 8; i++) {
+      _index[i] = remaining % 256;
+      remaining ~/= 256;
+    }
+    _tweaks.processBlock(_index, 0, _tweak, 0);
+    for (var offset = 0; offset < length; offset += 16) {
+      for (var i = 0; i < 16; i++) {
+        _block[i] = input[inputOffset + offset + i] ^ _tweak[i];
+      }
+      _data.processBlock(_block, 0, _decoded, 0);
+      for (var i = 0; i < 16; i++) {
+        output[outputOffset + offset + i] = _decoded[i] ^ _tweak[i];
+      }
+      var carry = 0;
+      for (var i = 0; i < 16; i++) {
+        final byte = _tweak[i];
+        _tweak[i] = ((byte << 1) | carry) & 0xff;
+        carry = byte >>> 7;
+      }
+      if (carry != 0) _tweak[0] ^= 0x87;
+    }
+  }
+
+  void dispose() {
+    _wipe(_index);
+    _wipe(_tweak);
+    _wipe(_block);
+    _wipe(_decoded);
+    // Replace reachable schedules. The VM may retain their old allocations.
+    final zeroKey = KeyParameter(Uint8List(32));
+    _data.init(false, zeroKey);
+    _tweaks.init(true, zeroKey);
+    _data.reset();
+    _tweaks.reset();
   }
 }

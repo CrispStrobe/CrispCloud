@@ -7,13 +7,18 @@
 //   • availableSourcesProvider    — list of selectable sources for the dropdown
 //   • activeFKeyContextProvider   — FKeyContext for the currently active panel
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:koni_archive/koni_archive.dart' as koni;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
 import '../services/fkey_action_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/veracrypt_container_reader.dart';
+import '../services/veracrypt_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
@@ -79,6 +84,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
       'setSource: ${source.displayName} path=${source.currentPath} side=$side',
     );
     _sourceRevision++;
+    _releaseContainers(state, keeping: source);
     state = source;
     _persist();
   }
@@ -101,12 +107,38 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   }
 
   /// Unlock and enter an encrypted container.
-  void enterContainer(String containerPath, String password) {
+  Future<bool> enterContainer(
+    String containerPath,
+    String password, {
+    koni.ByteSource? byteSource,
+    VeraCryptUnlockOptions options = const VeraCryptUnlockOptions(),
+    VeraCryptHeaderLocation headerLocation = VeraCryptHeaderLocation.primary,
+  }) async {
     _log.debug('enterContainer: $containerPath');
-    _sourceRevision++;
+    final revision = ++_sourceRevision;
+    final parent = state;
     const service = PanelSourceService();
-    state = service.enterContainer(containerPath, password, state);
-    _persist();
+    try {
+      final unlocked = await service.enterContainer(
+        containerPath,
+        password,
+        parent,
+        byteSource: byteSource,
+        options: options,
+        headerLocation: headerLocation,
+        isCancelled: () => !mounted || revision != _sourceRevision,
+      );
+      if (!mounted || revision != _sourceRevision) {
+        await service.lockContainer(unlocked);
+        return false;
+      }
+      state = unlocked;
+      _persist();
+      return true;
+    } catch (_) {
+      if (!mounted || revision != _sourceRevision) return false;
+      rethrow;
+    }
   }
 
   /// Navigate to the parent source (exit archive/container).
@@ -114,8 +146,44 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
     _log.debug('exitToParent from ${state.displayName}');
     _sourceRevision++;
     const service = PanelSourceService();
-    state = service.exitToParent(state);
+    final parent = service.exitToParent(state);
+    _releaseContainers(state, keeping: parent);
+    state = parent;
     _persist();
+  }
+
+  /// Navigation within a container keeps its session. Leaving its source tree
+  /// or disposing the pane closes every no-longer-reachable container session.
+  void _releaseContainers(PanelSource source, {PanelSource? keeping}) {
+    final retained = <Object>{};
+    PanelSource? cursor = keeping;
+    while (cursor != null) {
+      if (cursor is ContainerPanelSource) retained.add(cursor.unlockSession);
+      cursor = switch (cursor) {
+        ArchivePanelSource s => s.parent,
+        ContainerPanelSource s => s.parent,
+        _ => null,
+      };
+    }
+    cursor = source;
+    while (cursor != null) {
+      if (cursor is ContainerPanelSource &&
+          !retained.contains(cursor.unlockSession)) {
+        unawaited(const PanelSourceService().lockContainer(cursor));
+      }
+      cursor = switch (cursor) {
+        ArchivePanelSource s => s.parent,
+        ContainerPanelSource s => s.parent,
+        _ => null,
+      };
+    }
+  }
+
+  @override
+  void dispose() {
+    _sourceRevision++;
+    _releaseContainers(state);
+    super.dispose();
   }
 
   // ---- Persistence ----------------------------------------------------------

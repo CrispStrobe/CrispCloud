@@ -4,10 +4,19 @@
 // Provides unified file listing for local, remote, archive, and container
 // panel sources — the foundation for orthodox dual-panel navigation.
 
+import 'dart:typed_data';
+
+import 'package:koni_archive/koni_archive.dart' as koni;
+
 import '../models/file_item.dart';
 import 'archive_service.dart';
 import 'archive_format_registry.dart';
+import 'archive_member_index.dart';
+import 'archive_types.dart';
 import 'cloud_storage_interface.dart';
+import 'veracrypt_container_reader.dart';
+import 'veracrypt_file_source.dart';
+import 'veracrypt_service.dart';
 
 // ---------------------------------------------------------------------------
 // PanelSource sealed class hierarchy
@@ -255,7 +264,7 @@ class ContainerPanelSource extends PanelSource {
 // ---------------------------------------------------------------------------
 
 /// Filenames / extensions treated as encrypted containers.
-const _containerExtensions = {'.vc', '.hc'};
+const _containerExtensions = {'.vc', '.hc', '.tc'};
 const _containerFilenames = {'vault.cryptomator'};
 
 // ---------------------------------------------------------------------------
@@ -290,26 +299,80 @@ class PanelSourceService {
     parent: parentSource,
   );
 
-  /// Unlock and enter an encrypted container.
+  /// Unlock and index an AES-XTS VeraCrypt/TrueCrypt file container.
   ///
-  /// The [password] is used to derive an [unlockSession] token.  In a real
-  /// implementation this would call VeraCrypt / Cryptomator APIs; here it
-  /// stores a deterministic placeholder so tests remain synchronous.
-  ContainerPanelSource enterContainer(
+  /// Local native files are captured automatically. Remote, browser and nested
+  /// callers supply an owned, revision-bound [byteSource]. It is consumed even
+  /// when unlocking fails; no unbounded remote download is attempted here.
+  Future<ContainerPanelSource> enterContainer(
     String containerPath,
     String password,
-    PanelSource parentSource,
-  ) {
-    // Opaque session token — intentionally does not store the password.
-    final session = _ContainerSession(
-      containerPath: containerPath,
-      openedAt: DateTime.now(),
+    PanelSource parentSource, {
+    koni.ByteSource? byteSource,
+    VeraCryptUnlockOptions options = const VeraCryptUnlockOptions(),
+    VeraCryptHeaderLocation headerLocation = VeraCryptHeaderLocation.primary,
+    bool Function()? isCancelled,
+  }) async {
+    if (containerPath.toLowerCase().endsWith('.cryptomator')) {
+      await byteSource?.close();
+      throw UnsupportedError('Use the Cryptomator vault unlock workflow.');
+    }
+    if (byteSource == null && parentSource is! LocalPanelSource) {
+      throw UnsupportedError('A captured container byte source is required.');
+    }
+    final source = byteSource ?? await openVeraCryptFileSource(containerPath);
+    final archive = await openVeraCryptArchive(
+      source,
+      password: password,
+      options: options,
+      headerLocation: headerLocation,
+      isCancelled: isCancelled,
     );
-    return ContainerPanelSource(
-      containerPath: containerPath,
-      innerPath: '',
-      parent: parentSource,
-      unlockSession: session,
+    try {
+      final session = _ContainerSession(containerPath, archive);
+      return ContainerPanelSource(
+        containerPath: containerPath,
+        innerPath: '',
+        parent: parentSource,
+        unlockSession: session,
+      );
+    } catch (_) {
+      await archive.close();
+      rethrow;
+    }
+  }
+
+  /// Invalidates the session synchronously and releases its reader/key owner.
+  Future<void> lockContainer(ContainerPanelSource source) {
+    final session = source.unlockSession;
+    return session is _ContainerSession
+        ? session.archive.close()
+        : Future<void>.value();
+  }
+
+  Future<Uint8List> readContainerFile(
+    ContainerPanelSource source,
+    String path, {
+    int maxBytes = kArchiveReadLimit,
+  }) {
+    final session = _containerSession(source);
+    return session.archive.readMember(
+      session.index.file(path),
+      maxBytes: maxBytes,
+    );
+  }
+
+  Stream<List<int>> openContainerFile(
+    ContainerPanelSource source,
+    String path, {
+    int maxBytes = kArchiveReadLimit,
+    int chunkSize = 256 * 1024,
+  }) {
+    final session = _containerSession(source);
+    return session.archive.openMember(
+      session.index.file(path),
+      maxBytes: maxBytes,
+      chunkSize: chunkSize,
     );
   }
 
@@ -382,11 +445,22 @@ class PanelSourceService {
     }
   }
 
-  /// Simulated container listing using the unlocked session.
+  /// A real validated filesystem listing; locked/restored sessions fail closed.
   List<FileItem> _listContainer(ContainerPanelSource source) {
-    // Return an empty list; a real impl would delegate to the mounted
-    // virtual filesystem provided by VeraCrypt / Cryptomator.
-    return [];
+    return _containerSession(source).index.list(source.innerPath);
+  }
+
+  _ContainerSession _containerSession(ContainerPanelSource source) {
+    final session = source.unlockSession;
+    if (session is! _ContainerSession ||
+        session.containerPath != source.containerPath ||
+        session.archive.isClosed) {
+      throw const ArchiveViewException(
+        'This container is locked. Unlock it again to browse its files.',
+        code: ArchiveMessageCode.closed,
+      );
+    }
+    return session;
   }
 
   // ---- Extension helpers ----------------------------------------------------
@@ -484,14 +558,13 @@ class PanelSourceService {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/// Opaque unlock session token — stores metadata but never the password.
+/// Ephemeral filesystem/key ownership. Never persisted or reconstructed.
 class _ContainerSession {
   final String containerPath;
-  final DateTime openedAt;
-  const _ContainerSession({
-    required this.containerPath,
-    required this.openedAt,
-  });
+  final ViewerArchive archive;
+  final ArchiveMemberIndex index;
+  _ContainerSession(this.containerPath, this.archive)
+    : index = ArchiveMemberIndex(archive);
 }
 
 /// Thin wrapper so [_listLocal] can be tested without dart:io on web.

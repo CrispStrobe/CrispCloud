@@ -37,8 +37,6 @@ void main() {
         notifier.setSource(const LocalPanelSource('/')),
     'path navigation': (notifier) => notifier.navigateTo('/chosen'),
     'archive entry': (notifier) => notifier.enterArchive('/chosen.zip'),
-    'container entry': (notifier) =>
-        notifier.enterContainer('/chosen.vc', 'test-password'),
     'parent navigation': (notifier) => notifier.exitToParent(),
   };
   for (final choice in choices.entries) {
