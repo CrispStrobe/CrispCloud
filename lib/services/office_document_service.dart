@@ -155,6 +155,15 @@ class SlideShape {
   });
 }
 
+bool _isRtf(Uint8List bytes) {
+  const signature = [0x7b, 0x5c, 0x72, 0x74, 0x66]; // {\rtf
+  if (bytes.length < signature.length) return false;
+  for (var i = 0; i < signature.length; i++) {
+    if (bytes[i] != signature[i]) return false;
+  }
+  return true;
+}
+
 Future<OfficeDocument> parseOfficeDocument(
   Uint8List bytes,
   String filename,
@@ -162,7 +171,9 @@ Future<OfficeDocument> parseOfficeDocument(
   final ext = filename.split('.').last.toLowerCase();
   ViewerArchive? archive;
   try {
-    if (ext == 'rtf') {
+    // Some ".doc" files are really RTF (a common export format); route them
+    // by content instead of failing in the binary Word parser.
+    if (ext == 'rtf' || ((ext == 'doc' || ext == 'dot') && _isRtf(bytes))) {
       final rtf = parseRtfDocument(bytes);
       return OfficeDocument(
         kind: OfficeDocumentKind.document,
@@ -176,7 +187,10 @@ Future<OfficeDocument> parseOfficeDocument(
       return _parseLegacyPowerPoint(bytes);
     }
     if (ext == 'doc' || ext == 'dot') {
-      final document = parseLegacyWordDocument(bytes);
+      // Opening for a person: damage confined to an auxiliary feature (a
+      // text box, list table, single picture, dangling style) omits that
+      // feature with a declared warning instead of refusing the document.
+      final document = parseLegacyWordDocument(bytes, recover: true);
       final preview = projectLegacyWordPreview(document);
       return OfficeDocument(
         kind: OfficeDocumentKind.document,

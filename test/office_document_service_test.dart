@@ -216,4 +216,13 @@ void main() {
     expect(doc.plainText, contains('Could not extract'));
     expect(doc.note, isNotNull);
   });
+
+  test('an RTF file named .doc is read as RTF', () async {
+    final bytes = Uint8List.fromList(
+      utf8.encode(r'{\rtf1\ansi Hello from RTF\par}'),
+    );
+    final doc = await parseOfficeDocument(bytes, 'misnamed.doc');
+    expect(doc.plainText, contains('Hello from RTF'));
+    expect(doc.notice, OfficePreviewNotice.rtfFormatting);
+  });
 }

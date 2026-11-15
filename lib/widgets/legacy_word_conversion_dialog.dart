@@ -26,6 +26,9 @@ LegacyWordStructuredConversion _convertStructuredWord(
   format: request.docm
       ? LegacyWordOutputFormat.docm
       : LegacyWordOutputFormat.docx,
+  // Recovered features are reported through the conversion limitations
+  // shown in this dialog before anything is saved.
+  recover: true,
 );
 
 /// Creates a separate copy. Structured and installed conversions are reviewed
