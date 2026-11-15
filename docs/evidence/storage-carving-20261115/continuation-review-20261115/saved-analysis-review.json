@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T10:04:21.725457+00:00",
+  "review_head": "64250fb120122009575428727daa8b9ecf52a555",
+  "reviews": [
+    {
+      "gate": "analysis-app-final-2",
+      "tested_head": "2060a3cd94ee644e03d71b2feeefc74fd016886b",
+      "analyzed_files": 53,
+      "artifact_count": 6,
+      "invalid_artifacts": [],
+      "recomputed_run_stability": true,
+      "strict_command_valid": true,
+      "cli_resolution_covered": true,
+      "tracked_non_evidence_inputs_compared": 8481,
+      "source_mismatches": [],
+      "success": true
+    },
+    {
+      "gate": "analysis-engine-final-2",
+      "tested_head": "67a22a3e2079fe3fd7ab377124374c33cab41204",
+      "analyzed_files": 5,
+      "artifact_count": 6,
+      "invalid_artifacts": [],
+      "recomputed_run_stability": true,
+      "strict_command_valid": true,
+      "cli_resolution_covered": true,
+      "tracked_non_evidence_inputs_compared": 8481,
+      "source_mismatches": [],
+      "success": true
+    },
+    {
+      "gate": "analysis-cli-final",
+      "tested_head": "6df08719ee02e5ab7b25d177bae5c1e46190a219",
+      "analyzed_files": 1,
+      "artifact_count": 6,
+      "invalid_artifacts": [],
+      "recomputed_run_stability": true,
+      "strict_command_valid": true,
+      "cli_resolution_covered": true,
+      "tracked_non_evidence_inputs_compared": 8481,
+      "source_mismatches": [],
+      "success": true
+    }
+  ],
+  "success": true,
+  "scope": "Integrity of saved analysis receipts and equality of every current tracked non-evidence input. The original recorded dependency graphs are stable within each run; this does not claim current-workspace execution."
+}
