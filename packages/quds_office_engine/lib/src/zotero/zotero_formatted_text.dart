@@ -47,6 +47,20 @@ final class ZoteroFormattedText {
   final String plainText;
   final Set<String> unsupportedFormatting;
 
+  /// A single atomic Word run can carry this result without losing emphasis.
+  bool get hasUniformCharacterFormatting {
+    if (spans.length < 2) return true;
+    final first = spans.first;
+    return spans.every(
+      (span) =>
+          span.bold == first.bold &&
+          span.italic == first.italic &&
+          span.underline == first.underline &&
+          span.strike == first.strike &&
+          span.verticalAlign == first.verticalAlign,
+    );
+  }
+
   /// Builds independent Word runs, retaining the host's base font and color.
   /// Character emphasis is supplied by the result, including explicit resets.
   List<WmlRun> toRuns({WmlRunProps? baseProperties}) => <WmlRun>[

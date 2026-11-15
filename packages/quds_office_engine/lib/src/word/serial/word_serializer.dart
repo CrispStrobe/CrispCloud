@@ -21,6 +21,7 @@ import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../model/word_tree.dart';
 import '../model/word_zotero.dart';
+import '../model/word_zotero_data.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
 import 'word_bookmark_io.dart';
@@ -97,6 +98,10 @@ class WordSerializer {
     }
     final OpcPackage package =
         document.package ?? OpcPackage.create(OpcPackageKind.word);
+    final writeZoteroData = WordZoteroDocumentData.prepareWrite(
+      document,
+      package,
+    );
     final PackageRelationship? office = package.packageRelationships
         .firstByType(RelationshipTypes.officeDocument);
     if (office?.targetMode == RelationshipTargetMode.external) {
@@ -153,6 +158,7 @@ class WordSerializer {
     WordBibliographyIo.write(document, package, _mainPartUri);
     _syncSettings(document, package);
     document.properties.writeToPackage(package);
+    writeZoteroData();
     document.package = package;
     return package;
   }

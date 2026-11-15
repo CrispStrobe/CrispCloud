@@ -23,16 +23,23 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `0d9b008720b01371bc9db498efd063e3077be279`
+The app mirrors Quds `8855b88a96b5c94349e3b5278c339228a1688c3e`
 on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,375 managed files
+all 2,384 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
+
+The current incremental Zotero checkpoint adds the bounded desktop HTTP citing
+protocol, staged Word-field transactions and persistent Zotero document data.
+The host transport admits JSON POST only to the two native document endpoints,
+keeps catalog reads separate and supports the longer timeout needed for native
+dialogs. This is a source integration checkpoint; editor controls and final
+acceptance for this continuation are recorded separately when complete.
 
 Zotero support adds a shared references workspace, read-only online and desktop clients,
 offline CSL import/export, guarded DOCX citation and bibliography fields, and
