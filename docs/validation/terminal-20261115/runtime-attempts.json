@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-15",
+  "scope": "Focused native Flutter runtime attempt for terminal continuation; not final-source qualification",
+  "status": "blocked_before_test_execution",
+  "flutter": {
+    "version": "3.47.8",
+    "frameworkRevisionReported": "737ba8f885",
+    "engine": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2"
+  },
+  "dart": {
+    "version": "3.13.7",
+    "channel": "stable",
+    "platform": "linux_x64"
+  },
+  "successfulPrerequisites": [
+    "Flutter CLI version",
+    "Native flutter_tester help/startup",
+    "Focused offline Pub resolution: 106 dependencies",
+    "Published package archive SHA-256 verification",
+    "Exact libdbm locked Git source"
+  ],
+  "applicationManifestsModifiedByHarness": false,
+  "applicationSourceReplacedByHarness": false,
+  "nativeTestsCompleted": 0,
+  "passingNativeTestCountClaimed": 0,
+  "firstLoadingFile": "test/ssh_jump_host_test.dart",
+  "finalError": {
+    "kind": "ENOSPC",
+    "errno": 28,
+    "phase": "persistent test kernel cache copy",
+    "completedBeforeError": 0,
+    "processTerminationExitCode": 130
+  },
+  "approximateKernelCopiesMiB": {
+    "compilerOutput": 24,
+    "executionCopy": 24,
+    "persistentCacheCopy": "creation failed"
+  },
+  "attemptedFiles": [
+    "test/ssh_jump_host_test.dart",
+    "test/ssh_jump_transport_test.dart",
+    "test/ssh_jump_dialog_test.dart",
+    "test/terminal_arrangements_test.dart",
+    "test/terminal_arrangements_dialog_test.dart"
+  ],
+  "compilerOptions": {
+    "widgetCreationTracking": false,
+    "embedSourceText": false,
+    "assertionsDisabled": false
+  },
+  "ciAwaited": false,
+  "ciTriggeredByPreparation": false,
+  "sourceBinding": "Working sources changed in parallel; no successful exact-source gate is claimed."
+}

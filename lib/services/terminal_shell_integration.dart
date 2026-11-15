@@ -74,6 +74,7 @@ class TerminalShellIntegration extends ChangeNotifier {
   final DateTime Function() _now;
   final _marks = <TerminalCommandMark>[];
   TerminalCommandMark? _current;
+  TerminalCommandMark? _lastCompleted;
   int _nextId = 1;
   bool _disposed = false;
   Timer? _notification;
@@ -103,10 +104,11 @@ class TerminalShellIntegration extends ChangeNotifier {
 
   TerminalCommandMark? get latestCommand {
     _prune();
+    if (_current?.startedAt != null) return _current;
     for (final mark in _marks.reversed) {
       if (mark.startedAt != null) return mark;
     }
-    return null;
+    return _lastCompleted;
   }
 
   bool contains(TerminalCommandMark mark) =>
@@ -167,7 +169,7 @@ class TerminalShellIntegration extends ChangeNotifier {
     _prune();
     while (_marks.length >= maximumMarks) {
       final removed = _marks.removeAt(0);
-      if (identical(removed, _current)) _current = null;
+      if (identical(removed, _current) && !removed.running) _current = null;
       removed._dispose();
     }
     final mark = TerminalCommandMark._(
@@ -214,12 +216,16 @@ class TerminalShellIntegration extends ChangeNotifier {
 
   void _finishCommand(int? code) {
     final mark = _current;
-    if (mark == null || !contains(mark) || !mark.running) return;
+    if (mark == null || !mark.running) return;
     mark.finishedAt = _now();
     mark.exitCode = code != null && code >= -2147483648 && code <= 2147483647
         ? code
         : null;
     mark._end = terminal.buffer.createAnchorFromCursor();
+    _lastCompleted = mark;
+    // Long command output may evict the prompt. Keep its bounded status/alert,
+    // while rejecting selection/navigation through detached buffer anchors.
+    if (!_marks.contains(mark)) mark._dispose();
     if (_notifyOnCompletion) {
       _notifyOnCompletion = false;
       completionNotification = mark;
@@ -270,7 +276,7 @@ class TerminalShellIntegration extends ChangeNotifier {
     if (_disposed || terminal.isUsingAltBuffer) return;
     _marks.removeWhere((mark) {
       if (terminal.buffer.ownsAnchor(mark.anchor)) return false;
-      if (identical(mark, _current)) _current = null;
+      if (identical(mark, _current) && !mark.running) _current = null;
       mark._dispose();
       return true;
     });
@@ -332,6 +338,8 @@ class TerminalShellIntegration extends ChangeNotifier {
       mark._dispose();
     }
     _marks.clear();
+    _current?._dispose();
+    _lastCompleted?._dispose();
     super.dispose();
   }
 }

@@ -5,6 +5,7 @@ import 'package:xterm2/xterm.dart';
 
 import 'terminal_connection.dart';
 import 'terminal_shell_integration.dart';
+import 'terminal_user_input.dart';
 
 enum TerminalSessionStatus {
   idle,
@@ -35,7 +36,7 @@ class TerminalSession extends ChangeNotifier {
     _bindTerminal();
   }
 
-  static Terminal _createTerminal(TerminalSessionKind kind) => Terminal(
+  static Terminal _createTerminal(TerminalSessionKind kind) => InputAwareTerminal(
     maxLines: 10000,
     platform: kIsWeb
         ? TerminalTargetPlatform.web
@@ -88,15 +89,42 @@ class TerminalSession extends ChangeNotifier {
   int _generation = 0;
   bool _disposed = false;
   final _failedCleanup = <TerminalConnection, Object>{};
+  final _pendingCleanup = <TerminalConnection, Future<void>>{};
+  int _pendingOpeners = 0;
+  int _inputReplayDepth = 0;
+  bool Function()? _inputLease;
 
-  bool get isConnected => status == TerminalSessionStatus.connected;
+  /// Replaced for each attempt; broadcast membership captures this identity.
+  Object get connectionIdentity => terminal;
+  void Function(TerminalUserInput)? onUserInput;
+
+  void sendUserInput(TerminalUserInput input, {bool Function()? isCurrent}) {
+    if (!isConnected || _disposed || (isCurrent != null && !isCurrent())) {
+      return;
+    }
+    final previous = _inputLease;
+    _inputLease = isCurrent;
+    _inputReplayDepth++;
+    try {
+      input.applyTo(terminal);
+    } finally {
+      _inputReplayDepth--;
+      _inputLease = previous;
+    }
+  }
+
+  bool get isConnected => !_disposed && status == TerminalSessionStatus.connected;
   bool get isSandbox => kind == TerminalSessionKind.sandbox;
-  bool get isConnecting => status == TerminalSessionStatus.connecting;
+  bool get isConnecting => !_disposed && status == TerminalSessionStatus.connecting;
   bool get canDisconnect =>
-      _failedCleanup.isNotEmpty ||
-      isConnecting ||
-      isConnected ||
-      status == TerminalSessionStatus.waitingForExit;
+      !_disposed &&
+      (_connection != null ||
+       _failedCleanup.isNotEmpty ||
+       _pendingCleanup.isNotEmpty ||
+       _pendingOpeners != 0 ||
+       isConnecting ||
+       isConnected ||
+       status == TerminalSessionStatus.waitingForExit);
 
   int get columns => terminal.viewWidth.clamp(1, 10000);
   int get rows => terminal.viewHeight.clamp(1, 10000);
@@ -131,15 +159,19 @@ class TerminalSession extends ChangeNotifier {
     previousTerminal.dispose();
     notifyListeners();
     await _release(previous, subscription);
+    await Future.wait(_pendingCleanup.values.toList());
     if (!_current(generation)) return;
 
     TerminalConnection? connection;
+    var opening = false;
     try {
       await _retryCleanup(pendingCleanup);
       if (!_current(generation)) return;
       if (_failedCleanup.isNotEmpty) {
         throw TerminalCleanupFailure(_failedCleanup.values.first);
       }
+      opening = true;
+      _pendingOpeners++;
       connection = await open(columns, rows);
       if (!_current(generation)) {
         await _release(connection, null);
@@ -169,18 +201,30 @@ class TerminalSession extends ChangeNotifier {
       } else if (connection != null) {
         await _release(connection, null);
       }
+    } finally {
+      if (opening) {
+        _pendingOpeners--;
+        if (!_disposed) notifyListeners();
+      }
     }
   }
 
   void _write(String data) {
     final connection = _connection;
     final generation = _generation;
+    final lease = _inputLease;
     if (!isConnected || connection == null || data.isEmpty) return;
     _writes = _writes
         .then((_) async {
-          if (_current(generation) && isConnected) await connection.write(data);
+          if (_current(generation) && isConnected && (lease == null || lease())) {
+            await connection.write(data);
+          }
         })
         .catchError((Object error) => _fail(generation, error));
+    if (_inputReplayDepth == 0 && terminal is InputAwareTerminal) {
+      final input = (terminal as InputAwareTerminal).takeUserInput();
+      if (input != null) onUserInput?.call(input);
+    }
   }
 
   void _resize() {
@@ -231,8 +275,8 @@ class TerminalSession extends ChangeNotifier {
     _subscription = null;
     error = failure;
     status = TerminalSessionStatus.failed;
-    notifyListeners();
     unawaited(_release(connection, subscription));
+    notifyListeners();
   }
 
   /// Ends the process but leaves its screen available for selection/copying.
@@ -246,8 +290,10 @@ class TerminalSession extends ChangeNotifier {
     _subscription = null;
     status = TerminalSessionStatus.disconnected;
     error = null;
+    final releasing = _release(connection, subscription);
     notifyListeners();
-    await _release(connection, subscription);
+    await releasing;
+    await Future.wait(_pendingCleanup.values.toList());
     await _retryCleanup(pendingCleanup);
     if (!_current(generation)) return;
     if (_failedCleanup.isEmpty) {
@@ -276,20 +322,15 @@ class TerminalSession extends ChangeNotifier {
     // wait for native cleanup, while a replacement viewport is opening.
     final closing = connection == null
         ? Future<void>.value()
-        : Future<void>.sync(connection.close).then<void>(
-            (_) => _failedCleanup.remove(connection),
-            onError: (Object failure, StackTrace _) {
-              _failedCleanup[connection] = failure;
-            },
-          );
+        : _closeConnection(connection);
     try {
       await subscription?.cancel();
     } catch (_) {
       // Still close the process if its output stream already failed.
     }
     await closing;
-    if (!_disposed && _failedCleanup.isNotEmpty) {
-      if (_connection == null &&
+    if (!_disposed) {
+      if (_failedCleanup.isNotEmpty && _connection == null &&
           (status == TerminalSessionStatus.disconnected ||
               status == TerminalSessionStatus.exited)) {
         status = TerminalSessionStatus.failed;
@@ -299,12 +340,30 @@ class TerminalSession extends ChangeNotifier {
     }
   }
 
+  Future<void> _closeConnection(TerminalConnection connection) {
+    final existing = _pendingCleanup[connection];
+    if (existing != null) return existing;
+    final completion = Completer<void>();
+    _pendingCleanup[connection] = completion.future;
+    unawaited(Future<void>.sync(connection.close).then<void>(
+      (_) => _failedCleanup.remove(connection),
+      onError: (Object failure, StackTrace _) {
+        _failedCleanup[connection] = failure;
+      },
+    ).whenComplete(() {
+      _pendingCleanup.remove(connection);
+      completion.complete();
+    }));
+    return completion.future;
+  }
+
   @override
   void dispose() {
     if (_disposed) return;
     _disposed = true;
     ++_generation;
     shellIntegration.dispose();
+    onUserInput = null;
     terminal.onOutput = null;
     terminal.onResize = null;
     final connection = _connection;

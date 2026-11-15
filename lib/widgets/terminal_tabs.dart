@@ -8,13 +8,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_arrangement_strings.dart';
+import '../l10n/terminal_broadcast_strings.dart';
 import '../l10n/terminal_strings.dart';
 import '../models/terminal_arrangement.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/terminal_session.dart';
+import '../services/terminal_broadcast.dart';
 import 'terminal_panel.dart';
 import 'terminal_arrangements_dialog.dart';
+import 'terminal_broadcast_dialog.dart';
 
 class _TerminalTab {
   _TerminalTab(
@@ -66,10 +69,20 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   bool _closing = false;
   bool _arranging = false;
   int _focusRequest = 0;
+  late final TerminalBroadcast _broadcast;
+  int _broadcastStopSerial = 0;
 
   @override
   void initState() {
     super.initState();
+    _broadcast = TerminalBroadcast(
+      canSend: (id) =>
+          mounted &&
+          widget.visible &&
+          !_arranging &&
+          _active == id &&
+          ref.read(focusAreaProvider) == FocusArea.terminal,
+    )..addListener(_broadcastChanged);
     final tab = _makeTab(widget.session);
     _first = _active = tab.id;
   }
@@ -90,9 +103,42 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     if (mounted) setState(() {});
   }
 
+  void _broadcastChanged() {
+    if (!mounted) return;
+    setState(() {});
+    if (_broadcast.stopSerial == _broadcastStopSerial) return;
+    _broadcastStopSerial = _broadcast.stopSerial;
+    final message = switch (_broadcast.lastStopReason) {
+      TerminalBroadcastStopReason.connectionChanged =>
+        'Broadcast stopped because a connection changed.',
+      TerminalBroadcastStopReason.inputTooLarge =>
+        'Broadcast stopped because the input was too large.',
+      TerminalBroadcastStopReason.forwardingFailed =>
+        'Broadcast stopped because input could not be delivered.',
+      _ => null,
+    };
+    if (message == null) return;
+    final serial = _broadcastStopSerial;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_broadcast.isArmed && _broadcastStopSerial == serial) {
+        _broadcastNotice(message);
+      }
+    });
+  }
+
+  void _broadcastNotice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(context.terminalBroadcastTr(message))),
+    );
+  }
+
   @override
   void didUpdateWidget(TerminalTabs oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!widget.visible) {
+      _broadcast.stop(reason: TerminalBroadcastStopReason.workspaceHidden);
+    }
     if (!identical(oldWidget.session, widget.session)) {
       _releaseTabs();
       final tab = _makeTab(widget.session);
@@ -103,6 +149,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   }
 
   void _releaseTabs() {
+    _broadcast.stop(reason: TerminalBroadcastStopReason.connectionChanged);
     for (final tab in _tabs) {
       tab.session.removeListener(_changed);
       if (tab.owned) tab.session.dispose();
@@ -225,6 +272,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         if (close != true) return;
       }
       if (!mounted || !_tabs.contains(tab)) return;
+      _broadcast.stop(reason: TerminalBroadcastStopReason.tabClosed);
       await tab.session.disconnect();
       if (!mounted || !_tabs.contains(tab)) return;
       // Failed cleanup leaves the tab available to retry disconnect.
@@ -333,6 +381,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       if (confirmed != true || !mounted || !listEquals(previous, _tabs)) {
         return;
       }
+      _broadcast.stop(reason: TerminalBroadcastStopReason.arrangementRestored);
       // An opener may still be creating a native process/SSH connection. Keep
       // its pane until it settles so a delayed cleanup failure stays visible.
       if (previous.any((tab) => tab.session.isConnecting)) {
@@ -406,6 +455,116 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     } finally {
       if (mounted) setState(() => _arranging = false);
     }
+  }
+
+
+  Future<void> _chooseBroadcastGroup() async {
+    if (_arranging || _closing) return;
+    final candidates = <TerminalBroadcastTarget>[];
+    for (final tab in _tabs) {
+      if (!tab.session.isConnected) continue;
+      final label = _label(tab);
+      final destination = tab.session.label;
+      candidates.add(
+        TerminalBroadcastTarget(
+          id: tab.id,
+          label: '${_tabs.indexOf(tab) + 1}. $label'
+              '${destination == null || destination == label ? '' : ' — $destination'}',
+          session: tab.session,
+        ),
+      );
+    }
+    if (candidates.length < 2) {
+      _broadcastNotice('Select at least two connected terminals.');
+      return;
+    }
+    final chosen = await showDialog<List<TerminalBroadcastTarget>>(
+      context: context,
+      builder: (_) => TerminalBroadcastDialog(
+        candidates: candidates,
+        initiallySelected: _broadcast.targets.map((target) => target.id).toSet(),
+      ),
+    );
+    if (!mounted || chosen == null || !widget.visible || _arranging || _closing) {
+      return;
+    }
+    if (!_broadcast.start(chosen)) {
+      _broadcastNotice('Connections changed. Choose the broadcast group again.');
+    }
+  }
+
+  Widget _broadcastBar({bool compact = false}) {
+    final targets = _broadcast.targets;
+    final colors = Theme.of(context).colorScheme;
+    final bar = Semantics(
+      liveRegion: true,
+      child: Material(
+        key: const ValueKey('terminal-broadcast-banner'),
+        color: colors.errorContainer,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: compact ? 0 : 4,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.campaign_outlined,
+                color: colors.onErrorContainer,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Tooltip(
+                  message: targets.map((target) => target.label).join('\n'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        context
+                            .terminalBroadcastTr('Broadcasting to {count} terminals')
+                            .replaceAll('{count}', '${targets.length}'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.onErrorContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (!compact)
+                        Text(
+                          targets.map((target) => target.label).join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colors.onErrorContainer,
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Tooltip(
+                message: context.terminalBroadcastTr('Stop broadcast'),
+                child: TextButton.icon(
+                  key: const ValueKey('terminal-stop-broadcast'),
+                  onPressed: () => _broadcast.stop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colors.onErrorContainer,
+                  ),
+                  icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                  label: Text(context.terminalBroadcastTr('Stop')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return compact ? SizedBox(height: 40, child: bar) : bar;
   }
 
   KeyEventResult _onWorkspaceKey(KeyEvent event) {
@@ -569,6 +728,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   _moveTab(1);
                 case 'balance':
                   setState(() => _splitFraction = 0.5);
+                case 'broadcast':
+                  unawaited(_chooseBroadcastGroup());
               }
             },
             itemBuilder: (_) => [
@@ -620,6 +781,12 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                 child: Text(
                   context.terminalArrangementTr('Saved arrangements'),
                 ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'broadcast',
+                enabled: _tabs.where((tab) => tab.session.isConnected).length >= 2,
+                child: Text(context.terminalBroadcastTr('Broadcast input')),
               ),
             ],
           ),
@@ -674,7 +841,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   ),
                 ),
               ),
-              _tabBar(),
+              // With very little height, keep the broadcast warning and Stop
+              // control in the normal tab-bar slot so the terminal still fits.
+              if (!_broadcast.isArmed || height >= 220) _tabBar(),
+              if (_broadcast.isArmed) _broadcastBar(compact: height < 220),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, area) {
@@ -844,6 +1014,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
 
   @override
   void dispose() {
+    _broadcast.removeListener(_broadcastChanged);
+    _broadcast.dispose();
     _releaseTabs();
     super.dispose();
   }
