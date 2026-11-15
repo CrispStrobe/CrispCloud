@@ -293,8 +293,14 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       if (capture.isEmpty) {
         controller.setSelectedContents(result.trim());
       } else {
-        capture.attach(result);
-        _viewer.clearSelection();
+        if (capture.attach(result)) {
+          _viewer.clearSelection();
+          final page = capture.quads.keys.first;
+          controller.selectAnnotation(
+            page,
+            controller.document.page(page).annotations.length - 1,
+          );
+        }
       }
     } finally {
       await route.completed;

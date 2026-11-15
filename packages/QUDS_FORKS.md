@@ -23,10 +23,10 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `5211cc860775e84eab47ca4c90e24203cecfb147` and standalone
-legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,203 managed files
+The app mirrors Quds `4f7d0e0064cb430cc14e3daca663cffade777938` and standalone
+legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,211 managed files
 verify. New work includes supported BIFF8/HTML spreadsheet imports, shared
-formulas and cell font families; Word inline field preservation, revision
+formulas and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and

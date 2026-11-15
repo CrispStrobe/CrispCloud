@@ -150,7 +150,15 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('pdf-attach-note')));
       await tester.pumpAndSettle();
-      expect(find.text('First note'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey('pdf-selection-note-text')),
+            )
+            .controller!
+            .text,
+        'First note',
+      );
       await tester.enterText(
         find.byKey(const ValueKey('pdf-selection-note-text')),
         'Cancelled',

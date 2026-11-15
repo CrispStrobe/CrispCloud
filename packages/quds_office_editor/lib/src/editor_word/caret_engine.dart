@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -230,11 +231,18 @@ class CaretEngine {
   }
 
   /// Selection boxes from laid-out glyph X (matches justified ink).
+  ///
+  /// With [lastOfParagraph], a selection that continues past the end of the
+  /// paragraph also covers its paragraph mark: Word shows that as a small
+  /// block (about a space wide) after the last glyph, on the left for a
+  /// right-to-left paragraph.
   List<Rect> selectionRectsOnLine(
     LaidOutLine line,
     double y,
     double height, {
     int? paragraph,
+    bool lastOfParagraph = false,
+    bool rtl = false,
   }) {
     final ({int from, int to})? span = _selectionSpan(
       paragraph: paragraph ?? line.paragraphIndex,
@@ -242,7 +250,101 @@ class CaretEngine {
     if (span == null) {
       return const <Rect>[];
     }
-    return rangeRectsOnLine(line, y, height, span.from, span.to);
+    return selectionBandOnLine(
+      line,
+      y,
+      height,
+      span.from,
+      span.to,
+      paragraphMark: lastOfParagraph,
+      rtl: rtl,
+    );
+  }
+
+  /// Width of the paragraph-mark block for text of [fontSize] points.
+  static double paragraphMarkWidth(double fontSize) =>
+      (fontSize * 0.28).clamp(2.5, 12.0).toDouble();
+
+  /// Word-like selection band for `[from, to)` on [line].
+  ///
+  /// Every piece spans the line's full box ([y], [height]) so runs of
+  /// different sizes share one even band, and consecutive lines meet
+  /// without gaps. Horizontally it covers the selected glyphs only (never
+  /// out to the margin); with [paragraphMark] and a selection that runs
+  /// past the line's last character, the paragraph mark is added as a
+  /// block of [paragraphMarkWidth] at the visual end of the line.
+  static List<Rect> selectionBandOnLine(
+    LaidOutLine line,
+    double y,
+    double height,
+    int from,
+    int to, {
+    bool paragraphMark = false,
+    bool rtl = false,
+  }) {
+    if (from >= to) {
+      return const <Rect>[];
+    }
+    if (line.glyphs.isEmpty) {
+      // An empty paragraph: only its mark can be selected.
+      if (!paragraphMark || from > 0) {
+        return const <Rect>[];
+      }
+      final double width = paragraphMarkWidth(height / 1.15);
+      return <Rect>[
+        Rect.fromLTWH(rtl ? line.x - width : line.x, y, width, height),
+      ];
+    }
+    final List<Rect> rects = rangeRectsOnLine(line, y, height, from, to);
+    if (!paragraphMark) {
+      return rects;
+    }
+    var lineEnd = 0;
+    var left = double.infinity;
+    var right = double.negativeInfinity;
+    var size = 0.0;
+    for (final LaidOutGlyph g in line.glyphs) {
+      if (g.glyph.logicalIndex + 1 > lineEnd) {
+        lineEnd = g.glyph.logicalIndex + 1;
+        size = g.fontSize;
+      }
+      final double pen = g.x - g.paintDx;
+      left = math.min(left, pen);
+      right = math.max(right, pen + g.advance);
+    }
+    if (to <= lineEnd || from > lineEnd) {
+      return rects;
+    }
+    final double width = paragraphMarkWidth(size > 0 ? size : height / 1.15);
+    return _mergeAdjacent(<Rect>[
+      ...rects,
+      Rect.fromLTWH(rtl ? left - width : right, y, width, height),
+    ]);
+  }
+
+  static List<Rect> _mergeAdjacent(List<Rect> rects) {
+    if (rects.length < 2) {
+      return rects;
+    }
+    final List<Rect> sorted = List<Rect>.of(rects)
+      ..sort((Rect a, Rect b) => a.left.compareTo(b.left));
+    final List<Rect> merged = <Rect>[sorted.first];
+    for (final Rect r in sorted.skip(1)) {
+      final Rect last = merged.last;
+      // Sub-pixel gaps come from kerning/justification rounding; drawn as
+      // two translucent rects they would leave a visible seam.
+      if (r.left <= last.right + 0.5) {
+        merged[merged.length - 1] = Rect.fromLTRB(
+          last.left,
+          math.min(last.top, r.top),
+          math.max(last.right, r.right),
+          math.max(last.bottom, r.bottom),
+        );
+      } else {
+        merged.add(r);
+      }
+    }
+    return merged;
   }
 
   ({int from, int to})? _selectionSpan({int? paragraph}) {
@@ -327,18 +429,23 @@ class CaretEngine {
     for (final LaidOutGlyph g in line.glyphs) {
       final bool inside =
           g.glyph.logicalIndex >= from && g.glyph.logicalIndex < to;
+      // Measure on the pen position: [LaidOutGlyph.x] includes the glyph's
+      // paint offset (kerning, mark attachment), which would open gaps and
+      // overlaps between neighbouring boxes.
+      final double pen = g.x - g.paintDx;
       if (inside) {
-        runStart ??= g.x;
-        runEnd = g.x + g.advance;
+        runStart = runStart == null ? pen : math.min(runStart, pen);
+        runEnd = math.max(runEnd, pen + g.advance);
       } else if (runStart != null) {
-        rects.add(Rect.fromLTWH(runStart, y, runEnd - runStart, height));
+        rects.add(Rect.fromLTRB(runStart, y, runEnd, y + height));
         runStart = null;
+        runEnd = 0.0;
       }
     }
     if (runStart != null) {
-      rects.add(Rect.fromLTWH(runStart, y, runEnd - runStart, height));
+      rects.add(Rect.fromLTRB(runStart, y, runEnd, y + height));
     }
-    return rects;
+    return _mergeAdjacent(rects);
   }
 
   /// caretRect API.

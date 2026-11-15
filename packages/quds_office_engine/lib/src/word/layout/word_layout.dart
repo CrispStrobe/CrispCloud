@@ -1303,6 +1303,39 @@ class WordLayoutEngine {
     final double dropWidth = dropLines > 0 ? fontSize * 2.4 : 0;
     final int lineStart = current.length;
     final double paraTop = cursorY;
+    // Word grows a line for its tallest run: a 20 pt word inside 11 pt text
+    // makes that line taller and moves its baseline down. Lines whose runs
+    // are no larger than the paragraph's first run keep [lineHeight].
+    double largestSizeOn(BrokenLine line) {
+      var largest = fontSize;
+      for (final ShapedGlyph g in line.glyphs) {
+        final double size = propsAt(g.logicalIndex).fontSizePoints;
+        if (size > largest) largest = size;
+      }
+      return largest;
+    }
+
+    double ascentFor(double size) => metrics == null || fontSize <= 0
+        ? size * 0.8
+        : metrics.ascender * size / fontSize;
+    double heightOfLine(BrokenLine line) {
+      if (paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact) {
+        return lineHeight;
+      }
+      final double largest = largestSizeOn(line);
+      if (largest <= fontSize + 0.01) return lineHeight;
+      return math.max(
+        lineHeight,
+        _lineHeight(
+          paragraph.properties,
+          firstFace == null
+              ? null
+              : FontMetrics(font: firstFace, fontSizePoints: largest),
+          largest,
+        ),
+      );
+    }
+
     var lineNumber = 0;
     var wrappedOffset = 0;
     while (wrapBreaker == null
@@ -1363,12 +1396,13 @@ class WordLayoutEngine {
       }
 
       rebreakForFrame();
+      var lineH = heightOfLine(line);
       var noteIds = _noteIds(
         paragraph,
         line.glyphs.map((ShapedGlyph g) => g.logicalIndex),
       ).toList();
       double occupiedBottom() {
-        var bottom = cursorY + lineHeight;
+        var bottom = cursorY + lineH;
         for (final LaidOutLine l in current) {
           bottom = math.max(bottom, l.y + l.height);
         }
@@ -1381,7 +1415,7 @@ class WordLayoutEngine {
       }
 
       while (allowBreak &&
-          (cursorY + lineHeight > _bodyBottom(section, idx) ||
+          (cursorY + lineH > _bodyBottom(section, idx) ||
               (_minimumNotes(noteIds, section, idx) > 0 &&
                   occupiedBottom() + _minimumNotes(noteIds, section, idx) >
                       _bodyBottom(section, idx)))) {
@@ -1426,6 +1460,7 @@ class WordLayoutEngine {
           cursorY = section.margins.top;
         }
         rebreakForFrame();
+        lineH = heightOfLine(line);
         noteIds = _noteIds(
           paragraph,
           line.glyphs.map((g) => g.logicalIndex),
@@ -1442,6 +1477,9 @@ class WordLayoutEngine {
         x += lineWidth - line.width;
       }
       var gx = x;
+      final double largest = largestSizeOn(line);
+      final bool grown = largest > fontSize + 0.01;
+      final double lineAscent = ascentFor(largest);
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
       for (final ShapedGlyph g in line.glyphs) {
         final WmlRunProps props = propsAt(g.logicalIndex);
@@ -1453,7 +1491,7 @@ class WordLayoutEngine {
             x: gx + g.paintDx,
             y:
                 cursorY +
-                (metrics?.ascender ?? baseSize * 0.8) +
+                (grown ? lineAscent : (metrics?.ascender ?? baseSize * 0.8)) +
                 props.vertAlign.baselineShift(baseSize) -
                 g.paintDy,
             color: props.color,
@@ -1485,7 +1523,7 @@ class WordLayoutEngine {
         x: x,
         y: cursorY,
         width: line.width,
-        height: lineHeight,
+        height: lineH,
         pageIndex: idx,
         justification: paragraph.properties.justification,
         paragraphIndex: paragraphIndex,
@@ -1511,7 +1549,7 @@ class WordLayoutEngine {
       );
       laid.applyJustification(targetWidth: lineWidth);
       current.add(laid);
-      cursorY += lineHeight;
+      cursorY += lineH;
       lineNumber++;
       wrappedOffset = nextOffset;
     }
