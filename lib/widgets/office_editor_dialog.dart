@@ -7,8 +7,8 @@
 //
 // Legacy .xls workbooks are imported into the shared spreadsheet model and
 // opened as XLSX; Save writes a new .xlsx copy so the original BIFF file is
-// never overwritten. .doc/.ppt and ODF still get a clear message because they
-// cannot be converted in-process yet.
+// never overwritten. .doc/.ppt and ODT/ODP still get a clear message because
+// they cannot be converted in-process yet.
 
 import 'dart:async';
 import 'dart:io';
