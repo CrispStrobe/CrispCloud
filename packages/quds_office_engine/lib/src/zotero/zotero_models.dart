@@ -145,6 +145,8 @@ class ZoteroItem {
     this.citationHtml,
     this.bibliographyHtml,
   }) : creators = List.unmodifiable(creators),
+       // Keep the public argument name and the private optional override.
+       // ignore: prefer_initializing_formals
        _citationUri = citationUri,
        cslJson = cslJson == null ? null : Map.unmodifiable(cslJson) {
     validateZoteroKey(key);

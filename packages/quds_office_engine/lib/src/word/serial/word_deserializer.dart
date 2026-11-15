@@ -51,6 +51,7 @@ class WordDeserializer {
   String? _docUri;
   WmlSection? _pendingParagraphSectPr;
   bool _liftSdtSectionBreak = false;
+  int _nextSplitControlId = 0x30000000;
 
   /// Bookmark endpoints found between blocks (directly in the body, a
   /// table, row or cell). OOXML allows them there and Word writes them
@@ -85,6 +86,7 @@ class WordDeserializer {
     _notItalic.clear();
     _pendingParagraphSectPr = null;
     _liftSdtSectionBreak = false;
+    _nextSplitControlId = 0x30000000;
     _openFields.clear();
     _tocBoundaries.clear();
     _blockMarkers.clear();
@@ -140,10 +142,7 @@ class WordDeserializer {
         section.blocks.add(_readTable(reader, package, docUri));
       } else if (reader.localName == 'sdt' &&
           reader.namespaceUri == OfficeNamespaces.w) {
-        section.blocks.addAll(
-          _readSdt(reader, package, docUri, allowSectionBreak: true),
-        );
-        section = _flushParagraphSectPr(document, section);
+        section = _readBodySdt(reader, package, docUri, document, section);
       } else if (reader.localName == 'altChunk' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         section.blocks.add(WordOpaqueIo.read(reader, package, docUri));
@@ -190,6 +189,131 @@ class WordDeserializer {
   /// readBytes API.
   WmlDocument readBytes(Uint8List bytes, {String? password}) =>
       read(OpcPackage.openBytes(bytes, password: password));
+
+  /// Body-level controls may span section boundaries. A trailing break is
+  /// lifted after the control; multiple breaks split the control into one
+  /// segment per section, keeping its metadata and assigning fresh IDs to the
+  /// later segments so the result is a valid native control tree.
+  WmlSection _readBodySdt(
+    XmlPullReader reader,
+    OpcPackage package,
+    String docUri,
+    WmlDocument document,
+    WmlSection section,
+  ) {
+    final source = XmlDocument.readElement(reader);
+    final layout = _sdtBreakLayout(source);
+    if (layout != _SdtBreakLayout.opaque) {
+      section.blocks.addAll(
+        _readSdtElement(
+          source,
+          package,
+          docUri,
+          allowSectionBreak: layout == _SdtBreakLayout.liftLast,
+        ),
+      );
+      return _flushParagraphSectPr(document, section);
+    }
+    final segments = _splitSdt(source);
+    if (segments == null) {
+      throw UnsupportedError(
+        'A section break inside a content control cannot yet be imported safely',
+      );
+    }
+    for (var i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      if (i > 0) _retagSdt(segment, _nextSplitControlId++);
+      section.blocks.addAll(
+        _readSdtElement(segment, package, docUri, allowSectionBreak: true),
+      );
+      section = _flushParagraphSectPr(document, section);
+    }
+    return section;
+  }
+
+  List<WmlBlock> _readSdtElement(
+    XmlElement source,
+    OpcPackage package,
+    String docUri, {
+    required bool allowSectionBreak,
+  }) {
+    final reader = XmlPullReader(
+      XmlDocument(root: source).toXmlString(declaration: false),
+    )..next();
+    return _readSdt(
+      reader,
+      package,
+      docUri,
+      allowSectionBreak: allowSectionBreak,
+    );
+  }
+
+  /// Splits a control at top-level paragraph section breaks. Nested breaks or
+  /// breaks outside a paragraph return null and remain refused.
+  List<XmlElement>? _splitSdt(XmlElement source) {
+    final content = source.firstChild(
+      'sdtContent',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (content == null) return null;
+    final children = content.childElements.toList();
+    final segments = <XmlElement>[];
+    var current = <XmlElement>[];
+    var breaks = 0;
+    for (final child in children) {
+      final found = <XmlElement>[];
+      void collect(XmlElement node) {
+        for (final nested in node.childElements) {
+          if (nested.localName == 'sectPr' &&
+              nested.namespaceUri == OfficeNamespaces.w) {
+            found.add(nested);
+          }
+          collect(nested);
+        }
+      }
+
+      collect(child);
+      final directBreak =
+          child.localName == 'p' &&
+          child
+                  .firstChild('pPr', namespaceUri: OfficeNamespaces.w)
+                  ?.firstChild('sectPr', namespaceUri: OfficeNamespaces.w) !=
+              null;
+      if (found.isNotEmpty && (!directBreak || found.length != 1)) return null;
+      current.add(child);
+      if (directBreak) {
+        segments.add(_sdtSegment(source, current));
+        current = <XmlElement>[];
+        breaks++;
+      }
+    }
+    if (breaks == 0) return null;
+    if (current.isNotEmpty) segments.add(_sdtSegment(source, current));
+    return segments;
+  }
+
+  XmlElement _sdtSegment(XmlElement source, List<XmlElement> children) {
+    final copy = source.copy();
+    final content = copy.firstChild(
+      'sdtContent',
+      namespaceUri: OfficeNamespaces.w,
+    )!;
+    content.children.clear();
+    for (final child in children) {
+      content.addChild(child.copy());
+    }
+    return copy;
+  }
+
+  void _retagSdt(XmlElement segment, int id) {
+    final properties = segment.firstChild(
+      'sdtPr',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    properties
+        ?.firstChild('id', namespaceUri: OfficeNamespaces.w)
+        ?.setAttribute('val', '$id', namespaceUri: OfficeNamespaces.w);
+  }
 
   List<WmlBlock> _readSdt(
     XmlPullReader reader,

@@ -9,6 +9,9 @@ executes a macro, or changes its original bytes. The selected document package
 is implemented in source and has passed selected Chromium checks; native
 platform acceptance remains pending as described under [Verification](#verification).
 
+Remaining format work is tracked in
+[office-remaining-gaps-20261115.md](office-remaining-gaps-20261115.md).
+
 | Extensions | Viewer | Editor |
 | --- | --- | --- |
 | `.eml` | Decoded subject, sender, recipients, date, plain text or safe HTML, attachments | MIME source in the text/code editor |

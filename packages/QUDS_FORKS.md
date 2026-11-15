@@ -23,8 +23,8 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `706971b6818d5382e135ea947ce862b27124a46a`
-on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
+The app mirrors Quds `55d46a0fb5f7392dab1a604bc3c15126bd3e380d`
+on `codex/zotero-support-20261115`, including canonical main `68d5bd8`, through PR #46,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
 all 2,391 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
@@ -83,12 +83,13 @@ counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text and duplicate) and list validations
+ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text, begins/ends-with and duplicate) and list validations
 are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The previously recorded sheet/ODS
-development cohort is 494 tests; it was not rerun during this integration.
-The combined host qualification remains separately source-bound in the storage evidence.
+elapsed time formats survive XLSX saves. The incoming branch records a 495-test
+sheet/ODS development cohort; that complete cohort was not rerun during this
+integration. The combined host qualification remains separately source-bound
+in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
 and Excel wrap-text support. Import preserves the correct wrap flag for each
@@ -334,6 +335,13 @@ Follow
 - tests live next to the behavior they cover;
 - package CHANGELOGs get an `Unreleased` entry for user-visible changes;
 - do not bump versions outside a release.
+
+## Remaining limits
+
+The engine-side backlog is tracked in the Quds
+[office-remaining-gaps.md](https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/office-remaining-gaps.md).
+The host-level backlog is
+[office-remaining-gaps-20261115.md](../docs/office-remaining-gaps-20261115.md).
 
 ## Syncing
 

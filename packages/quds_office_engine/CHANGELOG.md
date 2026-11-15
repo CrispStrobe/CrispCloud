@@ -21,6 +21,15 @@ All notable changes to `quds_office_engine` are documented here.
   deliberate unlinking. Write native complex ADDIN fields and preserve rich
   imported caches and unknown Zotero metadata without automatic CSL processing.
 
+- Complete the bounded ODS picture and spreadsheet-state pass: embed package
+  pictures as worksheet drawings, apply nameless document default styles and
+  default column/row geometry, preserve hidden rows/columns/sheets, import
+  conditional formats (numeric, between, contains-text, begins/ends-with and
+  duplicate) with generated dxf styling, and import literal list validations
+  with corrected Excel list quoting. Documented limits remain for range-source
+  validations, expression/visual conditional rules, ODS metadata and package
+  part naming.
+
 - Preserve ODS authored date-component order, literal separators, full month and
   weekday names, and cell annotations through XLSX copies. Annotation text stays
   separate from cell values; repeated notes and authors share the existing cell
