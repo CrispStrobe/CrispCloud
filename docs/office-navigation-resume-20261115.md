@@ -1,5 +1,30 @@
 # Worksheet navigation acceptance recovery — 15 November 2026
 
+## Current continuation
+
+Package/behavior acceptance has completed at exact app source `7e5af83c`,
+with successful push run [43685477823](https://github.com/CrispStrobe/CrispCloud/actions/runs/43685477823).
+The [acceptance record](office-worksheet-navigation-20261115.md) has the full
+results, source boundaries, evidence map and integration limits.
+
+Checkpoint `5fa20624cfdcea2cede84e22f2d5ce7faa7eb1f1` now preserves all four
+successful-run ZIPs plus the original failed-run host ZIP, full logs, reports,
+metadata and hashes. Large archives are split only for transport and rebuild
+to the exact GitHub bytes. Independent verification and a replay from those
+parts pass. The original run's full logs confirm 283 passing tests followed
+by exactly 57 inventory collisions, with external validation skipped; it
+remains separately labeled as failed-run history.
+
+Visual review of the initial complete-view captures found test-font blocks.
+Preview-only checkpoint `c3ac5b674c42b9a2d8f1b1631e394c6132cfbeba` loads the
+existing Latin, Arabic and icon assets and records their hashes. Its fresh
+exact-source [run 43689052023](https://github.com/CrispStrobe/CrispCloud/actions/runs/43689052023)
+is pending. Next: inspect and retain its actual readable PNGs, then close the
+UI acceptance record and update PR #110. Production/runtime source remains
+identical to the already accepted source.
+
+## Initial recovery note (historical)
+
 Continuation branch: `codex/office-recovery-20261115`.
 Recovered host head: `1a86e790080c174c27a283b7ac49913ca1fa91f0`.
 Host main at recovery: `8a24763fb4b2c720ff6b617cebbea8971191bdca`.

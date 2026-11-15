@@ -1,0 +1,409 @@
+{
+  "total_count": 3,
+  "jobs": [
+    {
+      "id": 132724956678,
+      "run_id": 43685477823,
+      "workflow_name": "Office fidelity integration",
+      "head_branch": "codex/office-recovery-20261115",
+      "run_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43685477823",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQf6hs88AAAAe5wYeBg",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/jobs/132724956678",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685477823/job/132724956678",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:26:57Z",
+      "started_at": "2026-11-15T06:27:26Z",
+      "completed_at": "2026-11-15T06:28:31Z",
+      "name": "Office recovery copy in Chromium",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-15T06:27:27Z",
+          "completed_at": "2026-11-15T06:27:28Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-15T06:27:28Z",
+          "completed_at": "2026-11-15T06:27:36Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-15T06:27:36Z",
+          "completed_at": "2026-11-15T06:27:58Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-15T06:27:58Z",
+          "completed_at": "2026-11-15T06:27:58Z"
+        },
+        {
+          "name": "Run flutter pub get",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-15T06:27:58Z",
+          "completed_at": "2026-11-15T06:28:00Z"
+        },
+        {
+          "name": "Install pinned browser driver and Chromium",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-15T06:28:00Z",
+          "completed_at": "2026-11-15T06:28:21Z"
+        },
+        {
+          "name": "Verify the real recovery download and URL cleanup",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-15T06:28:21Z",
+          "completed_at": "2026-11-15T06:28:26Z"
+        },
+        {
+          "name": "Preserve compile and browser receipts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-15T06:28:26Z",
+          "completed_at": "2026-11-15T06:28:27Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-15T06:28:27Z",
+          "completed_at": "2026-11-15T06:28:27Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-15T06:28:27Z",
+          "completed_at": "2026-11-15T06:28:28Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-15T06:28:28Z",
+          "completed_at": "2026-11-15T06:28:28Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-15T06:28:28Z",
+          "completed_at": "2026-11-15T06:28:28Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/check-runs/132724956678",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000473505,
+      "runner_name": "GitHub Actions 1000473505",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 132724956851,
+      "run_id": 43685477823,
+      "workflow_name": "Office fidelity integration",
+      "head_branch": "codex/office-recovery-20261115",
+      "run_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43685477823",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQf6hs88AAAAe5wYesw",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/jobs/132724956851",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685477823/job/132724956851",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:26:57Z",
+      "started_at": "2026-11-15T06:27:38Z",
+      "completed_at": "2026-11-15T06:35:16Z",
+      "name": "host-roundtrip",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-15T06:27:38Z",
+          "completed_at": "2026-11-15T06:27:40Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-15T06:27:40Z",
+          "completed_at": "2026-11-15T06:27:51Z"
+        },
+        {
+          "name": "Verify committed Office sources before test hooks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-15T06:27:51Z",
+          "completed_at": "2026-11-15T06:27:52Z"
+        },
+        {
+          "name": "Set up bundled ebook converter",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-15T06:27:52Z",
+          "completed_at": "2026-11-15T06:28:05Z"
+        },
+        {
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-15T06:28:05Z",
+          "completed_at": "2026-11-15T06:28:22Z"
+        },
+        {
+          "name": "Native test dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-15T06:28:22Z",
+          "completed_at": "2026-11-15T06:28:44Z"
+        },
+        {
+          "name": "Run flutter pub get",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-15T06:28:44Z",
+          "completed_at": "2026-11-15T06:28:47Z"
+        },
+        {
+          "name": "Shared corpus and host save workflow",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-15T06:28:47Z",
+          "completed_at": "2026-11-15T06:35:11Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-15T06:35:11Z",
+          "completed_at": "2026-11-15T06:35:12Z"
+        },
+        {
+          "name": "Preserve worksheet UI captures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-15T06:35:12Z",
+          "completed_at": "2026-11-15T06:35:13Z"
+        },
+        {
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-15T06:35:13Z",
+          "completed_at": "2026-11-15T06:35:13Z"
+        },
+        {
+          "name": "Post Set up bundled ebook converter",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-15T06:35:13Z",
+          "completed_at": "2026-11-15T06:35:14Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-15T06:35:14Z",
+          "completed_at": "2026-11-15T06:35:14Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-15T06:35:14Z",
+          "completed_at": "2026-11-15T06:35:14Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/check-runs/132724956851",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000473507,
+      "runner_name": "GitHub Actions 1000473507",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 132726845129,
+      "run_id": 43685477823,
+      "workflow_name": "Office fidelity integration",
+      "head_branch": "codex/office-recovery-20261115",
+      "run_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43685477823",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQf6hs88AAAAe5yLuyQ",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/jobs/132726845129",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685477823/job/132726845129",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:35:16Z",
+      "started_at": "2026-11-15T06:44:10Z",
+      "completed_at": "2026-11-15T06:48:49Z",
+      "name": "external-schema",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-15T06:44:10Z",
+          "completed_at": "2026-11-15T06:44:12Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-15T06:44:12Z",
+          "completed_at": "2026-11-15T06:44:22Z"
+        },
+        {
+          "name": "Run actions/setup-dotnet@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-15T06:44:22Z",
+          "completed_at": "2026-11-15T06:44:22Z"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-15T06:44:22Z",
+          "completed_at": "2026-11-15T06:44:24Z"
+        },
+        {
+          "name": "Require every actual host export",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-15T06:44:24Z",
+          "completed_at": "2026-11-15T06:44:54Z"
+        },
+        {
+          "name": "Prove validator detects invalid XML",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-15T06:44:54Z",
+          "completed_at": "2026-11-15T06:45:15Z"
+        },
+        {
+          "name": "Validate host uploads and engine exports",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-15T06:45:15Z",
+          "completed_at": "2026-11-15T06:45:24Z"
+        },
+        {
+          "name": "Stage required rendered host artifacts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-15T06:45:24Z",
+          "completed_at": "2026-11-15T06:45:24Z"
+        },
+        {
+          "name": "Install independent host renderer",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-15T06:45:24Z",
+          "completed_at": "2026-11-15T06:45:58Z"
+        },
+        {
+          "name": "Check actual-host rendering and repeated saves",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-15T06:45:58Z",
+          "completed_at": "2026-11-15T06:48:44Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-15T06:48:44Z",
+          "completed_at": "2026-11-15T06:48:46Z"
+        },
+        {
+          "name": "Post Run actions/setup-dotnet@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-15T06:48:46Z",
+          "completed_at": "2026-11-15T06:48:46Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-15T06:48:46Z",
+          "completed_at": "2026-11-15T06:48:46Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-15T06:48:46Z",
+          "completed_at": "2026-11-15T06:48:46Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/check-runs/132726845129",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000473556,
+      "runner_name": "GitHub Actions 1000473556",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "file": "job-132724956678-browser-copy.log.gz",
+    "gzip_bytes": 14450,
+    "gzip_sha256": "93f119f4c3a35b03f9c6b2f092f13681354e6be1a9f2d8a371a40961c793f167",
+    "decoded_utf8_bytes": 62760,
+    "decoded_utf8_sha256": "be3943afbaefa63642d588c1c84618b7be3a61a9ff82c367b4a8029e30181b2f",
+    "unicode_characters": 59958,
+    "utf8_bom": true,
+    "trailing_newline": true,
+    "scope": "Exact UTF-8 encoding of the full decoded string returned by GitHub fetch_workflow_job_logs; HTTP transfer bytes were not exposed."
+  },
+  {
+    "file": "job-132724956851-host-roundtrip.log.gz",
+    "gzip_bytes": 67815,
+    "gzip_sha256": "902cf22a01a93f44051c50ad1709d930735ee1770369937290794553ac457e7d",
+    "decoded_utf8_bytes": 369418,
+    "decoded_utf8_sha256": "032c4fb5eb97d41495db704a5d36571dc7cac3cc3a6a0447d367163663500a4f",
+    "unicode_characters": 365414,
+    "utf8_bom": true,
+    "trailing_newline": true,
+    "scope": "Exact UTF-8 encoding of the full decoded string returned by GitHub fetch_workflow_job_logs; HTTP transfer bytes were not exposed."
+  },
+  {
+    "file": "job-132726845129-external-schema.log.gz",
+    "gzip_bytes": 24174,
+    "gzip_sha256": "d67a2abca01f226bbcd6b407d7a4184f6c7e13b7f96afcf1501de9c7fc7b5922",
+    "decoded_utf8_bytes": 156387,
+    "decoded_utf8_sha256": "21c7b7b97bfad17032ff0fa4a7e163692bc59e44e574568c360aa6111353512b",
+    "unicode_characters": 156385,
+    "utf8_bom": true,
+    "trailing_newline": true,
+    "scope": "Exact UTF-8 encoding of the full decoded string returned by GitHub fetch_workflow_job_logs; HTTP transfer bytes were not exposed."
+  }
+]

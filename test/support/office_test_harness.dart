@@ -79,6 +79,7 @@ class OfficeTestHarness {
     bool expectEditor = true,
     OfficeDeviceExporter copyExporter = exportOfficeCopy,
     Locale locale = const Locale('en'),
+    ThemeData? theme,
   }) async {
     assert(initialBytes == null || bytesOverride == null);
     SharedPreferences.setMockInitialValues({});
@@ -105,6 +106,7 @@ class OfficeTestHarness {
         container: container,
         child: MaterialApp(
           locale: locale,
+          theme: theme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(

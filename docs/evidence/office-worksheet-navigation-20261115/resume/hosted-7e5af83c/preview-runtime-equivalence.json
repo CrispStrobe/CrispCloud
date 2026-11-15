@@ -1,0 +1,55 @@
+{
+  "accepted_source": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+  "preview_source": "c3ac5b674c42b9a2d8f1b1631e394c6132cfbeba",
+  "scope": "Production source, assets, dependencies, validation tools and Office workflow identical; only two test source files and evidence changed",
+  "git_objects": [
+    {
+      "path": "lib",
+      "accepted_object": "6fd6ff12912d40eacc2b9ba8144b9ffb6f75f21c",
+      "preview_object": "6fd6ff12912d40eacc2b9ba8144b9ffb6f75f21c",
+      "unchanged": true
+    },
+    {
+      "path": "packages",
+      "accepted_object": "469d54112cda4123e6000070799e1c6908204b6d",
+      "preview_object": "469d54112cda4123e6000070799e1c6908204b6d",
+      "unchanged": true
+    },
+    {
+      "path": "assets",
+      "accepted_object": "d467a0a359e73816992a15f81e1a6faad9eee528",
+      "preview_object": "d467a0a359e73816992a15f81e1a6faad9eee528",
+      "unchanged": true
+    },
+    {
+      "path": "tool",
+      "accepted_object": "7c6b708b677fa5cec2d7104d8aecfc1498009c34",
+      "preview_object": "7c6b708b677fa5cec2d7104d8aecfc1498009c34",
+      "unchanged": true
+    },
+    {
+      "path": "pubspec.yaml",
+      "accepted_object": "0872aaeddd48f35c5fb2af00c70ab23931e3327d",
+      "preview_object": "0872aaeddd48f35c5fb2af00c70ab23931e3327d",
+      "unchanged": true
+    },
+    {
+      "path": "pubspec.lock",
+      "accepted_object": "304499d38203c7888a21264410e8c947bc65a405",
+      "preview_object": "304499d38203c7888a21264410e8c947bc65a405",
+      "unchanged": true
+    },
+    {
+      "path": ".fvmrc",
+      "accepted_object": "4e46fba09bb9c1d654a226b7285b55b6949b3767",
+      "preview_object": "4e46fba09bb9c1d654a226b7285b55b6949b3767",
+      "unchanged": true
+    },
+    {
+      "path": ".github/workflows/office-fidelity.yml",
+      "accepted_object": "369065500ff40985c4f89c585ce43a9332c4a276",
+      "preview_object": "369065500ff40985c4f89c585ce43a9332c4a276",
+      "unchanged": true
+    }
+  ]
+}

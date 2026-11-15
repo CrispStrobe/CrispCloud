@@ -1,0 +1,98 @@
+[
+  {
+    "file": "source.xlsx",
+    "sha256": "b4406e4f2a236266a51a2d26e758cde98ed1bd5e98400aad35ad09f8f2b7a388",
+    "sheets": [
+      "Budget",
+      "Reference"
+    ],
+    "amount": "125.5",
+    "reference_sentinel": 73,
+    "reference_formula": "Budget!B2",
+    "reference_cache": "125.5",
+    "defined_name": "Budget!$B$2",
+    "labels_preserved": true,
+    "validation_preserved": true,
+    "passed": true
+  },
+  {
+    "file": "switched-draft.xlsx",
+    "sha256": "f03a8b73774334055fe4b3c94cb25355ae05d60b0466ff6510cdf9a006b0ced9",
+    "sheets": [
+      "Budget",
+      "Reference"
+    ],
+    "amount": "250",
+    "reference_sentinel": 73,
+    "reference_formula": "Budget!B2",
+    "reference_cache": "250",
+    "defined_name": "Budget!$B$2",
+    "labels_preserved": true,
+    "validation_preserved": true,
+    "passed": true
+  },
+  {
+    "file": "rejected-draft-corrected.xlsx",
+    "sha256": "fac8cbb3130140b06b61bb7e5c0791e33641c4ad96d44b4e032deed4401472af",
+    "sheets": [
+      "Budget",
+      "Reference"
+    ],
+    "amount": "300",
+    "reference_sentinel": 73,
+    "reference_formula": "Budget!B2",
+    "reference_cache": "300",
+    "defined_name": "Budget!$B$2",
+    "labels_preserved": true,
+    "validation_preserved": true,
+    "passed": true
+  },
+  {
+    "file": "rename.xlsx",
+    "sha256": "e2371a105857e541ea5024cbaa866fda3715e5a26600b61347c07ec38205defa",
+    "sheets": [
+      "O'Brien 2026",
+      "Reference"
+    ],
+    "amount": "125.5",
+    "reference_sentinel": 73,
+    "reference_formula": "'O''Brien 2026'!B2",
+    "reference_cache": "125.5",
+    "defined_name": "'O''Brien 2026'!$B$2",
+    "labels_preserved": true,
+    "validation_preserved": true,
+    "passed": true
+  },
+  {
+    "file": "rename-undo.xlsx",
+    "sha256": "61c3fcd7a0b42941a911b76c8c6519af7655497687303aa90f56e4213112d328",
+    "sheets": [
+      "Budget",
+      "Reference"
+    ],
+    "amount": "125.5",
+    "reference_sentinel": 73,
+    "reference_formula": "Budget!B2",
+    "reference_cache": "125.5",
+    "defined_name": "Budget!$B$2",
+    "labels_preserved": true,
+    "validation_preserved": true,
+    "passed": true
+  },
+  {
+    "file": "rename-redo.xlsx",
+    "sha256": "a9c7f4c8a4c77c42923ae70f0c196514b1c7695d6f0b2ee9d3a96d29d4b1d7ce",
+    "sheets": [
+      "O'Brien 2026",
+      "Reference"
+    ],
+    "amount": "125.5",
+    "reference_sentinel": 73,
+    "reference_formula": "'O''Brien 2026'!B2",
+    "reference_cache": "125.5",
+    "defined_name": "'O''Brien 2026'!$B$2",
+    "labels_preserved": true,
+    "validation_preserved": true,
+    "passed": true
+  }
+]
