@@ -1,7 +1,7 @@
 {
   "at": "2026-11-15T11:33:42.837340+00:00",
   "scope": "Finite observed incoming batch reconciled before local qualification; no later rolling refresh.",
-  "canonical_office": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+  "canonical_office": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
   "standalone_parser": "09c8b3731edb60bf6e5309578260af36b9433570",
   "managed_files": 2274,
   "resolved_app_overlap": "All five late app vendor source/fixture/test blobs equal the canonical incoming head; merged ancestry retained and copies replaced by the canonical bounded resolution through the guarded sync tool.",
@@ -27,5 +27,10 @@
     "c8fd8d76a5367e2712600451de3a2811b085a6c5"
   ],
   "late_app_merge_commit": "fb109e8daeebdc5ecfe2f1b98dd05d2ff4dbcee9",
-  "gate_provenance": "plans/provenance-overlay-manifest.json"
+  "gate_provenance": "plans/provenance-overlay-manifest.json",
+  "strict_constant_correction": {
+    "commit": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+    "after_failed_receipt": "9e0ed55f78129d6991d7eb98023d3036e9b5280c",
+    "change": "final defaultChars to const defaultChars; identical value and behavior."
+  }
 }
