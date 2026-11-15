@@ -16,10 +16,14 @@ import 'file_editor_dialog.dart';
 import 'document_conversion_dialog.dart';
 
 Future<void> showNewDocumentDialog(BuildContext context, WidgetRef ref) async {
-  if (!await closeDocumentWorkspace(context) || !context.mounted) return;
-  final side = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(side));
   try {
+    if (!await closeDocumentWorkspace(context) || !context.mounted) return;
+    final side = ref.read(activePanelProvider);
+    final panel = ref.read(panelProvider(side));
+    if (!panel.hasVerifiedDirectoryListing)
+      throw StateError(
+        'Open a normal destination folder before creating a document.',
+      );
     final origin = panel.captureCurrentOrigin();
     if (origin.source is! LocalPanelSource &&
         origin.source is! RemotePanelSource) {

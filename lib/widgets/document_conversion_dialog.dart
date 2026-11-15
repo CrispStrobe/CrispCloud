@@ -21,10 +21,14 @@ Future<void> showDocumentConversionDialog(
   BuildContext context,
   WidgetRef ref,
 ) async {
-  if (!await closeDocumentWorkspace(context) || !context.mounted) return;
   try {
+    if (!await closeDocumentWorkspace(context) || !context.mounted) return;
     final side = ref.read(activePanelProvider);
     final panel = ref.read(panelProvider(side));
+    if (!panel.hasVerifiedDirectoryListing)
+      throw StateError(
+        'Open a normal destination folder before creating a document.',
+      );
     final destination = panel.captureCurrentOrigin();
     final directory = destination.source.currentPath;
     final backend = fileOperationBackend(

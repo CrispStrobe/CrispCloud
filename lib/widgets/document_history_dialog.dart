@@ -31,8 +31,8 @@ Future<void> showDocumentHistoryDialog(
     builder: (_) => const DocumentHistoryDialog(),
   );
   if (request == null || !context.mounted) return;
-  if (!await closeDocumentWorkspace(context) || !context.mounted) return;
   try {
+    if (!await closeDocumentWorkspace(context) || !context.mounted) return;
     final panel = ref.read(panelProvider(side));
     final file = request.entry.file;
     final origin = panel.resolveStorageReference(file.storage, file.path);
