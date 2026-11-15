@@ -95,6 +95,9 @@ abstract class OfficeController extends ChangeNotifier {
   /// isDirty API.
   bool get isDirty => _dirty || _hasPendingEdits;
 
+  /// Allows asynchronous host workflows to reject a closed editor safely.
+  bool get isDisposed => _disposed;
+
   // Drafts contribute to dirty state without replacing the state of unrelated
   // committed commands. Discarding a draft therefore cannot clear those edits.
   bool get _hasPendingEdits => false;
@@ -6796,6 +6799,235 @@ class WordEditorController extends OfficeController {
       return;
     }
     _insertBlocksAfterCurrent(<WmlBlock>[WordCitations.bibliography(document)]);
+  }
+
+  /// Zotero fields in every modeled story, including imported citations.
+  /// Reinspect after mutations or undo/redo: field handles are short-lived.
+  List<WmlZoteroField> get zoteroFields => WordZotero.fields(document);
+
+  /// Inserts a Zotero citation and its embedded CSL data as one undo step.
+  /// Display text is supplied explicitly; this does not run a CSL processor.
+  void insertZoteroCitation(ZoteroCitation citation) {
+    if (_disposed || !config.allowsMutation) return;
+    if (!caret.isCollapsed) {
+      throw UnsupportedError('Place the caret where the citation should go.');
+    }
+    if (zoteroFields.any(
+      (field) => field.citation?.citationId == citation.citationId,
+    )) {
+      throw ArgumentError('A citation with this identity already exists.');
+    }
+    final paragraph = _activeParagraph;
+    if (zoteroFields.any(
+      (field) =>
+          field.paragraphs.length > 1 && field.paragraphs.contains(paragraph),
+    )) {
+      throw UnsupportedError(
+        'Move the caret outside the multi-paragraph Zotero field.',
+      );
+    }
+    final at = WmlRunEdit.normalizeRange(
+      paragraph,
+      caret.logicalIndex,
+      caret.logicalIndex,
+    ).start;
+    final beforeLength = paragraph.text.length;
+    _commitZoteroChange(<WmlParagraph>[paragraph], () {
+      WordZotero.insertCitation(paragraph, citation, index: at);
+    });
+    caret.logicalIndex = at + paragraph.text.length - beforeLength;
+    caret.collapseSelection();
+    relayout();
+    notifyListeners();
+  }
+
+  /// Replaces one managed citation while retaining ordinary document text.
+  void updateZoteroCitation(WmlZoteroField field, ZoteroCitation citation) {
+    if (_disposed || !config.allowsMutation) return;
+    _assertZoteroFieldOwner(field);
+    if (field.citation?.citationId != citation.citationId) {
+      throw ArgumentError('An edited citation must retain its identity.');
+    }
+    _commitZoteroChange(field.paragraphs, () {
+      WordZotero.updateCitation(field, citation);
+    });
+  }
+
+  /// Refreshes a prepared set of citation caches atomically. All network work
+  /// must finish before this call; any unsupported field leaves every cache
+  /// and the undo history unchanged.
+  void refreshZoteroCitations(Map<String, ZoteroCitation> citations) {
+    if (_disposed || !config.allowsMutation || citations.isEmpty) return;
+    final fields = zoteroFields
+        .where((field) => citations.containsKey(field.citation?.citationId))
+        .toList();
+    if (fields.length != citations.length ||
+        fields.any((field) => !field.canEdit)) {
+      throw UnsupportedError(
+        'Some citations changed or cannot be refreshed safely.',
+      );
+    }
+    for (final field in fields) {
+      final id = field.citation!.citationId;
+      if (citations[id]!.citationId != id) {
+        throw ArgumentError('A refreshed citation must retain its identity.');
+      }
+    }
+    _commitZoteroChange(
+      fields.expand((field) => field.paragraphs).toSet().toList(),
+      () {
+        // Replace later fields first so earlier offsets remain valid.
+        for (final field in fields.reversed) {
+          WordZotero.updateCitation(
+            field,
+            citations[field.citation!.citationId]!,
+          );
+        }
+      },
+    );
+  }
+
+  /// Creates an editable Zotero bibliography field from a complete result.
+  void insertZoteroBibliography({
+    required String text,
+    Map<String, dynamic>? metadata,
+    ZoteroFormattedText? formattedText,
+  }) {
+    if (_disposed || !config.allowsMutation) return;
+    _assertZoteroTrackingMode();
+    if (!caret.isCollapsed ||
+        isEditingHeaderFooter ||
+        isEditingComment ||
+        editingFrame ||
+        selectedFrame != null) {
+      throw UnsupportedError(
+        'Place the caret in the document body for a bibliography.',
+      );
+    }
+    _insertBlocksAfterCurrent(<WmlBlock>[
+      WordZotero.bibliography(
+        text: text,
+        metadata: metadata,
+        formattedText: formattedText,
+      ),
+    ]);
+  }
+
+  /// Updates a bibliography only after its complete replacement is available.
+  void updateZoteroBibliography(
+    WmlZoteroField field, {
+    required String text,
+    Map<String, dynamic>? metadata,
+    ZoteroFormattedText? formattedText,
+  }) {
+    if (_disposed || !config.allowsMutation) return;
+    _assertZoteroFieldOwner(field);
+    _commitZoteroChange(field.paragraphs, () {
+      WordZotero.updateBibliography(
+        field,
+        text: text,
+        metadata: metadata,
+        formattedText: formattedText,
+      );
+    });
+  }
+
+  /// Explicitly converts a citation/bibliography to ordinary text, with undo.
+  void unlinkZoteroField(WmlZoteroField field) {
+    if (_disposed || !config.allowsMutation) return;
+    _assertZoteroFieldOwner(field);
+    _commitZoteroChange(field.paragraphs, () => WordZotero.unlink(field));
+  }
+
+  void _assertZoteroFieldOwner(WmlZoteroField field) {
+    if (!zoteroFields.any(
+      (current) =>
+          identical(current.paragraph, field.paragraph) &&
+          current.start == field.start &&
+          current.end == field.end &&
+          current.instruction == field.instruction &&
+          current.cachedText == field.cachedText,
+    )) {
+      throw StateError(
+        'This Zotero field no longer belongs to the current document.',
+      );
+    }
+  }
+
+  void _commitZoteroChange(List<WmlParagraph> paragraphs, VoidCallback mutate) {
+    _assertZoteroTrackingMode();
+    final touched = Set<WmlParagraph>.identity()..addAll(paragraphs);
+    if (document.revisions.any(
+      (revision) =>
+          revision.accepted == null &&
+          touched.contains(
+            revision.targetParagraph ??
+                WordRevisions.resolveParagraph(document, revision),
+          ),
+    )) {
+      throw UnsupportedError(
+        'Accept or reject tracked changes in this paragraph before editing Zotero fields.',
+      );
+    }
+    final before =
+        <
+          WmlParagraph,
+          ({List<WmlInline> inlines, WmlParagraphProps properties})
+        >{
+          for (final paragraph in paragraphs)
+            paragraph: (
+              inlines: _cloneInlines(paragraph),
+              properties: paragraph.properties.copy(),
+            ),
+        };
+    void restore(
+      Map<
+        WmlParagraph,
+        ({List<WmlInline> inlines, WmlParagraphProps properties})
+      >
+      snapshot,
+    ) {
+      for (final entry in snapshot.entries) {
+        entry.key.properties = entry.value.properties.copy();
+        entry.key.inlines
+          ..clear()
+          ..addAll(_cloneInlinesFrom(entry.value.inlines));
+      }
+    }
+
+    late final Map<
+      WmlParagraph,
+      ({List<WmlInline> inlines, WmlParagraphProps properties})
+    >
+    after;
+    try {
+      mutate();
+      after = {
+        for (final paragraph in paragraphs)
+          paragraph: (
+            inlines: _cloneInlines(paragraph),
+            properties: paragraph.properties.copy(),
+          ),
+      };
+    } finally {
+      restore(before);
+    }
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => restore(after),
+        undoFn: () => restore(before),
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
+  void _assertZoteroTrackingMode() {
+    if (document.trackRevisions) {
+      throw UnsupportedError(
+        'Turn off Track changes before changing Zotero fields.',
+      );
+    }
   }
 
   /// markIndexTerm API.

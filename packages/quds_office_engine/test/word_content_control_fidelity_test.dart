@@ -1030,13 +1030,32 @@ void main() {
     expect(reopened.sections, hasLength(2));
   });
 
-  test('multiple section breaks in one control remain safely refused', () {
+  test('multiple section breaks split one control into section segments', () {
     const content =
         '<w:p><w:pPr><w:sectPr/></w:pPr><w:r><w:t>One</w:t></w:r></w:p>'
         '<w:p><w:pPr><w:sectPr/></w:pPr><w:r><w:t>Two</w:t></w:r></w:p>';
+    final document = WordDeserializer().read(sectionControlSource(content));
+    expect(document.sections, hasLength(3));
+    final controls = document.sections
+        .expand((section) => section.blocks)
+        .whereType<WmlContentControlBlock>()
+        .toList();
+    expect(controls, hasLength(2));
+    expect(controls.map((control) => control.control.id).toSet(), hasLength(2));
     expect(
-      () => WordDeserializer().read(sectionControlSource(content)),
-      throwsUnsupportedError,
+      controls.map((control) => control.blocks.single),
+      everyElement(isA<WmlParagraph>()),
+    );
+    final reopened = WordDeserializer().readBytes(
+      WordSerializer().writeBytes(document),
+    );
+    expect(reopened.sections, hasLength(3));
+    expect(
+      reopened.sections
+          .expand((section) => section.blocks)
+          .whereType<WmlContentControlBlock>()
+          .length,
+      2,
     );
   });
 }

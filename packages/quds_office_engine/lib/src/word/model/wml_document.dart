@@ -1013,7 +1013,8 @@ class WmlSection {
   /// table), keyed by story: header, footer, firstHeader, firstFooter,
   /// evenHeader, evenFooter. Written back unchanged unless that story gets
   /// model content (the user replaced the header).
-  final Map<String, WmlOpaqueBlock> preservedStories = <String, WmlOpaqueBlock>{};
+  final Map<String, WmlOpaqueBlock> preservedStories =
+      <String, WmlOpaqueBlock>{};
 
   /// header API.
   List<WmlParagraph> header;
@@ -1155,6 +1156,7 @@ class WmlDocument {
     this.sourceFileName = '',
     this.sourceByteLength,
     this.sourceFootnoteSeparatorsPresent,
+    this.zoteroDocumentData,
   }) : sections = sections ?? <WmlSection>[WmlSection()],
        comments = comments ?? <WmlComment>[],
        footnotes = footnotes ?? <WmlNote>[],
@@ -1203,6 +1205,12 @@ class WmlDocument {
 
   /// package API.
   OpcPackage? package;
+
+  /// Native Zotero document preferences staged by an editor transaction.
+  /// Null preserves the imported package; an empty string explicitly removes
+  /// Zotero preferences. Keeping this override after saving makes undo restore
+  /// the previous preferences even though the package has already changed.
+  String? zoteroDocumentData;
 
   /// trackRevisions API.
   bool trackRevisions;
