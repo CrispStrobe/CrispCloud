@@ -612,6 +612,9 @@ void main() {
         frame < 30 && find.byType(SshMultiplexerSessionsDialog).evaluate().isEmpty;
         frame++) {
       await tester.pump(const Duration(milliseconds: 100));
+      // The real form callback owns stream cancellation in its event zone;
+      // let backend cleanup complete as well as advancing the frame clock.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     }
     expect(find.byType(SshMultiplexerSessionsDialog), findsOneWidget,
         reason: 'status=${terminal.status}, requests=${service.requests.length}, '
