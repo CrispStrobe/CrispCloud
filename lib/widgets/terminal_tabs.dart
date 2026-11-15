@@ -623,7 +623,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   KeyEventResult _onWorkspaceKey(KeyEvent event) {
     if (_arranging) return KeyEventResult.handled;
     final keyboard = HardwareKeyboard.instance;
-    final direction = const {
+    final direction = {
       LogicalKeyboardKey.arrowLeft,
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowUp,
@@ -1169,7 +1169,7 @@ class _PaneGeometry {
         1 - (horizontal ? secondMinimum.width : secondMinimum.height) / usable;
     // Minimum pane sizes can temporarily clamp a saved proportion. Keep the
     // saved value so widening the workspace restores the user's original ratio.
-    final fraction = split.fraction.clamp(lower, math.max(lower, upper));
+    final fraction = split.fraction.clamp(lower, math.max(lower, upper)).toDouble();
     final firstExtent = usable * fraction;
     final secondExtent = usable - firstExtent;
     final first = horizontal
