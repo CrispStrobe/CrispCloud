@@ -373,6 +373,7 @@ void main() {
         );
         expect(session.rows, greaterThan(0));
         expect(find.text('Esc'), findsOneWidget);
+        expect(find.text('Ctrl+B'), findsOneWidget);
         expect(find.text('Ctrl+C'), findsOneWidget);
 
         // A software keyboard inserts at the supplied selection; it does not
@@ -394,9 +395,13 @@ void main() {
           ),
         );
         await tester.pump();
+        await tester.tap(find.text('Ctrl+B'));
+        await tester.pump();
+        await tester.ensureVisible(find.text('Ctrl+C'));
         await tester.tap(find.text('Ctrl+C'));
         await tester.pump();
         expect(connection.input.join(), contains('echo Grüße'));
+        expect(connection.input.join(), contains('\x02'));
         expect(connection.input.join(), contains('\x03'));
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());

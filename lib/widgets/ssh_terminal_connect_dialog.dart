@@ -1,0 +1,452 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../l10n/terminal_strings.dart';
+import '../models/ssh_terminal_config.dart';
+import '../models/tmux_session_options.dart';
+import '../services/ssh_gateway.dart';
+
+export '../models/ssh_terminal_config.dart';
+
+enum _SessionMode { shell, createOrAttach, attach }
+
+/// Native apps connect directly; browsers require a user-supplied gateway.
+/// Reconnect details prefill the form without restoring any credentials.
+class SshTerminalConnectDialog extends StatefulWidget {
+  const SshTerminalConnectDialog({
+    super.key,
+    this.requiresGateway = kIsWeb,
+    this.initialConfig,
+  });
+
+  final bool requiresGateway;
+  final SshTerminalConfig? initialConfig;
+
+  @override
+  State<SshTerminalConnectDialog> createState() => _SshConnectDialogState();
+}
+
+class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
+  final _form = GlobalKey<FormState>();
+  final _host = TextEditingController();
+  final _port = TextEditingController(text: '22');
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  final _privateKey = TextEditingController();
+  final _passphrase = TextEditingController();
+  final _gateway = TextEditingController();
+  final _tmuxName = TextEditingController(text: 'crispcloud');
+  SshTerminalAuthentication _authentication =
+      SshTerminalAuthentication.password;
+  _SessionMode _sessionMode = _SessionMode.shell;
+  bool _showPrivateKey = false;
+  bool _keyPasteFailed = false;
+  int _keyPasteRequest = 0;
+  late final bool _showGateway;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialConfig?.withoutSecrets();
+    _showGateway = widget.requiresGateway || initial?.gateway != null;
+    if (initial == null) return;
+    _host.text = initial.host;
+    _port.text = initial.port.toString();
+    _username.text = initial.username;
+    _gateway.text = initial.gateway?.toString() ?? '';
+    _authentication = initial.authentication;
+    final tmux = initial.tmux;
+    if (tmux != null) {
+      _tmuxName.text = tmux.sessionName;
+      _sessionMode = tmux.mode == TmuxSessionMode.attach
+          ? _SessionMode.attach
+          : _SessionMode.createOrAttach;
+    }
+  }
+
+  void _submit() {
+    if (_form.currentState?.validate() != true) return;
+    final usesKey = _authentication == SshTerminalAuthentication.privateKey;
+    final gateway = _gateway.text.trim();
+    Navigator.pop(
+      context,
+      SshTerminalConfig(
+        host: _host.text.trim(),
+        port: int.parse(_port.text.trim()),
+        username: _username.text.trim(),
+        authentication: _authentication,
+        password: usesKey ? '' : _password.text,
+        privateKey: usesKey ? _privateKey.text : '',
+        passphrase: usesKey ? _passphrase.text : '',
+        gateway: _showGateway && gateway.isNotEmpty ? Uri.parse(gateway) : null,
+        tmux: _sessionMode == _SessionMode.shell
+            ? null
+            : TmuxSessionOptions(
+                sessionName: _tmuxName.text.trim(),
+                mode: _sessionMode == _SessionMode.attach
+                    ? TmuxSessionMode.attach
+                    : TmuxSessionMode.createOrAttach,
+              ),
+      ),
+    );
+  }
+
+  void _selectAuthentication(SshTerminalAuthentication? value) {
+    if (value == null || value == _authentication) return;
+    setState(() {
+      _authentication = value;
+      _password.clear();
+      _privateKey.clear();
+      _passphrase.clear();
+      _showPrivateKey = false;
+      _keyPasteFailed = false;
+      _keyPasteRequest++;
+    });
+  }
+
+  Future<void> _pastePrivateKey() async {
+    final request = ++_keyPasteRequest;
+    bool current() =>
+        mounted &&
+        request == _keyPasteRequest &&
+        _authentication == SshTerminalAuthentication.privateKey;
+    try {
+      // Read only after this explicit user action. Assigning the controller
+      // preserves PEM newlines that a single-line field's formatter removes.
+      final clipboard = await Clipboard.getData('text/plain');
+      if (!current()) return;
+      final text = clipboard?.text;
+      if (text != null && text.isNotEmpty) {
+        _privateKey.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      }
+      setState(() => _keyPasteFailed = false);
+    } catch (_) {
+      if (current()) setState(() => _keyPasteFailed = true);
+    }
+  }
+
+  String? _required(String? value) =>
+      value?.trim().isNotEmpty == true ? null : context.terminalTr('Required');
+
+  String? _validateGateway(String? value) {
+    final text = value?.trim() ?? '';
+    final gateway = Uri.tryParse(text);
+    final message = text.isNotEmpty && gateway == null
+        ? 'Use a complete wss:// URL with a valid host and port.'
+        : sshGatewayValidationMessage(
+            text.isEmpty ? null : gateway,
+            required: widget.requiresGateway,
+            rawUrl: text,
+          );
+    return message == null ? null : context.terminalTr(message);
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(context.terminalTr('Connect via SSH')),
+    content: SizedBox(
+      width: 400,
+      child: SingleChildScrollView(
+        child: Form(
+          key: _form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (widget.requiresGateway) ...[
+                Text(
+                  context.terminalTr(
+                    'Enter a secure WebSocket gateway that forwards to this SSH server. CrispCloud does not provide a gateway.',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+              ],
+              TextFormField(
+                key: const ValueKey('terminal-ssh-host'),
+                controller: _host,
+                autofocus: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: InputDecoration(
+                  labelText: context.terminalTr('Host'),
+                ),
+                validator: _required,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      key: const ValueKey('terminal-ssh-username'),
+                      controller: _username,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      decoration: InputDecoration(
+                        labelText: context.terminalTr('Username'),
+                      ),
+                      validator: _required,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 100,
+                    child: TextFormField(
+                      key: const ValueKey('terminal-ssh-port'),
+                      controller: _port,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: context.terminalTr('Port'),
+                        errorMaxLines: 3,
+                      ),
+                      validator: (value) {
+                        final port = int.tryParse(value?.trim() ?? '');
+                        return port == null || port < 1 || port > 65535
+                            ? context.terminalTr('Enter a port from 1 to 65535')
+                            : null;
+                      },
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (_showGateway) ...[
+                TextFormField(
+                  key: const ValueKey('terminal-ssh-gateway'),
+                  controller: _gateway,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  keyboardType: TextInputType.url,
+                  decoration: InputDecoration(
+                    labelText: context.terminalTr('WebSocket gateway'),
+                    hintText: 'wss://gateway.example/ssh',
+                    errorMaxLines: 4,
+                  ),
+                  validator: _validateGateway,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+              ],
+              DropdownButtonFormField<SshTerminalAuthentication>(
+                key: const ValueKey('terminal-ssh-authentication'),
+                initialValue: _authentication,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: context.terminalTr('Authentication'),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: SshTerminalAuthentication.password,
+                    child: Text(
+                      context.terminalTr('Password'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: SshTerminalAuthentication.privateKey,
+                    child: Text(
+                      context.terminalTr('Private key'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+                onChanged: _selectAuthentication,
+              ),
+              const SizedBox(height: 8),
+              if (_authentication == SshTerminalAuthentication.password)
+                TextFormField(
+                  key: const ValueKey('terminal-ssh-password'),
+                  controller: _password,
+                  obscureText: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enableIMEPersonalizedLearning: false,
+                  autofillHints: null,
+                  decoration: InputDecoration(
+                    labelText: context.terminalTr('Password'),
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                )
+              else ...[
+                TextFormField(
+                  key: const ValueKey('terminal-ssh-private-key'),
+                  controller: _privateKey,
+                  // Obscured multiline input is unsupported, and ordinary
+                  // single-line paste strips PEM newlines. Keep the masked
+                  // view read-only; the explicit paste action preserves them.
+                  // Revealing the key enables normal multiline editing.
+                  obscureText: !_showPrivateKey,
+                  readOnly: !_showPrivateKey,
+                  enableInteractiveSelection: _showPrivateKey,
+                  minLines: _showPrivateKey ? 3 : 1,
+                  maxLines: _showPrivateKey ? 6 : 1,
+                  keyboardType: TextInputType.multiline,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enableIMEPersonalizedLearning: false,
+                  autofillHints: null,
+                  decoration: InputDecoration(
+                    labelText: context.terminalTr('Private key'),
+                    alignLabelWithHint: true,
+                    suffixIcon: IconButton(
+                      key: const ValueKey('terminal-ssh-reveal-key'),
+                      tooltip: context.terminalTr(
+                        _showPrivateKey
+                            ? 'Hide private key'
+                            : 'Show private key',
+                      ),
+                      onPressed: () => setState(() {
+                        _showPrivateKey = !_showPrivateKey;
+                        _keyPasteFailed = false;
+                      }),
+                      icon: Icon(
+                        _showPrivateKey
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
+                  ),
+                  validator: _required,
+                  onChanged: (_) {
+                    // A newer manual edit takes precedence over an earlier
+                    // paste that is still awaiting clipboard permission.
+                    _keyPasteRequest++;
+                    if (_keyPasteFailed) {
+                      setState(() => _keyPasteFailed = false);
+                    }
+                  },
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: const ValueKey('terminal-ssh-paste-key'),
+                    onPressed: _pastePrivateKey,
+                    icon: const Icon(Icons.content_paste, size: 18),
+                    label: Text(context.terminalTr('Paste private key')),
+                  ),
+                ),
+                if (_keyPasteFailed)
+                  Text(
+                    context.terminalTr('Could not read the clipboard.'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  key: const ValueKey('terminal-ssh-passphrase'),
+                  controller: _passphrase,
+                  obscureText: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  enableIMEPersonalizedLearning: false,
+                  autofillHints: null,
+                  decoration: InputDecoration(
+                    labelText: context.terminalTr('Key passphrase (optional)'),
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+              ],
+              const SizedBox(height: 12),
+              DropdownButtonFormField<_SessionMode>(
+                key: const ValueKey('terminal-ssh-session-mode'),
+                initialValue: _sessionMode,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: context.terminalTr('Session'),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: _SessionMode.shell,
+                    child: Text(
+                      context.terminalTr('Remote shell'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: _SessionMode.createOrAttach,
+                    child: Text(
+                      context.terminalTr('Create or attach tmux'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: _SessionMode.attach,
+                    child: Text(
+                      context.terminalTr('Attach existing tmux'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) setState(() => _sessionMode = value);
+                },
+              ),
+              if (_sessionMode != _SessionMode.shell) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  key: const ValueKey('terminal-ssh-tmux-name'),
+                  controller: _tmuxName,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: InputDecoration(
+                    labelText: context.terminalTr('tmux session name'),
+                    errorMaxLines: 4,
+                  ),
+                  validator: (value) =>
+                      TmuxSessionOptions.isValidSessionName(value?.trim() ?? '')
+                      ? null
+                      : context.terminalTr(
+                          'Use 1–64 ASCII letters, digits, _ or -; do not start with -.',
+                        ),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.terminalTr(
+                    'tmux must be installed on the server. Sessions keep running when you disconnect.',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(context.terminalTr('Cancel')),
+      ),
+      FilledButton(
+        onPressed: _submit,
+        child: Text(context.terminalTr('Connect')),
+      ),
+    ],
+  );
+
+  @override
+  void dispose() {
+    _host.dispose();
+    _port.dispose();
+    _username.dispose();
+    _password.dispose();
+    _privateKey.dispose();
+    _passphrase.dispose();
+    _gateway.dispose();
+    _tmuxName.dispose();
+    super.dispose();
+  }
+}

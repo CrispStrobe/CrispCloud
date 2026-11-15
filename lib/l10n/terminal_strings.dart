@@ -270,7 +270,8 @@ extension TerminalContextStrings on BuildContext {
     final strings = TerminalStrings(this);
     final key = _terminalKeys[english];
     if (key != null) return strings.text(key);
-    return (_terminalChrome[strings.language] ??
+    return _terminalSshChrome[strings.language]?[english] ??
+        (_terminalChrome[strings.language] ??
             const <String, String>{})[english] ??
         (strings.language == 'de' ? _de[english] : null) ??
         english;
@@ -597,5 +598,164 @@ const _terminalChrome = <String, Map<String, String>>{
         "يلزم استخدام بوابة WebSocket آمنة في المتصفح.",
     "The gateway URL must not contain credentials, query parameters, or a fragment.": "يجب ألا يتضمن عنوان البوابة بيانات اعتماد أو معلمات استعلام أو جزءاً مرجعياً.",
     "Enter a secure WebSocket gateway that forwards to this SSH server. CrispCloud does not provide a gateway.": "أدخل بوابة WebSocket آمنة تُحوّل الاتصال إلى خادم SSH هذا. لا يوفر CrispCloud بوابة.",
+  },
+};
+
+const _terminalSshChrome = <String, Map<String, String>>{
+  "de": {
+    "Paste private key": "Privaten Schlüssel einfügen",
+    "Could not read the clipboard.":
+        "Zwischenablage konnte nicht gelesen werden.",
+    "Authentication": "Authentifizierung",
+    "Private key": "Privater Schlüssel",
+    "Show private key": "Privaten Schlüssel anzeigen",
+    "Hide private key": "Privaten Schlüssel ausblenden",
+    "Key passphrase (optional)": "Schlüsselpassphrase (optional)",
+    "Session": "Sitzung",
+    "Remote shell": "Remote-Shell",
+    "Create or attach tmux": "tmux erstellen oder verbinden",
+    "Attach existing tmux": "Bestehende tmux-Sitzung verbinden",
+    "tmux session name": "tmux-Sitzungsname",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.": "1–64 ASCII-Buchstaben, Ziffern, _ oder - verwenden; nicht mit - beginnen.",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.": "tmux muss auf dem Server installiert sein. Sitzungen laufen nach dem Trennen weiter.",
+    "Reconnect SSH": "SSH erneut verbinden",
+    "Detach from tmux": "Von tmux lösen",
+  },
+  "fr": {
+    "Paste private key": "Coller la clé privée",
+    "Could not read the clipboard.": "Impossible de lire le presse-papiers.",
+    "Authentication": "Authentification",
+    "Private key": "Clé privée",
+    "Show private key": "Afficher la clé privée",
+    "Hide private key": "Masquer la clé privée",
+    "Key passphrase (optional)": "Phrase secrète de la clé (facultative)",
+    "Session": "Session",
+    "Remote shell": "Shell distant",
+    "Create or attach tmux": "Créer ou rejoindre tmux",
+    "Attach existing tmux": "Rejoindre une session tmux existante",
+    "tmux session name": "Nom de session tmux",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.": "Utilisez 1 à 64 lettres ASCII, chiffres, _ ou - ; ne commencez pas par -.",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.": "tmux doit être installé sur le serveur. Les sessions continuent après la déconnexion.",
+    "Reconnect SSH": "Reconnecter SSH",
+    "Detach from tmux": "Se détacher de tmux",
+  },
+  "es": {
+    "Paste private key": "Pegar clave privada",
+    "Could not read the clipboard.": "No se pudo leer el portapapeles.",
+    "Authentication": "Autenticación",
+    "Private key": "Clave privada",
+    "Show private key": "Mostrar clave privada",
+    "Hide private key": "Ocultar clave privada",
+    "Key passphrase (optional)": "Frase de contraseña de la clave (opcional)",
+    "Session": "Sesión",
+    "Remote shell": "Shell remoto",
+    "Create or attach tmux": "Crear o conectar a tmux",
+    "Attach existing tmux": "Conectar a una sesión tmux existente",
+    "tmux session name": "Nombre de sesión tmux",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.":
+        "Use de 1 a 64 letras ASCII, dígitos, _ o -; no empiece por -.",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.": "tmux debe estar instalado en el servidor. Las sesiones continúan al desconectarse.",
+    "Reconnect SSH": "Reconectar SSH",
+    "Detach from tmux": "Desvincularse de tmux",
+  },
+  "pt": {
+    "Paste private key": "Colar chave privada",
+    "Could not read the clipboard.":
+        "Não foi possível ler a área de transferência.",
+    "Authentication": "Autenticação",
+    "Private key": "Chave privada",
+    "Show private key": "Mostrar chave privada",
+    "Hide private key": "Ocultar chave privada",
+    "Key passphrase (optional)": "Frase-passe da chave (opcional)",
+    "Session": "Sessão",
+    "Remote shell": "Shell remoto",
+    "Create or attach tmux": "Criar ou ligar ao tmux",
+    "Attach existing tmux": "Ligar a uma sessão tmux existente",
+    "tmux session name": "Nome da sessão tmux",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.":
+        "Use 1 a 64 letras ASCII, algarismos, _ ou -; não comece com -.",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.": "O tmux deve estar instalado no servidor. As sessões continuam após desligar.",
+    "Reconnect SSH": "Voltar a ligar por SSH",
+    "Detach from tmux": "Desanexar do tmux",
+  },
+  "zh": {
+    "Paste private key": "粘贴私钥",
+    "Could not read the clipboard.": "无法读取剪贴板。",
+    "Authentication": "身份验证",
+    "Private key": "私钥",
+    "Show private key": "显示私钥",
+    "Hide private key": "隐藏私钥",
+    "Key passphrase (optional)": "私钥口令（可选）",
+    "Session": "会话",
+    "Remote shell": "远程 Shell",
+    "Create or attach tmux": "创建或连接 tmux",
+    "Attach existing tmux": "连接现有 tmux 会话",
+    "tmux session name": "tmux 会话名称",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.":
+        "使用 1–64 个 ASCII 字母、数字、_ 或 -；不能以 - 开头。",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.":
+        "服务器上必须已安装 tmux。断开连接后，会话仍会继续运行。",
+    "Reconnect SSH": "重新连接 SSH",
+    "Detach from tmux": "分离 tmux 会话",
+  },
+  "ja": {
+    "Paste private key": "秘密鍵を貼り付け",
+    "Could not read the clipboard.": "クリップボードを読み取れませんでした。",
+    "Authentication": "認証方式",
+    "Private key": "秘密鍵",
+    "Show private key": "秘密鍵を表示",
+    "Hide private key": "秘密鍵を隠す",
+    "Key passphrase (optional)": "鍵のパスフレーズ（任意）",
+    "Session": "セッション",
+    "Remote shell": "リモートシェル",
+    "Create or attach tmux": "tmux を作成または接続",
+    "Attach existing tmux": "既存の tmux に接続",
+    "tmux session name": "tmux セッション名",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.":
+        "ASCII 英数字、_、- を1〜64文字で入力してください。先頭に - は使えません。",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.":
+        "サーバーに tmux のインストールが必要です。切断後もセッションは実行されます。",
+    "Reconnect SSH": "SSH に再接続",
+    "Detach from tmux": "tmux からデタッチ",
+  },
+  "ko": {
+    "Paste private key": "개인 키 붙여넣기",
+    "Could not read the clipboard.": "클립보드를 읽을 수 없습니다.",
+    "Authentication": "인증 방식",
+    "Private key": "개인 키",
+    "Show private key": "개인 키 표시",
+    "Hide private key": "개인 키 숨기기",
+    "Key passphrase (optional)": "키 암호문 (선택 사항)",
+    "Session": "세션",
+    "Remote shell": "원격 셸",
+    "Create or attach tmux": "tmux 생성 또는 연결",
+    "Attach existing tmux": "기존 tmux에 연결",
+    "tmux session name": "tmux 세션 이름",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.":
+        "ASCII 영문자, 숫자, _ 또는 -를 1~64자 사용하세요. -로 시작할 수 없습니다.",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.":
+        "서버에 tmux가 설치되어 있어야 합니다. 연결을 끊어도 세션은 계속 실행됩니다.",
+    "Reconnect SSH": "SSH 다시 연결",
+    "Detach from tmux": "tmux에서 분리",
+  },
+  "ar": {
+    "Paste private key": "لصق المفتاح الخاص",
+    "Could not read the clipboard.": "تعذرت قراءة الحافظة.",
+    "Authentication": "طريقة المصادقة",
+    "Private key": "المفتاح الخاص",
+    "Show private key": "إظهار المفتاح الخاص",
+    "Hide private key": "إخفاء المفتاح الخاص",
+    "Key passphrase (optional)": "عبارة مرور المفتاح (اختيارية)",
+    "Session": "الجلسة",
+    "Remote shell": "صدفة بعيدة",
+    "Create or attach tmux": "إنشاء جلسة tmux أو الاتصال بها",
+    "Attach existing tmux": "الاتصال بجلسة tmux موجودة",
+    "tmux session name": "اسم جلسة tmux",
+    "Use 1–64 ASCII letters, digits, _ or -; do not start with -.":
+        "استخدم من 1 إلى 64 حرف ASCII أو رقمًا أو _ أو -؛ ولا تبدأ بالرمز -.",
+    "tmux must be installed on the server. Sessions keep running when you disconnect.":
+        "يجب تثبيت tmux على الخادم. تستمر الجلسات في العمل بعد قطع الاتصال.",
+    "Reconnect SSH": "إعادة الاتصال عبر SSH",
+    "Detach from tmux": "الانفصال عن tmux",
   },
 };

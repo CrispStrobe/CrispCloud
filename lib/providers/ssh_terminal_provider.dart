@@ -2,8 +2,10 @@
 //
 // Riverpod providers for the embedded SSH terminal service.
 
+import 'package:crisp_storage/crisp_storage.dart' show HostKeyPrompt;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/tmux_session_options.dart';
 import '../services/ssh_terminal_service.dart';
 import 'core_providers.dart';
 
@@ -58,6 +60,7 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String username,
     String password, {
     Uri? gateway,
+    HostKeyPrompt? hostKeyPrompt,
   }) async {
     final session = await _service.connect(
       host,
@@ -65,6 +68,7 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       username,
       password,
       gateway: gateway,
+      hostKeyPrompt: hostKeyPrompt,
     );
     _refresh();
     return session;
@@ -77,6 +81,8 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String username,
     String privateKey, {
     Uri? gateway,
+    String? passphrase,
+    HostKeyPrompt? hostKeyPrompt,
   }) async {
     final session = await _service.connectWithKey(
       host,
@@ -84,6 +90,8 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       username,
       privateKey,
       gateway: gateway,
+      passphrase: passphrase,
+      hostKeyPrompt: hostKeyPrompt,
     );
     _refresh();
     return session;
@@ -110,7 +118,9 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String sessionId, {
     int width = 80,
     int height = 24,
-  }) => _service.startShell(sessionId, width: width, height: height);
+    TmuxSessionOptions? tmux,
+  }) =>
+      _service.startShell(sessionId, width: width, height: height, tmux: tmux);
 
   /// Delegates to [SshTerminalService.writeToShell].
   Future<void> writeToShell(String sessionId, String input) =>
