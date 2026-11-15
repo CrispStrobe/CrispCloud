@@ -1,0 +1,8 @@
+test_lock_update_requires_review (test_bundled_notice_guards.NoticeGuards.test_lock_update_requires_review) ... ok
+test_missing_dependency_is_rejected_even_with_intact_text (test_bundled_notice_guards.NoticeGuards.test_missing_dependency_is_rejected_even_with_intact_text) ... ok
+test_truncated_notice_is_rejected (test_bundled_notice_guards.NoticeGuards.test_truncated_notice_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.022s
+
+OK

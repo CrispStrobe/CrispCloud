@@ -1,0 +1,32 @@
+managed-office-verifier: exit 0
+full-source-and-mode-verifier: exit 0
+quds-guarded-sync-dry-run: exit 0
+parser-guarded-sync-dry-run: exit 0
+quds-sync-controls: exit 0, 8 tests
+parser-sync-controls: exit 0, 19 tests
+inventory-controls: exit 0, 21 tests
+host-evidence-controls: exit 0, 34 tests
+{
+  "schema": 1,
+  "command_count": 8,
+  "success": true,
+  "python_control_tests": 82,
+  "scope": "Source identity, source synchronization and synthetic inventory/oracle controls; no native execution, Office rendering, produced-output inventory or external schema acceptance.",
+  "deferred_output_gate": {
+    "test": "packages/quds_office_engine/tool/fidelity/test_scripted_oracle.py",
+    "reason": "The positive controls require genuine current engine-produced Office packages; source-only checking cannot supply them.",
+    "generator_suite": "packages/quds_office_engine/test/scripted_workflows_test.dart",
+    "cwd": "packages/quds_office_engine",
+    "commands_after_generator": [
+      "python3 tool/fidelity/scripted_oracle.py",
+      "python3 -m unittest discover -s tool/fidelity -p test_scripted_oracle.py -v"
+    ],
+    "required_outputs": [
+      "build/fidelity-scripted/word/edited.docx",
+      "build/fidelity-scripted/sheet/edited.xlsx",
+      "build/fidelity-scripted/slide/edited.pptx"
+    ],
+    "current_python_test_methods": 17,
+    "status": "pending engine output generation; neither skipped nor passed by this source gate"
+  }
+}
