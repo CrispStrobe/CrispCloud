@@ -21,7 +21,7 @@ time-boxed proof-of-concept candidate, not a migration decision.
 - **F3 viewer → F4 editor** handoff for text/code, PDF, DOCX, XLSX and PPTX.
 - **Read-only fallbacks** for legacy Office formats and archive members.
 - **Legacy Excel** is now imported by Quds for a typed read-only grid and for F4 editing; the File Viewer spreadsheet engine remains the explicit **Legacy** fallback.
-- **ODS** uses the bounded Quds import profile (typed values, supported formulas, styles and merges) and edits a new `.xlsx` copy. Original ODS bytes are retained. Repeated/matrix formulas, ambiguous merges and expanded documents outside the documented limits decline explicitly. ODT/ODP remain read-only previews.
+- **ODS** uses the bounded Quds import profile (typed values, supported formulas, styles, merges, comments and embedded pictures) and edits a new `.xlsx` copy. Original ODS bytes are retained. Repeated/matrix formulas, ambiguous merges and expanded documents outside the documented limits decline explicitly. ODT/ODP remain read-only previews.
 
 The Office engine has no access to the network and does not own file identity,
 bookmarks, conflicts or saves. CrispCloud supplies those.
