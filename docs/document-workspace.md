@@ -84,3 +84,10 @@ The file-operation pane has a persistent theme-coloured outline and an accented
 path header with a filled selection marker. The other pane has a neutral border
 and unfilled marker. The indicator follows the active pane independently of
 keyboard focus; fixed border padding prevents column/row movement when switching.
+
+## Integration checks (15 November 2026)
+
+The focused native regression run passed 93 tests. Three additional portability
+and end-to-end New → Word editor tests passed, as did the isolated existing
+spreadsheet save/close regression. The source fork’s seven wrap-text fidelity
+tests passed before synchronizing its 2,217 managed files into this app.
