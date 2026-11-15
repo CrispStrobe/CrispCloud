@@ -1,0 +1,422 @@
+{
+  "schema_version": 1,
+  "kind": "historical_hosted_failure_recovery",
+  "retrieved_at_utc": "2026-11-15T07:17:53.409691+00:00",
+  "repository": "CrispStrobe/CrispCloud",
+  "workflow_run_id": 43681914471,
+  "workflow_run_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43681914471",
+  "run_attempt": 1,
+  "event": "push",
+  "workflow": ".github/workflows/office-fidelity.yml",
+  "branch": "codex/office-recovery-20261115",
+  "source_sha": "1a86e790080c174c27a283b7ac49913ca1fa91f0",
+  "status": "completed",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "id": 132714216553,
+      "name": "Office recovery copy in Chromium",
+      "conclusion": "success",
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43681914471/job/132714216553"
+    },
+    {
+      "id": 132714216624,
+      "name": "host-roundtrip",
+      "conclusion": "failure",
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43681914471/job/132714216624"
+    },
+    {
+      "id": 132716143802,
+      "name": "external-schema",
+      "conclusion": "skipped",
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43681914471/job/132716143802"
+    }
+  ],
+  "host_tests": {
+    "passed": 283,
+    "observation": "2026-11-15T05:47:08.5921088Z 🎉 283 tests passed."
+  },
+  "inventory": {
+    "verified": 125,
+    "expected": 182,
+    "failures": 57,
+    "collision_count": 57,
+    "observation": "2026-11-15T05:47:16.4534682Z Host inventory: 125/182 verified; 57 failures; receipt /home/runner/work/CrispCloud/CrispCloud/build/fidelity-host/inventory.json",
+    "collisions": [
+      {
+        "path": "build/fidelity-host/back-save-later-revision.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4504396Z"
+      },
+      {
+        "path": "build/fidelity-host/back-save.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4505052Z"
+      },
+      {
+        "path": "build/fidelity-host/native-sheet-1.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4505550Z"
+      },
+      {
+        "path": "build/fidelity-host/native-sheet-2.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4506530Z"
+      },
+      {
+        "path": "build/fidelity-host/native-sheet-3.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4507103Z"
+      },
+      {
+        "path": "build/fidelity-host/native-slide-1.pptx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4507536Z"
+      },
+      {
+        "path": "build/fidelity-host/native-slide-2.pptx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4508082Z"
+      },
+      {
+        "path": "build/fidelity-host/native-slide-3.pptx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4508507Z"
+      },
+      {
+        "path": "build/fidelity-host/native-word-1.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4508923Z"
+      },
+      {
+        "path": "build/fidelity-host/native-word-2.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4509342Z"
+      },
+      {
+        "path": "build/fidelity-host/native-word-3.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4509751Z"
+      },
+      {
+        "path": "build/fidelity-host/protection-after-late-change.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4510264Z"
+      },
+      {
+        "path": "build/fidelity-host/protection-before-late-change.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4510805Z"
+      },
+      {
+        "path": "build/fidelity-host/protection-undo-save.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4511314Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-cancel-retry.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4512098Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-disconnected-copy.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4512598Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-error-retry.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4513095Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-pending-cell.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4513552Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-pending-slide.pptx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4514033Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-picker-copy.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4514495Z"
+      },
+      {
+        "path": "build/fidelity-host/recovery-picker-later-save.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4514985Z"
+      },
+      {
+        "path": "build/fidelity-host/tracking-enabled-save.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4515466Z"
+      },
+      {
+        "path": "build/fidelity-host/tracking-redo-save.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4515932Z"
+      },
+      {
+        "path": "build/fidelity-host/tracking-undo-save.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4516384Z"
+      },
+      {
+        "path": "build/fidelity-host/word-docm-save.docm",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4516816Z"
+      },
+      {
+        "path": "build/fidelity-host/word-dotm-save.dotm",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4517238Z"
+      },
+      {
+        "path": "build/fidelity-host/word-dotx-save.dotx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4517655Z"
+      },
+      {
+        "path": "build/fidelity-host/reference/native-word-expected.docx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4518132Z"
+      },
+      {
+        "path": "build/fidelity-host/reference/native-sheet-expected.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4518658Z"
+      },
+      {
+        "path": "build/fidelity-host/reference/native-slide-expected.pptx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4519193Z"
+      },
+      {
+        "path": "build/office-fill-host-acceptance/source.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4519693Z"
+      },
+      {
+        "path": "build/office-fill-host-acceptance/saved-1.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4520161Z"
+      },
+      {
+        "path": "build/office-fill-host-acceptance/saved-2.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4520623Z"
+      },
+      {
+        "path": "build/office-fill-host-acceptance/saved-3.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4521094Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/source.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4521748Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/rtl-enabled.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4522259Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/rtl-undo.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4522781Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/rtl-redo.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4523272Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-selection.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4523808Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-undo.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4524349Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-redo.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4524865Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-top-row.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4525386Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-first-column.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4526046Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-cleared.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4526609Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/rtl-upload-before.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4527143Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/rtl-upload-after.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4527779Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-upload-before.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4528338Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/freeze-upload-after.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4528920Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/grid-delete.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4529461Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/grid-undo-other-sheet.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4530008Z"
+      },
+      {
+        "path": "build/office-sheet-state-acceptance/grid-redo-other-sheet.xlsx",
+        "found": 2,
+        "observed_at": "2026-11-15T05:47:16.4530579Z"
+      },
+      {
+        "path": "build/office-style-history-acceptance/source.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4531135Z"
+      },
+      {
+        "path": "build/office-style-history-acceptance/cross-sheet-applied.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4531764Z"
+      },
+      {
+        "path": "build/office-style-history-acceptance/cross-sheet-undo.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4532340Z"
+      },
+      {
+        "path": "build/office-style-history-acceptance/cross-sheet-redo.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4532929Z"
+      },
+      {
+        "path": "build/office-style-history-acceptance/native-undo.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4533474Z"
+      },
+      {
+        "path": "build/office-style-history-acceptance/native-redo.xlsx",
+        "found": 3,
+        "observed_at": "2026-11-15T05:47:16.4534009Z"
+      }
+    ]
+  },
+  "external_validation": {
+    "job_id": 132716143802,
+    "conclusion": "skipped",
+    "reason": "Dependent host-roundtrip job failed at inventory; original run performed no external schema/render job."
+  },
+  "original_host_archive": {
+    "artifact_id": 14149236176,
+    "name": "office-host-fidelity-evidence",
+    "github_digest": "sha256:3fe8fbf3bca0d941fc67270a9cdb7988e927db6b4b5ddf0237e98aa459354477",
+    "bytes": 4503239,
+    "sha256": "3fe8fbf3bca0d941fc67270a9cdb7988e927db6b4b5ddf0237e98aa459354477",
+    "local_filename": "original-host-43681914471-14149236176-continuation.zip",
+    "sha256_matches_github": true,
+    "original_inventory_matches_log": true,
+    "navigation_files": [
+      {
+        "path": "build/office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx",
+        "bytes": 18043,
+        "sha256": "c8252cea0b53e01460e3a218d0e1f3f490482972aa73cd42379780e69331a774"
+      },
+      {
+        "path": "build/office-sheet-navigation-acceptance/rename-redo.xlsx",
+        "bytes": 29228,
+        "sha256": "46063625761d5dd3a341fd99a5945d3719f18abb5a7e0357f78b633d4aea7c34"
+      },
+      {
+        "path": "build/office-sheet-navigation-acceptance/rename-undo.xlsx",
+        "bytes": 29203,
+        "sha256": "d17eaee735e61dde8a910d822fe1585d03447182d11128072c6c3888c1d040a1"
+      },
+      {
+        "path": "build/office-sheet-navigation-acceptance/rename.xlsx",
+        "bytes": 18073,
+        "sha256": "6df366dc5c3c08d7afd489c9f6eb3921e3cc3855265b9ec7dae5ed0389748ae3"
+      },
+      {
+        "path": "build/office-sheet-navigation-acceptance/source.xlsx",
+        "bytes": 5670,
+        "sha256": "f8ac2a4848a87e95fec14fcdee064c94e2747ec0cc561058202e7f4f2a8a791c"
+      },
+      {
+        "path": "build/office-sheet-navigation-acceptance/switched-draft.xlsx",
+        "bytes": 29198,
+        "sha256": "e470dfe85c67a8e73f19976978a13e7de059d10a1cdd5f0ecd085a7bec3b7790"
+      }
+    ]
+  },
+  "logs": [
+    {
+      "job_id": 132714216624,
+      "path": "host-roundtrip.log.gz",
+      "preservation": "Exact UTF-8 encoding of connector structuredContent.content; no trimming or newline normalization; gzip mtime=0",
+      "uncompressed_bytes": 373139,
+      "uncompressed_sha256": "2349b6b471f38065c3fa6774ade6e9bd36b853a700fa1fe9a2dcfcaee629d722",
+      "compressed_bytes": 68254,
+      "sha256": "c2b7bfb0418f032ef7701fff11b812712d87b03eeb110bf22a69414a8fec1149",
+      "checked_out_sha": "1a86e790080c174c27a283b7ac49913ca1fa91f0",
+      "checkout_observation": "git log -1 --format=%H\n2026-11-15T05:38:30.8143495Z 1a86e790080c174c27a283b7ac49913ca1fa91f0"
+    },
+    {
+      "job_id": 132714216553,
+      "path": "browser-copy.log.gz",
+      "preservation": "Exact UTF-8 encoding of connector structuredContent.content; no trimming or newline normalization; gzip mtime=0",
+      "uncompressed_bytes": 62543,
+      "uncompressed_sha256": "0dce103f2cb4ace9eec7856ebe743699abc49af5ea6893fa685d7b74dd04598d",
+      "compressed_bytes": 14333,
+      "sha256": "b5860ce423189d31913ce42efc3cd9b5eefda0466a33d73e31822f127b8f3a93",
+      "checked_out_sha": "1a86e790080c174c27a283b7ac49913ca1fa91f0",
+      "checkout_observation": "git log -1 --format=%H\n2026-11-15T05:38:33.1549698Z 1a86e790080c174c27a283b7ac49913ca1fa91f0"
+    }
+  ],
+  "metadata_files": [
+    {
+      "path": "run.json",
+      "bytes": 13419,
+      "sha256": "838c199ac8cfbdd430501f550bc5998377867296e8d975fcf4c634d85c853087"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 7081,
+      "sha256": "52ed49adbdf469bcafd27436ac0ef0edf29a34a2faf156d57e2b318a3c4e2824"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 1486,
+      "sha256": "72ce9280d05129cefee728d6f86cee5a5d0d7c1c4d5a29d01841db88b5c03104"
+    }
+  ],
+  "scope": "This preserves the original failed run at its actual checkout source. It is historical evidence, separate from the repaired inventory, later independent recovered-byte validation, and fresh hosted acceptance. Passing host tests do not make this original workflow green."
+}

@@ -52,3 +52,29 @@ A preview-only font setup is the next implementation checkpoint.
 Other workflows on this older branch have independent failures recorded in
 `github/summary.json`. This Office result is not an all-repository CI result,
 a qualification of newer main, or a physical-device claim.
+
+## Independent verification of the retained bytes
+
+`integrity/` records a separate local check of all five archive digests,
+1,843 extracted files, all 540 SDK input hashes, and the complete 182-file host
+inventory. An independent Python OPC/XML reader checks the six navigation
+workbooks, including draft values, quoted formulas, defined names, and
+rename/undo/redo. All 201 rendered PNG page fingerprints were recomputed;
+the 36 save-cycle and three independent-reference comparisons also pass.
+Browser source, lockfile, compiled code, and downloaded-payload hashes agree.
+This verifies the hosted execution evidence; it is not a second SDK or renderer
+execution. The browser's generated package configuration is not in the artifact,
+so its digest is retained without claiming an independent recomputation.
+
+To reproduce that check from this committed directory, use a new destination
+and a checkout containing qualified source `7e5af83c` (current runtime inputs
+checked by the verifier must match it):
+
+```sh
+python3 docs/evidence/office-worksheet-navigation-20261115/resume/hosted-7e5af83c/reassemble.py --extract /tmp/quds-navigation-replay
+python3 docs/evidence/office-worksheet-navigation-20261115/resume/hosted-7e5af83c/integrity/verify_hosted_artifacts.py --artifacts /tmp/quds-navigation-replay --app . --output /tmp/quds-navigation-verification
+```
+
+Python 3.12+ and Pillow are required. The retained receipt identifies the
+exact versions used. The verifier's original source and receipts are preserved
+unchanged, including their explicit geometry-only limit for the older UI PNGs.
