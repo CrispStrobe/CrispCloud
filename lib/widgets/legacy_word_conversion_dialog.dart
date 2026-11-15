@@ -45,7 +45,7 @@ _LegacyWordInput _inspectConversionSource(Uint8List bytes) {
     // but its missing feature inventory cannot establish preservation.
     if (error.issue != WordConversionInspectionIssue.invalidInput) rethrow;
     final recovery = _convertStructuredWord((bytes: bytes, docm: false));
-    if (!recovery.recoveredTextOnly) throw error;
+    if (!recovery.recoveredTextOnly) rethrow;
     return (source: null, recovery: recovery);
   }
 }
@@ -273,7 +273,10 @@ class _LegacyWordConversionDialogState
       if (_structured || _sourceRecovery != null) {
         final result =
             _sourceRecovery ??
-            await compute(_convertStructuredWord, (
+            await compute<
+              ({Uint8List bytes, bool docm}),
+              LegacyWordStructuredConversion
+            >(_convertStructuredWord, (
               bytes: widget.bytes,
               docm: _output == InstalledOfficeOutput.docm,
             ));
