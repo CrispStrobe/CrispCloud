@@ -1,0 +1,31 @@
+{
+  "repo": "quds_office_suite",
+  "our_comparison": "9d1f6755a21c5d9936fd89532a4ebdbb510e9a2d",
+  "incoming_requested": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+  "incoming_fetched": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+  "merge_base": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+  "ahead_behind": "6\t1",
+  "incoming_unique_commits": [
+    "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8 test(ods): restore retained geometry, currency and sparse-padding regressions [skip ci]"
+  ],
+  "incoming_change_inventory": [
+    "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "direct_tree_difference_inventory": [
+    "D\tdocs/evidence/comments-io-20261115/accepted/README.md",
+    "D\tdocs/evidence/comments-io-20261115/accepted/artifacts-manifest.json",
+    "D\tdocs/evidence/comments-io-20261115/accepted/artifacts.tar.xz",
+    "D\tdocs/evidence/comments-io-20261115/accepted/summary.json",
+    "D\tdocs/evidence/comments-io-20261115/baseline/README.md",
+    "D\tdocs/evidence/comments-io-20261115/baseline/artifacts-manifest.json",
+    "D\tdocs/evidence/comments-io-20261115/baseline/artifacts.tar.xz",
+    "D\tdocs/evidence/comments-io-20261115/baseline/summary.json",
+    "D\tdocs/evidence/comments-io-20261115/initial-correction-compilation/artifacts-manifest.json",
+    "D\tdocs/evidence/comments-io-20261115/initial-correction-compilation/artifacts.tar.xz",
+    "D\tdocs/evidence/comments-io-20261115/initial-correction-compilation/summary.json",
+    "M\tpackages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "M\tpackages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "D\tpackages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+    "D\tpackages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+  ]
+}

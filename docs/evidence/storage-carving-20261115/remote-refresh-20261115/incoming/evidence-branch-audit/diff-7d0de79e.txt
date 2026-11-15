@@ -1,0 +1,13 @@
+M	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/README.md
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-acceptance.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/README.md
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/artifacts-sha256.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/audit_cross_bindings.py
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/cross-bindings.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/final-independent-review/recorded-gates.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/concurrent-main-closure.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/concurrent-main-closure.md
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/final-closure-supplement.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/final-closure-supplement.md
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/visual-review.json
+A	docs/evidence/storage-carving-20261115/local-resume-20261115T1150/visual-review.md

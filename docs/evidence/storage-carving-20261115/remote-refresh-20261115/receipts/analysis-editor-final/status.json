@@ -1,0 +1,10 @@
+{
+  "label": "analysis-editor-final",
+  "qualification_success": true,
+  "returncode": 0,
+  "tested_head": "564d88d45b71bc50ab9f3dc672c4b8ec9363d41d",
+  "source_resolution_digest": "fac95c4fce0b6e6265be9112571e03915253c2391df235d7f1beaec4f7a439b0",
+  "inputs_and_commit_stable": true,
+  "totals": null,
+  "suite_count": null
+}

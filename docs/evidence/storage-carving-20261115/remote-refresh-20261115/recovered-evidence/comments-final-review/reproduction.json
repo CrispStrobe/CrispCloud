@@ -1,0 +1,19 @@
+{
+  "checked_utc": "2026-11-15T12:56:15.895214+00:00",
+  "source_commit": "fd14d8a68477165e7ca3317b647f403f2308e353",
+  "scope": "Exact committed engine lib snapshot; existing resolved pinned workspace dependencies; only the original failing clear/decoy reproduction, not full qualification.",
+  "command": [
+    "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "--packages=package_config.json",
+    "clear_decoy.dart"
+  ],
+  "cwd": "/workspace/scratch/0b93849cdeb9/audit-notes/comments-review-fd14d8a6",
+  "returncode": 0,
+  "stdout": "{\"source\":\"fd14d8a68477165e7ca3317b647f403f2308e353\",\"before_clear\":[\"authored note\"],\"after_clear_save_reopen\":[],\"authored_part_removed\":false,\"comments_relationship_removed\":false,\"unrelated_decoy_bytes_preserved\":true,\"expected_comments_after_clear\":0,\"success\":true}\n",
+  "stderr": "",
+  "input_hashes": {
+    "clear_decoy.dart": "a753306b48728c381ff27ae26ff82ad8b516b3e251329dabc960950a6c5d75cc",
+    "package_config.json": "fe8ce317eced46852311b1f1b757602b145ad222b84fcdca3efd3d2d17715888",
+    "source-binding.json": "19e3c4bf35cfa344eb3f5566a994718aaa8cd2a49b3cd5ad0fbf4169c149652f"
+  }
+}

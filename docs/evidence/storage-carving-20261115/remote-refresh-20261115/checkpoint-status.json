@@ -1,0 +1,22 @@
+{
+  "status": "final joined application source ready for qualification",
+  "saved_app_recovery": "7d0de79eeb5932e355e66af0be073d58f9fcf3c4",
+  "app_joined_source": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "saved_quds_correction": "25c373626368c4a800dbaff2024c7972ba8a6e50",
+  "saved_parser_source": "08296edbee08da013a8ff718798972552ccd03f7",
+  "saved_parser_qualification": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+  "pending": [
+    "Run final host gates and save each completed receipt",
+    "Retain joined canonical comments and mirrored-parser final qualification",
+    "Update final incoming closure, continuation and PR111"
+  ],
+  "ci_actions_waited": false,
+  "saved_quds_source": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+  "saved_parser_evidence": "fe916bf41eb7ecb6845f68b90c76c83d8f062a04",
+  "observed_branch_counts": {
+    "CrispCloud": 19,
+    "Quds": 14,
+    "Parser": 9
+  },
+  "managed_files": 2336
+}

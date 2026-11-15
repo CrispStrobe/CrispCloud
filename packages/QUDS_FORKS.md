@@ -23,9 +23,17 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea` on
+The current comments correction uses SpreadsheetML text/author structure and
+actual package relationships. Imported comments remain editable at their real
+part URI, deletion survives repeated saves, and shared or unrelated parts are
+preserved. Malformed comment targets are rejected before package mutation.
+The final qualification records live in
+`docs/evidence/storage-carving-20261115/remote-refresh-20261115/`; earlier
+counts below retain their original source scope.
+
+The app mirrors Quds `4e8c8f80f206e93be8530a94da478e06c0f87608` on
 `integration/office-storage-reconcile-20261115` and standalone
-legacy parser `08296edbee08da013a8ff718798972552ccd03f7`; all 2,334 managed files
+legacy parser `08296edbee08da013a8ff718798972552ccd03f7`; all 2,336 managed files
 are pinned for verification. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover

@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-11-15T12:58:28.359240+00:00",
+  "scope": "Read-only local ancestry check after parent integration; does not independently assert remote publication.",
+  "repositories": {
+    "CrispCloud": {
+      "observed_local_head": "7c1c925028d66f8109c628b8c17a0d4f1d70cb73",
+      "incoming_head": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+      "incoming_is_ancestor": true
+    },
+    "quds_office_suite": {
+      "observed_local_head": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+      "incoming_head": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+      "incoming_is_ancestor": true
+    },
+    "legacy-doc-parser": {
+      "observed_local_head": "58a2a63a23e2bda2dde42455707f2ab3a9655413",
+      "incoming_head": "84264525417b924476af3a9c8cfa9bbe19b6437b",
+      "incoming_is_ancestor": true
+    }
+  }
+}
