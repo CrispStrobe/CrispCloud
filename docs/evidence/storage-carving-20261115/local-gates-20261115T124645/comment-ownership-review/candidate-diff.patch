@@ -1,0 +1,66 @@
+--- a/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
++++ b/packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart
+@@ -784,12 +784,18 @@
+   OpcPackage write(SmlWorkbook book, {bool recalculate = true}) {
+     book.package?.assertUnsignedForEditing();
+     final sourcePackage = book.package;
++    final sourceComments = <SmlWorksheet, PackagePart?>{};
+     if (sourcePackage != null) {
+-      // Reject malformed comments ownership before any package parts change.
++      // Capture only existing source-sheet ownership before any parts change.
++      // Newly allocated sheets must never adopt an unrelated legacy-named part.
+       for (final sheet in book.sheets) {
+         final sourceUri = sheet.sourcePartUri;
+-        if (sourceUri != null) {
+-          _sheetCommentsPart(sheet, sourcePackage, sourceUri);
++        if (sourceUri != null && sourcePackage.getPart(sourceUri) != null) {
++          sourceComments[sheet] = _sheetCommentsPart(
++            sheet,
++            sourcePackage,
++            sourceUri,
++          );
+         }
+       }
+     }
+@@ -879,7 +885,11 @@
+       package
+           .getPart(uri)!
+           .writeText(_sheetXml(book.sheets[i], sst, package, uri));
+-      _writeSheetExtras(book.sheets[i], package);
++      _writeSheetExtras(
++        book.sheets[i],
++        package,
++        commentsPart: sourceComments[book.sheets[i]],
++      );
+       _writePivots(book, book.sheets[i], package, uri);
+     }
+     if (package
+@@ -904,19 +914,21 @@
+     return package;
+   }
+ 
+-  static void _writeSheetExtras(SmlWorksheet sheet, OpcPackage package) {
++  static void _writeSheetExtras(
++    SmlWorksheet sheet,
++    OpcPackage package, {
++    required PackagePart? commentsPart,
++  }) {
+     final sheetUri = sheet.sourcePartUri!;
+     final relationships = package.relationshipsFor(sheetUri);
+-    final commentsPart = _sheetCommentsPart(sheet, package, sheetUri);
+     final commentsLink = relationships.firstByType(RelationshipTypes.comments);
+     final legacyPart = package.getPart('/xl/comments${sheet.sheetId}.xml');
+-    // Removing an authored link can make an unrelated legacy-named part the
+-    // fallback on the next import. Retain an authoritative empty part in that
+-    // case, preserving the decoy and avoiding deleted comments resurfacing.
++    // A new sheet or removal of an authored link can expose an unrelated
++    // legacy-named part as the fallback on the next import. Keep a distinct
++    // authoritative empty part so the orphan survives without becoming a note.
+     final keepEmptyAuthority =
+-        commentsPart != null &&
+         legacyPart != null &&
+-        legacyPart.uri != commentsPart.uri &&
++        legacyPart.uri != commentsPart?.uri &&
+         legacyPart.contentType == OfficeContentTypes.sheetComments &&
+         !_hasOtherPartReference(package, legacyPart.uri);
+     if (sheet.comments.isNotEmpty || keepEmptyAuthority) {

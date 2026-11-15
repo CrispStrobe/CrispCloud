@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "reviewer": "qualification_setup",
+  "status": "No concrete blocker found in the reviewed candidate delta. Runtime acceptance remains a separate owner gate.",
+  "review_kind": "read-only static source and lifecycle-test review; no tests executed and no repository source modified",
+  "base_source": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+  "candidate_commit": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "candidate_path": "/workspace/scratch/1e19fe1d39ae/incoming-audit/comments-namespace-review/proposed-sheet-serial.dart",
+  "candidate_git_blob": "4cbc5fa6bc476572253cfbd30685e6fbdece9fad",
+  "candidate_sha256": "4bfabb807ff50edf68d6e2e1d3a32623847ef10b9dc055ab392bf5614014eeb7",
+  "candidate_bytes": 54851,
+  "exact_patch_sha256": "205fbbd78b74504a93bc5d5fee4ee7d5c1436384608854501c0bc1888c0ae689",
+  "patch_reconstructs_exact_candidate": true,
+  "lifecycle_test_commit": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "lifecycle_test_path": "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+  "lifecycle_test_git_blob": "e09987bd9895692e46ee41334d783363e32cb561",
+  "existing_tests_removed_or_weakened": false,
+  "preserved_baseline": {
+    "source": "55fe279284130d8691c9edcd3fe5ae68656a7037",
+    "selected_tests": 4,
+    "passed": 0,
+    "failed": 4,
+    "stable_inputs_and_commit": true,
+    "indexed_artifacts_verified": 8,
+    "metadata_sha256": "f828f6bdac9d4a2fb5a3c08515eefaf8f37b6e3f471cb338a8da9f016792aa7b"
+  },
+  "review_points": [
+    {
+      "area": "Unrelated part ownership",
+      "assessment": "Existing source comments are resolved before package changes and only when the original worksheet part exists. Newly allocated worksheet URIs therefore cannot make a conventional orphan comments part owned during serialization."
+    },
+    {
+      "area": "Allocation and preservation",
+      "assessment": "The nullable captured part flows into the existing allocator. A missing owned part cannot become a retained URI; occupied conventional and suffixed part names are skipped. Existing unrelated bytes are not overwritten. Existing _hasOtherPartReference checks still split edits from shared/foreign owners and guard deletion."
+    },
+    {
+      "area": "Empty authority lifecycle",
+      "assessment": "Removing the old commentsPart-nonnull precondition permits a distinct empty authority for a new empty worksheet facing an unreferenced conventional comments part. On reopen that relationship wins over legacy naming; later addition and clear retain the authoritative part rather than resurrecting orphan text."
+    },
+    {
+      "area": "No partial mutation for actual owned errors",
+      "assessment": "The same _sheetCommentsPart validation runs for every existing source worksheet before column metrics, recalculation, shared strings, styles, properties or sheet writes. Existing external, missing, wrong-type and wrong-root target tests assert unchanged package bytes both before and after clearing authored comments."
+    },
+    {
+      "area": "Stable worksheet keys",
+      "assessment": "SmlWorksheet has object-identity equality and no hashCode override in its model declaration, so setting sourcePartUri during allocation does not invalidate the captured ownership map."
+    },
+    {
+      "area": "Lifecycle and regression controls",
+      "assessment": "Four additive cases cross valid/malformed unowned legacy parts with initially empty/explicit comments. Each saves/reopens, adds a later note, then clears, checking orphan bytes/content type, distinct authoritative relationships, preserved old worksheet comments/cells, and exact reopened note contents. Existing shared, foreign-part, relocated-part and owned-target validation cases are unchanged."
+    },
+    {
+      "area": "Final saved test and external-reader fixture additions",
+      "assessment": "The final 31 test lines strengthen the lifecycle cases with exact preservation of unrelated orphan relationships, exactly one distinct owning relationship, correct comments content type/root and SpreadsheetML descendant namespaces, and truly empty authors/commentList children when no note is authored. The fixture preserves the existing three repeated-save packages and adds six valid/malformed orphan collision outputs through empty/add/clear with authored expected comment data and exact orphan/relationship bytes. No assertions were removed or weakened."
+    }
+  ],
+  "concrete_blockers": [],
+  "scope_limits": [
+    "This static review is not a runtime pass or full package certification. The owner is running focused acceptance separately.",
+    "The review is bound to saved commit 47e44e0ae35adcc406eee2a2ae2118dd2a4a082a and all three changed engine-file identities recorded above.",
+    "No app/canonical source, index or HEAD changes, runtime reruns, or additional remote main observation were performed by this review."
+  ],
+  "candidate_tree": "9b5f9f9aeeb2fc59f46f0331037118a980b864b3",
+  "candidate_parent": "7a7fd2fe776d5733ddb824315e0768d01d1cbabc",
+  "candidate_saved_bytes_match_reviewed_scratch": true,
+  "lifecycle_baseline_commit": "55fe279284130d8691c9edcd3fe5ae68656a7037",
+  "saved_file_identities": {
+    "serializer": {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "git_blob": "4cbc5fa6bc476572253cfbd30685e6fbdece9fad",
+      "sha256": "4bfabb807ff50edf68d6e2e1d3a32623847ef10b9dc055ab392bf5614014eeb7",
+      "bytes": 54851
+    },
+    "lifecycle_test": {
+      "path": "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+      "git_blob": "e09987bd9895692e46ee41334d783363e32cb561",
+      "sha256": "e9b5aad698d42df42c88d6b236ab01fa8303e61e1e2827471b882a83e7a462f0",
+      "bytes": 20310
+    },
+    "fixture": {
+      "path": "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+      "git_blob": "9b545271f344d35aaf4abc8dcdcca657891a5949",
+      "sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3",
+      "bytes": 4817
+    }
+  }
+}

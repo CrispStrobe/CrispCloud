@@ -27,12 +27,15 @@ The current comments correction uses SpreadsheetML text/author structure and
 actual package relationships. Imported comments remain editable at their real
 part URI, deletion survives repeated saves, and shared or unrelated parts are
 preserved. Malformed comment targets are rejected before package mutation.
-The final qualification records live in
-`docs/evidence/storage-carving-20261115/remote-refresh-20261115/`; earlier
-counts below retain their original source scope.
+New worksheet saves capture ownership before assigning parts. Unrelated legacy-named
+comment parts and their relationships remain unchanged through save/reopen/add/clear;
+a separate empty comment authority prevents later fallback from adopting unrelated data.
+The current qualification records live in
+`docs/evidence/storage-carving-20261115/local-gates-20261115T124645/`; incoming
+`remote-refresh-20261115` receipts and earlier counts retain their own source scope.
 
-The app mirrors Quds `4e8c8f80f206e93be8530a94da478e06c0f87608` on
-`integration/office-storage-reconcile-20261115` and standalone
+The app mirrors Quds `47e44e0ae35adcc406eee2a2ae2118dd2a4a082a` on
+`integration/comments-ownership-20261115T132154` and standalone
 legacy parser `08296edbee08da013a8ff718798972552ccd03f7`; all 2,336 managed files
 are pinned for verification. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
