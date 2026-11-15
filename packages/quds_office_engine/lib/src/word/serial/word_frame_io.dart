@@ -307,11 +307,13 @@ abstract final class WordFrameIo {
     }
     _writeLineProperties(w, frame, stroke);
     w.writeEndElement();
-    w.writeStartElement('txbx', prefix: 'wps');
-    w.writeStartElement('txbxContent', prefix: 'w');
-    _writeContent(w, frame, writeBlock);
-    w.writeEndElement();
-    w.writeEndElement();
+    if (_writesTextBox(frame)) {
+      w.writeStartElement('txbx', prefix: 'wps');
+      w.writeStartElement('txbxContent', prefix: 'w');
+      _writeContent(w, frame, writeBlock);
+      w.writeEndElement();
+      w.writeEndElement();
+    }
     _writeBodyProperties(w, frame);
     w.writeEndElement();
     w.writeEndElement();
@@ -373,19 +375,26 @@ abstract final class WordFrameIo {
         attributes: {'type': 'topAndBottom'},
       );
     }
-    w.writeStartElement('textbox', prefix: 'v');
-    w.writeAttribute(
-      'inset',
-      '${_fmt(frame.insetLeft)}pt,${_fmt(frame.insetTop)}pt,'
-          '${_fmt(frame.insetRight)}pt,${_fmt(frame.insetBottom)}pt',
-    );
-    w.writeStartElement('txbxContent', prefix: 'w');
-    _writeContent(w, frame, writeBlock);
-    w.writeEndElement();
-    w.writeEndElement();
+    if (_writesTextBox(frame)) {
+      w.writeStartElement('textbox', prefix: 'v');
+      w.writeAttribute(
+        'inset',
+        '${_fmt(frame.insetLeft)}pt,${_fmt(frame.insetTop)}pt,'
+            '${_fmt(frame.insetRight)}pt,${_fmt(frame.insetBottom)}pt',
+      );
+      w.writeStartElement('txbxContent', prefix: 'w');
+      _writeContent(w, frame, writeBlock);
+      w.writeEndElement();
+      w.writeEndElement();
+    }
     w.writeEndElement();
     w.writeEndElement();
   }
+
+  /// A shape imported without a text box stays without one until content
+  /// is added to it.
+  static bool _writesTextBox(WmlFrame frame) =>
+      frame.hasTextBox || frame.blocks.isNotEmpty;
 
   static void _writeContent(
     XmlWriter w,

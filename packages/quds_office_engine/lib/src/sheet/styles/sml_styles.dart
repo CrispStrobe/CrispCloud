@@ -225,6 +225,7 @@ class SmlStyleSheet {
     final SmlStyleSheet sheet = SmlStyleSheet(
       cellXfsNumFmt: <int>[],
       cellXfsAlign: <SmlHAlign>[],
+      cellXfsWrap: <bool>[],
       fillRgbs: <String>[],
       fontRgbs: <String>[],
       fontBolds: <bool>[],
@@ -305,9 +306,7 @@ class SmlStyleSheet {
           alignment == null ? null : _attribute(alignment, 'horizontal'),
         ),
       );
-      final wrap = alignment == null
-          ? null
-          : _attribute(alignment, 'wrapText');
+      final wrap = alignment == null ? null : _attribute(alignment, 'wrapText');
       sheet.cellXfsWrap.add(
         wrap != null && (wrap == '1' || wrap.toLowerCase() == 'true'),
       );
@@ -439,7 +438,8 @@ class SmlStyleSheet {
       final scheme = font
           .firstChild('scheme', namespaceUri: font.namespaceUri)
           ?.getAttribute('val', namespaceUri: '');
-      final resolved = themeFontFamilies[scheme] ??
+      final resolved =
+          themeFontFamilies[scheme] ??
           font
               .firstChild('name', namespaceUri: font.namespaceUri)
               ?.getAttribute('val', namespaceUri: '');
@@ -556,7 +556,8 @@ class SmlStyleSheet {
     final String desiredFamily = fontFamily.isEmpty
         ? (base == null ? 'Calibri' : _familyOf(cellXfsFontId[base]))
         : fontFamily;
-    final bool desiredWrap = wrapText ?? (base == null ? false : cellXfsWrap[base]);
+    final bool desiredWrap =
+        wrapText ?? (base == null ? false : cellXfsWrap[base]);
     final int? desiredFormat = numFmtCode == null
         ? (base == null ? null : cellXfsNumFmt[base])
         : numFmtId(numFmtCode);
@@ -616,7 +617,7 @@ class SmlStyleSheet {
           cellXfsAlign[i] == align &&
           xfFill == fillId &&
           xfFont == fontId &&
-          (wrapText == null || (i < cellXfsWrap.length && cellXfsWrap[i] == desiredWrap)) &&
+          cellXfsWrap[i] == desiredWrap &&
           (desiredFormat == null || xfFormat == desiredFormat)) {
         return i;
       }
@@ -800,15 +801,16 @@ class SmlStyleSheet {
     // Only formats a cell xf actually selects need authoring. Built-in and
     // unused source formats stay exactly as the native stylesheet left them.
     final referenced = cellXfsNumFmt.toSet();
-    final customFormats = numFmts.entries
-        .where(
-          (entry) =>
-              entry.key >= 164 &&
-              entry.value.trim().isNotEmpty &&
-              referenced.contains(entry.key),
-        )
-        .toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final customFormats =
+        numFmts.entries
+            .where(
+              (entry) =>
+                  entry.key >= 164 &&
+                  entry.value.trim().isNotEmpty &&
+                  referenced.contains(entry.key),
+            )
+            .toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
     if (customFormats.isNotEmpty) {
       buf.write('<numFmts count="${customFormats.length}">');
       for (final entry in customFormats) {
@@ -876,8 +878,7 @@ class SmlStyleSheet {
       if (align != SmlHAlign.general || wrap) {
         buf.write(' applyAlignment="1">');
         final attrs = <String>[
-          if (align != SmlHAlign.general)
-            'horizontal="${hAlignName(align)}"',
+          if (align != SmlHAlign.general) 'horizontal="${hAlignName(align)}"',
           if (wrap) 'wrapText="1"',
         ];
         buf.write('<alignment ${attrs.join(' ')}/></xf>');
@@ -899,10 +900,7 @@ class SmlStyleSheet {
     if (customFormats.isNotEmpty) {
       XmlElement? formats = root.firstChild('numFmts', namespaceUri: namespace);
       if (formats == null) {
-        formats = XmlElement(
-          localName: 'numFmts',
-          namespaceUri: namespace,
-        );
+        formats = XmlElement(localName: 'numFmts', namespaceUri: namespace);
         _insertStyleCollection(root, formats);
       }
       final existing = <int>{
@@ -1035,7 +1033,11 @@ class SmlStyleSheet {
                   );
                 }
                 if (wrapChanged) {
-                  _setAttribute(alignment, 'wrapText', cellXfsWrap[i] ? '1' : '0');
+                  _setAttribute(
+                    alignment,
+                    'wrapText',
+                    cellXfsWrap[i] ? '1' : '0',
+                  );
                 }
               } else {
                 final alignment = _generatedCopy(
@@ -1488,13 +1490,10 @@ String formatExcelDate(DateTime dt, String code) {
   // Literal escapes (`\.`) and quoted text must not be treated as date
   // tokens; Excel prints dd\.mm\.yyyy as 15.03.2023.
   final List<String> literals = <String>[];
-  var out = code.replaceAllMapped(
-    RegExp(r'\\(.)|"([^"]*)"'),
-    (match) {
-      literals.add(match.group(1) ?? match.group(2) ?? '');
-      return '\u0000${literals.length - 1}\u0000';
-    },
-  );
+  var out = code.replaceAllMapped(RegExp(r'\\(.)|"([^"]*)"'), (match) {
+    literals.add(match.group(1) ?? match.group(2) ?? '');
+    return '\u0000${literals.length - 1}\u0000';
+  });
   out = out.replaceAll('yyyy', '${dt.year}');
   out = out.replaceAll('yy', pad(dt.year % 100, 2));
   out = out.replaceAll('mmm', month);

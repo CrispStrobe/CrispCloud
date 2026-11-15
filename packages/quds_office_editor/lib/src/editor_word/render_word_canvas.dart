@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -3196,9 +3197,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       if (laidOut.pages.isNotEmpty) {
         _fitPage(laidOut.pages.first);
         _paintFrames(canvas, laidOut.pages.first);
+        _paintSelectionBand(canvas, laidOut.pages.first);
         for (final LaidOutLine line in laidOut.pages.first.lines) {
           if (_paintsLineSelection(line, laidOut.pages.first)) {
-            _paintLineSelection(canvas, line);
+            _paintFindHits(canvas, line);
           }
           _drawLine(
             canvas,
@@ -3310,6 +3312,9 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           if (index != null) frameOwners[index] = frame;
         }
       }
+      if (!_editingHeaderFooter) {
+        _paintSelectionBand(canvas, page);
+      }
       for (final LaidOutLine line in page.lines) {
         final LaidOutBox? cell = _cellForLine(
           page,
@@ -3323,7 +3328,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           );
         }
         if (!_editingHeaderFooter && _paintsLineSelection(line, page)) {
-          _paintLineSelection(canvas, line);
+          _paintFindHits(canvas, line);
         }
         _paintRevisionMarkup(canvas, line);
         _drawLine(
@@ -3423,17 +3428,29 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     if (band != null && box.table != null && identical(band.table, box.table)) {
       return _boxInTableBand(box, band);
     }
+    return _selectionLeavesCell(box);
+  }
+
+  /// Word selects whole cells once a text selection reaches outside the
+  /// cell it touches; a selection inside one cell stays ordinary text.
+  bool _selectionLeavesCell(LaidOutBox box) {
     final int? start = box.paragraphIndex;
-    if (start == null) {
+    if (start == null || caret.isCollapsed) {
       return false;
     }
     final int end = box.paragraphEnd ?? start;
-    for (int p = start; p <= end; p++) {
-      if (caret.coversParagraph(p)) {
-        return true;
-      }
+    final int a = math.min(
+      caret.selectionAnchorParagraph,
+      caret.paragraphIndex,
+    );
+    final int b = math.max(
+      caret.selectionAnchorParagraph,
+      caret.paragraphIndex,
+    );
+    if (b < start || a > end) {
+      return false;
     }
-    return false;
+    return a < start || b > end;
   }
 
   bool _boxInTableBand(
@@ -3493,27 +3510,71 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     }
   }
 
-  void _paintLineSelection(Canvas canvas, LaidOutLine line) {
-    _paintFindHits(canvas, line);
-    for (final Rect r in caret.selectionRectsOnLine(
-      line,
-      line.y,
-      line.height,
-      paragraph: line.paragraphIndex,
-    )) {
-      final Rect box = r.inflate(0.6);
-      // Selection must be visible regardless of the text colour. The old
-      // code inverted the ink colour, which made black-on-white selections
-      // pure white and therefore invisible.
-      canvas.drawRect(box, Paint()..color = _theme.selectionFill);
-      canvas.drawRect(
-        box,
+  /// Fill for selected text, cells and in-range pictures.
+  Color get _textSelectionFill =>
+      _theme.textSelectionFillFor(defaultTargetPlatform);
+
+  /// Paints the whole page's text selection as one path, under the text.
+  ///
+  /// Like Word: one even band per line (the line's full box, so runs of
+  /// different sizes do not make it ragged), no outline, paragraph spacing
+  /// left out, the paragraph mark shown as a small block when the selection
+  /// runs past a paragraph end. Drawing one path instead of a rect per line
+  /// keeps the translucent fill from darkening where neighbours touch.
+  void _paintSelectionBand(Canvas canvas, LaidOutPage page) {
+    if (!config.allowsSelection || caret.isCollapsed) {
+      return;
+    }
+    final Map<int, LaidOutLine> lastLines = _lastLineOfParagraphs();
+    final Path band = Path();
+    var any = false;
+    for (final LaidOutLine line in page.lines) {
+      if (!_paintsLineSelection(line, page)) {
+        continue;
+      }
+      for (final Rect r in caret.selectionRectsOnLine(
+        line,
+        line.y,
+        line.height,
+        paragraph: line.paragraphIndex,
+        lastOfParagraph: identical(lastLines[line.paragraphIndex], line),
+        rtl: _paragraphRtl(line.paragraphIndex, line: line),
+      )) {
+        band.addRect(r);
+        any = true;
+      }
+    }
+    if (any) {
+      canvas.drawPath(
+        band,
         Paint()
-          ..color = _theme.selectionStroke
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.9,
+          ..color = _textSelectionFill
+          ..style = PaintingStyle.fill,
       );
     }
+  }
+
+  Map<int, LaidOutLine>? _lastLinesCache;
+  LaidOutDocument? _lastLinesFor;
+
+  /// The last laid-out line of every body paragraph (document order).
+  Map<int, LaidOutLine> _lastLineOfParagraphs() {
+    if (_lastLinesCache != null && identical(_lastLinesFor, laidOut)) {
+      return _lastLinesCache!;
+    }
+    final Map<int, LaidOutLine> last = <int, LaidOutLine>{};
+    for (final LaidOutPage page in laidOut.pages) {
+      for (final LaidOutLine line in page.lines) {
+        final LaidOutLine? seen = last[line.paragraphIndex];
+        if (seen == null ||
+            seen.pageIndex < line.pageIndex ||
+            (seen.pageIndex == line.pageIndex && line.y > seen.y + 0.01)) {
+          last[line.paragraphIndex] = line;
+        }
+      }
+    }
+    _lastLinesFor = laidOut;
+    return _lastLinesCache = last;
   }
 
   bool _paintsLineSelection(LaidOutLine line, LaidOutPage page) {
@@ -3522,6 +3583,20 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     }
     if (!caret.coversParagraph(line.paragraphIndex)) {
       return false;
+    }
+    for (final LaidOutBox box in page.frames) {
+      if (box.kind != LaidOutBoxKind.tableCell) {
+        continue;
+      }
+      final int start = box.paragraphIndex ?? -1;
+      final int end = box.paragraphEnd ?? start;
+      if (line.paragraphIndex >= start &&
+          line.paragraphIndex <= end &&
+          _selectionLeavesCell(box)) {
+        // The whole cell is filled instead; a text band on top would
+        // double the tint.
+        return false;
+      }
     }
     final ({WmlTable table, bool column, int from, int to})? band =
         selectedTableBand;
@@ -3709,9 +3784,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       }
       final bool selected =
           selectedVisual != null && identical(visual, selectedVisual!.visual);
-      final bool inRange =
-          selected || (isVisualInSelection?.call(visual) ?? false);
-      if (!inRange) {
+      if (!selected) {
+        // In-range pictures are tinted in [_paintFrames], not handled.
         continue;
       }
       TransformHandles(
@@ -3930,13 +4004,17 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
               selectedVisual != null &&
               identical(visual, selectedVisual!.visual),
         );
+        final bool selected =
+            selectedVisual != null && identical(visual, selectedVisual!.visual);
+        if (!selected &&
+            config.allowsSelection &&
+            (isVisualInSelection?.call(visual) ?? false)) {
+          // A picture inside a text selection is tinted like the text
+          // around it; handles belong to a picture selected on its own.
+          canvas.drawRect(rect, Paint()..color = _textSelectionFill);
+        }
         if (paintHandles) {
-          final bool selected =
-              selectedVisual != null &&
-              identical(visual, selectedVisual!.visual);
-          final bool inRange =
-              selected || (isVisualInSelection?.call(visual) ?? false);
-          if (inRange) {
+          if (selected) {
             TransformHandles(rect).paint(
               canvas,
               strokeColor: pictureCropMode
@@ -3959,7 +4037,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         canvas.drawRect(rect, Paint()..color = _colorFromHex(box.fillColor!));
       }
       if (config.allowsSelection && _cellSelected(box)) {
-        canvas.drawRect(rect, Paint()..color = _theme.selectionFill);
+        canvas.drawRect(rect, Paint()..color = _textSelectionFill);
       }
       canvas.drawRect(
         rect,
@@ -4227,17 +4305,28 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       text,
       paragraph,
     );
-    painter.paint(
-      canvas,
-      Offset(
-        paintX,
-        first.vertAlign.paintTop(
-          lineY: line.y,
-          lineHeight: line.height,
-          fontSize: first.fontSize,
-        ),
-      ),
+    var top = first.vertAlign.paintTop(
+      lineY: line.y,
+      lineHeight: line.height,
+      fontSize: first.fontSize,
     );
+    if (first.vertAlign == WmlVertAlign.baseline && first.fontSize > 0) {
+      // Runs share the baseline of the line's largest run (the layout grows
+      // such a line); without this, small text hangs from the line top.
+      var largest = first.fontSize;
+      for (final LaidOutGlyph g in line.glyphs) {
+        if (g.vertAlign == WmlVertAlign.baseline && g.fontSize > largest) {
+          largest = g.fontSize;
+        }
+      }
+      if (largest > first.fontSize + 0.01) {
+        final double ascent = painter.computeDistanceToActualBaseline(
+          TextBaseline.alphabetic,
+        );
+        top += ascent * (largest / first.fontSize - 1);
+      }
+    }
+    painter.paint(canvas, Offset(paintX, top));
   }
 
   void _drawTocLeader(
@@ -4388,7 +4477,20 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       contentRight: laidOut.pageSize.width - 72,
     );
     if (line.glyphs.isNotEmpty) {
-      final LaidOutGlyph marker = line.glyphs.first;
+      // Like Word, the caret takes the height of the text it sits after (or
+      // before, at a line start), not of the line's first run.
+      LaidOutGlyph marker = line.glyphs.first;
+      var best = 1 << 30;
+      for (final LaidOutGlyph g in line.glyphs) {
+        final int index = g.glyph.logicalIndex;
+        final int distance = index < caret.logicalIndex
+            ? caret.logicalIndex - 1 - index
+            : index - caret.logicalIndex + 1;
+        if (distance < best) {
+          best = distance;
+          marker = g;
+        }
+      }
       final double size = marker.fontSize <= 0 ? 12 : marker.fontSize;
       final double ascent = size * 0.80;
       final double descent = size * 0.22;

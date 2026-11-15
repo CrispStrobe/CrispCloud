@@ -126,7 +126,8 @@ void main() {
             .first
             .properties
             .fontSizePoints,
-        16,
+        // Word 365's built-in Heading 1 (used when the style is undefined).
+        20,
       );
       final saved = WordSerializer().write(document);
       final styles = XmlDocument.parse(

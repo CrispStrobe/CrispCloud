@@ -1243,14 +1243,31 @@ class WordLayoutEngine {
     WmlRunProps propsAt(int offset) => propsByOffset.putIfAbsent(
       offset, () => WmlRunEdit.propsAt(paragraph, offset),
     );
+    // Inline pictures: one U+FFFC per picture (WmlRun.inlineVisual). It
+    // advances by the picture's width and is shaped as a space glyph, so no
+    // painter draws a character there; the picture itself becomes a box on
+    // the baseline once the line is placed.
+    final inlinePictures = <int, OfficeVisual>{};
+    {
+      var offset = 0;
+      for (final WmlInline inline in paragraph.inlines) {
+        if (inline is! WmlRun) continue;
+        final WmlVisual? picture = inline.inlineVisual;
+        if (picture != null) inlinePictures[offset] = picture.visual;
+        offset += inline.text.length;
+      }
+    }
     double widthAt(int cp, int offset) {
+      final OfficeVisual? picture = inlinePictures[offset];
+      if (picture != null) return math.min(picture.width, maxWidth);
       final props = propsAt(offset);
       return _advanceOf(
         cp, props.fontSizePoints * props.vertAlign.fontScale, em, props,
       );
     }
-    int glyphIdAt(int cp, int offset) =>
-        _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
+    int glyphIdAt(int cp, int offset) => inlinePictures.containsKey(offset)
+        ? _faceFor(0x20, propsAt(offset))?.glyphIdFor(0x20) ?? 0
+        : _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
 
     // Widths and glyph IDs are resolved before wrapping, using each run's
     // actual family, style and size. Scaling only after wrapping lets bold or
@@ -1303,6 +1320,68 @@ class WordLayoutEngine {
     final double dropWidth = dropLines > 0 ? fontSize * 2.4 : 0;
     final int lineStart = current.length;
     final double paraTop = cursorY;
+    // Word grows a line for its tallest run: a 20 pt word inside 11 pt text
+    // makes that line taller and moves its baseline down. Lines whose runs
+    // are no larger than the paragraph's first run keep [lineHeight].
+    double largestSizeOn(BrokenLine line) {
+      var largest = fontSize;
+      for (final ShapedGlyph g in line.glyphs) {
+        final double size = propsAt(g.logicalIndex).fontSizePoints;
+        if (size > largest) largest = size;
+      }
+      return largest;
+    }
+
+    double ascentFor(double size) => metrics == null || fontSize <= 0
+        ? size * 0.8
+        : metrics.ascender * size / fontSize;
+    double textHeightOfLine(BrokenLine line) {
+      if (paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact) {
+        return lineHeight;
+      }
+      final double largest = largestSizeOn(line);
+      if (largest <= fontSize + 0.01) return lineHeight;
+      return math.max(
+        lineHeight,
+        _lineHeight(
+          paragraph.properties,
+          firstFace == null
+              ? null
+              : FontMetrics(font: firstFace, fontSizePoints: largest),
+          largest,
+        ),
+      );
+    }
+
+    double pictureHeightOn(BrokenLine line) {
+      var tallest = 0.0;
+      for (final ShapedGlyph g in line.glyphs) {
+        final OfficeVisual? picture = inlinePictures[g.logicalIndex];
+        if (picture != null) tallest = math.max(tallest, picture.height);
+      }
+      return tallest;
+    }
+
+    double textAscentOn(BrokenLine line) {
+      final double largest = largestSizeOn(line);
+      return largest > fontSize + 0.01
+          ? ascentFor(largest)
+          : (metrics?.ascender ?? fontSize * 0.8);
+    }
+
+    // An inline picture sits on the baseline: a picture taller than the
+    // text ascent raises the baseline and the line (exact spacing clips).
+    double heightOfLine(BrokenLine line) {
+      final double text = textHeightOfLine(line);
+      if (paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact) {
+        return text;
+      }
+      final double picture = pictureHeightOn(line);
+      final double ascent = textAscentOn(line);
+      if (picture <= ascent) return text;
+      return text + (picture - ascent);
+    }
+
     var lineNumber = 0;
     var wrappedOffset = 0;
     while (wrapBreaker == null
@@ -1363,12 +1442,13 @@ class WordLayoutEngine {
       }
 
       rebreakForFrame();
+      var lineH = heightOfLine(line);
       var noteIds = _noteIds(
         paragraph,
         line.glyphs.map((ShapedGlyph g) => g.logicalIndex),
       ).toList();
       double occupiedBottom() {
-        var bottom = cursorY + lineHeight;
+        var bottom = cursorY + lineH;
         for (final LaidOutLine l in current) {
           bottom = math.max(bottom, l.y + l.height);
         }
@@ -1381,7 +1461,7 @@ class WordLayoutEngine {
       }
 
       while (allowBreak &&
-          (cursorY + lineHeight > _bodyBottom(section, idx) ||
+          (cursorY + lineH > _bodyBottom(section, idx) ||
               (_minimumNotes(noteIds, section, idx) > 0 &&
                   occupiedBottom() + _minimumNotes(noteIds, section, idx) >
                       _bodyBottom(section, idx)))) {
@@ -1426,6 +1506,7 @@ class WordLayoutEngine {
           cursorY = section.margins.top;
         }
         rebreakForFrame();
+        lineH = heightOfLine(line);
         noteIds = _noteIds(
           paragraph,
           line.glyphs.map((g) => g.logicalIndex),
@@ -1442,6 +1523,17 @@ class WordLayoutEngine {
         x += lineWidth - line.width;
       }
       var gx = x;
+      final double largest = largestSizeOn(line);
+      final bool grown = largest > fontSize + 0.01;
+      final double lineAscent = ascentFor(largest);
+      final double pictureAscent =
+          paragraph.properties.lineSpacingRule == WmlLineSpacingRule.exact
+          ? 0.0
+          : pictureHeightOn(line);
+      // A line without a picture keeps the established per-run baseline
+      // fallback; a picture line aligns every run with the picture's base.
+      final bool lineHasPicture = pictureAscent > 0;
+      final double baselineAscent = math.max(textAscentOn(line), pictureAscent);
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
       for (final ShapedGlyph g in line.glyphs) {
         final WmlRunProps props = propsAt(g.logicalIndex);
@@ -1453,7 +1545,11 @@ class WordLayoutEngine {
             x: gx + g.paintDx,
             y:
                 cursorY +
-                (metrics?.ascender ?? baseSize * 0.8) +
+                (lineHasPicture
+                    ? baselineAscent
+                    : (grown
+                          ? lineAscent
+                          : (metrics?.ascender ?? baseSize * 0.8))) +
                 props.vertAlign.baselineShift(baseSize) -
                 g.paintDy,
             color: props.color,
@@ -1485,7 +1581,7 @@ class WordLayoutEngine {
         x: x,
         y: cursorY,
         width: line.width,
-        height: lineHeight,
+        height: lineH,
         pageIndex: idx,
         justification: paragraph.properties.justification,
         paragraphIndex: paragraphIndex,
@@ -1511,7 +1607,25 @@ class WordLayoutEngine {
       );
       laid.applyJustification(targetWidth: lineWidth);
       current.add(laid);
-      cursorY += lineHeight;
+      if (inlinePictures.isNotEmpty) {
+        for (final LaidOutGlyph placed in laid.glyphs) {
+          final OfficeVisual? picture =
+              inlinePictures[placed.glyph.logicalIndex];
+          if (picture == null) continue;
+          final double width = math.min(picture.width, lineWidth);
+          final double height = picture.height;
+          currentFrames.add(
+            _visualBox(
+              picture,
+              placed.x,
+              cursorY + baselineAscent - height,
+              width,
+              height,
+            ),
+          );
+        }
+      }
+      cursorY += lineH;
       lineNumber++;
       wrappedOffset = nextOffset;
     }

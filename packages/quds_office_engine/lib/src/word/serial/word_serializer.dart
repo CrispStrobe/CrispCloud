@@ -14,6 +14,7 @@ import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
 import '../model/word_bookmarks.dart';
 import '../model/word_content_controls.dart';
+import '../model/word_field_spans.dart';
 import '../model/word_notes.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
@@ -50,6 +51,7 @@ class WordSerializer {
   }
 
   var _docPrId = 1;
+  Map<OfficeVisual, String> _inlineImageIds = <OfficeVisual, String>{};
   var _hfPart = 1;
   OpcPackage? _package;
   String _mainPartUri = '/word/document.xml';
@@ -73,6 +75,7 @@ class WordSerializer {
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
     WordContentControls.validate(document);
+    _skippedFieldBoundaries = WordFieldSpans.unbalanced(document);
     for (final blocks in [
       for (final section in document.sections) section.blocks,
       for (final note in [...document.footnotes, ...document.endnotes])
@@ -140,6 +143,7 @@ class WordSerializer {
     _headerFooterIds = _syncHeadersFooters(document, package);
     _syncEmbeddings(document, package);
     final Map<OfficeVisual, String> imageIds = _syncImages(document, package);
+    _inlineImageIds = imageIds;
     package.getPart(_mainPartUri)!.writeText(_documentXml(document, imageIds));
     _syncComments(document, package);
     _syncWatermark(document, package);
@@ -321,6 +325,31 @@ class WordSerializer {
     }
   }
 
+  Set<WmlFieldBoundary> _skippedFieldBoundaries = Set.identity();
+
+  void _writeFieldBoundary(XmlWriter w, WmlFieldBoundary boundary) {
+    w.writeStartElement('r', prefix: 'w');
+    final rPr = boundary.runPropertiesXml;
+    if (rPr != null && rPr.isNotEmpty) {
+      XmlDocument.parse(rPr).root!.writeTo(w);
+    }
+    if (boundary.kind == WmlFieldBoundaryKind.instruction) {
+      w.writeStartElement('instrText', prefix: 'w');
+      w.writeAttribute('xml:space', 'preserve');
+      w.writeText(boundary.text);
+      w.writeEndElement();
+    } else if (boundary.sourceXml != null) {
+      XmlDocument.parse(boundary.sourceXml!).root!.writeTo(w);
+    } else {
+      w.writeEmptyElement(
+        'fldChar',
+        prefix: 'w',
+        attributes: {'w:fldCharType': boundary.kind.name},
+      );
+    }
+    w.writeEndElement();
+  }
+
   void _writeToc(XmlWriter w, WmlToc toc) {
     WordToc.ensureBody(toc);
     final native = WordToc.nativeParagraphs(toc);
@@ -400,6 +429,7 @@ class WordSerializer {
               hyperlink: inline.hyperlink?.copy(),
               commentIds: List<int>.from(inline.commentIds),
               noteRefId: inline.noteRefId,
+              inlineVisual: inline.inlineVisual,
               noteRefEndnote: inline.noteRefEndnote,
               fieldInstruction: inline.fieldInstruction,
               fieldLocked: inline.fieldLocked,
@@ -796,6 +826,10 @@ class WordSerializer {
             _writeTrackedRun(w, paragraph, inline, offset);
           }
           offset += inline.text.length;
+        case WmlFieldBoundary():
+          if (!_skippedFieldBoundaries.contains(inline)) {
+            _writeFieldBoundary(w, inline);
+          }
         case WmlOpaqueInline():
           w.writeStartElement('r', prefix: 'w');
           final rPr = inline.runPropertiesXml;
@@ -943,7 +977,18 @@ class WordSerializer {
     }
     w.writeStartElement('r', prefix: 'w');
     _writeRPr(w, inline.properties);
-    if (inline.noteRefId != null) {
+    final WmlVisual? picture = inline.inlineVisual;
+    final String? pictureId = picture == null
+        ? null
+        : _inlineImageIds[picture.visual];
+    if (picture != null && pictureId != null) {
+      WordDrawingIo.writeInlineDrawing(
+        w,
+        relationshipId: pictureId,
+        visual: picture.visual,
+        docPrId: _docPrId++,
+      );
+    } else if (inline.noteRefId != null) {
       w.writeEmptyElement(
         inline.noteRefEndnote ? 'endnoteReference' : 'footnoteReference',
         prefix: 'w',
@@ -1579,40 +1624,60 @@ class WordSerializer {
           visuals: section.headerVisuals,
           header: true,
           watermark: i == 0 ? watermark : '',
+          preserved: section.preservedStories['header'],
         ),
         footer: _writeHfPart(
           package,
           section.footer,
           visuals: section.footerVisuals,
           header: false,
+          preserved: section.preservedStories['footer'],
         ),
         firstHeader: _writeHfPart(
           package,
           section.firstHeader,
           visuals: section.firstHeaderVisuals,
           header: true,
+          preserved: section.preservedStories['firstHeader'],
         ),
         firstFooter: _writeHfPart(
           package,
           section.firstFooter,
           visuals: section.firstFooterVisuals,
           header: false,
+          preserved: section.preservedStories['firstFooter'],
         ),
         evenHeader: _writeHfPart(
           package,
           section.evenHeader,
           visuals: section.evenHeaderVisuals,
           header: true,
+          preserved: section.preservedStories['evenHeader'],
         ),
         evenFooter: _writeHfPart(
           package,
           section.evenFooter,
           visuals: section.evenFooterVisuals,
           header: false,
+          preserved: section.preservedStories['evenFooter'],
         ),
       );
     }
     return map;
+  }
+
+  /// Inline pictures carried by runs in a paragraph-only story (header,
+  /// footer), so their media is synced into that part's relationship set.
+  static Iterable<OfficeVisual> _inlineVisualsOf(
+    Iterable<WmlParagraph> story,
+  ) sync* {
+    for (final WmlParagraph paragraph in story) {
+      for (final WmlInline inline in paragraph.inlines) {
+        if (inline is WmlRun && inline.inlineVisual != null) {
+          yield inline.inlineVisual!.visual;
+        }
+      }
+    }
   }
 
   String? _writeHfPart(
@@ -1621,7 +1686,28 @@ class WordSerializer {
     required List<WmlVisual> visuals,
     required bool header,
     String watermark = '',
+    WmlOpaqueBlock? preserved,
   }) {
+    if (preserved != null && story.isEmpty && visuals.isEmpty) {
+      // A part the story model could not represent: write it back verbatim
+      // (relationships remapped to the new part by WordOpaqueIo).
+      final int n = _hfPart++;
+      final String name = header ? 'header$n.xml' : 'footer$n.xml';
+      final String uri = OpcUris.resolve(_mainPartUri, name);
+      final String previousPart = _activePartUri;
+      _activePartUri = uri;
+      final XmlWriter w = XmlWriter();
+      w.writeStartDocument();
+      WordOpaqueIo.write(w, preserved, package, uri);
+      _activePartUri = previousPart;
+      return _putNamedPart(
+        package,
+        uri,
+        header ? OfficeContentTypes.wordHeader : OfficeContentTypes.wordFooter,
+        w.toXml(),
+        header ? RelationshipTypes.header : RelationshipTypes.footer,
+      );
+    }
     if (story.isEmpty && visuals.isEmpty && watermark.isEmpty) {
       return null;
     }
@@ -1629,12 +1715,17 @@ class WordSerializer {
     final String name = header ? 'header$n.xml' : 'footer$n.xml';
     final String uri = OpcUris.resolve(_mainPartUri, name);
     final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
-      visuals.map((WmlVisual visual) => visual.visual),
+      <OfficeVisual>[
+        ...visuals.map((WmlVisual visual) => visual.visual),
+        ..._inlineVisualsOf(story),
+      ],
       package,
       partUri: uri,
       mediaPrefix: '${header ? 'header' : 'footer'}${n}Image',
     );
     final String previousPart = _activePartUri;
+    final Map<OfficeVisual, String> previousInlineImages = _inlineImageIds;
+    _inlineImageIds = imageIds;
     _activePartUri = uri;
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
@@ -1660,6 +1751,7 @@ class WordSerializer {
     }
     w.writeEndElement();
     _activePartUri = previousPart;
+    _inlineImageIds = previousInlineImages;
     return _putNamedPart(
       package,
       uri,
@@ -2208,6 +2300,8 @@ class WordSerializer {
     w.writeNamespace('a', OfficeNamespaces.a);
     w.writeNamespace('pic', WordDrawingIo.pictureUri);
     final String previousPart = _activePartUri;
+    final Map<OfficeVisual, String> previousInlineImages = _inlineImageIds;
+    _inlineImageIds = imageIds;
     _activePartUri = uri;
     // Separators are not editable note bodies. Preserve their native metadata;
     // only a newly created note part receives the conventional standard pair.
@@ -2247,6 +2341,7 @@ class WordSerializer {
     }
     w.writeEndElement();
     _activePartUri = previousPart;
+    _inlineImageIds = previousInlineImages;
     _putPart(package, uri, contentType, w.toXml(), relType);
   }
 

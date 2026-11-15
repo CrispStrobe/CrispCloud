@@ -356,6 +356,15 @@ void _assertModel(WmlDocument document, {required bool edited}) {
   }
 }
 
+const _preservedKey = {
+  'header_default': 'header',
+  'header_first': 'firstHeader',
+  'header_even': 'evenHeader',
+  'footer_default': 'footer',
+  'footer_first': 'firstFooter',
+  'footer_even': 'evenFooter',
+};
+
 void main() {
   for (final kind in ['drawing', 'equation']) {
     test('unsupported inline control $kind stops import without changing source', () {
@@ -426,7 +435,9 @@ void main() {
     'comments',
   ]) {
     test(
-      'unsupported $story multi-paragraph control fails with its source part',
+      story == 'comments'
+          ? 'unsupported $story multi-paragraph control fails with its source part'
+          : '$story multi-paragraph control is preserved verbatim',
       () {
         final package = _source();
         final root = story.startsWith('header')
@@ -450,16 +461,37 @@ void main() {
           for (final part in package.parts)
             part.uri: List<int>.of(part.bytesView),
         };
-        expect(
-          () => WordDeserializer().read(package),
-          throwsA(
-            isA<UnsupportedError>().having(
-              (e) => e.message,
-              'location and unsupported topology',
-              contains('$uri: block control in a paragraph-only'),
+        if (story == 'comments') {
+          expect(
+            () => WordDeserializer().read(package),
+            throwsA(
+              isA<UnsupportedError>().having(
+                (e) => e.message,
+                'location and unsupported topology',
+                contains('$uri: block control in a paragraph-only'),
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Header/footer parts the paragraph-only story model cannot
+          // represent are kept verbatim instead of refusing the document.
+          final doc = WordDeserializer().read(package);
+          expect(
+            doc.sections.first.preservedStories.keys,
+            contains(_preservedKey[story]),
+          );
+          final saved = WordSerializer().write(doc);
+          expect(
+            saved.parts.any(
+              (part) =>
+                  (part.contentType == OfficeContentTypes.wordHeader ||
+                      part.contentType == OfficeContentTypes.wordFooter) &&
+                  part.readText().contains('Second controlled paragraph'),
+            ),
+            isTrue,
+          );
+          return;
+        }
         expect({
           for (final part in package.parts)
             part.uri: List<int>.of(part.bytesView),

@@ -194,6 +194,7 @@ final class _WordParagraphSnapshot {
     WmlNoteMarker() => (WmlNoteMarker, inline.endnote),
     WmlBreak() => (WmlBreak, inline.type),
     WmlOpaqueInline() => (WmlOpaqueInline, inline.content.xml),
+    WmlFieldBoundary() => (WmlFieldBoundary, inline.kind, inline.text),
     WmlObject() => (
       WmlObject,
       inline.relationshipId,

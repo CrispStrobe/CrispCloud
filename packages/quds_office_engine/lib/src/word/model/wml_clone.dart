@@ -170,6 +170,7 @@ abstract final class WmlClone {
       sourceLinePropertiesXml: source.sourceLinePropertiesXml,
       importedStrokeColor: source.importedStrokeColor,
       anchorParagraphProperties: source.anchorParagraphProperties?.copy(),
+      hasTextBox: source.hasTextBox,
       blocks: <WmlBlock>[
         for (final WmlBlock block in source.blocks) WmlClone.block(block),
       ],
@@ -270,6 +271,9 @@ abstract final class WmlClone {
         hyperlink: inline.hyperlink?.copy(),
         commentIds: List<int>.from(inline.commentIds),
         noteRefId: inline.noteRefId,
+        inlineVisual: inline.inlineVisual == null
+            ? null
+            : WmlClone.block(inline.inlineVisual!) as WmlVisual,
         noteRefEndnote: inline.noteRefEndnote,
         fieldInstruction: inline.fieldInstruction,
         fieldLocked: inline.fieldLocked,
@@ -331,6 +335,9 @@ abstract final class WmlClone {
           hyperlink: inline.hyperlink?.copy(),
           commentIds: List<int>.from(inline.commentIds),
           noteRefId: inline.noteRefId,
+          inlineVisual: inline.inlineVisual == null
+              ? null
+              : WmlClone.block(inline.inlineVisual!) as WmlVisual,
           noteRefEndnote: inline.noteRefEndnote,
           fieldInstruction: inline.fieldInstruction,
           fieldLocked: inline.fieldLocked,

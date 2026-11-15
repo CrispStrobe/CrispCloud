@@ -6,6 +6,7 @@ import '../../opc/ole/embedded_part.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
+import '../../visual/office_visual.dart';
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
@@ -78,6 +79,8 @@ class WordDeserializer {
     _notBold.clear();
     _notItalic.clear();
     _pendingParagraphSectPr = null;
+    _openFields.clear();
+    _tocBoundaries.clear();
     _blockMarkers.clear();
     _lastBlockParagraph = null;
     _drawingDepth = 0;
@@ -454,7 +457,8 @@ class WordDeserializer {
           (inline) =>
               inline is WmlNoteMarker ||
               inline is WmlBookmarkBoundary ||
-              inline is WmlContentControlBoundary,
+              inline is WmlContentControlBoundary ||
+              inline is WmlFieldBoundary,
         ) &&
         (_pendingVisuals.isNotEmpty || _pendingFrames.isNotEmpty);
     if (!mathOnly && !drawingHost) {
@@ -569,6 +573,8 @@ class WordDeserializer {
       ..properties.sourcePropertiesXml = '';
     final previousFrames = Set<WmlFrame>.identity()..addAll(_pendingFrames);
     _readParagraphContent(reader, package, docUri, paragraph);
+    _settleFieldSpans(paragraph);
+    _settleInlinePictures(paragraph);
     for (final frame in _pendingFrames) {
       if (previousFrames.contains(frame)) continue;
       frame.anchorParagraphProperties ??= paragraph.properties.copy()
@@ -823,11 +829,38 @@ class WordDeserializer {
         if (_isPageField(instr)) {
           paragraph.properties.pageNumberField = true;
         }
+        _flushFieldText(inlines, run);
+        final boundary = WmlFieldBoundary(
+          kind: WmlFieldBoundaryKind.instruction,
+          text: instr,
+          runPropertiesXml: run.properties.sourcePropertiesXml,
+        );
+        inlines.add(boundary);
+        _noteFieldInstruction(boundary);
       } else if (reader.localName == 'fldChar') {
-        final String? type = reader.getAttribute(
+        final XmlElement fldChar = XmlDocument.readElement(reader);
+        final String? type = fldChar.getAttribute(
           'fldCharType',
           namespaceUri: OfficeNamespaces.w,
         );
+        final kind = switch (type) {
+          'begin' => WmlFieldBoundaryKind.begin,
+          'separate' => WmlFieldBoundaryKind.separate,
+          'end' => WmlFieldBoundaryKind.end,
+          _ => null,
+        };
+        if (kind != null) {
+          _flushFieldText(inlines, run);
+          final boundary = WmlFieldBoundary(
+            kind: kind,
+            sourceXml: XmlDocument(
+              root: fldChar,
+            ).toXmlString(declaration: false),
+            runPropertiesXml: run.properties.sourcePropertiesXml,
+          );
+          inlines.add(boundary);
+          _noteFieldChar(boundary);
+        }
         if (type == 'begin') {
           paragraph.properties.fieldBegin = true;
         } else if (type == 'separate') {
@@ -902,11 +935,26 @@ class WordDeserializer {
           inlines.add(WmlRun(text: run.text, properties: run.properties));
           run.text = '';
         }
+        final int pendingBefore = _pendingVisuals.length;
         if (!_takeDrawing(reader, package, docUri)) {
           final WmlObject? obj = _readObject(reader, package, docUri);
           if (obj != null) {
             inlines.add(obj);
           }
+        } else if (_pendingVisuals.length == pendingBefore + 1 &&
+            _pendingVisuals.last.visual.kind == OfficeVisualKind.picture &&
+            !_pendingVisuals.last.visual.isDiagram &&
+            _pendingVisuals.last.visual.picture.wrap == PictureWrap.inline) {
+          // An inline picture stays in its line of text (settled in
+          // _settleInlinePictures once the paragraph is complete).
+          inlines.add(
+            WmlRun(
+              text: _inlinePictureChar,
+              properties: run.properties.copy(),
+              commentIds: List<int>.of(_openCommentIds),
+              inlineVisual: _pendingVisuals.removeLast(),
+            ),
+          );
         }
       }
     }
@@ -1148,6 +1196,7 @@ class WordDeserializer {
     section.firstFooterVisuals.addAll(pending.firstFooterVisuals);
     section.evenHeaderVisuals.addAll(pending.evenHeaderVisuals);
     section.evenFooterVisuals.addAll(pending.evenFooterVisuals);
+    section.preservedStories.addAll(pending.preservedStories);
     document.sections.add(section);
     return WmlSection();
   }
@@ -1453,6 +1502,124 @@ class WordDeserializer {
       text: String.fromCharCode(code),
       properties: props,
       commentIds: List<int>.of(_openCommentIds),
+    );
+  }
+
+  // -- complex-field spans --------------------------------------------------
+  // Open fields across paragraphs (a TOC spans many). Each entry is the begin
+  // boundary plus whether its instruction marked it as a TOC.
+  final List<(WmlFieldBoundary, bool)> _openFields = [];
+  final Set<WmlFieldBoundary> _tocBoundaries = Set.identity();
+
+  void _flushFieldText(List<WmlInline> inlines, WmlRun run) {
+    if (run.text.isEmpty) return;
+    inlines.add(
+      WmlRun(
+        text: run.text,
+        properties: run.properties.copy(),
+        commentIds: List<int>.of(_openCommentIds),
+      ),
+    );
+    run.text = '';
+  }
+
+  bool get _insideToc => _openFields.any((entry) => entry.$2);
+
+  void _noteFieldChar(WmlFieldBoundary boundary) {
+    switch (boundary.kind) {
+      case WmlFieldBoundaryKind.begin:
+        _openFields.add((boundary, false));
+        if (_insideToc) _tocBoundaries.add(boundary);
+      case WmlFieldBoundaryKind.separate:
+        if (_insideToc) _tocBoundaries.add(boundary);
+      case WmlFieldBoundaryKind.end:
+        if (_insideToc) _tocBoundaries.add(boundary);
+        if (_openFields.isNotEmpty) _openFields.removeLast();
+      case WmlFieldBoundaryKind.instruction:
+        break;
+    }
+  }
+
+  void _noteFieldInstruction(WmlFieldBoundary boundary) {
+    if (_openFields.isNotEmpty) {
+      final (begin, toc) = _openFields.last;
+      if (!toc && WordToc.isTocInstruction(boundary.text)) {
+        _openFields[_openFields.length - 1] = (begin, true);
+        _tocBoundaries.add(begin);
+      }
+    }
+    if (_insideToc) _tocBoundaries.add(boundary);
+  }
+
+  /// Decide, once a paragraph is complete, how its fields are represented.
+  void _settleFieldSpans(WmlParagraph paragraph) {
+    final boundaries = paragraph.inlines.whereType<WmlFieldBoundary>().toList();
+    if (boundaries.isEmpty) return;
+    bool strip() {
+      paragraph.inlines.removeWhere((inline) => inline is WmlFieldBoundary);
+      return true;
+    }
+
+    // TOC fields keep the established paragraph-level machinery.
+    if (boundaries.every(_tocBoundaries.contains)) {
+      strip();
+      return;
+    }
+    // Exactly one top-level field that wraps all of the paragraph's text,
+    // no nesting and no form-field data: the paragraph model is exact.
+    final kinds = boundaries.map((b) => b.kind).toList();
+    final nested = kinds.where((k) => k == WmlFieldBoundaryKind.begin).length;
+    // Opaque pictures, objects and range markers outside the field must not
+    // be pulled into its result by the whole-paragraph compatibility model.
+    final firstContent = paragraph.inlines.indexWhere(
+      (inline) => inline is! WmlFieldBoundary,
+    );
+    final lastContent = paragraph.inlines.lastIndexWhere(
+      (inline) => inline is! WmlFieldBoundary,
+    );
+    final begin = paragraph.inlines.indexOf(boundaries.first);
+    final end = paragraph.inlines.indexOf(boundaries.last);
+    final simple =
+        nested == 1 &&
+        kinds.first == WmlFieldBoundaryKind.begin &&
+        kinds.last == WmlFieldBoundaryKind.end &&
+        kinds.where((k) => k == WmlFieldBoundaryKind.end).length == 1 &&
+        !(boundaries.first.sourceXml ?? '').contains('ffData') &&
+        (firstContent < 0 || begin < firstContent) &&
+        (lastContent < 0 || end > lastContent) &&
+        (paragraph.properties.fieldInstruction ?? '').trim().isNotEmpty;
+    if (simple) {
+      strip();
+      return;
+    }
+    // Inexact for the paragraph model: keep the spans and drop the
+    // paragraph-level reading, which would otherwise wrap all text.
+    paragraph.properties
+      ..fieldInstruction = null
+      ..fieldBegin = false
+      ..fieldSeparate = false
+      ..fieldEnd = false
+      ..pageNumberField = false;
+  }
+
+  static const String _inlinePictureChar = '\uFFFC';
+
+  /// Inline pictures stay inline only in paragraphs that also hold text.
+  /// A paragraph with nothing but pictures keeps the established block
+  /// representation (the pictures follow the paragraph as visuals).
+  void _settleInlinePictures(WmlParagraph paragraph) {
+    final runs = paragraph.inlines
+        .whereType<WmlRun>()
+        .where((run) => run.inlineVisual != null)
+        .toList();
+    if (runs.isEmpty) return;
+    final text = paragraph.text.replaceAll(_inlinePictureChar, '');
+    if (text.trim().isNotEmpty) return;
+    for (final run in runs) {
+      _pendingVisuals.add(run.inlineVisual!);
+    }
+    paragraph.inlines.removeWhere(
+      (inline) => inline is WmlRun && inline.inlineVisual != null,
     );
   }
 
@@ -2055,6 +2222,7 @@ class WordDeserializer {
           docUri,
           headerRid,
           visualsOut: section.headerVisuals,
+          preserveInto: (part) => section.preservedStories['header'] = part,
         ),
       );
     }
@@ -2065,6 +2233,7 @@ class WordDeserializer {
           docUri,
           footerRid,
           visualsOut: section.footerVisuals,
+          preserveInto: (part) => section.preservedStories['footer'] = part,
         ),
       );
     }
@@ -2075,6 +2244,8 @@ class WordDeserializer {
           docUri,
           firstHeaderRid,
           visualsOut: section.firstHeaderVisuals,
+          preserveInto: (part) =>
+              section.preservedStories['firstHeader'] = part,
         ),
       );
     }
@@ -2085,6 +2256,8 @@ class WordDeserializer {
           docUri,
           firstFooterRid,
           visualsOut: section.firstFooterVisuals,
+          preserveInto: (part) =>
+              section.preservedStories['firstFooter'] = part,
         ),
       );
     }
@@ -2095,6 +2268,7 @@ class WordDeserializer {
           docUri,
           evenHeaderRid,
           visualsOut: section.evenHeaderVisuals,
+          preserveInto: (part) => section.preservedStories['evenHeader'] = part,
         ),
       );
     }
@@ -2105,6 +2279,7 @@ class WordDeserializer {
           docUri,
           evenFooterRid,
           visualsOut: section.evenFooterVisuals,
+          preserveInto: (part) => section.preservedStories['evenFooter'] = part,
         ),
       );
     }
@@ -2125,6 +2300,7 @@ class WordDeserializer {
     for (final WmlSection section in document.sections) {
       if (section.header.isEmpty &&
           section.headerVisuals.isEmpty &&
+          !section.preservedStories.containsKey('header') &&
           headerRel != null) {
         section.header.addAll(
           _readStoryByRid(
@@ -2132,11 +2308,13 @@ class WordDeserializer {
             docUri,
             headerRel.id,
             visualsOut: section.headerVisuals,
+            preserveInto: (part) => section.preservedStories['header'] = part,
           ),
         );
       }
       if (section.footer.isEmpty &&
           section.footerVisuals.isEmpty &&
+          !section.preservedStories.containsKey('footer') &&
           footerRel != null) {
         section.footer.addAll(
           _readStoryByRid(
@@ -2144,6 +2322,7 @@ class WordDeserializer {
             docUri,
             footerRel.id,
             visualsOut: section.footerVisuals,
+            preserveInto: (part) => section.preservedStories['footer'] = part,
           ),
         );
       }
@@ -2151,6 +2330,87 @@ class WordDeserializer {
   }
 
   List<WmlParagraph> _readStoryByRid(
+    OpcPackage package,
+    String docUri,
+    String rid, {
+    List<WmlVisual>? visualsOut,
+    void Function(WmlOpaqueBlock part)? preserveInto,
+  }) {
+    // Headers and footers are independent field stories, even while a body
+    // paragraph's section properties are being parsed.
+    final fields = List<(WmlFieldBoundary, bool)>.of(_openFields);
+    final toc = Set<WmlFieldBoundary>.identity()..addAll(_tocBoundaries);
+    _openFields.clear();
+    _tocBoundaries.clear();
+    try {
+      return _readStoryByRidPreserving(
+        package,
+        docUri,
+        rid,
+        visualsOut: visualsOut,
+        preserveInto: preserveInto,
+      );
+    } finally {
+      _openFields
+        ..clear()
+        ..addAll(fields);
+      _tocBoundaries
+        ..clear()
+        ..addAll(toc);
+    }
+  }
+
+  List<WmlParagraph> _readStoryByRidPreserving(
+    OpcPackage package,
+    String docUri,
+    String rid, {
+    List<WmlVisual>? visualsOut,
+    void Function(WmlOpaqueBlock part)? preserveInto,
+  }) {
+    if (preserveInto == null) {
+      return _readStoryByRidModeled(
+        package,
+        docUri,
+        rid,
+        visualsOut: visualsOut,
+      );
+    }
+    final int visualCount = visualsOut?.length ?? 0;
+    final int revisionCount = _document?.revisions.length ?? 0;
+    try {
+      return _readStoryByRidModeled(
+        package,
+        docUri,
+        rid,
+        visualsOut: visualsOut,
+      );
+    } on UnsupportedError {
+      // The paragraph-only header/footer model cannot represent this part
+      // (a content control around a logo, a table or several paragraphs).
+      // Keep the whole part verbatim instead of refusing the document.
+      visualsOut?.removeRange(visualCount, visualsOut.length);
+      // Revisions parsed before fallback refer to abandoned paragraphs. Their
+      // native markup remains in the preserved part, not in the editable model.
+      final revisions = _document?.revisions;
+      revisions?.removeRange(revisionCount, revisions.length);
+      _pendingVisuals.clear();
+      _pendingFrames.clear();
+      _pendingEquations.clear();
+      final RelationshipCollection rels = package.relationshipsFor(docUri);
+      final PackageRelationship rel = rels.byId(rid)!;
+      final String storyUri = rels.resolve(rel);
+      // Plain reader: a verbatim copy keeps every mc:AlternateContent
+      // branch (e.g. VML fallbacks), unlike the compatibility reader.
+      final XmlPullReader reader = XmlPullReader(
+        package.getPart(storyUri)!.readText(),
+      );
+      while (reader.next() && reader.eventType != XmlEventType.startElement) {}
+      preserveInto(WordOpaqueIo.read(reader, package, storyUri));
+      return <WmlParagraph>[];
+    }
+  }
+
+  List<WmlParagraph> _readStoryByRidModeled(
     OpcPackage package,
     String docUri,
     String rid, {

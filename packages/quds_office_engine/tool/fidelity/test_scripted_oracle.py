@@ -41,6 +41,63 @@ class ScriptedOracleControls(unittest.TestCase):
             content.find(oracle.W+'rPr/'+oracle.W+'b').set(oracle.W+'val','1')
         self.corrupt('word','word/document.xml',change)
 
+    def heading_style(self, styles):
+        title = E.fromstring(self.parts['word']['word/document.xml']).find(oracle.W+'body/'+oracle.W+'p')
+        style_id = title.find(oracle.W+'pPr/'+oracle.W+'pStyle').get(oracle.W+'val')
+        return next(style for style in styles if style.get(oracle.W+'styleId') == style_id)
+
+    def test_heading_inherited_through_parent_style_is_accepted(self):
+        parts = copy.deepcopy(self.parts['word'])
+        styles = E.fromstring(parts['word/styles.xml'])
+        style = self.heading_style(styles)
+        ppr = style.find(oracle.W+'pPr')
+        outline = ppr.find(oracle.W+'outlineLvl')
+        ppr.remove(outline)
+        style.insert(1, E.Element(oracle.W+'basedOn', {oracle.W+'val':'ScriptHeadingParent'}))
+        parent = E.SubElement(styles, oracle.W+'style', {
+            oracle.W+'type':'paragraph', oracle.W+'styleId':'ScriptHeadingParent'})
+        E.SubElement(parent, oracle.W+'pPr').append(outline)
+        parts['word/styles.xml'] = E.tostring(styles)
+        oracle.verify_word(parts)
+
+    def test_wrong_inherited_heading_level_is_rejected(self):
+        def change(styles):
+            self.heading_style(styles).find(oracle.W+'pPr/'+oracle.W+'outlineLvl').set(oracle.W+'val','8')
+        self.corrupt('word','word/styles.xml',change)
+
+    def test_direct_outline_overrides_inherited_heading_level(self):
+        parts = copy.deepcopy(self.parts['word'])
+        styles = E.fromstring(parts['word/styles.xml'])
+        self.heading_style(styles).find(oracle.W+'pPr/'+oracle.W+'outlineLvl').set(oracle.W+'val','8')
+        parts['word/styles.xml'] = E.tostring(styles)
+        document = E.fromstring(parts['word/document.xml'])
+        ppr = document.find(oracle.W+'body/'+oracle.W+'p/'+oracle.W+'pPr')
+        E.SubElement(ppr, oracle.W+'outlineLvl', {oracle.W+'val':str(oracle.EXPECTED['word']['heading'])})
+        parts['word/document.xml'] = E.tostring(document)
+        oracle.verify_word(parts)
+
+    def test_wrong_direct_outline_is_not_hidden_by_valid_style(self):
+        def change(document):
+            ppr = document.find(oracle.W+'body/'+oracle.W+'p/'+oracle.W+'pPr')
+            E.SubElement(ppr, oracle.W+'outlineLvl', {oracle.W+'val':'8'})
+        self.corrupt('word','word/document.xml',change)
+
+    def test_missing_heading_style_reference_is_rejected(self):
+        def change(document):
+            document.find(oracle.W+'body/'+oracle.W+'p/'+oracle.W+'pPr/'+oracle.W+'pStyle').set(oracle.W+'val','Missing')
+        self.corrupt('word','word/document.xml',change)
+
+    def test_missing_or_cyclic_heading_parent_is_rejected(self):
+        for parent_id in ['Missing', 'self']:
+            with self.subTest(parent=parent_id):
+                def change(styles):
+                    style = self.heading_style(styles)
+                    ppr = style.find(oracle.W+'pPr')
+                    ppr.remove(ppr.find(oracle.W+'outlineLvl'))
+                    target = style.get(oracle.W+'styleId') if parent_id == 'self' else parent_id
+                    style.insert(1, E.Element(oracle.W+'basedOn', {oracle.W+'val':target}))
+                self.corrupt('word','word/styles.xml',change)
+
     def test_wrong_restart_is_rejected(self):
         self.corrupt('word','word/numbering.xml',lambda r:r.find('.//'+oracle.W+'lvlOverride[@'+oracle.W+'ilvl="1"]/'+oracle.W+'startOverride').set(oracle.W+'val','1'))
 

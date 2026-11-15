@@ -869,7 +869,10 @@ class SheetSerializer {
           sheet.sourcePartUri!,
         );
         if (rels.firstByType(RelationshipTypes.comments) == null) {
-          rels.add(type: RelationshipTypes.comments, target: '../comments${sheet.sheetId}.xml');
+          rels.add(
+            type: RelationshipTypes.comments,
+            target: '../comments${sheet.sheetId}.xml',
+          );
         }
       }
     }
@@ -938,7 +941,8 @@ class SheetSerializer {
             cell.fillRgb.isNotEmpty ||
             cell.fontRgb.isNotEmpty ||
             cell.fontBold ||
-            cell.fontSize != 11) {
+            cell.fontSize != 11 ||
+            cell.wrapText != null) {
           needsStyles = true;
           break;
         }

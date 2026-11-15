@@ -141,6 +141,38 @@ final class WmlBookmarkBoundary extends WmlInline {
   final String? sourceXml;
 }
 
+/// The parts of a complex field (`w:fldChar` / `w:instrText`).
+enum WmlFieldBoundaryKind { begin, instruction, separate, end }
+
+/// A complex-field character or instruction fragment, kept in place.
+///
+/// Fields whose extent is not the whole paragraph (a cross-reference inside a
+/// sentence, several fields in one paragraph, nested fields, form fields,
+/// fields spanning paragraphs) are kept as boundaries around their result
+/// runs, which stay ordinary editable text. A paragraph holding exactly one
+/// field that wraps all of its text keeps the paragraph-level representation
+/// ([WmlParagraphProps.fieldInstruction]).
+final class WmlFieldBoundary extends WmlInline {
+  WmlFieldBoundary({
+    required this.kind,
+    this.text = '',
+    this.sourceXml,
+    this.runPropertiesXml,
+  });
+
+  final WmlFieldBoundaryKind kind;
+
+  /// Instruction text of an [WmlFieldBoundaryKind.instruction] fragment.
+  final String text;
+
+  /// The original `w:fldChar` element (a begin keeps its `w:ffData`, i.e.
+  /// form-field state, names and entries).
+  final String? sourceXml;
+
+  /// The enclosing run's `w:rPr`.
+  final String? runPropertiesXml;
+}
+
 /// Inline content the model does not interpret, kept verbatim with the
 /// provenance of the relationships it references — e.g. legacy VML
 /// pictures, shapes and horizontal rules (`w:pict`). Without it such content
@@ -168,6 +200,7 @@ class WmlRun extends WmlInline {
     this.fieldInstruction,
     this.fieldLocked = false,
     this.fieldDirty,
+    this.inlineVisual,
   }) : properties = properties ?? WmlRunProps(),
        commentIds = commentIds ?? <int>[];
 
@@ -202,7 +235,13 @@ class WmlRun extends WmlInline {
   bool? fieldDirty;
 
   /// Note marks and inline field results cannot be split into ordinary text.
-  bool get isAtomic => noteRefId != null || fieldInstruction != null;
+  bool get isAtomic =>
+      noteRefId != null || fieldInstruction != null || inlineVisual != null;
+
+  /// An inline picture inside a line of text. The run's text is a single
+  /// U+FFFC (Word also counts an inline picture as one character); layout
+  /// gives it the picture's width and places the picture on the baseline.
+  WmlVisual? inlineVisual;
 }
 
 /// Class WmlComment.
@@ -311,6 +350,7 @@ class WmlComment {
                   hyperlink: inline.hyperlink,
                   commentIds: List<int>.from(inline.commentIds),
                   noteRefId: inline.noteRefId,
+                  inlineVisual: inline.inlineVisual,
                   noteRefEndnote: inline.noteRefEndnote,
                   fieldInstruction: inline.fieldInstruction,
                   fieldLocked: inline.fieldLocked,
@@ -572,8 +612,14 @@ class WmlFrame extends WmlBlock {
     this.sourceLinePropertiesXml,
     this.importedStrokeColor,
     this.anchorParagraphProperties,
+    this.hasTextBox = true,
     List<WmlBlock>? blocks,
   }) : blocks = blocks ?? <WmlBlock>[];
+
+  /// False for an imported shape that had no text box (a plain rectangle,
+  /// line or callout without text). Such a shape is written back without an
+  /// empty text-box body as long as it still has no content.
+  bool hasTextBox;
 
   /// x API.
   double x;
@@ -962,6 +1008,13 @@ class WmlSection {
   /// Unmodeled imported section settings, shared safely by section clones.
   WmlSectionSource? sourceProperties;
 
+  /// Header/footer parts kept verbatim because the paragraph-only story
+  /// model cannot represent them (e.g. a content control around a logo or a
+  /// table), keyed by story: header, footer, firstHeader, firstFooter,
+  /// evenHeader, evenFooter. Written back unchanged unless that story gets
+  /// model content (the user replaced the header).
+  final Map<String, WmlOpaqueBlock> preservedStories = <String, WmlOpaqueBlock>{};
+
   /// header API.
   List<WmlParagraph> header;
 
@@ -1235,6 +1288,18 @@ class WmlDocument {
   Iterable<WmlVisual> get visuals sync* {
     for (final WmlSection section in sections) {
       yield* _visualsIn(section.blocks);
+    }
+    yield* inlineVisuals;
+  }
+
+  /// Pictures held inline in body text runs ([WmlRun.inlineVisual]).
+  Iterable<WmlVisual> get inlineVisuals sync* {
+    for (final WmlParagraph paragraph in paragraphs) {
+      for (final inline in paragraph.inlines) {
+        if (inline is WmlRun && inline.inlineVisual != null) {
+          yield inline.inlineVisual!;
+        }
+      }
     }
   }
 
