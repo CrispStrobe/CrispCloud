@@ -26,8 +26,9 @@ The legacy path is a **preview reader**, not a conversion path:
   workbook is rejected outright (`worksheet layout limit exceeded`).
 
 Quds now reads BIFF8 (and Excel's HTML-table `.xls`) into the shared workbook
-model: values stay typed, formulas/merges/formats survive, and the sheet opens
-in the editor as XLSX. CrispCloud still never writes `.xls`; Save creates a new
+model: values stay typed, formulas/merges/formats survive, the F3 preview renders
+that model as a read-only grid (File Viewer grid kept as the explicit **Legacy**
+fallback), and the sheet opens in the editor as XLSX. CrispCloud still never writes `.xls`; Save creates a new
 `.xlsx` copy so the original BIFF file is untouched.
 
 ## Defects fixed in the Quds fork

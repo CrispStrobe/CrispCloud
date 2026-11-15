@@ -44,6 +44,8 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:file_viewer_documents/file_viewer_documents.dart';
+import 'package:quds_office_editor/quds_office_editor.dart'
+    hide PdfDocument;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:universal_html/html.dart' as html;
@@ -400,6 +402,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   List<String>? _previewLines;
   List<int>? _previewLineStarts;
   _OfficeView _officeView = _OfficeView.formatted;
+  SheetEditorController? _sheetController;
+  bool _legacySpreadsheet = false;
+  static const OfficeSurfaceConfig _sheetViewConfig = OfficeSurfaceConfig(
+    mode: OfficeInteractionMode.viewing,
+    showRulers: false,
+    showFormulaBar: true,
+    adaptiveChrome: false,
+  );
   PdfController? _officePdfController;
   PdfDocument? _officePdfDoc;
   bool _officePdfLoading = false;
@@ -514,8 +524,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   bool get _isMailbox =>
       (_expansionName ?? _viewName).toLowerCase().endsWith('.mbox');
 
-  DocumentPreviewKind? get _browserDocumentKind =>
-      documentPreviewKind(_expansionName ?? _viewName);
+  String get _effectiveName => _expansionName ?? _viewName;
+
+  bool get _isLegacyExcelName {
+    final name = _effectiveName.toLowerCase();
+    return name.endsWith('.xls') || name.endsWith('.xlt');
+  }
+
+  DocumentPreviewKind? get _browserDocumentKind {
+    // Legacy Excel is imported by Quds for a typed, formula-aware grid. The
+    // File Viewer spreadsheet route stays available as the explicit fallback.
+    if (_isLegacyExcelName) {
+      return _legacySpreadsheet ? DocumentPreviewKind.spreadsheet : null;
+    }
+    return documentPreviewKind(_effectiveName);
+  }
 
   bool get _canChangeEncoding =>
       (_mode == ViewerMode.text ||
@@ -1015,6 +1038,30 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.office:
           setState(() => _preparing = true);
+          if (_isLegacyExcelName && !_legacySpreadsheet) {
+            final data = await _ensureFullData();
+            if (!mounted || token != _prepareToken) return;
+            try {
+              final controller = SheetEditorController(
+                workbook: LegacySheetReader.readBytes(data),
+                config: _sheetViewConfig,
+              );
+              _sheetController?.dispose();
+              setState(() {
+                _sheetController = controller;
+                _officeView = _OfficeView.grid;
+                _preparing = false;
+              });
+              return;
+            } catch (error) {
+              _log.warn(
+                'Quds legacy spreadsheet import failed; using the legacy grid',
+                error,
+              );
+              if (!mounted) return;
+              setState(() => _legacySpreadsheet = true);
+            }
+          }
           final kind = _browserDocumentKind;
           if (kind != null && kind != DocumentPreviewKind.xml) {
             final data = await _readDocumentBytes(
@@ -1290,7 +1337,32 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     );
   }
 
+  Future<void> _showLegacySpreadsheet() async {
+    final token = ++_prepareToken;
+    try {
+      final data = await _readDocumentBytes(
+        documentPreviewByteLimit(DocumentPreviewKind.spreadsheet),
+        token,
+      );
+      if (!mounted || token != _prepareToken || data == null) return;
+      setState(() {
+        _documentPreviewBytes = data;
+        _legacySpreadsheet = true;
+        _preparing = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _preparing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$error')),
+      );
+    }
+  }
+
   void _disposeModeResources({ViewerSpool? spool}) {
+    _sheetController?.dispose();
+    _sheetController = null;
+    _legacySpreadsheet = false;
     // Revoke borrowed readers immediately, before disposing the viewer source.
     // This also cancels readers still opening or waiting for a password.
     for (final source in _archiveSources) {
@@ -3552,6 +3624,33 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         ),
       );
     }
+    if (_sheetController != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: SegmentedButton<bool>(
+          style: _compactButtonStyle,
+          segments: const [
+            ButtonSegment(value: false, label: Text('Grid')),
+            ButtonSegment(value: true, label: Text('Legacy')),
+          ],
+          selected: {_legacySpreadsheet},
+          onSelectionChanged: (selection) {
+            final legacy = selection.first;
+            if (legacy) {
+              unawaited(_showLegacySpreadsheet());
+            } else {
+              setState(() {
+                _legacySpreadsheet = false;
+                _officeView = _OfficeView.grid;
+              });
+              if (_sheetController == null) {
+                unawaited(_prepareForMode(_mode, ++_prepareToken));
+              }
+            }
+          },
+        ),
+      );
+    }
     final document = _officeDoc;
     if (document == null) return const SizedBox.shrink();
     final lowerName = _viewName.toLowerCase();
@@ -4143,6 +4242,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildOfficeBody(ThemeData theme) {
+    final sheet = _sheetController;
+    if (sheet != null && !_legacySpreadsheet) {
+      return QudsSheetEditor(controller: sheet, config: _sheetViewConfig);
+    }
     final data = _documentPreviewBytes;
     final kind = _browserDocumentKind;
     if (data != null && kind != null && !_documentTextFallback) {
@@ -4182,6 +4285,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   String _officeViewLabel(_OfficeView view) => switch (view) {
+    _OfficeView.grid => 'Grid',
     _OfficeView.slides => 'Slides',
     _OfficeView.pdf => 'Pages',
     _OfficeView.formatted => 'Formatted',
@@ -4202,6 +4306,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Widget _buildOfficeContent(OfficeDocument document, ThemeData theme) {
     switch (_officeView) {
+      case _OfficeView.grid:
+        final sheet = _sheetController;
+        if (sheet == null) return _buildOfficeText(document, theme);
+        return QudsSheetEditor(controller: sheet, config: _sheetViewConfig);
       case _OfficeView.slides:
         final deck = document.deck;
         if (deck == null) {
@@ -4943,4 +5051,4 @@ class _TextPromptDialogState extends State<_TextPromptDialog> {
   }
 }
 
-enum _OfficeView { slides, pdf, formatted, table, text, raw }
+enum _OfficeView { grid, slides, pdf, formatted, table, text, raw }
