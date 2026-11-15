@@ -204,8 +204,7 @@ void main() {
     'EPUB extraction follows relocated OPF spine and excludes navigation',
     () async {
       final bytes = _zip({
-        'META-INF/container.xml':
-            '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
+        'META-INF/container.xml': '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
         'Book/package.opf':
             '<package><manifest>'
             '<item id="first" href="Text/z.xhtml"/>'
@@ -876,7 +875,8 @@ void odfTests() {
       'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
 
   test('ODS keeps typed values, repeats and the real sheet name', () async {
-    const xml = '''
+    const xml =
+        '''
 <office:document-content $namespaces>
   <office:body><office:spreadsheet>
     <table:table table:name="Data">
@@ -900,7 +900,10 @@ void odfTests() {
   </office:spreadsheet></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'data.ods');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'data.ods',
+    );
     expect(doc.kind, OfficeDocumentKind.spreadsheet);
     expect(doc.markdown, contains('## Data'));
     final rows = doc.csv!.split('\n').where((line) => line.isNotEmpty).toList();
@@ -911,7 +914,8 @@ void odfTests() {
   });
 
   test('ODS with a merged cell keeps following columns aligned', () async {
-    const xml = '''
+    const xml =
+        '''
 <office:document-content $namespaces>
   <office:body><office:spreadsheet>
     <table:table>
@@ -923,12 +927,16 @@ void odfTests() {
   </office:spreadsheet></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'merged.ods');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'merged.ods',
+    );
     expect(doc.csv!.split('\n').first, 'Wide,,7');
   });
 
   test('ODT renders lists and ODF table cells', () async {
-    const xml = '''
+    const xml =
+        '''
 <office:document-content $namespaces>
   <office:body><office:text>
     <text:h text:outline-level="1">Title</text:h>
@@ -945,7 +953,10 @@ void odfTests() {
   </office:text></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'notes.odt');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'notes.odt',
+    );
     expect(doc.markdown, contains('# Title'));
     expect(doc.markdown, contains('- One'));
     expect(doc.markdown, contains('- Two'));

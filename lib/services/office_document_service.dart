@@ -1137,9 +1137,9 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
   final presentationXml = await _readPart(archive, 'ppt/presentation.xml');
   if (presentationXml != null) {
     try {
-      final size = XmlDocument.parse(
-        presentationXml,
-      ).findAllElements('p:sldSz').firstOrNull;
+      final size = XmlDocument.parse(presentationXml)
+          .findAllElements('p:sldSz')
+          .firstOrNull;
       final cx = int.tryParse(size?.getAttribute('cx') ?? '');
       final cy = int.tryParse(size?.getAttribute('cy') ?? '');
       if (cx != null && cy != null && cx > 0 && cy > 0) {
