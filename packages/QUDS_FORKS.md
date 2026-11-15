@@ -95,8 +95,8 @@ reports limitations; converted legacy documents save separately as OOXML.
   exactly as in the source (none are invented).
 - Local verification at this pin: fork engine 774 tests; host
   `tool/check_office_fidelity.sh` passes (all exports match goldens/oracles).
-  The editor's page-image goldens are reviewed on Linux CI; six differ on
-  macOS fonts only.
+  The editor's page-image goldens have exact Linux and macOS references;
+  each host matches its own reviewed files.
 
 ## Earlier state (11 November 2026)
 
@@ -210,9 +210,8 @@ validates the downloaded engine exports and actual host bytes with the Open XML
 SDK (`tool/office-validation`), after proving that missing evidence and invalid
 XML are rejected. Details and scoped limits: [office-fidelity.md](../docs/office-fidelity.md).
 
-Known limit: the full-page golden is reviewed on Linux with Flutter 3.44.0. On
-other platforms it can differ by about 0.6% of pixels from font rendering. Do
-not regenerate it from another platform.
+The full-page golden has exact Linux (Flutter 3.44.0) and macOS references.
+Regenerate each on its own host; do not copy a reference across platforms.
 
 ## Independent Word verification
 
