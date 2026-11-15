@@ -1,0 +1,845 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart
+00:00 +0: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: argv preserves quotes, Unicode and shell syntax as directory data
+00:00 +1: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: Windows paths remain complete arguments and settings use their path style
+00:00 +2: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: relative-terminal
+00:00 +3: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: /bin/sh
+00:00 +4: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: /bin/bash
+00:00 +5: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects an implicit path or shell executable: /bin/zsh
+00:00 +6: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Tools\run.cmd
+00:00 +7: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Tools\run.BAT
+00:00 +8: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Windows\cmd.exe
+00:00 +9: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects Windows command execution fallback: C:\Tools\powershell.exe
+00:00 +10: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: rejects unsupported placeholders and excessive configuration before saving
+00:00 +11: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: view changes during access check prevent a process launch
+00:00 +12: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: view changes during directory check prevent a process launch
+00:00 +13: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: view changes during executable check prevent a process launch
+00:00 +14: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: unavailable access is never replaced by a fallback directory
+00:00 +15: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: missing executable and missing directory are actionable without fallback
+00:00 +16: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: unsupported runtime and another platform configuration cannot launch
+00:00 +17: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: runtime errors do not expose arbitrary exception contents
+00:00 +18: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: preferences roundtrip per OS, reject mismatched saves and reset independently
+00:00 +19: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: malformed or unsupported saved data is reported without erasing it
+00:00 +20: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: native host distinguishes real directories and absent executables
+00:00 +21: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: expanded arguments and the working directory retain the launch bounds
+00:00 +22: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: escaped settings cannot save a value that exceeds the load limit
+00:00 +23: /workspace/scratch/3517d212389a/crispcloud/test/external_terminal_service_test.dart: all supported languages have complete terminal labels and errors
+00:00 +24: /workspace/scratch/3517d212389a/crispcloud/test/ios_terminal_connection_test.dart: starts Dash in the captured directory with bounded dimensions
+00:00 +25: /workspace/scratch/3517d212389a/crispcloud/test/ios_terminal_connection_test.dart: preserves terminal output, input, exit status and resize
+00:00 +26: /workspace/scratch/3517d212389a/crispcloud/test/ios_terminal_connection_test.dart: close is idempotent and stops late layout/input
+00:00 +27: /workspace/scratch/3517d212389a/crispcloud/test/ios_terminal_connection_test.dart: iOS routing uses the embedded engine and never starts a host process
+00:00 +28: /workspace/scratch/3517d212389a/crispcloud/test/ios_terminal_connection_test.dart: iOS startup failures remain visible without switching interpreters
+00:01 +29: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution creates a new named session even inside an inherited Screen
+00:01 +30: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution exact names cannot select longer names or a different prefix
+00:01 +31: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution missing exact names do not attach prefixes or create sessions
+00:01 +32: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution numeric names use string equality
+00:01 +33: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_options_test.dart: new screen sessions use explicit creation, never attach fallback
+00:01 +34: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution duplicate exact names require a full ID
+00:01 +35: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution duplicate exact names require a full ID
+00:01 +36: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_options_test.dart: rejects screen options, shell syntax and malformed full IDs
+00:01 +37: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution full IDs distinguish duplicate names and preserve other displays
+00:01 +38: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution full IDs distinguish duplicate names and preserve other displays
+00:01 +39: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution full IDs distinguish duplicate names and preserve other displays
+00:01 +40: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution missing full IDs do not fall back to a session with that name
+00:01 +41: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution supports dated and multi-display listings owned by this account
+00:01 +42: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution rejects alternate candidates for Screen prefix fallback
+00:01 +43: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution unavailable exact matches are not replaced by live prefix matches
+00:01 +44: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution a failed or incomplete listing cannot trigger an attach
+00:01 +45: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution oversized listings fail closed
+00:01 +46: /workspace/scratch/3517d212389a/crispcloud/test/screen_session_command_test.dart: POSIX Screen command resolution attach failure is returned without shell or creation fallback
+00:02 +47: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +48: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +49: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +50: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +51: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +52: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +53: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +54: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +55: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +56: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +57: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +58: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +59: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +60: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +61: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +62: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +63: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +64: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +65: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +66: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +67: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +68: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +69: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +70: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +71: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +72: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +73: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +74: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +75: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:02 +76: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +77: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +78: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +79: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +80: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +81: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +82: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +83: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +84: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +85: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +86: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +87: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +88: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: only selected aliases are saved with no automatic connection
+00:03 +89: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: existing names get an editable unique suggestion and never overwrite
+00:04 +90: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: a racing profile save rejects the batch without replacements
+00:04 +91: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:04 +92: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:04 +93: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:05 +94: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:05 +95: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:05 +96: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:06 +97: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: adding a hop keeps target credentials separate
+00:06 +98: /workspace/scratch/3517d212389a/crispcloud/test/ssh_config_import_dialog_test.dart: profile manager exposes import and stays open after saving
+00:06 +99: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:07 +100: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:07 +101: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: restored routes require explicit credentials for every hop
+00:08 +102: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +103: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +104: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +105: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +106: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +107: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +108: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +109: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +110: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: duplicate target endpoint is rejected in the actual dialog
+00:08 +111: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: removing a hop discards its credential requirement and caps additions
+00:08 +112: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_dialog_test.dart: hop credentials fit a narrow layout and never ask for a gateway
+00:09 +113: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: opens one outer socket, authenticates each hop, executes at final host
+ℹ️ [SshTerminalService] Session ho73q0dzfp0 established to target.example:2200
+ℹ️ [SshTerminalService] execute(ho73q0dzfp0)
+ℹ️ [SshTerminalService] Disconnecting session ho73q0dzfp0
+00:09 +114: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: direct connections still use verified socket path when no seam is set
+ℹ️ [SshTerminalService] Session ho73q0evhm0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0evhm0
+00:09 +115: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: mixed hop key authentication never sends a passphrase as a password
+ℹ️ [SshTerminalService] Session ho73q0gh5k0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0gh5k0
+00:09 +116: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: invalid key at any later hop fails before opening the outer socket
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+00:09 +117: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: unencrypted jump key accepts the default empty passphrase
+ℹ️ [SshTerminalService] Session ho73q0j54z0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0j54z0
+00:09 +118: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: private-key targets retain the password-authenticated jump route
+ℹ️ [SshTerminalService] Session ho73q0ka4d0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0ka4d0
+00:09 +119: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: disconnect releases channels without waiting for a remote close reply
+ℹ️ [SshTerminalService] Session ho73q0kgjv0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0kgjv0
+00:09 +120: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: rejecting a middle host key prevents downstream auth and closes route
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:09 +121: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: changed middle host key fails closed without offering a trust override
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for inner.example:22. Expected SHA256:ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ; received SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+00:09 +122: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: forwarding failure releases already authenticated hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Forwarding rejected
+00:09 +123: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: final authentication failure closes the final client and its ancestors
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Authentication failed
+00:09 +124: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: disconnectAll closes a client while its host-key prompt is pending
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+00:09 +125: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: cancellation closes a forwarded socket that arrives later
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:09 +126: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: dispose closes an outer socket that arrives after cancellation
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+00:09 +127: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: route snapshot cannot change while the first connection awaits I/O
+ℹ️ [SshTerminalService] Session ho73q0lfba0 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lfba0
+00:09 +128: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: each attempt retains its captured host-key prompt for every hop
+ℹ️ [SshTerminalService] Session ho73q0ljc60 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0ljc60
+00:09 +129: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: invalid duplicate or oversized routes fail before network I/O
+00:09 +130: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: tab cancellation prevents later hops without disconnecting other tabs
+ℹ️ [SshTerminalService] Session ho73q0lp0w0 established to other.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] execute(ho73q0lp0w0)
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lp0w0
+00:09 +131: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: already stale tab attempts never open a socket
+00:09 +132: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: a route consumes one terminal pool slot and cleanup makes it reusable
+ℹ️ [SshTerminalService] Session ho73q0lvjl0 established to target.example:2200
+ℹ️ [SshTerminalService] Session ho73q0lw0s1 established to other1.example:22
+ℹ️ [SshTerminalService] Session ho73q0lwg92 established to other2.example:22
+ℹ️ [SshTerminalService] Session ho73q0lwtv3 established to other3.example:22
+ℹ️ [SshTerminalService] Session ho73q0lxa94 established to other4.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lvjl0
+ℹ️ [SshTerminalService] Session ho73q0lz7p5 established to target.example:2200
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lw0s1
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lwg92
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lwtv3
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lxa94
+ℹ️ [SshTerminalService] Disconnecting session ho73q0lz7p5
+00:09 +133: /workspace/scratch/3517d212389a/crispcloud/test/ssh_jump_transport_test.dart: a failed client constructor closes its socket and previous hops
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: Client constructor failed
+00:09 +134: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: uses only the fixed no-PTY command and closes a successful channel
+ℹ️ [SshTerminalService] Session ho73q0tare0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0tare0
+00:10 +135: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: waits for a late exit status after both streams reach EOF
+ℹ️ [SshTerminalService] Session ho73q0ttn60 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0ttn60
+00:10 +136: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: exit status never discards output queued afterwards
+ℹ️ [SshTerminalService] Session ho73q0tx5b0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0tx5b0
+00:10 +137: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: stdout and stderr share one byte budget
+ℹ️ [SshTerminalService] Session ho73q0u0tf0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0u0tf0
+00:10 +138: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: missing tool errors remain errors and still close the channel
+ℹ️ [SshTerminalService] Session ho73q0u8k70 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0u8k70
+00:10 +139: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: screen discovery uses full IDs without opening an interactive shell
+ℹ️ [SshTerminalService] Session ho73q0ubf00 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0ubf00
+00:10 +140: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: invalid UTF-8 is rejected instead of changing an attach target
+ℹ️ [SshTerminalService] Session ho73q0uesi0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0uesi0
+00:10 +141: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: a quiet stale tab cancels without killing the verified connection
+ℹ️ [SshTerminalService] Session ho73q0uhwb0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0uhwb0
+00:10 +142: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: a request returning after cancellation closes its late channel
+ℹ️ [SshTerminalService] Session ho73q0xcjp0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q0xcjp0
+00:10 +143: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: disconnecting the connection cancels an in-flight listing
+ℹ️ [SshTerminalService] Session ho73q122zy0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q122zy0
+00:10 +144: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: one session cannot accumulate concurrent discovery channels
+ℹ️ [SshTerminalService] Session ho73q129if0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q129if0
+00:10 +145: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: transport stream errors fail and release the listing channel
+ℹ️ [SshTerminalService] Session ho73q12ewq0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q12ewq0
+00:10 +146: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+ℹ️ [SshTerminalService] Session ho73q12jol0 established to host.example:22
+00:10 +147: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +148: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +149: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +150: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +151: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +152: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +153: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +154: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +155: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +156: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +157: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +158: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +159: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +160: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +161: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:10 +162: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:13 +163: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:13 +164: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:14 +165: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:14 +166: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:14 +167: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:14 +168: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:14 +169: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:16 +170: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:18 +171: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +172: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:19 +173: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+00:20 +174: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: request timeout also owns and closes a later returned channel
+ℹ️ [SshTerminalService] Disconnecting session ho73q12jol0
+00:20 +175: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: late clipboard results cannot restore cleared key credentials
+00:20 +175: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: synchronous exec failures use the same bounded cleanup path
+ℹ️ [SshTerminalService] Session ho73q73cis0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q73cis0
+00:20 +176: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: late clipboard results cannot restore cleared key credentials
+00:20 +176: /workspace/scratch/3517d212389a/crispcloud/test/ssh_multiplexer_discovery_test.dart: already stale requests never send a server command
+ℹ️ [SshTerminalService] Session ho73q73o0t0 established to host.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q73o0t0
+00:20 +177: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: late clipboard results cannot restore cleared key credentials
+00:20 +178: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: a manual key edit supersedes a pending clipboard paste
+00:21 +179: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: reconnect prefills endpoint and tmux settings, never secrets
+00:21 +180: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_gateway_test.dart: browser requires an explicit gateway; native defaults to direct TCP
+ℹ️ [SshTerminalService] Session ho73q7mvc40 established to target.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73q7mvc40
+00:21 +181: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: password reconnect also leaves the password empty
+00:21 +181: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_gateway_test.dart: gateway URL stays separate from the real SSH server and username
+ℹ️ [SshTerminalService] Session ho73q7n6u20 established to target.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho73q7n6u20
+00:21 +182: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: password reconnect also leaves the password empty
+00:21 +183: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: password reconnect also leaves the password empty
+00:21 +184: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: tmux validates names before returning a create-or-attach request
+00:22 +185: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: plain shell mode does not accidentally reuse a tmux target
+00:22 +186: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: screen create validates names and discards a previous tmux choice
+00:23 +187: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:23 +188: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:23 +189: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:23 +190: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:23 +191: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: saving a destination strips credentials and closes after successful storage
+00:23 +192: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: key and tmux mode still require a safe browser gateway
+00:24 +193: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: key and tmux mode still require a safe browser gateway
+00:24 +194: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: key and tmux mode still require a safe browser gateway
+00:24 +195: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: deleting one profile leaves the other destination available
+00:24 +196: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: expanded key and tmux form fits a narrow viewport
+00:24 +197: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: unreadable profiles show a bounded error and preserve storage
+00:24 +198: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_connect_dialog_test.dart: SSH extension labels are translated in every supported locale
+00:24 +199: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: saved profiles remain scrollable in a short narrow viewport
+00:24 +200: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +201: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +202: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +203: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +204: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +205: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +206: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +207: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +208: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +209: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +210: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:25 +211: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_profiles_dialog_test.dart: selecting a saved profile asks for credentials and cancel preserves live connection
+00:26 +212: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model constructor stores all fields
+00:26 +213: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model toJson contains all keys
+00:26 +214: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model fromJson round-trip preserves all fields
+00:26 +215: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model equality is based on id
+00:26 +216: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model hashCode matches for equal sessions
+00:26 +217: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model copyWith replaces only specified fields
+00:26 +218: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model toString contains key fields
+00:26 +219: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model disconnected session has connected=false
+00:26 +220: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshSession model fromJson handles port as integer
+00:26 +221: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService constants maxSessions is 5
+00:26 +222: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService constants defaultIdleTimeout is 30 minutes
+00:26 +223: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService platform guard isSupported returns bool
+00:26 +224: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool initial active sessions list is empty
+00:26 +225: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool injected session appears in getActiveSessions
+00:26 +226: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool multiple sessions appear in getActiveSessions
+00:26 +227: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool disconnected sessions are excluded from active list
+00:26 +228: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool pool capacity check throws at maxSessions
+00:26 +229: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool pool capacity check does not throw below max
+00:26 +230: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool disconnect removes session from pool
+00:26 +231: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool disconnect unknown id is a no-op
+00:26 +232: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool disconnectAll clears all sessions
+00:26 +233: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_test.dart: SshTerminalService session pool disconnectAll on empty pool completes normally
+00:26 +234: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +235: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +236: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +237: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +238: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +239: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +240: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +241: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +242: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +243: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +244: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +245: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +246: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +247: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +248: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +249: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +250: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +251: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +252: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:26 +253: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +253: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: requests the actual terminal geometry and resizes the active PTY
+ℹ️ [SshTerminalService] Session ho73qbgldu0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbgldu0)
+ℹ️ [SshTerminalService] resizeTerminal(ho73qbgldu0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho73qbgldu0
+00:27 +254: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +254: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: starts tmux through an exec PTY and preserves input and resize
+ℹ️ [SshTerminalService] Session ho73qbh9kd0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbh9kd0)
+ℹ️ [SshTerminalService] resizeTerminal(ho73qbh9kd0): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho73qbh9kd0
+00:27 +255: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +255: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: attach uses an exact tmux target and never creates a fallback shell
+ℹ️ [SshTerminalService] Session ho73qbhn6t0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbhn6t0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbhn6t0
+00:27 +256: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +256: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: invalid tmux names leave an existing shell untouched
+ℹ️ [SshTerminalService] Session ho73qbhtei0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbhtei0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbhtei0
+00:27 +257: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +257: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: screen uses an exec PTY and preserves input and geometry
+ℹ️ [SshTerminalService] Session ho73qbi2f70 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbi2f70)
+ℹ️ [SshTerminalService] resizeTerminal(ho73qbi2f70): 95x31
+ℹ️ [SshTerminalService] Disconnecting session ho73qbi2f70
+00:27 +258: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +258: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: invalid or conflicting screen options preserve the running shell
+ℹ️ [SshTerminalService] Session ho73qbi7by0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbi7by0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbi7by0
+00:27 +259: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +259: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: disconnect during screen startup closes the late channel
+ℹ️ [SshTerminalService] Session ho73qbibtn0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbibtn0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbibtn0
+00:27 +260: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +260: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: failed screen exec closes its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho73qbig9v0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbig9v0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbig9v0
+00:27 +261: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +261: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: closing screen disconnects only this SSH client without remote commands
+ℹ️ [SshTerminalService] Session ho73qbilwj0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbilwj0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbilwj0
+00:27 +262: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:27 +262: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: disconnect during tmux startup closes its late exec channel
+ℹ️ [SshTerminalService] Session ho73qbisfm0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbisfm0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbisfm0
+00:27 +263: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +263: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: failed tmux exec releases its pool slot without shell fallback
+ℹ️ [SshTerminalService] Session ho73qbiwgt0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbiwgt0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbiwgt0
+00:28 +264: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +264: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: disconnect closes only the tmux client without sending kill or exit
+ℹ️ [SshTerminalService] Session ho73qbj1mq0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbj1mq0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbj1mq0
+00:28 +265: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +265: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: preserves remote exit status without losing final tmux output
+ℹ️ [SshTerminalService] Session ho73qbj8u60 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbj8u60)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbj8u60
+00:28 +266: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +266: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: output EOF waits for the later SSH exit status before cleanup
+ℹ️ [SshTerminalService] Session ho73qbjglr0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbjglr0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbjglr0
+00:28 +267: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +267: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: explicit disconnect still closes SSH while waiting after output EOF
+ℹ️ [SshTerminalService] Session ho73qbjltj0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbjltj0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbjltj0
+00:28 +268: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +268: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: observes early channel errors and preserves them for the exit reader
+ℹ️ [SshTerminalService] Session ho73qbjqju0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbjqju0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbjqju0
+00:28 +269: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +269: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: plain output streams remain compatible without exit metadata
+ℹ️ [SshTerminalService] Session ho73qbjucm0 established to test.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73qbjucm0
+00:28 +270: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +270: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: decrypts an encrypted key without sending its passphrase as a password
+ℹ️ [SshTerminalService] Session ho73qbjwtw0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho73qbo11q0 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73qbo11q0
+ℹ️ [SshTerminalService] Disconnecting session ho73qbjwtw0
+00:28 +271: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +271: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: rejects missing or incorrect key passphrases before connecting
+ℹ️ [SshTerminalService] Session ho73qbocj00 established to test.example:22
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+❌ [SshTerminalService] Failed to parse or decrypt SSH private key
+ℹ️ [SshTerminalService] Disconnecting session ho73qbocj00
+00:28 +272: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +272: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: accepts unencrypted keys with omitted or empty passphrases
+ℹ️ [SshTerminalService] Session ho73qbq2a10 established to test.example:22
+ℹ️ [SshTerminalService] Session ho73qbrm681 established to key.example:22
+ℹ️ [SshTerminalService] Session ho73qbrn342 established to key.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho73qbq2a10
+ℹ️ [SshTerminalService] Disconnecting session ho73qbrm681
+ℹ️ [SshTerminalService] Disconnecting session ho73qbrn342
+00:28 +273: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +273: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: writes UTF-8, arrow keys, tab and control characters without line buffering
+ℹ️ [SshTerminalService] Session ho73qbru3u0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbru3u0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbru3u0
+00:28 +274: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +274: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: buffers initial prompt and decodes UTF-8 split across packets
+ℹ️ [SshTerminalService] Session ho73qbs9880 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbs9880)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbs9880
+00:28 +275: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +275: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: waits for stderr after stdout EOF and keeps its UTF-8 decoder separate
+ℹ️ [SshTerminalService] Session ho73qbsuon0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbsuon0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbsuon0
+00:28 +276: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +276: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: reports channel errors instead of silently swallowing stderr errors
+ℹ️ [SshTerminalService] Session ho73qbsyg10 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbsyg10)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbsyg10
+00:28 +277: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +277: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: disconnect completes before any output consumer attaches
+ℹ️ [SshTerminalService] Session ho73qbt6l30 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbt6l30)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbt6l30
+00:28 +278: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +278: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: cancelling the terminal subscription closes the SSH connection
+ℹ️ [SshTerminalService] Session ho73qbta520 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbta520)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbta520
+00:28 +279: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +279: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: restart closes the old shell without disconnecting the replacement
+ℹ️ [SshTerminalService] Session ho73qbtds90 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbtds90)
+ℹ️ [SshTerminalService] startShell(ho73qbtds90)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbtds90
+00:28 +280: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +280: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: disconnect during shell setup closes the late shell
+ℹ️ [SshTerminalService] Session ho73qbtlkv0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbtlkv0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbtlkv0
+00:28 +281: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +281: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: failed shell setup releases the connection and its pool slot
+ℹ️ [SshTerminalService] Session ho73qbtsvm0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbtsvm0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbtsvm0
+00:28 +282: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +282: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: transport completion does not discard output still queued in channels
+ℹ️ [SshTerminalService] Session ho73qbu0zl0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbu0zl0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbu0zl0
+00:28 +283: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +283: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: noninteractive execute also decodes UTF-8
+ℹ️ [SshTerminalService] Session ho73qbu5140 established to test.example:22
+ℹ️ [SshTerminalService] execute(ho73qbu5140)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbu5140
+00:28 +284: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +284: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: validates actual start and resize entry points before requesting a PTY
+ℹ️ [SshTerminalService] Session ho73qbuwmw0 established to test.example:22
+ℹ️ [SshTerminalService] startShell(ho73qbuwmw0)
+ℹ️ [SshTerminalService] Disconnecting session ho73qbuwmw0
+00:28 +285: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +285: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: dispose rejects and closes a connection that completes later
+ℹ️ [SshTerminalService] Session ho73qbvtcu0 established to test.example:22
+❌ [SshTerminalService] SSH connect failed
+  Error: Bad state: SSH connection was cancelled
+ℹ️ [SshTerminalService] Disconnecting session ho73qbvtcu0
+00:28 +286: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:28 +286: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_transport_test.dart: pool limit includes connections still authenticating
+ℹ️ [SshTerminalService] Session ho73qbw14h0 established to test.example:22
+ℹ️ [SshTerminalService] Session ho73qbw2hh0 established to host0:22
+ℹ️ [SshTerminalService] Session ho73qbw3e31 established to host1:22
+ℹ️ [SshTerminalService] Session ho73qbw3s82 established to host2:22
+ℹ️ [SshTerminalService] Session ho73qbw4oe3 established to host3:22
+ℹ️ [SshTerminalService] Session ho73qbw4ua4 established to host4:22
+ℹ️ [SshTerminalService] Disconnecting session ho73qbw2hh0
+ℹ️ [SshTerminalService] Disconnecting session ho73qbw3e31
+ℹ️ [SshTerminalService] Disconnecting session ho73qbw3s82
+ℹ️ [SshTerminalService] Disconnecting session ho73qbw4oe3
+ℹ️ [SshTerminalService] Disconnecting session ho73qbw4ua4
+ℹ️ [SshTerminalService] Disconnecting session ho73qbw14h0
+00:28 +287: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: tmux reconnect retains the target and asks for credentials before replacing the connection
+00:29 +288: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:30 +289: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_dialog_test.dart: save validates, names replacements and restores the selected value
+00:31 +290: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: screen detach and reconnect preserve the exact target without secrets
+00:31 +291: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_dialog_test.dart: future data disables saving and remains intact on both dialogs
+00:31 +292: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:31 +293: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: conflicting multiplexer options do not replace a live connection
+00:31 +294: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_dialog_test.dart: capacity preserves existing arrangements and allows replacement
+00:32 +295: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: failed startup can reconnect with the previous destination
+00:32 +296: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: failed startup can reconnect with the previous destination
+00:32 +297: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +298: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +299: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +300: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +301: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +302: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +303: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +304: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +305: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: overlapping reconnect attempts keep host-key prompts isolated
+00:33 +306: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_test.dart: arrangement store bounds saved arrangements but permits replacement at capacity
+00:33 +307: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route
+00:33 +308: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route
+00:33 +309: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route
+00:33 +310: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route
+00:34 +311: /workspace/scratch/3517d212389a/crispcloud/test/ssh_terminal_reconnect_test.dart: screen browsing attaches the selected full ID among duplicate names
+00:34 +312: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:35 +313: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:35 +314: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:35 +315: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:36 +316: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:37 +317: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:37 +318: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:37 +319: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:38 +320: /workspace/scratch/3517d212389a/crispcloud/test/terminal_broadcast_dialog_test.dart: requires explicit selection of two exact connected destinations
+00:40 +321: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: SSH arrangements stay disconnected and reconnect asks again
+00:40 +322: /workspace/scratch/3517d212389a/crispcloud/test/terminal_broadcast_dialog_test.dart: a changed connection is deselected and cannot be silently replaced
+00:40 +323: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:40 +324: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +325: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +326: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +327: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +328: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +329: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +330: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +331: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +332: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +333: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +334: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +335: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +336: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +337: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:41 +338: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +339: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +340: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:42 +341: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:43 +342: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:43 +343: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cancel keeps live sessions and every existing screen
+00:43 +344: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +345: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +346: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +347: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +348: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +349: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +350: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +351: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +352: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +353: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +354: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:44 +355: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_test.dart: local store corrupt, duplicate and future stores remain untouched
+00:44 +356: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: pending connection is kept until its opener settles
+00:44 +357: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: pending connection is kept until its opener settles
+00:44 +358: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: failed load cannot save over an unreadable store
+00:45 +359: /workspace/scratch/3517d212389a/crispcloud/test/terminal_arrangements_widget_test.dart: delete confirms without affecting the current workspace
+00:45 +360: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: text mapping runs once and consumes repeat and modifier-changed release (variant: TargetPlatform.linux)
+00:46 +361: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: mode-aware mapped tap completes once and disabling takes effect (variant: TargetPlatform.linux)
+00:47 +362: /workspace/scratch/3517d212389a/crispcloud/test/terminal_mount_localization_test.dart: session errors retain contracts and render session values in each locale
+00:47 +363: /workspace/scratch/3517d212389a/crispcloud/test/terminal_mount_localization_test.dart: session errors retain contracts and render session values in each locale
+00:47 +364: /workspace/scratch/3517d212389a/crispcloud/test/terminal_mount_localization_test.dart: session errors retain contracts and render session values in each locale
+00:47 +365: /workspace/scratch/3517d212389a/crispcloud/test/terminal_mount_localization_test.dart: session errors retain contracts and render session values in each locale
+00:47 +366: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: terminal menu supports capture, save, edit, disable and delete (variant: TargetPlatform.linux)
+00:47 +367: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: terminal menu supports capture, save, edit, disable and delete (variant: TargetPlatform.linux)
+00:48 +368: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: capture rejects reserved and duplicate keys without modifying storage (variant: TargetPlatform.linux)
+00:48 +369: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: capture rejects reserved and duplicate keys without modifying storage (variant: TargetPlatform.linux)
+00:48 +370: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: capture rejects reserved and duplicate keys without modifying storage (variant: TargetPlatform.linux)
+00:48 +371: /workspace/scratch/3517d212389a/crispcloud/test/terminal_key_bindings_widget_test.dart: narrow editor validates text and preserves corrupt stores (variant: TargetPlatform.linux)
+00:49 +372: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: nested layout round-trips order, axes and independent dividers
+00:49 +373: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: repeated splits retain prior sessions and stop at eight panes
+00:49 +374: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: switching a hidden terminal replaces only the selected leaf
+00:49 +375: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: closing a pane collapses parents without losing sibling topology
+00:49 +376: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: divider movement targets its branch and balance preserves topology
+00:49 +377: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: runtime IDs map to saved indexes and back without changing layout
+00:49 +378: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: constructors reject duplicate IDs, negative IDs and bad proportions
+00:49 +379: /workspace/scratch/3517d212389a/crispcloud/test/terminal_pane_layout_test.dart: decoder rejects malformed and over-deep trees before traversing them
+00:50 +380: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: built-in shell executes file commands inside its working directory
+00:50 +381: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: real PTY shell accepts a command on desktop
+00:50 +381 ~1: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +382 ~1: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +383 ~1: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +383 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +384 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +385 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +386 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:50 +387 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_panel_test.dart: terminal sends raw typed input and cooperates with sticky pane focus
+00:51 +388 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_scoped_access_test.dart: each local connection owns its own access grant until exit or close
+00:51 +389 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_scoped_access_test.dart: closed output does not release access before the process exits
+00:51 +390 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_scoped_access_test.dart: failed opening releases the grant without changing the requested directory
+00:51 +391 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_scoped_access_test.dart: a denied directory uses a separately owned fallback grant
+00:52 +392 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +393 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +394 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +395 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +396 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +397 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +398 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +399 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +400 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +401 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +402 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +403 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +404 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +405 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: find navigates scrollback and keyboard stays inside search
+00:53 +406 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +407 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +408 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +409 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +410 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +411 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +412 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +413 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +414 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +415 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +416 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +417 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +418 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +419 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: small pane exposes options without overflowing
+00:54 +420 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_session_test.dart: scrollback remains bounded for long-running jobs
+00:54 +421 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: replacement terminal cancels stale search and reuses query
+00:54 +422 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: reactivating a retained search restores its input focus
+00:54 +423 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: explicit focus request reclaims an already-active search
+00:54 +424 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: deactivation preserves the parent viewport focus handoff
+00:54 +425 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: workspace focus request respects a viewport focus preference
+00:55 +426 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_search_bar_test.dart: workspace shortcut is forwarded without leaking other keys
+00:55 +427 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_directory_labels_test.dart: literal absolute directory labels preserve URI punctuation
+00:55 +428 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_directory_labels_test.dart: non-file URI labels and credential-bearing URIs remain ignored
+00:55 +429 ~2: loading /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart
+00:56 +429 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: fragmented OSC maps Unicode command, output and status
+00:56 +430 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: OSC633 equal previous status does not complete a new command
+00:56 +431 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: orphan and duplicate completion cannot invent commands or alerts
+00:56 +432 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: new prompt closes an unterminated command with unknown status
+00:56 +433 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: continuation and right prompts do not split history
+00:56 +434 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: alternate screen cannot create marks, completion or a directory
+00:56 +435 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: manual and iTerm marks need no setup and send no input
+00:56 +436 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: anchors follow wide wrapped reflow and expire with scrollback
+00:56 +437 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: mark count and directory metadata stay bounded
+00:56 +438 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: completion survives long output evicting the current prompt
+00:56 +439 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_shell_integration_test.dart: disposal restores callback ownership
+00:56 +440 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:57 +441 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:57 +442 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:57 +443 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +444 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +445 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +446 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +447 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +448 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +449 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +450 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +451 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +452 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:58 +453 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+00:59 +454 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_widget_test.dart: raw keys reach the terminal without triggering ancestor file commands
+01:00 +455 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: search stays visible while clicks route typing to either split viewport (variant: TargetPlatform.linux)
+01:00 +456 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: search stays visible while clicks route typing to either split viewport (variant: TargetPlatform.linux)
+01:00 +457 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: search stays visible while clicks route typing to either split viewport (variant: TargetPlatform.linux)
+01:00 +458 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: search stays visible while clicks route typing to either split viewport (variant: TargetPlatform.linux)
+01:00 +459 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_widget_test.dart: SSH form rejects invalid port instead of silently connecting to port 22
+01:01 +460 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: eight nested panes retain views through zoom and compact layouts
+01:01 +461 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: eight nested panes retain views through zoom and compact layouts
+01:02 +462 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: eight nested panes retain views through zoom and compact layouts
+01:02 +463 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: eight nested panes retain views through zoom and compact layouts
+01:02 +464 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: eight nested panes retain views through zoom and compact layouts
+01:03 +465 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: nested close and hidden-tab replacement leave siblings connected
+01:03 +466 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: nested close and hidden-tab replacement leave siblings connected
+01:03 +467 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_dialog_test.dart: task shows progress and returns its completed result
+01:04 +468 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: pane shortcuts split, navigate and zoom without writing to shells
+01:04 +469 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: pane shortcuts split, navigate and zoom without writing to shells
+01:04 +470 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: pane shortcuts split, navigate and zoom without writing to shells
+01:04 +471 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_dialog_test.dart: review permits only selected uploadable files and never selects deletions
+01:04 +472 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: clicking current or another tab reclaims typing from a file pane
+01:04 +473 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: clicking current or another tab reclaims typing from a file pane
+01:04 +474 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_dialog_test.dart: saved workspaces reload their manifest before opening a shell
+01:04 +475 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: mobile control keys activate their pane before subsequent typing
+01:04 +476 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: mobile control keys activate their pane before subsequent typing
+01:04 +477 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_dialog_test.dart: interrupted staging resumes against a captured account
+01:05 +478 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: narrow and short layouts collapse and restore splits without losing sessions
+01:05 +479 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: narrow and short layouts collapse and restore splits without losing sessions
+01:05 +480 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: narrow and short layouts collapse and restore splits without losing sessions
+01:05 +481 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: a delayed clipboard read cannot paste into a pane that lost focus
+01:05 +482 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: hide and reopen preserve all sessions and release keyboard and menu ownership
+01:05 +483 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +484 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +485 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +486 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +487 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +488 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +489 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +490 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: cancel keeps a live tab, confirm closes only that owned session
+01:06 +491 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_integration_review_test.dart: new nested upload rejects every remote symlink ancestor before writing
+01:06 +492 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: failed close keeps the tab available for a cleanup retry
+01:06 +493 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +494 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +495 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +496 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +497 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +498 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +499 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +500 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +501 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +502 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +503 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +504 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +505 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +506 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: the final tab stays available and the tab limit blocks additional sessions
+01:07 +507 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: workspace shortcuts add, cycle and close without sending control input
+01:07 +508 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: macOS command shortcuts also stay inside the workspace
+01:07 +509 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_tabs_test.dart: renaming a tab preserves its connection and other tab labels
+01:08 +510 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: input.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+01:08 +511 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:09 +512 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:09 +513 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:09 +514 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:09 +515 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+01:10 +516 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:10 +517 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:10 +518 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:10 +519 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:10 +520 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:10 +521 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: stage opens the native shell and reviewed uploads keep the original account (variant: TargetPlatform.iOS)
+01:10 +522 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: native staging and persistence stream errors preserve a journal and resume without overwriting completed edits
+01:10 +522 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: input.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+01:10 +523 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +524 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +525 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +526 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +527 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +528 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +529 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: cleanup failure stays visible with a working disconnect retry (variant: TargetPlatform.iOS)
+01:10 +530 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment uses decrypted lengths while retaining provider stored-size metadata
+01:10 +530 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: input.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+01:10 +531 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:10 +532 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:10 +533 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:10 +534 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:10 +535 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:11 +536 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_panel_test.dart: account disconnection invalidates a staging request without opening a shell (variant: TargetPlatform.iOS)
+01:11 +537 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment classifies modified, added, removed and new-directory paths
+01:11 +538 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment never propagates a local deletion and unchanged uploads are a no-op
+01:11 +539 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment does not follow file or directory links outside the workspace
+01:11 +540 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment rejects a replaced workspace root or journal symlink
+01:11 +541 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment rejects symlink storage root and tampered manifest path mappings
+01:11 +542 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: local inspection and containment rejects regular-file and directory type substitutions
+01:11 +543 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery conditional native-move backup receipt survives interruption after backedUp
+01:11 +544 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery native-move restoration records a changed revision for a safe retry
+01:11 +545 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery native-move restoration records a changed revision for a safe retry
+01:11 +546 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery native-move restoration records a changed revision for a safe retry
+01:11 +547 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery native-move restoration records a changed revision for a safe retry
+01:11 +548 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery conditional native moves protect replacements and unsafe preferred move routes are rejected
+01:11 +549 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery a failed commit restores the original and accepts a retry against the recorded restored revision
+01:11 +550 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery backup cleanup failures are recorded as persistent nonfatal warnings
+01:12 +551 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery lost acknowledgements for new files recover without treating them as unrelated conflicts
+01:12 +552 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery uploads only reviewed changes using staged streams and updates baseline
+01:12 +553 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery uploads new files with exact no-replace moves while retaining unsupported replacements
+01:12 +554 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery an incapable provider retains all local work without a direct upload fallback
+01:12 +555 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery missing revision tokens prevent unsafe replacement before any upload
+01:12 +556 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery stale, forged, duplicated and changed review tokens are rejected
+01:12 +557 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:12 +558 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:12 +559 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:12 +560 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +561 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +562 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +563 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +564 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +565 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +566 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +567 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +568 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +569 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: preferences and opening the review never start a process
+01:13 +570 ~2: /workspace/scratch/3517d212389a/crispcloud/test/terminal_workspace_service_test.dart: reviewed uploads and recovery cancellation and independent errors retain all unuploaded local files
+01:13 +571 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: explicit save and open passes the captured folder as one argument
+01:13 +572 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: explicit save and open passes the captured folder as one argument
+01:13 +573 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: explicit save and open passes the captured folder as one argument
+01:13 +574 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: without a local capture preferences are editable but launch stays disabled
+01:14 +575 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: missing executable stays in review and reset clears the saved preference
+01:14 +576 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: view change during preflight blocks the reviewed launch
+01:14 +577 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: forced disposal cancels pending launch preparation
+01:14 +578 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: review fits a narrow enlarged de layout
+01:15 +579 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/external_terminal_dialog_test.dart: review fits a narrow enlarged ar layout
+01:48 +580 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/terminal_localization_test.dart: SSH host trust message retains host and fingerprint
+01:49 +581 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/screen_dialog_localization_test.dart: keyboard shortcut descriptions follow the selected locale
+01:49 +582 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/screen_dialog_localization_test.dart: keyboard shortcut descriptions follow the selected locale
+01:50 +583 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/screen_dialog_localization_test.dart: received-files confirmation follows the selected locale
+01:50 +584 ~2: /workspace/scratch/3517d212389a/crispcloud/test/widget/screen_dialog_localization_test.dart: shortcut help omits aliases disabled by customization
+01:50 +585 ~2: All tests passed!

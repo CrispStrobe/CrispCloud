@@ -1,145 +1,382 @@
 {
-  "checked_at_utc": "2026-11-15T22:28:48.200410+00:00",
-  "oracle": "OpenSSH_10.0p2 Debian-7+deb13u4, OpenSSL 3.5.7 9 Jun 2026",
-  "scope": "Production pure Dart importer compared against local ssh -G; no network connections, commands, includes, or Match execution. Hostnames compared case-insensitively after case-sensitive alias evaluation.",
+  "checked_at_utc": "2026-11-15T22:46:34.307156+00:00",
+  "status": "passed",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/terminal_ssh_config_oracle.py",
+    "--dart",
+    "../.terminal-tools/run-dart",
+    "--output",
+    "docs/validation/terminal-parity-continuation/ssh-config-openssh-oracle.json"
+  ],
+  "working_directory": "repository root",
+  "helper_command": [
+    "../.terminal-tools/run-dart",
+    "--disable-dart-dev",
+    "tool/terminal_ssh_config_oracle.dart"
+  ],
+  "oracle_command_template": [
+    "ssh",
+    "-G",
+    "-F",
+    "<temporary authored fixture>",
+    "<alias>"
+  ],
+  "tool_versions": {
+    "python": "3.12.14",
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "openssh": "OpenSSH_10.0p2 Debian-7+deb13u4, OpenSSL 3.5.7 9 Jun 2026"
+  },
+  "tool_sha256": {
+    "tool/terminal_ssh_config_oracle.py": "e220ad4262b1948aac0fc575221757ce54ac4557b508e5851167ef5fe238f2bd",
+    "tool/terminal_ssh_config_oracle.dart": "f7117ba16257d0e7aefc483b0142914ecc9577e63d6a2acb47a0fb46a0e2347b"
+  },
+  "source_sha256": {
+    "lib/models/ssh_config_import.dart": "29e0dcb51a9cd06909abc4831aad98e81e9f51bc52d3955acfc33636b05a3314",
+    "lib/models/ssh_terminal_config.dart": "f6a97b3327f01cfb7e7fc04d3198f97673d9a13de36e39f114f208304f261830",
+    "lib/models/ssh_jump_host.dart": "1c78d880dd2fb281cb6f57f274c0d6136314607a1c1f63e944ecab641b064375",
+    "lib/models/ssh_terminal_authentication.dart": "68c7306b5e8367baf12bebf5fc5d11b73b63b504675fa292068ead04278e7951",
+    "lib/models/tmux_session_options.dart": "92b031ed03bedc3681a10823eb71f45de69a8469aea0a7c536df72955228a71c",
+    "lib/models/screen_session_options.dart": "89d447925bf69a5b34a7c3ba3a869641bca992675e807b04b4aac883e4ab64b5"
+  },
+  "importer_sha256": "29e0dcb51a9cd06909abc4831aad98e81e9f51bc52d3955acfc33636b05a3314",
+  "scope": "Production pure Dart importer compared against local ssh -G using only 14 authored fixtures. No network connections, configuration commands, includes, Match evaluation, or identity-file reads. Hostnames compared case-insensitively after case-sensitive alias evaluation. Covers the listed destination, pattern, identity-hint and disabled-proxy cases, not all OpenSSH features or live jump connections.",
+  "passed": 14,
+  "total": 14,
   "checks": [
     {
       "case": "defaults",
       "status": "passed",
-      "destination": {
+      "source": "Host one\nUser alice\nHost *\nPort 2200",
+      "alias": "one",
+      "native_destination": {
         "host": "one",
         "user": "alice",
         "port": 2200
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "one",
+        "user": "alice",
+        "port": 2200
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "first-wins",
       "status": "passed",
-      "destination": {
+      "source": "Host one\nUser alice\nPort 2200\nHost one\nUser ignored\nPort 2222",
+      "alias": "one",
+      "native_destination": {
         "host": "one",
         "user": "alice",
         "port": 2200
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "one",
+        "user": "alice",
+        "port": 2200
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "global-first",
       "status": "passed",
-      "destination": {
+      "source": "User first\nPort 2022\nHost one\nUser ignored\nPort 2222",
+      "alias": "one",
+      "native_destination": {
         "host": "one",
         "user": "first",
         "port": 2022
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "one",
+        "user": "first",
+        "port": 2022
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "case-upper",
       "status": "passed",
-      "destination": {
+      "source": "Host One one\nHostName %h.example\nHost One\nUser upper\nHost one\nUser lower",
+      "alias": "One",
+      "native_destination": {
         "host": "one.example",
         "user": "upper",
         "port": 22
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "one.example",
+        "user": "upper",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "case-lower",
       "status": "passed",
-      "destination": {
+      "source": "Host One one\nHostName %h.example\nHost One\nUser upper\nHost one\nUser lower",
+      "alias": "one",
+      "native_destination": {
         "host": "one.example",
         "user": "lower",
         "port": 22
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "one.example",
+        "user": "lower",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "glob-include",
       "status": "passed",
-      "destination": {
+      "source": "Host !dev2 dev?\nPort 2200\nHost dev1 dev2\nUser alice\nHost *\nPort 22",
+      "alias": "dev1",
+      "native_destination": {
         "host": "dev1",
         "user": "alice",
         "port": 2200
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "dev1",
+        "user": "alice",
+        "port": 2200
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "glob-exclude",
       "status": "passed",
-      "destination": {
+      "source": "Host !dev2 dev?\nPort 2200\nHost dev1 dev2\nUser alice\nHost *\nPort 22",
+      "alias": "dev2",
+      "native_destination": {
         "host": "dev2",
         "user": "alice",
         "port": 22
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "dev2",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "negative-only",
       "status": "passed",
-      "destination": {
+      "source": "Host !other\nUser wrong\nHost one\nUser correct",
+      "alias": "one",
+      "native_destination": {
         "host": "one",
         "user": "correct",
         "port": 22
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "one",
+        "user": "correct",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "quoted",
       "status": "passed",
-      "destination": {
+      "source": "Host = one\r\n HostName = \"host.example\" # comment\r\n User = \"alice\"\r\n IdentityFile \"~/.ssh/a # b\"",
+      "alias": "one",
+      "native_destination": {
         "host": "host.example",
         "user": "alice",
         "port": 22
       },
-      "identity_hints_checked": 1
+      "importer_destination": {
+        "host": "host.example",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 1,
+      "native_identity_hints": [
+        "~/.ssh/a # b"
+      ],
+      "importer_identity_hints": [
+        "~/.ssh/a # b"
+      ],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "identity-additive",
       "status": "passed",
-      "destination": {
+      "source": "Host one\nUser alice\nIdentityFile ~/.ssh/one\nHost *\nIdentityFile ~/.ssh/default",
+      "alias": "one",
+      "native_destination": {
         "host": "one",
         "user": "alice",
         "port": 22
       },
-      "identity_hints_checked": 2
+      "importer_destination": {
+        "host": "one",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 2,
+      "native_identity_hints": [
+        "~/.ssh/one",
+        "~/.ssh/default"
+      ],
+      "importer_identity_hints": [
+        "~/.ssh/one",
+        "~/.ssh/default"
+      ],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "no-recursive-hostname",
       "status": "passed",
-      "destination": {
+      "source": "Host one\nHostName two\nUser first\nHost two\nHostName other\nUser second",
+      "alias": "one",
+      "native_destination": {
         "host": "two",
         "user": "first",
         "port": 22
       },
-      "identity_hints_checked": 0
+      "importer_destination": {
+        "host": "two",
+        "user": "first",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "proxyjump-disabled-case",
       "status": "passed",
       "source": "Host box\nUser alice\nProxyJump NONE",
-      "native_proxycommand": [],
-      "native_proxyjump": [],
-      "importer_blocked": false
+      "alias": "box",
+      "native_destination": {
+        "host": "box",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_destination": {
+        "host": "box",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "proxycommand-disabled-case",
       "status": "passed",
       "source": "Host box\nUser alice\nProxyCommand NONE",
-      "native_proxycommand": [],
-      "native_proxyjump": [],
-      "importer_blocked": false
+      "alias": "box",
+      "native_destination": {
+        "host": "box",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_destination": {
+        "host": "box",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_blocked": false,
+      "expected_blocked": false,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [],
+      "failures": []
     },
     {
       "case": "proxyjump-none-command-fallback",
       "status": "passed",
       "source": "Host box\nUser alice\nProxyJump none\nProxyCommand special",
-      "native_proxycommand": [
-        "proxycommand special"
+      "alias": "box",
+      "native_destination": {
+        "host": "box",
+        "user": "alice",
+        "port": 22
+      },
+      "importer_destination": {
+        "host": null,
+        "user": null,
+        "port": null
+      },
+      "importer_blocked": true,
+      "expected_blocked": true,
+      "identity_hints_checked": 0,
+      "native_identity_hints": [],
+      "importer_identity_hints": [],
+      "importer_errors": [
+        "proxycommand"
       ],
-      "native_proxyjump": [],
-      "importer_blocked": true
+      "failures": []
     }
-  ],
-  "passed": 14,
-  "importer_sha256": "29e0dcb51a9cd06909abc4831aad98e81e9f51bc52d3955acfc33636b05a3314"
+  ]
 }

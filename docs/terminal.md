@@ -187,15 +187,20 @@ The terminal strip supports up to eight independent tabs. **New terminal** (+)
 starts another local or built-in shell. Each tab has its own scrollback,
 selection, SSH reconnect destination and search state. Switching tabs or hiding
 the whole terminal keeps the connections alive. Use **Terminal layout** to split
-the workspace side by side or top and bottom; creating the first split opens
-another terminal. Clicking a pane makes it the keyboard target. Selecting a
-hidden tab replaces the active split pane while preserving the other one.
+the active pane side by side or top and bottom. Each split adds another
+terminal, and splits can be nested to display up to eight panes. Clicking a
+pane makes it the keyboard target. Selecting a hidden tab replaces the active
+leaf while preserving every other visible pane.
 The existing SSH service permits five concurrent SSH connections across the
 app; the eight-tab limit also accommodates local and disconnected terminals.
 
-Only two panes are displayed at once. When the available space is too small,
-the active pane is displayed alone and the split reappears when space permits.
-**Single pane** keeps both sessions alive. Double-click a tab or choose
+Each split keeps its own direction and divider proportion. When the requested
+layout cannot fit the available width or height, the active pane is displayed
+alone and the full layout reappears when space permits. **Zoom active pane**
+temporarily fills the workspace; **Restore panes** brings the same layout back.
+**Single pane** changes the layout while keeping all other tabs connected.
+**Previous pane** and **Next pane** cycle visible leaves, including while zoomed.
+Double-click a tab or choose
 **Rename terminal** to give it a local label; that label does not replace the
 trusted SSH endpoint in the pane header. Closing a running tab asks before
 disconnecting it. The last tab remains available; use Disconnect or Hide for it.
@@ -219,6 +224,11 @@ Font controls adjust the current tab from 8 to 32 logical pixels and reset to
 | New terminal | Ctrl+Shift+T | Command+T |
 | Close selected tab | Ctrl+Shift+W | Command+W |
 | Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab | Ctrl+Tab / Ctrl+Shift+Tab |
+| Split side by side | Ctrl+Shift+D | Command+D |
+| Split top and bottom | Ctrl+Shift+E | Command+Shift+D |
+| Select pane in a direction | Ctrl+Alt+Arrow | Command+Option+Arrow (or Ctrl+Alt+Arrow) |
+| Previous / next pane | Ctrl+Shift+[ / Ctrl+Shift+] | Command+[ / Command+] |
+| Zoom / restore active pane | Ctrl+Shift+Enter | Command+Shift+Enter |
 | Find | Ctrl+Shift+F | Command+F |
 | Larger / smaller font | Ctrl+Shift+Plus / Ctrl+Shift+Minus | Command+Plus / Command+Minus |
 | Reset font size | Ctrl+Shift+0 | Command+0 |
@@ -232,11 +242,14 @@ the app; the terminal strip and actions menu provide the corresponding controls.
 ## Saved arrangements and split sizing
 
 Use **Terminal layout → Save arrangement** to save up to 20 named layouts.
-An arrangement includes tab order and custom names, the selected tab, the two
-visible panes, horizontal/vertical direction, split proportion, each tab's font
-size, and remembered SSH destinations including jump routes and exact
-shell/tmux/screen modes. Drag the split divider to adjust its proportion from
-20% to 80%, or use **Balance panes**. Tab controls can move a tab left or right.
+An arrangement includes tab order and custom names, the selected tab, the
+complete nested split layout with each branch's direction and proportion, each
+tab's font size, and remembered SSH destinations including jump routes and
+exact shell/tmux/screen modes. Drag any divider to adjust its branch from 20%
+to 80%, or double-click that divider to balance it. **Balance panes** balances
+every branch. Minimum pane sizes temporarily clamp displayed proportions without
+changing the saved values. Tab controls can move a tab left or right. Saving
+while zoomed retains the complete layout; transient zoom is not persisted.
 
 **Saved arrangements → Restore** asks before replacing the current workspace,
 including when disconnected tabs still contain scrollback. It ends existing
@@ -249,7 +262,38 @@ Arrangements never store scrollback, command history, selection, passwords,
 private keys, passphrases, broadcast membership or live connection objects.
 Local working-directory grants and staged-workspace ownership are not restored.
 Saved data uses the app's local preferences; it is not synchronized, and corrupt
-or newer-format records are preserved instead of silently overwritten.
+or newer-format records are preserved instead of silently overwritten. The
+arrangement store reads the earlier two-pane schema v1 and writes schema v2.
+Migration happens only on a save/delete operation. Older app versions reject
+v2 instead of silently discarding nested panes.
+
+## Custom terminal key bindings
+
+Choose **Terminal actions → Key bindings** to add, edit, disable or delete up to
+50 local mappings. Capture an exact logical key and Ctrl/Alt/Shift/Meta chord,
+then choose **Send text** or **Send key**. The same mappings apply to terminal
+panes throughout this app instance and persist locally across restarts.
+
+Text mappings contain at most 4,096 UTF-16 code units and send exactly that text;
+they do not append Enter. Tabs and line breaks must be entered explicitly. Raw
+escape and other control bytes are rejected. Key mappings choose a supported
+terminal key and output modifiers. The emulator encodes a complete press/release
+tap according to each recipient's keyboard protocol, including Kitty release
+reporting. Broadcast groups receive the explicit mapping once and re-encode it
+for each recipient. Holding a shortcut does not repeat a macro; its repeats and
+release remain consumed even after focus moves to another terminal.
+
+Bare printable shortcuts require Ctrl, Alt or Meta, preserving normal typing
+and IME composition. Workspace navigation, copy/paste, search, zoom, command
+navigation, Ctrl+C and the app's configured terminal-toggle shortcut retain
+priority. A mapping requires the active visible connected terminal to have
+keyboard focus. Shell output cannot trigger it.
+
+Mapping text is stored in local preferences as plain text, as stated in the
+editor. It is not a credential store. Unknown or corrupt schema versions are
+preserved and cannot be overwritten by an unsuccessful load. These bindings
+cover explicit text and terminal-key actions; they do not add output triggers,
+coprocesses, scripts, arbitrary raw-byte macros or iTerm2's complete action set.
 
 ## Broadcast input
 
@@ -370,8 +414,8 @@ One complete route occupies one slot in the existing five-session application
 pool, although it owns multiple SSH clients internally.
 
 Jump hosts do not add SSH-agent authentication, agent forwarding, local/remote/
-dynamic port-forwarding controls, OpenSSH configuration import or persistent
-connection multiplexing.
+dynamic port-forwarding controls or persistent connection multiplexing.
+OpenSSH destination import is available separately from saved profiles below.
 
 ### Browse existing tmux and screen sessions
 
@@ -424,6 +468,39 @@ An attach-only profile remains attach-only, including after restarting the
 app. Profile loading does not bypass host-key verification or connect
 automatically. A saved Create new screen profile still creates a new screen
 session on each connection; select Attach existing screen to resume one.
+
+### Import OpenSSH configuration
+
+Open **Saved SSH profiles → Import OpenSSH config**, paste a configuration, and
+supply a default username if it is omitted in the text. **Preview** lists each
+literal positive Host alias, its resolved destination and ordered jump route,
+identity-file hints, and line-specific diagnostics. Select entries and review
+or edit their proposed unique profile names, then choose **Import selected**.
+Import never connects; opening a saved profile asks for credentials normally.
+
+Supported settings include `Host` blocks and case-sensitive wildcard/negated
+patterns, case-insensitive directive names, first-value precedence for scalar
+options, `HostName` (including `%h`), `User`, `Port`, ordered `ProxyJump`, and
+additive `IdentityFile` hints. Jump aliases resolve their own username, port and
+authentication hint independently. Identity paths are displayed only: they are
+not expanded, read or persisted, and private keys must be chosen when connecting.
+The importer follows OpenSSH's proxy precedence, including disabling `none`.
+Nested proxy routes must be flattened into at most three explicit hops.
+
+`Match` or `Include` anywhere in the paste blocks every alias until the complete
+configuration is flattened. `ProxyCommand` execution and unsupported
+routing/security options block the aliases to which they apply. Diagnostics
+explain the blocked configuration. Unsupported display/performance preferences
+are identified where they can be safely omitted. This is a bounded destination
+importer, not a complete OpenSSH evaluator or a live configuration watcher.
+
+Input is limited to 128 Ki UTF-16 code units, 2,048 lines, 4,096 characters per
+line and 100 literal aliases. A paste over the total text-size limit rejects
+the whole edit and invalidates the previous preview instead of truncating route
+settings. Other size/count limits retain the text but reject the entire preview.
+The existing 50-profile limit still applies. Selected profiles are added under
+one storage lock and one write; a collision or capacity failure saves none of
+them. Existing profiles are never overwritten by import.
 
 ## Shell integration and command navigation
 
@@ -573,18 +650,30 @@ flutter test --concurrency=1 \
   test/ssh_multiplexer_session_test.dart \
   test/ssh_multiplexer_discovery_test.dart \
   test/ssh_multiplexer_sessions_dialog_test.dart \
-  test/ssh_terminal_profiles_test.dart test/ssh_terminal_reconnect_test.dart
+  test/ssh_terminal_profiles_test.dart test/ssh_terminal_reconnect_test.dart \
+  test/terminal_pane_layout_test.dart \
+  test/ssh_config_import_test.dart test/ssh_config_import_dialog_test.dart \
+  test/terminal_key_bindings_test.dart test/terminal_key_bindings_widget_test.dart
 
 python3 tool/terminal_shell_setup_smoke.py
+python3 tool/terminal_ssh_config_oracle.py --dart /path/to/dart
+python3 tool/run_terminal_live_smoke.py --flutter /path/to/flutter
 ```
 
 The new Dart suites are also listed in the existing Chrome, Windows and macOS
-jobs. Linux's normal suite discovers them automatically. These commands are
-reproduction instructions, **not a statement that the current continuation
-passed**: the execution environment ran out of disk during test loading and
-then became unavailable. See [the current validation record](terminal-parity.md)
-and [runtime attempts](validation/terminal-20261115/runtime-attempts.md).
+jobs. Linux's normal suite discovers them automatically. See the
+[current source-bound validation record](terminal-parity.md) for actual results.
+The [earlier failed runtime attempt](validation/terminal-20261115/runtime-attempts.md)
+remains historical evidence and does not describe the recovered environment.
 No GitHub Actions result is awaited or required for this work.
+
+The live SSH runner requires OpenSSH server/client tools. It creates disposable
+keys and two servers bound only to loopback, verifies a real jump route, executes
+Unicode commands, reconnects and checks changed-host-key rejection. All fixtures
+are cleaned up. Add `--with-pty` only when the test sshd has permission to write
+login records; unprivileged environments may forbid interactive SSH PTYs while
+permitting non-interactive channels. Test keys are never committed. The runner
+also accepts `--project` to explicitly select a separately documented harness.
 
 CI runs the terminal tests in the Linux suite, the browser tests in Chromium,
 and a native PTY smoke test in the existing Linux/macOS/Windows matrix so
@@ -642,9 +731,9 @@ physical-device keyboard/IME or Windows ConPTY validation.
    Also exercise the browser's in-memory built-in shell; those files are local
    to that terminal session and are not the browser's selected filesystem.
    Test a signed sandboxed macOS build separately from an unsandboxed build.
-9. **Tabs and split views.** Open two terminals, split side by side and top and
-   bottom, and type into each pane. Output in another pane must not redirect
-   typing. Switch a third tab into a split, rename it, hide/reopen the terminal,
+9. **Tabs and split views.** Create a nested layout with up to eight panes,
+   mixing side-by-side and top/bottom splits, and type into each pane. Output
+   in another pane must not redirect typing. Switch a third tab into a split, rename it, hide/reopen the terminal,
    and shrink the window until the split collapses. All retained sessions must
    keep their own output. Cancel a running-tab close, then retry and confirm;
    only that connection should close.
@@ -688,6 +777,17 @@ physical-device keyboard/IME or Windows ConPTY validation.
     repeated setup is idempotent, command navigation follows resize/reflow,
     output selection excludes the next prompt and one-shot notifications fire
     once. Repeat inside the actual tmux/Screen configuration.
+
+17. **OpenSSH import.** Preview a controlled configuration with defaults,
+    negated patterns, independent jump aliases and identity hints. Compare
+    destination resolution with `ssh -G -F <file> <alias>` without connecting.
+    Confirm blocked external directives, duplicate-name rejection, atomic
+    capacity failure, whole-paste bounds and disconnected saved profiles.
+18. **Key bindings.** Capture a harmless function-key mapping, test literal text
+    without implicit Enter and a complete mapped key tap in classic and Kitty
+    modes, then enable/disable/edit/delete it. Test duplicate/reserved chords,
+    holding the key while moving between panes, normal typing/IME and broadcast
+    recipients with different keyboard modes. Reopen after restarting.
 
 Only claim platform smoke tests that were actually executed. In particular,
 Linux unit/native checks do not certify Windows, signed macOS or physical
