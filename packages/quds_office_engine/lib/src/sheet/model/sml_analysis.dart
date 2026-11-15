@@ -150,7 +150,16 @@ class SmlDataValidation {
 }
 
 /// Conditional format kinds hosts can paint.
-enum SmlConditionalKind { greaterThan, lessThan, equal, duplicate, contains }
+enum SmlConditionalKind {
+  greaterThan,
+  greaterOrEqual,
+  lessThan,
+  lessOrEqual,
+  equal,
+  notEqual,
+  duplicate,
+  contains,
+}
 
 /// One conditional-format rule.
 class SmlConditionalRule {
@@ -186,12 +195,22 @@ class SmlConditionalRule {
         final double? n = cell.asNumber;
         final double? bound = double.tryParse(formula);
         return n != null && bound != null && n > bound;
+      case SmlConditionalKind.greaterOrEqual:
+        final double? n = cell.asNumber;
+        final double? bound = double.tryParse(formula);
+        return n != null && bound != null && n >= bound;
       case SmlConditionalKind.lessThan:
         final double? n = cell.asNumber;
         final double? bound = double.tryParse(formula);
         return n != null && bound != null && n < bound;
+      case SmlConditionalKind.lessOrEqual:
+        final double? n = cell.asNumber;
+        final double? bound = double.tryParse(formula);
+        return n != null && bound != null && n <= bound;
       case SmlConditionalKind.equal:
         return text == formula;
+      case SmlConditionalKind.notEqual:
+        return text != formula;
       case SmlConditionalKind.contains:
         return text.toLowerCase().contains(formula.toLowerCase());
       case SmlConditionalKind.duplicate:
@@ -326,9 +345,9 @@ abstract final class SmlAnalysis {
           ..hasExplicitFontColorEdit = src.hasExplicitFontColorEdit
           ..fontBold = src.fontBold
           ..fontSize = src.fontSize
-        ..fontFamily = src.fontFamily
+          ..fontFamily = src.fontFamily
           ..horizontalAlign = src.horizontalAlign
-        ..wrapText = src.wrapText
+          ..wrapText = src.wrapText
           ..borderRgb = src.borderRgb
           ..borderWidth = src.borderWidth
           ..locked = src.locked;

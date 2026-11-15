@@ -593,10 +593,15 @@ abstract final class OdsSheetReader {
         if (value == null || value.isEmpty || styleName == null) continue;
         final SmlConditionalKind kind;
         final String formula;
-        if (value.startsWith('<>') || value.startsWith('>=') ||
-            value.startsWith('<=') || value.startsWith('!=')) {
-          // The shared model has no not-equal/range comparison kinds.
-          continue;
+        if (value.startsWith('<>') || value.startsWith('!=')) {
+          kind = SmlConditionalKind.notEqual;
+          formula = value.substring(2).trim();
+        } else if (value.startsWith('>=')) {
+          kind = SmlConditionalKind.greaterOrEqual;
+          formula = value.substring(2).trim();
+        } else if (value.startsWith('<=')) {
+          kind = SmlConditionalKind.lessOrEqual;
+          formula = value.substring(2).trim();
         } else if (value.startsWith('>')) {
           kind = SmlConditionalKind.greaterThan;
           formula = value.substring(1).trim();
@@ -614,9 +619,7 @@ abstract final class OdsSheetReader {
         final fill = _hex(
           _property(style, 'table-cell-properties', 'background-color', _fo),
         );
-        final font = _hex(
-          _property(style, 'text-properties', 'color', _fo),
-        );
+        final font = _hex(_property(style, 'text-properties', 'color', _fo));
         budget.conditional();
         rules.add(
           SmlConditionalRule(
@@ -1414,7 +1417,9 @@ class _OdsBudget {
 
   void conditional() {
     if (++_conditionalFormats > 1000) {
-      throw const OdsSheetFormatException('ODS conditional format limit (1000)');
+      throw const OdsSheetFormatException(
+        'ODS conditional format limit (1000)',
+      );
     }
   }
 
