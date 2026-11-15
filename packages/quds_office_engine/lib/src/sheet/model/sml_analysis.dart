@@ -161,6 +161,8 @@ enum SmlConditionalKind {
   lessOrEqual,
   equal,
   notEqual,
+  between,
+  notBetween,
   duplicate,
   contains,
 }
@@ -172,6 +174,7 @@ class SmlConditionalRule {
     required this.range,
     required this.kind,
     this.formula = '',
+    this.formula2 = '',
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
     this.dxfId,
@@ -185,6 +188,9 @@ class SmlConditionalRule {
 
   /// formula API.
   String formula;
+
+  /// formula2 API. The upper bound for between/notBetween rules.
+  String formula2;
 
   /// fillRgb API.
   String fillRgb;
@@ -219,6 +225,23 @@ class SmlConditionalRule {
         return text == formula;
       case SmlConditionalKind.notEqual:
         return text != formula;
+      case SmlConditionalKind.between:
+        final double? n = cell.asNumber;
+        final double? lower = double.tryParse(formula);
+        final double? upper = double.tryParse(formula2);
+        return n != null &&
+            lower != null &&
+            upper != null &&
+            n >= lower &&
+            n <= upper;
+      case SmlConditionalKind.notBetween:
+        final double? n = cell.asNumber;
+        final double? lower = double.tryParse(formula);
+        final double? upper = double.tryParse(formula2);
+        return n != null &&
+            lower != null &&
+            upper != null &&
+            (n < lower || n > upper);
       case SmlConditionalKind.contains:
         return text.toLowerCase().contains(formula.toLowerCase());
       case SmlConditionalKind.duplicate:

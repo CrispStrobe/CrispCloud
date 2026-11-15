@@ -1486,6 +1486,50 @@ void conditionalFormatTests() {
     expect(sheetXml, contains('type="duplicateValues"'));
   });
 
+  test('ODS between conditions keep both bounds', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        'o:value-type="float" o:value="5"><x:p>5</x:p></t:table-cell>'
+        '</t:table-row><cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" cal:value="between(1,6)"/>'
+        '</cal:conditional-format>'
+        '<cal:conditional-format cal:target-range-address="Data.B1:Data.B10">'
+        '<cal:condition cal:apply-style-name="cf" '
+        'cal:value="not-between(1,6)"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.conditionalFormats.length, 2);
+    final between = sheet.conditionalFormats.first;
+    expect(between.kind, SmlConditionalKind.between);
+    expect(between.formula, '1');
+    expect(between.formula2, '6');
+    expect(between.matches(sheet.cellA1('A1'), sheet), isTrue);
+    expect(
+      sheet.conditionalFormats.last.matches(sheet.cellA1('A1'), sheet),
+      isFalse,
+    );
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('operator="between"'));
+    expect(sheetXml, contains('operator="notBetween"'));
+    expect(
+      '<formula>1</formula><formula>6</formula>'.allMatches(sheetXml).length,
+      2,
+    );
+  });
+
   test('ODS conditional comparison operators keep their meaning', () {
     final book = OdsSheetReader.readBytes(
       _ods(
