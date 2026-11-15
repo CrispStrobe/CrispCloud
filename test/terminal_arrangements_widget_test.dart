@@ -277,6 +277,57 @@ void main() {
   });
 
   testWidgets(
+    'blocked divider motion preserves saved ratios when the window widens',
+    (tester) async {
+      for (final fraction in [0.2, 0.8]) {
+        await store.save(
+          TerminalArrangement(
+            name: 'Ratio $fraction',
+            tabs: [
+              TerminalArrangementTab(name: 'First'),
+              TerminalArrangementTab(name: 'Second'),
+            ],
+            activeIndex: 0,
+            layout: TerminalPaneSplit(
+              axis: TerminalSplitAxis.horizontal,
+              fraction: fraction,
+              first: TerminalPaneLeaf(0),
+              second: TerminalPaneLeaf(1),
+            ),
+          ),
+        );
+      }
+      await mount(tester);
+
+      for (final fraction in [0.2, 0.8]) {
+        await restore(tester, 'Ratio $fraction');
+        tester.view.physicalSize = const Size(500, 900);
+        await settle(tester);
+        final divider = find.byKey(const ValueKey('terminal-split-divider'));
+        final constrainedBounds = tester.getRect(divider);
+        await tester.drag(divider, Offset(fraction < 0.5 ? -80 : 80, 0));
+        await settle(tester);
+        expect(tester.getRect(divider), constrainedBounds);
+
+        await save(tester, 'Blocked $fraction');
+        final captured = (await store.load()).singleWhere(
+          (item) => item.name == 'Blocked $fraction',
+        );
+        expect(captured.layout.splitAt('')!.fraction, fraction);
+
+        tester.view.physicalSize = const Size(1400, 900);
+        await settle(tester);
+        expect(
+          tester.getSize(find.byType(TerminalPanel).first).width,
+          closeTo((1400 - 8) * fraction, 0.01),
+        );
+      }
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
+  testWidgets(
     'nested arrangements preserve hidden tabs and independent dividers',
     (tester) async {
       final saved = TerminalArrangement(

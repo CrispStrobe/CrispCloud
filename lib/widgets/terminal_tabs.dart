@@ -715,14 +715,20 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       return;
     }
     final effective = current.fraction.clamp(divider.lower, divider.upper);
-    final fraction = balance
-        ? 0.5
-        : (effective + delta / divider.usable)
-              .clamp(
-                TerminalPaneLayout.minimumFraction,
-                TerminalPaneLayout.maximumFraction,
-              )
-              .toDouble();
+    var fraction = 0.5;
+    if (!balance) {
+      fraction = (effective + delta / divider.usable)
+          .clamp(
+            TerminalPaneLayout.minimumFraction,
+            TerminalPaneLayout.maximumFraction,
+          )
+          .clamp(divider.lower, divider.upper)
+          .toDouble();
+      // A window constraint may hide the saved ratio. Keep that ratio when a
+      // drag cannot move the divider, so widening restores the user's layout.
+      if (fraction == effective) return;
+    }
+    if (fraction == current.fraction) return;
     setState(() => _layout = _layout.withSplitFraction(divider.path, fraction));
   }
 

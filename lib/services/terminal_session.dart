@@ -36,31 +36,32 @@ class TerminalSession extends ChangeNotifier {
     _bindTerminal();
   }
 
-  static Terminal _createTerminal(TerminalSessionKind kind) => InputAwareTerminal(
-    maxLines: 10000,
-    platform: kIsWeb
-        ? TerminalTargetPlatform.web
-        : switch (defaultTargetPlatform) {
-            TargetPlatform.android => TerminalTargetPlatform.android,
-            TargetPlatform.iOS => TerminalTargetPlatform.ios,
-            TargetPlatform.fuchsia => TerminalTargetPlatform.fuchsia,
-            TargetPlatform.linux => TerminalTargetPlatform.linux,
-            TargetPlatform.macOS => TerminalTargetPlatform.macos,
-            TargetPlatform.windows => TerminalTargetPlatform.windows,
-          },
-    windowsPtyMode:
-        kind == TerminalSessionKind.local &&
-        !kIsWeb &&
-        defaultTargetPlatform == TargetPlatform.windows,
-    // TerminalView supplies OS clipboard handlers when these are null.
-    // Remote escape sequences must not read/write the local clipboard;
-    // explicit user copy/paste remains available in the viewport.
-    onClipboardQuery: (_) => null,
-    onClipboardStore: (_, __) {},
-    clipboardDecoder: (_, __) => null,
-    allowITerm2ClipboardCapture: false,
-    allowKittyClipboard: false,
-  );
+  static Terminal _createTerminal(TerminalSessionKind kind) =>
+      InputAwareTerminal(
+        maxLines: 10000,
+        platform: kIsWeb
+            ? TerminalTargetPlatform.web
+            : switch (defaultTargetPlatform) {
+                TargetPlatform.android => TerminalTargetPlatform.android,
+                TargetPlatform.iOS => TerminalTargetPlatform.ios,
+                TargetPlatform.fuchsia => TerminalTargetPlatform.fuchsia,
+                TargetPlatform.linux => TerminalTargetPlatform.linux,
+                TargetPlatform.macOS => TerminalTargetPlatform.macos,
+                TargetPlatform.windows => TerminalTargetPlatform.windows,
+              },
+        windowsPtyMode:
+            kind == TerminalSessionKind.local &&
+            !kIsWeb &&
+            defaultTargetPlatform == TargetPlatform.windows,
+        // TerminalView supplies OS clipboard handlers when these are null.
+        // Remote escape sequences must not read/write the local clipboard;
+        // explicit user copy/paste remains available in the viewport.
+        onClipboardQuery: (_) => null,
+        onClipboardStore: (_, __) {},
+        clipboardDecoder: (_, __) => null,
+        allowITerm2ClipboardCapture: false,
+        allowKittyClipboard: false,
+      );
 
   void _bindTerminal() {
     terminal.onOutput = _write;
@@ -113,18 +114,20 @@ class TerminalSession extends ChangeNotifier {
     }
   }
 
-  bool get isConnected => !_disposed && status == TerminalSessionStatus.connected;
+  bool get isConnected =>
+      !_disposed && status == TerminalSessionStatus.connected;
   bool get isSandbox => kind == TerminalSessionKind.sandbox;
-  bool get isConnecting => !_disposed && status == TerminalSessionStatus.connecting;
+  bool get isConnecting =>
+      !_disposed && status == TerminalSessionStatus.connecting;
   bool get canDisconnect =>
       !_disposed &&
       (_connection != null ||
-       _failedCleanup.isNotEmpty ||
-       _pendingCleanup.isNotEmpty ||
-       _pendingOpeners != 0 ||
-       isConnecting ||
-       isConnected ||
-       status == TerminalSessionStatus.waitingForExit);
+          _failedCleanup.isNotEmpty ||
+          _pendingCleanup.isNotEmpty ||
+          _pendingOpeners != 0 ||
+          isConnecting ||
+          isConnected ||
+          status == TerminalSessionStatus.waitingForExit);
 
   int get columns => terminal.viewWidth.clamp(1, 10000);
   int get rows => terminal.viewHeight.clamp(1, 10000);
@@ -216,7 +219,9 @@ class TerminalSession extends ChangeNotifier {
     if (!isConnected || connection == null || data.isEmpty) return;
     _writes = _writes
         .then((_) async {
-          if (_current(generation) && isConnected && (lease == null || lease())) {
+          if (_current(generation) &&
+              isConnected &&
+              (lease == null || lease())) {
             await connection.write(data);
           }
         })
@@ -330,7 +335,8 @@ class TerminalSession extends ChangeNotifier {
     }
     await closing;
     if (!_disposed) {
-      if (_failedCleanup.isNotEmpty && _connection == null &&
+      if (_failedCleanup.isNotEmpty &&
+          _connection == null &&
           (status == TerminalSessionStatus.disconnected ||
               status == TerminalSessionStatus.exited)) {
         status = TerminalSessionStatus.failed;
@@ -345,15 +351,19 @@ class TerminalSession extends ChangeNotifier {
     if (existing != null) return existing;
     final completion = Completer<void>();
     _pendingCleanup[connection] = completion.future;
-    unawaited(Future<void>.sync(connection.close).then<void>(
-      (_) => _failedCleanup.remove(connection),
-      onError: (Object failure, StackTrace _) {
-        _failedCleanup[connection] = failure;
-      },
-    ).whenComplete(() {
-      _pendingCleanup.remove(connection);
-      completion.complete();
-    }));
+    unawaited(
+      Future<void>.sync(connection.close)
+          .then<void>(
+            (_) => _failedCleanup.remove(connection),
+            onError: (Object failure, StackTrace _) {
+              _failedCleanup[connection] = failure;
+            },
+          )
+          .whenComplete(() {
+            _pendingCleanup.remove(connection);
+            completion.complete();
+          }),
+    );
     return completion.future;
   }
 
