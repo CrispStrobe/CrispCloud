@@ -1390,6 +1390,28 @@ void defaultGeometryTests() {
 }
 
 void hiddenStateTests() {
+  test('ODS hidden sheets survive save and reopen', () async {
+    final source = _ods(
+      '<t:table t:name="Visible"><t:table-row><t:table-cell>'
+      '<x:p>One</x:p></t:table-cell></t:table-row></t:table>'
+      '<t:table t:name="Hidden" t:style-name="taHidden">'
+      '<t:table-row><t:table-cell><x:p>Two</x:p></t:table-cell>'
+      '</t:table-row></t:table>',
+      styles:
+          '<s:style s:name="taHidden" s:family="table">'
+          '<s:table-properties t:display="false"/></s:style>',
+    );
+    final book = OdsSheetReader.readBytes(source);
+    expect(book.sheets[0].hidden, isFalse);
+    expect(book.sheets[1].hidden, isTrue);
+
+    final reopened = SheetDeserializer().readBytes(
+      await OfficeIsolateSave.workbook(book, recalculate: false),
+    );
+    expect(reopened.sheets[1].hidden, isTrue);
+    expect(reopened.sheets[1].cellA1('A1').value, 'Two');
+  });
+
   test('ODS hidden columns and rows survive save', () async {
     final source = _ods(
       '<t:table t:name="Data">'
