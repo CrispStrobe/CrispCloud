@@ -1,0 +1,74 @@
+{
+  "after_entries_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "after_git": {
+    "head": "6fec638c9386be139c288e5bf07b020b71b24473",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rename-redo.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rename-undo.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rename.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/source.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/switched-draft.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/command.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/metadata.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final/suites.txt\n",
+    "tree": "1cd18de9622800a882364b7283f3c8b6fd51ae14",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/navigation-suites.txt": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-delta-queue-20261114/run_delta_qualification.py": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/artifacts/engine/linux-x64/flutter_tester": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter": "7d486c33b30a0cf1ea5146231c68bb8f966cdb4e087c5cd8b37e14513f536e7d"
+  },
+  "before_entries_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "before_git": {
+    "head": "6fec638c9386be139c288e5bf07b020b71b24473",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rename-redo.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rename-undo.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/rename.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/source.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1150/navigation-capture-final-prior-build/office-sheet-navigation-acceptance/switched-draft.xlsx\n",
+    "tree": "1cd18de9622800a882364b7283f3c8b6fd51ae14",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/navigation-suites.txt": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1150/plans/run_selected_gate.py": "6289de4e3607697a05834685739763056be0d6feeee344c7920616838e12a53a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-delta-queue-20261114/run_delta_qualification.py": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/artifacts/engine/linux-x64/flutter_tester": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter": "7d486c33b30a0cf1ea5146231c68bb8f966cdb4e087c5cd8b37e14513f536e7d"
+  },
+  "command": [
+    "env",
+    "OFFICE_NAVIGATION_PREVIEW=1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter",
+    "--no-version-check",
+    "--suppress-analytics",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "json",
+    "--concurrency=1",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "elapsed_seconds": 37.08848089499952,
+  "finished_at": "2026-11-15T12:24:47.124885+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8588,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T12:24:10.034727+00:00",
+  "suite_count": 1,
+  "postprocessing": {
+    "success": true,
+    "produced_files_sha256": "dd2a92fda5a6c11f69d60c068fc0632b0fdad1a09d80a4c90e07593691cf617d"
+  }
+}
