@@ -37,6 +37,8 @@ import 'word_table_property_io.dart';
 
 part 'word_style_cascade.dart';
 
+enum _SdtBreakLayout { none, liftLast, opaque }
+
 /// Reads a `.docx` OPC package into a [WmlDocument] tree.
 class WordDeserializer {
   final List<WmlEquation> _pendingEquations = <WmlEquation>[];
@@ -46,6 +48,7 @@ class WordDeserializer {
   OpcPackage? _package;
   String? _docUri;
   WmlSection? _pendingParagraphSectPr;
+  bool _liftSdtSectionBreak = false;
 
   /// Bookmark endpoints found between blocks (directly in the body, a
   /// table, row or cell). OOXML allows them there and Word writes them
@@ -79,6 +82,7 @@ class WordDeserializer {
     _notBold.clear();
     _notItalic.clear();
     _pendingParagraphSectPr = null;
+    _liftSdtSectionBreak = false;
     _openFields.clear();
     _tocBoundaries.clear();
     _blockMarkers.clear();
@@ -134,7 +138,10 @@ class WordDeserializer {
         section.blocks.add(_readTable(reader, package, docUri));
       } else if (reader.localName == 'sdt' &&
           reader.namespaceUri == OfficeNamespaces.w) {
-        section.blocks.addAll(_readSdt(reader, package, docUri));
+        section.blocks.addAll(
+          _readSdt(reader, package, docUri, allowSectionBreak: true),
+        );
+        section = _flushParagraphSectPr(document, section);
       } else if (reader.localName == 'altChunk' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         section.blocks.add(WordOpaqueIo.read(reader, package, docUri));
@@ -185,8 +192,9 @@ class WordDeserializer {
   List<WmlBlock> _readSdt(
     XmlPullReader reader,
     OpcPackage package,
-    String docUri,
-  ) {
+    String docUri, {
+    bool allowSectionBreak = false,
+  }) {
     final contentType = package.getPart(docUri)?.contentType;
     if (contentType == OfficeContentTypes.wordHeader ||
         contentType == OfficeContentTypes.wordFooter ||
@@ -197,11 +205,25 @@ class WordDeserializer {
       );
     }
     final source = XmlDocument.readElement(reader);
+    final breakLayout = _sdtBreakLayout(source);
+    if (breakLayout == _SdtBreakLayout.opaque ||
+        (breakLayout == _SdtBreakLayout.liftLast && !allowSectionBreak)) {
+      throw UnsupportedError(
+        'A section break inside a content control cannot yet be imported safely',
+      );
+    }
     final control = WordContentControlIo.capture(source, package, docUri);
     final content = _sdtContentReader(source);
-    final blocks = content == null
-        ? <WmlBlock>[]
-        : _readBlockContent(content, package, docUri);
+    final previousLift = _liftSdtSectionBreak;
+    _liftSdtSectionBreak = breakLayout == _SdtBreakLayout.liftLast;
+    final List<WmlBlock> blocks;
+    try {
+      blocks = content == null
+          ? <WmlBlock>[]
+          : _readBlockContent(content, package, docUri);
+    } finally {
+      _liftSdtSectionBreak = previousLift;
+    }
     final tag = control.tag ?? '';
     if (tag.startsWith('qudsFrame:') &&
         !(blocks.length == 1 && blocks.single is WmlFrame)) {
@@ -211,6 +233,57 @@ class WordDeserializer {
         ..add(frame);
     }
     return <WmlBlock>[WmlContentControlBlock(control: control, blocks: blocks)];
+  }
+
+  /// A body control may end with a single section break, which belongs to the
+  /// document section rather than the control. More than one break, a nested
+  /// break, or a break before the final paragraph cannot be lifted without
+  /// changing the control boundary, so the whole control is preserved opaquely.
+  _SdtBreakLayout _sdtBreakLayout(XmlElement source) {
+    final content = source.firstChild(
+      'sdtContent',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (content == null) return _SdtBreakLayout.none;
+    final children = content.childElements.toList();
+    var breaks = 0;
+    var lastBreakIndex = -1;
+    for (var i = 0; i < children.length; i++) {
+      final child = children[i];
+      final found = <XmlElement>[];
+      void collect(XmlElement node) {
+        for (final nested in node.childElements) {
+          if (nested.localName == 'sectPr' &&
+              nested.namespaceUri == OfficeNamespaces.w) {
+            found.add(nested);
+          }
+          collect(nested);
+        }
+      }
+
+      collect(child);
+      if (found.isEmpty) continue;
+      if (child.localName != 'p' || found.length != 1) {
+        return _SdtBreakLayout.opaque;
+      }
+      final properties = child.firstChild(
+        'pPr',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      if (properties?.firstChild(
+            'sectPr',
+            namespaceUri: OfficeNamespaces.w,
+          ) ==
+          null) {
+        return _SdtBreakLayout.opaque;
+      }
+      breaks += found.length;
+      lastBreakIndex = i;
+    }
+    if (breaks == 0) return _SdtBreakLayout.none;
+    return breaks == 1 && lastBreakIndex == children.length - 1
+        ? _SdtBreakLayout.liftLast
+        : _SdtBreakLayout.opaque;
   }
 
   XmlPullReader? _sdtContentReader(XmlElement source) {
@@ -333,7 +406,7 @@ class WordDeserializer {
       } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         _addParagraph(blocks, _readParagraph(reader, package, docUri));
-        if (_pendingParagraphSectPr != null) {
+        if (_pendingParagraphSectPr != null && !_liftSdtSectionBreak) {
           throw UnsupportedError(
             'A section break inside a content control cannot yet be imported safely',
           );
