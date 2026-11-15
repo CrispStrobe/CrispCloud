@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T13:58:47.720327+00:00",
+  "source_commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "saved_receipt_commit": "f43eb7752f3c98505600a4b7d919537602dfb790",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "performed_by": "root assistant viewing each actual retained PNG separately",
+  "images": [
+    {
+      "file": "navigation-independent-review-final-artifacts/previews/worksheet-arabic-narrow.png",
+      "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+      "bytes": 30978,
+      "width": 390,
+      "height": 1000,
+      "actual_visual_inspection": true,
+      "finding": "Arabic menu labels render legibly without replacement-glyph boxes. The narrow sheet view shows the grid, selection, active Budget sheet, scrollbars and bottom rename control; the constrained document name is ellipsized. No obstructed critical navigation control was observed in this captured state.",
+      "result": "passed for captured state"
+    },
+    {
+      "file": "navigation-independent-review-final-artifacts/previews/rename-validation.png",
+      "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+      "bytes": 70534,
+      "width": 1600,
+      "height": 1000,
+      "actual_visual_inspection": true,
+      "finding": "The centered rename dialog shows the entered Reference name, a visible red validation message wrapping within the dialog, and readable Cancel/Rename controls. The dimmed worksheet remains visible behind the dialog; no dialog text or buttons are clipped.",
+      "result": "passed for captured state"
+    }
+  ],
+  "success": true,
+  "scope": "Visual inspection of these two fresh Linux Flutter captures only. This does not certify broader responsive states, other platforms, accessibility or external Office rendering."
+}

@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "status": "passed within the selected Linux qualification scope",
+  "completed_at": "2026-11-15T14:01:23.758117+00:00",
+  "source_commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "raw_receipt_commit": "f43eb7752f3c98505600a4b7d919537602dfb790",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "source_resolution_inputs": 8621,
+  "recorded_tool_inputs": 49,
+  "canonical_pins": {
+    "quds": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+    "parser": "08296edbee08da013a8ff718798972552ccd03f7"
+  },
+  "accepted_gates": [
+    {
+      "gate": "analysis-app",
+      "label": "analysis-app-final",
+      "receipt_commit": "dc16ea2405529fd5372e4cbf740f4c1bda1bd760",
+      "tested_head": "1920ebe5e5020735791160b5af2558bef821a78a",
+      "metadata_sha256": "c9c2f81b3138d685213d28147f6d71b65d36b68e225646536ef95326b490b3f4",
+      "success": true
+    },
+    {
+      "gate": "analysis-cli",
+      "label": "analysis-cli-final",
+      "receipt_commit": "40d9bf353150c05b81b4f9c70ab044e20b315e1a",
+      "tested_head": "2ce658776d109454ce1695a88ff9472f397ed9a6",
+      "metadata_sha256": "911bee1b062543a8ff94e05f33ed6653134a1056ad1feb633fd2c77a6e9cd9d8",
+      "success": true
+    },
+    {
+      "gate": "analysis-editor",
+      "label": "analysis-editor-final",
+      "receipt_commit": "2ce658776d109454ce1695a88ff9472f397ed9a6",
+      "tested_head": "e3bf443f6cae7752873562b9beff2524f890758b",
+      "metadata_sha256": "92a93bafb197de3aac41f18cc77134d8bfab8f6501fd5acc94b39190a69ae7cf",
+      "success": true
+    },
+    {
+      "gate": "analysis-engine",
+      "label": "analysis-engine-final",
+      "receipt_commit": "e3bf443f6cae7752873562b9beff2524f890758b",
+      "tested_head": "735b30f8fa587a1ce9baf36a38eca1aead1b9bee",
+      "metadata_sha256": "da18260acbad83ae646ed882e2c5308edaa6f7f21a918cce364379cc0a358451",
+      "success": true
+    },
+    {
+      "gate": "app",
+      "label": "app-final",
+      "receipt_commit": "1715d506a26c5f5abcb23fa3b808fea6de495484",
+      "tested_head": "40d9bf353150c05b81b4f9c70ab044e20b315e1a",
+      "metadata_sha256": "09baa1d899225bf7675a45c8a16dd0cc08c302b2e7fd088b1ee44a08f084151e",
+      "success": true
+    },
+    {
+      "gate": "comments-oracle",
+      "label": "comments-oracle-final",
+      "receipt_commit": "137895ea13edc3142558744f2119e0d31fda21ea",
+      "tested_head": "42f5e864d760473c4193566fd8679e7ba1a21140",
+      "metadata_sha256": "fafc25823d4d9d5e5611724d708a675ace95f30e52348fb0f1516f82b560fe40",
+      "success": true
+    },
+    {
+      "gate": "editor",
+      "label": "editor-final",
+      "receipt_commit": "1a2971a5c0706a82baad983100ae2f34655d99b8",
+      "tested_head": "7df4d19aed7ea1d05028bd421bb458f9e901cb29",
+      "metadata_sha256": "382c55fa5f98136eccf841fc3966e464f3d9d422d56406fb5326f4198a0c738c",
+      "success": true
+    },
+    {
+      "gate": "engine",
+      "label": "engine-final",
+      "receipt_commit": "7df4d19aed7ea1d05028bd421bb458f9e901cb29",
+      "tested_head": "1715d506a26c5f5abcb23fa3b808fea6de495484",
+      "metadata_sha256": "749aa7b25d86ae7967e17e49b3979f52f392eae7a62950ae090149c73dc81601",
+      "success": true
+    },
+    {
+      "gate": "navigation-capture",
+      "label": "navigation-capture-final",
+      "receipt_commit": "8542045fad97864fc9027a0d69a24920c70183d5",
+      "tested_head": "9e3594de1d82d4048b62ab61ce92a79ba8fd6adb",
+      "metadata_sha256": "cc28e97b21c546d2c730de8b528bf55cc2ee1d644f350fb138f46315f293d2d7",
+      "success": true
+    },
+    {
+      "gate": "navigation-independent-review",
+      "label": "navigation-independent-review-final",
+      "receipt_commit": "f43eb7752f3c98505600a4b7d919537602dfb790",
+      "tested_head": "8542045fad97864fc9027a0d69a24920c70183d5",
+      "metadata_sha256": "5c5f87af9b8de0e21d7af6462aa3b58a9cbc8a3090bd9dfbc4258254155f0907",
+      "success": true
+    },
+    {
+      "gate": "png-portable",
+      "label": "png-portable-final-2",
+      "receipt_commit": "9e3594de1d82d4048b62ab61ce92a79ba8fd6adb",
+      "tested_head": "6e556b34b2923c288b31d94de586306945ca0063",
+      "metadata_sha256": "0215b9bbd45d797d9912f1a53ac4669b7c8bc9dc83c660a8d64bb5727f13c629",
+      "success": true
+    },
+    {
+      "gate": "scripted-oracle",
+      "label": "scripted-oracle-final",
+      "receipt_commit": "42f5e864d760473c4193566fd8679e7ba1a21140",
+      "tested_head": "1a2971a5c0706a82baad983100ae2f34655d99b8",
+      "metadata_sha256": "eabd5577fc8d100be155713a742952068ee137b146f035d949aea3406e8066e5",
+      "success": true
+    },
+    {
+      "gate": "source-integrity",
+      "label": "source-integrity-final",
+      "receipt_commit": "2ece842cafc02c7232d458feb13069885c4db5b5",
+      "tested_head": "137895ea13edc3142558744f2119e0d31fda21ea",
+      "metadata_sha256": "601c7ac6af964f60e58d74c80141c9767f102c7156d782b74bee3d4b88f64176",
+      "success": true
+    }
+  ],
+  "host_runtime": {
+    "app": {
+      "suites": 65,
+      "tests": 903
+    },
+    "editor": {
+      "suites": 11,
+      "tests": 105
+    },
+    "engine": {
+      "suites": 23,
+      "tests": 275
+    }
+  },
+  "host_total_tests": 1283,
+  "host_total_suites": 99,
+  "host_failures_errors_skips": 0,
+  "strict_analysis_files": {
+    "app": 76,
+    "engine": 19,
+    "editor": 6,
+    "cli": 1,
+    "total": 102
+  },
+  "standalone_parser": {
+    "tests": 4132,
+    "suites": 144,
+    "strict_files": 18,
+    "source": "08296edbee08da013a8ff718798972552ccd03f7",
+    "evidence": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+    "scope": "An existing complete raw run on the exact source independently audited here; not newly executed in this workspace. Standalone and host dependency graphs retain separate scopes. Foreign environment script bytes were not retained; its stable recorded hash is explicitly qualified."
+  },
+  "independent_checks": {
+    "office_exports": 12,
+    "office_oracle_controls": 17,
+    "comments_xlsx": 9,
+    "comments_bound_inputs": 11,
+    "comments_checks": 1154,
+    "managed_files": 2336,
+    "source_and_notice_controls": 85,
+    "source_gate_tracked_files": 11899,
+    "png_cases_per_runtime": 8,
+    "png_assertions_per_runtime": 248,
+    "png_zips_verified_per_runtime": 8,
+    "png_images_verified_per_runtime": 10,
+    "png_runtimes": [
+      "Dart VM",
+      "compiled JavaScript on recorded Node"
+    ],
+    "navigation_tests_separate": 12,
+    "navigation_workbooks": 6,
+    "navigation_captures": 2,
+    "visual_review": "visual-review-final.json",
+    "linux_golden_files": 5,
+    "linux_golden_test_cases": 4,
+    "bundled_fonts": 14
+  },
+  "audit": {
+    "path": "final-audit",
+    "manifest_sha256": "b241c02a3934a572e6fffb2fd3446fc380ca6af362821c4ac32efc2975c348cb",
+    "first_attempt_passed": true,
+    "runtime_tests_rerun": false,
+    "source_tool_generated_output_bindings_verified": true
+  },
+  "excluded_attempts": [
+    {
+      "label": "png-portable-final",
+      "commit": "44a7339a7c7aecb96601b32712e9a7131e694e1a",
+      "reason": "Launcher lacked executable mode; failed before Dart. Corrected mode-only at6e556b34; accepted retry separately selected."
+    }
+  ],
+  "historical_results": "Source20ee and source966 receipts, earlier parser4131 and focused18 runs, focusedODS70 and focusedcomments28, and saved failure baselines remain preserved. Overlapping counts are not added.",
+  "scope_limits": [
+    "Selected Linux Flutter/Dart/native-hook tests and actual Node JavaScript execution",
+    "Exact Linux goldens, bounded semantic readers and the two captured UI states; no external Office rendering or broad Open XML schema certification",
+    "Optional private corpus scanners excluded; no other-platform release acceptance",
+    "Stable before/after source/resolution and recorded-tool hashes; not a hermetic cache or proof against transient writes"
+  ],
+  "github_actions_polled_waited_or_restarted": false,
+  "pr": 111,
+  "pr_remains_draft": true,
+  "integration_return": "Prepared fast-forward to the final evidence checkpoint; completion will be recorded separately."
+}

@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "output": "/workspace/scratch/1e19fe1d39ae/evidence-review/current-acceptance/results-final-attempt1/cross-bindings.json",
+  "sha256": "455e8e533c439603e033d524403e36704d8b4c86dd7a6d373b261a2cf14b9889",
+  "canonical_parser_full_tests": 4132,
+  "canonical_parser_full_suites": 144,
+  "managed_files": 2336,
+  "oracle_outputs": 12,
+  "comments_oracle_outputs": 9,
+  "navigation_workbooks": 6
+}

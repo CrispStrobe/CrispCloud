@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "completed_at": "2026-11-15T13:59:44.427223+00:00",
+  "success": true,
+  "audit_attempts": 1,
+  "audit_process_exit_code": 0,
+  "review_head": "f43eb7752f3c98505600a4b7d919537602dfb790",
+  "production_source": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "selected_gates": 13,
+  "selected_ancillary_artifact_directories": 5,
+  "host_runtime": {
+    "app": {
+      "suites": 65,
+      "tests": 903
+    },
+    "editor": {
+      "suites": 11,
+      "tests": 105
+    },
+    "engine": {
+      "suites": 23,
+      "tests": 275
+    }
+  },
+  "host_total_tests": 1283,
+  "host_total_suites": 99,
+  "strict_analysis_files": 102,
+  "parser_complete_tests": 4132,
+  "parser_complete_suites": 144,
+  "navigation_tests_separate": 12,
+  "concrete_acceptance_gaps": [],
+  "runtime_tests_rerun": 0,
+  "repository_writes": 0,
+  "ci_polls_or_waits": 0,
+  "head_may_move_after_this_completed_audit": true
+}

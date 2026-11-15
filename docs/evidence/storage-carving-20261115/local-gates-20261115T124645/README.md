@@ -1,50 +1,63 @@
-> **Continuation update:** observed incoming commit `3e9560c9` adds comment-part namespace/relationship handling. The earlier local gates below belong to source `96634597`. Final source qualification is pending the reviewed comment correction and a new source freeze; these earlier counts are not acceptance for changed source.
+# Completed local qualification — corrected source `4c2b6ddd`
 
-# Local qualification plan — isolated continuation, 15 November 2026
+**All 13 required local gates passed, and the independent final audit passed on its first attempt.** The selected host runtime cohorts pass **1,283 tests across 99 suites**, with no failures, errors or skips. The disk/toolchain blocker in the earlier handoff is resolved. No GitHub Actions run was polled, awaited or restarted.
 
-**Status: local qualification in progress on saved source `966345971a50ef93bcb67ed32060c8176b4d2949`. Only completed receipts establish passing results.**
+The qualified application source is [`4c2b6ddd87c854525b075dfda8783ad209565d5e`](https://github.com/CrispStrobe/CrispCloud/commit/4c2b6ddd87c854525b075dfda8783ad209565d5e). Complete raw final receipts are saved through [`f43eb7752f3c98505600a4b7d919537602dfb790`](https://github.com/CrispStrobe/CrispCloud/commit/f43eb7752f3c98505600a4b7d919537602dfb790). Subsequent changes in this evidence base document acceptance and delivery; they do not alter the qualified application source.
 
-This evidence base is for `integration/storage-carving-local-20261115124645`, created from observed app commit `41885d7d1d67348f5abe3579b99d9d2951fc909f`. Managed synchronization and app/CLI/engine/editor offline resolution are complete, committed lockfiles are unchanged, and the source is saved remotely before the first gate. `source-checkpoint.json` records its exact identity. The app strict-analysis gate has passed; remaining gates are pending.
+[Machine-readable acceptance](final-acceptance.json) · [Independent final audit](final-audit/README.md) · [Actual image review](visual-review-final.json) · [Saved source binding](source-checkpoint-final.json)
 
-The intended canonical source pins are Quds `9bb71983a4ae6bc7bb3372fd931e724ddd102fc8` and parser `08296edbee08da013a8ff718798972552ccd03f7`. Quds restores the three currency/padding/geometry ODS regressions removed by the observed upstream reconciliation. The new ODS covered-cell and 10,000-comment admission behavior, Linux golden references, and parser regression remain incorporated. Source mirrors and graph setup must finish before qualification.
+## Accepted results
 
-## Exact selected scope
+| Scope | Result |
+| --- | --- |
+| Application | **903 passing tests / 65 suites** |
+| Office engine | **275 passing tests / 23 suites** |
+| Office editor | **105 passing tests / 11 suites** |
+| Primary host total | **1,283 passing tests / 99 suites**, no failures/errors/skips |
+| Strict analysis | **102 files**: 76 app, 19 engine, six editor and one CLI; fatal infos/warnings, no issues |
+| Standalone parser | **4,132 passing tests / all 144 suites**, plus strict analysis of 18 files; exact-source retained run independently audited |
+| General Office oracle | **12 generated DOCX/XLSX/PPTX exports**, **17 controls** |
+| Comments oracle | **Nine generated XLSX files**, two authored manifests, **1,154 independent checks** |
+| Source and notices | **2,336 managed canonical files**, **85 controls**; 11,899 tracked files at the source gate |
+| Portable PNG recovery | Actual Dart VM and compiled JavaScript: **eight cases / 248 assertions per runtime**; eight ZIPs and ten PNGs independently checked per runtime; outputs match |
+| Navigation capture/review | **12 separately counted tests**, six workbooks, two font/source-bound PNGs; both images actually inspected |
+| Linux goldens | Four passing visible cases against five exact references; normal comparator and all 14 font assets verified |
 
-| Group | Manifest entries |
-| --- | ---: |
-| App tests | 65 suites |
-| Engine tests | 22 suites |
-| Editor tests | 11 suites |
-| App strict analysis | 76 files |
-| Engine strict analysis | 16 files |
-| Editor strict analysis | 6 files |
-| CLI strict analysis | 1 file |
-| Navigation capture | 1 separate suite |
+The 12 navigation tests repeat a selected workflow for capture and are not added to the primary host total. Focused ODS/comment runs and historical host/parser results also remain separate. Source-defined loops perform 18 exact golden comparisons; that is not an additional runtime-test count.
 
-The editor additions are `office_fidelity_golden_test.dart` and `office_structure_goldens_test.dart`, included in both test and strict-analysis manifests. They exercise five exact Linux references through four test cases and 18 image comparisons. Those are scope expectations only; completed raw machine events determine the eventual test count.
+## Source, history and canonical corrections
 
-The parser's production/dependency/unchanged-test identity preserves the prior 144-suite, 4,131-test full run. Fresh qualification at the observed pin passes the changed 18-test suite (the previous 17 plus one) and strict analysis of that changed file; no fresh full 4,132-test run is claimed. Exact linkage is saved in `canonical-parser-observed-pin/`. The host graph remains independently covered by the host cohorts. Both optional private Documents/Downloads corpus scanners are excluded and do not contribute empty-input passes.
+The original handoff `71c14b98`, observed main through `68631862` (including PR #120), document-workspace changes, worksheet navigation, inline pictures, wrap-text and PNG storage work remain in the retained ancestry. Incoming source intake was frozen at `3e9560c9`, which was merged through `2083d2c2` before the final correction and qualification. The original finite branch inventory and later exact observations remain separately documented; this is not a claim of a rolling refresh after that boundary.
 
-## Execution order and checkpoint discipline
+The final managed pins are:
 
-Run the four strict groups, then app, engine, editor, independent Office oracle, source integrity, portable PNG, navigation capture, and independent navigation review. Each gate is a separate action: save the completed receipt remotely before starting the next. Preserve failures and use a fresh retry label; never overwrite receipts. The JSON plan contains the exact inventory counts and expected inputs, and `gate-commands.json` contains one argument array per gate.
+| Source | Commit | Managed files |
+| --- | --- | ---: |
+| Quds Office | [`47e44e0ae35adcc406eee2a2ae2118dd2a4a082a`](https://github.com/CrispStrobe/quds_office_suite/commit/47e44e0ae35adcc406eee2a2ae2118dd2a4a082a) | 504 |
+| Legacy parser | [`08296edbee08da013a8ff718798972552ccd03f7`](https://github.com/CrispStrobe/legacy-doc-parser/commit/08296edbee08da013a8ff718798972552ccd03f7) | 1,832 |
 
-The runner and wrappers derive current manifests, scripts, receipt outputs and artifact outputs from this new evidence base. The source-integrity gate uses sibling checkouts `QudsCanonical` and `ParserCanonical`, whose HEADs must match the final app pins. Fixed historical recorder/source-integrity/semantic-reader helpers remain intentional dependencies and are hashed by the runner. No historical receipt is modified or counted as current acceptance.
+The continuation preserves the ODS column-geometry correction after the saved 81px-to-64px copy/save failure, all 18 underline styles in both host controls and eight translated locale maps, and the bounded typed `CfbfException` recovery path for damaged legacy Word input. The three deleted ODS regressions were restored byte-for-byte at `9bb71983`; incoming covered-cell and 10,000-comment limits remain intact. See [canonical ODS linkage](canonical-ods-restoration/linkage.json) and [the source/fix evidence index](final-report-preparation/final-pr-scope-evidence.json).
 
-Existing safeguards remain intact: pinned Dart and Flutter executables, resolved and hashed Node, helper and prerequisite hashes, clean saved source, stable before/after source and resolution inputs, fresh artifact paths, generated-file binding immediately after a passed engine/capture run, and failed qualification if output postprocessing fails. Dependent gates require exact generator labels and hashes. The 12 produced Office documents and six navigation workbooks must be retained with their bound receipts.
+The final comment correction addresses a newly exposed ownership defect: creating a sheet could adopt or delete an unrelated legacy-named comments part, or encounter malformed orphan XML after mutating the package. Four failing baseline cases were saved first. Source `47e44e0a` captures existing ownership before writes and preserves a distinct explicit empty comments authority through save/reopen/add/clear. Unrelated XML, content types and outgoing relationships remain unchanged. Its 28 focused tests and strict three-file analysis passed; the final engine cohort and independent nine-XLSX reader now qualify the combined host source as well. See [canonical correction linkage](canonical-comments-ownership/linkage.json), [independent source review](comment-ownership-review/README.md) and [reader review](comment-oracle-review/README.md).
 
-Resolve and freeze every required package graph before beginning. Do not disable native hooks, substitute fake libraries, alter source or tools while a gate runs, use `--update-goldens`, relax the golden comparator, skip new goldens, or poll/wait for GitHub Actions. Save incremental commits with `[skip ci]` on the isolated remote branch.
+## What the final audit proves
 
-## Linux goldens and review scope
+All accepted gates share source/resolution digest:
 
-The existing pinned Linux Flutter 3.47.8 / Dart 3.13.7 toolchain will compare the exact saved references. The imported provenance claims a matching Flutter 3.47.8 run, but it does not contain an immutable capture source SHA; that claim is not substituted for fresh source-bound results. All five Linux reference hashes and dimensions were independently checked in the incoming review, and all five images were visually inspected. No reference was generated or changed for this preflight.
+`3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0`
 
-If comparison fails, preserve the raw failed receipt and any `packages/quds_office_editor/test/failures/` images and `build/fidelity-diagnostics/` files before correction or retry. These local golden tests do not establish external Microsoft Word rendering or cross-platform release acceptance. Navigation's two actual PNGs still require their separate visual inspection after capture; its repeated suite is not added again to the primary host count.
+The audit checked **8,621 source/resolution inputs**, all **49 unique recorded tool inputs**, complete unique machine test events, exact suite inventories, successful terminal events, artifact inventories and hashes, canonical Git identities/modes, required ancestry, and generator-to-reader bindings. The gate source and dependency inputs stayed stable before and after each execution. Final audit HEAD was fixed at `f43eb775`; the audit itself reran no runtime tests and changed no repository files.
 
-## Previous evidence and this plan's verification
+Flutter 3.47.8 and Dart 3.13.7 were pinned. App/CLI/engine/editor dependency resolution completed before the final gates with committed locks unchanged. Native hooks remained enabled and no fake libraries or golden tolerance changes were used. Generated Office documents were hashed immediately after the generating gate and before independent reading; the comments wrapper similarly bound all 11 output files before its reader ran.
 
-The prior acceptance applies to production source `20ee83ff965d5433aeb528ae84debdb304edcf4a` and was preserved remotely at `6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6`. Its counts and common digest remain historical evidence. The new ODS source, parser pin/mirrored evidence and golden files change the combined snapshot; only new completed receipts qualify this continuation.
+The standalone parser result comes from immutable evidence [`09a4a531`](https://github.com/CrispStrobe/legacy-doc-parser/commit/09a4a531a4aa210a638a220de45c9d53d44c84e1) on exact `08296ed`. Its complete raw run, 32 archive members, 23 inner-index entries, source bytes, lock and actual SDK identities were independently verified. This continuation audited that existing full run; it did not execute another full parser run. Serialized workspace graphs differ while normalized dependency nodes agree. One foreign environment script has a stable recorded hash but no retained bytes; the audit states that limit explicitly. See [parser full-run linkage](integration-return-audit/parser-09a4/canonical-parser-full-qualification.json).
 
-`historical/readiness-review.json` and `historical/provenance-overlay-manifest.json` are byte-for-byte inherited reports about an earlier source/overlay. They are retained under explicitly historical names. `incoming-review/` describes immutable app `41885d7d`, before the three ODS tests were restored by intended Quds pin `9bb71983`; the present plan supersedes its pending-restoration note.
+## Preserved attempts and practical limits
 
-`plan-readiness.json` records only static preparation: unique manifest entries, Python syntax parsing, shell syntax checking, corrected canonical paths and preserved helper bytes. No app source was modified by the reviewer, no repository HEAD was moved, and no runtime test was executed while preparing this package. The final app source commit and acceptance results remain pending root's subsequent source checkpoint and gates.
+The first `png-portable-final` attempt failed before Dart could launch because the evidence launcher was saved as mode `100644`. Failure receipts were saved at `44a7339a`. The mode-only correction at `6e556b34` restored `100755` without changing script bytes or application source; accepted retry `png-portable-final-2` was saved at `9e3594de`. The failed attempt remains excluded. Every completed gate was saved remotely before the next gate began, with `[skip ci]` checkpoint messages.
+
+Source20ee and source966 receipts retain their historical scope. The earlier README and prepared plan are preserved under `historical/`; only the labels selected by `final-acceptance.json` establish current acceptance. Earlier parser totals and focused ODS/comment totals are not added again.
+
+This acceptance covers the selected Linux Flutter/Dart/native-hook workloads, real Node JavaScript execution, bounded independent semantic readers, exact Linux goldens and the two inspected UI captures. It does not establish external Microsoft Office rendering, broad Open XML schema certification, rich/VML comment geometry or other-platform release acceptance. Optional private corpus scanners remain excluded. Before/after snapshots are not a hermetic cache or proof against transient writes.
+
+PNG recovery remains the bounded complete-PNG profile and reviewed new-ZIP workflow described in [the product profile](../../../archive-png-carving.md): 64 MiB bounds, supported noninterlaced 8-bit formats and explicit refusals. Fragment reconstruction, original filesystem-name inference, other formats, physical devices and browser/cloud publication remain outside this change. PR #111 remains a draft for implementation review.

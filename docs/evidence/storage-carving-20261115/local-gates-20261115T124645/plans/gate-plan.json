@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "status": "source and resolution frozen; final runtime gates pending",
+  "status": "All13 accepted final local gates passed and independently audited",
   "evidence_base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
   "source_freeze": {
     "commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
@@ -216,7 +216,15 @@
     "historical/provenance-overlay-manifest.json",
     "historical/source966-gate-plan.json"
   ],
-  "runtime_results": null,
+  "runtime_results": {
+    "record": "final-acceptance.json",
+    "raw_receipt_commit": "f43eb7752f3c98505600a4b7d919537602dfb790",
+    "host_tests": 1283,
+    "host_suites": 99,
+    "strict_files": 102,
+    "navigation_tests_counted_separately": 12,
+    "independent_audit": "final-audit/README.md"
+  },
   "gate_labels": {
     "analysis-app": "analysis-app-final",
     "analysis-engine": "analysis-engine-final",

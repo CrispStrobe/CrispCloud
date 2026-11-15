@@ -1,0 +1,42 @@
+{
+  "README.md": {
+    "sha256": "b38ef05149767e64ba0eb00e5e238f5d03a671dfb666ec8a3d8296b4b88282af",
+    "size": 7394
+  },
+  "audit.stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "audit.stdout.log": {
+    "sha256": "98c9a0d2ae9f3c505f6416e7494eb407aa33d6c8fa08f1e90ec04f58c108c963",
+    "size": 415
+  },
+  "audit_current_acceptance.py": {
+    "sha256": "cc4f42bf6dd1e83de4c1fd36f2830b23e3a61b23e956923b27ccaa4ed15deed6",
+    "size": 60219
+  },
+  "completion.json": {
+    "sha256": "9efb5554cc9b535df5556c46981fc37ec3e95645d141784457f53fe57f969b81",
+    "size": 1005
+  },
+  "config.final.json": {
+    "sha256": "950023e711e31ac6e434bd3f01debf46d87109905b8de765029f282afe39becf",
+    "size": 3766
+  },
+  "cross-bindings.json": {
+    "sha256": "455e8e533c439603e033d524403e36704d8b4c86dd7a6d373b261a2cf14b9889",
+    "size": 27228
+  },
+  "invocation.json": {
+    "sha256": "8083418055395fed443812debb931a924adbe4e0aff29186f821f3661a6c1534",
+    "size": 939
+  },
+  "recorded-gates.json": {
+    "sha256": "750160f892ad671a1940e3b7b2210c812bd709653963266df71da9e3dcafd99d",
+    "size": 10659
+  },
+  "recorded-gates.stdout.log": {
+    "sha256": "5e787576b69dcfe6e658e78dce5bc877e05e2f559537fc3044d85620d71563f4",
+    "size": 10659
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "started_at": "2026-11-15T13:58:23.404217+00:00",
+  "argv": [
+    "python3",
+    "/workspace/scratch/1e19fe1d39ae/evidence-review/current-acceptance/audit_current_acceptance.py",
+    "--review-head",
+    "f43eb7752f3c98505600a4b7d919537602dfb790",
+    "--config",
+    "/workspace/scratch/1e19fe1d39ae/evidence-review/current-acceptance/config.final.json",
+    "--output",
+    "/workspace/scratch/1e19fe1d39ae/evidence-review/current-acceptance/results-final-attempt1"
+  ],
+  "review_head": "f43eb7752f3c98505600a4b7d919537602dfb790",
+  "source_head": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "source_digest": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "script_sha256": "cc4f42bf6dd1e83de4c1fd36f2830b23e3a61b23e956923b27ccaa4ed15deed6",
+  "config_sha256": "950023e711e31ac6e434bd3f01debf46d87109905b8de765029f282afe39becf",
+  "repository_writes_authorized": false,
+  "runtime_tests_authorized": false
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "prepared_at": "2026-11-15T13:59:35.525591+00:00",
+  "qualified_source": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "raw_receipt_head": "f43eb7752f3c98505600a4b7d919537602dfb790",
+  "raw_receipt_tree": "b870f333edbdad57ab0e25ef41925464ee408843",
+  "non_evidence_changes_since_source": [],
+  "preserved_ancestors": [
+    "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+    "686318626e209220011f7da194cfe4e41ca4adeb",
+    "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1"
+  ],
+  "observed_pr_head": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "branch": "integration/storage-carving-20261115",
+  "return_method": "After final acceptance evidence saved, fast-forward with expected_sha=3e9560c9 and force=false. The PR head is already an ancestor; no history or concurrent source needs replacement. Re-check exact lease if rejected.",
+  "no_new_source_intake": true,
+  "no_actions_status_checked": true,
+  "completion_status": "Prepared only; final acceptance audit running, ref not updated."
+}
