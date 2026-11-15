@@ -1,0 +1,144 @@
+{
+  "result": "pass",
+  "created_at_utc": "2026-11-15T13:05:25.915147+00:00",
+  "canonical_source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+  "source_tree": "b2d390c49919c323b127d89f168d875f09c4ff96",
+  "observed_base_commit": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+  "qualified_predecessor_for_restored_bodies": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+  "remote_evidence_branch": "integration/ods-regression-restore-20261115T1246",
+  "remote_evidence_head": "64d4c5687856554f3a86cf3c0a7c3d73e3091f8f",
+  "remote_evidence_tree": "60333c89f212d00fe57b7be07aa095512cfea191",
+  "remote_ref_readback_verified": true,
+  "source_only_test_restoration": {
+    "changed_path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "additions": 93,
+    "deletions": 0,
+    "only_test_path_changed": true,
+    "production_changes": 0,
+    "exact_predecessor_block_restored": true,
+    "block_bytes": 3975,
+    "block_sha256": "ff42a01a56275111991c7b3c6b34914ad9a238b10db032b8f6f53ab4b8b4c8cd",
+    "restored_titles": [
+      "currency symbols survive namespaced import and XLSX saves",
+      "inherited styled padding stays sparse while explicit blanks survive",
+      "ODS native column geometry survives a new XLSX copy"
+    ],
+    "source_blob": "ed5cd8985befe19b89375a63bbb73581753fda60",
+    "patch_sha256": "b4aee6b6c0750ff124f4ee7bbbab9bb0305333f807db193b71486eae1846588e"
+  },
+  "evidence_head_source_identity": {
+    "paths_changed_after_source_checkpoint": 37,
+    "all_changes_under_evidence_prefix": true,
+    "evidence_prefix": "docs/evidence/ods-regression-restore-20261115T1246/",
+    "non_evidence_changes": 0
+  },
+  "gates": {
+    "excluded_first_attempt": {
+      "accepted": false,
+      "tested_head": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+      "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+      "returncode": 0,
+      "source_head_input_tools_stable": true,
+      "input_digest": "6f5fc7857f88ef882530e2e1320928edfb370e35eeed1452121f6e7676244fd9",
+      "input_count": 3058,
+      "raw_directory_at_evidence_head": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-path-binding-attempt",
+      "raw_artifact_files_verified": 9,
+      "independent_artifact_and_git_blob_verification": true,
+      "tests": 70,
+      "passed": 70,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "restored_test_names_observed_passing": [
+        "currency symbols survive namespaced import and XLSX saves",
+        "inherited styled padding stays sparse while explicit blanks survive",
+        "ODS native column geometry survives a new XLSX copy"
+      ],
+      "raw_done_success": true,
+      "requested_suites": 1,
+      "missing_suites": [
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ],
+      "unexpected_suites": [
+        "test/ods_sheet_reader_test.dart"
+      ],
+      "exclusion_reason": "Receipt path binding mismatch: Dart emitted the suite relative to engine cwd while the manifest was repository-relative. Behavioral results passed, but this attempt is excluded from accepted-gate totals."
+    },
+    "ods_runtime": {
+      "accepted": true,
+      "tested_head": "26dfd5c8998a07989c87980adf309043539effed",
+      "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+      "returncode": 0,
+      "source_head_input_tools_stable": true,
+      "input_digest": "6f5fc7857f88ef882530e2e1320928edfb370e35eeed1452121f6e7676244fd9",
+      "input_count": 3058,
+      "raw_directory_at_evidence_head": "docs/evidence/ods-regression-restore-20261115T1246/ods-suite-final",
+      "raw_artifact_files_verified": 9,
+      "independent_artifact_and_git_blob_verification": true,
+      "tests": 70,
+      "passed": 70,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "restored_test_names_observed_passing": [
+        "currency symbols survive namespaced import and XLSX saves",
+        "inherited styled padding stays sparse while explicit blanks survive",
+        "ODS native column geometry survives a new XLSX copy"
+      ],
+      "raw_done_success": true,
+      "requested_suites": 1,
+      "missing_suites": [],
+      "unexpected_suites": []
+    },
+    "strict_analysis": {
+      "accepted": true,
+      "tested_head": "0ee5c4f1793fbcb55a6a43ced10296bcb00829e3",
+      "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+      "returncode": 0,
+      "source_head_input_tools_stable": true,
+      "input_digest": "6f5fc7857f88ef882530e2e1320928edfb370e35eeed1452121f6e7676244fd9",
+      "input_count": 3058,
+      "raw_directory_at_evidence_head": "docs/evidence/ods-regression-restore-20261115T1246/strict-analysis",
+      "raw_artifact_files_verified": 7,
+      "independent_artifact_and_git_blob_verification": true,
+      "analyzed_files": [
+        "lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "test/ods_sheet_reader_test.dart"
+      ],
+      "fatal_infos": true,
+      "fatal_warnings": true,
+      "issues_found": 0
+    }
+  },
+  "accepted_focused_runtime_total": 70,
+  "primary_host_total_contribution": 0,
+  "counting_note": "The 70 focused ODS tests are included in the coming primary engine cohort. Report focused acceptance separately; do not add either runtime attempt again to the primary host total. The first path-binding attempt is excluded from accepted-gate totals.",
+  "qualification_method": "Direct installed Dart test entrypoint with explicit canonical package config; no solver run or app mutation. External dependency versions inherited from the settled 55-package engine development graph; engine/parser roots are explicitly mapped to canonical checkouts.",
+  "canonical_checkout_target_after_report": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+  "saved_commits": [
+    {
+      "kind": "restored source",
+      "sha": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8"
+    },
+    {
+      "kind": "excluded first receipt-binding attempt",
+      "sha": "26dfd5c8998a07989c87980adf309043539effed"
+    },
+    {
+      "kind": "accepted70-test runtime and immutable delta audit",
+      "sha": "0ee5c4f1793fbcb55a6a43ced10296bcb00829e3"
+    },
+    {
+      "kind": "accepted strict analysis and retained gate drivers",
+      "sha": "64d4c5687856554f3a86cf3c0a7c3d73e3091f8f"
+    }
+  ],
+  "ci_polls_or_waits": 0,
+  "additional_runtime_after_completed_gates": 0,
+  "canonical_checkout_verified": {
+    "head": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "detached": true,
+    "clean": true,
+    "evidence_branch_preserved_at": "64d4c5687856554f3a86cf3c0a7c3d73e3091f8f"
+  }
+}
