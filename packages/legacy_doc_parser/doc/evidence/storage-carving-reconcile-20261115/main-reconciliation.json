@@ -1,0 +1,16 @@
+{
+  "observed_main": "7df906d2643d1fec39c49fc795733316a49f3278",
+  "incoming_runtime_equivalent_to": "9864ac623a95b82c305ea2923f4ac783bbd200fe",
+  "incoming_changed_paths": [
+    "README.md"
+  ],
+  "corrected_runtime_source": "5ba4993c24c88eb366ffbb4f5e16b8da6b418064",
+  "corrected_runtime_unchanged": true,
+  "runtime_object_ids": {
+    "lib": "533055a69078d565eb6c515efc9ed9dbe7bbd65f",
+    "test": "13fe7cbc2cd30c067fa3f0bbac43b8bd78c8ba0e",
+    "pubspec.yaml": "6c9061f2deb12612990c3ac904f3fc6bd24776fd",
+    "analysis_options.yaml": "572dd239d0976799433e2a9c56e7e02be86d61b1"
+  },
+  "preservation": "Merged current-main ancestry and capability bullets while retaining the precise bounded recovery/encoding profile. No parser production, test or dependency declaration changed."
+}

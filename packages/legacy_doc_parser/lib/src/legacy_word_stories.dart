@@ -136,7 +136,9 @@ extension _WordStories on _StructuredWordParser {
         ..addAll(markers);
       final start = _storyBase(2);
       final end = start + source.storyLengths[2];
-      bool inside(int cp) => cp >= start && cp <= end;
+      // Story ownership is half-open: an annotation starting exactly at end
+      // belongs to the following endnote story, which may already be parsed.
+      bool inside(int cp) => cp >= start && cp < end;
       bookmarks.removeWhere((b) => inside(b.startCp));
       fields.removeWhere((f) => inside(f.startCp));
       warnings

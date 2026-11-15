@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
+import '../services/log_service.dart';
 
 String printLabel(BuildContext context) =>
     switch (Localizations.localeOf(context).languageCode) {
@@ -105,7 +106,9 @@ class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted || !(_route?.isCurrent ?? true)) return;
       await widget.onPrint();
-    } catch (error) {
+    } catch (error, stack) {
+      const Log('DocumentPrint')
+          .warn('Could not print the current document', error, stack);
       if (mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(content: Text('${printLabel(context)} $error')),

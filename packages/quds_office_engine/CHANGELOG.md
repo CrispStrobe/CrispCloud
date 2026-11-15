@@ -4,6 +4,22 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve ODS authored date-component order, literal separators, full month and
+  weekday names, and cell annotations through XLSX copies. Annotation text stays
+  separate from cell values; repeated notes and authors share the existing cell
+  and expanded-text limits. Multiple, nested or foreign-namespace annotations
+  and ambiguous authors explicitly decline. Escaped/quoted format literals do
+  not become date tokens or numeric section separators.
+- Reconcile current ODS geometry, currency and explicit whitespace imports with
+  bounded namespace-aware parsing. Keep inherited empty-cell padding sparse,
+  retain explicit formatted blanks, and reject stored cells hidden inside an
+  earlier vertical merge. New regressions bind native column widths, default
+  geometry and currency symbols to an XLSX copy round trip. New worksheets now
+  write retained default/base column widths in native units; existing native
+  sheet-format attributes remain intact.
+- Accept Word OOXML formatting vocabulary, preserve all underline styles, and
+  continue character formatting after splitting a paragraph at its end.
+
 - Apply ODS cell style precedence from explicit cell, row default and column
   default styles, including repeated cells that cross differing column styles.
   Default-style padding remains sparse and column style bookkeeping shares the

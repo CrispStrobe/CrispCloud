@@ -1,0 +1,98 @@
+{
+  "README.md": {
+    "size": 3114,
+    "sha256": "f287ebd0e6c5ba47d1534eccc34453b92bb05e6121ebf44efd31afdaebbc762d"
+  },
+  "baseline/artifacts-sha256.json": {
+    "size": 1006,
+    "sha256": "498a0ef183fdd441d31aa91a3f4137dff5e07e4a9897bc2b0265c4c2081a437d"
+  },
+  "baseline/command.json": {
+    "size": 460,
+    "sha256": "4b34d439042d8599f628e37f2f33a9a312b68fc8291a13b40336e4a263b1c98f"
+  },
+  "baseline/inputs-after.json.gz": {
+    "size": 85488,
+    "sha256": "f558b8f82228f830e7002f5ee9a8288bb2f095e7d394379b0f2e07e7dcf6d7ae"
+  },
+  "baseline/inputs-before.json.gz": {
+    "size": 85489,
+    "sha256": "cbee812e4082710571bec4821ff8485484e4fe826733c1f38b7466aa11a254bb"
+  },
+  "baseline/metadata.json": {
+    "size": 3122,
+    "sha256": "816ab10f3665b9b4550a8c19cbfab2c030f6389b5764127636b046caa2fe79e1"
+  },
+  "baseline/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "baseline/stdout.jsonl": {
+    "size": 11296,
+    "sha256": "d3078fd7f0ac72f8b00ea37cd36c2c7f2d3bd5503488fe3c3de326a996b22c0f"
+  },
+  "baseline/suites.txt": {
+    "size": 46,
+    "sha256": "bb903be0d6237d074718c2e228ef2f111344cd5a3953a4e6b854bc483c304b47"
+  },
+  "baseline/summary.json": {
+    "size": 5559,
+    "sha256": "0080b744fbe8007e5667b8556c7d28761baa8014949279ba3cc555bf3d1349ba"
+  },
+  "baseline-suites.txt": {
+    "size": 46,
+    "sha256": "bb903be0d6237d074718c2e228ef2f111344cd5a3953a4e6b854bc483c304b47"
+  },
+  "dependency-setup/after/dart_tool-package_config.json.gz": {
+    "size": 1087,
+    "sha256": "04e53627bcc644a8ec1d7bdb26b84d963ec5a041af09a78e07e22f2493ba56fd"
+  },
+  "dependency-setup/after/dart_tool-package_graph.json.gz": {
+    "size": 1174,
+    "sha256": "cc697cfd8a7e1cc630f3d973ff60d6b455fc4b07953127499f4b717e02454161"
+  },
+  "dependency-setup/after/pubspec.lock.gz": {
+    "size": 3290,
+    "sha256": "bfce188956f6bdf39219d0c31f3dce55649c1c8066f100a7db23f628ce0f2a6c"
+  },
+  "dependency-setup/after/pubspec.yaml.gz": {
+    "size": 294,
+    "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e"
+  },
+  "dependency-setup/artifacts-sha256.json": {
+    "size": 1344,
+    "sha256": "2d8b2eff2f46725e5576329ee0f80b9f8bedc893e15de3741b00fe8428178e8a"
+  },
+  "dependency-setup/before/pubspec.yaml.gz": {
+    "size": 294,
+    "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e"
+  },
+  "dependency-setup/evidence-path-mapping.json": {
+    "size": 755,
+    "sha256": "b024c53977000d75229c439d3dfa93108887e40d2c75cd5dce8b12a1e09adba2"
+  },
+  "dependency-setup/original-output-artifacts.json": {
+    "size": 1067,
+    "sha256": "d374a1991e96d26a40926e9a1a66377626e00e239a160775e6b6bf1a61c450cc"
+  },
+  "dependency-setup/receipt.json": {
+    "size": 2983,
+    "sha256": "7d489cd3e7046505d6adaa6535e35192daf3c64e8ca0ad91cb754d0d198ed86a"
+  },
+  "dependency-setup/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "dependency-setup/stdout.log": {
+    "size": 1252,
+    "sha256": "ab6544db9223e49fab35f5a633989030cb75887b2c97bbc5f966a43e436393db"
+  },
+  "record_parser_gate.py": {
+    "size": 9401,
+    "sha256": "41631c941659fd3972089f2cd944ee09c7a104e8f495a70204b7a0b4592749a0"
+  },
+  "run_delta_qualification.py": {
+    "size": 10495,
+    "sha256": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1"
+  }
+}

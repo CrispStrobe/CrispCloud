@@ -1306,7 +1306,7 @@ String applyNumberFormat(Object? value, String code) {
     return value.toString();
   }
 
-  final List<String> sections = code.split(';');
+  final List<String> sections = _numberFormatSections(code);
   // Sections: positive; negative; zero. A negative section prints its own
   // sign (e.g. parentheses), so the value is formatted without one.
   var section = sections.first;
@@ -1332,11 +1332,28 @@ String applyNumberFormat(Object? value, String code) {
   return out;
 }
 
+// A literal semicolon must not turn one authored format into extra sections.
+List<String> _numberFormatSections(String code) {
+  final sections = <String>[];
+  var start = 0;
+  var quoted = false;
+  for (var i = 0; i < code.length; i++) {
+    if (code[i] == r'\') {
+      i++;
+    } else if (code[i] == '"') {
+      quoted = !quoted;
+    } else if (code[i] == ';' && !quoted) {
+      sections.add(code.substring(start, i));
+      start = i + 1;
+    }
+  }
+  sections.add(code.substring(start));
+  return sections;
+}
+
 /// [code] without quoted literals, escapes, and `[…]` blocks.
-String _literalFree(String code) => code
-    .replaceAll(RegExp(r'"[^"]*"'), '')
-    .replaceAll(RegExp(r'\\.'), '')
-    .replaceAll(RegExp(r'\[[^\]]*\]'), '');
+String _literalFree(String code) =>
+    code.replaceAll(RegExp(r'\\.|"[^"]*"|\[[^\]]*\]'), '');
 
 /// Formats one numeric section: `0` / `#` / `?` digits, `,` grouping and
 /// thousands scaling, `.` decimals, `%`, and literal prefix / suffix text.

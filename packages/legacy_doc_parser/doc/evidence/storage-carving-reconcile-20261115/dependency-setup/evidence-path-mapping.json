@@ -1,0 +1,18 @@
+{
+  "reason": "Use ordinary evidence filenames because the guarded mirror correctly excludes generated directories at every depth. Raw package snapshot bytes and receipt.json are unchanged.",
+  "original_receipt_commit": "00fe6b3117bb39076ad8130b56538bd048c96569",
+  "renames": [
+    {
+      "original": "after/.dart_tool/package_config.json.gz",
+      "current": "after/dart_tool-package_config.json.gz",
+      "size": 1087,
+      "sha256": "04e53627bcc644a8ec1d7bdb26b84d963ec5a041af09a78e07e22f2493ba56fd"
+    },
+    {
+      "original": "after/.dart_tool/package_graph.json.gz",
+      "current": "after/dart_tool-package_graph.json.gz",
+      "size": 1174,
+      "sha256": "cc697cfd8a7e1cc630f3d973ff60d6b455fc4b07953127499f4b717e02454161"
+    }
+  ]
+}

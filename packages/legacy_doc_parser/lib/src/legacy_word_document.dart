@@ -24,7 +24,9 @@ LegacyWordDocument parseLegacyWordDocument(
   bool recover = false,
 }) => readStructuredLegacyWord(bytes, recover: recover);
 
-/// Read-only body-text extraction for Word 97–2007 binary DOC/DOT files.
+/// Read-only body-text extraction for Word 6/95 and Word 97–2007 DOC/DOT.
+/// Word 6/95 supports declared UTF-16, Mac Roman and bounded Windows-1252
+/// profiles; unsupported legacy character sets/locales are explicitly refused.
 ///
 /// Uses the documented FIB/CLX piece table, never a scan for printable strings:
 /// unreferenced text and unrelated embedded-object streams must not appear in a
@@ -45,7 +47,14 @@ String extractLegacyWordText(Uint8List bytes) {
   if (fib.u16(0) != 0xa5ec) {
     throw const FormatException('This is not a Word binary document.');
   }
-  if (!const {0x00c1, 0x00c2, 0x00d9, 0x0101, 0x010c, 0x0112}.contains(fib.u16(2))) {
+  if (!const {
+    0x00c1,
+    0x00c2,
+    0x00d9,
+    0x0101,
+    0x010c,
+    0x0112,
+  }.contains(fib.u16(2))) {
     throw const FormatException(
       'This older Word binary version is not supported. Save it as DOCX.',
     );
@@ -287,9 +296,53 @@ class _WordBytes {
 /// is read from its FIB; the table stream is found as the FAT chain whose
 /// bytes hold a valid piece table (CLX) at the FIB's `fcClx`, and the text is
 /// read through that piece table exactly as [extractLegacyWordText] does.
-/// Returns `null` when either stream cannot be found; formatting, pictures,
-/// tables and notes are not recovered.
+/// Returns `null` when either stream cannot be found or a recovery bound is
+/// exceeded; formatting, pictures, tables and notes are not recovered.
+///
+/// Admission is bounded to 64 MiB. Referenced stream extents are limited to
+/// 32 MiB; CLX records to 16 MiB; main-body text to 4 Mi UTF-16 units. Across
+/// attempts, at most 4096 candidates, 64 MiB of chain/CLX work and 8 Mi declared
+/// character units are admitted. Rejected candidates consume the same work
+/// budget, so malformed alternatives cannot repeatedly decode a large body.
 String? recoverLegacyWordText(Uint8List bytes) {
+  if (bytes.length > 64 * 1024 * 1024) return null;
+  try {
+    return _recoverLegacyWordText(bytes, _WordRecoveryBudget());
+  } on _WordRecoveryLimit {
+    return null;
+  } on FormatException {
+    return null;
+  }
+}
+
+const _maxRecoveryStreamBytes = 32 * 1024 * 1024;
+
+class _WordRecoveryLimit implements Exception {
+  const _WordRecoveryLimit();
+}
+
+class _WordRecoveryBudget {
+  int _bytes = 0;
+  int _characters = 0;
+  int _candidates = 0;
+
+  void readBytes(int count) {
+    if (count > 64 * 1024 * 1024 - _bytes) {
+      throw const _WordRecoveryLimit();
+    }
+    _bytes += count;
+  }
+
+  void candidate(int clxBytes, int characters) {
+    if (++_candidates > 4096 || characters > 8 * 1024 * 1024 - _characters) {
+      throw const _WordRecoveryLimit();
+    }
+    _characters += characters;
+    readBytes(clxBytes);
+  }
+}
+
+String? _recoverLegacyWordText(Uint8List bytes, _WordRecoveryBudget budget) {
   const maxCharacters = 4 * 1024 * 1024;
   const magic = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
   if (bytes.length < 1024) return null;
@@ -326,6 +379,7 @@ String? recoverLegacyWordText(Uint8List bytes) {
     return header.getUint16(at, Endian.little) == 0xa5ec &&
         const {
           0x00c1,
+          0x00c2,
           0x00d9,
           0x0101,
           0x010c,
@@ -353,9 +407,12 @@ String? recoverLegacyWordText(Uint8List bytes) {
 
   // WordDocument: its FAT chain, or (FAT lost) the contiguous bytes from its
   // FIB, which is how Word allocates it.
+  final wordStart = firstSector + start * sectorSize;
+  final wordLimit = wordStart + _maxRecoveryStreamBytes;
   final contiguousWord = Uint8List.sublistView(
     bytes,
-    firstSector + start * sectorSize,
+    wordStart,
+    wordLimit < bytes.length ? wordLimit : bytes.length,
   );
   var word = fatSane
       ? _chainBytes(
@@ -365,12 +422,17 @@ String? recoverLegacyWordText(Uint8List bytes) {
               firstSector: firstSector,
               sectorSize: sectorSize,
               sectorCount: sectorCount,
-              limit: 64 * 1024 * 1024,
+              limit: _maxRecoveryStreamBytes,
+              budget: budget,
             ) ??
             contiguousWord
       : contiguousWord;
   final cbMac = ByteData.sublistView(word).getUint32(64, Endian.little);
-  if (cbMac >= 1024 && cbMac <= word.length) {
+  if (cbMac != 0) {
+    // A positive declared extent is authoritative even when it is too small
+    // for the FIB or larger than the available stream. Never ignore it and
+    // borrow bytes from an unrelated following stream.
+    if (cbMac > _maxRecoveryStreamBytes || cbMac > word.length) return null;
     word = Uint8List.sublistView(word, 0, cbMac);
   }
   final fib = _WordBytes(word);
@@ -387,10 +449,15 @@ String? recoverLegacyWordText(Uint8List bytes) {
     final pairCountOffset = longStart + cslw * 4;
     final pairCount = fib.u16(pairCountOffset);
     if (pairCount < 34 || pairCount > 183) return null;
+    fib.require(pairCountOffset + 2, pairCount * 8);
     final clxPair = pairCountOffset + 2 + 33 * 8;
     final clxOffset = fib.u32(clxPair);
     final clxLength = fib.u32(clxPair + 4);
-    if (clxLength < 5 || clxLength > 16 * 1024 * 1024) return null;
+    if (clxLength < 5 ||
+        clxLength > 16 * 1024 * 1024 ||
+        clxOffset > _maxRecoveryStreamBytes - clxLength) {
+      return null;
+    }
 
     // The table stream is a FAT chain no other entry points into, or (FAT
     // lost) a contiguous run starting at some sector. Only a piece table that
@@ -411,6 +478,7 @@ String? recoverLegacyWordText(Uint8List bytes) {
           sectorSize: sectorSize,
           sectorCount: sectorCount,
           limit: clxOffset + clxLength,
+          budget: budget,
         );
       }
       // Small table streams live in the mini stream (64-byte mini sectors),
@@ -427,6 +495,7 @@ String? recoverLegacyWordText(Uint8List bytes) {
     for (final table in candidates()) {
       if (table == null || table.length < clxOffset + clxLength) continue;
       if (table[clxOffset] != 1 && table[clxOffset] != 2) continue;
+      budget.candidate(clxLength, characterCount);
       try {
         final text = _textFromClx(
           word,
@@ -455,6 +524,7 @@ Uint8List? _chainBytes(
   required int sectorSize,
   required int sectorCount,
   required int limit,
+  required _WordRecoveryBudget budget,
 }) {
   final out = BytesBuilder(copy: false);
   final visited = <int>{};
@@ -462,7 +532,10 @@ Uint8List? _chainBytes(
   while (out.length < limit) {
     if (sector >= sectorCount || !visited.add(sector)) return null;
     final at = firstSector + sector * sectorSize;
-    out.add(Uint8List.sublistView(bytes, at, at + sectorSize));
+    final remaining = limit - out.length;
+    final take = remaining < sectorSize ? remaining : sectorSize;
+    budget.readBytes(take);
+    out.add(Uint8List.sublistView(bytes, at, at + take));
     final next = sector < fat.length ? fat[sector] : 0xFFFFFFFF;
     if (next == 0xFFFFFFFE) break;
     sector = next;
@@ -472,10 +545,12 @@ Uint8List? _chainBytes(
 
 /// Text of a Word 6.0 / Word 95 document (`wIdent` 0xA5DC, nFib 101–105).
 ///
-/// Only the main text is read: these files have 8-bit text in the
+/// Only the main text is read: these files have 8-bit or UTF-16 text in the
 /// WordDocument stream, either at `fcMin` (fast-saved files are complex and
 /// carry their piece table in the same stream at `fcClx`). The character
-/// set is Windows-1252 or, for Macintosh files, Mac Roman.
+/// set is declared UTF-16 (`fExtChar`), Mac Roman, or Windows-1252 when the
+/// charset is ANSI and the locale is unspecified/legacy or explicitly en-US.
+/// Other 8-bit charset/locale declarations are refused rather than guessed.
 String _word6Text(Uint8List word) {
   const maxCharacters = 4 * 1024 * 1024;
   final fib = _WordBytes(word);
@@ -491,7 +566,17 @@ String _word6Text(Uint8List word) {
       'This Word document is encrypted. Open it in Word and save an unlocked copy.',
     );
   }
-  final mac = fib.u16(0x14) == 256;
+  final unicode = (flags & 0x1000) != 0;
+  final charset = fib.u16(0x14);
+  final locale = fib.u16(6);
+  final mac = charset == 256;
+  if (!unicode &&
+      !mac &&
+      (charset != 0 || (locale >= 999 && locale != 0x0409))) {
+    throw const FormatException(
+      'This Word 6/95 character encoding is not supported. Save it as DOCX or Unicode text.',
+    );
+  }
   final characterCount = fib.u32(0x34);
   if (characterCount > maxCharacters) {
     throw const FormatException('Word text exceeds the preview size limit.');
@@ -503,12 +588,23 @@ String _word6Text(Uint8List word) {
       ? _macRoman.codeUnitAt(byte - 0x80)
       : (_windows1252[byte] ?? byte);
   final output = StringBuffer();
-  if ((flags & 0x0004) == 0) {
-    final fcMin = fib.u32(0x18);
-    fib.require(fcMin, characterCount);
-    for (var i = 0; i < characterCount; i++) {
-      output.writeCharCode(decode(word[fcMin + i]));
+  void appendPiece(int offset, int count) {
+    fib.require(offset, count * (unicode ? 2 : 1));
+    if (unicode) {
+      output.write(
+        String.fromCharCodes([
+          for (var i = 0; i < count; i++) fib.u16(offset + i * 2),
+        ]),
+      );
+    } else {
+      for (var i = 0; i < count; i++) {
+        output.writeCharCode(decode(word[offset + i]));
+      }
     }
+  }
+
+  if ((flags & 0x0004) == 0) {
+    appendPiece(fib.u32(0x18), characterCount);
     return _readableBody(output.toString());
   }
   // Complex (fast-saved): the CLX lives in the WordDocument stream.
@@ -532,7 +628,7 @@ String _word6Text(Uint8List word) {
     throw const FormatException('Invalid Word text piece table size.');
   }
   final pieceCount = (pieceBytes - 4) ~/ 12;
-  if (fib.u32(position) != 0) {
+  if (pieceCount > 100000 || fib.u32(position) != 0) {
     throw const FormatException('Invalid Word text piece count or start.');
   }
   final pcdStart = position + (pieceCount + 1) * 4;
@@ -540,16 +636,13 @@ String _word6Text(Uint8List word) {
   for (var index = 0; index < pieceCount; index++) {
     final start = fib.u32(position + index * 4);
     final next = fib.u32(position + (index + 1) * 4);
-    if (next <= start) {
+    if (next <= start || next > 0x7fffffff) {
       throw const FormatException('Word text positions are not ordered.');
     }
     if (start >= characterCount) continue;
     final count = (next < characterCount ? next : characterCount) - start;
     final fc = fib.u32(pcdStart + index * 8 + 2);
-    fib.require(fc, count);
-    for (var i = 0; i < count; i++) {
-      output.writeCharCode(decode(word[fc + i]));
-    }
+    appendPiece(fc, count);
     extracted += count;
   }
   if (extracted != characterCount) {
