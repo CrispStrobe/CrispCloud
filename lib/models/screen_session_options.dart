@@ -93,7 +93,7 @@ resolved=$(
       if (matches) {
         count++
         chosen = id
-        if ($0 !~ /[(](Attached|Detached)[)][ \t\r]*$/) unavailable = 1
+        if ($0 !~ /[(](Attached|Detached|Multi, attached|Multi, detached)[)][ \t\r]*$/) unavailable = 1
       }
     }
     END {

@@ -129,6 +129,25 @@ exit "${CRISP_SCREEN_ATTACH_STATUS:-0}"
       },
     );
 
+    test(
+      'supports dated and multi-display listings owned by this account',
+      () async {
+        for (final status in [
+          'Attached',
+          'Detached',
+          'Multi, attached',
+          'Multi, detached',
+        ]) {
+          final result = await run(
+            'work',
+            sessions(['123.work\t(11/15/26 20:15:00)\t($status)']),
+          );
+          expect(result.exitCode, 0, reason: '$status: ${result.stderr}');
+          expect(await arguments.readAsLines(), ['-x', '123.work']);
+        }
+      },
+    );
+
     test('rejects alternate candidates for Screen prefix fallback', () async {
       for (final other in ['456.123.work', '456.123.worker', '123.worker']) {
         final result = await run(
@@ -165,7 +184,7 @@ exit "${CRISP_SCREEN_ATTACH_STATUS:-0}"
     test('oversized listings fail closed', () async {
       for (final output in [
         '${'x' * 1025}\n',
-        '${'\n' * 4097}',
+        '\n' * 4097,
         List.filled(300, '${'x' * 1000}\n').join(),
       ]) {
         final result = await run('work', output);

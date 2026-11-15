@@ -20,6 +20,8 @@ class TerminalSearchBar extends StatefulWidget {
     required this.lineHeight,
     required this.onClose,
     this.autofocus = true,
+    this.active = true,
+    this.onActivate,
   });
 
   final Terminal terminal;
@@ -28,6 +30,8 @@ class TerminalSearchBar extends StatefulWidget {
   final double Function() lineHeight;
   final VoidCallback onClose;
   final bool autofocus;
+  final bool active;
+  final VoidCallback? onActivate;
 
   @override
   State<TerminalSearchBar> createState() => _TerminalSearchBarState();
@@ -45,11 +49,14 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
   }
 
   void _attachSearch() {
-    _search = TerminalScrollbackSearch(
-      terminal: widget.terminal,
-      controller: widget.controller,
-      onReveal: _revealCurrent,
-    )..addListener(_onSearchChanged);
+    _search =
+        TerminalScrollbackSearch(
+            terminal: widget.terminal,
+            controller: widget.controller,
+            onReveal: _revealCurrent,
+          )
+          ..setActive(widget.active)
+          ..addListener(_onSearchChanged);
   }
 
   @override
@@ -71,6 +78,17 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
         _search.setQuery(_query.text);
       });
     }
+    if (oldWidget.active != widget.active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _search.setActive(widget.active);
+        if (widget.active && widget.autofocus) {
+          _focus.requestFocus();
+        } else if (!widget.active) {
+          _focus.unfocus();
+        }
+      });
+    }
   }
 
   void _onSearchChanged() {
@@ -78,10 +96,12 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
   }
 
   void _revealCurrent() {
+    if (!widget.active) return;
     final search = _search;
     final revision = search.revision;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted ||
+          !widget.active ||
           !identical(search, _search) ||
           revision != search.revision) {
         return;
@@ -264,7 +284,7 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
             key: const ValueKey('terminal-search-query'),
             controller: _query,
             focusNode: _focus,
-            autofocus: widget.autofocus,
+            autofocus: widget.autofocus && widget.active,
             autocorrect: false,
             enableSuggestions: false,
             enableIMEPersonalizedLearning: false,
@@ -280,6 +300,7 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
               ),
             ),
             onChanged: _search.setQuery,
+            onTap: widget.onActivate,
             textInputAction: TextInputAction.search,
             onSubmitted: (_) {
               _search.next();

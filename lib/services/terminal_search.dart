@@ -32,6 +32,7 @@ class TerminalScrollbackSearch extends ChangeNotifier {
   bool _dirty = false;
   bool _resetCurrent = true;
   bool _disposed = false;
+  bool _active = true;
   bool _truncated = false;
   int _currentIndex = -1;
   int _revision = 0;
@@ -40,10 +41,12 @@ class TerminalScrollbackSearch extends ChangeNotifier {
   CellAnchor? _preferredAnchor;
   Timer? _refreshTimer;
   Timer? _invalidationTimer;
+  Duration? _outputRefreshDelay;
 
   String get query => _query;
   bool get caseSensitive => _caseSensitive;
   bool get wholeWord => _wholeWord;
+  bool get active => _active;
   bool get pending => _dirty && _query.isNotEmpty;
   bool get truncated => _truncated;
   int get matchCount => _matches.length;
@@ -53,7 +56,8 @@ class TerminalScrollbackSearch extends ChangeNotifier {
   int get revision => _revision;
 
   BufferRangeLine? get currentRange {
-    if (_dirty ||
+    if (!_active ||
+        _dirty ||
         _currentIndex < 0 ||
         _currentIndex >= controller.searchHighlights.length) {
       return null;
@@ -79,6 +83,35 @@ class TerminalScrollbackSearch extends ChangeNotifier {
     _criteriaChanged();
   }
 
+  /// Hidden tabs keep their query but do not repeatedly scan live output.
+  void setActive(bool value) {
+    if (_disposed || _active == value) return;
+    if (!value) {
+      final range = currentRange;
+      _releasePreferredAnchor();
+      if (range != null) {
+        _preferredAnchor = terminal.buffer.createAnchorFromOffset(range.begin);
+      }
+      terminal.removeListener(_onTerminalChanged);
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
+      _invalidationTimer?.cancel();
+      _invalidationTimer = null;
+      controller.clearSearchHighlights();
+    } else {
+      terminal.addListener(_onTerminalChanged);
+      if (!identical(_searchedBuffer, terminal.buffer)) {
+        _releasePreferredAnchor();
+        _resetCurrent = true;
+      }
+    }
+    _active = value;
+    _revision++;
+    _dirty = _query.isNotEmpty;
+    notifyListeners();
+    if (value) _scheduleRefresh();
+  }
+
   void _criteriaChanged() {
     _revision++;
     _resetCurrent = true;
@@ -97,7 +130,7 @@ class TerminalScrollbackSearch extends ChangeNotifier {
   }
 
   void _onTerminalChanged() {
-    if (_disposed || _query.isEmpty) return;
+    if (_disposed || !_active || _query.isEmpty) return;
     _revision++;
     if (!_dirty && identical(_searchedBuffer, terminal.buffer)) {
       final range = currentRange;
@@ -119,25 +152,31 @@ class TerminalScrollbackSearch extends ChangeNotifier {
       controller.clearSearchHighlights();
       notifyListeners();
     });
-    _scheduleRefresh();
+    _scheduleRefresh(fromOutput: true);
   }
 
-  void _scheduleRefresh() {
-    if (_disposed || _query.isEmpty || _refreshTimer != null) return;
+  void _scheduleRefresh({bool fromOutput = false}) {
+    if (_disposed || !_active || _query.isEmpty || _refreshTimer != null) {
+      return;
+    }
     // Do not restart this timer for every output chunk: a busy terminal still
     // gets fresh results at bounded intervals instead of starving the search.
-    _refreshTimer = Timer(refreshDelay, refresh);
+    _refreshTimer = Timer(
+      fromOutput ? _outputRefreshDelay ?? refreshDelay : refreshDelay,
+      refresh,
+    );
   }
 
   /// Refreshes the active buffer now. Exposed for explicit navigation/testing.
   void refresh() {
-    if (_disposed) return;
+    if (_disposed || !_active) return;
     _refreshTimer?.cancel();
     _refreshTimer = null;
     _invalidationTimer?.cancel();
     _invalidationTimer = null;
     if (!_dirty) return;
 
+    final scanTime = Stopwatch()..start();
     final reveal = _resetCurrent;
     final preferred = _preferredAnchor;
     final start = preferred != null && terminal.buffer.ownsAnchor(preferred)
@@ -169,6 +208,16 @@ class TerminalScrollbackSearch extends ChangeNotifier {
       _matches.map((match) => match.range).toList(growable: false),
       currentIndex: _currentIndex,
     );
+    scanTime.stop();
+    // Very wide histories take longer to scan. Space automatic rescans by
+    // at least eight times their measured work instead of consuming the UI
+    // isolate on every output burst. Explicit queries/navigation remain eager.
+    final automaticMicros = scanTime.elapsedMicroseconds * 8;
+    _outputRefreshDelay = Duration(
+      microseconds: automaticMicros > refreshDelay.inMicroseconds
+          ? automaticMicros
+          : refreshDelay.inMicroseconds,
+    );
     notifyListeners();
     // Background output updates highlights but never drag the user's viewport.
     if (reveal && _currentIndex >= 0) onReveal?.call();
@@ -183,7 +232,7 @@ class TerminalScrollbackSearch extends ChangeNotifier {
   }
 
   void _move(int direction) {
-    if (_disposed) return;
+    if (_disposed || !_active) return;
     final hadCurrent = _currentIndex >= 0 && !_resetCurrent;
     refresh();
     if (_matches.isEmpty) return;

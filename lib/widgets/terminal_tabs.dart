@@ -143,40 +143,36 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       '${context.terminalTr('Terminal')} ${tab.id}';
 
   Future<void> _rename(_TerminalTab tab) async {
-    final controller = TextEditingController(text: _label(tab));
-    try {
-      final name = await showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(context.terminalControlsTr('Rename terminal')),
-          content: TextField(
-            key: const ValueKey('terminal-tab-name'),
-            controller: controller,
-            autofocus: true,
-            maxLength: 60,
-            inputFormatters: [
-              FilteringTextInputFormatter.deny(RegExp(r'[\x00-\x1f\x7f]')),
-            ],
-            onSubmitted: (text) => Navigator.pop(context, text),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.terminalTr('Cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, controller.text),
-              child: Text(context.terminalControlsTr('Rename')),
-            ),
+    var edited = _label(tab);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.terminalControlsTr('Rename terminal')),
+        content: TextFormField(
+          key: const ValueKey('terminal-tab-name'),
+          initialValue: edited,
+          onChanged: (value) => edited = value,
+          autofocus: true,
+          maxLength: 60,
+          inputFormatters: [
+            FilteringTextInputFormatter.deny(RegExp(r'[\x00-\x1f\x7f]')),
           ],
+          onFieldSubmitted: (text) => Navigator.pop(context, text),
         ),
-      );
-      if (!mounted || name == null || !_tabs.contains(tab)) return;
-      setState(() => tab.name = name.trim().isEmpty ? null : name.trim());
-    } finally {
-      // A closing dialog still uses its controller during the route animation.
-      WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.terminalTr('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, edited),
+            child: Text(context.terminalControlsTr('Rename')),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || name == null || !_tabs.contains(tab)) return;
+    setState(() => tab.name = name.trim().isEmpty ? null : name.trim());
   }
 
   Future<void> _closeTab(_TerminalTab tab) async {

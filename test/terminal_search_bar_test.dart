@@ -27,7 +27,11 @@ void main() {
     scroll.dispose();
   });
 
-  Future<void> mount(WidgetTester tester, {double width = 640}) async {
+  Future<void> mount(
+    WidgetTester tester, {
+    double width = 640,
+    bool active = true,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -48,6 +52,7 @@ void main() {
                     lineHeight: () =>
                         view.currentState!.renderTerminal.lineHeight,
                     onClose: () => closed++,
+                    active: active,
                   ),
                   Expanded(
                     child: TerminalView(
@@ -116,12 +121,22 @@ void main() {
     expect(find.text('1/3'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('terminal-search-options')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Match case'));
+    await tester.tap(
+      find.ancestor(
+        of: find.text('Match case'),
+        matching: find.byWidgetPredicate((widget) => widget is PopupMenuEntry),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('1/2'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('terminal-search-options')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Whole words'));
+    await tester.tap(
+      find.ancestor(
+        of: find.text('Whole words'),
+        matching: find.byWidgetPredicate((widget) => widget is PopupMenuEntry),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('1/1'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -148,5 +163,28 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     old.dispose();
+  });
+
+  testWidgets('reactivating a retained search restores its input focus', (
+    tester,
+  ) async {
+    terminal.write('hit');
+    await mount(tester);
+    await findText(tester, 'hit');
+    await mount(tester, active: false);
+    await tester.pump();
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('terminal-search-query')),
+    );
+    expect(field.focusNode!.hasFocus, isFalse);
+    terminal.write(' hit');
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(controller.searchHighlights, isEmpty);
+    await mount(tester);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(field.focusNode!.hasFocus, isTrue);
+    expect(find.text('1/2'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 }

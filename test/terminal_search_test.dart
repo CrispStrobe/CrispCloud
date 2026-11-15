@@ -145,7 +145,7 @@ void main() {
       search.refresh();
       terminal.write('\r\x1b[2Knone');
       expect(search.currentRange, isNull);
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
       expect(controller.searchHighlights, isEmpty);
       await tester.pump(const Duration(milliseconds: 160));
       expect(search.matchCount, 0);
@@ -182,6 +182,58 @@ void main() {
     search.refresh();
     expect(search.matchCount, 1);
     expect(terminal.buffer.getText(search.currentRange!, true), 'needle');
+  });
+
+  testWidgets(
+    'hidden search pauses output scans and refreshes when activated',
+    (tester) async {
+      terminal.write('hit');
+      search.setQuery('hit');
+      search.refresh();
+      search.setActive(false);
+      terminal.write(' hit');
+      await tester.pump(const Duration(seconds: 1));
+      expect(search.matchCount, 1);
+      expect(controller.searchHighlights, isEmpty);
+      expect(search.currentRange, isNull);
+      search.setActive(true);
+      await tester.pump(const Duration(milliseconds: 160));
+      expect(search.matchCount, 2);
+      expect(controller.searchHighlights, hasLength(2));
+    },
+  );
+
+  testWidgets('current hit follows scrollback eviction before a rescan', (
+    tester,
+  ) async {
+    final bounded = Terminal(maxLines: 20)..resize(12, 4);
+    final boundedController = TerminalController();
+    final boundedSearch = TerminalScrollbackSearch(
+      terminal: bounded,
+      controller: boundedController,
+    );
+    addTearDown(() {
+      boundedSearch.dispose();
+      boundedController.dispose();
+      bounded.dispose();
+    });
+    bounded.write(List.generate(18, (i) => 'hit $i\r\n').join());
+    boundedSearch.setQuery('hit');
+    boundedSearch.refresh();
+    for (var i = 0; i < 10; i++) {
+      boundedSearch.next();
+    }
+    final selectedLine =
+        bounded.buffer.lines[boundedSearch.currentRange!.begin.y];
+    for (var i = 18; i < 24; i++) {
+      bounded.write('hit $i\r\n');
+    }
+    boundedSearch.refresh();
+    expect(
+      bounded.buffer.lines[boundedSearch.currentRange!.begin.y],
+      same(selectedLine),
+    );
+    expect(bounded.buffer.getText(boundedSearch.currentRange!, true), 'hit');
   });
 
   testWidgets('clearing or disposing cancels delayed searches and highlights', (

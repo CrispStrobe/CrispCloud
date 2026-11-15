@@ -15,6 +15,7 @@ import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_workspace_provider.dart';
+import '../providers/ssh_terminal_profiles_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
 import '../services/terminal_backends.dart';
@@ -28,6 +29,7 @@ import '../services/terminal_workspace_service.dart';
 import 'terminal_workspace_dialog.dart';
 import 'external_terminal_dialog.dart';
 import 'ssh_terminal_connect_dialog.dart';
+import 'ssh_terminal_profiles_dialog.dart';
 import 'terminal_tabs.dart';
 import 'terminal_search_bar.dart';
 import '../l10n/external_terminal_strings.dart';
@@ -96,6 +98,8 @@ class TerminalPanel extends ConsumerStatefulWidget {
 enum _PanelAction {
   local,
   reconnect,
+  profiles,
+  saveProfile,
   external,
   stage,
   workspaces,
@@ -134,6 +138,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   Terminal? _tmuxTerminal;
   Terminal? _screenTerminal;
   bool _showSearch = false;
+  bool _searchFits = true;
   double _fontSize = 13;
   int _connectionRequest = 0;
 
@@ -260,7 +265,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (mounted &&
         widget.visible &&
         widget.active &&
-        !_showSearch &&
+        !(_showSearch && _searchFits) &&
         _focusAreaState.state == FocusArea.terminal) {
       _focus.requestFocus();
     }
@@ -318,8 +323,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _performMenuAction(TerminalMenuAction action) {
-    if (!mounted || !widget.visible || !widget.active || !_focus.hasFocus)
+    if (!mounted || !widget.visible || !widget.active || !_focus.hasFocus) {
       return;
+    }
     switch (action) {
       case TerminalMenuAction.copy:
         unawaited(_copySelection());
@@ -461,12 +467,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     );
   }
 
-  Future<void> _connectSsh({bool reconnect = false}) async {
+  Future<void> _connectSsh({
+    bool reconnect = false,
+    SshTerminalConfig? initialConfig,
+  }) async {
     if (_session.isConnecting) return;
+    _activateInput();
     final config = await showDialog<SshTerminalConfig>(
       context: context,
       builder: (_) => SshTerminalConnectDialog(
-        initialConfig: reconnect ? _lastSshConfig : null,
+        initialConfig: initialConfig ?? (reconnect ? _lastSshConfig : null),
       ),
     );
     if (!mounted || config == null || !widget.visible) return;
@@ -571,6 +581,37 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     }
   }
 
+  Future<void> _showProfiles() async {
+    final config = await showDialog<SshTerminalConfig>(
+      context: context,
+      builder: (_) => SshTerminalProfilesDialog(
+        store: ref.read(sshTerminalProfilesProvider),
+      ),
+    );
+    if (mounted && widget.visible && config != null) {
+      await _connectSsh(initialConfig: config.withoutSecrets());
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final config = _lastSshConfig;
+    if (config == null) return;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => SaveSshTerminalProfileDialog(
+        store: ref.read(sshTerminalProfilesProvider),
+        config: config.withoutSecrets(),
+      ),
+    );
+    if (mounted && saved == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.terminalControlsTr('Saved SSH profile')),
+        ),
+      );
+    }
+  }
+
   Future<void> _copyText(String text) async {
     if (text.isNotEmpty) await Clipboard.setData(ClipboardData(text: text));
   }
@@ -584,11 +625,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   Future<void> _paste() async {
-    if (!_session.isConnected || !widget.visible) return;
+    if (!_session.isConnected || !widget.visible || !widget.active) return;
     final terminal = _session.terminal;
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (!mounted ||
         !widget.visible ||
+        !widget.active ||
         !_session.isConnected ||
         !identical(terminal, _session.terminal)) {
       return;
@@ -742,11 +784,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _performAction(_PanelAction action) {
+    _activateInput();
     switch (action) {
       case _PanelAction.local:
         unawaited(_startLocal());
       case _PanelAction.reconnect:
         unawaited(_connectSsh(reconnect: true));
+      case _PanelAction.profiles:
+        unawaited(_showProfiles());
+      case _PanelAction.saveProfile:
+        unawaited(_saveProfile());
       case _PanelAction.external:
         unawaited(showExternalTerminalDialog(context, ref));
       case _PanelAction.stage:
@@ -850,8 +897,23 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   PopupMenuButton<_PanelAction>(
                     key: const ValueKey('terminal-actions'),
                     tooltip: context.terminalTr('Terminal actions'),
+                    onOpened: _activateInput,
                     onSelected: _performAction,
                     itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: _PanelAction.profiles,
+                        enabled: !_session.isConnecting,
+                        child: Text(
+                          context.terminalControlsTr('Saved SSH profiles'),
+                        ),
+                      ),
+                      if (_lastSshConfig != null)
+                        PopupMenuItem(
+                          value: _PanelAction.saveProfile,
+                          child: Text(
+                            context.terminalControlsTr('Save SSH profile'),
+                          ),
+                        ),
                       if (_lastSshConfig != null)
                         PopupMenuItem(
                           value: _PanelAction.reconnect,
@@ -1057,8 +1119,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             : requestedHeight
                   .clamp(math.min(140.0, maximum), maximum)
                   .toDouble();
-        final showSearch =
-            _showSearch && height >= (constraints.maxWidth < 300 ? 150 : 110);
+        final wasSearchVisible = _showSearch && _searchFits;
+        _searchFits = height >= (constraints.maxWidth < 300 ? 150 : 110);
+        final showSearch = _showSearch && _searchFits;
+        if (wasSearchVisible && !showSearch) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _focusIfVisible(),
+          );
+        }
         final showExtraKeys = _mobile && height >= (showSearch ? 190 : 140);
         return SizedBox(
           key: const ValueKey('terminal-panel'),
@@ -1092,6 +1160,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               _buildHeader(),
               if (showSearch)
                 TerminalSearchBar(
+                  active: widget.visible && widget.active,
+                  onActivate: () {
+                    widget.onActivate?.call();
+                    _focusAreaState.state = FocusArea.terminal;
+                  },
                   terminal: _session.terminal,
                   controller: _controller,
                   scrollController: _scroll,
