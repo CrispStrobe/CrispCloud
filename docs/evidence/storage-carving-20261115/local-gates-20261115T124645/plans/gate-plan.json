@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "status": "planned; final app source freeze and all current acceptance results pending",
+  "status": "source frozen; acceptance is recorded individually in completed gate receipts",
   "evidence_base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
   "source_freeze": {
-    "commit": null,
+    "commit": "966345971a50ef93bcb67ed32060c8176b4d2949",
     "rule": "Root must checkpoint the complete source after managed sync and dependency resolution. Gate driver reads each subsequent saved HEAD; never invent or copy the prior source SHA."
   },
   "source_inputs": {

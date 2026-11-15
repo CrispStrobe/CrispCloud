@@ -1,8 +1,8 @@
 # Local qualification plan — isolated continuation, 15 November 2026
 
-**Status: prepared, not executed. The final app source checkpoint is pending.**
+**Status: local qualification in progress on saved source `966345971a50ef93bcb67ed32060c8176b4d2949`. Only completed receipts establish passing results.**
 
-This evidence base is for `integration/storage-carving-local-20261115124645`, created from observed app commit `41885d7d1d67348f5abe3579b99d9d2951fc909f`. Root will first finish managed synchronization and dependency resolution, review the complete change, and save its exact app commit. No future source SHA or new passing result is asserted here.
+This evidence base is for `integration/storage-carving-local-20261115124645`, created from observed app commit `41885d7d1d67348f5abe3579b99d9d2951fc909f`. Managed synchronization and app/CLI/engine/editor offline resolution are complete, committed lockfiles are unchanged, and the source is saved remotely before the first gate. `source-checkpoint.json` records its exact identity. The app strict-analysis gate has passed; remaining gates are pending.
 
 The intended canonical source pins are Quds `9bb71983a4ae6bc7bb3372fd931e724ddd102fc8` and parser `08296edbee08da013a8ff718798972552ccd03f7`. Quds restores the three currency/padding/geometry ODS regressions removed by the observed upstream reconciliation. The new ODS covered-cell and 10,000-comment admission behavior, Linux golden references, and parser regression remain incorporated. Source mirrors and graph setup must finish before qualification.
 

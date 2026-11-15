@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "status": "not executed",
-  "source_commit": null,
+  "status": "source frozen; individual commands run only with intervening remote receipt saves",
+  "source_commit": "966345971a50ef93bcb67ed32060c8176b4d2949",
   "execution": "Each entry is a separate action; this file is not an automatic batch runner.",
   "commands": [
     {
