@@ -20,6 +20,7 @@ import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../model/word_tree.dart';
+import '../model/word_zotero.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
 import 'word_bookmark_io.dart';
@@ -956,7 +957,28 @@ class WordSerializer {
 
   void _writeRun(XmlWriter w, WmlRun inline, {WmlRevision? revision}) {
     final String? instruction = inline.fieldInstruction;
-    if (instruction != null) {
+    final zotero = WordZotero.kindOfInstruction(instruction) != null;
+    if (instruction != null && zotero) {
+      w.writeStartElement('r', prefix: 'w');
+      w.writeEmptyElement(
+        'fldChar',
+        prefix: 'w',
+        attributes: <String, String>{
+          'w:fldCharType': 'begin',
+          if (inline.fieldLocked) 'w:fldLock': '1',
+          if (inline.fieldDirty != null)
+            'w:dirty': inline.fieldDirty! ? '1' : '0',
+        },
+      );
+      w.writeEndElement();
+      w.writeStartElement('r', prefix: 'w');
+      w.writeStartElement('instrText', prefix: 'w');
+      w.writeAttribute('xml:space', 'preserve');
+      w.writeText(instruction);
+      w.writeEndElement();
+      w.writeEndElement();
+      _writeFieldChar(w, 'separate');
+    } else if (instruction != null) {
       w.writeStartElement('fldSimple', prefix: 'w');
       w.writeAttribute('w:instr', instruction);
       if (inline.fieldLocked) w.writeAttribute('w:fldLock', '1');
@@ -999,7 +1021,13 @@ class WordSerializer {
     }
     w.writeEndElement();
     if (revision != null) w.writeEndElement();
-    if (instruction != null) w.writeEndElement();
+    if (instruction != null) {
+      if (zotero) {
+        _writeFieldChar(w, 'end');
+      } else {
+        w.writeEndElement();
+      }
+    }
   }
 
   void _writeRunContent(XmlWriter w, String text, {required bool deleted}) {
@@ -1290,9 +1318,7 @@ class WordSerializer {
       w.writeEmptyElement(
         'u',
         prefix: 'w',
-        attributes: <String, String>{
-          'w:val': r.underline.xmlValue,
-        },
+        attributes: <String, String>{'w:val': r.underline.xmlValue},
       );
     }
     if (r.vertAlign != WmlVertAlign.baseline) {

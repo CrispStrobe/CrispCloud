@@ -4,6 +4,11 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Add Zotero CSL citation and bibliography field inspection, bounded JSON
+  metadata, embedded CSL items, explicit cached-text insertion/editing, and
+  deliberate unlinking. Write native complex ADDIN fields and preserve rich
+  imported caches and unknown Zotero metadata without automatic CSL processing.
+
 - Preserve ODS authored date-component order, literal separators, full month and
   weekday names, and cell annotations through XLSX copies. Annotation text stays
   separate from cell values; repeated notes and authors share the existing cell
