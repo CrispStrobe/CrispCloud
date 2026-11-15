@@ -22,7 +22,7 @@ void main() {
       await tester.runAsync(() async {
         SharedPreferences.setMockInitialValues({});
         final cloud = WorkflowFakeClient()
-          ..seedFile('/keep.txt', Uint8List.fromList([65]));
+          ..put('/keep.txt', Uint8List.fromList([65]));
         final container = ProviderContainer(
           overrides: [
             authProvider.overrideWith((_) => WorkspaceTestAuth(cloud)),
