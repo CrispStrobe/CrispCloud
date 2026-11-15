@@ -23,10 +23,11 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `df824e4351b7df7f8b7d6df2deb64f95bfe2ef2d`
-on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
+The app mirrors combined canonical Quds main
+`3304f42ee17b52659a82d5714dcc730184050960`, preserving the latest Zotero
+work and the begins-with/ends-with conditional-format rules,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,375 managed files
+all 2,384 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -34,7 +35,14 @@ header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
 
-Zotero support adds a shared references workspace, a read-only Web API client,
+The current incremental Zotero checkpoint adds the bounded desktop HTTP citing
+protocol, staged Word-field transactions and persistent Zotero document data.
+The host transport admits JSON POST only to the two native document endpoints,
+keeps catalog reads separate and supports the longer timeout needed for native
+dialogs. This is a source integration checkpoint; editor controls and final
+acceptance for this continuation are recorded separately when complete.
+
+Zotero support adds a shared references workspace, read-only online and desktop clients,
 offline CSL import/export, guarded DOCX citation and bibliography fields, and
 undoable editing. CrispCloud supplies its selected proxy/TLS transport and
 optional existing credential store. See [usage and formatting limits](../docs/zotero.md)
@@ -49,24 +57,37 @@ sources; the six changed managed files were freshly hashed. See the
 [integration receipt](../docs/validation/zotero-local-identity-20261115/recent-integration.json).
 No application test or build result is claimed for this source integration.
 
-The incremental Zotero engine checkpoint adds expected citation-identity checks
-for individual references and complete selections, metadata-only refresh without
-loading a citation style, and canonical identity handling in document sources.
-Its four changed/new managed files were freshly hashed; new regression tests
-are committed but were not executed. Shared-dialog wiring follows separately.
-See the [interim feature receipt](../docs/validation/zotero-local-identity-20261115/feature-checkpoint.json).
+The completed local-identity checkpoint connects unsynced local references to
+individual style previews, metadata-only atomic basic refresh, selected exports
+and formatted bibliographies. Every connected operation verifies the expected
+source identity. Desktop aggregate output additionally requires the database
+identifier and library-version headers provided by Zotero 10 or later; it
+refuses changed or incomplete selections. Older desktops can still use
+same-response previews and metadata refresh when the returned identity matches.
+
+The continuation adds 39 regression cases across client, model/DOCX, helper and
+widget suites. All are committed and source-reviewed; none was executed. No
+Dart parser, formatter, analyzer, application build or live Zotero acceptance
+is claimed. The final managed inventory contains 2,375 files: six changed files
+were freshly hashed in this checkpoint, and 2,369 immutable blobs/modes/sizes
+retain prior digest evidence, including the four files freshly hashed at the
+[interim engine checkpoint](../docs/validation/zotero-local-identity-20261115/feature-checkpoint.json).
+The [source review](../docs/validation/zotero-local-identity-20261115/REVIEW.md)
+and [complete source inventory and final receipt](../docs/validation/zotero-local-identity-20261115/final-integration.json)
+record the workflow limits, all managed source identities and verification scope.
 
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text and duplicate) and list validations
+ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text, begins/ends-with and duplicate) and list validations
 are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The previously recorded sheet/ODS
-development cohort is 494 tests; it was not rerun during this integration.
-The combined host qualification remains separately source-bound in the storage evidence.
+elapsed time formats survive XLSX saves. The latest upstream sheet/ODS
+development cohort is recorded as 495 tests; it was not rerun during this
+terminal integration. The combined host qualification remains separately
+source-bound in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
 and Excel wrap-text support. Import preserves the correct wrap flag for each

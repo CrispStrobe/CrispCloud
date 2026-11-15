@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Verify persistent source identities before connected Zotero item reads and
+  selected-source exports. Check complete selections before formatting; pin
+  desktop database identity and library version across aggregate requests.
+  Metadata-only item reads allow basic refresh without citation-style work.
+  New linked Word citations reject request aliases and malformed identities,
+  while imported opaque metadata remains preserved.
+
 - Add a credential-free desktop Zotero API client with fixed loopback routing,
   API version checks, database identity pinning, bounded pagination and local
   CSL response normalization. Separate local request aliases from persistent

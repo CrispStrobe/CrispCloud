@@ -103,7 +103,7 @@ String zoteroBasicBibliography(List<ZoteroCitationItem> items) {
     if (data != null) {
       unique.putIfAbsent(
         address != null
-            ? address.library.itemUri(address.key).toString()
+            ? address.canonicalUri.toString()
             : item.uris.isEmpty
             ? 'csl:${item.id}'
             : item.uris.first,
@@ -211,11 +211,7 @@ List<ZoteroCitationItem> zoteroImportCslJson(String input) {
     ];
     final uris = candidates
         .whereType<String>()
-        .where(
-          (value) =>
-              ZoteroSourceAddress.parse(value) != null ||
-              ZoteroSourceAddress.isLocalItemUri(value),
-        )
+        .where((value) => ZoteroSourceAddress.parse(value) != null)
         .toSet()
         .toList();
     result.add(
@@ -231,51 +227,62 @@ List<ZoteroCitationItem> zoteroImportCslJson(String input) {
   return result;
 }
 
-/// Only canonical remote library/item identifiers can be refreshed online.
+/// A persistent source identity and its API route are deliberately separate.
+/// Desktop local-user identities route through /users/0, while their original
+/// local user key remains part of the identity used for verification and dedupe.
 class ZoteroSourceAddress {
-  const ZoteroSourceAddress(this.library, this.key);
+  const ZoteroSourceAddress(this.library, this.key) : _localUserKey = null;
+
+  const ZoteroSourceAddress._local(
+    this.library,
+    this.key,
+    this._localUserKey,
+  );
+
   final ZoteroLibrary library;
   final String key;
+  final String? _localUserKey;
 
-  /// Unsynced desktop identities are preserved as links but cannot be routed
-  /// through the Web API. In particular, /users/0 is never a citation identity.
-  static bool isLocalItemUri(String value) {
-    final uri = Uri.tryParse(value);
-    return uri != null &&
-        const ['http', 'https'].contains(uri.scheme) &&
-        const ['zotero.org', 'www.zotero.org'].contains(uri.host) &&
-        uri.userInfo.isEmpty &&
-        !uri.hasPort &&
-        !uri.hasQuery &&
-        !uri.hasFragment &&
-        RegExp(r'^/users/local/[A-Za-z0-9]{8}/items/[A-Z0-9]{8}$')
-            .hasMatch(uri.path);
-  }
+  bool get isLocal => _localUserKey != null;
+
+  /// Unlike [ZoteroLibrary.apiPath], this distinguishes different local profiles.
+  String get scope => isLocal ? '/users/local/$_localUserKey' : library.apiPath;
+
+  /// Used for comparison only. Imported citation URIs are never rewritten.
+  Uri get canonicalUri => isLocal
+      ? Uri.parse('http://zotero.org$scope/items/$key')
+      : library.itemUri(key);
+
+  static bool isLocalItemUri(String value) => parse(value)?.isLocal == true;
 
   static ZoteroSourceAddress? parse(String value) {
-    final uri = Uri.tryParse(value);
-    if (uri == null ||
-        !const ['http', 'https'].contains(uri.scheme) ||
-        !const ['zotero.org', 'www.zotero.org'].contains(uri.host) ||
-        uri.userInfo.isNotEmpty ||
-        uri.hasPort ||
-        uri.hasQuery ||
-        uri.hasFragment) {
-      return null;
+    // Check the original authority before Uri normalizes explicit default ports.
+    // Validate the raw path too, so escapes and dot segments cannot become IDs.
+    final authority = RegExp(
+      r'^https?://(?:www\.)?zotero\.org/',
+      caseSensitive: false,
+    ).matchAsPrefix(value);
+    if (authority == null) return null;
+    final path = value.substring(authority.end - 1);
+    final local = RegExp(
+      r'^/users/local/([A-Za-z0-9]{8})/items/([A-Z0-9]{8})$',
+    ).matchAsPrefix(path);
+    if (local != null && local.end == path.length) {
+      return ZoteroSourceAddress._local(
+        ZoteroLibrary.localUser(),
+        local[2]!,
+        local[1]!,
+      );
     }
-    final parts = uri.pathSegments;
-    if (parts.length != 4 ||
-        parts[2] != 'items' ||
-        !RegExp(r'^[A-Z0-9]{8}$').hasMatch(parts[3])) {
-      return null;
-    }
-    final id = int.tryParse(parts[1]);
+    final remote = RegExp(
+      r'^/(users|groups)/([1-9][0-9]*)/items/([A-Z0-9]{8})$',
+    ).matchAsPrefix(path);
+    if (remote == null || remote.end != path.length) return null;
+    final id = int.tryParse(remote[2]!);
     if (id == null || id <= 0) return null;
-    final library = switch (parts[0]) {
-      'users' => ZoteroLibrary.user(id),
-      'groups' => ZoteroLibrary.group(id),
-      _ => null,
-    };
-    return library == null ? null : ZoteroSourceAddress(library, parts[3]);
+    final library = remote[1] == 'users'
+        ? ZoteroLibrary.user(id)
+        : ZoteroLibrary.group(id);
+    return ZoteroSourceAddress(library, remote[3]!);
   }
 }

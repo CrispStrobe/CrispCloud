@@ -1,6 +1,124 @@
 # Zotero validation — 15 November 2026
 
-## Desktop continuation: current code
+## Rich formatting continuation: current executed results
+
+The final shared source is pinned to Quds
+`f40aa887325982ea70c8285b25f8ff5b92a46eb9`, whose library/test trees are identical
+to the fully tested code commit `b09537fb34dd711118ae6df5872184b6e813d2df`.
+The final actual host qualification ran at
+`9f1c8e144958fc88451be558d09f304f35ea0640`.
+
+| Local check | Result |
+| --- | ---: |
+| Canonical engine/client/parser/Word import and related regressions | 232 passed |
+| Canonical shared Flutter controller/formatter/dialog regressions | 81 passed |
+| Actual CrispCloud service/transport/credential/target and ribbon tests | 23 passed |
+| **Combined selected tests** | **336 passed** |
+| Canonical changed-path and seven-target host strict analyzers | Clean |
+| Canonical changed Dart formatter check | Clean |
+| Normal Python vendor guard and Git-index guard | 2,379 managed entries verified |
+| Integrated terminal Bash/Zsh smoke, counted separately | 3 scenarios passed, none skipped |
+
+The preceding Quds source independently passed 171 baseline tests, including
+all **39 previously unexecuted cases**. Those overlapping baseline results are
+not added again to 336. This continuation adds **63 canonical regression cases**.
+
+Current evidence, exact source identities, manifests/locks, log hashes and
+reproduction steps are under
+[validation/zotero-rich-text-20261115](validation/zotero-rich-text-20261115/README.md).
+The actual host/vendored library hashes were unchanged during tests and analysis;
+analyzer source copies were byte-identical to production. Official Flutter
+3.47.8 / Dart 3.13.7 and genuine enforced Pub lockfiles were used. Production
+manifests and dependency constraints were not relaxed.
+
+The normal guarded sync verified **522 Quds + 1,857 standalone parser files**.
+The parser pin remains `4895712158127b2fc930d796e17035c3ca0dac62`.
+Main through Quds #42 and CrispCloud #152 and the newer terminal #140 commits
+through `4cd8065a` are included. No GitHub Actions were polled, awaited or rerun;
+new remote checkpoints use `[skip ci]`.
+
+Full native builds, live desktop/private-account connectivity, real OS-keychain
+acceptance and native Word/Zotero refresh remain unverified. This increment does
+not add a full document-wide CSL processor, native picker/HTTP citing adapter,
+active ODT transfer, small-caps/paragraph-layout rendering or new mixed-format
+inline citation generation. Earlier sections below retain their original source
+revisions and historical limitations.
+
+## Earlier local identity continuation: historical source review
+
+This continuation adds identity-checked desktop operations for unsynced
+`users/local/<localUserKey>/items/<itemKey>` references. It also checks numeric
+reference identities before connected document operations and prevents
+two-phase desktop exports from accepting a database or library-version change.
+
+**No Dart/Flutter tests, analyzer, formatter or full application builds were
+executed in this continuation.** The execution service returned
+`No usable execution environment is available` during setup attempts.
+No GitHub Actions were awaited, polled, rerun or used as validation.
+
+Fresh checks are repository/source checks: exact-context integration of recent
+main changes, remote checkpoint/head verification, source review of the new
+code/tests, and CrispCloud's managed-source comparison to its pinned canonical
+Quds source. These checks do not establish that the Dart code compiles or
+that the widget regressions pass.
+
+New regression cases cover URI/route separation, colliding item keys in
+different local profiles, wrong or missing returned identities, alias
+normalization, zero network calls for incompatible requests, exact selection
+completeness, server/database and library-version changes, and preservation of
+original DOCX identities. The existing online and desktop tests remain in place.
+
+### Run locally
+
+Use the repository's Flutter/Dart toolchain and resolve the workspace dependencies
+before running the tests. The shared packages are used by both hosts:
+
+```sh
+flutter pub get
+cd packages/quds_office_engine
+dart test test/zotero_client_test.dart test/zotero_identity_client_test.dart test/word_zotero_test.dart
+dart test test/ods_sheet_reader_test.dart test/word_content_control_fidelity_test.dart
+cd ../quds_office_editor
+flutter test test/word_zotero_format_test.dart test/word_zotero_dialog_test.dart test/word_zotero_controller_test.dart
+cd ../..
+```
+
+Run the repository analyzers/format check on the changed sources as well.
+For host acceptance, build a native Quds Studio or CrispCloud application, then
+use an unsynced Zotero library with the local API enabled. Exercise insertion,
+individual preview, basic refresh, bibliography and reference export; save and
+reopen the DOCX. Check that a different database with a colliding item key
+refuses refresh/export and leaves the document unchanged. Check source
+switching, a delayed response after caret/document changes, and an older Zotero
+client without the database header. Native Word/Zotero refresh acceptance
+remains outstanding.
+
+The current evidence is under
+[validation/zotero-local-identity-20261115](validation/zotero-local-identity-20261115/).
+The following older results retain their original source hashes and do not
+count as current test passes.
+
+### Host verification
+
+The new shared client/editor files are vendored from the exact Quds pin in
+`tool/office_fidelity_manifest.json`. The initial recent-work integration is
+recorded in [recent-integration.json](validation/zotero-local-identity-20261115/recent-integration.json).
+It compared all 2,374 then-managed blob identities, modes and lengths, freshly
+hashing the six changed canonical files; the standalone parser pin stayed
+`4895712158127b2fc930d796e17035c3ca0dac62`.
+
+For the current feature source, see the [final source integration receipt](validation/zotero-local-identity-20261115/final-integration.json). Unchanged immutable blobs reuse earlier SHA-256 evidence;
+changed/new files are freshly hashed and matched against Quds. This remote
+comparison does not mean the Python guard ran in this execution environment.
+
+From a resolved local CrispCloud checkout, rerun the host tests and guard:
+
+```sh
+flutter test test/office_zotero_test.dart test/office_zotero_ribbon_test.dart
+python3 tool/verify_office_fidelity.py --source ../quds_office_suite
+```
+
+## Earlier desktop continuation: historical results
 
 The new desktop API work is saved at Quds code commit
 `1cc4d251ebeb3e0cce205805e9183396da0c0df4` and CrispCloud code commit
@@ -41,7 +159,7 @@ results for their recorded sources, not fresh qualification of the new UI.
 
 No GitHub Actions were awaited. Checkpoints carry `[skip ci]`.
 
-## Final managed-source and integration verification
+## Earlier desktop managed-source verification
 
 The final integration checkpoint is CrispCloud
 `e43fc424c5cb58bec93ee33c3f81de15f4f921db`, pinned to Quds

@@ -6891,6 +6891,7 @@ class WordEditorController extends OfficeController {
   void insertZoteroBibliography({
     required String text,
     Map<String, dynamic>? metadata,
+    ZoteroFormattedText? formattedText,
   }) {
     if (_disposed || !config.allowsMutation) return;
     _assertZoteroTrackingMode();
@@ -6904,7 +6905,11 @@ class WordEditorController extends OfficeController {
       );
     }
     _insertBlocksAfterCurrent(<WmlBlock>[
-      WordZotero.bibliography(text: text, metadata: metadata),
+      WordZotero.bibliography(
+        text: text,
+        metadata: metadata,
+        formattedText: formattedText,
+      ),
     ]);
   }
 
@@ -6913,11 +6918,17 @@ class WordEditorController extends OfficeController {
     WmlZoteroField field, {
     required String text,
     Map<String, dynamic>? metadata,
+    ZoteroFormattedText? formattedText,
   }) {
     if (_disposed || !config.allowsMutation) return;
     _assertZoteroFieldOwner(field);
     _commitZoteroChange(field.paragraphs, () {
-      WordZotero.updateBibliography(field, text: text, metadata: metadata);
+      WordZotero.updateBibliography(
+        field,
+        text: text,
+        metadata: metadata,
+        formattedText: formattedText,
+      );
     });
   }
 

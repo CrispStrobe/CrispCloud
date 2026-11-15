@@ -165,6 +165,8 @@ enum SmlConditionalKind {
   notBetween,
   duplicate,
   contains,
+  beginsWith,
+  endsWith,
 }
 
 /// One conditional-format rule.
@@ -244,6 +246,10 @@ class SmlConditionalRule {
             (n < lower || n > upper);
       case SmlConditionalKind.contains:
         return text.toLowerCase().contains(formula.toLowerCase());
+      case SmlConditionalKind.beginsWith:
+        return text.toLowerCase().startsWith(formula.toLowerCase());
+      case SmlConditionalKind.endsWith:
+        return text.toLowerCase().endsWith(formula.toLowerCase());
       case SmlConditionalKind.duplicate:
         if (text.isEmpty) {
           return false;

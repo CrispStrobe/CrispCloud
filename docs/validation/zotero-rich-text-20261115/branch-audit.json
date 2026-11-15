@@ -1,0 +1,283 @@
+{
+  "recorded_utc": "2026-11-15T21:32:00.392738+00:00",
+  "repositories": {
+    "quds_office_suite": {
+      "head_at_audit": "b09537fb34dd711118ae6df5872184b6e813d2df",
+      "main": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+      "branch_count": 15,
+      "branches": [
+        {
+          "branch": "codex/zotero-support-20261115",
+          "head": "b09537fb34dd711118ae6df5872184b6e813d2df",
+          "status": "current"
+        },
+        {
+          "branch": "feat/conditional-between",
+          "head": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+          "status": "exact-tree-equivalent-to-merged-PR",
+          "merged_commit": "42b7f1e767454a962ef3a21342eac335bbf925db",
+          "tree": "1efc6bcb3f5321ed9a8841bd6c40e24ca4097b1d"
+        },
+        {
+          "branch": "feat/conditional-dxf",
+          "head": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+          "status": "exact-tree-equivalent-to-merged-PR",
+          "merged_commit": "85f5109c8067133bc30942d71b0be6ea9d9bf68c",
+          "tree": "9a26fc43ff926106c600f0d1ccecc7ed98d7fdc7"
+        },
+        {
+          "branch": "feat/conditional-operators",
+          "head": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+          "status": "exact-tree-equivalent-to-merged-PR",
+          "merged_commit": "8815cec9705f8a0b099f83f38d5eca75c5564171",
+          "tree": "6740bfb3162cb8e90f1c7c406bfbd9baa3b6c27c"
+        },
+        {
+          "branch": "feat/conditional-text",
+          "head": "752a94dfddf69522429f3025f9d25702499cb6da",
+          "status": "exact-tree-equivalent-to-merged-PR",
+          "merged_commit": "9f1efe0758f5e67f10cec05883cc587a3b08b14c",
+          "tree": "12d41ea32488adcc2da3d73eea7ffcd8ead9c0d5"
+        },
+        {
+          "branch": "feat/ods-conditional",
+          "head": "e59751246a200e7477657d0e4835bf77b153422c",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/ods-default-geometry",
+          "head": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/ods-default-style",
+          "head": "49b447324159595c59e64d8425b54a09f79ec736",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/ods-images",
+          "head": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/ods-validations",
+          "head": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+          "status": "exact-tree-equivalent-to-merged-PR",
+          "merged_commit": "c210315bee537776b556ae9885e907483b6df7bd",
+          "tree": "444a367d256d5631a82bc566d1a0a3d99a37c6f5"
+        },
+        {
+          "branch": "feat/sheet-hidden-sheets",
+          "head": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/sheet-hidden-state",
+          "head": "46850ae47e0241733750decb22417a0150e4b0e4",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/sdt-trailing-section-break",
+          "head": "8fc3d06be36da5c2176feb107c14245f61650d75",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/utf16-custom-xml",
+          "head": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+          "status": "ancestor"
+        },
+        {
+          "branch": "main",
+          "head": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+          "status": "ancestor"
+        }
+      ]
+    },
+    "CrispCloud": {
+      "head_at_audit": "4c5ccad11323f08865d386556d55bdfcf316136c",
+      "main": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+      "branch_count": 30,
+      "branches": [
+        {
+          "branch": "codex/ssh-terminal-tmux",
+          "head": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+          "status": "ancestor"
+        },
+        {
+          "branch": "codex/terminal-screen-workspace",
+          "head": "4cd8065aec7ade066a0a9f34438288c09d866333",
+          "status": "ancestor"
+        },
+        {
+          "branch": "codex/zotero-support-20261115",
+          "head": "4c5ccad11323f08865d386556d55bdfcf316136c",
+          "status": "current"
+        },
+        {
+          "branch": "docs/conditional-between",
+          "head": "073713474ea62525d9f5832da918407de333cd03",
+          "status": "ancestor"
+        },
+        {
+          "branch": "docs/conditional-complete",
+          "head": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+          "status": "ancestor"
+        },
+        {
+          "branch": "docs/conditional-formats",
+          "head": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+          "status": "ancestor"
+        },
+        {
+          "branch": "docs/ods-hidden-state",
+          "head": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+          "status": "ancestor"
+        },
+        {
+          "branch": "docs/ods-pictures",
+          "head": "128f55295107e3ada605b52d160165e03f726cb4",
+          "status": "ancestor"
+        },
+        {
+          "branch": "docs/ods-validations",
+          "head": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+          "status": "ancestor"
+        },
+        {
+          "branch": "docs/office-pin-20261115",
+          "head": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/hidden-sheets-ui",
+          "head": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/odt-headers",
+          "head": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/odt-images",
+          "head": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/odt-styles",
+          "head": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+          "status": "ancestor"
+        },
+        {
+          "branch": "feat/odt-textboxes",
+          "head": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/conditional-between-vendor",
+          "head": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/conditional-dxf-vendor",
+          "head": "b9b7932eca6213973803b5bb227464cccd3051d6",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/conditional-operators-vendor",
+          "head": "24ac26de023313dba726f8cdaabd16179c49da01",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/conditional-text-vendor",
+          "head": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/hidden-state-vendor",
+          "head": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/ods-conditional-vendor",
+          "head": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/ods-default-geometry-vendor",
+          "head": "29a2bb5158a316dcde5da776172e09027e04f78d",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/ods-default-style-vendor",
+          "head": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/ods-images-vendor",
+          "head": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+          "status": "ancestor"
+        },
+        {
+          "branch": "fix/ods-validations-vendor",
+          "head": "ee74601e71441fcac2b6defebff33ca04f538d12",
+          "status": "ancestor"
+        },
+        {
+          "branch": "integrate/sdt-section-break-20261115",
+          "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+          "status": "ancestor"
+        },
+        {
+          "branch": "integrate/utf16-custom-xml-20261115",
+          "head": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+          "status": "ancestor"
+        },
+        {
+          "branch": "integration/storage-carving-20261115",
+          "head": "5018aebb709b35f1c4d730c06e0f91187727751c",
+          "status": "ancestor"
+        },
+        {
+          "branch": "integration/storage-carving-local-20261115124645",
+          "head": "10891b06a6da9f2502960cdbfe34b30eed271665",
+          "status": "ancestor"
+        },
+        {
+          "branch": "main",
+          "head": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+          "status": "ancestor"
+        }
+      ]
+    }
+  },
+  "github_actions_polled_or_awaited": false,
+  "recent_pull_requests": {
+    "quds": {
+      "only_open": [
+        40
+      ],
+      "latest_merged": 42
+    },
+    "crispcloud": {
+      "open": [
+        140,
+        149
+      ],
+      "latest_merged": 152
+    }
+  },
+  "terminal_integration": {
+    "incoming_head": "4cd8065aec7ade066a0a9f34438288c09d866333",
+    "merge_commit": "3b8b79fcb9bfc07db4f1cf23e0bd60e77255aa1e",
+    "parents": [
+      "3eba643c70414bb9c2d45e612ee1531b86f65057",
+      "4cd8065aec7ade066a0a9f34438288c09d866333"
+    ],
+    "incoming_commits": [
+      "7054ab52c03c682e570563cfda16248afa0e3a30",
+      "4c4310881741978aaf284352a6043cdfaa2d22bd",
+      "4cd8065aec7ade066a0a9f34438288c09d866333"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "recorded_utc": "2026-11-15T21:27:13.138754+00:00",
+  "source_repository": "CrispStrobe/quds_office_suite",
+  "source_commit": "c0a858ac62afe41bcc68633c24ae1b29053001c6",
+  "source_tree": "30b04097405155e43be94474e83bcd6d00e037a3",
+  "host_base_commit": "3b8b79fcb9bfc07db4f1cf23e0bd60e77255aa1e",
+  "host_staged_tree": "b08bfa44ba5875cda2be20ed0c183f0f17154eee",
+  "managed_entries": 2379,
+  "counts": {
+    "quds": 522,
+    "legacy_parser": 1857
+  },
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "quds_verification": "Every managed Quds Git blob and mode matches the exact canonical commit; normal guard also compared local bytes.",
+  "legacy_verification": "Standalone pin, hashes, Git blobs and modes unchanged from host base; normal guard checked current hashes and exact inventory.",
+  "normal_guard": "passed",
+  "git_index_guard": "passed",
+  "complete_inventory": {
+    "archive": "crisp-vendor-inventory.json.gz",
+    "compression": "gzip",
+    "uncompressed_sha256": "a6aa224b241d211a48c138797cf13b93c9843ff2f559c3cd2a83427351a09c55",
+    "archive_sha256": "d4f38cff3ac9edf994ff3312e565a2167ba0324b9cca1b594abd058c056a8177",
+    "entries": 2379
+  }
+}

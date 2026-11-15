@@ -26,8 +26,8 @@ citation composer to edit its locator and affixes.
 For offline work, export references from Zotero as CSL JSON and paste the file
 contents into **Import CSL JSON**. The importer accepts single items, arrays,
 and the API's `items` envelope. Unlinked records retain embedded source data
-without claiming to be present in a Zotero library. Selected online references
-from one library can be copied as BibTeX, BibLaTeX, RIS or CSL JSON. Use
+without claiming to be present in a Zotero library. Selected linked references
+from one matching library can be copied as BibTeX, BibLaTeX, RIS or CSL JSON. Use
 **Document → Copy embedded CSL JSON** for a mixed-library or offline document.
 
 ## Use Zotero desktop without an API key
@@ -53,12 +53,33 @@ citation key without a persistent URI, the editor explicitly embeds an offline
 reference with a generated ID. The `/users/0` request alias never becomes a
 saved citation URI.
 
-Unsynced local links and detached offline sources currently use basic citations,
-basic bibliographies and **Document → Copy embedded CSL JSON**. Connected
-refresh, individual style previews, selected-reference export and
-Zotero-formatted bibliographies still require numeric user/group identities.
-A style absent from the desktop installation may cause Zotero itself to fetch
-it, even though library browsing works offline.
+Unsynced local links now also support **Refresh basic citations** and individual
+style previews through the matching desktop library. Basic refresh requests
+only metadata and CSL data, so it does not ask Zotero to load a citation style.
+With Zotero 10 or later, selected-reference exports and **Zotero bibliography**
+can also use those local links. A style absent from the desktop installation
+may cause Zotero itself to fetch it for previews or formatted bibliographies.
+
+The editor verifies the complete saved identity, including the local profile
+key. Another database with the same item key cannot silently replace the
+source. Original citation IDs, URI aliases, locators, affixes and unknown
+metadata remain intact. Two local profiles are separate libraries even though
+the local API routes both through `/users/0`.
+
+Before export or formatted bibliography, the client verifies every selected
+source in one bounded metadata request. It refuses missing, duplicate,
+additional or mismatched records. Desktop aggregate output requires Zotero's
+stable database identifier and an unchanged reported library version across
+verification and formatting. If the database or reported version changes, the
+result is refused and the document is left unchanged. This is a change check,
+not a server-side snapshot transaction.
+
+Older desktop versions can still browse, insert, refresh basic citations and
+provide individual previews when their item response proves the saved identity.
+For aggregate output with an older desktop, or a detached reference without a
+persistent URI, use the basic bibliography or **Document → Copy embedded CSL
+JSON**. A local link cannot be resolved by the online API; connect the matching
+Zotero desktop library instead.
 
 This option is available in native desktop builds. It is not the native Zotero
 citation picker or HTTP citing adapter. See the official
@@ -79,20 +100,49 @@ timeout and 8 MB response limit, and are closed when the editor closes. Errors d
 response bodies or diagnostic dumps. Keys never enter document metadata or
 reference exports. Zotero library access is read-only.
 
+## Formatted bibliographies and citation preservation
+
+Choose **Document → Zotero bibliography** to review a formatted result before
+inserting it. **Keep Zotero formatting** preserves bold, italics, underline,
+strike-through, superscript and subscript as native Word formatting. Numeric
+labels stay beside their bibliography entries. Turn the option off to edit and
+insert the text explicitly as plain text. Cancelling leaves the document
+unchanged. The reviewed result also refuses insertion if the document or caret
+changed while it was open.
+
+Small caps, hanging indents, paragraph spacing, multi-column margins and
+arbitrary CSS are simplified, with known limitations shown in the review.
+Entry order and line breaks are retained. Links are inert text; external
+resources and active content are never loaded. Malformed formatted output is
+refused rather than silently replacing a field.
+
+Rich bibliographies can be saved, reopened, updated and undone/redone. Rich
+replacement requires a complete bibliography paragraph without surrounding
+text or outside structural markers. The plain-text workflow remains available
+for other editable fields.
+
+Imported citations with several styled runs now keep their Zotero link,
+metadata and styles through DOCX saves, including Word simple fields. Numeric
+citation results and the locator label `page` are no longer confused with a
+Word page-number field. Editing a citation without changing its visible text
+keeps its rich result and processor-specific formatting metadata. The composer
+shows the actual field cache even when imported plain-text metadata is stale.
+
 ## Scope and preservation
 
 New citations use complex DOCX fields following Zotero field-code conventions
 and embed CSL source snapshots. Imported Zotero field JSON, cached text, and
-native document preferences are preserved on ordinary saves. Unsupported locked/nested/rich or
-multi-paragraph field replacements are refused; explicit unlink retains text.
+native document preferences are preserved on ordinary saves. Locked, nested,
+opaque or multi-paragraph field replacements are refused; explicit unlink retains text.
 Track-changes mode and unresolved revisions in affected paragraphs also guard
 reference edits. A changed document, caret, story or selection invalidates an
 asynchronous insertion instead of targeting a different place.
 
 Basic author-year formatting is an offline fallback. Zotero's individual
-citation preview is not a full document-wide CSL run. Complete online
-bibliographies are requested in one operation for at most 50 distinct sources
-in one library, then reviewed and inserted as plain text. Larger/mixed-library
+citation preview is not a full document-wide CSL run. Complete connected
+bibliographies use one identity-verification request followed by one formatted
+request for at most 50 distinct sources in one library, then are reviewed with
+the rich-formatting or plain-text choice described above. Larger/mixed-library
 sets can use the basic bibliography or CSL export. Refresh updates Quds basic
 citations for at most 50 distinct linked sources atomically; imported and
 custom-style caches are left alone. Bibliographies with imported nonempty
@@ -104,6 +154,8 @@ Full CSL numbering/disambiguation/ibid, the native Zotero desktop picker and
 HTTP citing adapter, ODT active-citation transfer, and native Word/Zotero refresh
 acceptance remain outside this increment. The native app talks directly to the
 local API; the desktop option is not exposed through a server-side proxy.
+New inline citations retain their existing atomic plain-result workflow;
+mixed-format inline citation generation is not added by this increment.
 
 ## Shared source and local checks
 
@@ -112,13 +164,14 @@ The implementation is maintained in
 `tool/office_fidelity_manifest.json` records the exact immutable Quds source and
 hashes of managed files. Its standalone legacy DOC parser pin is unchanged.
 
-The desktop continuation audited all current branches/recent PRs and brought
-terminal-workspace draft #140 into the integration branch. Main `50b45932`
-(through PR #148) and Quds main `c210315` (through PR #39) remain included.
-All feature work is saved incrementally to remote branches using `[skip ci]`.
-No GitHub Actions queue was awaited.
+The current local-identity continuation audited all live branches and recent
+PRs, integrated CrispCloud main through #152 and Quds main through #42, and
+included the newer terminal-workspace #140 changes. Work is saved incrementally
+to remote branches using `[skip ci]`. No GitHub Actions queue was awaited.
 
-Fresh checks passed 34 Quds API client tests and 16 tests of the actual
-production host transport, with clean focused analysis. They do not represent
-a full native or Flutter widget build. See [zotero-validation.md](zotero-validation.md)
-for exact source hashes, reproducible commands, logs and remaining limits.
+Local execution is available for this continuation. The frozen preceding
+Quds head passed 171 focused engine/editor tests, including all 39 regressions
+previously left unexecuted. This increment adds separate rich-formatting,
+DOCX preservation and UI regression coverage. See
+[zotero-validation.md](zotero-validation.md) for exact tested source identities,
+current results, reproducible commands and the remaining native acceptance limits.

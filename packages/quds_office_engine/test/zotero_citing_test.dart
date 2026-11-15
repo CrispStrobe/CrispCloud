@@ -1,0 +1,735 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:quds_office_engine/src/zotero/zotero_citing.dart';
+import 'package:quds_office_engine/src/zotero/zotero_client.dart';
+import 'package:test/test.dart';
+
+const _doc = 'quds-document-1';
+
+ZoteroHttpResponse _command(String name, List<Object?> arguments) =>
+    ZoteroHttpResponse(
+      statusCode: 200,
+      body: jsonEncode({'command': name, 'arguments': arguments}),
+    );
+
+ZoteroHttpResponse _complete([String doc = _doc]) =>
+    _command('Document.complete', [doc]);
+
+Map<String, Object?> _active() => {
+  'documentID': _doc,
+  'outputFormat': 'html',
+  'supportedNotes': ['footnotes'],
+  'supportsImportExport': false,
+  'supportsTextInsertion': false,
+  'supportsCitationMerging': false,
+  'processorName': 'Quds Office',
+};
+
+Map<String, Object?> _field(String id, {int note = 0}) => {
+  'id': id,
+  'code': 'ITEM CSL_CITATION {"citationID":"$id"}',
+  'text': 'Existing citation',
+  'noteIndex': note,
+};
+
+TypeMatcher<ZoteroCitingException> _failure(
+  ZoteroCitingErrorKind kind, {
+  bool restart = false,
+}) => isA<ZoteroCitingException>()
+    .having((e) => e.kind, 'kind', kind)
+    .having((e) => e.desktopMayNeedRestart, 'restart possible', restart);
+
+Future<void> _run(
+  ZoteroTransport transport, {
+  ZoteroCitingHandler? handler,
+  ZoteroCitingCancellation? cancellation,
+  void Function()? guard,
+  int maxCommands = 20000,
+  int maxPayloadBytes = 8 * 1024 * 1024,
+  Duration requestTimeout = const Duration(minutes: 10),
+}) =>
+    ZoteroCitingClient(
+      transport: transport,
+      maxCommands: maxCommands,
+      maxPayloadBytes: maxPayloadBytes,
+      requestTimeout: requestTimeout,
+    ).execute(
+      command: ZoteroCitingCommand.refresh,
+      documentId: _doc,
+      handler:
+          handler ??
+          (name, _) =>
+              name == 'Application.getActiveDocument' ? _active() : null,
+      cancellation: cancellation,
+      guard: guard,
+    );
+
+void main() {
+  test(
+    'refresh follows current object-based protocol and sends literal JSON',
+    () async {
+      final requests = <ZoteroHttpRequest>[];
+      final fields = [_field('citation-1'), _field('citation-2', note: 2)];
+      const prefs =
+          '<data><prefs><pref name="fieldType" value="Http"/></prefs></data>';
+      final replies = <ZoteroHttpResponse>[
+        _command('Application.getActiveDocument', []),
+        _command('Document.getDocumentData', [_doc]),
+        _command('Document.getFields', [_doc, 'Http']),
+        _command('Field.setText', [
+          _doc,
+          'citation-2',
+          '<i>Formatted</i> result',
+          true,
+        ]),
+        _command('Field.setCode', [
+          _doc,
+          'citation-2',
+          'ITEM CSL_CITATION {"updated":true}',
+        ]),
+        _command('Document.setDocumentData', [_doc, prefs]),
+        _command('Document.activate', [_doc]),
+        _complete(),
+      ];
+      final handled = <String>[];
+      await _run(
+        (request) async {
+          requests.add(request);
+          expect(request.uri.scheme, 'http');
+          expect(request.uri.host, 'localhost');
+          expect(request.uri.port, 23119);
+          expect(request.uri.userInfo, isEmpty);
+          expect(request.uri.hasQuery, isFalse);
+          expect(request.uri.hasFragment, isFalse);
+          expect(request.method, 'POST');
+          expect(request.followRedirects, isFalse);
+          expect(request.timeout, const Duration(minutes: 10));
+          expect(request.headers, {
+            'Content-Type': 'application/json',
+            'Zotero-Allowed-Request': '1',
+          });
+          return replies.removeAt(0);
+        },
+        handler: (name, args) {
+          handled.add(name);
+          if (name == 'Application.getActiveDocument') return _active();
+          expect(args.first, _doc);
+          if (name == 'Document.getDocumentData') return prefs;
+          if (name == 'Document.getFields') return fields;
+          return null;
+        },
+      );
+      expect(replies, isEmpty);
+      expect(requests.length, 8);
+      expect(requests.first.uri.path, '/connector/document/execCommand');
+      expect(
+        requests
+            .skip(1)
+            .every((r) => r.uri.path == '/connector/document/respond'),
+        isTrue,
+      );
+      final sent = requests.map((r) => jsonDecode(r.body!)).toList();
+      expect(sent[0], {'command': 'refresh', 'docId': _doc});
+      expect(sent[1], _active());
+      expect(sent[2], prefs);
+      expect(sent[3], fields);
+      expect(sent.skip(4), everyElement(isNull));
+      expect(handled.last, 'Document.complete');
+      expect(requests.last.body, 'null');
+    },
+  );
+
+  test(
+    'citation insertion registers temporary field and note conversion objects',
+    () async {
+      var n = 0;
+      final replies = [
+        _command('Application.getActiveDocument', []),
+        _command('Document.canInsertField', [_doc, 'Http']),
+        _command('Document.cursorInField', [_doc, 'Http']),
+        _command('Document.insertField', [_doc, 'Http', 1]),
+        _command('Field.setCode', [_doc, 'new-field', 'TEMP']),
+        _command('Field.select', [_doc, 'new-field']),
+        _command('Document.convert', [
+          _doc,
+          ['new-field'],
+          'Http',
+          [0],
+        ]),
+        _command('Field.delete', [_doc, 'new-field']),
+        _complete(),
+      ];
+      await ZoteroCitingClient(
+        transport: (r) async {
+          if (n == 0) {
+            expect(
+              (jsonDecode(r.body!) as Map<String, dynamic>)['command'],
+              'addEditCitation',
+            );
+          }
+          if (n == 2) expect(r.body, 'true');
+          if (n == 4) {
+            expect(
+              (jsonDecode(r.body!) as Map<String, dynamic>)['id'],
+              'new-field',
+            );
+          }
+          return replies[n++];
+        },
+      ).execute(
+        command: ZoteroCitingCommand.addEditCitation,
+        documentId: _doc,
+        handler: (name, _) => switch (name) {
+          'Application.getActiveDocument' => _active(),
+          'Document.canInsertField' => true,
+          'Document.insertField' => {
+            'id': 'new-field',
+            'code': '',
+            'text': '',
+            'noteIndex': 1,
+          },
+          _ => null,
+        },
+      );
+      expect(n, replies.length);
+    },
+  );
+
+  for (final command in ZoteroCitingCommand.values) {
+    test('starts the explicit ${command.name} command', () async {
+      var requests = 0;
+      await ZoteroCitingClient(
+        transport: (request) async {
+          requests++;
+          expect(jsonDecode(request.body!), {
+            'command': command.name,
+            'docId': _doc,
+          });
+          return _complete();
+        },
+      ).execute(command: command, documentId: _doc, handler: (_, _) => null);
+      expect(requests, 1);
+    });
+  }
+
+  test('initial 503 never responds to somebody else’s transaction', () async {
+    var requests = 0;
+    await expectLater(
+      _run((_) async {
+        requests++;
+        return ZoteroHttpResponse(
+          statusCode: 503,
+          body: 'private error details',
+        );
+      }),
+      throwsA(_failure(ZoteroCitingErrorKind.busy)),
+    );
+    expect(requests, 1);
+  });
+
+  test(
+    'handler error sends safe payload and drains alert/activate/complete',
+    () async {
+      final requests = <ZoteroHttpRequest>[];
+      final replies = [
+        _command('Application.getActiveDocument', []),
+        _command('Document.displayAlert', [_doc, 'An error occurred', 0, 0]),
+        _command('Document.activate', [_doc]),
+        _complete(),
+      ];
+      var handlers = 0;
+      await expectLater(
+        _run(
+          (request) async {
+            requests.add(request);
+            return replies.removeAt(0);
+          },
+          handler: (_, _) {
+            handlers++;
+            throw StateError('secret token and document content');
+          },
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.document)),
+      );
+      expect(handlers, 1);
+      expect(requests.length, 4);
+      final error = jsonDecode(requests[1].body!) as Map;
+      expect(error['error'], 'Alert');
+      expect(error['message'], isNot(contains('secret')));
+      expect(error.containsKey('stack'), isFalse);
+      expect(requests[2].body, '1');
+      expect(requests[3].body, 'null');
+      expect(
+        requests.skip(1).every((r) => r.timeout == const Duration(seconds: 5)),
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'abort cleanup never approves a question or dispatches mutations',
+    () async {
+      var n = 0;
+      var handled = 0;
+      final sent = <String>[];
+      final replies = [
+        _command('Document.unknown', [_doc]),
+        _command('Document.displayAlert', [_doc, 'Replace text?', 2, 3]),
+        _command('Field.setText', [_doc, 'field', 'replacement', true]),
+        _complete(),
+      ];
+      await expectLater(
+        _run(
+          (request) async {
+            sent.add(request.body!);
+            return replies[n++];
+          },
+          handler: (_, _) {
+            handled++;
+            return null;
+          },
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.unsupportedCommand)),
+      );
+      expect(handled, 0);
+      expect(sent[2], '0');
+      expect((jsonDecode(sent[3]) as Map<String, dynamic>)['error'], 'Alert');
+    },
+  );
+
+  test('cleanup is bounded and reports unfinished desktop ownership', () async {
+    var n = 0;
+    await expectLater(
+      _run((_) async {
+        n++;
+        return _command('Document.unknown', [_doc]);
+      }),
+      throwsA(
+        _failure(ZoteroCitingErrorKind.unsupportedCommand, restart: true),
+      ),
+    );
+    expect(n, 9);
+  });
+
+  test(
+    'mismatched document is rejected before handler and safely drained',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run(
+          (_) async => ++n == 1
+              ? _command('Document.getFields', ['different-document', 'Http'])
+              : _complete(),
+          handler: (_, _) => fail('wrong document dispatched'),
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+      );
+      expect(n, 2);
+    },
+  );
+
+  test('wrong terminal document never triggers another response', () async {
+    var n = 0;
+    await expectLater(
+      _run((_) async {
+        n++;
+        return _complete('different');
+      }),
+      throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+    );
+    expect(n, 1);
+  });
+
+  test(
+    'failed completion handler never sends a response after complete',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run((_) async {
+          n++;
+          return _complete();
+        }, handler: (_, _) => throw StateError('stale document')),
+        throwsA(_failure(ZoteroCitingErrorKind.document)),
+      );
+      expect(n, 1);
+    },
+  );
+
+  test(
+    'unsupported HTML/text insertion capability is refused before advertising it',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run(
+          (_) async => ++n == 1
+              ? _command('Application.getActiveDocument', [])
+              : _complete(),
+          handler: (_, _) => {..._active(), 'supportsTextInsertion': true},
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+      );
+      expect(n, 2);
+    },
+  );
+
+  test(
+    'stale tuple field response is rejected instead of corrupting Zotero state',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run(
+          (_) async => ++n == 1
+              ? _command('Document.getFields', [_doc, 'Http'])
+              : _complete(),
+          handler: (_, _) => [
+            ['old-tuple', 'ITEM CSL_CITATION {}', 0],
+          ],
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+      );
+    },
+  );
+
+  test('duplicate field identifiers cannot be advertised to Zotero', () async {
+    var n = 0;
+    await expectLater(
+      _run(
+        (_) async => ++n == 1
+            ? _command('Document.getFields', [_doc, 'Http'])
+            : _complete(),
+        handler: (_, _) => [_field('duplicate'), _field('duplicate')],
+      ),
+      throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+    );
+  });
+
+  test('unknown field cannot be modified or selected', () async {
+    var n = 0;
+    await expectLater(
+      _run(
+        (_) async => ++n == 1
+            ? _command('Field.setText', [_doc, 'unknown', 'text', true])
+            : _complete(),
+        handler: (_, _) => fail('unknown field dispatched'),
+      ),
+      throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+    );
+  });
+
+  test(
+    'bibliography dimensions and display-alert choices retain protocol types',
+    () async {
+      var n = 0;
+      final replies = [
+        _command('Document.setBibliographyStyle', [
+          _doc,
+          -720,
+          720,
+          240,
+          0,
+          [720],
+          1,
+        ]),
+        _command('Document.displayAlert', [_doc, 'Choose?', 1, 3]),
+        _complete(),
+      ];
+      await _run(
+        (request) async {
+          if (n == 2) expect(request.body, '2');
+          return replies[n++];
+        },
+        handler: (name, args) {
+          if (name == 'Document.displayAlert') return 2;
+          if (name == 'Document.setBibliographyStyle') expect(args[1], -720);
+          return null;
+        },
+      );
+    },
+  );
+
+  test(
+    'invalid alert answer is an error instead of implicit confirmation',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run(
+          (_) async => ++n == 1
+              ? _command('Document.displayAlert', [_doc, 'Continue?', 2, 2])
+              : _complete(),
+          handler: (_, _) => 2,
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.invalidResponse)),
+      );
+    },
+  );
+
+  test(
+    'command limit accepts completion but refuses further document work',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run(
+          (_) async => switch (++n) {
+            1 => _command('Document.activate', [_doc]),
+            2 => _command('Document.getDocumentData', [_doc]),
+            _ => _complete(),
+          },
+          maxCommands: 1,
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.limit)),
+      );
+      expect(n, 3);
+      n = 0;
+      await _run(
+        (_) async =>
+            ++n == 1 ? _command('Document.activate', [_doc]) : _complete(),
+        maxCommands: 1,
+      );
+      expect(n, 2);
+    },
+  );
+
+  test(
+    'outgoing JSON limit counts UTF-8 bytes and never submits partial fields',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run(
+          (request) async {
+            n++;
+            expect(request.body, isNot(contains('界')));
+            return n == 1
+                ? _command('Document.getDocumentData', [_doc])
+                : _complete();
+          },
+          maxPayloadBytes: 1024,
+          handler: (_, _) => List.filled(400, '界').join(),
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.limit)),
+      );
+      expect(n, 2);
+    },
+  );
+
+  test('incoming JSON nesting and malformed responses are bounded', () async {
+    for (final body in [
+      '{bad JSON',
+      '${List.filled(65, '[').join()}0${List.filled(65, ']').join()}',
+    ]) {
+      var n = 0;
+      await expectLater(
+        _run(
+          (_) async => ++n == 1
+              ? ZoteroHttpResponse(statusCode: 200, body: body)
+              : _complete(),
+        ),
+        throwsA(
+          isA<ZoteroCitingException>().having(
+            (e) => e.desktopMayNeedRestart,
+            'cleanup',
+            false,
+          ),
+        ),
+      );
+      expect(n, 2);
+    }
+  });
+
+  test(
+    'cyclic and non-JSON handler values never escape to transport',
+    () async {
+      final cyclic = <String, Object?>{};
+      cyclic['cycle'] = cyclic;
+      for (final extra in [cyclic, double.nan, Object()]) {
+        var n = 0;
+        await expectLater(
+          _run(
+            (_) async => ++n == 1
+                ? _command('Application.getActiveDocument', [])
+                : _complete(),
+            handler: (_, _) => {..._active(), 'extra': extra},
+          ),
+          throwsA(isA<ZoteroCitingException>()),
+        );
+        expect(n, 2);
+      }
+    },
+  );
+
+  test(
+    'transport failure never retries POST or blindly sends cleanup',
+    () async {
+      var n = 0;
+      await expectLater(
+        _run((_) async {
+          n++;
+          if (n == 1) return _command('Application.getActiveDocument', []);
+          throw StateError('private transport response');
+        }),
+        throwsA(_failure(ZoteroCitingErrorKind.network, restart: true)),
+      );
+      expect(n, 2);
+    },
+  );
+
+  test(
+    'request deadline bounds a transport that fails to enforce timeout',
+    () async {
+      var n = 0;
+      final pending = Completer<ZoteroHttpResponse>();
+      await expectLater(
+        _run((_) {
+          n++;
+          return pending.future;
+        }, requestTimeout: const Duration(milliseconds: 5)),
+        throwsA(_failure(ZoteroCitingErrorKind.network, restart: true)),
+      );
+      expect(n, 1);
+      pending.complete(_complete());
+    },
+  );
+
+  test('cancellation before start makes no request', () async {
+    final cancellation = ZoteroCitingCancellation()
+      ..cancel()
+      ..cancel();
+    await expectLater(
+      _run(
+        (_) async => fail('cancelled start sent'),
+        cancellation: cancellation,
+      ),
+      throwsA(_failure(ZoteroCitingErrorKind.cancelled)),
+    );
+  });
+
+  test(
+    'cancellation awaits pending native POST then aborts known command',
+    () async {
+      final cancellation = ZoteroCitingCancellation();
+      final pending = Completer<ZoteroHttpResponse>();
+      var n = 0;
+      final result = _run(
+        (request) async {
+          n++;
+          if (n == 1) return pending.future;
+          expect(
+            (jsonDecode(request.body!) as Map<String, dynamic>)['error'],
+            'Alert',
+          );
+          return _complete();
+        },
+        cancellation: cancellation,
+        handler: (_, _) => fail('cancelled command dispatched'),
+      );
+      final assertion = expectLater(
+        result,
+        throwsA(_failure(ZoteroCitingErrorKind.cancelled)),
+      );
+      await Future<void>.delayed(Duration.zero);
+      cancellation.cancel();
+      await Future<void>.delayed(Duration.zero);
+      expect(n, 1);
+      pending.complete(_command('Application.getActiveDocument', []));
+      await assertion;
+      expect(n, 2);
+    },
+  );
+
+  test(
+    'cancellation interrupts a pending application dialog and drains',
+    () async {
+      final cancellation = ZoteroCitingCancellation();
+      final waiting = Completer<Object?>();
+      final entered = Completer<void>();
+      var n = 0;
+      final result = _run(
+        (_) async => ++n == 1
+            ? _command('Application.getActiveDocument', [])
+            : _complete(),
+        cancellation: cancellation,
+        handler: (_, _) {
+          entered.complete();
+          return waiting.future;
+        },
+      );
+      final assertion = expectLater(
+        result,
+        throwsA(_failure(ZoteroCitingErrorKind.cancelled)),
+      );
+      await entered.future;
+      cancellation.cancel();
+      await assertion;
+      waiting.completeError(StateError('late dialog error must be observed'));
+      await Future<void>.delayed(Duration.zero);
+      expect(n, 2);
+    },
+  );
+
+  test(
+    'guard is rechecked after asynchronous handler before sending data',
+    () async {
+      var changed = false;
+      var n = 0;
+      await expectLater(
+        _run(
+          (request) async {
+            n++;
+            if (n == 1) return _command('Application.getActiveDocument', []);
+            expect(
+              (jsonDecode(request.body!) as Map<String, dynamic>)['error'],
+              'Alert',
+            );
+            return _complete();
+          },
+          guard: () {
+            if (changed) throw StateError('changed');
+          },
+          handler: (_, _) async {
+            changed = true;
+            return _active();
+          },
+        ),
+        throwsA(_failure(ZoteroCitingErrorKind.document)),
+      );
+    },
+  );
+
+  test(
+    'single-flight gate spans instances and releases after completion',
+    () async {
+      final pending = Completer<ZoteroHttpResponse>();
+      final first = _run((_) => pending.future);
+      await expectLater(
+        _run((_) async => fail('concurrent transaction sent')),
+        throwsA(_failure(ZoteroCitingErrorKind.busy)),
+      );
+      pending.complete(_complete());
+      await first;
+      await _run((_) async => _complete());
+    },
+  );
+
+  test(
+    'request diagnostics omit body and headers; catalog defaults unchanged',
+    () {
+      final uri = Uri.parse(
+        'http://localhost:23119/connector/document/respond',
+      );
+      final request = ZoteroHttpRequest(
+        uri: uri,
+        headers: {'Secret': 'api-secret'},
+        method: 'POST',
+        body: '{"private":"document-secret"}',
+      );
+      expect(
+        request.toString(),
+        'ZoteroHttpRequest(POST /connector/document/respond)',
+      );
+      final catalog = ZoteroHttpRequest(uri: uri, headers: {});
+      expect(catalog.method, 'GET');
+      expect(catalog.body, isNull);
+      expect(catalog.timeout, isNull);
+    },
+  );
+}

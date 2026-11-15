@@ -1486,6 +1486,53 @@ void conditionalFormatTests() {
     expect(sheetXml, contains('type="duplicateValues"'));
   });
 
+  test('ODS begins-with and ends-with conditions keep their text', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell>'
+        '<x:p>apple</x:p></t:table-cell></t:table-row>'
+        '<cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" '
+        'cal:value="begins-with(&quot;app&quot;)"/>'
+        '</cal:conditional-format>'
+        '<cal:conditional-format cal:target-range-address="Data.B1:Data.B10">'
+        '<cal:condition cal:apply-style-name="cf" '
+        'cal:value="ends-with(&quot;ple&quot;)"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.conditionalFormats[0].kind, SmlConditionalKind.beginsWith);
+    expect(sheet.conditionalFormats[1].kind, SmlConditionalKind.endsWith);
+    expect(
+      sheet.conditionalFormats[0].matches(sheet.cellA1('A1'), sheet),
+      isTrue,
+    );
+    expect(
+      sheet.conditionalFormats[1].matches(sheet.cellA1('A1'), sheet),
+      isTrue,
+    );
+    sheet.cellA1('A1').value = 'pear';
+    expect(
+      sheet.conditionalFormats[0].matches(sheet.cellA1('A1'), sheet),
+      isFalse,
+    );
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('type="beginsWith"'));
+    expect(sheetXml, contains('type="endsWith"'));
+    expect(sheetXml, contains('text="app"'));
+  });
+
   test('ODS between conditions keep both bounds', () async {
     final book = OdsSheetReader.readBytes(
       _ods(
