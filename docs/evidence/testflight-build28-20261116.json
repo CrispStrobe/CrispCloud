@@ -1,0 +1,66 @@
+{
+  "recorded_utc": "2026-11-15T23:27:39.574890+00:00",
+  "version": "1.3.4+28",
+  "candidate_tag": "testflight-v1.3.4-28",
+  "office_source": "216e5ba38110349d6a002a5a58e0ae27825c8bef",
+  "office_source_tag": "crispcloud-build28-office",
+  "managed_office_files": 2391,
+  "legacy_doc_parser": "4895712158127b2fc930d796e17035c3ca0dac62",
+  "crisperbooks": "505d3d7bfb922e5f0d77b7230cd38b0e266d0606",
+  "checks": {
+    "host_terminal_office": {
+      "passed": 584,
+      "skipped": 2,
+      "scope": "Focused host cohort before the final ODS-only follow-up; Windows ConPTY and case-sensitive-filesystem conditions skipped",
+      "log_sha256": "f6685a93635d7b989f1cc853028a9af6f0b7a2bf05a69cb3864f415271e4169d"
+    },
+    "quds_engine": {
+      "passed": 465,
+      "skipped": 0,
+      "scope": "Word, Zotero, ODS and affected serialization cohort at the pinned final engine source",
+      "log_sha256": "7d64d000dda43fa52c4754e75d0d891f23270b03e718fa89f6b61e0289d45434"
+    },
+    "quds_editor": {
+      "passed": 117,
+      "skipped": 0,
+      "scope": "Word/Zotero controller, formatting and dialog cohort; editor and Word implementation bytes unchanged by the final ODS-only follow-up",
+      "log_sha256": "85e9449766afbbcfff48a15777e07b7ab65049a3eac81f55c0f901ff4286502c"
+    },
+    "final_office_host_and_sqlite": {
+      "passed": 38,
+      "skipped": 0,
+      "log_sha256": "d0ae644a5e8d4c23398c2700c441f915cc61b1e130757ecf4e28b6287cc272ff"
+    },
+    "openssh_loopback": {
+      "passed": 2,
+      "skipped": 1,
+      "scope": "Disposable native loopback jump/target servers; interactive SSH PTY omitted because it needs login-record permissions",
+      "log_sha256": "0b92cd49e4d647f72db0f8cc92b585da98c96b0c5a62a159ca9316d279aff40e"
+    },
+    "testflight_distribution_controls": {
+      "tests": 27,
+      "assertions": 146,
+      "log_sha256": "6e2ae78c39b045baea1dc1ff6f585b8255d7dfe2943de5c86d99e345b3cef9e0"
+    },
+    "apple_sqlite_wrapper_controls": {
+      "tests": 5,
+      "log_sha256": "569ba1e263269327911174c3ab33fcb68b884b04548bd331a4a6a7e7dd8ed000"
+    },
+    "apple_export_controls": {
+      "tests": 38,
+      "log_sha256": "6f31742aafa7298e8e0024075e831c763e4186f2119d369cc34e34bf0d166227"
+    },
+    "release_publication_controls": {
+      "tests": 12,
+      "log_sha256": "ee064c4e6e8c613195c18af0cdf7e17cffbd83c126026a1d539a18762fc3914d"
+    }
+  },
+  "additional_checks": [
+    "Host and shared implementation analysis clean",
+    "Zsh shell helper live check passed; bundled Bash 3.2 skipped because 4.4+ is required",
+    "GET-only Apple group/build guards passed for the existing IOS and MAC_OS builds and both reviewed groups",
+    "All three mirrored Apple SQLite assets match the pinned upstream hashes; actual ARM SQLite/Drift transaction and rollback passed",
+    "No live Zotero/Word or native Windows acceptance claimed"
+  ],
+  "testflight_status": "Candidate prepared; upload, Apple processing and beta review are separate hosted gates. See workflow runs for current status."
+}
