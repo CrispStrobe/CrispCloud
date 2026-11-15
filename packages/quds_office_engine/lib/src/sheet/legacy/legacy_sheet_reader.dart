@@ -152,6 +152,10 @@ abstract final class LegacyHtmlSheetReader {
           final body = cellMatch.group(2)!;
           final rowspan = _span(attributes, 'rowspan');
           final colspan = _span(attributes, 'colspan');
+          final isHeader = cellMatch
+              .group(0)!
+              .toLowerCase()
+              .startsWith('<th');
           final numeric = RegExp(
             r'x:num\s*=\s*"([^"]*)"',
             caseSensitive: false,
@@ -167,6 +171,9 @@ abstract final class LegacyHtmlSheetReader {
             target
               ..value = raw
               ..type = SmlCellType.string;
+          }
+          if (isHeader) {
+            target.fontBold = true;
           }
           if (rowspan > 1 || colspan > 1) {
             sheet.merges.add(

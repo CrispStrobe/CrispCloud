@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/excel-legacy-import",
-  "source_commit": "ff1c8088b6487cba4ae10f3d5ef1eaee5224eb0f",
+  "source_commit": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1846,7 +1846,7 @@
     "packages/quds_office_engine/lib/src/sheet/formula/formula_ast.dart": "ad6c6e96375c0a68269a593e6dc74fd09314514f6abbc8c9a2e49f21a0f301b8",
     "packages/quds_office_engine/lib/src/sheet/formula/formula_eval.dart": "c9d13f08e8388c22e12567d50cc57c4f1ed70f340b338bfed39facac59c1d45b",
     "packages/quds_office_engine/lib/src/sheet/formula/formula_functions.dart": "53f4270baaa0aadf5b18da06fb86b81a084a199abdb2e9edb734e24f3a6f5d92",
-    "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart": "15f040e3a59b61272e8b79ada83863d5cb132bf0a77fff227e9476fbb3bf6095",
+    "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart": "e01d0c556c61c414e569c5b959b59b968b9e7dc33ea18dd01d9466461b4a004f",
     "packages/quds_office_engine/lib/src/sheet/model/sheet_rename.dart": "93e0c9103222bc05ddbc08929983129f3285da15839695bc3a2384c68a91089f",
     "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart": "dced1fae633e24179154becb1e1fb09b7bf27ee5838e3d52548df6b2ea615923",
     "packages/quds_office_engine/lib/src/sheet/model/sml_power_query.dart": "610f105eef406d0b80f0ac9e8c9c22fb7972a5cf82a9e28e618ce0bf4a19aae7",
