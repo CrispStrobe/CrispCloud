@@ -122,6 +122,25 @@ void main() {
     expect(WordZoteroDocumentData.toNative(json), json);
   });
 
+  test('native override actually replaces a stored HTTP field preference', () {
+    final http = WordZoteroDocumentData.toHttp(_native);
+    final document = _documentWithProperties(
+      _properties(_nativeProperties(http)),
+    );
+    final native = WordZoteroDocumentData.read(document);
+    expect(native, contains('value="Field"'));
+    document.zoteroDocumentData = native;
+    WordSerializer().write(document);
+    final stored = _savedProperties(document)
+        .childrenNamed('property', namespaceUri: _custom)
+        .map(
+          (property) => property.firstChild('lpwstr', namespaceUri: _vt)!.text,
+        )
+        .join();
+    expect(stored, native);
+    expect(stored, isNot(contains('value="Http"')));
+  });
+
   for (final type in ['Bookmark', 'ReferenceMark', '', 'unknown']) {
     test('rejects unsupported field storage $type', () {
       expect(
@@ -378,5 +397,120 @@ void main() {
       ..zoteroDocumentData = 'x' * (WordZoteroDocumentData.maxDataLength + 1);
     expect(() => WordSerializer().write(document), throwsFormatException);
     expect(document.package, isNull);
+  });
+
+  test('a surrogate pair at the native chunk boundary stays intact', () {
+    const prefix = '{"prefs":{"fieldType":"Field"},"extension":"';
+    final data = '$prefix${'a' * (254 - prefix.length)}😀tail"}';
+    final document = WmlDocument.empty()..zoteroDocumentData = data;
+    WordSerializer().write(document);
+    document.zoteroDocumentData = null;
+    expect(WordZoteroDocumentData.read(document), data);
+    final values = _savedProperties(document)
+        .childrenNamed('property', namespaceUri: _custom)
+        .map(
+          (property) => property.firstChild('lpwstr', namespaceUri: _vt)!.text,
+        )
+        .toList();
+    expect(values.first.length, 254);
+    expect(values[1], startsWith('😀'));
+    expect(values.join(), isNot(contains('\uFFFD')));
+  });
+
+  test('all-space native chunks retain significant JSON string whitespace', () {
+    final data = '{"prefs":{"fieldType":"Field"},"unknown":"${' ' * 700}"}';
+    final document = _documentWithProperties(
+      _properties(_nativeProperties(data)),
+    );
+    expect(WordZoteroDocumentData.read(document), data);
+    document.zoteroDocumentData = data.replaceFirst('Field', 'Http');
+    WordSerializer().write(document);
+    document.zoteroDocumentData = null;
+    expect(WordZoteroDocumentData.read(document), data);
+  });
+
+  test('XML adaptation retains unknown all-space text and comments', () {
+    final data = _native.replaceFirst('Füße 😀', '   <!--keep-->  ');
+    final http = WordZoteroDocumentData.toHttp(data);
+    expect(http, contains('>   <!--keep-->  </extension>'));
+  });
+
+  for (final data in [
+    '{"prefs":{"fieldType":"Field"},"prefs":{"fieldType":"Http"}}',
+    r'{"prefs":{"fieldType":"Field","field\u0054ype":"Http"}}',
+    '{"prefs":{"fieldType":"Field"},"unknown":{"key":1,"key":2}}',
+    '{"prefs":{"fieldType":"Field"},"nested":${'[' * 66}0${']' * 66}}',
+    '<data><prefs><pref name="fieldType" value="Field"/><pref name="noteType" value="1"/><pref name="noteType" value="2"/></prefs></data>',
+  ]) {
+    test('ambiguous or excessive preferences are refused ${data.hashCode}', () {
+      expect(() => WordZoteroDocumentData.toHttp(data), throwsFormatException);
+    });
+  }
+
+  test('JSON strings may contain escaped quotes and nesting characters', () {
+    final values = {
+      'prefs': {'fieldType': 'Field'},
+      'unknown': [
+        null,
+        true,
+        4.2,
+        {'quoted': '\\"[]{}'},
+      ],
+    };
+    expect(
+      jsonDecode(
+        WordZoteroDocumentData.toNative(
+          WordZoteroDocumentData.toHttp(jsonEncode(values)),
+        ),
+      ),
+      values,
+    );
+  });
+
+  for (final invalid in ['\u0000', '\uD800', '&#0;', '&#x110000;']) {
+    test(
+      'invalid XML characters cannot be silently replaced ${invalid.hashCode}',
+      () {
+        expect(
+          () => WordZoteroDocumentData.toHttp(
+            _native.replaceFirst('Füße 😀', invalid),
+          ),
+          throwsFormatException,
+        );
+      },
+    );
+  }
+
+  test('truncated UTF-16 custom properties are refused', () {
+    final document = _documentWithProperties(
+      '',
+      bytes: Uint8List.fromList([0xff, 0xfe, 0x3c]),
+    );
+    expect(() => WordZoteroDocumentData.read(document), throwsFormatException);
+  });
+
+  test('Field adaptation cannot exceed the bounded input size', () {
+    const prefix = '{"prefs":{"fieldType":"Http"},"unknown":"';
+    final data =
+        '$prefix${'a' * (WordZoteroDocumentData.maxDataLength - prefix.length - 2)}"}';
+    expect(data.length, WordZoteroDocumentData.maxDataLength);
+    expect(() => WordZoteroDocumentData.toNative(data), throwsFormatException);
+  });
+
+  test('custom-property output uses the reader UTF-8 byte limit', () {
+    final xml = _properties([_property('CustomerValue', '界' * 650000)]);
+    final document = _documentWithProperties(xml);
+    final package = document.package!;
+    final oldLength = package.getPart('/unusual/owned-properties.xml')!.length;
+    expect(oldLength, lessThan(2 * 1024 * 1024));
+    final originalBody = package.getPart('/word/document.xml')!.readText();
+    document.paragraphs.first.inlines.add(WmlRun(text: 'Unsaved edit'));
+    document.zoteroDocumentData = jsonEncode({
+      'prefs': {'fieldType': 'Field'},
+      'unknown': 'é' * 100000,
+    });
+    expect(() => WordSerializer().write(document), throwsFormatException);
+    expect(package.getPart('/unusual/owned-properties.xml')!.length, oldLength);
+    expect(package.getPart('/word/document.xml')!.readText(), originalBody);
   });
 }
