@@ -10,6 +10,46 @@ extension TerminalControlsStrings on BuildContext {
 
 const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
 const _values = <String, List<String>>{
+  'Zoom active pane': [
+    'Aktiven Bereich vergrößern',
+    'Agrandir le volet actif',
+    'Ampliar el panel activo',
+    'Ampliar o painel ativo',
+    '放大当前窗格',
+    'アクティブなペインを拡大',
+    '활성 창 확대',
+    'تكبير الجزء النشط',
+  ],
+  'Restore panes': [
+    'Bereiche wiederherstellen',
+    'Rétablir les volets',
+    'Restaurar paneles',
+    'Restaurar painéis',
+    '恢复窗格',
+    'ペインを元に戻す',
+    '창 배치 복원',
+    'استعادة الأجزاء',
+  ],
+  'Previous pane': [
+    'Vorheriger Bereich',
+    'Volet précédent',
+    'Panel anterior',
+    'Painel anterior',
+    '上一个窗格',
+    '前のペイン',
+    '이전 창',
+    'الجزء السابق',
+  ],
+  'Next pane': [
+    'Nächster Bereich',
+    'Volet suivant',
+    'Panel siguiente',
+    'Painel seguinte',
+    '下一个窗格',
+    '次のペイン',
+    '다음 창',
+    'الجزء التالي',
+  ],
   'New terminal': [
     'Neues Terminal',
     'Nouveau terminal',

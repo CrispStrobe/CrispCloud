@@ -134,7 +134,7 @@ void main() {
   testWidgets(
     'future data disables saving and remains intact on both dialogs',
     (tester) async {
-      raw = '{"version":2,"arrangements":[]}';
+      raw = '{"version":99,"arrangements":[]}';
       await mount(tester);
       await open(tester, 'Open save');
       expect(find.text('Could not load arrangements.'), findsOneWidget);
@@ -149,7 +149,7 @@ void main() {
       expect(find.text('Could not load arrangements.'), findsOneWidget);
       expect(find.byType(ListTile), findsNothing);
       await cancel(tester);
-      expect(raw, '{"version":2,"arrangements":[]}');
+      expect(raw, '{"version":99,"arrangements":[]}');
       expect(tester.takeException(), isNull);
     },
   );

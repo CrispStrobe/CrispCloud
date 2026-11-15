@@ -113,7 +113,9 @@ void main() {
   Future<void> layout(WidgetTester tester, String label) async {
     await tester.tap(find.byKey(const ValueKey('terminal-layout')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(label).last);
+    final item = find.text(label).last;
+    await tester.ensureVisible(item);
+    await tester.tap(item);
     await tester.pumpAndSettle();
   }
 
@@ -228,15 +230,15 @@ void main() {
     await layout(tester, 'Split top and bottom');
     expect(
       fixtures,
-      hasLength(2),
-      reason: 'Changing split direction reuses both sessions',
+      hasLength(3),
+      reason: 'Splitting again creates a nested pane beside the active session',
     );
-    expect(find.byType(TerminalView), findsNWidgets(2));
+    expect(find.byType(TerminalView), findsNWidgets(3));
     expect(
       tester.getRect(viewFinder(0)).bottom,
-      lessThan(tester.getRect(viewFinder(1)).top),
+      lessThan(tester.getRect(viewFinder(2)).top),
     );
-    expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+    expect(view(tester, 2).focusNode!.hasFocus, isTrue);
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });
@@ -357,6 +359,151 @@ void main() {
   );
 
   testWidgets(
+    'eight nested panes retain views through zoom and compact layouts',
+    (tester) async {
+      await mount(tester);
+      final original = tester.state<TerminalViewState>(viewFinder(0));
+      fixtures[0].session.terminal.write('retained first pane\r\n');
+      await layout(tester, 'Split side by side');
+      await layout(tester, 'Split top and bottom');
+      await activate(tester, 1);
+      await layout(tester, 'Split top and bottom');
+      await layout(tester, 'Split side by side');
+      await activate(tester, 1);
+      await layout(tester, 'Split side by side');
+      await activate(tester, 2);
+      await layout(tester, 'Split side by side');
+      await activate(tester, 3);
+      await layout(tester, 'Split side by side');
+      expect(fixtures, hasLength(8));
+      expect(find.byType(TerminalView), findsNWidgets(8));
+      expect(tester.state<TerminalViewState>(viewFinder(0)), same(original));
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const ValueKey('terminal-new-tab')))
+            .onPressed,
+        isNull,
+      );
+      final rectangles = [
+        for (var i = 0; i < 8; i++) tester.getRect(viewFinder(i)),
+      ];
+      for (var i = 0; i < rectangles.length; i++) {
+        for (var j = i + 1; j < rectangles.length; j++) {
+          expect(rectangles[i].overlaps(rectangles[j]), isFalse);
+        }
+      }
+
+      await layout(tester, 'Zoom active pane');
+      expect(find.byType(TerminalView), findsOneWidget);
+      expect(view(tester, 7).focusNode!.hasFocus, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ, character: 'z');
+      await tester.pump();
+      expect(fixtures[7].connection.input.join(), 'z');
+      expect(fixtures.take(7).every((f) => f.connection.input.isEmpty), isTrue);
+      await tester.tap(find.byKey(const ValueKey('terminal-restore-panes')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TerminalView), findsNWidgets(8));
+
+      tester.view.physicalSize = const Size(400, 900);
+      await tester.pumpAndSettle();
+      expect(find.byType(TerminalView), findsOneWidget);
+      fixtures[0].connection.outputController.add(
+        'background in compact view\r\n',
+      );
+      await tester.pump();
+      tester.view.physicalSize = const Size(1000, 900);
+      await tester.pumpAndSettle();
+      expect(find.byType(TerminalView), findsNWidgets(8));
+      expect(tester.state<TerminalViewState>(viewFinder(0)), same(original));
+      expect(
+        fixtures[0].session.terminal.buffer.getText(),
+        contains('retained first pane'),
+      );
+      expect(
+        fixtures[0].session.terminal.buffer.getText(),
+        contains('background in compact view'),
+      );
+      expect(fixtures.every((f) => f.connection.closes == 0), isTrue);
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
+  testWidgets(
+    'nested close and hidden-tab replacement leave siblings connected',
+    (tester) async {
+      await mount(tester);
+      await layout(tester, 'Split side by side');
+      await layout(tester, 'Split top and bottom');
+      final first = tester.state<TerminalViewState>(viewFinder(0));
+      final second = tester.state<TerminalViewState>(viewFinder(1));
+      await newTab(tester);
+      expect(fixtures, hasLength(4));
+      expect(find.byType(TerminalView), findsNWidgets(3));
+      expect(viewFinder(2), findsNothing);
+      expect(viewFinder(3), findsOneWidget);
+      expect(tester.state<TerminalViewState>(viewFinder(0)), same(first));
+      expect(tester.state<TerminalViewState>(viewFinder(1)), same(second));
+      await closeTab(tester, 4);
+      await tester.tap(find.widgetWithText(FilledButton, 'Close terminal'));
+      await tester.pumpAndSettle();
+      expect(fixtures[3].connection.closes, 1);
+      expect(find.byType(TerminalView), findsNWidgets(2));
+      expect(fixtures.take(3).every((f) => f.session.isConnected), isTrue);
+      expect(
+        tester.getRect(viewFinder(0)).right,
+        lessThan(tester.getRect(viewFinder(1)).left),
+      );
+      await activate(tester, 3);
+      expect(viewFinder(2), findsOneWidget);
+      expect(find.byType(TerminalView), findsNWidgets(2));
+      expect(fixtures.take(3).every((f) => f.connection.closes == 0), isTrue);
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
+  testWidgets(
+    'pane shortcuts split, navigate and zoom without writing to shells',
+    (tester) async {
+      await mount(tester);
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyD);
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.keyE);
+      expect(fixtures, hasLength(3));
+      expect(find.byType(TerminalView), findsNWidgets(3));
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.arrowUp);
+      expect(view(tester, 1).focusNode!.hasFocus, isTrue);
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.altLeft,
+      ], LogicalKeyboardKey.arrowLeft);
+      expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.enter);
+      expect(find.byType(TerminalView), findsOneWidget);
+      await _chord(tester, [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.enter);
+      expect(find.byType(TerminalView), findsNWidgets(3));
+      expect(fixtures.every((f) => f.connection.input.isEmpty), isTrue);
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
+  testWidgets(
     'clicking current or another tab reclaims typing from a file pane',
     (tester) async {
       await mount(tester);
@@ -433,7 +580,7 @@ void main() {
       expect(find.byType(TerminalView), findsOneWidget);
       tester.view.physicalSize = const Size(1000, 900);
       await tester.pump();
-      expect(find.byType(TerminalView), findsNWidgets(2));
+      expect(find.byType(TerminalView), findsNWidgets(3));
       expect(
         fixtures[0].session.terminal.buffer.getText(),
         contains('narrow background'),
