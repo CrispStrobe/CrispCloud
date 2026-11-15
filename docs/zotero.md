@@ -47,8 +47,8 @@ reference exports. Zotero library access is read-only.
 ## Scope and preservation
 
 New citations use complex DOCX fields following Zotero field-code conventions
-and embed CSL source snapshots. Imported Zotero field JSON, cached text, and native document
-preferences are preserved on ordinary saves. Unsupported locked/nested/rich or
+and embed CSL source snapshots. Imported Zotero field JSON, cached text, and
+native document preferences are preserved on ordinary saves. Unsupported locked/nested/rich or
 multi-paragraph field replacements are refused; explicit unlink retains text.
 Track-changes mode and unresolved revisions in affected paragraphs also guard
 reference edits. A changed document, caret, story or selection invalidates an
@@ -61,8 +61,9 @@ in one library, then reviewed and inserted as plain text. Larger/mixed-library
 sets can use the basic bibliography or CSL export. Refresh updates Quds basic
 citations for at most 50 distinct linked sources atomically; imported and
 custom-style caches are left alone. Bibliographies with imported nonempty
-`uncited`, `omitted`, or `custom` settings refuse basic replacement and preserve
-those choices.
+`uncited`, `omitted`, or `custom` settings refuse both basic and online updates
+to preserve those choices. Update those choices in Zotero before regenerating
+the bibliography here.
 
 Full CSL numbering/disambiguation/ibid, the native Zotero desktop picker and
 HTTP citing adapter, ODT active-citation transfer, and native Word/Zotero refresh

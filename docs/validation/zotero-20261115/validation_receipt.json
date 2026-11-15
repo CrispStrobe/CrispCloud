@@ -1,0 +1,88 @@
+{
+  "suite": "CrispCloud Zotero host focused validation",
+  "date_utc": "2026-11-15",
+  "flutter": "3.47.8",
+  "dart": "3.13.7",
+  "framework_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "engine_commit": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+  "official_sdk_archive_sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+  "tests": {
+    "passed": 15,
+    "failed": 0,
+    "command": "flutter test --no-pub --concurrency=1 --reporter expanded test/office_zotero_test.dart test/office_zotero_ribbon_test.dart",
+    "coverage": [
+      "original document/content revision/caret/selection/story guard before credential loading",
+      "Zotero-only HTTPS destination and API-key header",
+      "redirects disabled; redirects passed to API client for rejection",
+      "declared and streamed response limits",
+      "total timeout and stalled-body cancellation",
+      "disposal, client lifecycle and exception redaction",
+      "persistent credential write/read-back/delete; unrelated key preservation",
+      "session-only storage behavior; invalid keys and backend failures",
+      "real Insert menu and ribbon callback reachability",
+      "viewing-mode ribbon disabled and optional callback hidden"
+    ],
+    "exit_code": 0
+  },
+  "analyzer": {
+    "result": "No issues found",
+    "flutter_lints": "3.0.2",
+    "files": [
+      "lib/services/office_zotero.dart",
+      "lib/l10n/office_zotero_strings.dart",
+      "lib/l10n/office_editor_strings.dart",
+      "lib/widgets/office_editor_ribbon.dart",
+      "test/office_zotero_test.dart",
+      "test/office_zotero_ribbon_test.dart"
+    ],
+    "exit_code": 0
+  },
+  "method": "Tests use unchanged actual production lib/test symlinks and genuine dependencies pinned from production lockfile in a minimal scratch package. Analyzer uses byte-identical fresh source copies, production lint settings and genuine pub resolution. Host source and all177 manifested shared library files were verified unchanged before/after final combined-source validation.",
+  "limitations": [
+    "No full CrispCloud native application build or unrelated provider/native graph tests; Rust/Cargo toolchain is absent.",
+    "The full office_editor_dialog.dart dependency graph was not analyzed in the minimal harness; its target snapshot helper is compiled and covered by the host test.",
+    "Credential-store adapter tested with injected stores; OS keychain availability remains governed by existing CrispCloud startup checks.",
+    "No live private Zotero account or user credentials used.",
+    "No GitHub Actions awaited."
+  ],
+  "source_sha256_at_receipt": {
+    "lib/services/office_zotero.dart": "b79249450a99f56245a31e5175c30efbe470ed9e596b808c9638cda44f34ec36",
+    "lib/l10n/office_zotero_strings.dart": "e7babecbaa7c2709188b0296eb9eaddf2b172f417adf9c6319c57094b93ce68c",
+    "lib/l10n/office_editor_strings.dart": "06edc091f31b4692b987746da84e82b1f2259a045c8708f092114287b8d0d0cb",
+    "lib/widgets/office_editor_dialog.dart": "b9a48b496003fb818ef06b01a9b6e47362a520323c7ec54607153beea9c2e98a",
+    "lib/widgets/office_editor_ribbon.dart": "d0cf1194724d94bc520ebb7d316b515a6c3f2ea035e1d622fd908c0a09fdc7fc",
+    "test/office_zotero_test.dart": "59fde4eb5c9c6c71e91a189e020f6b020cb1f152d9d7faaff2c86c81631b4125",
+    "test/office_zotero_ribbon_test.dart": "651535c5bf87bf329017bd9a72197e1a2ec9e60dd3bff3c556ba4a5d4276a229"
+  },
+  "logs": {
+    "host-zotero-validation/host-zotero-tests.log": "92afad0282b03371a7cbe76d8993038e71ee93d0509c6cbc35c19394132f4ccc",
+    "host-zotero-analysis/host-zotero-analysis.log": "b0f074844f846d2a31382ab3ce04cbbf297ed5c5cdddf7f4e65bdb1f374cd564"
+  },
+  "final_combined_source": {
+    "shared_source_pin": "9da9c638bfe3bf932a70b2268dc16ef783fc009a",
+    "host_head": "8c4f97de69796dda9d9da9820f0353098ace1b73",
+    "host_main": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+    "quds_main": "c210315bee537776b556ae9885e907483b6df7bd",
+    "shared_library_file_count": 177,
+    "shared_library_content_sha256": "d3cd96fcf39ed518f7c117325a9b45b00be35507c2b71ad8ea96cfb0370863fe",
+    "host_head_after_validation": "803537e0c1e5dc3acf4c3659a37515dfb78224d7",
+    "remote_combined_host_commit_reported_by_parent": "803537e0c1e5dc3acf4c3659a37515dfb78224d7",
+    "shared_pin_after_validation": "9da9c638bfe3bf932a70b2268dc16ef783fc009a",
+    "source_unchanged_during_validation": true,
+    "shared_library_digest_method": "SHA256 of sorted path-to-SHA256 JSON map, no whitespace; includes all lib files in engine, editor, reports and legacy parser manifested packages."
+  },
+  "harness": {
+    "manifest": "focused-pubspec.yaml",
+    "lock": "focused-pubspec.lock",
+    "analyzer_manifest": "analysis-pubspec.yaml",
+    "analyzer_lock": "analysis-pubspec.lock",
+    "setup": "SETUP.md"
+  },
+  "harness_file_sha256": {
+    "focused-pubspec.yaml": "2ac93d86dbb7e9974a2a31552ad8be4e31b05df8211b0546adb982e66708d764",
+    "focused-pubspec.lock": "a9452196ade03d92fee43b425f4ee0155eb746afffa2d6401c4f41c5c9c7b787",
+    "analysis-pubspec.yaml": "640ddda1811f1a1e5c4d7628c583becec7ded8cb36309c2724f75621fd4e4672",
+    "analysis-pubspec.lock": "c4ac44cd8e6936216d8bdf3f0b5079fee312527037a6849a937ce7eba3789845",
+    "SETUP.md": "272d974c9b963daa8fd7a6b79f4290c6549d642289a547279136f449078bba9d"
+  }
+}
