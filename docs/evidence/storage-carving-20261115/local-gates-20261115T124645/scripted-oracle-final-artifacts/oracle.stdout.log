@@ -1,0 +1,12 @@
+sheet/edited.xlsx: PASS
+sheet/roundtrip-1.xlsx: PASS
+sheet/roundtrip-2.xlsx: PASS
+sheet/roundtrip-3.xlsx: PASS
+slide/edited.pptx: PASS
+slide/roundtrip-1.pptx: PASS
+slide/roundtrip-2.pptx: PASS
+slide/roundtrip-3.pptx: PASS
+word/edited.docx: PASS
+word/roundtrip-1.docx: PASS
+word/roundtrip-2.docx: PASS
+word/roundtrip-3.docx: PASS
