@@ -145,6 +145,25 @@ void main() {
     },
   );
 
+  test('unencrypted jump key accepts the default empty passphrase', () async {
+    final unencrypted = SSHKeyPair.fromPem(
+      _encryptedTestKey,
+      _testPassphrase,
+    ).single.toPem();
+    await connect([
+      SshJumpHost(
+        host: 'outer.example',
+        port: 2222,
+        username: 'outer',
+        authentication: SshTerminalAuthentication.privateKey,
+        privateKey: unencrypted,
+      ),
+    ]);
+    expect(harness.credentials.first.$2, isNull);
+    expect(harness.credentials.first.$3, hasLength(1));
+    expect(harness.prompts, ['outer.example:2222', 'target.example:2200']);
+  });
+
   test(
     'private-key targets retain the password-authenticated jump route',
     () async {
@@ -536,6 +555,7 @@ class _Socket implements SSHForwardChannel {
 class _Client implements SSHClient {
   _Client(this.harness, this.socket);
   final _Harness harness;
+  @override
   final _Socket socket;
   final _done = Completer<void>();
   final runs = <String>[];

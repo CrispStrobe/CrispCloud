@@ -46,8 +46,7 @@ class _BroadcastMember {
 /// event size prevent a stale selection or delayed operation changing targets.
 /// Groups are transient and are never written to preferences or arrangements.
 class TerminalBroadcast extends ChangeNotifier {
-  TerminalBroadcast({required bool Function(Object sourceId) canSend})
-    : _canSend = canSend;
+  TerminalBroadcast({required this._canSend});
 
   static const maximumMembers = 8;
   static const maximumInputLength = 256 * 1024;
@@ -64,8 +63,7 @@ class TerminalBroadcast extends ChangeNotifier {
   List<TerminalBroadcastTarget> get targets =>
       List.unmodifiable(_members.map((member) => member.target));
 
-  bool includes(Object id) =>
-      _members.any((member) => member.target.id == id);
+  bool includes(Object id) => _members.any((member) => member.target.id == id);
 
   /// Returns false if a connection changed while the user reviewed the group.
   /// A failed selection does not replace an otherwise valid existing group.

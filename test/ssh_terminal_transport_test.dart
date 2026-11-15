@@ -452,19 +452,22 @@ void main() {
     },
   );
 
-  test('continues to accept unencrypted keys without a passphrase', () async {
+  test('accepts unencrypted keys with omitted or empty passphrases', () async {
     final pem = SSHKeyPair.fromPem(
       _encryptedTestKey,
       _testPassphrase,
     ).first.toPem();
-    final connected = await service.connectWithKey(
-      'key.example',
-      22,
-      'alice',
-      pem,
-      gateway: _fixtureGateway,
-    );
-    expect(connected.connected, isTrue);
+    for (final passphrase in [null, '']) {
+      final connected = await service.connectWithKey(
+        'key.example',
+        22,
+        'alice',
+        pem,
+        passphrase: passphrase,
+        gateway: _fixtureGateway,
+      );
+      expect(connected.connected, isTrue);
+    }
   });
 
   test('writes UTF-8, arrow keys, tab and control characters without line buffering', () async {

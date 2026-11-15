@@ -47,7 +47,9 @@ void main() {
       find.byKey(const ValueKey('ssh-config-source')),
       source,
     );
-    await tester.ensureVisible(find.byKey(const ValueKey('ssh-config-preview')));
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('ssh-config-preview')),
+    );
     await tester.tap(find.byKey(const ValueKey('ssh-config-preview')));
     await tester.pumpAndSettle();
   }

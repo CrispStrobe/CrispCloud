@@ -9,6 +9,7 @@ import 'package:xterm2/xterm.dart';
 
 import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_controls_strings.dart';
+import '../l10n/terminal_key_binding_strings.dart';
 import '../l10n/terminal_shell_strings.dart';
 import '../l10n/ssh_multiplexer_strings.dart';
 import '../l10n/screen_terminal_strings.dart';
@@ -19,6 +20,7 @@ import '../models/ssh_multiplexer_session.dart';
 import '../models/terminal_arrangement.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_workspace_provider.dart';
+import '../providers/terminal_key_bindings_provider.dart';
 import '../providers/ssh_terminal_profiles_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
@@ -26,6 +28,7 @@ import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/terminal_session.dart';
+import '../services/terminal_user_input.dart';
 import '../services/terminal_shell_integration.dart';
 import '../services/terminal_mount_failure.dart';
 import '../services/terminal_directory.dart';
@@ -40,6 +43,7 @@ import 'terminal_tabs.dart';
 import 'terminal_search_bar.dart';
 import 'terminal_command_history_dialog.dart';
 import 'terminal_shell_setup_dialog.dart';
+import 'terminal_key_bindings_dialog.dart';
 import '../l10n/external_terminal_strings.dart';
 
 export '../models/ssh_terminal_config.dart';
@@ -132,6 +136,7 @@ enum _PanelAction {
   selectOutput,
   notifyCommand,
   shellSetup,
+  keyBindings,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -171,6 +176,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   int _shellNotificationSerial = 0;
   CellAnchor? _commandNavigationAnchor;
   bool _revealingCommand = false;
+  final _mappedKeyPresses = <PhysicalKeyboardKey>{};
 
   bool get _desktop =>
       !kIsWeb &&
@@ -313,8 +319,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted ||
             mark == null ||
-            !identical(shell, _session.shellIntegration))
+            !identical(shell, _session.shellIntegration)) {
           return;
+        }
         final status = mark.exitCode == null
             ? context.terminalShellTr('Status unknown')
             : '${context.terminalShellTr('Exit status')}: ${mark.exitCode}';
@@ -560,7 +567,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       context: context,
       builder: (_) => SshTerminalConnectDialog(
         initialConfig:
-            initialConfig ?? (reconnect || browse != null ? _lastSshConfig : null),
+            initialConfig ??
+            (reconnect || browse != null ? _lastSshConfig : null),
         showSessionOptions: browse == null,
       ),
     );
@@ -691,10 +699,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             _lastSshConfig = launchConfig.withoutSecrets();
             _publishPaneState();
             _session.label = connectionLabel(launchConfig);
-            _tmuxTerminal =
-                launchConfig.tmux == null ? null : connectingTerminal;
-            _screenTerminal =
-                launchConfig.screen == null ? null : connectingTerminal;
+            _tmuxTerminal = launchConfig.tmux == null
+                ? null
+                : connectingTerminal;
+            _screenTerminal = launchConfig.screen == null
+                ? null
+                : connectingTerminal;
           }
           final stream = await _ssh.startShell(
             session.id,
@@ -709,7 +719,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           if (browse != null && (!currentAttempt() || !widget.visible)) {
             selectionCancelled = true;
           }
-          if (error is SshMultiplexerDiscoveryException && currentAttempt()) {
+          if (error is SshMultiplexerDiscoveryException &&
+              mounted &&
+              currentAttempt()) {
             throw Exception(context.sshMultiplexerDiscoveryError(error));
           }
           rethrow;
@@ -821,6 +833,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   KeyEventResult _onTerminalKey(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      // A fresh press can use an edited/disabled mapping. Only the repeat and
+      // release edges of a mapped press are swallowed, even if modifiers change.
+      _mappedKeyPresses.remove(event.physicalKey);
+    } else if (_mappedKeyPresses.contains(event.physicalKey)) {
+      if (event is KeyUpEvent) _mappedKeyPresses.remove(event.physicalKey);
+      return KeyEventResult.handled;
+    }
     final keyboard = HardwareKeyboard.instance;
     final workspaceResult = widget.onWorkspaceKey?.call(event);
     if (workspaceResult != null && workspaceResult != KeyEventResult.ignored) {
@@ -898,7 +918,52 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       );
       return KeyEventResult.handled;
     }
+    if (event is KeyDownEvent &&
+        !event.synthesized &&
+        mounted &&
+        widget.visible &&
+        _activePane &&
+        _focus.hasFocus &&
+        _session.isConnected) {
+      final mappings = ref.read(terminalKeyBindingListProvider);
+      if (!mappings.isLoading && !mappings.hasError) {
+        for (final binding in mappings.valueOrNull ?? const []) {
+          if (!binding.enabled ||
+              binding.chord.isReserved(apple: apple) ||
+              !binding.chord.matches(
+                event,
+                ctrl: keyboard.isControlPressed,
+                alt: keyboard.isAltPressed,
+                shift: keyboard.isShiftPressed,
+                meta: keyboard.isMetaPressed,
+              )) {
+            continue;
+          }
+          final terminal = _session.terminal;
+          _mappedKeyPresses.add(event.physicalKey);
+          final input = binding.input;
+          if (terminal is InputAwareTerminal) {
+            terminal.submitUserInput(input);
+          } else {
+            input.applyTo(terminal);
+          }
+          _controller.clearSelection();
+          if (_scroll.hasClients) {
+            _scroll.jumpTo(_scroll.position.maxScrollExtent);
+          }
+          return KeyEventResult.handled;
+        }
+      }
+    }
     return KeyEventResult.ignored;
+  }
+
+  Future<void> _showKeyBindings() async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => const TerminalKeyBindingsDialog(),
+    );
+    _focusIfVisible();
   }
 
   void _setFontSize(double size) {
@@ -921,8 +986,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     final terminal = _session.terminal;
     if (terminal.isUsingAltBuffer ||
         line < 0 ||
-        line >= terminal.buffer.lines.length)
+        line >= terminal.buffer.lines.length) {
       return;
+    }
     _clearCommandNavigation();
     _commandNavigationAnchor = terminal.buffer.createAnchor(0, line);
     if (!_scroll.hasClients || !_scroll.position.hasContentDimensions) return;
@@ -972,8 +1038,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         !widget.visible ||
         !identical(shell, _session.shellIntegration) ||
         mark == null ||
-        !shell.contains(mark))
+        !shell.contains(mark)) {
       return;
+    }
     _activateInput();
     _revealCommandLine(mark.anchor.y);
   }
@@ -1107,10 +1174,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         final shell = _session.shellIntegration;
         shell.notifyOnCompletion = !shell.notifyOnCompletion;
       case _PanelAction.shellSetup:
-        unawaited(showDialog<void>(
-          context: context,
-          builder: (_) => const TerminalShellSetupDialog(),
-        ));
+        unawaited(
+          showDialog<void>(
+            context: context,
+            builder: (_) => const TerminalShellSetupDialog(),
+          ),
+        );
+      case _PanelAction.keyBindings:
+        unawaited(_showKeyBindings());
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:
@@ -1341,8 +1412,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         ),
                       ),
                       PopupMenuItem(
+                        value: _PanelAction.keyBindings,
+                        child: Text(
+                          context.terminalKeyBindingTr('Key bindings'),
+                        ),
+                      ),
+                      PopupMenuItem(
                         value: _PanelAction.shellSetup,
-                        child: Text(context.terminalShellTr('Shell integration setup')),
+                        child: Text(
+                          context.terminalShellTr('Shell integration setup'),
+                        ),
                       ),
                       PopupMenuItem(
                         value: _PanelAction.history,
@@ -1508,6 +1587,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep mappings current across every mounted pane, including hidden tabs.
+    // Errors remain in the settings dialog; malformed data never enables input.
+    ref.watch(terminalKeyBindingListProvider);
     ref.listen<FocusArea>(focusAreaProvider, (_, next) {
       if (next == FocusArea.terminal) {
         _focusIfVisible();

@@ -1,5 +1,5 @@
 {
-  "checked_at_utc": "2026-11-15T22:24:26.837102+00:00",
+  "checked_at_utc": "2026-11-15T22:28:48.200410+00:00",
   "oracle": "OpenSSH_10.0p2 Debian-7+deb13u4, OpenSSL 3.5.7 9 Jun 2026",
   "scope": "Production pure Dart importer compared against local ssh -G; no network connections, commands, includes, or Match execution. Hostnames compared case-insensitively after case-sensitive alias evaluation.",
   "checks": [
@@ -112,7 +112,34 @@
         "port": 22
       },
       "identity_hints_checked": 0
+    },
+    {
+      "case": "proxyjump-disabled-case",
+      "status": "passed",
+      "source": "Host box\nUser alice\nProxyJump NONE",
+      "native_proxycommand": [],
+      "native_proxyjump": [],
+      "importer_blocked": false
+    },
+    {
+      "case": "proxycommand-disabled-case",
+      "status": "passed",
+      "source": "Host box\nUser alice\nProxyCommand NONE",
+      "native_proxycommand": [],
+      "native_proxyjump": [],
+      "importer_blocked": false
+    },
+    {
+      "case": "proxyjump-none-command-fallback",
+      "status": "passed",
+      "source": "Host box\nUser alice\nProxyJump none\nProxyCommand special",
+      "native_proxycommand": [
+        "proxycommand special"
+      ],
+      "native_proxyjump": [],
+      "importer_blocked": true
     }
   ],
-  "passed": 11
+  "passed": 14,
+  "importer_sha256": "29e0dcb51a9cd06909abc4831aad98e81e9f51bc52d3955acfc33636b05a3314"
 }
