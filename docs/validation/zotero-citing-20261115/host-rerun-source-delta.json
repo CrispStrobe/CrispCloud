@@ -1,0 +1,23 @@
+{
+  "previous_host_commit": "f0f3863604ba272149af3b00d165c41abae16521",
+  "delivered_host_source_commit": "6a53294ad086e2a1c6475d888fbed7dcc2591449",
+  "source_inventory_before": "intermediate-f0f38636/host-source-after.json",
+  "source_inventory_after": "host-source-after.json",
+  "source_file_count_before": 1577,
+  "source_file_count_after": 1582,
+  "changed_measured_source_paths": [
+    "lib/l10n/terminal_key_binding_strings.dart",
+    "lib/models/ssh_config_import.dart",
+    "lib/models/terminal_key_binding.dart",
+    "lib/providers/terminal_key_bindings_provider.dart",
+    "lib/services/ssh_terminal_service.dart",
+    "lib/services/terminal_broadcast.dart",
+    "lib/services/terminal_key_bindings.dart",
+    "lib/services/terminal_user_input.dart",
+    "lib/widgets/terminal_key_bindings_dialog.dart",
+    "lib/widgets/terminal_panel.dart"
+  ],
+  "managed_office_sources_unchanged": true,
+  "host_zotero_analysis_and_test_targets_unchanged": true,
+  "runtime_tests_repeated_after_integration": 37
+}

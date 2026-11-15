@@ -1,0 +1,5 @@
+SOURCE /workspace/scratch/d13d764c3646/CrispCloud/lib/services/terminal_shell_setup.dart sha256=c000f979a102fd5bc89e76ebfb9c97f4f1b09f79dd76a8defdf989b1f694e675
+PASS /usr/bin/bash 5.2 scalar: exit1/7, hook status/order, Unicode cwd, idempotence
+PASS /usr/bin/bash 5.2 array: exit1/7, hook status/order, Unicode cwd, idempotence
+PASS /usr/bin/zsh 5.9 precmd: exit1/7, hook status/order, Unicode cwd, idempotence
+RESULT: 3 passed scenarios; 0 failures; 0 skipped shells

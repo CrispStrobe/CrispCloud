@@ -241,6 +241,12 @@ plus terminal #140, was already integrated. Five retained Quds heads were exact
 tree equivalents of integrated squash changes. Work is saved incrementally
 to remote branches using `[skip ci]`. No GitHub Actions queue was awaited.
 
+The final reconciliation also integrates work that arrived during the task:
+Quds main through **#46**, CrispCloud main through **#156**, and terminal #140
+through `a965bfd4a61ca01e6f50bf4d8c433c3fdc9e1423`. Both parents are retained in
+the main and terminal merges. Quds #40 was merged during implementation; its
+remaining continuation is reviewed in [draft PR #47](https://github.com/CrispStrobe/quds_office_suite/pull/47).
+
 Local execution uses official Flutter/Dart and genuine locked dependency
 graphs. This increment adds protocol, native preference, document adapter,
 controller, UI and actual host-transport regression coverage. See

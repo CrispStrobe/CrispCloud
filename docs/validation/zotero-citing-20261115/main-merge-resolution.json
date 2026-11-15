@@ -1,0 +1,36 @@
+{
+  "host_before": "f8705ac84322ae45e6c4a22985016b1714885353",
+  "incoming_host_parent": "d1add32cf5f4a14379ae35ca30b123e781558549",
+  "previous_quds_pin": "706971b6818d5382e135ea947ce862b27124a46a",
+  "canonical_merge_target": "ba9451b7426f126187ddd2b4c57f8eeb5b859638",
+  "method": "Preserve automatic merge bytes, prove each equals canonical merge target, restore coherent previous pin, then run unmodified guarded sync.",
+  "files": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "previous_sha256": "ea6c3c7c26cd6a8fb6805557204878b4e7a285d866ba42ba0fb85be019724213",
+      "merged_sha256": "b03979247b2cf49525a73d10ab8248f66c5a278040d4db9f85e401c5cdaae695",
+      "merged_equals_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+      "previous_sha256": "108e2fda4279f777bf9a45adb2cdc7aca25795fe4349caf5e41106dc7bfec144",
+      "merged_sha256": "2beb8a8c5e8d74453c805cc6d52f31702d91cabec2837eb917afc450fbe53774",
+      "merged_equals_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "previous_sha256": "24b16b2e99ec3e35bdb2f7128a3c823cafd96874e5b95f6c4a75f873e1d47967",
+      "merged_sha256": "882c6910a17627772bb423a5dbcebdfb97c29092830421360bc79e763698d5f3",
+      "merged_equals_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "previous_sha256": "622c8ef133a45e50dd30d5bb72f5ff82caab55a3897f2a736c151516c8d75b11",
+      "merged_sha256": "d5eb171521ec296206209450cc545491f47a096fe7e8e441ef6b1bf0bbda6978",
+      "merged_equals_canonical_target": true
+    }
+  ],
+  "staging_changed_by_agent": false,
+  "final_sync_target": "55d46a0fb5f7392dab1a604bc3c15126bd3e380d",
+  "final_sync_target_contains_all_saved_merge_bytes": true
+}
