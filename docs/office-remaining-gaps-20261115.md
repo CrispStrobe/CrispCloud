@@ -6,7 +6,7 @@ and editor can claim full format coverage.
 
 ## Verified state
 
-- CrispCloud `main`: `01f7fc77`
+- CrispCloud `main` snapshot: `e52d1bef`
 - Vendored Quds source: `b01455fa415f9411411d06c7c2ab66947630af1a`
   (`packages/QUDS_FORKS.md`, 2,363 managed files)
 - Quds sheet/ODS cohort: **495 tests**
