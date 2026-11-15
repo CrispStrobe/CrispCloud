@@ -200,6 +200,7 @@ class WmlRun extends WmlInline {
     this.fieldInstruction,
     this.fieldLocked = false,
     this.fieldDirty,
+    this.inlineVisual,
   }) : properties = properties ?? WmlRunProps(),
        commentIds = commentIds ?? <int>[];
 
@@ -234,7 +235,13 @@ class WmlRun extends WmlInline {
   bool? fieldDirty;
 
   /// Note marks and inline field results cannot be split into ordinary text.
-  bool get isAtomic => noteRefId != null || fieldInstruction != null;
+  bool get isAtomic =>
+      noteRefId != null || fieldInstruction != null || inlineVisual != null;
+
+  /// An inline picture inside a line of text. The run's text is a single
+  /// U+FFFC (Word also counts an inline picture as one character); layout
+  /// gives it the picture's width and places the picture on the baseline.
+  WmlVisual? inlineVisual;
 }
 
 /// Class WmlComment.
@@ -343,6 +350,7 @@ class WmlComment {
                   hyperlink: inline.hyperlink,
                   commentIds: List<int>.from(inline.commentIds),
                   noteRefId: inline.noteRefId,
+                  inlineVisual: inline.inlineVisual,
                   noteRefEndnote: inline.noteRefEndnote,
                   fieldInstruction: inline.fieldInstruction,
                   fieldLocked: inline.fieldLocked,
@@ -1280,6 +1288,18 @@ class WmlDocument {
   Iterable<WmlVisual> get visuals sync* {
     for (final WmlSection section in sections) {
       yield* _visualsIn(section.blocks);
+    }
+    yield* inlineVisuals;
+  }
+
+  /// Pictures held inline in body text runs ([WmlRun.inlineVisual]).
+  Iterable<WmlVisual> get inlineVisuals sync* {
+    for (final WmlParagraph paragraph in paragraphs) {
+      for (final inline in paragraph.inlines) {
+        if (inline is WmlRun && inline.inlineVisual != null) {
+          yield inline.inlineVisual!;
+        }
+      }
     }
   }
 

@@ -26,6 +26,34 @@ def equal(actual, expected, label):
 def subset(actual, expected, label):
     equal({key: actual.get(key) for key in expected}, expected, label)
 
+def outline_level(parts, paragraph):
+    """Direct outline level, else the level its paragraph style defines.
+
+    Word writes only w:pStyle for a built-in heading; the outline level lives
+    in styles.xml and may be inherited through basedOn.
+    """
+    ppr = paragraph.find(W+'pPr')
+    direct = ppr.find(W+'outlineLvl') if ppr is not None else None
+    if direct is not None:
+        return direct.get(W+'val')
+    style_ref = ppr.find(W+'pStyle') if ppr is not None else None
+    style_id = style_ref.get(W+'val') if style_ref is not None else None
+    if not style_id:
+        return None
+    styles = E.fromstring(parts['word/styles.xml'])
+    seen = set()
+    while style_id and style_id not in seen:
+        seen.add(style_id)
+        style = next((s for s in styles if s.get(W+'styleId') == style_id), None)
+        if style is None:
+            break
+        level = style.find(W+'pPr/'+W+'outlineLvl')
+        if level is not None:
+            return level.get(W+'val')
+        based_on = style.find(W+'basedOn')
+        style_id = based_on.get(W+'val') if based_on is not None else None
+    return None
+
 def verify_word(parts):
     expected = EXPECTED['word']
     snap = word_snapshot(parts)
@@ -38,7 +66,7 @@ def verify_word(parts):
     root = E.fromstring(parts['word/document.xml'])
     paragraphs = root.findall(W+'body/'+W+'p')
     title = paragraphs[0]
-    equal(attrs(title.find(W+'pPr/'+W+'outlineLvl')), {'val':str(expected['heading'])}, 'heading')
+    equal(outline_level(parts, title), str(expected['heading']), 'heading')
     ppr = title.find(W+'pPr')
     equal(attrs(ppr.find(W+'jc')).get('val'), 'center', 'alignment')
     subset(attrs(ppr.find(W+'spacing')), {'before':'0','after':'0','line':'360'}, 'spacing')
