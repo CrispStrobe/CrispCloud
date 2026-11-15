@@ -9,10 +9,12 @@ import 'package:xterm2/xterm.dart';
 
 import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_controls_strings.dart';
+import '../l10n/terminal_shell_strings.dart';
 import '../l10n/screen_terminal_strings.dart';
 import '../l10n/terminal_mount_error_strings.dart';
 import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
+import '../models/terminal_arrangement.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_workspace_provider.dart';
 import '../providers/ssh_terminal_profiles_provider.dart';
@@ -22,6 +24,7 @@ import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/terminal_session.dart';
+import '../services/terminal_shell_integration.dart';
 import '../services/terminal_mount_failure.dart';
 import '../services/terminal_directory.dart';
 import '../services/panel_source_service.dart';
@@ -32,6 +35,7 @@ import 'ssh_terminal_connect_dialog.dart';
 import 'ssh_terminal_profiles_dialog.dart';
 import 'terminal_tabs.dart';
 import 'terminal_search_bar.dart';
+import 'terminal_command_history_dialog.dart';
 import '../l10n/external_terminal_strings.dart';
 
 export '../models/ssh_terminal_config.dart';
@@ -82,6 +86,8 @@ class TerminalPanel extends ConsumerStatefulWidget {
     this.isActivePane,
     this.onActivate,
     this.onWorkspaceKey,
+    this.initialPaneState,
+    this.onPaneStateChanged,
   });
 
   /// An injected session remains caller-owned and is not automatically opened.
@@ -94,6 +100,8 @@ class TerminalPanel extends ConsumerStatefulWidget {
   final bool Function()? isActivePane;
   final VoidCallback? onActivate;
   final KeyEventResult Function(KeyEvent event)? onWorkspaceKey;
+  final TerminalPaneState? initialPaneState;
+  final ValueChanged<TerminalPaneState>? onPaneStateChanged;
 
   @override
   ConsumerState<TerminalPanel> createState() => _TerminalPanelState();
@@ -111,6 +119,12 @@ enum _PanelAction {
   copy,
   paste,
   find,
+  history,
+  previousCommand,
+  nextCommand,
+  addMark,
+  selectOutput,
+  notifyCommand,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -147,6 +161,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   int _searchFocusRequest = 0;
   double _fontSize = 13;
   int _connectionRequest = 0;
+  int _shellNotificationSerial = 0;
+  CellAnchor? _commandNavigationAnchor;
+  bool _revealingCommand = false;
 
   bool get _desktop =>
       !kIsWeb &&
@@ -182,6 +199,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   @override
   void initState() {
     super.initState();
+    _restorePaneState();
     _ssh = ref.read(sshTerminalServiceProvider);
     _menuState = ref.read(terminalMenuProvider.notifier);
     _inputFocusedState = ref.read(terminalInputFocusedProvider.notifier);
@@ -189,6 +207,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _focusAreaState = ref.read(focusAreaProvider.notifier);
     _focus.addListener(_onInputFocusChanged);
     _controller.addListener(_scheduleMenuUpdate);
+    _scroll.addListener(_onScrollChanged);
     _attachSession(widget.session);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -200,6 +219,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       }
     });
   }
+
+  void _restorePaneState() {
+    final state = widget.initialPaneState;
+    _fontSize = state?.fontSize ?? 13;
+    _lastSshConfig = state?.sshConfig?.withoutSecrets();
+  }
+
+  void _publishPaneState() => widget.onPaneStateChanged?.call(
+    TerminalPaneState(fontSize: _fontSize, sshConfig: _lastSshConfig),
+  );
 
   void _attachSession(TerminalSession? session) {
     _ownsSession = session == null;
@@ -220,6 +249,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _attachTerminal() {
     _detachTitleHandler();
+    _clearCommandNavigation();
+    _shellNotificationSerial = 0;
     final terminal = _session.terminal;
     _observedTerminal = terminal;
     _title = null;
@@ -244,6 +275,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (!identical(oldWidget.session, widget.session)) {
       _connectionRequest++;
       _workspace = null;
+      _restorePaneState();
       _session.removeListener(_onSessionChanged);
       _detachTitleHandler();
       if (_ownsSession) _session.dispose();
@@ -267,6 +299,27 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void _onSessionChanged() {
     if (!mounted) return;
     if (!identical(_observedTerminal, _session.terminal)) _attachTerminal();
+    final shell = _session.shellIntegration;
+    if (shell.notificationSerial != _shellNotificationSerial) {
+      _shellNotificationSerial = shell.notificationSerial;
+      final mark = shell.completionNotification;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted ||
+            mark == null ||
+            !identical(shell, _session.shellIntegration))
+          return;
+        final status = mark.exitCode == null
+            ? context.terminalShellTr('Status unknown')
+            : '${context.terminalShellTr('Exit status')}: ${mark.exitCode}';
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              '${context.terminalShellTr('Command finished')} · $status',
+            ),
+          ),
+        );
+      });
+    }
     setState(() {});
     _scheduleMenuUpdate();
   }
@@ -377,6 +430,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (!mounted) return;
     final request = ++_connectionRequest;
     _workspace = workspace;
+    _lastSshConfig = null;
+    _publishPaneState();
     final files = ref.read(localFileServiceProvider);
     final sources = workspace == null ? _localSources() : <PanelSource>[];
     final connecting = _session.connect(
@@ -513,6 +568,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _connectionRequest++;
     _workspace = null;
     _lastSshConfig = config.withoutSecrets();
+    _publishPaneState();
 
     Terminal? connectingTerminal;
     bool currentAttempt() =>
@@ -559,6 +615,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                     ? null
                     : config.passphrase,
                 gateway: config.gateway,
+                jumpHosts: config.jumpHosts,
+                isCurrent: currentAttempt,
                 hostKeyPrompt: prompt,
               )
             : await _ssh.connect(
@@ -567,6 +625,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                 config.username,
                 config.password,
                 gateway: config.gateway,
+                jumpHosts: config.jumpHosts,
+                isCurrent: currentAttempt,
                 hostKeyPrompt: prompt,
               );
         try {
@@ -693,6 +753,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           key == LogicalKeyboardKey.numpadSubtract;
       final reset =
           key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0;
+      if (keyboard.isShiftPressed &&
+          (key == LogicalKeyboardKey.arrowUp ||
+              key == LogicalKeyboardKey.arrowDown)) {
+        if (event is KeyDownEvent) {
+          _moveCommand(forward: key == LogicalKeyboardKey.arrowDown);
+        }
+        return KeyEventResult.handled;
+      }
       if (find || zoomIn || zoomOut || reset) {
         if (event is KeyDownEvent) {
           if (find) _openSearch();
@@ -739,7 +807,94 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _setFontSize(double size) {
-    setState(() => _fontSize = size.clamp(8.0, 32.0));
+    final next = size.clamp(8.0, 32.0);
+    if (next == _fontSize) return;
+    setState(() => _fontSize = next);
+    _publishPaneState();
+  }
+
+  void _clearCommandNavigation() {
+    _commandNavigationAnchor?.dispose();
+    _commandNavigationAnchor = null;
+  }
+
+  void _onScrollChanged() {
+    if (!_revealingCommand) _clearCommandNavigation();
+  }
+
+  void _revealCommandLine(int line) {
+    final terminal = _session.terminal;
+    if (terminal.isUsingAltBuffer ||
+        line < 0 ||
+        line >= terminal.buffer.lines.length)
+      return;
+    _clearCommandNavigation();
+    _commandNavigationAnchor = terminal.buffer.createAnchor(0, line);
+    if (!_scroll.hasClients || !_scroll.position.hasContentDimensions) return;
+    final cellHeight = _terminalViewKey.currentState?.renderTerminal.lineHeight;
+    if (cellHeight == null || !cellHeight.isFinite || cellHeight <= 0) return;
+    final position = _scroll.position;
+    final target =
+        line * cellHeight - (position.viewportDimension - cellHeight) / 2;
+    _revealingCommand = true;
+    try {
+      _scroll.jumpTo(
+        target.clamp(position.minScrollExtent, position.maxScrollExtent),
+      );
+    } finally {
+      _revealingCommand = false;
+    }
+  }
+
+  void _moveCommand({required bool forward}) {
+    final terminal = _session.terminal;
+    if (terminal.isUsingAltBuffer) return;
+    final anchor = _commandNavigationAnchor;
+    var line = terminal.buffer.absoluteCursorY;
+    if (anchor != null && terminal.buffer.ownsAnchor(anchor)) {
+      line = anchor.y;
+    } else if (_scroll.hasClients &&
+        _scroll.position.hasContentDimensions &&
+        _scroll.offset < _scroll.position.maxScrollExtent - 1) {
+      final height = _terminalViewKey.currentState?.renderTerminal.lineHeight;
+      if (height != null && height.isFinite && height > 0) {
+        line = (_scroll.offset / height).floor();
+      }
+    }
+    final target = forward
+        ? _session.shellIntegration.lineAfter(line)
+        : _session.shellIntegration.lineBefore(line);
+    if (target != null) _revealCommandLine(target);
+  }
+
+  Future<void> _showCommandHistory() async {
+    final shell = _session.shellIntegration;
+    final mark = await showDialog<TerminalCommandMark>(
+      context: context,
+      builder: (_) => TerminalCommandHistoryDialog(integration: shell),
+    );
+    if (!mounted ||
+        !widget.visible ||
+        !identical(shell, _session.shellIntegration) ||
+        mark == null ||
+        !shell.contains(mark))
+      return;
+    _activateInput();
+    _revealCommandLine(mark.anchor.y);
+  }
+
+  void _selectLastOutput() {
+    final shell = _session.shellIntegration;
+    final mark = shell.latestCommand;
+    if (mark == null) return;
+    final range = shell.outputRange(mark);
+    if (range == null) return;
+    final buffer = _session.terminal.buffer;
+    _controller.setSelection(
+      buffer.createAnchorFromOffset(range.begin),
+      buffer.createAnchorFromOffset(range.end),
+    );
+    _revealCommandLine(range.begin.y);
   }
 
   void _openSearch() {
@@ -839,6 +994,19 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         unawaited(_paste());
       case _PanelAction.find:
         _openSearch();
+      case _PanelAction.history:
+        unawaited(_showCommandHistory());
+      case _PanelAction.previousCommand:
+        _moveCommand(forward: false);
+      case _PanelAction.nextCommand:
+        _moveCommand(forward: true);
+      case _PanelAction.addMark:
+        _session.shellIntegration.addMark();
+      case _PanelAction.selectOutput:
+        _selectLastOutput();
+      case _PanelAction.notifyCommand:
+        final shell = _session.shellIntegration;
+        shell.notifyOnCompletion = !shell.notifyOnCompletion;
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:
@@ -1055,6 +1223,54 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         ),
                       ),
                       PopupMenuItem(
+                        value: _PanelAction.history,
+                        child: Text(context.terminalShellTr('Command history')),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.previousCommand,
+                        enabled:
+                            !_session.terminal.isUsingAltBuffer &&
+                            _session.shellIntegration.marks.isNotEmpty,
+                        child: Text(
+                          context.terminalShellTr('Previous command'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.nextCommand,
+                        enabled:
+                            !_session.terminal.isUsingAltBuffer &&
+                            _session.shellIntegration.marks.isNotEmpty,
+                        child: Text(context.terminalShellTr('Next command')),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.addMark,
+                        enabled: !_session.terminal.isUsingAltBuffer,
+                        child: Text(context.terminalShellTr('Add mark')),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.selectOutput,
+                        enabled:
+                            _session.shellIntegration.latestCommand != null &&
+                            _session.shellIntegration.outputRange(
+                                  _session.shellIntegration.latestCommand!,
+                                ) !=
+                                null,
+                        child: Text(
+                          context.terminalShellTr('Select last command output'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.notifyCommand,
+                        enabled: _session.isConnected,
+                        child: Text(
+                          context.terminalShellTr(
+                            _session.shellIntegration.notifyOnCompletion
+                                ? 'Cancel command notification'
+                                : 'Notify when command finishes',
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
                         value: _PanelAction.hide,
                         child: Text(context.terminalTr('Hide terminal')),
                       ),
@@ -1107,6 +1323,61 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   child: Text(label),
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShellStatus() {
+    final shell = _session.shellIntegration;
+    final command = shell.latestCommand;
+    final status = command?.running == true
+        ? context.terminalShellTr('Running')
+        : command?.exitCode == null
+        ? ''
+        : '${context.terminalShellTr('Exit status')}: ${command!.exitCode}';
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: InkWell(
+        key: const ValueKey('terminal-shell-status'),
+        onTap: () => unawaited(_showCommandHistory()),
+        child: SizedBox(
+          height: 26,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.history, size: 14),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Tooltip(
+                    message:
+                        '${context.terminalShellTr('Shell-reported directory')}: ${shell.currentDirectory ?? ''}',
+                    child: Text(
+                      shell.currentDirectory ??
+                          context.terminalShellTr('Command history'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                ),
+                if (status.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      status,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                if (shell.notifyOnCompletion)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(Icons.notifications_active_outlined, size: 14),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1302,6 +1573,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                 ),
               ),
               if (showExtraKeys) _buildExtraKeys(),
+              if (height >= 220 &&
+                  !_session.terminal.isUsingAltBuffer &&
+                  (_session.shellIntegration.detected ||
+                      _session.shellIntegration.currentDirectory != null))
+                _buildShellStatus(),
             ],
           ),
         );
@@ -1311,6 +1587,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    _scroll.removeListener(_onScrollChanged);
+    _clearCommandNavigation();
     _connectionRequest++;
     _focus.removeListener(_onInputFocusChanged);
     _controller.removeListener(_scheduleMenuUpdate);

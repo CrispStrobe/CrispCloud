@@ -54,6 +54,8 @@ class SshTerminalProfile {
     'username': config.username,
     'authentication': config.authentication.name,
     if (config.gateway != null) 'gateway': config.gateway.toString(),
+    if (config.jumpHosts.isNotEmpty)
+      'jumpHosts': config.jumpHosts.map((jump) => jump.toJson()).toList(),
     'session': config.tmux != null
         ? {
             'kind': 'tmux',
@@ -104,6 +106,20 @@ class SshTerminalProfile {
       }
     }
     final session = value['session'];
+    final jumpsValue = value['jumpHosts'];
+    if (jumpsValue != null &&
+        (jumpsValue is! List || jumpsValue.length > SshJumpHost.maxJumpHosts)) {
+      throw const FormatException('Invalid SSH jump route');
+    }
+    final jumpHosts = <SshJumpHost>[];
+    if (jumpsValue != null) {
+      for (final jump in jumpsValue as List) {
+        if (jump is! Map<String, dynamic>) {
+          throw const FormatException('Invalid SSH jump host');
+        }
+        jumpHosts.add(SshJumpHost.fromJson(jump));
+      }
+    }
     if (session is! Map<String, dynamic>) {
       throw const FormatException('Invalid SSH profile session');
     }
@@ -147,6 +163,7 @@ class SshTerminalProfile {
         username: text('username'),
         authentication: authentication,
         gateway: gateway,
+        jumpHosts: jumpHosts,
         tmux: tmux,
         screen: screen,
       ),

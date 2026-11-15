@@ -12,6 +12,7 @@ void main() {
   SshTerminalConfig config({
     TmuxSessionOptions? tmux,
     ScreenSessionOptions? screen,
+    List<SshJumpHost> jumpHosts = const [],
   }) => SshTerminalConfig(
     host: 'ssh.example',
     port: 2222,
@@ -23,6 +24,7 @@ void main() {
     gateway: Uri.parse('wss://gateway.example/ssh'),
     tmux: tmux,
     screen: screen,
+    jumpHosts: jumpHosts,
   );
 
   test('profiles remove credentials in memory and use an explicit persisted allowlist', () {
@@ -200,12 +202,73 @@ void main() {
   );
 
   test(
+    'jump routes upgrade the envelope and never silently downgrade it',
+    () async {
+      final direct = SshTerminalProfile(name: 'Direct', config: config());
+      String? raw = jsonEncode({
+        'version': 1,
+        'profiles': [direct.toJson()],
+      });
+      final store = SshTerminalProfiles(
+        read: () async => raw,
+        write: (value) async => raw = value,
+      );
+      expect((await store.load()).single.name, 'Direct');
+      await store.save(
+        SshTerminalProfile(
+          name: 'Routed',
+          config: config(
+            jumpHosts: const [
+              SshJumpHost(
+                host: 'bastion.example',
+                username: 'jump',
+                password: 'JUMP_SENTINEL',
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(jsonDecode(raw!)['version'], 2);
+      expect(raw, isNot(contains('SENTINEL')));
+      expect(
+        (await store.load()).last.config.jumpHosts.single.host,
+        'bastion.example',
+      );
+
+      // Old v1 readers must continue to reject/preserve an upgraded store,
+      // including after the last route or the last profile is removed.
+      await store.delete('Routed');
+      expect(jsonDecode(raw!)['version'], 2);
+      await store.save(direct);
+      expect(jsonDecode(raw!)['version'], 2);
+      await store.delete('Direct');
+      expect(jsonDecode(raw!)['version'], 2);
+      expect(await store.load(), isEmpty);
+    },
+  );
+
+  test(
+    'a direct-only legacy store retains its compatible v1 envelope',
+    () async {
+      String? raw;
+      final store = SshTerminalProfiles(
+        read: () async => raw,
+        write: (value) async => raw = value,
+      );
+      await store.save(SshTerminalProfile(name: 'Direct', config: config()));
+      expect(jsonDecode(raw!)['version'], 1);
+      expect((await store.load()).single.config.jumpHosts, isEmpty);
+    },
+  );
+
+  test(
     'a newer, malformed or duplicate store is preserved before a mutation',
     () async {
       final profile = SshTerminalProfile(name: 'Build', config: config());
       for (final raw in [
         '{invalid',
-        jsonEncode({'version': 2, 'profiles': []}),
+        jsonEncode({'version': 3, 'profiles': []}),
+        jsonEncode({'version': 1.0, 'profiles': []}),
         jsonEncode({
           'version': 1,
           'profiles': [profile.toJson(), profile.toJson()],

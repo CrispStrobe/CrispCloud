@@ -33,17 +33,19 @@ class SshTerminalProfiles {
     }
   }
 
-  Future<List<SshTerminalProfile>> load() => _lock.synchronized(_load);
+  Future<List<SshTerminalProfile>> load() =>
+      _lock.synchronized(() async => (await _load()).profiles);
 
-  Future<List<SshTerminalProfile>> _load() async {
+  Future<({int version, List<SshTerminalProfile> profiles})> _load() async {
     final raw = await _read();
-    if (raw == null) return const [];
+    if (raw == null) return (version: 1, profiles: const []);
     if (raw.length > maxStorageLength) {
       throw const FormatException('SSH profile store exceeds the limit');
     }
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
-        data['version'] != 1 ||
+        data['version'] is! int ||
+        (data['version'] != 1 && data['version'] != 2) ||
         data['profiles'] is! List) {
       throw const FormatException('Unsupported SSH profile store');
     }
@@ -66,12 +68,16 @@ class SshTerminalProfiles {
     profiles.sort(
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );
-    return List.unmodifiable(profiles);
+    return (
+      version: data['version'] as int,
+      profiles: List<SshTerminalProfile>.unmodifiable(profiles),
+    );
   }
 
   Future<void> save(SshTerminalProfile profile) => _lock.synchronized(() async {
     // A malformed or newer store fails before any write, preserving its data.
-    final profiles = (await _load()).toList();
+    final stored = await _load();
+    final profiles = stored.profiles.toList();
     final index = profiles.indexWhere((item) => item.name == profile.name);
     if (index >= 0) {
       profiles[index] = profile;
@@ -81,19 +87,31 @@ class SshTerminalProfiles {
       }
       profiles.add(profile);
     }
-    await _persist(profiles);
+    await _persist(profiles, minimumVersion: stored.version);
   });
 
   Future<void> delete(String name) => _lock.synchronized(() async {
-    final profiles = (await _load())
+    final stored = await _load();
+    final profiles = stored.profiles
         .where((item) => item.name != name)
         .toList();
-    await _persist(profiles);
+    await _persist(profiles, minimumVersion: stored.version);
   });
 
-  Future<void> _persist(List<SshTerminalProfile> profiles) async {
+  Future<void> _persist(
+    List<SshTerminalProfile> profiles, {
+    required int minimumVersion,
+  }) async {
+    // Old v1 readers ignore unknown fields within a profile. A v2 envelope
+    // makes them preserve/refuse a jump route instead of silently connecting
+    // directly. Once upgraded, keep v2 even after removing the last route.
+    final version =
+        minimumVersion >= 2 ||
+            profiles.any((profile) => profile.config.jumpHosts.isNotEmpty)
+        ? 2
+        : 1;
     final encoded = jsonEncode({
-      'version': 1,
+      'version': version,
       'profiles': profiles.map((item) => item.toJson()).toList(),
     });
     if (encoded.length > maxStorageLength) {

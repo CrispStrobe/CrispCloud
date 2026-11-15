@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/screen_session_options.dart';
 import '../models/tmux_session_options.dart';
 import '../services/ssh_terminal_service.dart';
+import '../models/ssh_jump_host.dart';
 import 'core_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -61,7 +62,9 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String username,
     String password, {
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) async {
     final session = await _service.connect(
       host,
@@ -69,7 +72,9 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       username,
       password,
       gateway: gateway,
+      jumpHosts: jumpHosts,
       hostKeyPrompt: hostKeyPrompt,
+      isCurrent: isCurrent,
     );
     _refresh();
     return session;
@@ -82,8 +87,10 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String username,
     String privateKey, {
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     String? passphrase,
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) async {
     final session = await _service.connectWithKey(
       host,
@@ -91,8 +98,10 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       username,
       privateKey,
       gateway: gateway,
+      jumpHosts: jumpHosts,
       passphrase: passphrase,
       hostKeyPrompt: hostKeyPrompt,
+      isCurrent: isCurrent,
     );
     _refresh();
     return session;

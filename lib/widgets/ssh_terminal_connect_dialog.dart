@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/screen_terminal_strings.dart';
+import '../l10n/ssh_jump_strings.dart';
 import '../l10n/terminal_strings.dart';
 import '../models/screen_session_options.dart';
 import '../models/ssh_terminal_config.dart';
@@ -20,10 +21,14 @@ class SshTerminalConnectDialog extends StatefulWidget {
     super.key,
     this.requiresGateway = kIsWeb,
     this.initialConfig,
+    this.jumpHostOnly = false,
   });
 
   final bool requiresGateway;
   final SshTerminalConfig? initialConfig;
+
+  /// Reuse the credential form for a single hop without nested routes.
+  final bool jumpHostOnly;
 
   @override
   State<SshTerminalConnectDialog> createState() => _SshConnectDialogState();
@@ -47,18 +52,24 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
   bool _keyPasteFailed = false;
   int _keyPasteRequest = 0;
   late final bool _showGateway;
+  final _jumpHosts = <SshJumpHost>[];
+  final _credentialledJumps = <SshJumpHost>{};
+  String? _routeError;
 
   @override
   void initState() {
     super.initState();
     final initial = widget.initialConfig?.withoutSecrets();
-    _showGateway = widget.requiresGateway || initial?.gateway != null;
+    _showGateway =
+        !widget.jumpHostOnly &&
+        (widget.requiresGateway || initial?.gateway != null);
     if (initial == null) return;
     _host.text = initial.host;
     _port.text = initial.port.toString();
     _username.text = initial.username;
     _gateway.text = initial.gateway?.toString() ?? '';
     _authentication = initial.authentication;
+    if (!widget.jumpHostOnly) _jumpHosts.addAll(initial.jumpHosts);
     final tmux = initial.tmux;
     if (tmux != null) {
       _tmuxName.text = tmux.sessionName;
@@ -77,42 +88,171 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
 
   void _submit() {
     if (_form.currentState?.validate() != true) return;
+    if (_jumpHosts.any((jump) => !_credentialledJumps.contains(jump))) {
+      setState(() => _routeError = 'Enter credentials for each jump host.');
+      return;
+    }
     final usesKey = _authentication == SshTerminalAuthentication.privateKey;
     final gateway = _gateway.text.trim();
-    Navigator.pop(
-      context,
-      SshTerminalConfig(
-        host: _host.text.trim(),
-        port: int.parse(_port.text.trim()),
-        username: _username.text.trim(),
-        authentication: _authentication,
-        password: usesKey ? '' : _password.text,
-        privateKey: usesKey ? _privateKey.text : '',
-        passphrase: usesKey ? _passphrase.text : '',
-        gateway: _showGateway && gateway.isNotEmpty ? Uri.parse(gateway) : null,
-        tmux:
-            _sessionMode == _SessionMode.attach ||
-                _sessionMode == _SessionMode.createOrAttach
-            ? TmuxSessionOptions(
-                sessionName: _tmuxName.text.trim(),
-                mode: _sessionMode == _SessionMode.attach
-                    ? TmuxSessionMode.attach
-                    : TmuxSessionMode.createOrAttach,
-              )
-            : null,
-        screen:
-            _sessionMode == _SessionMode.createScreen ||
-                _sessionMode == _SessionMode.attachScreen
-            ? ScreenSessionOptions(
-                sessionName: _screenName.text.trim(),
-                mode: _sessionMode == _SessionMode.attachScreen
-                    ? ScreenSessionMode.attach
-                    : ScreenSessionMode.create,
-              )
-            : null,
+    final config = SshTerminalConfig(
+      host: _host.text.trim(),
+      port: int.parse(_port.text.trim()),
+      username: _username.text.trim(),
+      authentication: _authentication,
+      password: usesKey ? '' : _password.text,
+      privateKey: usesKey ? _privateKey.text : '',
+      passphrase: usesKey ? _passphrase.text : '',
+      gateway: _showGateway && gateway.isNotEmpty ? Uri.parse(gateway) : null,
+      jumpHosts: List.unmodifiable(_jumpHosts),
+      tmux:
+          _sessionMode == _SessionMode.attach ||
+              _sessionMode == _SessionMode.createOrAttach
+          ? TmuxSessionOptions(
+              sessionName: _tmuxName.text.trim(),
+              mode: _sessionMode == _SessionMode.attach
+                  ? TmuxSessionMode.attach
+                  : TmuxSessionMode.createOrAttach,
+            )
+          : null,
+      screen:
+          _sessionMode == _SessionMode.createScreen ||
+              _sessionMode == _SessionMode.attachScreen
+          ? ScreenSessionOptions(
+              sessionName: _screenName.text.trim(),
+              mode: _sessionMode == _SessionMode.attachScreen
+                  ? ScreenSessionMode.attach
+                  : ScreenSessionMode.create,
+            )
+          : null,
+    );
+    try {
+      config.validateSessionOptions();
+    } on ArgumentError {
+      setState(
+        () => _routeError = 'Jump hosts and the destination must be distinct.',
+      );
+      return;
+    }
+    Navigator.pop(context, config);
+  }
+
+  Future<void> _editJump([int? index]) async {
+    if (index == null && _jumpHosts.length >= SshJumpHost.maxJumpHosts) return;
+    final previous = index == null ? null : _jumpHosts[index];
+    final result = await showDialog<SshTerminalConfig>(
+      context: context,
+      builder: (_) => SshTerminalConnectDialog(
+        requiresGateway: false,
+        jumpHostOnly: true,
+        initialConfig: previous == null
+            ? null
+            : SshTerminalConfig(
+                host: previous.host,
+                port: previous.port,
+                username: previous.username,
+                authentication: previous.authentication,
+              ),
       ),
     );
+    if (!mounted || result == null) return;
+    if (index != null &&
+        (index >= _jumpHosts.length ||
+            !identical(_jumpHosts[index], previous))) {
+      return;
+    }
+    final jump = SshJumpHost(
+      host: result.host,
+      port: result.port,
+      username: result.username,
+      authentication: result.authentication,
+      password: result.password,
+      privateKey: result.privateKey,
+      passphrase: result.passphrase,
+    );
+    setState(() {
+      if (index == null) {
+        _jumpHosts.add(jump);
+      } else {
+        _jumpHosts[index] = jump;
+        _credentialledJumps.remove(previous);
+      }
+      _credentialledJumps.add(jump);
+      _routeError = null;
+    });
   }
+
+  Widget _jumpRoute() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        context.sshJumpTr('Jump hosts'),
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
+      Text(
+        context.sshJumpTr(
+          'Connect through up to three SSH servers, in the order shown. Credentials are requested for every server.',
+        ),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      for (var i = 0; i < _jumpHosts.length; i++)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            '${i + 1}. ${_jumpHosts[i].username}@${_jumpHosts[i].host}:${_jumpHosts[i].port}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            context.sshJumpTr(
+              _credentialledJumps.contains(_jumpHosts[i])
+                  ? 'Credentials entered'
+                  : 'Credentials needed',
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                key: ValueKey('terminal-ssh-jump-$i-edit'),
+                tooltip: context.sshJumpTr('Edit jump host'),
+                onPressed: () => _editJump(i),
+                icon: const Icon(Icons.edit_outlined),
+              ),
+              IconButton(
+                key: ValueKey('terminal-ssh-jump-$i-remove'),
+                tooltip: context.sshJumpTr('Remove jump host'),
+                onPressed: () => setState(() {
+                  _credentialledJumps.remove(_jumpHosts.removeAt(i));
+                  _routeError = null;
+                }),
+                icon: const Icon(Icons.remove_circle_outline),
+              ),
+            ],
+          ),
+        ),
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton.icon(
+          key: const ValueKey('terminal-ssh-add-jump'),
+          onPressed: _jumpHosts.length < SshJumpHost.maxJumpHosts
+              ? () => _editJump()
+              : null,
+          icon: const Icon(Icons.add),
+          label: Text(context.sshJumpTr('Add jump host')),
+        ),
+      ),
+      if (_showGateway && _jumpHosts.isNotEmpty)
+        Text(
+          context.sshJumpTr('The gateway must forward to the first jump host.'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      if (_routeError != null)
+        Text(
+          context.sshJumpTr(_routeError!),
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+    ],
+  );
 
   void _selectAuthentication(SshTerminalAuthentication? value) {
     if (value == null || value == _authentication) return;
@@ -169,7 +309,11 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(context.terminalTr('Connect via SSH')),
+    title: Text(
+      widget.jumpHostOnly
+          ? context.sshJumpTr('SSH jump host')
+          : context.terminalTr('Connect via SSH'),
+    ),
     content: SizedBox(
       width: 400,
       child: SingleChildScrollView(
@@ -179,7 +323,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (widget.requiresGateway) ...[
+              if (widget.requiresGateway && !widget.jumpHostOnly) ...[
                 Text(
                   context.terminalTr(
                     'Enter a secure WebSocket gateway that forwards to this SSH server. CrispCloud does not provide a gateway.',
@@ -197,7 +341,12 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                 decoration: InputDecoration(
                   labelText: context.terminalTr('Host'),
                 ),
-                validator: _required,
+                validator: (value) =>
+                    SshJumpHost.isValidHost(value?.trim() ?? '')
+                    ? null
+                    : context.sshJumpTr(
+                        'Enter a valid host name or IP address.',
+                      ),
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 8),
@@ -213,7 +362,10 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                       decoration: InputDecoration(
                         labelText: context.terminalTr('Username'),
                       ),
-                      validator: _required,
+                      validator: (value) =>
+                          SshJumpHost.isValidUsername(value?.trim() ?? '')
+                          ? null
+                          : context.sshJumpTr('Enter a valid username.'),
                       textInputAction: TextInputAction.next,
                     ),
                   ),
@@ -379,127 +531,133 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                   onFieldSubmitted: (_) => _submit(),
                 ),
               ],
-              const SizedBox(height: 12),
-              DropdownButtonFormField<_SessionMode>(
-                key: const ValueKey('terminal-ssh-session-mode'),
-                initialValue: _sessionMode,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.terminalTr('Session'),
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: _SessionMode.shell,
-                    child: Text(
-                      context.terminalTr('Remote shell'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: _SessionMode.createOrAttach,
-                    child: Text(
-                      context.terminalTr('Create or attach tmux'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: _SessionMode.attach,
-                    child: Text(
-                      context.terminalTr('Attach existing tmux'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: _SessionMode.createScreen,
-                    child: Text(
-                      context.screenTr('Create new screen'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: _SessionMode.attachScreen,
-                    child: Text(
-                      context.screenTr('Attach existing screen'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _sessionMode = value);
-                },
-              ),
-              if (_sessionMode == _SessionMode.createOrAttach ||
-                  _sessionMode == _SessionMode.attach) ...[
-                const SizedBox(height: 8),
-                TextFormField(
-                  key: const ValueKey('terminal-ssh-tmux-name'),
-                  controller: _tmuxName,
-                  autocorrect: false,
-                  enableSuggestions: false,
+              if (!widget.jumpHostOnly) ...[
+                const SizedBox(height: 16),
+                _jumpRoute(),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<_SessionMode>(
+                  key: const ValueKey('terminal-ssh-session-mode'),
+                  initialValue: _sessionMode,
+                  isExpanded: true,
                   decoration: InputDecoration(
-                    labelText: context.terminalTr('tmux session name'),
-                    errorMaxLines: 4,
+                    labelText: context.terminalTr('Session'),
                   ),
-                  validator: (value) =>
-                      TmuxSessionOptions.isValidSessionName(value?.trim() ?? '')
-                      ? null
-                      : context.terminalTr(
-                          'Use 1–64 ASCII letters, digits, _ or -; do not start with -.',
-                        ),
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _submit(),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.terminalTr(
-                    'tmux must be installed on the server. Sessions keep running when you disconnect.',
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-              if (_sessionMode == _SessionMode.createScreen ||
-                  _sessionMode == _SessionMode.attachScreen) ...[
-                const SizedBox(height: 8),
-                TextFormField(
-                  key: const ValueKey('terminal-ssh-screen-name'),
-                  controller: _screenName,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  decoration: InputDecoration(
-                    labelText: context.screenTr(
-                      _sessionMode == _SessionMode.attachScreen
-                          ? 'screen session name or PID.name'
-                          : 'screen session name',
+                  items: [
+                    DropdownMenuItem(
+                      value: _SessionMode.shell,
+                      child: Text(
+                        context.terminalTr('Remote shell'),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    errorMaxLines: 5,
-                  ),
-                  validator: (value) {
-                    final name = value?.trim() ?? '';
-                    if (_sessionMode == _SessionMode.attachScreen) {
-                      return ScreenSessionOptions.isValidAttachTarget(name)
-                          ? null
-                          : context.screenTr(
-                              'Use a session name (1–64 ASCII letters, digits, _ or -), or a full PID.name.',
-                            );
-                    }
-                    return ScreenSessionOptions.isValidSessionName(name)
+                    DropdownMenuItem(
+                      value: _SessionMode.createOrAttach,
+                      child: Text(
+                        context.terminalTr('Create or attach tmux'),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: _SessionMode.attach,
+                      child: Text(
+                        context.terminalTr('Attach existing tmux'),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: _SessionMode.createScreen,
+                      child: Text(
+                        context.screenTr('Create new screen'),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: _SessionMode.attachScreen,
+                      child: Text(
+                        context.screenTr('Attach existing screen'),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _sessionMode = value);
+                  },
+                ),
+                if (_sessionMode == _SessionMode.createOrAttach ||
+                    _sessionMode == _SessionMode.attach) ...[
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    key: const ValueKey('terminal-ssh-tmux-name'),
+                    controller: _tmuxName,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    decoration: InputDecoration(
+                      labelText: context.terminalTr('tmux session name'),
+                      errorMaxLines: 4,
+                    ),
+                    validator: (value) =>
+                        TmuxSessionOptions.isValidSessionName(
+                          value?.trim() ?? '',
+                        )
                         ? null
                         : context.terminalTr(
                             'Use 1–64 ASCII letters, digits, _ or -; do not start with -.',
-                          );
-                  },
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _submit(),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.screenTr(
-                    _sessionMode == _SessionMode.attachScreen
-                        ? 'Attach uses an exact name or full PID.name from screen -ls. Other displays stay connected.'
-                        : 'screen must be installed on the server. New sessions keep running when you disconnect.',
+                          ),
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _submit(),
                   ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    context.terminalTr(
+                      'tmux must be installed on the server. Sessions keep running when you disconnect.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                if (_sessionMode == _SessionMode.createScreen ||
+                    _sessionMode == _SessionMode.attachScreen) ...[
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    key: const ValueKey('terminal-ssh-screen-name'),
+                    controller: _screenName,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    decoration: InputDecoration(
+                      labelText: context.screenTr(
+                        _sessionMode == _SessionMode.attachScreen
+                            ? 'screen session name or PID.name'
+                            : 'screen session name',
+                      ),
+                      errorMaxLines: 5,
+                    ),
+                    validator: (value) {
+                      final name = value?.trim() ?? '';
+                      if (_sessionMode == _SessionMode.attachScreen) {
+                        return ScreenSessionOptions.isValidAttachTarget(name)
+                            ? null
+                            : context.screenTr(
+                                'Use a session name (1–64 ASCII letters, digits, _ or -), or a full PID.name.',
+                              );
+                      }
+                      return ScreenSessionOptions.isValidSessionName(name)
+                          ? null
+                          : context.terminalTr(
+                              'Use 1–64 ASCII letters, digits, _ or -; do not start with -.',
+                            );
+                    },
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    context.screenTr(
+                      _sessionMode == _SessionMode.attachScreen
+                          ? 'Attach uses an exact name or full PID.name from screen -ls. Other displays stay connected.'
+                          : 'screen must be installed on the server. New sessions keep running when you disconnect.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ],
             ],
           ),
@@ -513,7 +671,11 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
       ),
       FilledButton(
         onPressed: _submit,
-        child: Text(context.terminalTr('Connect')),
+        child: Text(
+          widget.jumpHostOnly
+              ? context.sshJumpTr('Use jump host')
+              : context.terminalTr('Connect'),
+        ),
       ),
     ],
   );
