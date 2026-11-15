@@ -63,9 +63,20 @@ Production source, assets, dependency declarations, validation tools and the
 Office workflow match the accepted source exactly; the saved Git-object
 comparison records that boundary. Normal test typography is unchanged.
 
-Fresh exact-source [run 43689052023](https://github.com/CrispStrobe/CrispCloud/actions/runs/43689052023)
-is pending. Readable-glyph visual acceptance awaits inspection of its actual
-captures.
+At the user's direction, completion no longer waits on GitHub's free-tier
+queue. Monitoring stopped after the browser job passed and before the host
+job started; no later hosted result is claimed.
+
+Local continuation at formatting checkpoint `52f2dec46cdd31c99b7dd0cae8294cbe450056c4`
+resolved the locked dependencies without changing the lockfile, passed the
+formatter, and passed strict analysis of the two changed files. The actual
+test launch then exhausted workspace disk while compiling Kindling's real
+native dependency, before any worksheet tests or captures ran. Subsequent
+cleanup commands cannot start because sandbox setup also needs free space.
+
+See the [local continuation checkpoint](evidence/office-worksheet-navigation-20261115/resume/local-preview-20261115/README.md).
+Restore workspace capacity, retain the full local receipts, and retry the
+same focused tests. Readable-glyph visual acceptance remains open.
 
 ## Integration limits
 

@@ -17,11 +17,23 @@ remains separately labeled as failed-run history.
 
 Visual review of the initial complete-view captures found test-font blocks.
 Preview-only checkpoint `c3ac5b674c42b9a2d8f1b1631e394c6132cfbeba` loads the
-existing Latin, Arabic and icon assets and records their hashes. Its fresh
-exact-source [run 43689052023](https://github.com/CrispStrobe/CrispCloud/actions/runs/43689052023)
-is pending. Next: inspect and retain its actual readable PNGs, then close the
-UI acceptance record and update PR #110. Production/runtime source remains
-identical to the already accepted source.
+existing Latin, Arabic and icon assets and records their hashes; checkpoint
+`52f2dec46cdd31c99b7dd0cae8294cbe450056c4` applies the pinned Dart formatter.
+Production/runtime source remains identical to the accepted source.
+
+The user directed work to continue without waiting on the starved GitHub
+queue. The pinned toolchain now runs locally. Locked dependency resolution,
+formatting and strict focused analysis passed; the worksheet test launch
+stopped before tests when Kindling's native build exhausted workspace disk.
+Even cleanup commands are currently blocked at sandbox setup. A narrow
+elevated cleanup was rejected by the workspace's disabled-escalation policy.
+
+Next: restore workspace headroom, preserve the complete local receipts and
+retry the same tests, then inspect and retain readable PNGs and independently
+check the six new workbook outputs. The [local checkpoint](evidence/office-worksheet-navigation-20261115/resume/local-preview-20261115/README.md)
+records the exact commands and the distinction between observed results,
+local-only files and remotely retained evidence. Do not wait on GitHub to
+complete this visual gate.
 
 ## Initial recovery note (historical)
 

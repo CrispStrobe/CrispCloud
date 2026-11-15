@@ -11,6 +11,7 @@ identifies current results, source identities and UI status.
 | `resume/inventory-repair-baseline/` | Unmodified inventory and original collisions |
 | `resume/inventory-repair-validation/` | 32 controls, exact 57-collision replay and repaired 182-file inventory |
 | `resume/hosted-7e5af83c/` | Successful source-bound hosted acceptance, original ZIPs, full logs, reports and independent verification |
+| `resume/local-preview-20261115/` | Local locked-resolution, format and analysis results; disk-exhausted native build before tests; recovery boundary |
 
 The successful run validates 540 packages and renders 149 files, including
 36 save-cycle and three reference comparisons. All five retained archive
