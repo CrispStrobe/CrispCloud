@@ -1,0 +1,54 @@
+{
+  "after_entries_sha256": "63c8093f438c4a1d00dd581bb6a676ec0c975a454fdb476a0aaa36a7921adc8f",
+  "after_git": {
+    "head": "02d2142e1b962b0076470f4976742ec48f128e1f",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-qualification-20261115/analysis-files.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/suites.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/inputs-after.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/suites.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/summary.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/inputs-after.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/suites.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/summary.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-committed-identity.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-controls/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-controls/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-controls/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-source/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-source/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/office-source/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/verify_office_committed_identity.py\n?? tmpn1_k8oc0/host/lib/host.dart\n?? tmpn1_k8oc0/host/packages/legacy_doc_parser/LICENSE\n?? tmpn1_k8oc0/host/packages/legacy_doc_parser/UPSTREAM.json\n?? tmpn1_k8oc0/host/packages/legacy_doc_parser/doc/old.md\n?? tmpn1_k8oc0/host/packages/legacy_doc_parser/lib/legacy_doc_parser.dart\n?? tmpn1_k8oc0/host/packages/legacy_doc_parser/pubspec.yaml\n?? tmpn1_k8oc0/host/packages/quds_office_engine/lib/example.dart\n?? tmpn1_k8oc0/host/pubspec.yaml\n?? tmpn1_k8oc0/host/tool/office_fidelity_manifest.json\n?? tmpn1_k8oc0/parser/\n?? tmpn1_k8oc0/quds/\n",
+    "tree": "5cc0a771315f5cd36395a24ffd078906bf5e3741",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1f80e59755df/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1f80e59755df/CrispCloud/tool/verify_office_fidelity.py": "e6e2907c122b1e97d164b98f759243964de9b68804a191ab0af582a8bbb983ae"
+  },
+  "before_entries_sha256": "63c8093f438c4a1d00dd581bb6a676ec0c975a454fdb476a0aaa36a7921adc8f",
+  "before_git": {
+    "head": "02d2142e1b962b0076470f4976742ec48f128e1f",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-qualification-20261115/analysis-files.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/app/suites.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/inputs-after.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/suites.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/editor/summary.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/inputs-after.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/stdout.jsonl\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/suites.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/engine/summary.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/verify_office_committed_identity.py\n",
+    "tree": "5cc0a771315f5cd36395a24ffd078906bf5e3741",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1f80e59755df/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1f80e59755df/CrispCloud/tool/verify_office_fidelity.py": "e6e2907c122b1e97d164b98f759243964de9b68804a191ab0af582a8bbb983ae"
+  },
+  "command": [
+    "python3",
+    "tool/verify_office_fidelity.py",
+    "--source",
+    "/workspace/scratch/1f80e59755df/office_audit/quds_office_suite",
+    "--legacy-source",
+    "/workspace/scratch/1f80e59755df/office_audit/legacy-doc-parser",
+    "--require-tracked"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "elapsed_seconds": 2.317563254000106,
+  "finished_at": "2026-11-15T09:32:25.103320+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8490,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T09:32:22.784113+00:00",
+  "suite_count": null
+}

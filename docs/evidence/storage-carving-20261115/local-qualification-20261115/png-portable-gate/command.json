@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/workspace/scratch/1f80e59755df/toolchains/run.py",
+    "python3",
+    "docs/evidence/storage-carving-20261115/run_portable.py",
+    "--repo",
+    "/workspace/scratch/1f80e59755df/CrispCloud",
+    "--launcher",
+    "/workspace/scratch/1f80e59755df/toolchains/run.py",
+    "--output",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/png-portable"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "shell_display": "/workspace/scratch/1f80e59755df/toolchains/run.py python3 docs/evidence/storage-carving-20261115/run_portable.py --repo /workspace/scratch/1f80e59755df/CrispCloud --launcher /workspace/scratch/1f80e59755df/toolchains/run.py --output docs/evidence/storage-carving-20261115/local-qualification-20261115/png-portable"
+}

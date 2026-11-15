@@ -1,0 +1,9 @@
+Analyzing 118 items...                                          
+
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart:120:15 • prefer_const_constructors
+   info • Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' • packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart:1069:5 • prefer_const_declarations
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart:449:31 • prefer_const_constructors
+   info • Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' • packages/quds_office_engine/test/ods_sheet_reader_test.dart:259:5 • prefer_const_declarations
+   info • Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' • test/document_conversion_test.dart:99:5 • prefer_const_declarations
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • test/widget/document_conversion_dialog_test.dart:40:11 • curly_braces_in_flow_control_structures
+

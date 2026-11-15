@@ -1,0 +1,27 @@
+{
+  "modules": [
+    {
+      "file": "tool/test_sync_office_fidelity.py",
+      "discovered_tests": 8,
+      "source_sha256": "bf13365b5c9f4b4d6d5e0c89623cdefdeaf62b71d3c269114022ae1d5959fcac"
+    },
+    {
+      "file": "tool/test_sync_legacy_doc_parser.py",
+      "discovered_tests": 19,
+      "source_sha256": "a48f047d971d11977853ce9e678dd743d837b5fb54202099557828471148fd60"
+    },
+    {
+      "file": "tool/test_office_host_evidence.py",
+      "discovered_tests": 34,
+      "source_sha256": "4e1b5538acef90cdc3a8fc238dd13cdf5fa6afb9b9ea00cb0dc9f38090f5dd40"
+    }
+  ],
+  "tests_run": 61,
+  "passed": 61,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "expected_failures": 0,
+  "unexpected_successes": 0,
+  "success": true
+}

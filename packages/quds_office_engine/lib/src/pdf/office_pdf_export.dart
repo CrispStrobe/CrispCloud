@@ -117,7 +117,7 @@ abstract final class OfficePdfExport {
           title: title,
         );
       case OpcPackageKind.unknown:
-        throw FormatException('Unsupported Office package for PDF export');
+        throw const FormatException('Unsupported Office package for PDF export');
     }
   }
 
@@ -1066,7 +1066,7 @@ abstract final class OfficePdfExport {
     final double pageH = options.pageHeight;
     final double margin = options.margin;
     final double gutter = options.showHeadings ? 28 : 0;
-    final double band = 18;
+    const double band = 18;
 
     var minCol = 0;
     var maxCol = 0;

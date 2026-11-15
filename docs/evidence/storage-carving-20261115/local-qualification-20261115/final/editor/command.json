@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/workspace/scratch/1f80e59755df/toolchains/run.py",
+    "flutter",
+    "--suppress-analytics",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "json",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/word_inline_picture_history_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/word_selection_paint_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_navigation_controller_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_navigation_widget_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_cell_state_history_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_style_history_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_sort_history_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor",
+  "shell_display": "/workspace/scratch/1f80e59755df/toolchains/run.py flutter --suppress-analytics test --no-pub --reporter json /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/word_inline_picture_history_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/word_selection_paint_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_navigation_controller_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_navigation_widget_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_cell_state_history_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_style_history_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/test/sheet_sort_history_test.dart"
+}
