@@ -258,15 +258,16 @@ Future<void> _preview(WidgetTester tester, String filename) async {
         .widget<OfficeEditorRibbon>(find.byType(OfficeEditorRibbon))
         .config
         .theme;
-    final iconCodePoints = tester
-        .widgetList<Icon>(find.byType(Icon))
-        .map((widget) => widget.icon)
-        .whereType<IconData>()
-        .where((icon) => icon.fontFamily == 'MaterialIcons')
-        .map((icon) => icon.codePoint)
-        .toSet()
-        .toList()
-      ..sort();
+    final iconCodePoints =
+        tester
+            .widgetList<Icon>(find.byType(Icon))
+            .map((widget) => widget.icon)
+            .whereType<IconData>()
+            .where((icon) => icon.fontFamily == 'MaterialIcons')
+            .map((icon) => icon.codePoint)
+            .toSet()
+            .toList()
+          ..sort();
     expect(materialTheme.textTheme.bodyMedium!.fontFamily, _previewFontFamily);
     expect(
       materialTheme.textTheme.bodyMedium!.fontFamilyFallback,
@@ -276,38 +277,37 @@ Future<void> _preview(WidgetTester tester, String filename) async {
     File('build/office-sheet-navigation-preview/$filename')
       ..createSync(recursive: true)
       ..writeAsBytesSync(png);
-    File('build/office-sheet-navigation-preview/$filename.json')
-        .writeAsStringSync(
-          const JsonEncoder.withIndent('  ').convert({
-            'file': filename,
-            'capture': 'complete host render view including modal overlays',
-            'width': image.width,
-            'height': image.height,
-            'device_pixel_ratio': tester.view.devicePixelRatio,
-            'locale': Localizations.localeOf(selector).toLanguageTag(),
-            'preview_only_typography': {
-              'material_font_family': _previewFontFamily,
-              'material_font_family_fallback': _previewFallbacks,
-              'office_font_family': officeTheme.fontFamily,
-              'icon_font_family': 'MaterialIcons',
-              'visible_material_icon_code_points': iconCodePoints,
-              'fonts': _previewFontReceipts,
+    File(
+      'build/office-sheet-navigation-preview/$filename.json',
+    ).writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert({
+        'file': filename,
+        'capture': 'complete host render view including modal overlays',
+        'width': image.width,
+        'height': image.height,
+        'device_pixel_ratio': tester.view.devicePixelRatio,
+        'locale': Localizations.localeOf(selector).toLanguageTag(),
+        'preview_only_typography': {
+          'material_font_family': _previewFontFamily,
+          'material_font_family_fallback': _previewFallbacks,
+          'office_font_family': officeTheme.fontFamily,
+          'icon_font_family': 'MaterialIcons',
+          'visible_material_icon_code_points': iconCodePoints,
+          'fonts': _previewFontReceipts,
+        },
+        'capture_sources': [
+          for (final path in const [
+            'test/widget/office_sheet_navigation_workflow_test.dart',
+            'test/support/office_test_harness.dart',
+          ])
+            {
+              'path': path,
+              'sha256': sha256.convert(File(path).readAsBytesSync()).toString(),
             },
-            'capture_sources': [
-              for (final path in const [
-                'test/widget/office_sheet_navigation_workflow_test.dart',
-                'test/support/office_test_harness.dart',
-              ])
-                {
-                  'path': path,
-                  'sha256': sha256
-                      .convert(File(path).readAsBytesSync())
-                      .toString(),
-                },
-            ],
-            'sha256': sha256.convert(png).toString(),
-          }),
-        );
+        ],
+        'sha256': sha256.convert(png).toString(),
+      }),
+    );
   } finally {
     image.dispose();
   }
