@@ -1,0 +1,45 @@
+{
+  "command": [
+    "dart",
+    "test",
+    "--reporter=json",
+    "test/ods_sheet_reader_test.dart"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine",
+  "started_at": "2026-11-15T09:40:58.044549+00:00",
+  "elapsed_seconds": 2.8451036270002987,
+  "returncode": 0,
+  "before_sha256": {
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "56050029e8dea0d06ab90798bfb3616e77f94bb9691858969a983f05ee720364",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "9806873ca664e4e389f274ff332dc5458193bdbd069842a7e5454d3b07c5277c",
+    "packages/quds_office_engine/CHANGELOG.md": "093300f584f1c148ffeb2315f4bc6a72ef2ae841effb4739e1112b2d2693fb48",
+    "pubspec.lock": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+    ".dart_tool/package_config.json": "19965bbf79508f032db244782ebdabeecbf24afb63a08ca7df0fbcc007627968",
+    ".dart_tool/package_graph.json": "958cfa3beb2e234d7ecc1285f779c6c42ac5b57fcc6d7de9d984f00f028c394b"
+  },
+  "after_sha256": {
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "56050029e8dea0d06ab90798bfb3616e77f94bb9691858969a983f05ee720364",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "9806873ca664e4e389f274ff332dc5458193bdbd069842a7e5454d3b07c5277c",
+    "packages/quds_office_engine/CHANGELOG.md": "093300f584f1c148ffeb2315f4bc6a72ef2ae841effb4739e1112b2d2693fb48",
+    "pubspec.lock": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+    ".dart_tool/package_config.json": "19965bbf79508f032db244782ebdabeecbf24afb63a08ca7df0fbcc007627968",
+    ".dart_tool/package_graph.json": "958cfa3beb2e234d7ecc1285f779c6c42ac5b57fcc6d7de9d984f00f028c394b"
+  },
+  "inputs_stable": true,
+  "head": "1c1b0af8e20bb02f7d18b4e6cb116328f4342332",
+  "merge_parent": "fbe879e811b57805583d658523b73320c7149d04",
+  "scope": "Uncommitted canonical merge development with complete union regressions; not clean-source acceptance.",
+  "visible_test_totals": {
+    "success": 35,
+    "failure": 0,
+    "error": 0
+  },
+  "skipped": 0,
+  "done": [
+    {
+      "success": true,
+      "type": "done",
+      "time": 2258
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "README.md": {
+    "size": 1715,
+    "sha256": "80b268df4f17657fc5e32d29de1fc18d15593b4496e9a1f62f43652bb4ec3e6b"
+  },
+  "channel-rust-1.100.0.toml.gz": {
+    "size": 79860,
+    "sha256": "d68a66f14a52b3f4668099052cfd759307503f9bebd9f84b610e1198eaa864b8"
+  },
+  "dart-version.txt": {
+    "size": 82,
+    "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+  },
+  "downloads.json": {
+    "size": 7521,
+    "sha256": "53674299efadbe7e4000c1ae07ba8060034d989f27a555ff46de0712dcd925d1"
+  },
+  "env.sh": {
+    "size": 693,
+    "sha256": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245"
+  },
+  "flutter-release.json": {
+    "size": 354,
+    "sha256": "0512d2f3e1ecc398936a6dcd0d9b57f89c7cf6221efa5c103b95490c77eab9dd"
+  },
+  "flutter-tester-ldd.txt": {
+    "size": 370,
+    "sha256": "6ce949cd24b09b90b2dd46a46e061b733fb9c16bdc628c8cf181c92f252b2283"
+  },
+  "flutter-version.json": {
+    "size": 631,
+    "sha256": "ea4bc8316415636ee34e83e16bfad26e4fc48cfb7fdaa0b0182264b2c0474eca"
+  },
+  "initialize.sh": {
+    "size": 895,
+    "sha256": "600120682c3fd2806d22bc04c94e01f81e33352426a6fda6759cda140e6e7748"
+  },
+  "install.json": {
+    "size": 155,
+    "sha256": "21bcead971affdb6e9b2d7872ae261639137446305cd7277d8062c58117f1ab7"
+  },
+  "launcher-hashes.json": {
+    "size": 1409,
+    "sha256": "752039f32b3538eb13bf78bbe400c5f7f63cba0199a926f61092eb9170ca49ed"
+  },
+  "launchers/cargo": {
+    "size": 291,
+    "sha256": "f50de78842c8634372f3cdbb3308bad3c25dd72a17fa6430acd2126e9d93a55e"
+  },
+  "launchers/clang": {
+    "size": 368,
+    "sha256": "7fb2bd04b31901caf3cc079eaf39d1ca4b585270b26b42d44afe4592d767c745"
+  },
+  "launchers/clang++": {
+    "size": 370,
+    "sha256": "040dc5fbcca66cdfe079dbbf91e7fd226bb66c97a466c96ba316c2b1482f5b3e"
+  },
+  "launchers/clang-19": {
+    "size": 368,
+    "sha256": "7fb2bd04b31901caf3cc079eaf39d1ca4b585270b26b42d44afe4592d767c745"
+  },
+  "launchers/cmake": {
+    "size": 286,
+    "sha256": "b5a6315d855db5798d5e8c55a4102b443c70422d6baaceeba1f09dcc63c223e4"
+  },
+  "launchers/cpack": {
+    "size": 286,
+    "sha256": "b992869f41c813dfbf28b95fb970964fb2d2f881d7c867d22a5885ba01275a7a"
+  },
+  "launchers/ctest": {
+    "size": 286,
+    "sha256": "c95d1cf711e2bc36d855be7ea0d842c549aac8a319d4121715382cea1dd4d070"
+  },
+  "launchers/llvm-ar": {
+    "size": 370,
+    "sha256": "75d7c22cf054bca1722778cea3ac71fc914012b82976a1e6a8771cf010f4f1ee"
+  },
+  "launchers/llvm-strip": {
+    "size": 373,
+    "sha256": "a26d21d800b8289cc9ffa68c9138abfbb5142db7b5777620b632ca4accb76038"
+  },
+  "launchers/ninja": {
+    "size": 286,
+    "sha256": "8654551bb42911671aba4488ce5872640dca0b46a1c1a1d6ee11294dc2fb72c7"
+  },
+  "launchers/rustc": {
+    "size": 291,
+    "sha256": "64d2ba8e14053de79e949e9e527fc250184756d0bdb5edfb0f6c17b5ec3048cf"
+  },
+  "launchers/rustdoc": {
+    "size": 293,
+    "sha256": "469b784caca339e81618633d67368aac266562919f992f92e18c973d73ea5718"
+  },
+  "logs/flutter-precache-linux.log.gz": {
+    "size": 400,
+    "sha256": "f51bd456f9047b97cd20f939f1744e367692993554fb1a47b81a83eb39b0d79d"
+  },
+  "logs/sdk-cache-preload.log.gz": {
+    "size": 2841,
+    "sha256": "882628a75e13d0dd264c74ec8b130616ac6503a9d117789d691ded7fa08ea36f"
+  },
+  "logs/sdk-pub-offline.log.gz": {
+    "size": 467,
+    "sha256": "4d802adf338477713bb76e1c7b188a3f8449f67ea1c4a1a65515374bcd003c85"
+  },
+  "native-index-verification.json": {
+    "size": 488,
+    "sha256": "e1936aa8099e40e1d18dccf89e838783fc85ae3387c320408e76a36fa5e1cbe7"
+  },
+  "native-packages.json": {
+    "size": 4175,
+    "sha256": "777ceed11f044f7ac7aa76657deaf42bc1b4e9a79a7597f1b74af70151d7fe2f"
+  },
+  "native-probes.json": {
+    "size": 1169,
+    "sha256": "aa917d29b3a8afa74ff032a03a64d543966923c5a9eaf7e26729c630f86f67bf"
+  },
+  "releases_linux.json.gz": {
+    "size": 65436,
+    "sha256": "cf3537cd6cbd18acdbdbba9c10244582989710fbc5b0af3b28bfe54db57769ed"
+  },
+  "resolution-runner.py": {
+    "size": 3513,
+    "sha256": "5b35932ac83ee6d615a9be20dc77248839364b6df23271a7ffa538787908c95a"
+  },
+  "resolve_dependencies.py": {
+    "size": 1246,
+    "sha256": "be99de52e6a56341c1869a84bc895f9b6d51aad57ce69aa421479e6878aa71c8"
+  },
+  "rust-packages.json": {
+    "size": 1030,
+    "sha256": "56192cb8b5933d9c1f3f8f5fd4a9d746e2c6adb49c6637f6cc283d225a58b225"
+  },
+  "setup-receipt.json": {
+    "size": 510,
+    "sha256": "482df81d2e29b68264a58381bc6d86980c9bdd1c49e94a3f48bfda860f80648a"
+  },
+  "setup_downloads.py": {
+    "size": 2025,
+    "sha256": "709b9f6b3c7176cf192c7ec446cfed1704c6ca2d569621e3afad7591858c488f"
+  },
+  "setup_install.py": {
+    "size": 1432,
+    "sha256": "a7c6c5d9b2ccd435e673ab483df0d888e1e7b93979861e19a040fad0d2d2101a"
+  },
+  "setup_probes.py": {
+    "size": 1913,
+    "sha256": "106a84aa4def2570fe08a364dbed8bb3bd17a00c3805e472ad9cb99f52c31b65"
+  },
+  "tool-versions.json": {
+    "size": 1627,
+    "sha256": "0b3ed58535d668fec8ecd8fbb87b4182b2e7a6b230b7a25d5db06cb370c63cb5"
+  }
+}

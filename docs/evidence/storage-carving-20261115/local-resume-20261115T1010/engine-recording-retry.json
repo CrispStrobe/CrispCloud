@@ -1,0 +1,17 @@
+{
+  "accepted": false,
+  "reason": "Root started the engine gate before the previous remote publisher local-fetch/ref-alignment session had completed. The full source and resolution entries and tree remained equal, but HEAD changed from the local commit identity to the API-created remote identity. The strict recorder correctly rejected the attempt.",
+  "before_head": "ac3b196f9281ea8cd179b252368fefeec969ca53",
+  "after_head": "8a7387e28e483851c022d192b4a5d610304a1ad1",
+  "unchanged_tree": "295257d542f6b48421eccada0fca18ff49287a7e",
+  "unchanged_entries_sha256": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+  "runtime_totals": {
+    "errors": 0,
+    "failed": 0,
+    "other_results": 0,
+    "passed": 182,
+    "skipped": 0,
+    "tests": 182
+  },
+  "remediation": "Preserve the complete unsuccessful receipt, finish and verify all local publisher sessions before launching any next gate, and rerun the full engine cohort as engine-final-2. Do not relax the source-stability gate."
+}

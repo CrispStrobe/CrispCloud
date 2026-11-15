@@ -1,0 +1,1360 @@
+{
+  "classification": "Actual pinned local toolchain and resolved dependencies; runtime qualification not claimed by setup",
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/1f80e59755df/toolchains/flutter"
+  },
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5",
+  "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]",
+  "clang": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/1f80e59755df/toolchains/debian/root/usr/lib/llvm-19/bin",
+  "clang_probe": "real clang compile/run succeeded",
+  "sdk_archive": {
+    "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.8-stable.tar.xz",
+    "bytes": 1581444364,
+    "sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+    "verified": true
+  },
+  "native_packages": [
+    {
+      "package": "clang-19",
+      "filename": "pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+      "sha256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4"
+    },
+    {
+      "package": "libclang-common-19-dev",
+      "filename": "pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+      "sha256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc"
+    },
+    {
+      "package": "libclang-cpp19",
+      "filename": "pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+      "sha256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47"
+    },
+    {
+      "package": "libllvm19",
+      "filename": "pool/main/l/llvm-toolchain-19/libllvm19_19.1.7-3+b1_amd64.deb",
+      "sha256": "db0d614d61345ca710fb73e75105f1ec6e38898fa7b3aa99fa7eb7d8b0a11d57"
+    }
+  ],
+  "resolution": {
+    "pubspec.yaml": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/pubspec.yaml",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/pubspec.yaml",
+      "sha256": "919401d5798e93e98a3905a5009b54445998f061d2ca37f6f4b3c5c065f04784",
+      "bytes": 11439
+    },
+    "pubspec.lock": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/pubspec.lock",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/pubspec.lock",
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "bytes": 63283
+    },
+    ".dart_tool/package_config.json": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/package_config.json",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/.dart_tool/package_config.json",
+      "sha256": "f601d23558e09482e5c10e253dad0ba6e9d32a766cf6e1bcddefa1a2423d3522",
+      "bytes": 59405
+    },
+    ".dart_tool/package_graph.json": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/package_graph.json",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/.dart_tool/package_graph.json",
+      "sha256": "e5428055c188f2baf66b2fea2b111f6b9e867e982aa8eaddcf11e20a6f8d63a7",
+      "bytes": 52197
+    },
+    "packages/quds_office_engine/pubspec.yaml": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/pubspec.yaml",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_engine/pubspec.yaml",
+      "sha256": "0efaf1c9de086ba52503ea2dff6831820e72612a127ea29be6190f7c84252b37",
+      "bytes": 2456
+    },
+    "packages/quds_office_engine/pubspec.lock": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/pubspec.lock",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_engine/pubspec.lock",
+      "sha256": "0332e894dbbb6b891b909bca49d50e5382381fabdc30bf57a81ca84a3da23618",
+      "bytes": 12486
+    },
+    "packages/quds_office_engine/.dart_tool/package_config.json": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/.dart_tool/package_config.json",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_engine/.dart_tool/package_config.json",
+      "sha256": "95ce99b21afb7a6c7d45d3b5dbb81857da383ce9c5f434357ffd1b641026b37b",
+      "bytes": 11802
+    },
+    "packages/quds_office_engine/.dart_tool/package_graph.json": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/.dart_tool/package_graph.json",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_engine/.dart_tool/package_graph.json",
+      "sha256": "8cad30077628b5436ce3417b9014f47328d325c2d7c98a360c17cf5f1281a888",
+      "bytes": 8899
+    },
+    "packages/quds_office_editor/pubspec.yaml": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/pubspec.yaml",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_editor/pubspec.yaml",
+      "sha256": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e",
+      "bytes": 2355
+    },
+    "packages/quds_office_editor/pubspec.lock": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/pubspec.lock",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_editor/pubspec.lock",
+      "sha256": "29e3da52f589163abf9e2207a8ce75dbcef43640444f96789208c8ddda43341a",
+      "bytes": 9775
+    },
+    "packages/quds_office_editor/.dart_tool/package_config.json": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/.dart_tool/package_config.json",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_editor/.dart_tool/package_config.json",
+      "sha256": "e9396085c50b155df74950d2e593173865fb2152e89620b4ac0fd7bd0ec23dd9",
+      "bytes": 9733
+    },
+    "packages/quds_office_editor/.dart_tool/package_graph.json": {
+      "path": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_editor/.dart_tool/package_graph.json",
+      "preserved_copy": "/workspace/scratch/1f80e59755df/toolchains/resolution/packages/quds_office_editor/.dart_tool/package_graph.json",
+      "sha256": "e118abc63499db61fca547b3c997676de58e80a389fd303e45cd7e0adec4b49a",
+      "bytes": 7021
+    }
+  },
+  "root_manifest_unchanged": true,
+  "root_resolution_command": "run.py flutter pub get --enforce-lockfile",
+  "package_resolution_note": "Engine/editor had no committed locks. Resolved normally, then local locks frozen and enforced offline. Generated locks retained for acceptance provenance.",
+  "launcher": "/workspace/scratch/1f80e59755df/toolchains/run.py",
+  "launcher_sha256": "d845d99eb21f270387ce3953781c7b19e9d079be92a131d11dc30edc0f6b53af",
+  "wrappers": {
+    "cargo-home/bin/cargo": "8c7ed8525d7121d26b3b9c3610afda3b0a4dda9a2e0237717255cd14de02fe7d",
+    "bin/clang": "f834b553059e0235fd3178d06b6f9224051a8d4c0f59435c6fb1b39fe69bd1a0",
+    "bin/clang++": "f834b553059e0235fd3178d06b6f9224051a8d4c0f59435c6fb1b39fe69bd1a0"
+  },
+  "sqlite_runtime": {
+    "library": "/usr/lib/x86_64-linux-gnu/libsqlite3.so.0",
+    "sha256": "14c4418a06c5c2e30f5fb57bc8add93762236ae17898c6708984cf15e680ca71",
+    "scratch_soname_symlink": "/workspace/scratch/1f80e59755df/toolchains/lib/libsqlite3.so"
+  },
+  "prefetch": {
+    "elapsed_seconds": 126.13147576400024,
+    "results": [
+      {
+        "name": "_fe_analyzer_shared",
+        "version": "93.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "analyzer",
+        "version": "10.0.1",
+        "exit_code": 0
+      },
+      {
+        "name": "archive",
+        "version": "4.6.0",
+        "exit_code": 0
+      },
+      {
+        "name": "asn1lib",
+        "version": "1.6.5",
+        "exit_code": 0
+      },
+      {
+        "name": "bidi",
+        "version": "2.0.13",
+        "exit_code": 0
+      },
+      {
+        "name": "bip39",
+        "version": "1.0.6",
+        "exit_code": 0
+      },
+      {
+        "name": "build",
+        "version": "4.0.6",
+        "exit_code": 0
+      },
+      {
+        "name": "build_cli_annotations",
+        "version": "2.1.1",
+        "exit_code": 0
+      },
+      {
+        "name": "build_config",
+        "version": "1.3.0",
+        "exit_code": 0
+      },
+      {
+        "name": "build_daemon",
+        "version": "4.1.1",
+        "exit_code": 0
+      },
+      {
+        "name": "build_runner",
+        "version": "2.15.0",
+        "exit_code": 0
+      },
+      {
+        "name": "characters",
+        "version": "1.4.1",
+        "exit_code": 0
+      },
+      {
+        "name": "charcode",
+        "version": "1.4.0",
+        "exit_code": 0
+      },
+      {
+        "name": "cli_util",
+        "version": "0.4.2",
+        "exit_code": 0
+      },
+      {
+        "name": "code_assets",
+        "version": "2.2.0",
+        "exit_code": 0
+      },
+      {
+        "name": "covfuzz",
+        "version": "0.1.1",
+        "exit_code": 0
+      },
+      {
+        "name": "cross_file",
+        "version": "0.3.5+2",
+        "exit_code": 0
+      },
+      {
+        "name": "cryptography",
+        "version": "2.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "cryptography_flutter",
+        "version": "2.3.4",
+        "exit_code": 0
+      },
+      {
+        "name": "cupertino_icons",
+        "version": "2.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "cupertino_ui",
+        "version": "1.1.6",
+        "exit_code": 0
+      },
+      {
+        "name": "dart_pdf_editor_assets",
+        "version": "14.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "dart_pg",
+        "version": "2.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "dartssh2",
+        "version": "4.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "dbus",
+        "version": "0.7.14",
+        "exit_code": 0
+      },
+      {
+        "name": "desktop_drop",
+        "version": "0.7.1",
+        "exit_code": 0
+      },
+      {
+        "name": "dio",
+        "version": "5.10.0",
+        "exit_code": 0
+      },
+      {
+        "name": "dio_web_adapter",
+        "version": "2.2.0",
+        "exit_code": 0
+      },
+      {
+        "name": "drift",
+        "version": "2.34.0",
+        "exit_code": 0
+      },
+      {
+        "name": "drift_dev",
+        "version": "2.34.0",
+        "exit_code": 0
+      },
+      {
+        "name": "dynamic_color",
+        "version": "1.8.1",
+        "exit_code": 0
+      },
+      {
+        "name": "equatable",
+        "version": "2.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "extension",
+        "version": "0.6.0",
+        "exit_code": 0
+      },
+      {
+        "name": "file_picker",
+        "version": "10.3.10",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector",
+        "version": "1.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_android",
+        "version": "0.5.2+6",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_ios",
+        "version": "0.5.3+5",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_linux",
+        "version": "0.9.4",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_macos",
+        "version": "0.9.5",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_platform_interface",
+        "version": "2.7.0",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_web",
+        "version": "0.9.5",
+        "exit_code": 0
+      },
+      {
+        "name": "file_selector_windows",
+        "version": "0.9.3+5",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_highlight",
+        "version": "0.7.0",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview",
+        "version": "6.1.5",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_android",
+        "version": "1.1.3",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_internal_annotations",
+        "version": "1.3.0",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_ios",
+        "version": "1.1.2",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_macos",
+        "version": "1.1.2",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_platform_interface",
+        "version": "1.3.0+1",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_web",
+        "version": "1.1.2",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_inappwebview_windows",
+        "version": "0.6.0",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_launcher_icons",
+        "version": "0.14.4",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_lints",
+        "version": "3.0.2",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_local_notifications",
+        "version": "17.2.4",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_local_notifications_linux",
+        "version": "4.0.1",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_local_notifications_platform_interface",
+        "version": "7.2.0",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_markdown",
+        "version": "0.7.7+1",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_plugin_android_lifecycle",
+        "version": "2.0.35",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_riverpod",
+        "version": "2.6.1",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_rust_bridge",
+        "version": "2.11.1",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_secure_storage",
+        "version": "9.2.4",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_secure_storage_linux",
+        "version": "1.2.3",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_secure_storage_macos",
+        "version": "3.1.3",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_secure_storage_platform_interface",
+        "version": "1.1.2",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_secure_storage_web",
+        "version": "1.2.1",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_secure_storage_windows",
+        "version": "3.1.2",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_svg",
+        "version": "2.3.0",
+        "exit_code": 0
+      },
+      {
+        "name": "flutter_widget_from_html_core",
+        "version": "0.17.4",
+        "exit_code": 0
+      },
+      {
+        "name": "hex",
+        "version": "0.2.0",
+        "exit_code": 0
+      },
+      {
+        "name": "highlight",
+        "version": "0.7.0",
+        "exit_code": 0
+      },
+      {
+        "name": "hooks",
+        "version": "2.2.0",
+        "exit_code": 0
+      },
+      {
+        "name": "http_methods",
+        "version": "1.1.1",
+        "exit_code": 0
+      },
+      {
+        "name": "image",
+        "version": "4.12.0",
+        "exit_code": 0
+      },
+      {
+        "name": "internxt_client",
+        "version": "0.2.3",
+        "exit_code": 0
+      },
+      {
+        "name": "isolate_contactor",
+        "version": "4.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "isolate_manager",
+        "version": "4.1.5+1",
+        "exit_code": 0
+      },
+      {
+        "name": "jni",
+        "version": "1.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "jni_flutter",
+        "version": "1.0.1",
+        "exit_code": 0
+      },
+      {
+        "name": "js",
+        "version": "0.6.7",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_archive",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_archive_core",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_codecs",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_gzip",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_rar",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_sevenz",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_tar",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "koni_zip",
+        "version": "0.9.0",
+        "exit_code": 0
+      },
+      {
+        "name": "leak_tracker",
+        "version": "11.0.2",
+        "exit_code": 0
+      },
+      {
+        "name": "leak_tracker_flutter_testing",
+        "version": "3.0.10",
+        "exit_code": 0
+      },
+      {
+        "name": "leak_tracker_testing",
+        "version": "3.0.2",
+        "exit_code": 0
+      },
+      {
+        "name": "lints",
+        "version": "3.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "local_auth",
+        "version": "2.3.0",
+        "exit_code": 0
+      },
+      {
+        "name": "local_auth_android",
+        "version": "1.0.56",
+        "exit_code": 0
+      },
+      {
+        "name": "local_auth_darwin",
+        "version": "1.6.1",
+        "exit_code": 0
+      },
+      {
+        "name": "local_auth_platform_interface",
+        "version": "1.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "local_auth_windows",
+        "version": "1.0.11",
+        "exit_code": 0
+      },
+      {
+        "name": "logging_appenders",
+        "version": "1.4.0+1",
+        "exit_code": 0
+      },
+      {
+        "name": "macos_secure_bookmarks",
+        "version": "0.2.1",
+        "exit_code": 0
+      },
+      {
+        "name": "markdown",
+        "version": "7.3.1",
+        "exit_code": 0
+      },
+      {
+        "name": "material_color_utilities",
+        "version": "0.13.0",
+        "exit_code": 0
+      },
+      {
+        "name": "material_ui",
+        "version": "1.10.0",
+        "exit_code": 0
+      },
+      {
+        "name": "meta",
+        "version": "1.19.0",
+        "exit_code": 0
+      },
+      {
+        "name": "mime",
+        "version": "2.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "mime_type",
+        "version": "1.0.1",
+        "exit_code": 0
+      },
+      {
+        "name": "native_toolchain_c",
+        "version": "0.19.5",
+        "exit_code": 0
+      },
+      {
+        "name": "nested",
+        "version": "1.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "objective_c",
+        "version": "9.6.2",
+        "exit_code": 0
+      },
+      {
+        "name": "package_info_plus",
+        "version": "9.0.1",
+        "exit_code": 0
+      },
+      {
+        "name": "package_info_plus_platform_interface",
+        "version": "3.2.1",
+        "exit_code": 0
+      },
+      {
+        "name": "path_parsing",
+        "version": "1.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "path_provider",
+        "version": "2.1.6",
+        "exit_code": 0
+      },
+      {
+        "name": "path_provider_android",
+        "version": "2.3.1",
+        "exit_code": 0
+      },
+      {
+        "name": "path_provider_foundation",
+        "version": "2.6.0",
+        "exit_code": 0
+      },
+      {
+        "name": "path_provider_linux",
+        "version": "2.2.2",
+        "exit_code": 0
+      },
+      {
+        "name": "path_provider_platform_interface",
+        "version": "2.1.3",
+        "exit_code": 0
+      },
+      {
+        "name": "path_provider_windows",
+        "version": "2.3.0",
+        "exit_code": 0
+      },
+      {
+        "name": "pdf_cos",
+        "version": "14.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "pdf_graphics",
+        "version": "14.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "pdfx",
+        "version": "2.9.2",
+        "exit_code": 0
+      },
+      {
+        "name": "photo_view",
+        "version": "0.15.0",
+        "exit_code": 0
+      },
+      {
+        "name": "pinenacl",
+        "version": "0.6.0",
+        "exit_code": 0
+      },
+      {
+        "name": "plugin_platform_interface",
+        "version": "2.1.8",
+        "exit_code": 0
+      },
+      {
+        "name": "pointycastle",
+        "version": "4.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "posix",
+        "version": "6.5.4",
+        "exit_code": 0
+      },
+      {
+        "name": "provider",
+        "version": "6.1.5+1",
+        "exit_code": 0
+      },
+      {
+        "name": "quiver",
+        "version": "3.2.2",
+        "exit_code": 0
+      },
+      {
+        "name": "recase",
+        "version": "4.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "receive_sharing_intent",
+        "version": "1.7.0",
+        "exit_code": 0
+      },
+      {
+        "name": "record_use",
+        "version": "1.1.1",
+        "exit_code": 0
+      },
+      {
+        "name": "riverpod",
+        "version": "2.6.1",
+        "exit_code": 0
+      },
+      {
+        "name": "sha3",
+        "version": "0.2.0",
+        "exit_code": 0
+      },
+      {
+        "name": "share_plus",
+        "version": "10.1.4",
+        "exit_code": 0
+      },
+      {
+        "name": "share_plus_platform_interface",
+        "version": "5.0.2",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences",
+        "version": "2.5.6",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences_android",
+        "version": "2.4.23",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences_foundation",
+        "version": "2.5.6",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences_linux",
+        "version": "2.4.1",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences_platform_interface",
+        "version": "2.4.2",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences_web",
+        "version": "2.4.3",
+        "exit_code": 0
+      },
+      {
+        "name": "shared_preferences_windows",
+        "version": "2.4.1",
+        "exit_code": 0
+      },
+      {
+        "name": "shelf_dav",
+        "version": "1.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "shelf_router",
+        "version": "1.1.4",
+        "exit_code": 0
+      },
+      {
+        "name": "sign_dart",
+        "version": "1.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "source_gen",
+        "version": "4.2.3",
+        "exit_code": 0
+      },
+      {
+        "name": "sqlite3",
+        "version": "3.3.3",
+        "exit_code": 0
+      },
+      {
+        "name": "sqlite3_flutter_libs",
+        "version": "0.5.42",
+        "exit_code": 0
+      },
+      {
+        "name": "sqlparser",
+        "version": "0.44.5",
+        "exit_code": 0
+      },
+      {
+        "name": "state_notifier",
+        "version": "1.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "stream_transform",
+        "version": "2.1.1",
+        "exit_code": 0
+      },
+      {
+        "name": "synchronized",
+        "version": "3.4.0",
+        "exit_code": 0
+      },
+      {
+        "name": "system_tray",
+        "version": "2.0.3",
+        "exit_code": 0
+      },
+      {
+        "name": "timezone",
+        "version": "0.9.4",
+        "exit_code": 0
+      },
+      {
+        "name": "universal_html",
+        "version": "2.3.0",
+        "exit_code": 0
+      },
+      {
+        "name": "universal_io",
+        "version": "2.3.1",
+        "exit_code": 0
+      },
+      {
+        "name": "universal_platform",
+        "version": "1.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "unorm_dart",
+        "version": "0.3.3",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher",
+        "version": "6.3.3",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_android",
+        "version": "6.3.30",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_ios",
+        "version": "6.4.1",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_linux",
+        "version": "3.2.2",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_macos",
+        "version": "3.2.5",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_platform_interface",
+        "version": "2.3.2",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_web",
+        "version": "2.4.3",
+        "exit_code": 0
+      },
+      {
+        "name": "url_launcher_windows",
+        "version": "3.1.5",
+        "exit_code": 0
+      },
+      {
+        "name": "uuid",
+        "version": "4.5.1",
+        "exit_code": 0
+      },
+      {
+        "name": "vector_graphics",
+        "version": "1.2.2",
+        "exit_code": 0
+      },
+      {
+        "name": "vector_graphics_codec",
+        "version": "1.1.13",
+        "exit_code": 0
+      },
+      {
+        "name": "vector_graphics_compiler",
+        "version": "1.2.6",
+        "exit_code": 0
+      },
+      {
+        "name": "vector_math",
+        "version": "2.4.4",
+        "exit_code": 0
+      },
+      {
+        "name": "video_player",
+        "version": "2.11.1",
+        "exit_code": 0
+      },
+      {
+        "name": "video_player_android",
+        "version": "2.9.5",
+        "exit_code": 0
+      },
+      {
+        "name": "video_player_avfoundation",
+        "version": "2.10.0",
+        "exit_code": 0
+      },
+      {
+        "name": "video_player_platform_interface",
+        "version": "6.8.0",
+        "exit_code": 0
+      },
+      {
+        "name": "video_player_web",
+        "version": "2.4.0",
+        "exit_code": 0
+      },
+      {
+        "name": "web",
+        "version": "1.1.2",
+        "exit_code": 0
+      },
+      {
+        "name": "webdav_client",
+        "version": "1.2.2",
+        "exit_code": 0
+      },
+      {
+        "name": "win32",
+        "version": "5.15.0",
+        "exit_code": 0
+      },
+      {
+        "name": "workmanager",
+        "version": "0.9.0+3",
+        "exit_code": 0
+      },
+      {
+        "name": "workmanager_android",
+        "version": "0.9.0+2",
+        "exit_code": 0
+      },
+      {
+        "name": "workmanager_apple",
+        "version": "0.9.1+2",
+        "exit_code": 0
+      },
+      {
+        "name": "workmanager_platform_interface",
+        "version": "0.9.1+1",
+        "exit_code": 0
+      },
+      {
+        "name": "xdg_directories",
+        "version": "1.1.0",
+        "exit_code": 0
+      },
+      {
+        "name": "xterm2",
+        "version": "5.4.0",
+        "exit_code": 0
+      },
+      {
+        "name": "xterm2_core",
+        "version": "1.0.0",
+        "exit_code": 0
+      },
+      {
+        "name": "zmodem",
+        "version": "0.0.6",
+        "exit_code": 0
+      }
+    ]
+  },
+  "setup_retry_notes": [
+    "Initial Flutter bootstrap retried because host /tmp is absent; rerun with scratch TMPDIR succeeded.",
+    "Direct root Dart pub before Flutter initialization correctly refused unresolved Flutter SDK. Resolved after normal Flutter setup.",
+    "Initial editor resolution preceded sky_engine cache restoration and correctly failed; unchanged source resolved successfully after verified SDK cache restoration."
+  ],
+  "python": "3.12.14",
+  "raw_versions": {
+    "flutter": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "flutter",
+        "--version",
+        "--machine"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/flutter.txt",
+      "sha256": "1eab54922abe8beb0ceb7455e4903596bdbc6ca1f9de2d7c0546618dcdaab9e4",
+      "text": "{\n  \"frameworkVersion\": \"3.47.8\",\n  \"channel\": \"[user-branch]\",\n  \"repositoryUrl\": \"https://github.com/flutter/flutter.git\",\n  \"frameworkRevision\": \"737ba8f885dc774b53b442759999a312c9461e4e\",\n  \"frameworkCommitDate\": \"2026-10-22 21:37:31 -0700\",\n  \"engineRevision\": \"cf636b1dfb818dd6a3ff16e390e93b1a036969c8\",\n  \"engineCommitDate\": \"2026-10-23 02:13:38.000Z\",\n  \"engineContentHash\": \"dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2\",\n  \"engineBuildDate\": \"2026-10-23 05:34:48.330\",\n  \"dartSdkVersion\": \"3.13.7\",\n  \"devToolsVersion\": \"2.60.0\",\n  \"flutterVersion\": \"3.47.8\",\n  \"flutterRoot\": \"/workspace/scratch/1f80e59755df/toolchains/flutter\"\n}\n"
+    },
+    "dart": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "dart",
+        "--version"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/dart.txt",
+      "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4",
+      "text": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"\n"
+    },
+    "rustc": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "rustc",
+        "--version",
+        "--verbose"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/rustc.txt",
+      "sha256": "be69adad9137eaa0bdac1dd07e2fe286b1831fc8bad193ea27806ca0c7c8e7c6",
+      "text": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5\n"
+    },
+    "cargo": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "cargo",
+        "--version",
+        "--verbose"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/cargo.txt",
+      "sha256": "43dfd9b07c0d268f1436e3229aa614fbf3349f3e848cde0b66cf6ade8918f693",
+      "text": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]\n"
+    },
+    "clang": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "clang",
+        "--version"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/clang.txt",
+      "sha256": "2fbb32bd478367e9ab91b71dd8de4317c22e4017d22064339ffd2c4d12960aa2",
+      "text": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/1f80e59755df/toolchains/debian/root/usr/lib/llvm-19/bin\n"
+    },
+    "node": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "node",
+        "--version"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/node.txt",
+      "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81",
+      "text": "v24.22.1\n"
+    },
+    "python": {
+      "argv": [
+        "/workspace/scratch/1f80e59755df/toolchains/run.py",
+        "python3",
+        "--version"
+      ],
+      "path": "/workspace/scratch/1f80e59755df/toolchains/versions/python.txt",
+      "sha256": "4c3569f5da09975434dd9fd9a91fadbc4367a91d8f3c3fab59e9241ab9ee4bd8",
+      "text": "Python 3.12.14\n"
+    }
+  },
+  "toolchain_files": {
+    "flutter_launcher": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/flutter",
+      "sha256": "7d486c33b30a0cf1ea5146231c68bb8f966cdb4e087c5cd8b37e14513f536e7d",
+      "bytes": 2385
+    },
+    "flutter_tool_snapshot": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/flutter_tools.snapshot",
+      "sha256": "b1889a18e40266d5ee90b238c2eb3d063833584c150329fe0b8ec7245e0ad3a3",
+      "bytes": 47263808
+    },
+    "dart": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "bytes": 4835712
+    },
+    "dart_vm": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm",
+      "sha256": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d",
+      "bytes": 42998912
+    },
+    "dart_aot_runtime": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime",
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+      "bytes": 5710176
+    },
+    "flutter_tester_linux": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/artifacts/engine/linux-x64/flutter_tester",
+      "sha256": "800f4ca182df7dd2fb46a42dea5d76277b9dbc5e8cd2915e02bcbc978681b45f",
+      "bytes": 36051744
+    },
+    "flutter_linux_icu": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat",
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+      "bytes": 864880
+    },
+    "flutter_frontend_server": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/flutter/bin/cache/artifacts/engine/linux-x64/frontend_server_aot.dart.snapshot",
+      "sha256": "0c484223020a7aad5874e1ef3bdcc43c9d0b36a1402f223d538ee2d4cc0b847a",
+      "bytes": 17153416
+    },
+    "rustc": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/rustup-home/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "5073422953727c9427a76b7fce03aa9404da46315e5a1e4965389512a41e8db0",
+      "bytes": 647568
+    },
+    "cargo": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/rustup-home/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "84d55d77232a921da96bcf2e1f78532ef5c5221803aae4448d9e220d48ebd808",
+      "bytes": 36100400
+    },
+    "clang": {
+      "path": "/workspace/scratch/1f80e59755df/toolchains/debian/root/usr/lib/llvm-19/bin/clang",
+      "sha256": "0a3c55936ac43954fbe4914e6e73b577ca9e35e75d89ef13d3e28c187f41ca1a",
+      "bytes": 132352
+    }
+  },
+  "default_native_bootstrap": {
+    "classification": "Development/bootstrap, not final saved-source qualification",
+    "command_file": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.command.json",
+    "environment_file": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.environment.json",
+    "summary": {
+      "classification": "Development/bootstrap only, not final source-bound qualification",
+      "exit_code": 0,
+      "done": [
+        {
+          "success": true,
+          "type": "done",
+          "time": 8829
+        }
+      ],
+      "test_events": 64,
+      "test_done_events": 64,
+      "failed": [],
+      "native_assets": "native-bootstrap.native-assets.json",
+      "default_hooks": true,
+      "production_manifests_changed": false
+    },
+    "native_assets": {
+      "crisp_catalog": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/crisp_catalog/6b4ebf10e7/output.json",
+        "sha256": "04934034f5c41b5efc0a6c702647b00195017a626d3dce1dcfefd4f9a6d0976e",
+        "assets": [
+          {
+            "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/crisp_catalog/build/6b4ebf10e7/libcrisp_catalog_bridge.so",
+            "id": "package:crisp_catalog/crisp_catalog_bridge",
+            "bytes": 3611160,
+            "sha256": "7ea84af122844da162640b53eda8fe1097de8f07d970e57bb252312c67f7f5a4",
+            "link_mode": {
+              "type": "dynamic_loading_bundle"
+            }
+          }
+        ]
+      },
+      "crisp_ebook_conversion": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/crisp_ebook_conversion/6b4ebf10e7/output.json",
+        "sha256": "2f2008a3f28819c8451dc3dfa322d5860dbea17f10ae1a95e9febe7cf66c0f31",
+        "assets": [
+          {
+            "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/6b4ebf10e7/libcrisp_kindling_bridge.so",
+            "id": "package:crisp_ebook_conversion/kindling_bridge",
+            "bytes": 12176112,
+            "sha256": "b5aed715110695e5b3b646a6cdcb8d8d224477d62b9ea97f5d451df6c15aa13d",
+            "link_mode": {
+              "type": "dynamic_loading_bundle"
+            }
+          }
+        ]
+      },
+      "crisp_storage": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/crisp_storage/6b4ebf10e7/output.json",
+        "sha256": "d70d8d59246f25a4f89583c627692b0faa2ced672909d9f938e5d166e50ec597",
+        "assets": []
+      },
+      "dart_smb2": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/dart_smb2/6b4ebf10e7/output.json",
+        "sha256": "b75aeb94b0bb08c359e39a292daf4fba426abe5fd97d1dce6e06246e830411c6",
+        "assets": [
+          {
+            "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/dart_smb2/build/6b4ebf10e7/libdart_smb2.so",
+            "id": "package:dart_smb2/libsmb2",
+            "bytes": 294472,
+            "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+            "link_mode": {
+              "type": "dynamic_loading_bundle"
+            }
+          }
+        ]
+      },
+      "flutter_pty2": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/flutter_pty2/6b4ebf10e7/output.json",
+        "sha256": "3f057c814e6d42f99c074c5e9170cec46757daac182b79b6230c1238c873f904",
+        "assets": [
+          {
+            "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/flutter_pty2/build/6b4ebf10e7/libflutter_pty2.so",
+            "id": "package:flutter_pty2/flutter_pty2",
+            "bytes": 61776,
+            "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+            "link_mode": {
+              "type": "dynamic_loading_bundle"
+            }
+          }
+        ]
+      },
+      "objective_c": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/objective_c/6b4ebf10e7/output.json",
+        "sha256": "0d49150cd4fb6486c0c7a446f894b8ef0e85a26602187c35c9c24b4086cb9121",
+        "assets": []
+      },
+      "sqlite3": {
+        "output_file": "CrispCloud/.dart_tool/hooks_runner/sqlite3/6b4ebf10e7/output.json",
+        "sha256": "5eb860c190f73d22e6334dffe2757d5b5b9e2288ba0f61fbf7b13bf1377acc61",
+        "assets": [
+          {
+            "path": "/workspace/scratch/1f80e59755df/CrispCloud/.dart_tool/hooks_runner/shared/sqlite3/build/download-8620abc/libsqlite3.so",
+            "id": "package:sqlite3/src/ffi/libsqlite3.g.dart",
+            "bytes": 1793240,
+            "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+            "link_mode": {
+              "type": "dynamic_loading_bundle"
+            }
+          }
+        ]
+      }
+    },
+    "actual_png_service_tests": 63,
+    "test_loading_events": 1,
+    "sqlite_selection": "Default bundled native asset produced by the unchanged sqlite3 hook, not the optional scratch system-library symlink.",
+    "empty_default_outputs": "crisp_storage optional Rust bridges are disabled by the existing default app configuration; objective_c emits no Linux code asset. No hook was altered or disabled by setup.",
+    "receipts": {
+      "native-bootstrap.command.json": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.command.json",
+        "sha256": "faec1b49af8bc3cf9b52649b5ea7d57ab923930934e12e31b3230bbeb9b0089a",
+        "bytes": 462
+      },
+      "native-bootstrap.environment.json": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.environment.json",
+        "sha256": "d99c14f0c115bafe76819e683a779a9e64fb168dc34c9f86f7a3e8f2db44de00",
+        "bytes": 1418
+      },
+      "native-bootstrap.exit-code.txt": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.exit-code.txt",
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "bytes": 2
+      },
+      "native-bootstrap.native-assets.json": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.native-assets.json",
+        "sha256": "caf0779f4cc06d1a8ec0b4d4147780a9e3b36b96854c269c3eb38eb305da91b3",
+        "bytes": 3576
+      },
+      "native-bootstrap.stderr.log": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.stderr.log",
+        "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+        "bytes": 117
+      },
+      "native-bootstrap.stdout.jsonl": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.stdout.jsonl",
+        "sha256": "fa235c71a2dd7f2fb0f7ee76cfad513f4f9dd9445b6d18c1b68cfbe4ac057dd8",
+        "bytes": 25921
+      },
+      "native-bootstrap.summary.json": {
+        "path": "/workspace/scratch/1f80e59755df/toolchains/logs/native-bootstrap.summary.json",
+        "sha256": "d4987af3bfe7bb2d04e6b5e16e121f90c0b4dfe11688dfd9c8165585a0be9eaa",
+        "bytes": 389
+      }
+    }
+  },
+  "tracked_dependency_status": "",
+  "setup_complete": true
+}

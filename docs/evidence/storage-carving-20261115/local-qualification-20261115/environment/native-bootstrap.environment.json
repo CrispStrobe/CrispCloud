@@ -1,0 +1,14 @@
+{
+  "PUB_CACHE": "/workspace/scratch/1f80e59755df/toolchains/pub-cache",
+  "TMPDIR": "/workspace/scratch/1f80e59755df/toolchains/tmp",
+  "XDG_CACHE_HOME": "/workspace/scratch/1f80e59755df/toolchains/cache",
+  "XDG_CONFIG_HOME": "/workspace/scratch/1f80e59755df/toolchains/config",
+  "CARGO_HOME": "/workspace/scratch/1f80e59755df/toolchains/cargo-home",
+  "RUSTUP_HOME": "/workspace/scratch/1f80e59755df/toolchains/rustup-home",
+  "PATH": "/workspace/scratch/1f80e59755df/toolchains/bin:/workspace/scratch/1f80e59755df/toolchains/cargo-home/bin:/workspace/scratch/1f80e59755df/toolchains/flutter/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+  "LD_LIBRARY_PATH": "/workspace/scratch/1f80e59755df/toolchains/lib:/workspace/scratch/1f80e59755df/toolchains/debian/root/usr/lib/x86_64-linux-gnu:/workspace/scratch/1f80e59755df/toolchains/debian/root/usr/lib/llvm-19/lib:",
+  "FLUTTER_ROOT": "/workspace/scratch/1f80e59755df/toolchains/flutter",
+  "CI": "true",
+  "DART_DISABLE_ANALYTICS": "true",
+  "FLUTTER_SUPPRESS_ANALYTICS": "true"
+}

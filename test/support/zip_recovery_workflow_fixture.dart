@@ -37,7 +37,11 @@ Uint8List recoveryWorkflowZip([Map<String, List<int>>? files]) {
 class RecoveryWorkflowBackend extends QueueArchiveBackend {
   RecoveryWorkflowBackend(super.account);
   Future<void> Function()? beforeCommit;
+  void Function()? afterFinalTypeCheck;
   bool corruptStage = false;
+  var _stageSequence = 0;
+  @override
+  bool get supportsGuardedStagedPublication => true;
   @override
   Future<void> writePreparedFile(
     String path,
@@ -46,11 +50,47 @@ class RecoveryWorkflowBackend extends QueueArchiveBackend {
     required bool replace,
     Future<void> Function(FileItem)? verifyStaged,
     Future<void> Function(Map<String, dynamic>)? checkpoint,
+  }) => _writePreparedFile(
+    path,
+    data,
+    length,
+    replace: replace,
+    verifyStaged: verifyStaged,
+    checkpoint: checkpoint,
+  );
+
+  @override
+  Future<void> writeGuardedPreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    required bool Function() canInstall,
+    required Future<void> Function(Map<String, dynamic>) checkpoint,
+    Future<void> Function(FileItem)? verifyStaged,
+  }) => _writePreparedFile(
+    path,
+    data,
+    length,
+    replace: replace,
+    canInstall: canInstall,
+    verifyStaged: verifyStaged,
+    checkpoint: checkpoint,
+  );
+
+  Future<void> _writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    bool Function()? canInstall,
+    Future<void> Function(FileItem)? verifyStaged,
+    Future<void> Function(Map<String, dynamic>)? checkpoint,
   }) async {
     if (replace || await stat(path) != null) {
       throw StateError('Destination exists');
     }
-    const stage = '/output/.recovery-stage';
+    final stage = '${paths.dirname(path)}/.recovery-stage-${++_stageSequence}';
     await checkpoint?.call({'phase': 'staging', 'stagedPath': stage});
     final output = BytesBuilder(copy: false);
     await for (final chunk in data) {
@@ -62,8 +102,21 @@ class RecoveryWorkflowBackend extends QueueArchiveBackend {
       beforeStageVerification?.call();
       await verifyStaged?.call((await stat(stage))!);
       await beforeCommit?.call();
-      await checkpoint?.call({'phase': 'committing', 'stagedPath': stage});
-      if (await stat(path) != null) throw StateError('Destination exists');
+      while (true) {
+        await checkpoint?.call({'phase': 'committing', 'stagedPath': stage});
+        final existing = await stat(path);
+        // Represents control/account changes delivered while the final native
+        // asynchronous type query completes. No await follows an accepted
+        // guard before the modeled exclusive install.
+        afterFinalTypeCheck?.call();
+        if (existing != null) throw StateError('Destination exists');
+        if (canInstall?.call() ?? true) break;
+      }
+      if (contents.containsKey(path) ||
+          directories.contains(path) ||
+          links.contains(path)) {
+        throw StateError('Destination exists');
+      }
       contents[path] = contents[stage]!;
       writes.add(path);
       afterInstall?.call();

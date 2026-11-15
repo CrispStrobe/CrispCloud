@@ -77,7 +77,9 @@ import '../widgets/archive_jobs_dialog.dart';
 import '../widgets/archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
 import '../l10n/archive_zip_recovery_strings.dart';
+import '../l10n/archive_png_carving_strings.dart';
 import '../widgets/archive_zip_recovery_actions.dart';
+import '../widgets/archive_png_carving_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
@@ -644,6 +646,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       archiveZipRecoveryText(context, 'Recover ZIP to new file…'),
       () => showArchiveZipRecoveryForSelection(context, ref),
       available: () => canRecoverArchiveZipSelection(ref),
+    );
+    add(
+      'archivePngCarving',
+      archivePngCarvingText(context, 'Recover PNG images to ZIP…'),
+      () => showArchivePngCarvingForSelection(context, ref),
+      available: () => canCarveArchivePngSelection(ref),
     );
     add(
       'archiveTest',

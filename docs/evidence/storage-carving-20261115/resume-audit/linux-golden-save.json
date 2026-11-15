@@ -1,0 +1,10 @@
+{
+  "repository": "CrispStrobe/quds_office_suite",
+  "saved_commit": "b23d033620f07cf2659209eff4c4c8e2d71ee89c",
+  "qualified_local_commit": "22bba1983a83a076902ea0f9df817db5ad719ce7",
+  "tree": "cbf21749057ee9e7f88b18f59e8f1afb98374a0b",
+  "parent": "dcefdc051ac8dddcef0f07baaa00bfbc2c35817a",
+  "verification": "Fetched saved commit; complete git diff against qualified local checkpoint is empty. Four changed files are editor test, provenance, and two Linux PNG references. Production source unchanged.",
+  "targeted_selection_tests": 10,
+  "image_source_app": "5a62b10fc7f366b0229434667b91baccc0af8b53"
+}

@@ -1,0 +1,65 @@
+{
+  "source_commit": "db5e3f7516b1e6c08cc2926f6d5afdceba85792d",
+  "baseline_commit": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+  "baseline_source_identity": [
+    {
+      "path": "test/widget/office_save_fidelity_test.dart",
+      "baseline_blob": "caced4496baa2812f816f907f6ca70dfc74455ee",
+      "current_blob": "caced4496baa2812f816f907f6ca70dfc74455ee",
+      "identical": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_heading_io.dart",
+      "baseline_blob": "0bbba58f2df2b1f29ab616d6ae9ce173b837ca9b",
+      "current_blob": "0bbba58f2df2b1f29ab616d6ae9ce173b837ca9b",
+      "identical": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/fixtures/fidelity/word.docx",
+      "baseline_blob": "1e1c825e016a951bf5e2d92d4b80b3a74c4c8e0c",
+      "current_blob": "1e1c825e016a951bf5e2d92d4b80b3a74c4c8e0c",
+      "identical": true
+    }
+  ],
+  "failure": {
+    "suite": "test/widget/office_save_fidelity_test.dart",
+    "test": "ribbon headings, paragraphs, notes and pictures survive three host saves",
+    "inner_assertion": "expect(controller.activeRunProps.bold, isTrue)",
+    "inner_assertion_line": 579,
+    "actual": false,
+    "outer_capture_line": 685,
+    "raw_log": "qualification-runs/app-native/stdout.jsonl",
+    "test_id": 691
+  },
+  "reason": "The authored fixture has Heading1 only. Applying Heading2 creates the intentional Word365 built-in Heading2, which is not bold. The test assumes inherited bold without authoring that style. The same test, fixture and heading-style implementation are present at the original saved baseline.",
+  "patch_scope": "Author a directly bold 16pt Heading2 style in this test scenario's input ZIP, before opening the actual host. Retain existing UI unbold operation and all assertions across three saves. No production behavior/shared fixture binary changes.",
+  "old_source_sha256": "76b3334dbe42e02920780c4a1bde94cef1afb157f3f3e5265152a81fe6e04a97",
+  "candidate_sha256": "58ed919b62fb85661046064f3b9cfd96bf287800dbe427769e2f8c764f408de6",
+  "patch_sha256": "e6d8de5114c8bd1c7024847956f66cc9b88d30b11916e3113d0333a295f148e9",
+  "status": "Corrected fixture applied and formatted only in host test; exact failing case1/1 and full host-save suite14/14 passed, original assertions retained. No commit; root owns final freeze and source-bound qualification.",
+  "applied_source_sha256": "252af6e7ae02e65eab1a0d8fbc6473218944c2e42f3595554bf030a29d966fc6",
+  "final_patch_sha256": "add1b57f1d5f2b0e3b61b38a662298abae2c116e1ac8ffaef345e365b3affbda",
+  "debug_history": [
+    {
+      "log": "host-heading-targeted.log",
+      "result": "failed",
+      "reason": "First draft fixture combined a bold parent with child w:b; style toggle semantics resolve that to nonbold. Corrected the fixture by removing parent and declaring bold/16pt directly."
+    },
+    {
+      "log": "host-heading-targeted-corrected.log",
+      "result": "passed",
+      "tests": 1
+    },
+    {
+      "log": "host-save-full-suite.log",
+      "result": "passed",
+      "tests": 14,
+      "scope": "Complete host-save fidelity widget suite; includes exact ribbon scenario."
+    }
+  ],
+  "debug_log_sha256": {
+    "host-heading-targeted.log": "5fcb135911fb7287b3b794bdbfa6eeb1785c7e320a1c2be1035fddc541445b9a",
+    "host-heading-targeted-corrected.log": "e8f1c66fe4cb1d17ffe03e8832a5188d4e738e084adfe4e4990414e08a152532",
+    "host-save-full-suite.log": "9501a9b7523b49bb6a6a7c6fa442c6139f2a9a6616754eb00d1d9da102f9dea9"
+  }
+}

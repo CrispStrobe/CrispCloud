@@ -402,6 +402,7 @@ class BrowserMenuLayout {
           'archiveJobs',
           'archiveTest',
           'archiveZipRecovery',
+          'archivePngCarving',
           'archiveExtract',
           'gatherSelection',
           'gatheringStack',

@@ -1,0 +1,50 @@
+{
+  "rustc": {
+    "size": 291,
+    "sha256": "64d2ba8e14053de79e949e9e527fc250184756d0bdb5edfb0f6c17b5ec3048cf"
+  },
+  "clang++": {
+    "size": 370,
+    "sha256": "040dc5fbcca66cdfe079dbbf91e7fd226bb66c97a466c96ba316c2b1482f5b3e"
+  },
+  "rustdoc": {
+    "size": 293,
+    "sha256": "469b784caca339e81618633d67368aac266562919f992f92e18c973d73ea5718"
+  },
+  "cargo": {
+    "size": 291,
+    "sha256": "f50de78842c8634372f3cdbb3308bad3c25dd72a17fa6430acd2126e9d93a55e"
+  },
+  "cmake": {
+    "size": 286,
+    "sha256": "b5a6315d855db5798d5e8c55a4102b443c70422d6baaceeba1f09dcc63c223e4"
+  },
+  "cpack": {
+    "size": 286,
+    "sha256": "b992869f41c813dfbf28b95fb970964fb2d2f881d7c867d22a5885ba01275a7a"
+  },
+  "ctest": {
+    "size": 286,
+    "sha256": "c95d1cf711e2bc36d855be7ea0d842c549aac8a319d4121715382cea1dd4d070"
+  },
+  "llvm-strip": {
+    "size": 373,
+    "sha256": "a26d21d800b8289cc9ffa68c9138abfbb5142db7b5777620b632ca4accb76038"
+  },
+  "llvm-ar": {
+    "size": 370,
+    "sha256": "75d7c22cf054bca1722778cea3ac71fc914012b82976a1e6a8771cf010f4f1ee"
+  },
+  "clang": {
+    "size": 368,
+    "sha256": "7fb2bd04b31901caf3cc079eaf39d1ca4b585270b26b42d44afe4592d767c745"
+  },
+  "ninja": {
+    "size": 286,
+    "sha256": "8654551bb42911671aba4488ce5872640dca0b46a1c1a1d6ee11294dc2fb72c7"
+  },
+  "clang-19": {
+    "size": 368,
+    "sha256": "7fb2bd04b31901caf3cc079eaf39d1ca4b585270b26b42d44afe4592d767c745"
+  }
+}

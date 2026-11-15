@@ -1,0 +1,150 @@
+{
+  "at": "2026-11-15T10:53:44.035746+00:00",
+  "gates": [
+    {
+      "analyzed_files": 53,
+      "artifacts_verified": 6,
+      "gate": "analysis-app-final-2",
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "tested_head": "2060a3cd94ee644e03d71b2feeefc74fd016886b"
+    },
+    {
+      "analyzed_files": 5,
+      "artifacts_verified": 6,
+      "gate": "analysis-engine-final-2",
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "tested_head": "67a22a3e2079fe3fd7ab377124374c33cab41204"
+    },
+    {
+      "analyzed_files": 1,
+      "artifacts_verified": 6,
+      "gate": "analysis-cli-final",
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "tested_head": "6df08719ee02e5ab7b25d177bae5c1e46190a219"
+    },
+    {
+      "artifacts_verified": 8,
+      "complete_unique_events": true,
+      "gate": "app-final",
+      "hidden_success_events": 57,
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "suites": 49,
+      "tested_head": "64250fb120122009575428727daa8b9ecf52a555",
+      "tests": 741,
+      "zero_failures_errors_skips": true
+    },
+    {
+      "artifacts_verified": 8,
+      "complete_unique_events": true,
+      "gate": "editor-final",
+      "hidden_success_events": 9,
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "suites": 7,
+      "tested_head": "e000868c6deca46ffcfb3e55a6aaa990731b421c",
+      "tests": 73,
+      "zero_failures_errors_skips": true
+    },
+    {
+      "artifacts_verified": 8,
+      "complete_unique_events": true,
+      "gate": "engine-final-2",
+      "hidden_success_events": 17,
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "suites": 17,
+      "tested_head": "6de0c3c2c2b4dd6cc101c906e2637c251b6cfcdb",
+      "tests": 182,
+      "zero_failures_errors_skips": true
+    },
+    {
+      "artifacts_verified": 6,
+      "gate": "scripted-oracle-final",
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "tested_head": "96323fa3bcfca124b0577fd5632dc297f4fd34ba"
+    },
+    {
+      "artifacts_verified": 6,
+      "gate": "source-integrity-final",
+      "original_run_stability_verified": true,
+      "passing_commit_object_verified": true,
+      "snapshot_inputs": 8492,
+      "source_inputs_verified": 8481,
+      "source_resolution_digest": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+      "tested_head": "6c36120980672c3b9846be96c3271c62759147c6"
+    }
+  ],
+  "office_oracle": {
+    "artifacts_verified": 18,
+    "controls": 17,
+    "exports": 12
+  },
+  "original_missing_gate": "navigation-capture-final",
+  "portable": {
+    "archive_files_verified": 29,
+    "archive_sha256": "2e60c011fa490fcdd4eb80cef580f0570b1fe67a597d04a68e6b3fff352bb6a4",
+    "results": {
+      "compiled_javascript_sha256": "b41eeb4323d6a3b971c831730da18ac6edd4126536e048d2c6c2d35572a5603e",
+      "qualification_success": true,
+      "runtime_outputs_match": true,
+      "runtimes": {
+        "javascript": {
+          "assertions": 248,
+          "cases": 8,
+          "verified_pngs": 10,
+          "verified_zips": 8,
+          "wrong_expected_hash_rejected": true
+        },
+        "vm": {
+          "assertions": 248,
+          "cases": 8,
+          "verified_pngs": 10,
+          "verified_zips": 8,
+          "wrong_expected_hash_rejected": true
+        }
+      }
+    },
+    "tested_head": "ec257762c98c7ebdb033f4b9f9685c89e011277e",
+    "tracked_source_equal_to_integration": true
+  },
+  "review_script_sha256": "8b1356a744a292bf3896dcce9dfdb15b41f6a5e2402f6002781042e77f2f95c0",
+  "reviewed_integration_head": "59466d8b48f329362ab88e9da5e195c849557069",
+  "reviewed_portable_head": "0c574677be7749969d5c9230a5c036fde95cd87e",
+  "runtime_suites": 73,
+  "runtime_total": 996,
+  "schema": 1,
+  "scope": "Independent recovered raw artifact/source object/hash/machine-event audit. This is not a new Dart/Flutter execution; original passing results are bound to their tested source. Later incoming source requires newly scoped qualification.",
+  "source_audit": {
+    "controls": 82,
+    "managed_files": 2225,
+    "tracked_files": 10812
+  },
+  "success": true,
+  "tracked_source_files_verified": 8481
+}

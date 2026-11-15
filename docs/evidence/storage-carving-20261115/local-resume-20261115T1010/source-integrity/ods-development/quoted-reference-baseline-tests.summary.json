@@ -1,0 +1,21 @@
+{
+  "command": [
+    "dart",
+    "test",
+    "--reporter=json",
+    "test/ods_sheet_reader_test.dart"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine",
+  "started_at": "2026-11-15T09:26:46.116821+00:00",
+  "elapsed_seconds": 2.3105257700003676,
+  "returncode": 1,
+  "visible_test_totals": {
+    "success": 15,
+    "failure": 2,
+    "error": 0
+  },
+  "skipped": 0,
+  "production_reader_sha256": "41a3cf7b1be8dbf2c06d9c76966fb183bc81c88df808b3984342dedd24f734a4",
+  "test_sha256": "45a4c25c12c6364832ac4803abcf4ef15d375b02a91c3943c46b2a790dae4ede",
+  "scope": "Two additional reference-token regressions against the initial15-test passing ODS fix; development only."
+}

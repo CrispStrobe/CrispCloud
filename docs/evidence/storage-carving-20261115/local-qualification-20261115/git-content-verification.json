@@ -1,0 +1,339 @@
+{
+  "storage_vs_main_quds_changes": [
+    {
+      "path": "packages/quds_office_editor/lib/quds_office_editor.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "1d231b57",
+      "main_blob": "1d231b57",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/core/command_pipeline.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "683c1208",
+      "main_blob": "683c1208",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "2c81089f",
+      "main_blob": "2c81089f",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_slide/render_slide_stage.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "f49cbbd6",
+      "main_blob": "f49cbbd6",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_word/caret_engine.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "00f2b771",
+      "main_blob": "00f2b771",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_word/office_ruler.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "f789e6e7",
+      "main_blob": "f789e6e7",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "c6d751b7",
+      "main_blob": "c6d751b7",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/office_context_menu.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "6aa036d1",
+      "main_blob": "6aa036d1",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/office_editors.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "167e065d",
+      "main_blob": "167e065d",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "573af173",
+      "main_blob": "573af173",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/office_theme.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "97ee6a02",
+      "main_blob": "97ee6a02",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/word_notes_pane.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "e5b9a443",
+      "main_blob": "e5b9a443",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/visual/paint_office_visual.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "e0f0a2d7",
+      "main_blob": "e0f0a2d7",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/quds_office_engine.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "de8f1028",
+      "main_blob": "de8f1028",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/bidi/grapheme_clusters.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "f38d56ef",
+      "main_blob": "f38d56ef",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/bidi/line_breaker.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "0502736e",
+      "main_blob": "0502736e",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/fonts/office_font_set.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "b6885dbe",
+      "main_blob": "b6885dbe",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/office/office_find.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "1cda0085",
+      "main_blob": "1cda0085",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/opc/office_isolate_save.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "cfabc55d",
+      "main_blob": "cfabc55d",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/opc/opc_archive.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "38f7d7be",
+      "main_blob": "38f7d7be",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/opc/zip/deflate_codec.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "d4b6a29d",
+      "main_blob": "d4b6a29d",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/opc/zip/zip_reader.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "df8e786b",
+      "main_blob": "df8e786b",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "71abf15b",
+      "main_blob": "71abf15b",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/reports/report_data.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "ad531a05",
+      "main_blob": "ad531a05",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/formula/dep_graph.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "f5293491",
+      "main_blob": "f5293491",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/formula/formula_ast.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "1c68efcd",
+      "main_blob": "1c68efcd",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/formula/formula_eval.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "4667f8a3",
+      "main_blob": "4667f8a3",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/formula/formula_functions.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "4f38480e",
+      "main_blob": "4f38480e",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "2078e58e",
+      "main_blob": "2078e58e",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_power_query.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "3ce11bd7",
+      "main_blob": "3ce11bd7",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/slide/model/pml_arrange.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "ebcff59a",
+      "main_blob": "ebcff59a",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/math/omml_io.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "5685a5f5",
+      "main_blob": "5685a5f5",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/wml_run_edit.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "0e155db6",
+      "main_blob": "0e155db6",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_citations.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "3e616418",
+      "main_blob": "3e616418",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_fields.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "58dac867",
+      "main_blob": "58dac867",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_link.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "0ad8e009",
+      "main_blob": "0ad8e009",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_revision.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "80ce9868",
+      "main_blob": "80ce9868",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_table.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "71c24179",
+      "main_blob": "71c24179",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_toc.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "45f0d85e",
+      "main_blob": "45f0d85e",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_frame_io.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "67b19dd8",
+      "main_blob": "67b19dd8",
+      "status": "M"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/xml/namespaces.dart",
+      "storage_mode": "100644",
+      "main_mode": "100755",
+      "storage_blob": "9b3d4388",
+      "main_blob": "9b3d4388",
+      "status": "M"
+    }
+  ],
+  "all_41_are_mode_only": true,
+  "excel_vs_odf_quds_diff": "",
+  "consistency_vs_main_quds_diff": "",
+  "pr116_duplicate_odfTests_line_numbers": [
+    233,
+    318
+  ]
+}

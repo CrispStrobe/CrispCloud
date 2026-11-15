@@ -68,6 +68,10 @@ abstract class FileOperationBackend implements StorageScanSource {
   /// The verifier runs against a complete temporary file before replacement.
   bool get supportsStagedVerification => false;
 
+  /// New files can be installed immediately after a synchronous authority guard,
+  /// with no intervening asynchronous work or replacing-rename fallback.
+  bool get supportsGuardedStagedPublication => false;
+
   /// A backend must validate private staging paths and published contents
   /// before deleting exactly one retained payload and its empty parent.
   bool get supportsRetainedStageCleanup => false;
@@ -147,6 +151,26 @@ abstract class FileOperationBackend implements StorageScanSource {
     if (verifyStaged != null && result != null) await verifyStaged(result);
     await checkpoint?.call({'phase': 'committed', 'destination': path});
   }
+
+  /// Stage and verify a new file, then guard its exclusive installation.
+  ///
+  /// The backend calls [canInstall] after its final awaited destination check,
+  /// immediately before the synchronous installation primitive. A false result
+  /// repeats the `committing` [checkpoint], which must wait for any pause and
+  /// refresh the caller's publication proofs. A thrown error aborts the write.
+  /// This contract supports [replace] == false only. Unsupported backends fail
+  /// before consuming [data]; they must not fall back to [writePreparedFile].
+  Future<void> writeGuardedPreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    required bool Function() canInstall,
+    required Future<void> Function(Map<String, dynamic> state) checkpoint,
+    Future<void> Function(FileItem staged)? verifyStaged,
+  }) async => throw UnsupportedError(
+    'Guarded staged publication is unavailable for this storage.',
+  );
 
   Future<bool> moveNoReplace(FileItem file, String destination) async => false;
   Future<bool> hasPendingUpload(String path, {int? length}) async => false;

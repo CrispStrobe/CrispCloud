@@ -1,0 +1,22 @@
+{
+  "at_utc": "2026-11-15T10:55:24.345060+00:00",
+  "previous_integration": "59466d8b48f329362ab88e9da5e195c849557069",
+  "saved_continuation": "0c574677be7749969d5c9230a5c036fde95cd87e",
+  "incoming_main": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+  "canonical_preserved_for_this_checkpoint": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+  "standalone_parser": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+  "conflict_decisions": {
+    "office_document_service": "Retain namespace-aware bounded importer and explicit failure on out-of-range later data; retain all incoming nonconflicting additions.",
+    "office_document_service_test": "Retain explicit out-of-range failure regression and add incoming ODP/ODT image cases.",
+    "managed_engine_files": "Preserve existing exact canonical pin; newer canonical branches will be synchronized in next checkpoint.",
+    "apple_export_policy": "Recompute reviewed file and inventory fingerprints after reviewing imported attribution/notices changes; distribution decisions unchanged."
+  },
+  "pending": [
+    "merge latest fix/odf-final source",
+    "reconcile latest canonical main/PR24/PR25 and synchronize managed files",
+    "preserve later parallel qualification receipts",
+    "fresh qualification of combined source",
+    "font-backed navigation captures"
+  ],
+  "ci": "No Actions run awaited or restarted; checkpoint uses [skip ci]."
+}

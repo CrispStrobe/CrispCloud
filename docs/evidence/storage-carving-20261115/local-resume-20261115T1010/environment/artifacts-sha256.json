@@ -1,0 +1,322 @@
+{
+  "README.md": {
+    "size": 3277,
+    "sha256": "7259f6d7686fbedefa8f51fec6c7d3e42f1c0e1c038fee45eaefea0fa42ee869"
+  },
+  "dart-version.txt": {
+    "size": 82,
+    "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+  },
+  "env.sh": {
+    "size": 693,
+    "sha256": "550dad0633ac52e9cc4694607a5b5e13aae80719fd9b67f4eca97df6696c45b8"
+  },
+  "flutter-release.json": {
+    "size": 354,
+    "sha256": "0512d2f3e1ecc398936a6dcd0d9b57f89c7cf6221efa5c103b95490c77eab9dd"
+  },
+  "flutter-version.json": {
+    "size": 631,
+    "sha256": "17547b1e6773e2a1e0b640c88db1a65c768be8e6237d7040222601c0d40847ae"
+  },
+  "launcher-hashes.json": {
+    "size": 1013,
+    "sha256": "7d78360234b98bfb6e9ded8caa195643b186d24e64ab85d4b9dbe746e7d26122"
+  },
+  "launchers/cargo": {
+    "size": 291,
+    "sha256": "b38fe458c41cc02b7de0e584906088a92d77c27917cb10df967a444cf0c3df08"
+  },
+  "launchers/clang": {
+    "size": 368,
+    "sha256": "cfac41380e783d1e689489d2c2a3fd03601e8991ec9ffb7d936b6df6f9e267b9"
+  },
+  "launchers/clang++": {
+    "size": 370,
+    "sha256": "08554ff1bc1894bd6a7fc935ae2dd75d7a5ea309c0b6b9205f97b6bbd3fcb7ff"
+  },
+  "launchers/clang-19": {
+    "size": 368,
+    "sha256": "cfac41380e783d1e689489d2c2a3fd03601e8991ec9ffb7d936b6df6f9e267b9"
+  },
+  "launchers/cmake": {
+    "size": 286,
+    "sha256": "2ec17933c8ee7f03bf1a6a35d1aa3307eaa0a00eb2c7f752f770d4064a5a297c"
+  },
+  "launchers/cpack": {
+    "size": 286,
+    "sha256": "f934e8768977144f385366a60df6316bb316ff1d553463f0138099590816d2d4"
+  },
+  "launchers/ctest": {
+    "size": 286,
+    "sha256": "8e4584f568a08c84ed41b8e9cd251791bf6b1994d66663dfec59f048654ce28f"
+  },
+  "launchers/llvm-ar": {
+    "size": 370,
+    "sha256": "c404934e6e3d678be9dd2ec2d72d07dfe0ea6f6256bd4ea2f7430dbcce86e3f2"
+  },
+  "launchers/llvm-strip": {
+    "size": 373,
+    "sha256": "c643f3bdbf56079ae7477ffeecc816a8d1e2c8e9b403dccf71652d16913ed7be"
+  },
+  "launchers/ninja": {
+    "size": 286,
+    "sha256": "2c35da6acdfccfe4d6e9918f6ed3eb857a8e6b99865678f1f93a9c01a7361312"
+  },
+  "launchers/rustc": {
+    "size": 291,
+    "sha256": "354c944aa323df20b2653633d07e82ae6fb0a5d091733aaede40712efa7eaa57"
+  },
+  "launchers/rustdoc": {
+    "size": 293,
+    "sha256": "d8c10fcae3245f6e70f76791072c5e67aaee1d3f7e8130f9f6a9c48ca53ec0bb"
+  },
+  "logs/flutter-precache-linux-final.log.gz": {
+    "size": 398,
+    "sha256": "2c54a753a2e947e15eb2d85d696adf527ab5724843a6658dcd2c8c43a26deb9f"
+  },
+  "logs/flutter-precache-linux.log.gz": {
+    "size": 450,
+    "sha256": "ae5e90c58c0a651ed4d72c032ee2f0c8676ef84c0f23bfea7e6063f997e17d27"
+  },
+  "logs/flutter-precache.log.gz": {
+    "size": 20,
+    "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  "logs/sdk-cache-preload.log.gz": {
+    "size": 2859,
+    "sha256": "33f987053eee75e923b58899bcb7609141ab1631606b66ed060113b93b2368a7"
+  },
+  "logs/sdk-pub-offline.log.gz": {
+    "size": 498,
+    "sha256": "edf4eb60c3d784cae2cfc7ce7c9671a1d9ba48db7e84be90dd6fbaa5db81a7e1"
+  },
+  "native-packages.json": {
+    "size": 4175,
+    "sha256": "777ceed11f044f7ac7aa76657deaf42bc1b4e9a79a7597f1b74af70151d7fe2f"
+  },
+  "native-probes.json": {
+    "size": 1343,
+    "sha256": "a34b895e439b232a44df91dc62c8f5f63f93c813865cf4f303ec431a7c3f2a21"
+  },
+  "probes/http.dart": {
+    "size": 528,
+    "sha256": "cd9c0e0bcd69f0112479515bf1898a10a234e8386d2ad12bd7919e097f2781f1"
+  },
+  "probes/probe.c": {
+    "size": 79,
+    "sha256": "f7a128614c3ac104ccfd313acc8ab53848bb9e83c6053154e4c48cff954abeab"
+  },
+  "probes/probe.rs": {
+    "size": 56,
+    "sha256": "133612da3370a70bb229e9ffe4548586af2a3088b59803a61308c1d697882c14"
+  },
+  "resolution/01-app-locked/after/.dart_tool/package_config.json.gz": {
+    "size": 4242,
+    "sha256": "c440e2f72b4147062da53188b417a12198630a4b84b5f982a7aca2a3a7281552"
+  },
+  "resolution/01-app-locked/after/.dart_tool/package_graph.json.gz": {
+    "size": 5441,
+    "sha256": "4346e6a137ca74468dfc61c9afd658ba95bcdfcb44d52cbdc9025d87f577b3ca"
+  },
+  "resolution/01-app-locked/after/pubspec.lock.gz": {
+    "size": 14385,
+    "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b"
+  },
+  "resolution/01-app-locked/after/pubspec.yaml.gz": {
+    "size": 4522,
+    "sha256": "70a2b3ef7c0a4dcde413fd40990bab43d3f43b0faedf4602d1669bd558667dda"
+  },
+  "resolution/01-app-locked/artifacts-sha256.json": {
+    "size": 1205,
+    "sha256": "0240b57b29ea147c8774a87f654ce5ea7dd93a74ee8939b732ebfce8d2e87812"
+  },
+  "resolution/01-app-locked/before/pubspec.lock.gz": {
+    "size": 14385,
+    "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b"
+  },
+  "resolution/01-app-locked/before/pubspec.yaml.gz": {
+    "size": 4522,
+    "sha256": "70a2b3ef7c0a4dcde413fd40990bab43d3f43b0faedf4602d1669bd558667dda"
+  },
+  "resolution/01-app-locked/receipt.json": {
+    "size": 3146,
+    "sha256": "b1ad37616e8fa9ee570a6d9abff4399349479d2351f26c04596933fdec6b15f1"
+  },
+  "resolution/01-app-locked/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "resolution/01-app-locked/stdout.log": {
+    "size": 6480,
+    "sha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a"
+  },
+  "resolution/02-engine-dev/after/.dart_tool/package_config.json.gz": {
+    "size": 1102,
+    "sha256": "b989d8b27604b30016aff11f3acf9f2625a7c3db1c5012ea840b5ffb08e9344d"
+  },
+  "resolution/02-engine-dev/after/.dart_tool/package_graph.json.gz": {
+    "size": 1186,
+    "sha256": "de2e284daf95d05bc2c45bf6212284e721aa5074bbd7b4035103205ce557141f"
+  },
+  "resolution/02-engine-dev/after/pubspec.lock.gz": {
+    "size": 3289,
+    "sha256": "5425c6a470bbfd0613d8ea98902e08d35f2ff04a3e644c8bf881ee81cb6198e0"
+  },
+  "resolution/02-engine-dev/after/pubspec.yaml.gz": {
+    "size": 997,
+    "sha256": "880611fb040b00197f213101066ad0da5a259bdd0b641cb1888b82e9bed0b50d"
+  },
+  "resolution/02-engine-dev/artifacts-sha256.json": {
+    "size": 1067,
+    "sha256": "9a97de10142a4670eb61f386937b6b90afedc567cb43514d05b525851342b570"
+  },
+  "resolution/02-engine-dev/before/pubspec.yaml.gz": {
+    "size": 997,
+    "sha256": "880611fb040b00197f213101066ad0da5a259bdd0b641cb1888b82e9bed0b50d"
+  },
+  "resolution/02-engine-dev/receipt.json": {
+    "size": 3008,
+    "sha256": "7d944cd31e5a32daf0f717e71bfe4bc839ca998d3248fae3ca9930c03f89ac2f"
+  },
+  "resolution/02-engine-dev/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "resolution/02-engine-dev/stdout.log": {
+    "size": 1147,
+    "sha256": "b5ff7bbebb423aefcceb7a64a6746c594499c6acc36cab2b619bddec4c1d110d"
+  },
+  "resolution/03-editor-dev/after/.dart_tool/package_config.json.gz": {
+    "size": 971,
+    "sha256": "e446ad175c3e167a3cbaa3e2856149e57899fc2f658d16226ae7023662fe10c6"
+  },
+  "resolution/03-editor-dev/after/.dart_tool/package_graph.json.gz": {
+    "size": 971,
+    "sha256": "4edca86c4dec9637b75f8c97a9aaf24e698219dd754e97400214cae63dba8f26"
+  },
+  "resolution/03-editor-dev/after/pubspec.lock.gz": {
+    "size": 2510,
+    "sha256": "6fcd0b4de2be33040efc7082c613f43b2c4a599699d09bb7a104629e35bb9670"
+  },
+  "resolution/03-editor-dev/after/pubspec.yaml.gz": {
+    "size": 930,
+    "sha256": "fba5134084e637cdfc28e68e241370684010d4ff553c22fdb1cb7d5e03c6fde1"
+  },
+  "resolution/03-editor-dev/artifacts-sha256.json": {
+    "size": 1065,
+    "sha256": "3ce70db12c91e16c018a2c960325d4eb6292179c6ebba97bb31ff104bca62d67"
+  },
+  "resolution/03-editor-dev/before/pubspec.yaml.gz": {
+    "size": 930,
+    "sha256": "fba5134084e637cdfc28e68e241370684010d4ff553c22fdb1cb7d5e03c6fde1"
+  },
+  "resolution/03-editor-dev/receipt.json": {
+    "size": 3063,
+    "sha256": "f48dbbaee6e5f6263c11d4532dd404345aa3a4c119086f8968efc4cc370de996"
+  },
+  "resolution/03-editor-dev/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "resolution/03-editor-dev/stdout.log": {
+    "size": 1364,
+    "sha256": "3b1327f5145adb28857636d29ebb2c5269e0f9e516102b320e724f1ee5b59ef1"
+  },
+  "resolution/04-parser-dev/after/.dart_tool/package_config.json.gz": {
+    "size": 1087,
+    "sha256": "af10dc985cac4fa0bf0cf67f35671d8e7baa17d7e9b7a315a50e8b31ae9d758c"
+  },
+  "resolution/04-parser-dev/after/.dart_tool/package_graph.json.gz": {
+    "size": 1174,
+    "sha256": "cc697cfd8a7e1cc630f3d973ff60d6b455fc4b07953127499f4b717e02454161"
+  },
+  "resolution/04-parser-dev/after/pubspec.lock.gz": {
+    "size": 3290,
+    "sha256": "bfce188956f6bdf39219d0c31f3dce55649c1c8066f100a7db23f628ce0f2a6c"
+  },
+  "resolution/04-parser-dev/after/pubspec.yaml.gz": {
+    "size": 294,
+    "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e"
+  },
+  "resolution/04-parser-dev/artifacts-sha256.json": {
+    "size": 1067,
+    "sha256": "9f80a36af8ead13313deba3abbdff746a08cda115f7e5a1bd3c2a777a91d2429"
+  },
+  "resolution/04-parser-dev/before/pubspec.yaml.gz": {
+    "size": 294,
+    "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e"
+  },
+  "resolution/04-parser-dev/receipt.json": {
+    "size": 3005,
+    "sha256": "1836ef07a1317de82cb712cb14d2fbd1633a7de895769f9e8d8fc2a4babdec8d"
+  },
+  "resolution/04-parser-dev/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "resolution/04-parser-dev/stdout.log": {
+    "size": 1252,
+    "sha256": "ab6544db9223e49fab35f5a633989030cb75887b2c97bbc5f966a43e436393db"
+  },
+  "resolution/05-cli-locked/after/.dart_tool/package_config.json.gz": {
+    "size": 1595,
+    "sha256": "588057d99541b62d1971dc6ae751265bf8d11caf47e356e11616329fbbb03e4a"
+  },
+  "resolution/05-cli-locked/after/.dart_tool/package_graph.json.gz": {
+    "size": 1841,
+    "sha256": "d5e870c5513a3697f062001fb08b581dae3e86461a0b16c7ddffbea0efc4d862"
+  },
+  "resolution/05-cli-locked/after/pubspec.lock.gz": {
+    "size": 5077,
+    "sha256": "e47fdb656ca5df94ff98e8cd214cdb7a307af50f1bd0f517fc9a2b13b54ae959"
+  },
+  "resolution/05-cli-locked/after/pubspec.yaml.gz": {
+    "size": 367,
+    "sha256": "9df71f4195a8bcc0419212366a66d384e482ae78f7850b02b23f67e5eec38ea8"
+  },
+  "resolution/05-cli-locked/artifacts-sha256.json": {
+    "size": 1201,
+    "sha256": "4276cd818602365d919ed9218c5bf2eabd3afdad0d57b50f7266f5903dc84b63"
+  },
+  "resolution/05-cli-locked/before/pubspec.lock.gz": {
+    "size": 5077,
+    "sha256": "e47fdb656ca5df94ff98e8cd214cdb7a307af50f1bd0f517fc9a2b13b54ae959"
+  },
+  "resolution/05-cli-locked/before/pubspec.yaml.gz": {
+    "size": 367,
+    "sha256": "9df71f4195a8bcc0419212366a66d384e482ae78f7850b02b23f67e5eec38ea8"
+  },
+  "resolution/05-cli-locked/receipt.json": {
+    "size": 3090,
+    "sha256": "bcb03c60c22c6a03e34b805d9b217eed5ea065de670c9fb2fd8866de53e6a915"
+  },
+  "resolution/05-cli-locked/stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "resolution/05-cli-locked/stdout.log": {
+    "size": 1538,
+    "sha256": "1a3d1fa485a2df6322b7c2eebaa8e777c29b21f971729f46aaa1e5faa10c03fc"
+  },
+  "resolution-runner.py": {
+    "size": 3513,
+    "sha256": "5b35932ac83ee6d615a9be20dc77248839364b6df23271a7ffa538787908c95a"
+  },
+  "resolution-summary.json": {
+    "size": 3431,
+    "sha256": "869ed1eccda18e30c926bef7c34e73791a9990c526cea72b724aac2d5529f641"
+  },
+  "rust-packages.json": {
+    "size": 1030,
+    "sha256": "56192cb8b5933d9c1f3f8f5fd4a9d746e2c6adb49c6637f6cc283d225a58b225"
+  },
+  "setup-receipt.json": {
+    "size": 2554,
+    "sha256": "e85d7a74b101e03149b8a6ea42c29db17637af6067656996f443e18c4ee5be15"
+  },
+  "tool-versions.json": {
+    "size": 1501,
+    "sha256": "8e362eb31ca4652e799ec299511df2344f22ad5bd3b9588eaf663931ef1d8841"
+  }
+}

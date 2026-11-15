@@ -1,0 +1,62 @@
+{
+  "after_entries_sha256": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+  "after_git": {
+    "head": "6df08719ee02e5ab7b25d177bae5c1e46190a219",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/analysis-cli-final/command.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/analysis-cli-final/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/analysis-cli-final/metadata.json\n",
+    "tree": "299bb501aa73c42d9f377f1ad5d125a77ffc754c",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/cli/.dart_tool/package_config.json": "a1514dfed8489c1cafb0f71b3f75a4278f5fd37c1d23f209531c92b8f733e78b",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/cli/.dart_tool/package_graph.json": "3d1ba6b1b90c4a49bb47b1be2cfc9fccdd0ef53d6fe453c694a4902b86320621",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/analysis-cli-files.txt": "084097b0d4c960b2686d7e116980573c9b8d32f9a083a36804c01564bcdbe393",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/aed049b7e8bd/toolchains/env.sh": "550dad0633ac52e9cc4694607a5b5e13aae80719fd9b67f4eca97df6696c45b8",
+    "/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin/dart": "446e63e382b331c327cd17b001b025c2cb11c18ceddd2b34bfcd65cfb8cdecc2"
+  },
+  "before_entries_sha256": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+  "before_git": {
+    "head": "6df08719ee02e5ab7b25d177bae5c1e46190a219",
+    "source_changes": [],
+    "status": "",
+    "tree": "299bb501aa73c42d9f377f1ad5d125a77ffc754c",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/cli/.dart_tool/package_config.json": "a1514dfed8489c1cafb0f71b3f75a4278f5fd37c1d23f209531c92b8f733e78b",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/cli/.dart_tool/package_graph.json": "3d1ba6b1b90c4a49bb47b1be2cfc9fccdd0ef53d6fe453c694a4902b86320621",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/analysis-cli-files.txt": "084097b0d4c960b2686d7e116980573c9b8d32f9a083a36804c01564bcdbe393",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/aed049b7e8bd/toolchains/env.sh": "550dad0633ac52e9cc4694607a5b5e13aae80719fd9b67f4eca97df6696c45b8",
+    "/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin/dart": "446e63e382b331c327cd17b001b025c2cb11c18ceddd2b34bfcd65cfb8cdecc2"
+  },
+  "command": [
+    "dart",
+    "analyze",
+    "--fatal-infos",
+    "--fatal-warnings",
+    "cli/lib/commands/pdf.dart"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "elapsed_seconds": 6.3336748430001535,
+  "finished_at": "2026-11-15T10:00:13.205620+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8492,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T10:00:06.870469+00:00",
+  "suite_count": null
+}

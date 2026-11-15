@@ -1,0 +1,21 @@
+{
+  "parents": [
+    "1c1b0af8e20bb02f7d18b4e6cb116328f4342332",
+    "fbe879e811b57805583d658523b73320c7149d04"
+  ],
+  "inputs": {
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": {
+      "sha256": "56050029e8dea0d06ab90798bfb3616e77f94bb9691858969a983f05ee720364",
+      "git_blob": "d188820a1c758ec67e95843611f868b32858eecb"
+    },
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "sha256": "9806873ca664e4e389f274ff332dc5458193bdbd069842a7e5454d3b07c5277c",
+      "git_blob": "dce1cc09452c8cd310a0e4aa49bcee9e72c97c00"
+    },
+    "packages/quds_office_engine/CHANGELOG.md": {
+      "sha256": "093300f584f1c148ffeb2315f4bc6a72ef2ae841effb4739e1112b2d2693fb48",
+      "git_blob": "e47c2f2a8c8f3ab532462223b184c1262dcf2ea7"
+    }
+  },
+  "development_only": true
+}

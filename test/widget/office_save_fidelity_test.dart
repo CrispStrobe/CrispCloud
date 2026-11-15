@@ -271,6 +271,36 @@ String _storyText(xml.XmlElement node) {
   return result.toString();
 }
 
+Uint8List _ribbonFixtureWithBoldHeading() {
+  final archive = ZipDecoder().decodeBytes(
+    File('packages/quds_office_engine/test/fixtures/fidelity/word.docx')
+        .readAsBytesSync(),
+  );
+  final styles = xml.XmlDocument.parse(
+    utf8.decode(archive.findFile('word/styles.xml')!.content),
+  );
+  expect(
+    styles.rootElement.childElements.where(
+      (style) =>
+          style.getAttribute('styleId', namespace: _wordNs) == 'Heading2',
+    ),
+    isEmpty,
+  );
+  // This scenario tests an explicit unbold edit over inherited bold. Author
+  // that input style instead of assuming a built-in heading must be bold.
+  styles.rootElement.children.add(
+    xml.XmlDocument.parse(
+      '<w:style xmlns:w="$_wordNs" w:type="paragraph" w:styleId="Heading2">'
+      '<w:name w:val="heading 2"/>'
+      '<w:pPr><w:outlineLvl w:val="1"/></w:pPr>'
+      '<w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>',
+    ).rootElement.copy(),
+  );
+  final bytes = utf8.encode(styles.toXmlString());
+  archive.addFile(ArchiveFile('word/styles.xml', bytes.length, bytes));
+  return ZipEncoder().encodeBytes(archive);
+}
+
 void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
   final document = _part(bytes, 'word/document.xml');
   final paragraph = document.findAllElements('p', namespace: _wordNs).first;
@@ -562,8 +592,9 @@ void main() {
       // isolate. Install the deterministic boundary used by this scenario.
       FilePicker.platform = picker;
       await tester.runAsync(() async {
-        final cloud = _DelayedCloud();
-        var controller = await _open(tester, cloud);
+        final cloud = _DelayedCloud()
+          ..put('/report.docx', _ribbonFixtureWithBoldHeading());
+        var controller = await _open(tester, cloud, keepExisting: true);
         controller.jumpToParagraph(0);
         await tester.pump();
         await _tapSettled(tester, find.text('Heading 1').last);

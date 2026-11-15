@@ -1,0 +1,20 @@
+{
+  "review": "ODS formula namespace import boundary equivalence",
+  "scope": "Static source comparison only; no Dart or Flutter test execution",
+  "current_app_head": "48d4213d9d07dc2eaec13e49b3817b39c28f16f1",
+  "canonical_quds": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+  "incoming_app_commit": "f19709b4b60a2dd22878ecbe8fb15785ccbba535",
+  "reader_path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+  "current_reader_sha256": "d93b642b4544e6ca64eed4aede82eeae21dacd7fffcb13294ab7abd41725947e",
+  "incoming_reader_sha256": "4e09b69fae84fc74cc3823fd95a76bd10b33c345e7d44df080efe149e77eb369",
+  "translate_function_equal_after_helper_rename_and_whitespace_comments": true,
+  "helper_predicates_equal_after_variable_rename_and_or_order": true,
+  "predicate_terms": [
+    "(v>=0x30&&v<=0x39)",
+    "(v>=0x41&&v<=0x5a)",
+    "(v>=0x61&&v<=0x7a)",
+    "v==0x5f"
+  ],
+  "existing_regression": "of:=MYCOM.MICROSOFT.FUNC(1) preserved across import and XLSX roundtrip",
+  "conclusion": "The incoming boundary fix is already implemented. Incoming ORG/underscore case expansion is additional coverage, not a missing implementation."
+}

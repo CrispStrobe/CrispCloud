@@ -205,6 +205,53 @@ void main() {
     },
   );
 
+  for (final kind in ['zipRecovery', 'pngCarving']) {
+    testWidgets(
+      '$kind restart keeps receipts and requires a new reviewed scan',
+      (tester) async {
+        final job = _job(kind: kind);
+        job.entries.first.recovery.addAll({
+          'sourceSha256': 'a' * 64,
+          'archivePublication': {
+            'phase': 'committing',
+            'packedSha256': 'b' * 64,
+          },
+        });
+        final transfers = _Transfers(job);
+        await show(tester, transfers, ArchiveJobRecoveryDialog(jobId: job.id));
+        expect(
+          find.textContaining(
+            kind == 'pngCarving'
+                ? 'Scan the original file again after restart'
+                : 'Scan the original ZIP again after restart',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Source SHA-256: ${'a' * 64}'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Output SHA-256: ${'b' * 64}'),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-recovery-inspect')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-recovery-restart')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-recovery-publication')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'an active archive cannot be inspected or restarted through recovery',
     (tester) async {

@@ -2,7 +2,7 @@ name: Storage capabilities
 
 on:
   push:
-    branches: [main, integration/storage-capabilities-20261114, integration/storage-ext-20261114, integration/storage-ntfs-20261114, integration/storage-binary-20261114]
+    branches: [main, integration/storage-capabilities-20261114, integration/storage-ext-20261114, integration/storage-ntfs-20261114, integration/storage-binary-20261114, integration/storage-carving-20261115]
     paths: &storage_paths
       - '.github/workflows/storage-capabilities.yml'
       - '.github/actions/**'
@@ -71,7 +71,7 @@ jobs:
           retention-days: 14
 
   native:
-    name: Archive, FAT, ext, NTFS, partition, UDF and ZIP recovery regression gate
+    name: Archive, FAT, ext, NTFS, partition, UDF, ZIP recovery and PNG carving regression gate
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -114,9 +114,12 @@ jobs:
             test/archive_ntfs_*_test.dart \
             test/archive_dmg_fat_failure_test.dart test/archive_dmg_fat_provider_test.dart \
             test/archive_udf_*_test.dart test/archive_zip_recovery_*_test.dart \
+            test/archive_png_carving_*_test.dart \
             test/archive_job_queue_test.dart test/archive_job_recovery_test.dart \
+            test/file_operation_backend_test.dart \
             test/browser_menu_layout_test.dart \
             test/widget/archive_zip_recovery_dialog_test.dart \
+            test/widget/archive_png_carving_dialog_test.dart \
             test/widget/archive_container_viewer_test.dart \
             test/widget/archive_ntfs_viewer_test.dart \
             test/widget/archive_job_recovery_dialog_test.dart \
@@ -137,17 +140,25 @@ jobs:
             --file-reporter json:build/storage-ci/binary-browser-events.json \
             test/binary_comparison_portable_test.dart test/binary_comparison_limits_test.dart \
             2>&1 | tee build/storage-ci/binary-browser.log
-      - name: Run portable FAT, ext, NTFS, UDF and ZIP recovery on VM and JavaScript
+      - name: Run portable readers, ZIP recovery and PNG carving on VM and JavaScript
         shell: bash
         run: |
           set -euo pipefail
-          for driver in archive_fat archive_ext archive_ntfs archive_udf archive_zip_recovery; do
+          for driver in archive_fat archive_ext archive_ntfs archive_udf archive_zip_recovery archive_png_carving; do
             dart --packages=.dart_tool/package_config.json "test/support/${driver}_web_acceptance.dart" | tee "build/storage-ci/${driver}-vm.log"
             dart compile js --packages=.dart_tool/package_config.json -O2 "test/support/${driver}_web_acceptance.dart" -o "build/storage-ci/${driver}.js" | tee "build/storage-ci/${driver}-compile.log"
             node -e "global.self=global; require('./build/storage-ci/${driver}.js')" | tee "build/storage-ci/${driver}-js.log"
           done
           dart --packages=.dart_tool/package_config.json test/support/archive_zip_recovery_web_acceptance.dart --emit-candidates > build/storage-ci/zip-recovery-candidates.json
           python3 test/support/check_archive_zip_recovery.py --candidates build/storage-ci/zip-recovery-candidates.json --report build/storage-ci/zip-recovery-python.json | tee build/storage-ci/zip-recovery-python.log
+      - name: Verify PNG carving with independent Python readers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install Pillow==13.0.0
+          python3 test/support/generate_png_carving_reference.py --check | tee build/storage-ci/png-reference.log
+          dart --packages=.dart_tool/package_config.json test/support/archive_png_carving_web_acceptance.dart --emit-candidates > build/storage-ci/png-carving-candidates.json
+          python3 test/support/check_archive_png_carving.py --candidates build/storage-ci/png-carving-candidates.json --report build/storage-ci/png-carving-python.json | tee build/storage-ci/png-carving-python.log
       - name: Restore hash-pinned external FAT reference source
         uses: actions/cache@v4
         with:

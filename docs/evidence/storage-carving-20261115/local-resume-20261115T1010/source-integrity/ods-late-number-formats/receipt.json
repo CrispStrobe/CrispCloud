@@ -1,0 +1,96 @@
+{
+  "after_inputs": {
+    ".dart_tool/package_config.json": {
+      "sha256": "19965bbf79508f032db244782ebdabeecbf24afb63a08ca7df0fbcc007627968",
+      "size": 22899
+    },
+    ".dart_tool/package_graph.json": {
+      "sha256": "958cfa3beb2e234d7ecc1285f779c6c42ac5b57fcc6d7de9d984f00f028c394b",
+      "size": 18609
+    },
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": {
+      "sha256": "2ac8d150462d67505bf624099c931d469fb691f07de4f43b69a487535f4b0d95",
+      "size": 55195
+    },
+    "packages/quds_office_engine/test/sheet_time_number_format_test.dart": {
+      "sha256": "344a4fa9e16c2e7756af18b00b5a6adbaeddd5d1221afd406dd7d537d28d4f51",
+      "size": 2927
+    },
+    "pubspec.lock": {
+      "sha256": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+      "size": 22686
+    }
+  },
+  "before_inputs": {
+    ".dart_tool/package_config.json": {
+      "sha256": "19965bbf79508f032db244782ebdabeecbf24afb63a08ca7df0fbcc007627968",
+      "size": 22899
+    },
+    ".dart_tool/package_graph.json": {
+      "sha256": "958cfa3beb2e234d7ecc1285f779c6c42ac5b57fcc6d7de9d984f00f028c394b",
+      "size": 18609
+    },
+    "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": {
+      "sha256": "2ac8d150462d67505bf624099c931d469fb691f07de4f43b69a487535f4b0d95",
+      "size": 55195
+    },
+    "packages/quds_office_engine/test/sheet_time_number_format_test.dart": {
+      "sha256": "344a4fa9e16c2e7756af18b00b5a6adbaeddd5d1221afd406dd7d537d28d4f51",
+      "size": 2927
+    },
+    "pubspec.lock": {
+      "sha256": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+      "size": 22686
+    }
+  },
+  "commands": {
+    "analysis": {
+      "command": [
+        "dart",
+        "analyze",
+        "--fatal-infos",
+        "--fatal-warnings",
+        "lib/src/sheet/styles/sml_styles.dart",
+        "test/sheet_time_number_format_test.dart"
+      ],
+      "elapsed_seconds": 3.355378565999672,
+      "returncode": 0
+    },
+    "tests": {
+      "command": [
+        "dart",
+        "test",
+        "--reporter",
+        "json",
+        "test/sheet_time_number_format_test.dart",
+        "test/sheet_formula_test.dart",
+        "test/sheet_authored_number_format_test.dart"
+      ],
+      "elapsed_seconds": 3.4925316949997978,
+      "returncode": 0
+    }
+  },
+  "cwd": "/workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine",
+  "done_success": true,
+  "environment": {
+    "CARGO_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/cargo-home",
+    "FLUTTER_ROOT": "/workspace/scratch/aed049b7e8bd/toolchains/flutter",
+    "PATH": "/workspace/scratch/aed049b7e8bd/toolchains/bin:/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "PUB_CACHE": "/workspace/scratch/aed049b7e8bd/toolchains/pub-cache",
+    "TMPDIR": "/workspace/scratch/aed049b7e8bd/toolchains/tmp"
+  },
+  "finished_at": "2026-11-15T09:47:22.265399+00:00",
+  "head": "0ca0d31bd757da4db6b6ef45764ff9de33990a2f",
+  "merge_head": "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+  "owned_source_and_resolution_inputs_unchanged": true,
+  "scope": "Focused development checks on the canonical merge working tree; not a clean-commit app qualification gate.",
+  "started_at": "2026-11-15T09:47:18.751823+00:00",
+  "test_totals": {
+    "errors": 0,
+    "failed": 0,
+    "other_results": 0,
+    "passed": 36,
+    "skipped": 0,
+    "tests": 36
+  }
+}

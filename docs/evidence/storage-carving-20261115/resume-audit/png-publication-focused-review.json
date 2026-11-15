@@ -1,0 +1,146 @@
+{
+  "schema": "crispcloud.focused_png_guard_review.v1",
+  "completed_at": "2026-11-15T07:15:03.028059+00:00",
+  "source_commit": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+  "scope": "Read-only review of bounded PNG capture, guarded publication, queue ownership/restart, relevant regression cases, and qualification recorder. No PNG execution performed in this review.",
+  "all_reviewed_source_files_match_saved_commit": true,
+  "files": [
+    {
+      "path": "lib/services/archive_png_carving_service.dart",
+      "sha256": "7cd28aca7c91173e8595d385e1053fd4dae5f40c39332fc93c513762b51b13c4",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/services/archive_png_carving_workflow.dart",
+      "sha256": "a57cb03a60933c1a2c245c9856b235c0b469331f48fdae29899e1981e00a032e",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/services/file_operation_service.dart",
+      "sha256": "acca8c306414ffb636fd905ffb7560a42ef5d36ddcce75316d9bcaa5c22d07f0",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/services/file_operation_backend.dart",
+      "sha256": "8807e91d9424f84683b2e9762d43764802b748255ca99c0ee088ba3b51ff3bf3",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/services/native_file_primitives_io.dart",
+      "sha256": "40341dfba42203543276dd0789dce413c7968bcd82a31ee106873d6592aa2cbe",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/providers/transfer_provider.dart",
+      "sha256": "d4c7e747a7902d97994fdd9933903e49e64750df033c27c08fa1ce356092d016",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/widgets/archive_png_carving_actions.dart",
+      "sha256": "60350d44eafbb19b802cc11e20c7c77bdb80e60328db6bb3cfef94fb02f8216b",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/widgets/archive_png_carving_dialog.dart",
+      "sha256": "5df1df97c4ad73c958bd7557f4f992b81e168604de83e011e9d0591138e02caa",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/widgets/archive_job_recovery_dialog.dart",
+      "sha256": "36b632c2694295704377338aee17f987bd773523b3d251417915c8dee50a7800",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/models/archive_job.dart",
+      "sha256": "0384d0e05dd91850810f30e08d146141d407ed82075ea6f3ca9f43ed17f92794",
+      "matches_source_commit": true
+    },
+    {
+      "path": "lib/services/transfer_recovery_service.dart",
+      "sha256": "db373d7dea30853aa43cb9a71c728a207f9dcf4e9f9527112c2899771e0f88b4",
+      "matches_source_commit": true
+    },
+    {
+      "path": "test/archive_png_carving_workflow_test.dart",
+      "sha256": "21d21a4d0cbc8dbb094e3cde53a555d11cc24b409409fa989f2f78f6e79046a5",
+      "matches_source_commit": true
+    },
+    {
+      "path": "test/archive_png_carving_queue_test.dart",
+      "sha256": "a97ba8703feead5aaabad825b1e5a6d9eab0f160b5cecfa5c8b27f15a0e40638",
+      "matches_source_commit": true
+    },
+    {
+      "path": "test/file_operation_backend_test.dart",
+      "sha256": "13d5abee5d39c1c8ff40f8c5fdcd131a5b9588f7a506692c7ddb43ef0cb851c6",
+      "matches_source_commit": true
+    },
+    {
+      "path": "test/widget/archive_job_recovery_dialog_test.dart",
+      "sha256": "e325a4605cbc32a53bd4818db16e6728da4c2ecf82457797699aa3f4e59ca812",
+      "matches_source_commit": true
+    },
+    {
+      "path": "docs/archive-png-carving.md",
+      "sha256": "8995a58715ebcea986e426139e6a077fdbd5f0c7ce6c895a53407e0861ecd72e",
+      "matches_source_commit": true
+    }
+  ],
+  "png_blocking_findings": [],
+  "review_conclusions": [
+    "UI restricts admission to one native local regular file of at most 64 MiB. Host capture rechecks identity/stat, rejects oversized/short/invalid chunks, and keeps a private source snapshot.",
+    "Candidate/result lists are immutable; recovered bytes are exposed read-only, selections are frozen before asynchronous admission/execution, and ZIP members/digests are read back using a distinct reader.",
+    "Guarded publication is a distinct capability. Unsupported backends reject before consuming output; replace=true is rejected; native installation uses exclusive OS rename with no replacing fallback.",
+    "Committing journal callback completes before full source and stage proofs. A synchronous control-change listener increments pause epochs, so even transient pause/resume invalidates prior proofs.",
+    "Native writer performs its final asynchronous type probe, then synchronous authority/cancellation/epoch guard, then the FFI exclusive rename without another asynchronous boundary.",
+    "Observed install is authoritative: later Stop, backend revocation or completion observer errors cannot reclassify saved output as uninstalled; failures are retained as publication warnings.",
+    "Queue owns admitted handle/control after durable creation, including view disposal while admission is pending. Source review snapshot lives in the execution closure, while journal contains offsets/digests and receipts only.",
+    "PNG restart cannot enter ordinary copy recovery or create-archive recipe recovery. Its recovery view requires a new scan and review and retains saved paths/digests."
+  ],
+  "known_limits": [
+    "Final rehash and path checks are not an atomic filesystem snapshot or compare-and-swap against arbitrary external writers. Concurrent destination collision is protected by exclusive rename.",
+    "Source and output are separately capped at 64 MiB; aggregate decoded scanlines, candidate/chunk/validation-work caps are also enforced. This is not a 64 MiB total-memory claim.",
+    "Host capture/proof streams use a 262144-chunk cap, a 30-second inactivity timeout and two-minute elapsed clock. The elapsed clock includes user pause time; a long pause can therefore produce a safe bounded-read failure after resume.",
+    "Native Linux regression coverage does not establish actual execution on Windows/macOS/mobile. Browser/cloud publication remains disabled.",
+    "Abrupt process loss after exclusive installation but before durable completion can leave an unfinished job receipt; retained output is not automatically overwritten and restart requires explicit new review."
+  ],
+  "recorder_review": {
+    "path": "docs/evidence/storage-carving-20261115/record_gate.py",
+    "reviewed_sha256": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "initial_findings": [
+      "Untracked non-evidence source/suites were neither rejected nor included in stability equality.",
+      "Observed suites with zero visible tests could satisfy qualification."
+    ],
+    "status": "Root corrected both findings during review; focused synthetic controls validate the corrected recorder. No reviewer source edits.",
+    "synthetic_control_results": [
+      {
+        "name": "current-untracked-drift",
+        "returncode": 1,
+        "qualification_success": false,
+        "inputs_and_commit_stable": false
+      },
+      {
+        "name": "current-empty-suite",
+        "returncode": 1,
+        "qualification_success": false,
+        "inputs_and_commit_stable": true
+      },
+      {
+        "name": "current-unexpected-suite",
+        "returncode": 1,
+        "qualification_success": false,
+        "inputs_and_commit_stable": true
+      },
+      {
+        "name": "current-valid-visible-suite",
+        "returncode": 0,
+        "qualification_success": true,
+        "inputs_and_commit_stable": true
+      }
+    ],
+    "control_receipt": "recorder-review-controls/control-results-current.json",
+    "remaining_scope": "Before/after equality cannot prove absence of transient writes. External dependency payloads and executables are not a hermetic snapshot unless separately supplied as tool hashes. The recorder explicitly declares these limits; command exit zero alone only qualifies the recorded command scope."
+  },
+  "repository_worktree_mutations_by_reviewer": false,
+  "remote_mutations_by_reviewer": false
+}

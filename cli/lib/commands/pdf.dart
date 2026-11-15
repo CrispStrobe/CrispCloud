@@ -154,8 +154,7 @@ class _PdfOperationCommand extends Command<int> {
           )
           ..addOption(
             'passwords-file',
-            help:
-                'Private JSON array of passwords in input order, or - for stdin.',
+            help: 'Private JSON array of passwords in input order, or - for stdin.',
           )
           ..addFlag(
             'allow-decryption',
@@ -256,16 +255,14 @@ class _PdfOperationCommand extends Command<int> {
         argParser.addOption(
           'data',
           mandatory: true,
-          help:
-              'JSON object mapping exact field names to typed values; - reads stdin.',
+          help: 'JSON object mapping exact field names to typed values; - reads stdin.',
         );
       case _PdfOperation.ocr:
         argParser
           ..addOption(
             'data',
             mandatory: true,
-            help:
-                'Recognized pages/spans JSON array; - reads stdin. No model is bundled.',
+            help: 'Recognized pages/spans JSON array; - reads stdin. No model is bundled.',
           )
           ..addOption('min-confidence', defaultsTo: '0')
           ..addFlag(
@@ -295,8 +292,7 @@ class _PdfOperationCommand extends Command<int> {
         ..addFlag(
           'flatten',
           defaultsTo: true,
-          help:
-              'Bake only the new mark into page content; preserve other annotations.',
+          help: 'Bake only the new mark into page content; preserve other annotations.',
         );
     }
     if (operation == _PdfOperation.watermark ||
@@ -304,8 +300,7 @@ class _PdfOperationCommand extends Command<int> {
         operation == _PdfOperation.ocr) {
       argParser.addOption(
         'font',
-        help:
-            'TTF/OTF font file for Unicode appearances or OCR; must cover the text.',
+        help: 'TTF/OTF font file for Unicode appearances or OCR; must cover the text.',
       );
     }
   }
@@ -373,7 +368,8 @@ class _PdfOperationCommand extends Command<int> {
   String get invocation => switch (operation) {
     _PdfOperation.merge =>
       '${runner?.executableName ?? 'crispcloud'} pdf merge <input.pdf> <input.pdf>... --output <file> [options]',
-    _PdfOperation.search => '${runner?.executableName ?? 'crispcloud'} pdf search <input.pdf> <query> [options]',
+    _PdfOperation.search =>
+      '${runner?.executableName ?? 'crispcloud'} pdf search <input.pdf> <query> [options]',
     _ =>
       '${runner?.executableName ?? 'crispcloud'} pdf $name <input.pdf> ${_writes ? '--output <file> ' : ''}[options]',
   };

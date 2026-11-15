@@ -1,0 +1,21 @@
+{
+  "url": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz",
+  "index_sha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498",
+  "verified_packages": [
+    "clang-19",
+    "cmake",
+    "cmake-data",
+    "libclang-common-19-dev",
+    "libclang-cpp19",
+    "libclang1-19",
+    "libllvm19",
+    "libpfm4",
+    "librhash1",
+    "libuv1t64",
+    "libz3-4",
+    "llvm-19",
+    "llvm-19-linker-tools",
+    "llvm-19-runtime",
+    "ninja-build"
+  ]
+}

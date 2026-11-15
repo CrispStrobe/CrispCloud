@@ -1,0 +1,164 @@
+{
+  "scope": "Synthetic receipt validation controls only; not Dart/app qualification. Source checkout unchanged.",
+  "recorder_sha256": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+  "results": [
+    {
+      "control": "current-untracked-drift",
+      "returncode": 1,
+      "qualification_success": false,
+      "inputs_and_commit_stable": false,
+      "stderr": "",
+      "summary": null
+    },
+    {
+      "control": "current-empty-suite",
+      "returncode": 1,
+      "qualification_success": false,
+      "inputs_and_commit_stable": true,
+      "stderr": "",
+      "summary": {
+        "done_events": [
+          {
+            "success": true,
+            "type": "done"
+          }
+        ],
+        "done_success": true,
+        "errors": [],
+        "hidden_test_done": 0,
+        "missing_suites": [],
+        "non_json_lines": 0,
+        "non_object_json_lines": 0,
+        "nonpassing_requested_suites": [
+          "test/tracked_test.dart"
+        ],
+        "qualification_success": false,
+        "suites": [
+          {
+            "errors": 0,
+            "failed": 0,
+            "observed": true,
+            "other_results": 0,
+            "passed": 0,
+            "path": "test/tracked_test.dart",
+            "result": "no_visible_tests",
+            "skipped": 0,
+            "tests": 0
+          }
+        ],
+        "totals": {
+          "errors": 0,
+          "failed": 0,
+          "other_results": 0,
+          "passed": 0,
+          "skipped": 0,
+          "tests": 0
+        },
+        "unexpected_suites": []
+      }
+    },
+    {
+      "control": "current-unexpected-suite",
+      "returncode": 1,
+      "qualification_success": false,
+      "inputs_and_commit_stable": true,
+      "stderr": "",
+      "summary": {
+        "done_events": [
+          {
+            "success": true,
+            "type": "done"
+          }
+        ],
+        "done_success": true,
+        "errors": [],
+        "hidden_test_done": 0,
+        "missing_suites": [],
+        "non_json_lines": 0,
+        "non_object_json_lines": 0,
+        "nonpassing_requested_suites": [],
+        "qualification_success": false,
+        "suites": [
+          {
+            "errors": 0,
+            "failed": 0,
+            "observed": true,
+            "other_results": 0,
+            "passed": 1,
+            "path": "test/tracked_test.dart",
+            "result": "passed",
+            "skipped": 0,
+            "tests": 1
+          },
+          {
+            "errors": 0,
+            "failed": 0,
+            "observed": true,
+            "other_results": 0,
+            "passed": 0,
+            "path": "test/unrequested_test.dart",
+            "result": "no_visible_tests",
+            "skipped": 0,
+            "tests": 0
+          }
+        ],
+        "totals": {
+          "errors": 0,
+          "failed": 0,
+          "other_results": 0,
+          "passed": 1,
+          "skipped": 0,
+          "tests": 1
+        },
+        "unexpected_suites": [
+          "test/unrequested_test.dart"
+        ]
+      }
+    },
+    {
+      "control": "current-valid-visible-suite",
+      "returncode": 0,
+      "qualification_success": true,
+      "inputs_and_commit_stable": true,
+      "stderr": "",
+      "summary": {
+        "done_events": [
+          {
+            "success": true,
+            "type": "done"
+          }
+        ],
+        "done_success": true,
+        "errors": [],
+        "hidden_test_done": 0,
+        "missing_suites": [],
+        "non_json_lines": 0,
+        "non_object_json_lines": 0,
+        "nonpassing_requested_suites": [],
+        "qualification_success": true,
+        "suites": [
+          {
+            "errors": 0,
+            "failed": 0,
+            "observed": true,
+            "other_results": 0,
+            "passed": 1,
+            "path": "test/tracked_test.dart",
+            "result": "passed",
+            "skipped": 0,
+            "tests": 1
+          }
+        ],
+        "totals": {
+          "errors": 0,
+          "failed": 0,
+          "other_results": 0,
+          "passed": 1,
+          "skipped": 0,
+          "tests": 1
+        },
+        "unexpected_suites": []
+      }
+    }
+  ]
+}

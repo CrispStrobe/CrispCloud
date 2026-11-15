@@ -4,6 +4,30 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Apply ODS cell style precedence from explicit cell, row default and column
+  default styles, including repeated cells that cross differing column styles.
+  Default-style padding remains sparse and column style bookkeeping shares the
+  workbook dimension budget. Preserve absolute sheet references, clock component
+  formats and elapsed hour/minute/second formats through XLSX saves. Quoted
+  formula text and sheet identifiers retain their original content. The importer
+  also retains its compatibility extension for omitted horizontal covered-cell
+  placeholders; standard ODF requires those placeholders. Explicit covered cells
+  consume reserved positions once, and ambiguous overlapping merges still decline.
+
+- Import ODS merged anchors and covered cells at their original coordinates,
+  including vertical spans and data after repeated blank rows. Recognize row
+  and column groups by namespace, resolve named cell styles from `styles.xml`,
+  and retain inherited wrap settings, explicit spaces and formula string text.
+  Repeated padding advances the grid without allocating cells; meaningful data
+  outside 100,000 rows or 4,096 columns declines instead of being truncated.
+  The workbook shares limits of 128 sheets, 200,000 materialized cells,
+  200,000 dimension assignments, 1,000 merges and 8 MiB expanded UTF-8 cell text.
+  Input and combined XML each cap at 64 MiB; XML nesting/events and style work
+  have separate limits. Repeated formulas, matrix formulas, repeated merged
+  anchors, overlapping merges, nested tables and covered cells that contain
+  stored data explicitly decline. This is a bounded ODS-to-XLSX import profile,
+  not roundtrip preservation of arbitrary ODF features.
+
 - Preserve imported typed formula caches through unsupported dependencies,
   including cross-sheet and runtime references. Resolve recalculations before
   writing caches, retain unsupported provenance through nested values, and keep

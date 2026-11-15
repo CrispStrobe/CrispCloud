@@ -515,6 +515,17 @@ source ranges. This is not a simultaneous or universally atomic provider
 snapshot. The [separate evidence](evidence/storage-binary-20261114/) records the
 actual tested revisions and the remaining platform qualifications.
 
+Implemented first carving continuation: [bounded PNG recovery](archive-png-carving.md)
+searches a captured native local file for complete supported images, reviews
+validated ranges and exports selected PNGs plus an offset/hash report to a new
+ZIP through the shared queue and guarded exclusive publication. Input and output
+remain separately bounded to 64 MiB. The profile preserves original source bytes,
+requires a fresh scan after restart, and explicitly declines unsupported PNG
+forms. [Source-bound evidence](evidence/storage-carving-20261115/PROGRESS.md)
+keeps its qualification separate from the preceding ZIP salvage and comparison
+profiles. Broader image formats, fragmented recovery and rescue imaging remain
+future work.
+
 Xdelta patch files are a later export format; bind their expected base and
 result identities, limit work, apply to a private candidate and verify before
 publication. Retain the original if a patch fails.

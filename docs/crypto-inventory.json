@@ -448,6 +448,18 @@
         "lib/services/file_operation_content_strategy.dart"
       ],
       "note": "Explicit native S3 download-to-local copy profile. Source versions, local baseline provenance and a complete private candidate are revalidated before publication. ETags identify revisions; they are not treated as SHA-256 content hashes. This is an integrity/transfer feature and adds no new encryption algorithm or credential storage."
+    },
+    {
+      "name": "Reviewed PNG carving to a new ZIP",
+      "algorithms": [
+        "Existing SHA-256 capture, image and staged-output integrity",
+        "PNG CRC-32 and zlib Adler-32 format checks (not authentication)"
+      ],
+      "implementations": [
+        "lib/services/archive_png_carving_service.dart",
+        "lib/services/archive_png_carving_workflow.dart"
+      ],
+      "note": "Bounded original parser for supported complete contiguous PNG images in a native local file. Selected images and an offset/hash report are packaged in a new ZIP. The journal holds hashes and recipe metadata, not source bytes or credentials. Guarded native publication repeats complete source/stage proofs after pauses and checks captured identity and cancellation synchronously before exclusive installation. Existing encryption, credentials, protocol and distribution decisions are retained; no runtime dependency or new encryption algorithm is added."
     }
   ],
   "reviewed_files": [
@@ -484,6 +496,7 @@
     "lib/l10n/archive_integrity_strings.dart",
     "lib/l10n/archive_job_strings.dart",
     "lib/l10n/archive_member_move_strings.dart",
+    "lib/l10n/archive_png_carving_strings.dart",
     "lib/l10n/archive_transfer_strings.dart",
     "lib/l10n/archive_viewer_error_strings.dart",
     "lib/l10n/connection_dialog_extra_strings.dart",
@@ -550,6 +563,8 @@
     "lib/services/archive_package_readers.dart",
     "lib/services/archive_package_writers.dart",
     "lib/services/archive_pbzx_source.dart",
+    "lib/services/archive_png_carving_service.dart",
+    "lib/services/archive_png_carving_workflow.dart",
     "lib/services/archive_publication_access_policy.dart",
     "lib/services/archive_publication_cleanup_io.dart",
     "lib/services/archive_publication_cleanup_stub.dart",
@@ -634,8 +649,10 @@
     "lib/services/external_editor_service.dart",
     "lib/services/external_remote_editing_service.dart",
     "lib/services/file_bytes_loader.dart",
+    "lib/services/file_operation_backend.dart",
     "lib/services/file_operation_content_strategy.dart",
     "lib/services/file_operation_options.dart",
+    "lib/services/file_operation_service.dart",
     "lib/services/file_pointer_modifiers.dart",
     "lib/services/file_viewer_documents_license.dart",
     "lib/services/filen_client_adapter.dart",
@@ -707,6 +724,8 @@
     "lib/widgets/archive_job_recovery_dialog.dart",
     "lib/widgets/archive_jobs_dialog.dart",
     "lib/widgets/archive_member_move_dialog.dart",
+    "lib/widgets/archive_png_carving_actions.dart",
+    "lib/widgets/archive_png_carving_dialog.dart",
     "lib/widgets/archive_workspace_dialog.dart",
     "lib/widgets/command_palette.dart",
     "lib/widgets/connection_dialog.dart",

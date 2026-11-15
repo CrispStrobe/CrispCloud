@@ -1,0 +1,175 @@
+# Office reconciliation for the storage continuation — 15 November 2026
+
+The `integration/office-reconcile-storage-20261115` branch preserved the first
+Office snapshot before storage recovery implementation continued. It incorporates
+Excel PR #108 at `a77364501d274e0fde2e9fffeefb121258ae9614` and worksheet
+navigation at `8c7f8ac78593661d415a23d52048de6053f378c9`. DOC recovery PR #109
+at `1b7680583ac69649b17287ab68738288fec10f51` was already included in the storage
+branch. Existing main `8a24763fb4b2c720ff6b617cebbea8971191bdca` is retained.
+
+## Initial canonical source checkpoint
+
+At that checkpoint, all 2,214 managed files matched Quds integration
+`01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca` and the unchanged standalone DOC
+parser `f9d10b5a5e68b4216892d64622caa8b0a15c7afd`. The Quds checkpoint is saved
+on `integration/office-storage-reconcile-20261115` with these explicit parents:
+
+- main `4f7d0e0064cb430cc14e3daca663cffade777938`, already containing worksheet
+  navigation and the newer Word selection, fields and preservation fixes;
+- Excel palette import `fd749d8ee140be623597493cdbc05ce20f1f5151`;
+- shape preservation PR #20, `5278aafd512640608fe06b8f7d357c4cffe8520a`;
+- heading inheritance and theme shading PR #21,
+  `1f30a823b30678e3684c98fee6a2cd5c4945c4f2`.
+
+The guarded sync checks the original manifest and the full canonical source
+before updating the mirror and pin. No upstream PR is closed or merged into
+main by this reconciliation.
+
+## Office evidence discovery
+
+The existing host workflow passed 283 tests at navigation source `1a86e790`
+but rejected 57 inventory paths because recursive discovery counted archived
+build outputs inside committed evidence. Those are historical results; they
+are not acceptance for this combined source.
+
+Checkout verification inspects only the current declared `build/` roots.
+Historical copies cannot create duplicate results or substitute for a missing
+current output. The initial checkpoint used `--downloaded-artifacts` for
+downloaded bundles. The later navigation reconciliation below supersedes that
+interface with explicit layout names and broader artifact-root checks. The
+required 182 files and their rendering/schema scopes remain unchanged.
+
+## Qualification at the reconciliation checkpoint
+
+- The exact managed-source check passes for all 2,214 files.
+- All 25 inventory controls pass against the explicit layout modes; all eight
+  guarded-sync controls pass. These include rejection of missing current
+  outputs despite archived copies and duplicate downloaded artifact roots.
+- Runtime, rendering and external schema acceptance for this combined source
+  are pending. Earlier test totals are not relabeled as current results.
+
+## Final source cutoff incorporated into storage
+
+The final audit observed remote refs from 06:34:41 through 06:37:21 UTC on
+15 November 2026. It found 105 advertised CrispCloud branch/PR refs and 28
+canonical Quds branch/PR refs. The initial implementation already contained
+102 app refs; current main and the navigation branch/PR alias contributed
+17 additional distinct commits. The audit is preserved in
+`evidence/storage-carving-20261115/remote-cutoff-audit.json`.
+
+The combined storage candidate incorporates:
+
+- CrispCloud main `fa030137fd203467d5560b68b767019194b95ebd`, including the
+  merged Office PRs, newer PDF interactions and legacy save protection;
+- navigation / PR #110 `7e5af83c4e6d26247ccf91d2b03c47a816f46231`, including
+  complete worksheet-view captures and the newer evidence inventory repair;
+- exact canonical Quds main `eae58542dffd73cf30e97cc60a59a5474656d676` and
+  standalone DOC parser `d422fa99a3a84830794f0e2dc332d59f923779f7`, as pinned
+  in the incoming main manifest. The 2,214-file managed-source check passes.
+
+The current checker uses `--layout checkout` for a working checkout and
+`--layout artifact` for downloaded bundles. Artifact discovery includes partial
+and otherwise-unused wrappers so duplicate or undeclared output cannot hide
+outside the principal host tree. Both checkout-history regression cases are
+retained with the explicit checkout layout. Historical evidence remains intact.
+
+The earlier canonical integration branch remains a durable history checkpoint;
+the final app mirror follows the newer canonical main pin. This reconciliation
+does not close another PR or merge the storage branch into upstream main.
+
+The storage evidence directory records qualification against the saved combined
+source. Earlier totals above remain historical and do not establish current
+runtime, rendering or external schema acceptance.
+
+## Resumed source cutoff and wrap-text repair
+
+The next audit captured 106 app branch/PR refs and 30 canonical Quds refs at
+07:07:43–07:07:49 UTC on 15 November 2026. App main and worksheet navigation
+were unchanged. The app Excel branch had advanced to `ca6156e8` after its PR
+merged; its managed wrap-text changes originate at canonical `4b51c5c0`.
+Canonical Word `4637ddce` adds inline-picture preservation and repairs the
+scripted heading oracle's incorrect assumption that outline levels must be
+direct paragraph properties.
+
+Canonical integration `dcefdc051ac8dddcef0f07baaa00bfbc2c35817a` combines those
+heads and corrects three defects in the incoming wrap support: shifted imported
+XF flags, accidental reuse of a wrapped style for an unwrapped cell, and missing
+style emission for a new workbook's wrap-only edit. Seven new wrap tests cover
+native/prefixed XML, explicit overrides, repeated saves and HTML import; six
+additional oracle controls exercise inherited headings and reject incorrect
+overrides, missing properties and cyclic inheritance.
+
+The app merge retains `ca6156e8` as a parent, while guarded synchronization takes
+the final managed bytes from that exact canonical integration. The incoming
+Excel manifest's older DOC parser pin is not adopted: the standalone parser
+remains `d422fa99`. The managed inventory now covers 2,217 files. Audit receipts
+are in `evidence/storage-carving-20261115/resume-audit/`; runtime acceptance is
+recorded separately against the saved combined candidate.
+
+## Test-fixture corrections found during the combined run
+
+Saved app `db5e3f75` passed the PNG/storage tests but exposed three pre-existing
+Office expectation failures. The host ribbon scenario assumed that the built-in
+Heading 2 was bold, although the current style deliberately is not. That test
+now authors its own bold Heading 2 input, preserving its explicit-unbold action,
+XML assertions, notes, images and three real save/reopen cycles. The complete
+14-test host-save suite passes with the corrected fixture.
+
+The two selection screenshot failures reproduce byte-for-byte at old app
+`5a62b10f`, in the current standalone editor and in the app context. Selection
+component boxes and table borders are identical to the macOS-authored masters;
+the differences lie at local image edges. Canonical `b23d0336` preserves those
+masters and adds separate Linux-host references copied from the old-source
+captures. All ten selection tests pass, with unchanged pixel tolerance. This
+is Linux renderer qualification of simulated target colour variants, not an
+execution claim for macOS or Windows. The exact upstream rasterizer cause is
+not established by the comparison.
+
+This last canonical change contains only the test harness, two PNG references
+and their provenance. The 2,220-file host mirror retains exactly the engine
+implementation qualified at canonical `dcefdc05`. Failed development receipts
+and the subsequent source-bound qualification remain separately identifiable.
+
+## 08:06 UTC continuation: current branches and Git modes
+
+The continuation preserves current main `5b7daacc`, navigation through
+`d97705da`, and document workspace/history `ab94bedb`. The production source
+checkpoint is `97e6aa18`; newer evidence-only integration is `488478cc`.
+The incoming document work does not change managed package bytes or pins.
+
+Independent committed-object comparison verifies all 2,220 managed files
+against Quds `b23d0336` and parser `d422fa99`. It also found 41 Quds Dart
+files marked executable in the host but not in the canonical source.
+Checkpoint `6e9284e3` corrects those modes to `100644`, preserving every
+blob. All canonical modes now agree. The existing checker enforced upstream
+modes only for the standalone parser; this separate audit extends the mode
+comparison without changing that checker.
+
+The [continuation receipts](evidence/storage-carving-20261115/resume-0806/README.md)
+record exact source identities, merge checks and the current execution block.
+No fresh runtime or manifest SHA-256 rehash is claimed: local commands cannot
+start on the full filesystem. Prior test observations remain historical.
+
+## 09:14 UTC source refresh and ODS corrections
+
+The current continuation incorporates app main `6fcc4497` and all six incoming
+ODF PR #116 commits through `bda0374b`. The remote audit covers all 11 branches
+and 20 recently updated PRs; superseded branches contain no unique omitted
+implementation. The previous 41 executable-mode corrections are retained.
+
+Quds main `793c64ac` incorporates the incoming ODS source and the earlier Linux
+goldens. Canonical integration `1c1b0af8e20bb02f7d18b4e6cb116328f4342332`
+retains both that main and the earlier qualification branch as parents. It fixes
+internal blank-row truncation, double-counted covered merge cells, and formula
+rewrites that altered quoted strings or sheet identifiers. Focused development
+runs reproduced the defects and then passed all 17 cases with strict scoped
+analysis. The app preview also preserves row/column positions and leading empty
+CSV rows, with four added host regression cases.
+
+Guarded synchronization changes exactly the canonical reader and its test,
+retaining all 2,223 managed files and standalone parser `d422fa99`. The local
+toolchain is restored, app/CLI resolution enforces unchanged committed locks,
+and package-local development graphs are retained. The source-only gate now
+includes host inventory controls; the scripted-output oracle follows the real
+engine artifact generator. Fresh combined runtime acceptance is recorded in
+`evidence/storage-carving-20261115/local-resume-20261115T1010/`.

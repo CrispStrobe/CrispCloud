@@ -2369,11 +2369,14 @@ class S3ClientAdapter extends CloudStorageClient
       final directory =
           deltaCacheDirectory ??
           p.join(
+            // local path: native block-map cache, not an S3 key.
             (await getApplicationSupportDirectory()).path,
             'block-maps',
             's3',
           );
-      if (!p.isAbsolute(directory) || p.normalize(directory) != directory) {
+      final absolute = p.isAbsolute(directory); // local path
+      final normalized = p.normalize(directory); // local path
+      if (!absolute || normalized != directory) {
         return null;
       }
       return _deltaSyncService.blockMapCachePath(

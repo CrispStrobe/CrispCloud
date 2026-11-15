@@ -7,6 +7,8 @@ import 'transfer_job.dart';
 bool isArchiveTransferJob(TransferJobRecord job) =>
     job.id.startsWith('archive_create_') ||
     job.id.startsWith('archive_workspace_') ||
+    job.id.startsWith('archive_zip_recovery_') ||
+    job.id.startsWith('archive_png_carving_') ||
     job.entries.firstOrNull?.recovery['archiveKind'] != null;
 
 /// Credential-free creation recipe. The original sources are captured by the

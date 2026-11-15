@@ -1,0 +1,158 @@
+{
+  "recorded_at": "2026-11-15T10:53:12.016742+00:00",
+  "downloads": [
+    {
+      "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.8-stable.tar.xz",
+      "size": 1581444364,
+      "sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+      "verified_against": "https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json",
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/flutter_linux_3.47.8-stable.tar.xz",
+      "verified": true,
+      "elapsed_seconds": 52.87
+    },
+    {
+      "url": "https://static.rust-lang.org/dist/2026-11-12/rustc-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "f1d0b1dec81dab6f523cd098507763487b0d4bd7fd2c87582f154128719be03b",
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/rustc-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "verified": true,
+      "elapsed_seconds": 8.07,
+      "size": 84955936
+    },
+    {
+      "url": "https://static.rust-lang.org/dist/2026-11-12/cargo-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "7e29ce07d7c6e92d1826870575ba27d57fff6cb3e754aa57d99099cb88fab35d",
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/cargo-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "verified": true,
+      "elapsed_seconds": 5.23,
+      "size": 10946408
+    },
+    {
+      "url": "https://static.rust-lang.org/dist/2026-11-12/rust-std-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "sha256": "4591b6486594ded52ecd6135db95bf9355bbd3ca7a380888b141528bbcf9a5d4",
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/rust-std-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "verified": true,
+      "elapsed_seconds": 6.12,
+      "size": 31283108
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/c/cmake/cmake_3.31.6-2_amd64.deb",
+      "sha256": "dee2fc94973325240604ffbca677a3f16b462fb6520946bd81be1ecbac770a02",
+      "size": 11969144,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/cmake_3.31.6-2_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 6.9
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/c/cmake/cmake-data_3.31.6-2_all.deb",
+      "sha256": "d9060145be892f43cd1888024114ceab019c81479d4b0a3383fe14cebe2295cb",
+      "size": 2268208,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/cmake-data_3.31.6-2_all.deb",
+      "verified": true,
+      "elapsed_seconds": 1.25
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/libp/libpfm4/libpfm4_4.13.0+git99-gc5587f9-1_amd64.deb",
+      "sha256": "55f0d470f5bdd63061593180c5b34bcb9cefdb09b4cfc9c67b3cb170b0162525",
+      "size": 371144,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libpfm4_4.13.0+git99-gc5587f9-1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 3.08
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/libu/libuv1/libuv1t64_1.50.0-2_amd64.deb",
+      "sha256": "5fec8035002e0c745b64d1c5b3e1dc42790d1a77574315b976cf3e4aab9ddc0a",
+      "size": 153752,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libuv1t64_1.50.0-2_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 2.69
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+      "sha256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4",
+      "size": 116584,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/clang-19_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 2.24
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+      "sha256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc",
+      "size": 739932,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 1.17
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+      "sha256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47",
+      "size": 13191148,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 6.25
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang1-19_19.1.7-3+b1_amd64.deb",
+      "sha256": "4e7e2a5fe236e280d32fb529350b3c1cfd9410a964629a57ea079a314c45d7a3",
+      "size": 7623496,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libclang1-19_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 5.34
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libllvm19_19.1.7-3+b1_amd64.deb",
+      "sha256": "db0d614d61345ca710fb73e75105f1ec6e38898fa7b3aa99fa7eb7d8b0a11d57",
+      "size": 25978316,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libllvm19_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 6.06
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/llvm-19_19.1.7-3+b1_amd64.deb",
+      "sha256": "0b1b7263f4f45e261099240fdbf00fc14b42b88410fd829e041bf83ea45866cb",
+      "size": 16385748,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/llvm-19_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 5.3
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/llvm-19-linker-tools_19.1.7-3+b1_amd64.deb",
+      "sha256": "874a0a5cde797cda3e94e9310a0a9958608f526f177637414a8ce9620c804818",
+      "size": 1263460,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/llvm-19-linker-tools_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 3.6
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/llvm-19-runtime_19.1.7-3+b1_amd64.deb",
+      "sha256": "84a9dfc277f0914cb84e6cb3d139d3eb3dfe19f06670bbdea4241e8e3d921a4e",
+      "size": 550636,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/llvm-19-runtime_19.1.7-3+b1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 3.56
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/n/ninja-build/ninja-build_1.12.1-1_amd64.deb",
+      "sha256": "bc172ce9270bd6fcd6d5335a83ff9d3c7ba0d13ec624cfdfa1b5aa06901dc453",
+      "size": 142132,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/ninja-build_1.12.1-1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 2.78
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/r/rhash/librhash1_1.4.5-1_amd64.deb",
+      "sha256": "9bf56d7d8ce3e7680a0dd8e3cfe8acdf50e0aa3b98b0a907cf744a4d1711af72",
+      "size": 132184,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/librhash1_1.4.5-1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 2.67
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/z/z3/libz3-4_4.13.3-1_amd64.deb",
+      "sha256": "71383373523ef62d47eccf660cf6535c3febcbb3f88e54cb7a43124014b57359",
+      "size": 8560036,
+      "path": "/workspace/scratch/1e19fe1d39ae/toolchains/downloads/libz3-4_4.13.3-1_amd64.deb",
+      "verified": true,
+      "elapsed_seconds": 3.54
+    }
+  ]
+}

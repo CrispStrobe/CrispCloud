@@ -2,7 +2,8 @@
 // context follows the host platform, so on Windows `p.join`/`p.dirname` would
 // produce `\` inside remote keys (e.g. a B2 rename to `dir\new`). Adapters must
 // use `p.posix` (or `p.url`) for remote paths; a genuinely local path is marked
-// with a trailing `// local path` comment.
+// with a `// local path` comment on the call line, or immediately inside
+// its opening parenthesis when the formatter wraps a multiline call.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +24,11 @@ void main() {
         final line = lines[i];
         if (line.trimLeft().startsWith('//')) continue;
         if (line.contains('// local path')) continue;
+        if (line.trimRight().endsWith('(') &&
+            i + 1 < lines.length &&
+            lines[i + 1].trimLeft().startsWith('// local path')) {
+          continue;
+        }
         if (platformCall.hasMatch(line)) {
           offenders.add('${file.path}:${i + 1}: ${line.trim()}');
         }

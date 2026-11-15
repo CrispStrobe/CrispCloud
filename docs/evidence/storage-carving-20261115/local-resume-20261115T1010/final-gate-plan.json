@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "observed_production_cutoff_utc": "2026-11-15T09:37:28Z",
+  "app_main": "ab7f1536e77b0bc15d546e229fc802e4edaa1079",
+  "incoming_qualification": "8a4cc8b62c75461a05f58cc97386191cbca9f05c",
+  "canonical_quds": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+  "canonical_last_incoming": "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+  "standalone_parser": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+  "managed_files": 2225,
+  "cohorts": {
+    "app": 49,
+    "editor": 7,
+    "engine": 17
+  },
+  "analysis_files": {
+    "app": 53,
+    "engine": 5,
+    "cli": 1
+  },
+  "gates": [
+    "analysis-app-final-2",
+    "analysis-engine-final-2",
+    "analysis-cli-final",
+    "app-final",
+    "editor-final",
+    "engine-final-2",
+    "scripted-oracle-final",
+    "source-integrity-final",
+    "png-portable-final-record",
+    "navigation-capture-final"
+  ],
+  "rules": [
+    "Run each gate against current saved clean source HEAD with source/resolution/tool snapshots.",
+    "Save each completed gate immediately, including failures, and use fresh HEAD for the next gate.",
+    "No dependency resolution, source edits, commits or ref alignment while a gate runs.",
+    "Generate actual Office outputs in engine cohort before scripted oracle; retain produced artifacts.",
+    "Separate font-backed navigation preview review from ordinary test acceptance.",
+    "Keep original failure and predecessor evidence unchanged.",
+    "Do not wait for or restart Actions; checkpoints use [skip ci]."
+  ]
+}

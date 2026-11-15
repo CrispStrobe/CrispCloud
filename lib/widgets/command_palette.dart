@@ -75,7 +75,9 @@ import 'archive_batch_actions.dart';
 import 'archive_jobs_dialog.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
 import '../l10n/archive_zip_recovery_strings.dart';
+import '../l10n/archive_png_carving_strings.dart';
 import 'archive_zip_recovery_actions.dart';
+import 'archive_png_carving_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/archive_job_strings.dart';
 
@@ -477,6 +479,17 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           enabled: canRecoverArchiveZipSelection(ref),
           action: () =>
               showArchiveZipRecoveryForSelection(widget.parentContext, ref),
+        ),
+      if (!kIsWeb)
+        _Command(
+          id: 'archive-png-carving',
+          name: archivePngCarvingText(context, 'Recover PNG images to ZIP…'),
+          icon: Icons.image_search_outlined,
+          keywords:
+              'png image carve carving recover damaged disk image raw photo',
+          enabled: canCarveArchivePngSelection(ref),
+          action: () =>
+              showArchivePngCarvingForSelection(widget.parentContext, ref),
         ),
       _Command(
         id: 'archive-test-selected',

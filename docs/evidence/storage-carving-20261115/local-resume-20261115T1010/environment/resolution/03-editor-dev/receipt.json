@@ -1,0 +1,71 @@
+{
+  "after_inputs": {
+    ".dart_tool/package_config.json": {
+      "sha256": "cbb17c0147ce5c470ae22959ad9409616efd050d0935b9f46a64f072216aa9a2",
+      "size": 9733
+    },
+    ".dart_tool/package_graph.json": {
+      "sha256": "fa8e469d3e7648bb072a3e6e50aa150f4f4b98e7e13d66671f69b34180ce946c",
+      "size": 7021
+    },
+    "pubspec.lock": {
+      "sha256": "29e3da52f589163abf9e2207a8ce75dbcef43640444f96789208c8ddda43341a",
+      "size": 9775
+    },
+    "pubspec.yaml": {
+      "sha256": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e",
+      "size": 2355
+    }
+  },
+  "before_inputs": {
+    ".dart_tool/package_config.json": {
+      "missing": true
+    },
+    ".dart_tool/package_graph.json": {
+      "missing": true
+    },
+    "pubspec.lock": {
+      "missing": true
+    },
+    "pubspec.yaml": {
+      "sha256": "61ec8cf9aebcde1a11cf2c09bdd4e5e7d1e10a62ba41c8ff9064c0166a46d13e",
+      "size": 2355
+    }
+  },
+  "command": [
+    "flutter",
+    "--no-version-check",
+    "--suppress-analytics",
+    "pub",
+    "get"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_editor",
+  "elapsed_seconds": 62.02822407800022,
+  "environment": {
+    "CARGO_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/cargo-home",
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ROOT": "/workspace/scratch/aed049b7e8bd/toolchains/flutter",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "LD_LIBRARY_PATH": "/workspace/scratch/aed049b7e8bd/toolchains/lib:/workspace/scratch/aed049b7e8bd/toolchains/native/usr/lib/x86_64-linux-gnu",
+    "PATH": "/workspace/scratch/aed049b7e8bd/toolchains/bin:/workspace/scratch/aed049b7e8bd/toolchains/flutter/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "PUB_CACHE": "/workspace/scratch/aed049b7e8bd/toolchains/pub-cache",
+    "TMPDIR": "/workspace/scratch/aed049b7e8bd/toolchains/tmp",
+    "XDG_CACHE_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/cache",
+    "XDG_CONFIG_HOME": "/workspace/scratch/aed049b7e8bd/toolchains/config"
+  },
+  "finished_at": "2026-11-15T09:27:17.472007+00:00",
+  "lock_enforcement": false,
+  "lock_unchanged": false,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "pubspec_unchanged": true,
+  "resolution_success": true,
+  "returncode": 0,
+  "schema": 1,
+  "scope": "Dependency setup only; application source may change concurrently. Not runtime qualification.",
+  "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e",
+  "source_head_at_start": "a706e2e2bfd489b005447af914701f37259d021e",
+  "source_tree_at_start": "256eaf0dd8b3fd961142425442e4dfbfc9c99d05",
+  "started_at": "2026-11-15T09:26:15.443846+00:00",
+  "status": "completed"
+}

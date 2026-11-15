@@ -1,0 +1,369 @@
+diff --git a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+index 39be83e..d188820 100644
+--- a/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
++++ b/packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart
+@@ -111,6 +111,7 @@ abstract final class OdsSheetReader {
+       );
+       _readColumns(table, sheet, styles, budget);
+       var rowIndex = 0;
++      final pendingRowHeights = <({int start, int count, double height})>[];
+       for (final row in _members(table, 'table-row', const {
+         'table-row-group',
+         'table-rows',
+@@ -136,6 +137,7 @@ abstract final class OdsSheetReader {
+               })
+             >[];
+         var column = 0;
++        var pendingCovered = 0;
+         for (final element in row.childElements) {
+           if (element.namespaceUri != _table ||
+               (element.localName != 'table-cell' &&
+@@ -144,16 +146,22 @@ abstract final class OdsSheetReader {
+           }
+           final repeat = _repeat(element, 'number-columns-repeated');
+           if (element.localName == 'covered-table-cell') {
+-            // ODF emits a covered cell for each coordinate after the anchor.
+-            // The anchor itself also occupies exactly one serialized cell.
+             if (_attribute(element, 'value-type', _office) != null ||
+                 _attribute(element, 'formula', _table) != null ||
+                 _text(element).isNotEmpty) {
+               throw const OdsSheetFormatException('Covered cell contains data');
+             }
+-            column += repeat;
++            // A spanning origin already reserves its covered columns. Consume
++            // explicit placeholders once; additional covered positions still
++            // advance normally, including cells covered by a vertical merge.
++            final reserved = repeat < pendingCovered ? repeat : pendingCovered;
++            pendingCovered -= reserved;
++            column += repeat - reserved;
+             continue;
+           }
++          // Keep compatibility with producers that omit covered placeholders:
++          // a new ordinary origin begins after the preceding reserved span.
++          pendingCovered = 0;
+           final colSpan = _repeat(element, 'number-columns-spanned');
+           final rowSpan = _repeat(element, 'number-rows-spanned');
+           if (_repeat(element, 'number-matrix-columns-spanned') > 1 ||
+@@ -212,18 +220,37 @@ abstract final class OdsSheetReader {
+               cell: cell,
+             ));
+           }
+-          column += repeat;
++          column += repeat + colSpan - 1;
++          pendingCovered = colSpan - 1;
+         }
+         // Empty runs do not allocate cells, but must retain their exact row
+         // count: data after an internal gap must never move or disappear.
++        if (entries.isNotEmpty) {
++          for (final pending in pendingRowHeights) {
++            budget.dimensions(pending.count);
++            for (var r = 0; r < pending.count; r++) {
++              sheet.rowHeights[pending.start + r] = pending.height;
++            }
++          }
++          pendingRowHeights.clear();
++        }
+         if (rowHeight != null &&
+             rowHeight > 0 &&
+             rowIndex + rowRepeat <= _maxRows) {
+-          budget.dimensions(rowRepeat);
+-          for (var r = 0; r < rowRepeat; r++) {
+-            sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
+-              rowHeight,
+-            );
++          final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
++          if (entries.isEmpty && rowRepeat > 1) {
++            // Defer empty height runs until data follows. Styled trailing
++            // padding remains sparse; internal heights retain the same budget.
++            pendingRowHeights.add((
++              start: rowIndex,
++              count: rowRepeat,
++              height: height,
++            ));
++          } else {
++            budget.dimensions(rowRepeat);
++            for (var r = 0; r < rowRepeat; r++) {
++              sheet.rowHeights[rowIndex + r] = height;
++            }
+           }
+         }
+         if (entries.isNotEmpty) {
+@@ -522,6 +549,7 @@ abstract final class OdsSheetReader {
+       } else if (!quoted && char == ';') {
+         result.write(',');
+       } else if (!quoted &&
++          (i == 0 || !_formulaNameCharacter(formula.codeUnitAt(i - 1))) &&
+           (formula.startsWith('COM.MICROSOFT.', i) ||
+               formula.startsWith('ORG.OPENOFFICE.', i))) {
+         i += formula.startsWith('COM.MICROSOFT.', i)
+@@ -538,6 +566,12 @@ abstract final class OdsSheetReader {
+     return translated.trim().isEmpty ? null : translated;
+   }
+ 
++  static bool _formulaNameCharacter(int value) =>
++      value == 0x5f ||
++      (value >= 0x30 && value <= 0x39) ||
++      (value >= 0x41 && value <= 0x5a) ||
++      (value >= 0x61 && value <= 0x7a);
++
+   static String _odfReference(String raw) {
+     var reference = raw.trim();
+     if (reference.startsWith('.')) reference = reference.substring(1);
+@@ -545,11 +579,12 @@ abstract final class OdsSheetReader {
+     if (dot <= 0) return reference;
+     var sheet = reference.substring(0, dot).trim();
+     final cell = reference.substring(dot + 1);
+-    if (sheet.startsWith("'") && sheet.endsWith("'")) {
++    final quoted = sheet.startsWith("'") && sheet.endsWith("'");
++    if (quoted) {
+       sheet = sheet.substring(1, sheet.length - 1);
+     }
+     if (sheet.isEmpty) return cell;
+-    return sheet.contains(' ') ? "'$sheet'!$cell" : '$sheet!$cell';
++    return quoted || sheet.contains(' ') ? "'$sheet'!$cell" : '$sheet!$cell';
+   }
+ 
+   static String? _numberFormat(
+diff --git a/packages/quds_office_engine/test/ods_sheet_reader_test.dart b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+index 7471869..dce1cc0 100644
+--- a/packages/quds_office_engine/test/ods_sheet_reader_test.dart
++++ b/packages/quds_office_engine/test/ods_sheet_reader_test.dart
+@@ -378,4 +378,238 @@ void main() {
+       _invalidOds,
+     );
+   });
++  test(
++    'keeps internal repeated blank rows without expanding trailing padding',
++    () async {
++      final book = OdsSheetReader.readBytes(
++        _odsRows(
++          '''
++      <table:table-row>
++        <table:table-cell office:value-type="string"><text:p>Start</text:p></table:table-cell>
++      </table:table-row>
++      <table:table-row table:number-rows-repeated="2" table:style-name="tall">
++        <table:table-cell table:number-columns-repeated="4096"/>
++      </table:table-row>
++      <table:table-row>
++        <table:table-cell office:value-type="float" office:value="7"/>
++        <table:table-cell office:value-type="float" office:value="14" table:formula="of:=[.A4]*2"/>
++      </table:table-row>
++      <table:table-row table:number-rows-repeated="1048572" table:style-name="tall">
++        <table:table-cell table:number-columns-repeated="16384"/>
++      </table:table-row>
++      ''',
++          styles: '''
++      <style:style style:name="tall" style:family="table-row">
++        <style:table-row-properties style:row-height="24pt"/>
++      </style:style>
++      ''',
++        ),
++      );
++      for (final current in [book, await _roundTrip(book)]) {
++        final sheet = current.sheets.single;
++        expect(sheet.cellOrNull(SmlCellRef.parse('A4'))?.value, 7);
++        expect(sheet.cellOrNull(SmlCellRef.parse('B4'))?.formula, 'A4*2');
++        expect(sheet.cellOrNull(SmlCellRef.parse('B4'))?.value, 14);
++        expect(sheet.cellOrNull(SmlCellRef.parse('A2')), isNull);
++        expect(sheet.cellOrNull(SmlCellRef.parse('A3')), isNull);
++        expect(sheet.allCells, hasLength(3));
++        expect(sheet.rowHeights[1], SmlWorksheet.rowHeightFromExcel(24));
++        expect(sheet.rowHeights[2], SmlWorksheet.rowHeightFromExcel(24));
++        expect(sheet.rowHeights, hasLength(2));
++      }
++    },
++  );
++
++  test(
++    'blank runs retain in-range cells and refuse later out-of-range data',
++    () {
++      const inside = '''
++      <table:table-row table:number-rows-repeated="99999"><table:table-cell/></table:table-row>
++      <table:table-row><table:table-cell office:value-type="float" office:value="7"/></table:table-row>
++      ''';
++      final sheet = OdsSheetReader.readBytes(_odsRows(inside)).sheets.single;
++      expect(sheet.cellOrNull(const SmlCellRef(0, 99999))?.value, 7);
++      expect(sheet.cellOrNull(const SmlCellRef(0, 100000)), isNull);
++      expect(sheet.allCells, hasLength(1));
++      expect(sheet.rows, hasLength(1));
++      expect(
++        () => OdsSheetReader.readBytes(
++          _odsRows('''
++        $inside
++        <table:table-row><table:table-cell office:value-type="float" office:value="9"/></table:table-row>
++        '''),
++        ),
++        _invalidOds,
++      );
++    },
++  );
++
++  for (final merge in [
++    (
++      name: 'explicit placeholder',
++      span: 2,
++      covered: '<table:covered-table-cell/>',
++      nextColumn: 2,
++    ),
++    (name: 'omitted placeholder', span: 2, covered: '', nextColumn: 2),
++    (
++      name: 'repeated placeholders',
++      span: 3,
++      covered: '<table:covered-table-cell table:number-columns-repeated="2"/>',
++      nextColumn: 3,
++    ),
++    (
++      name: 'additional covered column',
++      span: 2,
++      covered: '<table:covered-table-cell table:number-columns-repeated="2"/>',
++      nextColumn: 3,
++    ),
++  ]) {
++    test('horizontal merge consumes ${merge.name} once', () async {
++      final book = OdsSheetReader.readBytes(
++        _odsRows('''
++        <table:table-row>
++          <table:table-cell office:value-type="string" table:number-columns-spanned="${merge.span}"><text:p>Wide</text:p></table:table-cell>
++          ${merge.covered}
++          <table:table-cell office:value-type="float" office:value="7"/>
++        </table:table-row>
++        '''),
++      );
++      for (final current in [book, await _roundTrip(book)]) {
++        final sheet = current.sheets.single;
++        expect(sheet.cellOrNull(SmlCellRef(merge.nextColumn, 0))?.value, 7);
++        expect(sheet.cellOrNull(SmlCellRef(merge.nextColumn + 1, 0)), isNull);
++        expect(sheet.merges.single.c0, 0);
++        expect(sheet.merges.single.c1, merge.span - 1);
++        expect(sheet.allCells, hasLength(2));
++      }
++    });
++  }
++
++  test('a new origin clears unconsumed merge placeholders', () async {
++    final book = OdsSheetReader.readBytes(
++      _odsRows('''
++      <table:table-row>
++        <table:table-cell office:value-type="string" table:number-columns-spanned="2"><text:p>First</text:p></table:table-cell>
++        <table:table-cell office:value-type="string" table:number-columns-spanned="2"><text:p>Second</text:p></table:table-cell>
++        <table:covered-table-cell/>
++        <table:table-cell office:value-type="float" office:value="7"/>
++      </table:table-row>
++      '''),
++    );
++    for (final current in [book, await _roundTrip(book)]) {
++      final sheet = current.sheets.single;
++      expect(sheet.cellOrNull(SmlCellRef.parse('C1'))?.asString, 'Second');
++      expect(sheet.cellOrNull(SmlCellRef.parse('E1'))?.value, 7);
++      expect(sheet.allCells, hasLength(3));
++      expect(sheet.merges.map((merge) => merge.origin.a1), ['A1', 'C1']);
++    }
++  });
++
++  test('merge spans retain in-range cells and refuse column overflow', () {
++    final sheet = OdsSheetReader.readBytes(
++      _odsRows('''
++      <table:table-row>
++        <table:table-cell table:number-columns-repeated="4094"/>
++        <table:table-cell office:value-type="string" table:number-columns-spanned="2"><text:p>Edge</text:p></table:table-cell>
++        <table:covered-table-cell/>
++      </table:table-row>
++      '''),
++    ).sheets.single;
++    expect(sheet.merges.single.c0, 4094);
++    expect(sheet.merges.single.c1, 4095);
++    expect(sheet.allCells, hasLength(1));
++    expect(
++      () => OdsSheetReader.readBytes(
++        _odsRows('''
++        <table:table-row>
++          <table:table-cell table:number-columns-repeated="4094"/>
++          <table:table-cell office:value-type="string" table:number-columns-spanned="4096"><text:p>Edge</text:p></table:table-cell>
++          <table:covered-table-cell table:number-columns-repeated="4096"/>
++          <table:table-cell office:value-type="float" office:value="7"/>
++        </table:table-row>
++        '''),
++      ),
++      _invalidOds,
++    );
++  });
++
++  test(
++    'styled trailing row padding stays sparse within the admitted grid',
++    () async {
++      final book = OdsSheetReader.readBytes(
++        _odsRows(
++          '''
++      <table:table-row><table:table-cell office:value-type="float" office:value="7"/></table:table-row>
++      <table:table-row table:number-rows-repeated="1000" table:style-name="tall"><table:table-cell/></table:table-row>
++      ''',
++          styles: '''
++      <style:style style:name="tall" style:family="table-row"><style:table-row-properties style:row-height="24pt"/></style:style>
++      ''',
++        ),
++      );
++      for (final current in [book, await _roundTrip(book)]) {
++        final sheet = current.sheets.single;
++        expect(sheet.cellOrNull(const SmlCellRef(0, 0))?.value, 7);
++        expect(sheet.allCells, hasLength(1));
++        expect(sheet.rowHeights, isEmpty);
++      }
++    },
++  );
++
++  for (final formula in {
++    'of:=MYCOM.MICROSOFT.FUNC(1)': 'MYCOM.MICROSOFT.FUNC(1)',
++    'of:="a;b"': '"a;b"',
++    'of:="literal [.A1];COM.MICROSOFT.SUM"':
++        '"literal [.A1];COM.MICROSOFT.SUM"',
++    'of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))':
++        'IF(A1="a;b","say ""[.B2];""",SUM(A1:A2,1))',
++    'of:=CONCATENATE("";"a;b";"[.A1]")': 'CONCATENATE("","a;b","[.A1]")',
++    "of:=SUM(['Semi;Colon'.A1];1)": "SUM('Semi;Colon'!A1,1)",
++    "of:=SUM(['COM.MICROSOFT.Data'.A1];1)": "SUM('COM.MICROSOFT.Data'!A1,1)",
++  }.entries) {
++    test('formula translation preserves literals in ${formula.key}', () async {
++      final book = OdsSheetReader.readBytes(
++        _odsRows('''
++        <table:table-row>
++          <table:table-cell office:value-type="string" office:string-value="cached" table:formula="${_xmlAttribute(formula.key)}"/>
++        </table:table-row>
++        '''),
++      );
++      for (final current in [book, await _roundTrip(book)]) {
++        expect(current.sheets.single.cellA1('A1').formula, formula.value);
++      }
++    });
++  }
++}
++
++Future<SmlWorkbook> _roundTrip(SmlWorkbook book) async => SheetDeserializer()
++    .readBytes(await OfficeIsolateSave.workbook(book, recalculate: false));
++
++String _xmlAttribute(String value) => value
++    .replaceAll('&', '&amp;')
++    .replaceAll('<', '&lt;')
++    .replaceAll('"', '&quot;');
++
++Uint8List _odsRows(String rows, {String styles = ''}) {
++  final zip = ZipWriter()
++    ..addFile(
++      'mimetype',
++      utf8.encode('application/vnd.oasis.opendocument.spreadsheet'),
++      store: true,
++    )
++    ..addFile(
++      'content.xml',
++      utf8.encode('''
++      <office:document-content
++        xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
++        xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
++        xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
++        xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0">
++        <office:automatic-styles>$styles</office:automatic-styles>
++        <office:body><office:spreadsheet><table:table table:name="Data">$rows</table:table></office:spreadsheet></office:body>
++      </office:document-content>
++      '''),
++    );
++  return zip.close();
+ }

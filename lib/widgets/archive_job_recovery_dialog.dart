@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/archive_creation_strings.dart';
 import '../l10n/archive_zip_recovery_strings.dart';
+import '../l10n/archive_png_carving_strings.dart';
 import '../l10n/archive_endpoint_strings.dart';
 import '../l10n/commander_strings.dart';
 import '../models/archive_job.dart';
@@ -346,12 +347,18 @@ class _ArchiveJobRecoveryDialogState
                               ),
                             ),
                           ],
-                        ] else if (kind == 'zipRecovery') ...[
+                        ] else if (kind == 'zipRecovery' ||
+                            kind == 'pngCarving') ...[
                           Text(
-                            archiveZipRecoveryText(
-                              context,
-                              'Scan the original ZIP again after restart. Saved digests and output receipts remain available in this job.',
-                            ),
+                            kind == 'pngCarving'
+                                ? archivePngCarvingText(
+                                    context,
+                                    'Scan the original file again after restart and review the PNG candidates. Saved digests and output receipts remain available in this job.',
+                                  )
+                                : archiveZipRecoveryText(
+                                    context,
+                                    'Scan the original ZIP again after restart. Saved digests and output receipts remain available in this job.',
+                                  ),
                           ),
                           SelectableText(job.entries.first.source.path ?? ''),
                           SelectableText(job.entries.first.destination),

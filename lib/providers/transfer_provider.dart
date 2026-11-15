@@ -32,6 +32,8 @@ import '../services/archive_creation_service.dart';
 import '../services/archive_creation_batch.dart';
 import '../services/archive_zip_recovery_workflow.dart';
 import '../services/archive_zip_recovery_service.dart';
+import '../services/archive_png_carving_service.dart';
+import '../services/archive_png_carving_workflow.dart';
 import '../services/archive_job_recovery_service.dart';
 import '../services/archive_workspace.dart';
 import '../services/file_operation_service.dart';
@@ -1086,6 +1088,96 @@ class TransferNotifier extends ChangeNotifier {
               progress.phase == ArchiveZipRecoveryPhase.publishing;
           handle.operation
             ..phaseLabel = 'zipRecovery:${progress.phase.name}'
+            ..currentFilePath = progress.path
+            ..totalBytes = byteProgress ? progress.total : 0;
+          handle.operation.updateProgress(
+            byteProgress ? progress.completed : 0,
+          );
+          handle.update();
+          notifyListeners();
+        },
+        onPublicationCheckpoint: (event) async {
+          final entry = plan.entries.first;
+          entry.recovery = {
+            ...?entry.recovery,
+            'archivePublication': {
+              ...?entry.recovery?['archivePublication']
+                  as Map<String, dynamic>?,
+              ...event,
+            },
+          };
+          await _journal.checkpoint(
+            handle.id,
+            0,
+            entry,
+            event['phase'] as String,
+          );
+        },
+      ),
+    );
+  }
+
+  /// Runs a reviewed PNG carving snapshot through the shared durable queue.
+  /// The journal records only the recipe/digests; restart requires a fresh scan.
+  Future<ArchiveOperationHandle<ArchiveCreationResult>>
+  enqueueArchivePngCarving({
+    required CapturedArchivePngCarving captured,
+    required FileOperationBackend destination,
+    required String destinationDirectory,
+    required String outputName,
+    required Set<int> selectedOffsets,
+    VoidCallback? onPublished,
+  }) async {
+    final offsets = Set<int>.unmodifiable(selectedOffsets);
+    await ready;
+    if (!destination.supportsGuardedStagedPublication) {
+      throw UnsupportedError(
+        'PNG carving requires guarded native publication.',
+      );
+    }
+    if (!captured.isCurrent ||
+        offsets.isEmpty ||
+        !offsets.every(
+          (offset) => captured.report.recoverableCandidates.any(
+            (entry) => entry.offset == offset,
+          ),
+        )) {
+      throw StateError('Review the available PNG carving candidates first.');
+    }
+    final plan = archiveCreationJobPlan(
+      source: captured.source,
+      destination: destination,
+      files: [captured.file],
+      destinationDirectory: destinationDirectory,
+      options: ArchiveCreationOptions(name: outputName),
+    );
+    plan.entries.first.recovery = {
+      'archiveVersion': 1,
+      'archiveKind': 'pngCarving',
+      'name': outputName,
+      'sourceSha256': captured.report.sourceSha256,
+      'sourceBytes': captured.report.sourceBytes,
+      'selectedOffsets': offsets.toList()..sort(),
+    };
+    return _enqueueArchiveJob<ArchiveCreationResult>(
+      id: 'archive_png_carving_${const Uuid().v4()}',
+      plan: plan,
+      onPublished: onPublished,
+      warning: (result) => result?.publicationWarning,
+      execute: (handle) => publishArchivePngCarving(
+        captured: captured,
+        destination: destination,
+        destinationDirectory: destinationDirectory,
+        outputName: outputName,
+        selectedOffsets: offsets,
+        control: handle.control,
+        onProgress: (progress) {
+          handle.pngCarvingProgress = progress;
+          final byteProgress =
+              progress.phase == ArchivePngCarvingPhase.scanning ||
+              progress.phase == ArchivePngCarvingPhase.publishing;
+          handle.operation
+            ..phaseLabel = 'pngCarving:${progress.phase.name}'
             ..currentFilePath = progress.path
             ..totalBytes = byteProgress ? progress.total : 0;
           handle.operation.updateProgress(

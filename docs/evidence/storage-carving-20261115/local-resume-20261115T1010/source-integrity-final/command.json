@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_only_controls.py",
+    "--repo",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud",
+    "--quds",
+    "../canonical/quds_office_suite",
+    "--parser",
+    "../canonical/legacy-doc-parser",
+    "--output",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity-final-details"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "shell_display": "python3 docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_only_controls.py --repo /workspace/scratch/aed049b7e8bd/CrispCloud --quds ../canonical/quds_office_suite --parser ../canonical/legacy-doc-parser --output docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity-final-details"
+}

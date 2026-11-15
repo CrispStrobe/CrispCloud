@@ -25,6 +25,7 @@ server CORS still needs configuration. See the [live verification and limits](do
 
 
 The current Office integration preserves authored spreadsheet number formats and
+wrap settings, and retains inline Word pictures through text edits. It also
 includes Word media deduplication, supported symbol characters and independent
 sibling text boxes. Legacy VML pictures, shapes and rules retain their source
 content for export; their native rendering and editing remain unsupported.
@@ -150,6 +151,7 @@ qualify their binaries, servers, settings or delta behavior:
 - **XML content types:** ACSM fulfilment tokens, OPF/NCX ebook metadata, GPX/KML, XSPF, RSS/Atom and XML schemas open in the XML tree/source viewer and use XML syntax highlighting in the editor.
 - **Background archive jobs:** archive creation and edited-archive publication share the Operations queue, with pause/resume/stop, priority, scheduling and conflict reservations. Native compression runs in a worker; closing its dialog leaves the job running. Saved creation recipes support reviewed restart without stored passwords. See [archive queue behavior and verification](docs/archive-operation-queue.md).
 - **Archive workflows:** browse archives like folders; create and review edits to ZIP/7z/TAR, comic and unsigned Java aliases, compressed TAR/files, AR/CPIO/XAR and eligible data ISOs. Original-source verification and recovery protect publication.
+- **PNG recovery:** scan one local file, review complete supported PNG images by source offset, and save the selection with a hash report in a new ZIP through the Operations queue. The first profile accepts noninterlaced 8-bit grayscale/RGB/gray-alpha/RGBA images, with 64 MiB input and output limits. See [supported images, publication checks and qualification](docs/archive-png-carving.md).
 - **Filesystem images:** browse, preview and extract supported FAT, ext2/ext3/ext4, NTFS and MBR/GPT images through the archive tools. These readers are read-only, retain raw partition access and refuse unsupported or unclean layouts; see the [ext profile](docs/archive-ext-profile.md) and [NTFS profile](docs/archive-ntfs-profile.md).
 - **Commander archive tools:** separate archives per selection, batch extraction with masks and collision previews, batch integrity reports, checked installed 7-Zip/RAR creation and bounded 7z dictionary/thread/solid controls. Read complete numbered 7z sets and supported unsigned Windows SFX payloads. See [workflows and remaining parity boundaries](docs/archive-commander-workflows.md).
 - **Large native archives:** eligible unencrypted ZIP/ZIP64, 7z and TGZ workflows use bounded streams and private file snapshots with an explicit 8 GiB budget. Standalone codecs have processed members above 2 GiB; the [commander comparison and verification record](docs/archive-parity-large-continuation.md) separates measured codec results and remaining limits. The integration also exercises creation, publication, editing, extraction and F3 in Flutter; final platform acceptance is tracked by release CI.

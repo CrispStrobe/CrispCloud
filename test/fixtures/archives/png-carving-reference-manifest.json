@@ -1,0 +1,254 @@
+{
+  "cases": {
+    "damaged-regions": {
+      "bytes": 346,
+      "candidates": [
+        {
+          "bytes": 92,
+          "endExclusive": 92,
+          "height": 5,
+          "mode": "L",
+          "offset": 0,
+          "outputName": "png-0000000000.png",
+          "pixels_sha256": "eb012c191c69fb374510564164be3f622ad767257c41a1a60e3d8833653082c6",
+          "reason": null,
+          "sha256": "7d4de0d03eb879ebe0c9c4ca74e2283918966ff952c1a41db1b38d0acd05f928",
+          "status": "recoverable",
+          "width": 5
+        },
+        {
+          "offset": 99,
+          "reason": "checksumMismatch",
+          "status": "rejected"
+        },
+        {
+          "bytes": 93,
+          "endExclusive": 305,
+          "height": 3,
+          "mode": "LA",
+          "offset": 212,
+          "outputName": "png-0000000212.png",
+          "pixels_sha256": "6bdf0ccd596f0ae1277c55c4407e2298dcbd2e6e6c91dafa4ddbb6c0a2bfcfa6",
+          "reason": null,
+          "sha256": "d7b049a38bea77468db8187429fd4306d45bd1321bf3dcc0afb0c754c0d2ccb6",
+          "status": "recoverable",
+          "width": 5
+        },
+        {
+          "offset": 305,
+          "reason": "truncated",
+          "status": "rejected"
+        }
+      ],
+      "sha256": "1c98f001f4adb0cba88d6a3557b7b1f020f3be2f7156440ffcc902aa8e4b5346"
+    },
+    "deflate-window": {
+      "bytes": 77689,
+      "candidates": [
+        {
+          "bytes": 77689,
+          "endExclusive": 77689,
+          "height": 1,
+          "mode": "L",
+          "offset": 0,
+          "outputName": "png-0000000000.png",
+          "pixels_sha256": "db1d13310232b782105f6e12dd4bb9b0aeb9a5233da15ae85808432aae97df3c",
+          "reason": null,
+          "sha256": "3e88ff9a1b6164ca54e7eb11d2090ae9a328bfab6d9a02af0f0fa78fff04c124",
+          "status": "recoverable",
+          "width": 77600
+        }
+      ],
+      "sha256": "3e88ff9a1b6164ca54e7eb11d2090ae9a328bfab6d9a02af0f0fa78fff04c124"
+    },
+    "false-signature": {
+      "bytes": 117,
+      "candidates": [
+        {
+          "offset": 0,
+          "reason": "truncated",
+          "status": "rejected"
+        },
+        {
+          "bytes": 92,
+          "endExclusive": 117,
+          "height": 5,
+          "mode": "L",
+          "offset": 25,
+          "outputName": "png-0000000025.png",
+          "pixels_sha256": "eb012c191c69fb374510564164be3f622ad767257c41a1a60e3d8833653082c6",
+          "reason": null,
+          "sha256": "7d4de0d03eb879ebe0c9c4ca74e2283918966ff952c1a41db1b38d0acd05f928",
+          "status": "recoverable",
+          "width": 5
+        }
+      ],
+      "sha256": "abf9d0511c28eb2842161c82a0f172b2fc10faef230379be1b4c0421fcbadbd7"
+    },
+    "malformed-image-data": {
+      "bytes": 449,
+      "candidates": [
+        {
+          "offset": 0,
+          "reason": "invalidZlib",
+          "status": "rejected"
+        },
+        {
+          "offset": 73,
+          "reason": "invalidZlib",
+          "status": "rejected"
+        },
+        {
+          "offset": 137,
+          "reason": "invalidZlib",
+          "status": "rejected"
+        },
+        {
+          "offset": 206,
+          "reason": "invalidFilter",
+          "status": "rejected"
+        },
+        {
+          "offset": 275,
+          "reason": "scanlineSize",
+          "status": "rejected"
+        },
+        {
+          "bytes": 106,
+          "endExclusive": 449,
+          "height": 4,
+          "mode": "RGB",
+          "offset": 343,
+          "outputName": "png-0000000343.png",
+          "pixels_sha256": "4256e332f212d31a0add211fc7394043aadd6b2174a685f8c0bafec982fc1fb0",
+          "reason": null,
+          "sha256": "608458e9c7336a5669ed9c588f51d6d4c72a28625b628b5120280a02a96cd6fa",
+          "status": "recoverable",
+          "width": 3
+        }
+      ],
+      "sha256": "2b6da5b2f6703ebe854ac16a3877b031cbdc2161abebb953decf25595dbfe6ea"
+    },
+    "nested-signature": {
+      "bytes": 140,
+      "candidates": [
+        {
+          "bytes": 140,
+          "endExclusive": 140,
+          "height": 1,
+          "mode": "L",
+          "offset": 0,
+          "outputName": "png-0000000000.png",
+          "pixels_sha256": "470e0fa28fbc2d685492df92b2970cb695daf6f2f861c2617dcd8f18be7634ec",
+          "reason": null,
+          "sha256": "3856af96cf48b91cf6bcd98133db47a569144966e029802501cd4b54d5e09603",
+          "status": "recoverable",
+          "width": 71
+        },
+        {
+          "offset": 49,
+          "reason": "overlappingCandidate",
+          "status": "rejected"
+        }
+      ],
+      "sha256": "3856af96cf48b91cf6bcd98133db47a569144966e029802501cd4b54d5e09603"
+    },
+    "pillow-metadata": {
+      "bytes": 169,
+      "candidates": [
+        {
+          "bytes": 169,
+          "endExclusive": 169,
+          "height": 3,
+          "mode": "RGB",
+          "offset": 0,
+          "outputName": "png-0000000000.png",
+          "pixels_sha256": "37cf165929174a13da8579389790398238b8006c351df72a0d2ae39e7fdbd7f1",
+          "reason": null,
+          "sha256": "c364ba08b07f8af0481c95b8dbc41e8f189c1a760b5ff17fceeaef3ed7ffab7f",
+          "status": "recoverable",
+          "width": 7
+        }
+      ],
+      "sha256": "c364ba08b07f8af0481c95b8dbc41e8f189c1a760b5ff17fceeaef3ed7ffab7f"
+    },
+    "read-boundary": {
+      "bytes": 65746,
+      "candidates": [
+        {
+          "bytes": 106,
+          "endExclusive": 65639,
+          "height": 4,
+          "mode": "RGB",
+          "offset": 65533,
+          "outputName": "png-0000065533.png",
+          "pixels_sha256": "4256e332f212d31a0add211fc7394043aadd6b2174a685f8c0bafec982fc1fb0",
+          "reason": null,
+          "sha256": "608458e9c7336a5669ed9c588f51d6d4c72a28625b628b5120280a02a96cd6fa",
+          "status": "recoverable",
+          "width": 3
+        },
+        {
+          "bytes": 92,
+          "endExclusive": 65746,
+          "height": 2,
+          "mode": "RGBA",
+          "offset": 65654,
+          "outputName": "png-0000065654.png",
+          "pixels_sha256": "e79e50edc5b5839586078b79008a9bcac516017c7427e3403ba082908cdf42a4",
+          "reason": null,
+          "sha256": "44940e21cfa2688559e0b1c861083a51b85f1da8247296398ecc86aea700b35f",
+          "status": "recoverable",
+          "width": 4
+        }
+      ],
+      "sha256": "0376bfb96eff9ae0fc42549956fd40b85e5d1cbd37f450e4a29b08c6a49fba70"
+    },
+    "unsupported-profiles": {
+      "bytes": 482,
+      "candidates": [
+        {
+          "offset": 0,
+          "reason": "indexedColor",
+          "status": "unsupported"
+        },
+        {
+          "offset": 67,
+          "reason": "interlaced",
+          "status": "unsupported"
+        },
+        {
+          "offset": 136,
+          "reason": "bitDepth",
+          "status": "unsupported"
+        },
+        {
+          "offset": 204,
+          "reason": "animation",
+          "status": "unsupported"
+        },
+        {
+          "offset": 293,
+          "reason": "unsupportedChunk",
+          "status": "unsupported"
+        },
+        {
+          "bytes": 92,
+          "endExclusive": 482,
+          "height": 2,
+          "mode": "RGBA",
+          "offset": 390,
+          "outputName": "png-0000000390.png",
+          "pixels_sha256": "e79e50edc5b5839586078b79008a9bcac516017c7427e3403ba082908cdf42a4",
+          "reason": null,
+          "sha256": "44940e21cfa2688559e0b1c861083a51b85f1da8247296398ecc86aea700b35f",
+          "status": "recoverable",
+          "width": 4
+        }
+      ],
+      "sha256": "c7e7dd05bdad823d8076e31667ba93a6b4b727e4dc653060085ebce377303d79"
+    }
+  },
+  "producer": "Pillow PNG writer and Python standard library struct/zlib",
+  "schema": 1
+}

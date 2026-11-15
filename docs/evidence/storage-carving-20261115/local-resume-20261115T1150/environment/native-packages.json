@@ -1,0 +1,111 @@
+{
+  "index_url": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz",
+  "index_sha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498",
+  "packages": [
+    {
+      "Package": "cmake",
+      "Version": "3.31.6-2",
+      "Filename": "pool/main/c/cmake/cmake_3.31.6-2_amd64.deb",
+      "Size": "11969144",
+      "SHA256": "dee2fc94973325240604ffbca677a3f16b462fb6520946bd81be1ecbac770a02"
+    },
+    {
+      "Package": "cmake-data",
+      "Version": "3.31.6-2",
+      "Filename": "pool/main/c/cmake/cmake-data_3.31.6-2_all.deb",
+      "Size": "2268208",
+      "SHA256": "d9060145be892f43cd1888024114ceab019c81479d4b0a3383fe14cebe2295cb"
+    },
+    {
+      "Package": "libpfm4",
+      "Version": "4.13.0+git99-gc5587f9-1",
+      "Filename": "pool/main/libp/libpfm4/libpfm4_4.13.0+git99-gc5587f9-1_amd64.deb",
+      "Size": "371144",
+      "SHA256": "55f0d470f5bdd63061593180c5b34bcb9cefdb09b4cfc9c67b3cb170b0162525"
+    },
+    {
+      "Package": "libuv1t64",
+      "Version": "1.50.0-2",
+      "Filename": "pool/main/libu/libuv1/libuv1t64_1.50.0-2_amd64.deb",
+      "Size": "153752",
+      "SHA256": "5fec8035002e0c745b64d1c5b3e1dc42790d1a77574315b976cf3e4aab9ddc0a"
+    },
+    {
+      "Package": "clang-19",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+      "Size": "116584",
+      "SHA256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4"
+    },
+    {
+      "Package": "libclang-common-19-dev",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+      "Size": "739932",
+      "SHA256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc"
+    },
+    {
+      "Package": "libclang-cpp19",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+      "Size": "13191148",
+      "SHA256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47"
+    },
+    {
+      "Package": "libclang1-19",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/libclang1-19_19.1.7-3+b1_amd64.deb",
+      "Size": "7623496",
+      "SHA256": "4e7e2a5fe236e280d32fb529350b3c1cfd9410a964629a57ea079a314c45d7a3"
+    },
+    {
+      "Package": "libllvm19",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/libllvm19_19.1.7-3+b1_amd64.deb",
+      "Size": "25978316",
+      "SHA256": "db0d614d61345ca710fb73e75105f1ec6e38898fa7b3aa99fa7eb7d8b0a11d57"
+    },
+    {
+      "Package": "llvm-19",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/llvm-19_19.1.7-3+b1_amd64.deb",
+      "Size": "16385748",
+      "SHA256": "0b1b7263f4f45e261099240fdbf00fc14b42b88410fd829e041bf83ea45866cb"
+    },
+    {
+      "Package": "llvm-19-linker-tools",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/llvm-19-linker-tools_19.1.7-3+b1_amd64.deb",
+      "Size": "1263460",
+      "SHA256": "874a0a5cde797cda3e94e9310a0a9958608f526f177637414a8ce9620c804818"
+    },
+    {
+      "Package": "llvm-19-runtime",
+      "Version": "1:19.1.7-3+b1",
+      "Filename": "pool/main/l/llvm-toolchain-19/llvm-19-runtime_19.1.7-3+b1_amd64.deb",
+      "Size": "550636",
+      "SHA256": "84a9dfc277f0914cb84e6cb3d139d3eb3dfe19f06670bbdea4241e8e3d921a4e"
+    },
+    {
+      "Package": "ninja-build",
+      "Version": "1.12.1-1",
+      "Filename": "pool/main/n/ninja-build/ninja-build_1.12.1-1_amd64.deb",
+      "Size": "142132",
+      "SHA256": "bc172ce9270bd6fcd6d5335a83ff9d3c7ba0d13ec624cfdfa1b5aa06901dc453"
+    },
+    {
+      "Package": "librhash1",
+      "Version": "1.4.5-1",
+      "Filename": "pool/main/r/rhash/librhash1_1.4.5-1_amd64.deb",
+      "Size": "132184",
+      "SHA256": "9bf56d7d8ce3e7680a0dd8e3cfe8acdf50e0aa3b98b0a907cf744a4d1711af72"
+    },
+    {
+      "Package": "libz3-4",
+      "Version": "4.13.3-1",
+      "Filename": "pool/main/z/z3/libz3-4_4.13.3-1_amd64.deb",
+      "Size": "8560036",
+      "SHA256": "71383373523ef62d47eccf660cf6535c3febcbb3f88e54cb7a43124014b57359"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "environment": "normal",
+    "language": "C",
+    "command": [
+      "clang",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe.c",
+      "-o",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe-c"
+    ],
+    "returncode": 0,
+    "execution_returncode": 0
+  },
+  {
+    "environment": "normal",
+    "language": "Rust",
+    "command": [
+      "rustc",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe.rs",
+      "-o",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe-rs"
+    ],
+    "returncode": 0,
+    "execution_returncode": 0
+  },
+  {
+    "environment": "filtered",
+    "language": "C",
+    "command": [
+      "clang",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe.c",
+      "-o",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe-c"
+    ],
+    "returncode": 0,
+    "execution_returncode": 0
+  },
+  {
+    "environment": "filtered",
+    "language": "Rust",
+    "command": [
+      "rustc",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe.rs",
+      "-o",
+      "/workspace/scratch/1e19fe1d39ae/toolchains/tmp/probe-rs"
+    ],
+    "returncode": 0,
+    "execution_returncode": 0
+  }
+]
