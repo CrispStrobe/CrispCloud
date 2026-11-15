@@ -1,0 +1,52 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":99,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":3,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":6926}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":12,"line":null,"column":null,"url":null},"type":"group","time":6928}
+{"test":{"id":3,"name":"(setUpAll)","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":409,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":6929}
+{"testID":3,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":7164}
+{"test":{"id":4,"name":"worksheet selector commits a valid draft to its original sheet before saving","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":416,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":7165}
+{"testID":4,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":7391}
+{"testID":4,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":9465}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":9697}
+{"test":{"id":5,"name":"worksheet selector retains a rejected draft until corrected and saved","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":431,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":9698}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":9705}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":10721}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":11049}
+{"test":{"id":6,"name":"rename dialog saves rewritten references through undo and redo on another sheet","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":458,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":11049}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":11055}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":11977}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":12981}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":13698}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":13820}
+{"test":{"id":7,"name":"invalid rename stays open and retains the name for correction","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":481,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":13821}
+{"testID":7,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":13825}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":14246}
+{"test":{"id":8,"name":"cancelled rename preserves the cell draft and history","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":514,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":14247}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":14252}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":14573}
+{"test":{"id":9,"name":"rename dialog remains bound to the worksheet that opened it","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":531,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":14574}
+{"testID":9,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":14583}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":14838}
+{"test":{"id":10,"name":"viewing mode permits worksheet navigation and disables rename","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":550,"root_column":5,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":14839}
+{"testID":10,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":14845}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15179}
+{"test":{"id":11,"name":"selecting mode permits worksheet navigation and disables rename","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":550,"root_column":5,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":15180}
+{"testID":11,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":15184}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15431}
+{"test":{"id":12,"name":"selecting the current worksheet preserves selection and an uncommitted draft","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":571,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":15432}
+{"testID":12,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":15438}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15631}
+{"test":{"id":13,"name":"worksheet selector works from the keyboard","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":587,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":15631}
+{"testID":13,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":15635}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":15822}
+{"test":{"id":14,"name":"narrow Arabic host keeps worksheet chrome RTL and names unchanged","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":604,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":15822}
+{"testID":14,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":15826}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":16055}
+{"test":{"id":15,"name":"find navigation shows a recoverable error without dropping a rejected cell draft","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":626,"root_column":3,"root_url":"file:///workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"},"type":"testStart","time":16056}
+{"testID":15,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":16063}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":16314}
+{"test":{"id":16,"name":"(tearDownAll)","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":16314}
+{"testID":16,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":16316}
+{"success":true,"type":"done","time":16359}

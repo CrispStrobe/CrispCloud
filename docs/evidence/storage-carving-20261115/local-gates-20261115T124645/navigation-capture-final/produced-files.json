@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "gate": "navigation-capture-final",
+  "tested_head": "9e3594de1d82d4048b62ab61ce92a79ba8fd6adb",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "files": {
+    "office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx": {
+      "sha256": "15e42d280bf2a2171665414f52386c44ec8cd5752723496b96e0853959973fe9",
+      "size": 18043
+    },
+    "office-sheet-navigation-acceptance/rename-redo.xlsx": {
+      "sha256": "b820d1a0baea2dafc04ca7bebfdfa10b01e02d12b2315e2278352caaf2d42a98",
+      "size": 29228
+    },
+    "office-sheet-navigation-acceptance/rename-undo.xlsx": {
+      "sha256": "705e0474f7f2758edb5825854f5aaddf72b3fddd475fb16e3f3dd11baed89d94",
+      "size": 29203
+    },
+    "office-sheet-navigation-acceptance/rename.xlsx": {
+      "sha256": "af36c3ef8b69c713b761ba95113360cf279c846923d096a6689227519ca0b1f1",
+      "size": 18073
+    },
+    "office-sheet-navigation-acceptance/source.xlsx": {
+      "sha256": "6fc86a807ddd5834af560ef20cd9662fb79bd482f03b47a4976b98a1742efecf",
+      "size": 5670
+    },
+    "office-sheet-navigation-acceptance/switched-draft.xlsx": {
+      "sha256": "72fbbbdeeb1d1fc0d2b096e2805e5017ec3d60a4102ee397bc987d552b504ca8",
+      "size": 29198
+    },
+    "office-sheet-navigation-preview/rename-validation.png": {
+      "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+      "size": 70534
+    },
+    "office-sheet-navigation-preview/rename-validation.png.json": {
+      "sha256": "c8c65ae683207bb3d45f93942d269f020d66248e20c9d88c4c103633011570cb",
+      "size": 2731
+    },
+    "office-sheet-navigation-preview/worksheet-arabic-narrow.png": {
+      "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+      "size": 30978
+    },
+    "office-sheet-navigation-preview/worksheet-arabic-narrow.png.json": {
+      "sha256": "1c878839abaae158ec28883204be5ea77f720880c5663de2e045b9c1262ffca1",
+      "size": 2736
+    }
+  },
+  "scope": "Fresh outputs were cleared before this passed generator gate and fingerprinted immediately after it."
+}

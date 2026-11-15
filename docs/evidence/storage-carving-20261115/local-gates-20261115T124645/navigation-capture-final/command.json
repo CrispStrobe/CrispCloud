@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "env",
+    "OFFICE_NAVIGATION_PREVIEW=1",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter",
+    "--no-version-check",
+    "--suppress-analytics",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "json",
+    "--concurrency=1",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "shell_display": "env OFFICE_NAVIGATION_PREVIEW=1 /workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/flutter --no-version-check --suppress-analytics test --no-pub --reporter json --concurrency=1 /workspace/scratch/1e19fe1d39ae/CrispCloud/test/widget/office_sheet_navigation_workflow_test.dart"
+}
