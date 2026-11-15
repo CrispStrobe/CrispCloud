@@ -1,0 +1,12 @@
+[
+  {
+    "name": "fixture-reference",
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "test/support/generate_png_carving_reference.py",
+      "--check"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "returncode": 0
+  }
+]

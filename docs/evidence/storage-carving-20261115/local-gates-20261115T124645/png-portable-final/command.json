@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_portable_current.py",
+    "--repo",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "--launcher",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/toolchain_launcher.sh",
+    "--node",
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "--output",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/png-portable-final-artifacts"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "shell_display": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_portable_current.py --repo /workspace/scratch/1e19fe1d39ae/CrispCloud --launcher /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/toolchain_launcher.sh --node /opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node --output /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/png-portable-final-artifacts"
+}
