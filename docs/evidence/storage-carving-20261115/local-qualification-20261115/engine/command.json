@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/workspace/scratch/1f80e59755df/toolchains/run.py",
+    "dart",
+    "test",
+    "--reporter",
+    "json",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_wrap_text_fidelity_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/legacy_sheet_reader_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_authored_number_format_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_cell_state_preservation_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_import_fidelity_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/word_inline_picture_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/word_heading_apply_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/inline_field_fidelity_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/story_media_fidelity_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/word_picture_distance_fidelity_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/legacy_word_document_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/legacy_word_conversion_test.dart",
+    "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine",
+  "shell_display": "/workspace/scratch/1f80e59755df/toolchains/run.py dart test --reporter json /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_wrap_text_fidelity_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/legacy_sheet_reader_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_authored_number_format_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_style_namespace_fidelity_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_cell_state_preservation_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/sheet_import_fidelity_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/word_inline_picture_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/word_heading_apply_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/inline_field_fidelity_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/story_media_fidelity_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/word_picture_distance_fidelity_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/legacy_word_document_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/legacy_word_conversion_test.dart /workspace/scratch/1f80e59755df/CrispCloud/packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+}
