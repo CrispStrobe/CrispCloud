@@ -23,7 +23,7 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `89574c359034582e0db1a9ba88a3308b6b36e045` on `main`
+The app mirrors Quds `56ed6c8876d0a8cc8bad1f1d890325237f6cd32d` on `main`
 and standalone legacy parser `97c930ba336f120863bb526f4796284aba344cca`;
 all 2,281 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
