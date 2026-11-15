@@ -28,10 +28,15 @@ teardown. Native actions also validate the current enabled command set.
 against real Cocoa/AppKit with only a Flutter-channel stub. It checks 900 native
 configure updates, folder/editor command transitions, light/dark appearance,
 hide/show, release of detached toolbars and queued teardown rejection. The same
-check runs in the existing macOS CI test job. This isolates the observed failing
+check runs in the existing macOS CI test job. Set
+`CRISP_TOOLBAR_TEST_VISIBLE=1` to exercise a visible window locally. This isolates the observed failing
 ownership path; it does not establish the cause of arbitrary native memory
 corruption elsewhere or promise that every possible app crash is eliminated.
 
 The isolated legacy control also completed 900 updates without crashing. The
 intermittent crash therefore has not been reproduced by this harness; longer
 interactive use of the full app remains necessary to confirm the mitigation.
+
+The revised controller also passed all 900 updates with a visible AppKit window.
+The focused Dart analyzer reported no issues. The responsive chooser test covers
+all nine formats at 360 × 640 with 1.5× text scaling.

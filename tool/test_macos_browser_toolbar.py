@@ -33,6 +33,7 @@ app.setActivationPolicy(.prohibited)
 let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
                       styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
 window.isReleasedWhenClosed = false
+if ProcessInfo.processInfo.environment["CRISP_TOOLBAR_TEST_VISIBLE"] == "1" { window.orderFront(nil) }
 let controller = BrowserToolbarController(window: window, binaryMessenger: Messenger())
 let channel = FlutterMethodChannel.latest!
 func configure(_ arguments: [String: Any]) {
