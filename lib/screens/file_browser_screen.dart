@@ -1,3 +1,8 @@
+import '../widgets/new_document_dialog.dart';
+import '../services/document_workspace_session.dart';
+import '../widgets/document_conversion_dialog.dart';
+import '../widgets/document_history_dialog.dart';
+import '../l10n/document_workspace_strings.dart';
 // screens/file_browser_screen.dart
 //
 // Main scaffold and layout for the two-panel file browser.
@@ -419,6 +424,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       );
     }
 
+    add(
+      'convertDocument',
+      documentTr(context, 'Convert existing file…'),
+      () => showDocumentConversionDialog(context, ref),
+    );
+    add(
+      'newDocument',
+      documentTr(context, 'New…'),
+      () => showNewDocumentDialog(context, ref),
+    );
+    add(
+      'recentDocuments',
+      documentTr(context, 'Recent files…'),
+      () => showDocumentHistoryDialog(context, ref),
+    );
     void route(String id, String label, String action) =>
         add(id, label, () => _runOverflowAction(context, action));
     add(
@@ -752,12 +772,28 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       id: id,
       label: label,
       onSelected: () {
-        if (context.mounted && ModalRoute.of(context)?.isCurrent != false) {
+        if (context.mounted &&
+            (const {
+                  'newDocument',
+                  'recentDocuments',
+                  'convertDocument',
+                }.contains(id) ||
+                ModalRoute.of(context)?.isCurrent != false)) {
           perform();
         }
       },
     );
     return [
+      fixed(
+        'newDocument',
+        documentTr(context, 'New…'),
+        () => showNewDocumentDialog(context, ref),
+      ),
+      fixed(
+        'recentDocuments',
+        documentTr(context, 'Recent files…'),
+        () => showDocumentHistoryDialog(context, ref),
+      ),
       fixed(
         'settings',
         context.commanderTr('Settings...'),
@@ -815,6 +851,39 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     ];
   }
 
+  List<PlatformMenuItem> _documentWorkspaceFileItems(BuildContext context) => [
+    PlatformMenuItem(
+      label: documentTr(context, 'New…'),
+      shortcut: const SingleActivator(LogicalKeyboardKey.keyN, meta: true),
+      onSelected: () => showNewDocumentDialog(context, ref),
+    ),
+    PlatformMenuItem(
+      label: documentTr(context, 'Recent files…'),
+      onSelected: () => showDocumentHistoryDialog(context, ref),
+    ),
+    PlatformMenuItem(
+      label: documentTr(context, 'Convert existing file…'),
+      onSelected: () => showDocumentConversionDialog(context, ref),
+    ),
+  ];
+  List<PlatformMenuItem> _withDocumentWorkspaceFileMenu(
+    BuildContext context,
+    List<PlatformMenuItem> menus,
+  ) {
+    if (menus.isEmpty || menus.first is! PlatformMenu) return menus;
+    final file = menus.first as PlatformMenu;
+    return [
+      PlatformMenu(
+        label: file.label,
+        menus: [
+          PlatformMenuItemGroup(members: _documentWorkspaceFileItems(context)),
+          ...file.menus,
+        ],
+      ),
+      ...menus.skip(1),
+    ];
+  }
+
   List<PlatformMenuItem> _buildMacMenus(
     BuildContext context,
     WidgetRef ref,
@@ -826,6 +895,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     MediaEditorMenuActions? mediaEditor,
     TerminalMenuActions? terminal,
   ) {
+    ref.watch(documentWorkspaceSessionProvider);
     final appMenu = PlatformMenu(
       label: context.commanderTr("CrispCloud"),
       menus: <PlatformMenuItem>[
@@ -866,7 +936,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             for (final command in _fixedBrowserMenuBindings(
               context,
               ref,
-            ).skip(1))
+            ).where((command) => command.id != 'settings'))
               command.platform(),
           ],
         ),
@@ -876,35 +946,50 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     if (mediaEditor != null) {
       return <PlatformMenuItem>[
         appMenu,
-        ...buildMediaEditorPlatformMenus(context, mediaEditor),
+        ..._withDocumentWorkspaceFileMenu(
+          context,
+          buildMediaEditorPlatformMenus(context, mediaEditor),
+        ),
       ];
     }
 
     if (imageEditor != null) {
       return <PlatformMenuItem>[
         appMenu,
-        ...buildImageEditorPlatformMenus(context, imageEditor),
+        ..._withDocumentWorkspaceFileMenu(
+          context,
+          buildImageEditorPlatformMenus(context, imageEditor),
+        ),
       ];
     }
 
     if (ebookEditor != null) {
       return <PlatformMenuItem>[
         appMenu,
-        ...buildEbookEditorPlatformMenus(context, ebookEditor),
+        ..._withDocumentWorkspaceFileMenu(
+          context,
+          buildEbookEditorPlatformMenus(context, ebookEditor),
+        ),
       ];
     }
 
     if (pdfEditor != null) {
       return <PlatformMenuItem>[
         appMenu,
-        ...buildPdfEditorPlatformMenus(pdfEditor),
+        ..._withDocumentWorkspaceFileMenu(
+          context,
+          buildPdfEditorPlatformMenus(pdfEditor),
+        ),
       ];
     }
 
     if (codeEditor != null) {
       return <PlatformMenuItem>[
         appMenu,
-        ...buildCodeEditorPlatformMenus(codeEditor),
+        ..._withDocumentWorkspaceFileMenu(
+          context,
+          buildCodeEditorPlatformMenus(codeEditor),
+        ),
       ];
     }
 
@@ -1216,6 +1301,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     OfficeEditorMenuActions editor,
   ) {
     return <PlatformMenuItem>[
+      PlatformMenuItemGroup(members: _documentWorkspaceFileItems(context)),
       _editorItem(
         context,
         'Save',

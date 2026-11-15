@@ -1,3 +1,5 @@
+import '../services/document_workspace_session.dart';
+import '../services/document_activity.dart';
 // lib/widgets/office_editor_dialog.dart
 //
 // F4 editor for Office Open XML documents (DOCX / XLSX / PPTX) built on the
@@ -139,6 +141,8 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
+  DocumentWorkspaceSession? _workspace;
+  DocumentActivity? _activity;
   OfficeController? _controller;
   OfficeEditorKind _kind = OfficeEditorKind.unsupported;
   Uint8List? _loadedBytes;
@@ -180,6 +184,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     final ProviderContainer? container = _providerContainer;
     final OfficeEditorMenuActions? actions = _menuActions;
     _menuActions = null;
@@ -224,6 +229,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     setState(() {
       _loading = true;
       _error = null;
@@ -301,6 +307,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _dirty = controller?.isDirty ?? false;
         _loading = false;
       });
+      _activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _registerMenu();
     } catch (e, st) {
       _log.warn('office editor load failed', e, st);
@@ -337,8 +345,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (popAfter &&
           mounted &&
           !_dirty &&
-          ModalRoute.of(context)?.isCurrent == true)
+          ModalRoute.of(context)?.isCurrent == true) {
         Navigator.of(context).pop();
+      }
       return;
     }
     setState(() => _saving = true);
@@ -373,6 +382,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           'A copy was downloaded. The original is unchanged.',
         );
       }
+      _activity?.edited();
       _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
       if (!mounted) return;
       if (controller.contentRevision == savedRevision) controller.markClean();

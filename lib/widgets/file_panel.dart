@@ -1,3 +1,4 @@
+import 'active_pane_frame.dart';
 // widgets/file_panel.dart
 
 import '../l10n/commander_strings.dart';
@@ -665,13 +666,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         layout == ViewMode.column &&
         !panel.showingSearchResults &&
         ref.watch(panelViewModeProvider(widget.side)) != PanelViewMode.tree;
-    return Container(
-      decoration: BoxDecoration(
-        color: widget.isActive ? null : Colors.black.withValues(alpha: 0.02),
-        border: _isDragging
-            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
-            : null,
-      ),
+    return ActivePaneFrame(
+      side: widget.side,
+      dropTarget: _isDragging,
       // Very short panels (stacked panes on a phone in landscape) scroll as a
       // whole instead of clipping their tabs, path and toolbar rows.
       child: LayoutBuilder(
@@ -726,7 +723,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
               ),
               PanelHeader(
                 side: widget.side,
-                isActive: widget.isActive,
+                isActive: ref.watch(activePanelProvider) == widget.side,
                 showSource: MediaQuery.sizeOf(context).width > 800,
               ),
               if (constraints.maxHeight >= _compactPanelHeight)
@@ -817,8 +814,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      '${FilePanelStrings(context).text(panel.isQuickFilterActive ? 'filter' : 'find')}: ' +
-                                          panel.filterQuery,
+                                      '${FilePanelStrings(context).text(panel.isQuickFilterActive ? 'filter' : 'find')}: ${panel.filterQuery}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
