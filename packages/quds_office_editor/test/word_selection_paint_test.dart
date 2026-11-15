@@ -1,6 +1,7 @@
 // Word-like text selection: geometry of the selection band and one golden.
 //
-// The golden (goldens/word_selection_sample.png) was generated on macOS.
+// The original goldens were generated on macOS. Linux references preserve
+// its rasterization of the same document; see goldens/linux/provenance.json.
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -11,6 +12,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 const _pageKey = ValueKey('word-selection-page');
+
+String _selectionGolden(String targetPlatform) {
+  // TargetPlatformVariant changes selection colours, not the host rasterizer.
+  final hostDirectory = Platform.isLinux ? 'linux/' : '';
+  return 'goldens/${hostDirectory}word_selection_$targetPlatform.png';
+}
 
 String _run(String text, {int halfPoints = 22}) =>
     '<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>'
@@ -360,31 +367,21 @@ void main() {
     expect(inCellDiff.count, greaterThan(50));
   });
 
-  testWidgets(
-    'Word-like selection golden',
-    (tester) async {
-      final image = await _paintImage(tester, _sample(), _select(0, 10, 2, 15));
-      final png = await _bytes(tester, image, ui.ImageByteFormat.png);
-      _dump('golden_${defaultTargetPlatform.name}', png);
-      await expectLater(
-        find.byKey(_pageKey),
-        matchesGoldenFile(
-          'goldens/word_selection_${defaultTargetPlatform.name}.png',
-        ),
-      );
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
-  );
+  testWidgets('Word-like selection golden', (tester) async {
+    final image = await _paintImage(tester, _sample(), _select(0, 10, 2, 15));
+    final png = await _bytes(tester, image, ui.ImageByteFormat.png);
+    _dump('golden_${defaultTargetPlatform.name}', png);
+    await expectLater(
+      find.byKey(_pageKey),
+      matchesGoldenFile(_selectionGolden(defaultTargetPlatform.name)),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 
-  testWidgets(
-    'Word-like selection golden (Windows grey)',
-    (tester) async {
-      await _paintImage(tester, _sample(), _select(0, 10, 2, 15));
-      await expectLater(
-        find.byKey(_pageKey),
-        matchesGoldenFile('goldens/word_selection_windows.png'),
-      );
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.windows),
-  );
+  testWidgets('Word-like selection golden (Windows grey)', (tester) async {
+    await _paintImage(tester, _sample(), _select(0, 10, 2, 15));
+    await expectLater(
+      find.byKey(_pageKey),
+      matchesGoldenFile(_selectionGolden('windows')),
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 }
