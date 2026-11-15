@@ -1,0 +1,11 @@
+# Independent comments oracle review
+
+**Ready for the planned comments gate after applying the reviewed reader correction.** No concrete remaining blocker was found in the stated plain-comment profile, generator contract or wrapper. This is a static review, not runtime acceptance.
+
+The canonical generator at `47e44e0ae35adcc406eee2a2ae2118dd2a4a082a` is byte-identical to the app generator at production source `4c2b6ddd87c854525b075dfda8783ad209565d5e` (SHA-256 `1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3`). The original overlay reader was `33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a`; the reviewed corrected reader is **`9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867`**. Wrapper and driver hashes are unchanged and recorded in `review-after.json`.
+
+The original reader could accept non-whitespace bare container text or child tails that its leaf-value checks and openpyxl would ignore. `review-before.json` records the exact shapes and the inspected installed openpyxl deserializer is retained. The narrow correction rejects such content on comments root, authors, commentList, comment and text containers using XML whitespace only. It also requires the authored plain comment to contain exactly one text element. Existing namespace, inventory, comment value, ownership and unrelated-byte checks remain in place.
+
+The wrapper binds eleven fresh output files (nine workbooks and two authored manifests) before independent readback, verifies reader inputs before and after, preserves actual tool and source/resolution identities, and fails closed on generation, readback or postprocessing errors. It checks both worksheets for collision cases, original note preservation, distinct explicit authorities, and exact orphan XML/relationship bytes and content type.
+
+No runtime gate, workbook generation, reader invocation or mutation probe was executed by this review. No app/canonical source, index, HEAD, lock or dependency was changed. Apply and remotely save the corrected helper before the comments gate; the earlier app analysis does not use this reader. Full Open XML, rich comments, VML geometry and native Excel rendering remain outside this bounded profile.
