@@ -85,7 +85,7 @@ jobs:
       - name: Check crypto release inputs and compatibility
         run: |
           python3 tool/crypto_release_evidence.py --check
-          flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
+          python3 tool/with_ci_apple_sqlite.py -- flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
             test/keepass_crypto_test.dart test/keepass_service_test.dart test/keepass_extended_service_test.dart \
             test/veracrypt_header_vectors_test.dart test/veracrypt_compatibility_test.dart test/veracrypt_container_reader_test.dart test/veracrypt_header_worker_test.dart test/internxt_secure_config_test.dart \
             test/crypto_paths_test.dart test/filen_adapter_test.dart \
@@ -178,7 +178,7 @@ jobs:
           # FLUTTER_BUILD_NAME/NUMBER are defined only for the Runner target, so
           # the Finder extension's Info.plist would resolve CFBundleVersion to
           # empty (ITMS-90360/90056 on the iOS side). Inject globally.
-          PATH="/usr/bin:$PATH" python3 tool/macos_distribution.py build --profile appstore -- --no-pub \
+          PATH="/usr/bin:$PATH" python3 tool/with_ci_apple_sqlite.py -- python3 tool/macos_distribution.py build --profile appstore -- --no-pub \
             --build-name="$VER" --build-number="$BUILD" \
             --dart-define=APP_VERSION="$VER" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
