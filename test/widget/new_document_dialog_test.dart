@@ -77,6 +77,7 @@ void main() {
       for (final kind in NewDocumentKind.values) {
         final tile = find.byKey(ValueKey('new-document-kind-${kind.name}'));
         await tester.ensureVisible(tile);
+        await tester.pumpAndSettle();
         await tester.tap(tile);
         await tester.pump();
         final input = tester.widget<TextField>(

@@ -210,6 +210,7 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
                             selected: _kind == kind,
                             child: OutlinedButton(
                               key: ValueKey('new-document-kind-${kind.name}'),
+                              autofocus: kind == NewDocumentKind.text,
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
@@ -263,7 +264,6 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
                 key: const ValueKey('new-document-name'),
                 controller: _name,
                 enabled: !_working,
-                autofocus: true,
                 decoration: InputDecoration(
                   labelText: documentTr(context, 'File name'),
                 ),
