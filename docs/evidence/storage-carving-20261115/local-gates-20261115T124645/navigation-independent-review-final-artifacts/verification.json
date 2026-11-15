@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "at": "2026-11-15T13:57:04.530166+00:00",
+  "capture_tested_head": "9e3594de1d82d4048b62ab61ce92a79ba8fd6adb",
+  "capture_produced_files_receipt_sha256": "ebbf4424cecf39d18239a30a8dd2d302442e48a001cb2b0f33fa8ff4014b9d1b",
+  "capture_source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "review_head": "8542045fad97864fc9027a0d69a24920c70183d5",
+  "verifier_sha256": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+  "semantic_helper_sha256": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5",
+  "capture_machine_tests": 12,
+  "navigation_workbooks": [
+    {
+      "file": "source.xlsx",
+      "sha256": "6fc86a807ddd5834af560ef20cd9662fb79bd482f03b47a4976b98a1742efecf",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "125.5",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "switched-draft.xlsx",
+      "sha256": "72fbbbdeeb1d1fc0d2b096e2805e5017ec3d60a4102ee397bc987d552b504ca8",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "250",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "250",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rejected-draft-corrected.xlsx",
+      "sha256": "15e42d280bf2a2171665414f52386c44ec8cd5752723496b96e0853959973fe9",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "300",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "300",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rename.xlsx",
+      "sha256": "af36c3ef8b69c713b761ba95113360cf279c846923d096a6689227519ca0b1f1",
+      "sheets": [
+        "O'Brien 2026",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "'O''Brien 2026'!B2",
+      "reference_cache": "125.5",
+      "defined_name": "'O''Brien 2026'!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rename-undo.xlsx",
+      "sha256": "705e0474f7f2758edb5825854f5aaddf72b3fddd475fb16e3f3dd11baed89d94",
+      "sheets": [
+        "Budget",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "Budget!B2",
+      "reference_cache": "125.5",
+      "defined_name": "Budget!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    },
+    {
+      "file": "rename-redo.xlsx",
+      "sha256": "b820d1a0baea2dafc04ca7bebfdfa10b01e02d12b2315e2278352caaf2d42a98",
+      "sheets": [
+        "O'Brien 2026",
+        "Reference"
+      ],
+      "amount": "125.5",
+      "reference_sentinel": 73,
+      "reference_formula": "'O''Brien 2026'!B2",
+      "reference_cache": "125.5",
+      "defined_name": "'O''Brien 2026'!$B$2",
+      "labels_preserved": true,
+      "validation_preserved": true,
+      "passed": true
+    }
+  ],
+  "captures": [
+    {
+      "file": "rename-validation.png",
+      "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+      "width": 1600,
+      "height": 1000,
+      "locale": "en",
+      "font_assets_verified": 6,
+      "source_inputs_verified": 2
+    },
+    {
+      "file": "worksheet-arabic-narrow.png",
+      "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+      "width": 390,
+      "height": 1000,
+      "locale": "ar",
+      "font_assets_verified": 6,
+      "source_inputs_verified": 2
+    }
+  ],
+  "success": true,
+  "visual_inspection": "Required separately; numeric/font/source verification does not inspect glyph appearance or layout.",
+  "scope": "Six actual source/current edit/undo/redo workbooks checked with independent Python ZIP/XML/Decimal readers; two complete-host PNG captures verified against exact font/source hashes and dimensions. No external Office rendering or broad schema claim."
+}

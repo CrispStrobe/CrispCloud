@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "file_count": 1,
+  "files": [
+    {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py",
+      "sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867",
+      "size": 27568,
+      "existing_source_sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+      "existing_source_size": 26858,
+      "must_not_overwrite_existing_path": false
+    }
+  ],
+  "scope": "Narrow scratch-only independent comments reader strengthening; driver, generator and app production source unchanged.",
+  "static_python_syntax_parse": true,
+  "runtime_tests_executed": 0
+}

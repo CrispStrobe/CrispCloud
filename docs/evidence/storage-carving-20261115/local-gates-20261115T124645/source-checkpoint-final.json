@@ -1,0 +1,16 @@
+{
+  "production_source": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "source_tree": "a2cc3fd6e26512d2a273da47151191103274b96f",
+  "branch": "integration/storage-carving-local-20261115124645",
+  "canonical_pins": {
+    "quds": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+    "parser": "08296edbee08da013a8ff718798972552ccd03f7"
+  },
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "input_count": 8621,
+  "first_gate": "analysis-app-final",
+  "first_gate_tested_head": "1920ebe5e5020735791160b5af2558bef821a78a",
+  "first_gate_success": true,
+  "source_saved_before_first_gate": true,
+  "plan_binding_note": "This evidence-only record binds the actual saved corrected source and first final gate. Historical source-checkpoint.json and plain-label receipts remain source966 scope; no later gate result is asserted here."
+}

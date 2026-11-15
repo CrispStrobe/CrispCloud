@@ -1,0 +1,10 @@
+{
+  "source_commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "applied_after_saved_gate": "analysis-app-final",
+  "analysis_gate_used_reader": false,
+  "source_resolution_unchanged": true,
+  "driver_unchanged": true,
+  "reader_old_sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+  "reader_new_sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867",
+  "reason": "Independent review found unexpected non-whitespace container text and tails could escape the scoped plain-comment/explicit-empty-authority validator. Reader now rejects them and extra comment children. No generator or production change."
+}

@@ -1,0 +1,642 @@
+{
+  "at": "2026-11-15T13:58:29.822304+00:00",
+  "audit_config_sha256": "950023e711e31ac6e434bd3f01debf46d87109905b8de765029f282afe39becf",
+  "canonical_parser": {
+    "archive_members_verified": 32,
+    "archive_sha256": "353e4386a5e0a9fec060e2f75ff113a08a392febd565c32c2edcec074981c95d",
+    "complete_evidence_head": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+    "excluded_historical_evidence_paths": 895,
+    "fatal_infos_and_warnings": true,
+    "fresh_complete_run_at_current_pin": true,
+    "gates": [
+      {
+        "gate": "full-parser",
+        "input_count": 949,
+        "input_digest": "32dabe44736cbf4eba905a4c48bb9e58b2cac488bc4ce3e076250b1dbbac8e4c",
+        "returncode": 0,
+        "source_commit_resolution_and_tools_stable": true,
+        "source_head": "08296edbee08da013a8ff718798972552ccd03f7",
+        "source_selector": "All tracked paths except docs/evidence/** and doc/evidence/**; root, Office engine/editor, and legacy parser package locks/configs/graphs are included even if ignored."
+      },
+      {
+        "gate": "strict-analysis",
+        "input_count": 949,
+        "input_digest": "32dabe44736cbf4eba905a4c48bb9e58b2cac488bc4ce3e076250b1dbbac8e4c",
+        "returncode": 0,
+        "source_commit_resolution_and_tools_stable": true,
+        "source_head": "08296edbee08da013a8ff718798972552ccd03f7",
+        "source_selector": "All tracked paths except docs/evidence/** and doc/evidence/**; root, Office engine/editor, and legacy parser package locks/configs/graphs are included even if ignored."
+      }
+    ],
+    "inner_indexes": [
+      {
+        "entries": 9,
+        "path": "dependency-setup/artifacts-sha256.json"
+      },
+      {
+        "entries": 8,
+        "path": "full-parser/artifacts-sha256.json"
+      },
+      {
+        "entries": 6,
+        "path": "strict-analysis/artifacts-sha256.json"
+      }
+    ],
+    "linkage_sha256": "0df1c03912671a66f9f2717f79b0769ba10bf7b40193b42b7ac3800101d959e7",
+    "normalized_package_graph_equal": true,
+    "previous_overlapping_results_added_to_total": false,
+    "recorded_input_count": 949,
+    "recorded_input_digest": "32dabe44736cbf4eba905a4c48bb9e58b2cac488bc4ce3e076250b1dbbac8e4c",
+    "resolution": {
+      ".dart_tool/package_config.json": {
+        "byte_equal_to_current": false,
+        "current_sha256": "b8da91cc7d6b9ee7f60a672e68e251cf4752a0a5a6a9a2577d55218500a8b1bf",
+        "recorded_sha256": "8a711cfd784ca3a51544b312d49baa28199854e089b341eff11d92a7612dccaf"
+      },
+      ".dart_tool/package_graph.json": {
+        "byte_equal_to_current": false,
+        "current_sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+        "recorded_sha256": "b4afe70cf70c46781e3b18b62960752de0a8322e5201df08b6bb093b5bbb84f2"
+      },
+      "pubspec.lock": {
+        "byte_equal_to_current": true,
+        "current_sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+        "recorded_sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3"
+      }
+    },
+    "runtime": {
+      "all_starts_have_one_successful_end": true,
+      "errors": 0,
+      "hidden_success_events": 144,
+      "skipped": 0,
+      "suites": 144,
+      "tests": 4132
+    },
+    "scope": "Complete native standalone parser run on exact08296ed, independently checked from retained raw receipts. Original workspace graphs remain source-bound; only lock bytes and normalized package graph/SDK identities are compared across workspaces. The environment script has a stable recorded hash but no retained bytes. Historical4131 and changed-suite18 results remain separate; host app graph qualification is independent.",
+    "source_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+    "source_tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb",
+    "strict_analysis_files": 18,
+    "tool_identity_checks": [
+      {
+        "path": "doc/evidence/storage-carving-reconcile-20261115/run_delta_qualification.py",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/legacy-doc-parser/doc/evidence/storage-carving-reconcile-20261115/run_delta_qualification.py",
+        "sha256": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+        "verification": "immutable pinned Git bytes"
+      },
+      {
+        "member": "record_gate.py",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/parser-qualification-20261115/record_gate.py",
+        "sha256": "3fc3bd50dc2c764609c551db3cb113916a208bdcb30eaf6f30625190dc1898b5",
+        "verification": "retained archive bytes"
+      },
+      {
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/env.sh",
+        "sha256": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+        "verification": "stable recorded hash only; environment script bytes not retained"
+      },
+      {
+        "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+        "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+        "verification": "current SDK bytes"
+      },
+      {
+        "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartaotruntime",
+        "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+        "verification": "current SDK bytes"
+      },
+      {
+        "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dartvm",
+        "sha256": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d",
+        "verification": "current SDK bytes"
+      },
+      {
+        "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot",
+        "sha256": "3f675fe483acfb56e752121c2cf0b1505d4db0edf0fc16ca996d3d76eb252b55",
+        "verification": "current SDK bytes"
+      },
+      {
+        "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/kernel-service.dart.snapshot",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/kernel-service.dart.snapshot",
+        "sha256": "c0d7084a95a873914091d661c45141560070c2d582d7989d5ce3881583fc84e8",
+        "verification": "current SDK bytes"
+      },
+      {
+        "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server_aot.dart.snapshot",
+        "recorded_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server_aot.dart.snapshot",
+        "sha256": "2effb1def007ae4812cdc5d229587ca3df575586dd95ac7e36cd5c178490632a",
+        "verification": "current SDK bytes"
+      }
+    ],
+    "tracked_non_evidence_source_files_verified": 937
+  },
+  "ci_polls_or_waits": 0,
+  "evidence_only_paths_since_production_checkpoint": 267,
+  "final_source_resolution_and_tool_recheck": {
+    "entries": 8621,
+    "passed": true,
+    "unique_recorded_tool_inputs": 49
+  },
+  "historical_parser_reuse_proof": {
+    "added_case_names": [
+      "explicit DOCX recovery handles compound parser errors; strict mode preserves them"
+    ],
+    "added_lines": 29,
+    "fresh_evidence_head": "84264525417b924476af3a9c8cfa9bbe19b6437b",
+    "fresh_full_run_at_current_pin": false,
+    "gates": [
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "0de0eb9dfe28575bfdd3f6cdf7196f3d56649ed4afbdbfc54df0ca25e7c0def4",
+        "current_tools_verified": 5,
+        "errors": 0,
+        "evidence_commit": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "hidden_success_events": 1,
+        "historical_full_graph_scope": true,
+        "label": "prior-directory-focused-fixed",
+        "normalized_source_resolution_inputs": 949,
+        "production_dependencies_and_unchanged_tests_equal_to_app_pin": true,
+        "recorded_input_count": 1819,
+        "recorded_input_digest": "5d03427cd02051507f614cbd4c44ce679d095d3244c5dfe11de7ba58d1c8b391",
+        "skipped": 0,
+        "success": true,
+        "suites": 1,
+        "tested_head": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+        "tests": 9
+      },
+      {
+        "analyzed_files": 18,
+        "artifact_files": 6,
+        "artifact_index_sha256": "0d3dbd95a704f1081d6208d650a5b8ee676febfbc10e57781eba8d09024e3abf",
+        "current_tools_verified": 4,
+        "evidence_commit": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "fatal_infos_explicit": true,
+        "historical_full_graph_scope": true,
+        "label": "prior-directory-strict-analysis",
+        "no_analyzer_issues_reported": true,
+        "normalized_source_resolution_inputs": 949,
+        "production_dependencies_and_unchanged_tests_equal_to_app_pin": true,
+        "recorded_input_count": 1828,
+        "recorded_input_digest": "4785552882e3e2afcb2dfc09105ce14b0af871b8cc24c97fa9dc711a5b21c0e7",
+        "success": true,
+        "tested_head": "fde5685965db83e9cfb6807ecba1205438d7e819"
+      },
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "a950c3f7b72f252b3acedea5748f487060f7ec136234ba93064e0b03ac817af3",
+        "current_tools_verified": 5,
+        "errors": 0,
+        "evidence_commit": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "hidden_success_events": 144,
+        "historical_full_graph_scope": true,
+        "label": "retained-prior-full-run",
+        "normalized_source_resolution_inputs": 949,
+        "production_dependencies_and_unchanged_tests_equal_to_app_pin": true,
+        "recorded_input_count": 1835,
+        "recorded_input_digest": "6574327c24c222b3016eccec1e2de598b81acb4c1275a9383427ff5fadef6533",
+        "skipped": 0,
+        "success": true,
+        "suites": 144,
+        "tested_head": "337b2fad504ce68f9e5e5053ae859bb5905f3dd8",
+        "tests": 4131
+      },
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "2b5992e9fa9dfe42bce8632bed69e87e17c86560cd0065d078c74ea44b1737e9",
+        "current_tools_verified": 5,
+        "errors": 0,
+        "evidence_commit": "84264525417b924476af3a9c8cfa9bbe19b6437b",
+        "hidden_success_events": 1,
+        "historical_full_graph_scope": false,
+        "label": "fresh-changed-suite",
+        "normalized_source_resolution_inputs": 949,
+        "production_dependencies_and_unchanged_tests_equal_to_app_pin": true,
+        "recorded_input_count": 1844,
+        "recorded_input_digest": "1ad4f8c1f0a3fa06b36917795a487722e59b363875a9c88f4bcf09fa912252e9",
+        "skipped": 0,
+        "success": true,
+        "suites": 1,
+        "tested_head": "08296edbee08da013a8ff718798972552ccd03f7",
+        "tests": 18
+      },
+      {
+        "analyzed_files": 1,
+        "artifact_files": 6,
+        "artifact_index_sha256": "000ff21aaf7d76dd14775ad4387f1dcad8e6f67820bdadb282f3a9a68e6e6c93",
+        "current_tools_verified": 4,
+        "evidence_commit": "84264525417b924476af3a9c8cfa9bbe19b6437b",
+        "fatal_infos_explicit": true,
+        "historical_full_graph_scope": false,
+        "label": "fresh-changed-file-analysis",
+        "no_analyzer_issues_reported": true,
+        "normalized_source_resolution_inputs": 949,
+        "production_dependencies_and_unchanged_tests_equal_to_app_pin": true,
+        "recorded_input_count": 1844,
+        "recorded_input_digest": "1ad4f8c1f0a3fa06b36917795a487722e59b363875a9c88f4bcf09fa912252e9",
+        "success": true,
+        "tested_head": "08296edbee08da013a8ff718798972552ccd03f7"
+      }
+    ],
+    "link_report_sha256": "a5d1d708dee3d1a270d64ba054a9ecd0ad80c70eca942ab307877f71b7356968",
+    "prior_17_case_names_retained_in_fresh_18_case_suite": true,
+    "remote_link_artifacts_verified": 20,
+    "removed_lines": 0,
+    "retained_evidence_head": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+    "scope": "Retain the historical 4131-test/144-suite run through exact unchanged production/dependency/test/tool identity, and replace the changed 17-test suite with its fresh 18-test receipt. This is not a fresh full 4132-test run and is separate from the app host graph.",
+    "sole_additive_test_delta": "test/recovery_reconciliation_bounds_test.dart",
+    "source_equivalence_sha256": "4d7c76ec741996f201217304cebef98cf7239892255d0e0c3293be8803b923ef",
+    "source_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+    "tracked_paths_at_pin": 1832,
+    "unchanged_production_dependencies_other_tests_and_tools_verified": true
+  },
+  "host_runtime": {
+    "app": {
+      "suites": 65,
+      "tests": 903
+    },
+    "editor": {
+      "suites": 11,
+      "tests": 105
+    },
+    "engine": {
+      "suites": 23,
+      "tests": 275
+    }
+  },
+  "host_total_suites": 99,
+  "host_total_tests": 1283,
+  "independent_comments": {
+    "actual_pinned_dart_generator_and_source_bound": true,
+    "authored_classic_comments_per_save": 6,
+    "checks": 1154,
+    "classic_repeated_saves": 3,
+    "exact_original_notes_orphan_xml_relationships_and_empty_authority_checked": true,
+    "generation_binding_sha256": "3327d27e75186ab8d65652b218cefb5149b58153fb2c9690aee9f8cd6368e75f",
+    "independent_reader_modules_verified": 5,
+    "orphan_collision_lifecycle_outputs": 6,
+    "reader_report_sha256": "a5d1a5026e17f3f5484385d9d8870e8de69570b07f74b531d282b276d6ca8439",
+    "scope": "Bounded plain-comment packages and two orphan kinds through empty/add/clear. No external Excel, VML geometry or full Open XML schema certification.",
+    "unchanged_output_inputs": 11,
+    "xlsx_outputs": 9
+  },
+  "linux_word_goldens": {
+    "editor_tested_head": "7df4d19aed7ea1d05028bd421bb458f9e901cb29",
+    "font_loader_sha256": "0f983d3bd127f986ff06c2e9ef0d836062e99262c72a3fa48d62b01061818a55",
+    "passing_case_names": {
+      "packages/quds_office_editor/test/office_fidelity_golden_test.dart": [
+        "DOCX import and exported reopen match reviewed page golden"
+      ],
+      "packages/quds_office_editor/test/office_structure_goldens_test.dart": [
+        "create structure matches reviewed pages through three saves",
+        "edit structure matches reviewed pages through three saves",
+        "remove structure matches reviewed pages through three saves"
+      ]
+    },
+    "reference_files": [
+      {
+        "dimensions": [
+          800,
+          1120
+        ],
+        "path": "packages/quds_office_editor/test/goldens/linux/office_fidelity_word.png",
+        "sha256": "c34f2629de5a3397efe7ef5593b543ec254e48812e403b2a5c07d527fa8abb54",
+        "size": 35733
+      },
+      {
+        "dimensions": [
+          800,
+          1120
+        ],
+        "path": "packages/quds_office_editor/test/goldens/linux/structure_create_1.png",
+        "sha256": "18b691623f20119d59a0c02f7ee15dd97f6d4299d8b08804dcf1137b581107e8",
+        "size": 36287
+      },
+      {
+        "dimensions": [
+          800,
+          1120
+        ],
+        "path": "packages/quds_office_editor/test/goldens/linux/structure_edit_1.png",
+        "sha256": "d693a6e9da001204bbcdc2cf5f7399cdf39291aba1d8bd14c7d8b1edbd8c5585",
+        "size": 15998
+      },
+      {
+        "dimensions": [
+          800,
+          1120
+        ],
+        "path": "packages/quds_office_editor/test/goldens/linux/structure_edit_2.png",
+        "sha256": "285b03e73f865a98e289e180fc573cee2f51d141a08ae0bed7d6248d86e2acef",
+        "size": 30179
+      },
+      {
+        "dimensions": [
+          800,
+          1120
+        ],
+        "path": "packages/quds_office_editor/test/goldens/linux/structure_remove_1.png",
+        "sha256": "4ccb257cb36e7a97ff895406958ea4fd81326c1e73953307136e5059fad3943b",
+        "size": 26481
+      }
+    ],
+    "reference_provenance_sha256": "856a337cfc0e3deb0da2692aef769ebe3773e7df4ad4e5e48404923eb73af350",
+    "scope": "Fresh successful Linux cases against five exact tracked references. Comparison-loop count is from frozen test source; no new golden capture or external Word/macOS rendering claim.",
+    "source_bound_font_assets": [
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf",
+        "sha256": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8",
+        "size": 410820
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSans-Bold.ttf",
+        "sha256": "b72c65e551d653b54217ffad0d1454ce0657e4e8d4a28bcc79e0acd2598f4bf3",
+        "size": 414568
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSans-Italic.ttf",
+        "sha256": "4ccb79043bd3a6d131b5a53901abb21261b1417f6052b38a9fa9716a4e5a3d81",
+        "size": 415920
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSans-BoldItalic.ttf",
+        "sha256": "64263238517af60213cdb469165fc7e9acd0c09c35f4155f924a379f97125a57",
+        "size": 409108
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSerif-Regular.ttf",
+        "sha256": "350f4ffd773cae53560c63dca3d89a5070595614fde12f772bf43feb63d81064",
+        "size": 393692
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSerif-Bold.ttf",
+        "sha256": "bb033fae52dcbf67a55494a08829aaa788324624d72a195af7f93da3061c928f",
+        "size": 370196
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSerif-Italic.ttf",
+        "sha256": "c1882fbb05e78537b9c39dad3c07c4f231c987a3747b20c8745737aed50cd488",
+        "size": 375760
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationSerif-BoldItalic.ttf",
+        "sha256": "10ec0fa22bc6f12a239d600c051752884d155997aafd19ebc24c4f4a8d2b98d0",
+        "size": 376892
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationMono-Regular.ttf",
+        "sha256": "d18235f1e874771f4eaec3ddd6ddb4db849d334bdc6930c5c2185d9344834e62",
+        "size": 319624
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationMono-Bold.ttf",
+        "sha256": "50464e64aaadea741fb9516748aee296d570439406be11d63df22294e77ba867",
+        "size": 308068
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationMono-Italic.ttf",
+        "sha256": "35c3116d4366eb0e58494d8e432d4ee0c60c5735c7f775ffc096008bd2907c74",
+        "size": 281608
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/LiberationMono-BoldItalic.ttf",
+        "sha256": "291872531f0e8013df602c412fc570241860e41b1fa1b7972537c27a19024d4d",
+        "size": 284184
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf",
+        "sha256": "8c67eaa2f0086872628fc3f7f760386f83c8be5c5e9a1ba3a38891237b2ac7cb",
+        "size": 175792
+      },
+      {
+        "kind": "file",
+        "path": "packages/quds_office_editor/fonts/NotoNaskhArabic-Bold.ttf",
+        "sha256": "b5cbcb561b4b540ff11d7b6934577dbbbbb9e1d152d47f6f31f19176d58ff39c",
+        "size": 181192
+      }
+    ],
+    "source_defined_exact_comparison_scope": {
+      "import_and_reopen": 2,
+      "structure_save_cycles": 16,
+      "total": 18
+    },
+    "standard_comparator_and_no_update_or_filter_flags": true
+  },
+  "managed_source": {
+    "all_bytes_git_blobs_modes_match": true,
+    "by_canonical": {
+      "parser": 1832,
+      "quds": 504
+    },
+    "canonical_pins": {
+      "parser": "08296edbee08da013a8ff718798972552ccd03f7",
+      "quds": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a"
+    },
+    "files": 2336,
+    "full_checkout_gate_tracked_files": 11899,
+    "manifest_sha256": "6344a6047b6174aea4db45d387f589db40337f9de322f91823d934ffdec17ac7",
+    "source_controls": 85
+  },
+  "navigation": {
+    "capture_tests_separate_from_host_total": 12,
+    "captures": [
+      {
+        "dimensions": [
+          1600,
+          1000
+        ],
+        "file": "rename-validation.png",
+        "fonts": 6,
+        "locale": "en",
+        "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+        "source_files": 2
+      },
+      {
+        "dimensions": [
+          390,
+          1000
+        ],
+        "file": "worksheet-arabic-narrow.png",
+        "fonts": 6,
+        "locale": "ar",
+        "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+        "source_files": 2
+      }
+    ],
+    "generator_binding_sha256": "ebbf4424cecf39d18239a30a8dd2d302442e48a001cb2b0f33fa8ff4014b9d1b",
+    "retained_and_live_output_hashes_match": true,
+    "visual_review": "Separate root-agent visual inspection; this script makes only hash/receipt/dimension checks.",
+    "workbooks": 6
+  },
+  "navigation_tests_separate": 12,
+  "observed_incoming_and_source_freeze": {
+    "additional_intake_reports_bound_to_review_head": [
+      {
+        "path": "integration-return-audit/integration-return-plan.json",
+        "sha256": "12cd2ed910f4734dec6666d2f74c4d6c672dd6b41fb0246a990c09e769a56f36",
+        "size": 10446
+      },
+      {
+        "path": "integration-return-audit/resolved-merge-tree-proof.json",
+        "sha256": "f7c4251439a5c344699ea72d6409526dc906f45a16717e897e175b8eb3824980",
+        "size": 1557
+      },
+      {
+        "path": "integration-return-audit/incoming-analysis-receipts-review.json",
+        "sha256": "5bba0b397736657607886b0b329999d7e9e4e8f856ed6187d7216067a71272e0",
+        "size": 26851
+      },
+      {
+        "path": "integration-return-audit/parser-09a4/canonical-parser-full-qualification.json",
+        "sha256": "0df1c03912671a66f9f2717f79b0769ba10bf7b40193b42b7ac3800101d959e7",
+        "size": 3235
+      },
+      {
+        "path": "canonical-comments-ownership/linkage.json",
+        "sha256": "8c10170b7c36bfcc6d88e1a2db5ef80ebd176dfb4280621e33fcddb5ba52c9e9",
+        "size": 3819
+      },
+      {
+        "path": "comment-oracle-review/review-after.json",
+        "sha256": "017a53a679ecbef2630c844c74dd1792be72c3892bcbf3d75f590572886473d8",
+        "size": 2673
+      }
+    ],
+    "archive_graph_versions": {
+      "app": [
+        "4.6.0"
+      ],
+      "cli": [
+        "4.6.0"
+      ],
+      "editor": [
+        "4.7.1"
+      ],
+      "engine": [
+        "4.7.1"
+      ]
+    },
+    "deleted_lines": 0,
+    "final_quds_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+    "intake_report_sha256": "231206523d8cb08dd1bc8ac17a0aea12238d1780d494a12e4d19c6ba4c35b65b",
+    "observed_app_commit": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "required_ancestry_rechecked": [
+      {
+        "ancestor": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+        "final_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+        "repository": "quds"
+      },
+      {
+        "ancestor": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+        "final_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+        "repository": "quds"
+      },
+      {
+        "ancestor": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+        "final_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+        "repository": "quds"
+      },
+      {
+        "ancestor": "08296edbee08da013a8ff718798972552ccd03f7",
+        "final_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+        "repository": "parser"
+      },
+      {
+        "ancestor": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+        "final_pin": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+        "repository": "app"
+      },
+      {
+        "ancestor": "966345971a50ef93bcb67ed32060c8176b4d2949",
+        "final_pin": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+        "repository": "app"
+      },
+      {
+        "ancestor": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+        "final_pin": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+        "repository": "app"
+      }
+    ],
+    "restored_ods_test_lines": 93,
+    "restored_quds_test_pin": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "scope": "Finite observed41885 intake, retained three-case canonical restoration and explicitly selected later intake reports. No new remote observation; prior source20ee and966 evidence remain historical.",
+    "source_checkpoint_sha256": "a9cf5bf691fdb70d174c18bacbe2c625f149b0019f56d6e26efa73d4816d560e",
+    "source_integration_sha256": "56183ccbf244d2500f392664eae3213095e7b64bc2cae47c1f9e52d33b5eb7a4"
+  },
+  "portable_png": {
+    "actual_node": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "compiled_js_sha256": "b41eeb4323d6a3b971c831730da18ac6edd4126536e048d2c6c2d35572a5603e",
+    "node_sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d",
+    "runtimes": {
+      "javascript": {
+        "assertions": 248,
+        "candidate_receipt_sha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+        "cases": 8,
+        "pngs": 10,
+        "wrong_hash_control": true,
+        "zips": 8
+      },
+      "vm": {
+        "assertions": 248,
+        "candidate_receipt_sha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+        "cases": 8,
+        "pngs": 10,
+        "wrong_hash_control": true,
+        "zips": 8
+      }
+    },
+    "vm_js_payload_identity": true
+  },
+  "production_source": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "recorded_gates_report_sha256": "750160f892ad671a1940e3b7b2210c812bd709653963266df71da9e3dcafd99d",
+  "repository_writes": 0,
+  "review_head": "f43eb7752f3c98505600a4b7d919537602dfb790",
+  "reviewer_sha256": "cc4f42bf6dd1e83de4c1fd36f2830b23e3a61b23e956923b27ccaa4ed15deed6",
+  "runtime_tests_rerun": 0,
+  "schema": 1,
+  "scripted_office": {
+    "exports": 12,
+    "generation_binding_sha256": "2edf50c262961ce1b952d1993dd298c6330a12bf5f07098634a26f8f45442e6e",
+    "oracle_controls": 17,
+    "retained_and_live_output_hashes_match": true,
+    "semantic_report": {
+      "exports": 12,
+      "failures": []
+    }
+  },
+  "selected_gate_labels": {
+    "analysis-app": "analysis-app-final",
+    "analysis-cli": "analysis-cli-final",
+    "analysis-editor": "analysis-editor-final",
+    "analysis-engine": "analysis-engine-final",
+    "app": "app-final",
+    "comments-oracle": "comments-oracle-final",
+    "editor": "editor-final",
+    "engine": "engine-final",
+    "navigation-capture": "navigation-capture-final",
+    "navigation-independent-review": "navigation-independent-review-final",
+    "png-portable": "png-portable-final-2",
+    "scripted-oracle": "scripted-oracle-final",
+    "source-integrity": "source-integrity-final"
+  },
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "success": true
+}

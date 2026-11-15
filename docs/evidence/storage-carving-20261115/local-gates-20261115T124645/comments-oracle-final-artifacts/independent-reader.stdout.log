@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "cycles": 3,
+  "collisions": 6,
+  "checks": 1154,
+  "failures": {},
+  "setup_failures": [],
+  "report": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/reader-report.json"
+}

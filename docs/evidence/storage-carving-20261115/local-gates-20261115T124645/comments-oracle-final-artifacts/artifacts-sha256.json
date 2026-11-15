@@ -1,0 +1,78 @@
+{
+  "commands.json": {
+    "size": 1528,
+    "sha256": "0383992fdd9557e1161d3fb7a5bb45b6d915c35534a21ca7d1d624173042cfe5"
+  },
+  "generate.stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "generate.stdout.log": {
+    "size": 66,
+    "sha256": "ae434155af1c2ae234a2fd382d54b7d1fe99a594143a9552a17d3ccb138a5918"
+  },
+  "generation.json": {
+    "size": 2474,
+    "sha256": "3327d27e75186ab8d65652b218cefb5149b58153fb2c9690aee9f8cd6368e75f"
+  },
+  "independent-reader.stderr.log": {
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "independent-reader.stdout.log": {
+    "size": 292,
+    "sha256": "a0a34304cf2a2a998706a2ede4f92c3fa1fe4ccc519a0c2045edaf51e48fb13a"
+  },
+  "reader-report.json": {
+    "size": 28159,
+    "sha256": "a5d1a5026e17f3f5484385d9d8870e8de69570b07f74b531d282b276d6ca8439"
+  },
+  "summary.json": {
+    "size": 5141,
+    "sha256": "2a362743c2651120bc015f0f6e43f28ad77d986e4f1bc54240e040574ba2659f"
+  },
+  "workbooks/collision-cases.json": {
+    "size": 7537,
+    "sha256": "90df1de4d925544aac6e5ca4ec4c8a901379845963caf7a478034370f69096de"
+  },
+  "workbooks/collision-malformed-added.xlsx": {
+    "size": 5346,
+    "sha256": "2f815ac2e11b30d00a551f291be775f5cf9920457d0472fe4b4078be9a8cdec5"
+  },
+  "workbooks/collision-malformed-cleared.xlsx": {
+    "size": 5239,
+    "sha256": "a0ca6f75dfb7c22178c5d2f254262185bb8ce8bd005eead96f8211133ae14f09"
+  },
+  "workbooks/collision-malformed-empty.xlsx": {
+    "size": 5238,
+    "sha256": "ae6c55a82810725c774f911944bef40ea3f05419ad7d10128626aa25467b2f4a"
+  },
+  "workbooks/collision-valid-added.xlsx": {
+    "size": 5443,
+    "sha256": "cc2a46d8304e8c78c348d6d25945150ee42dec5931ca7a8fa3dc9cacff31dd74"
+  },
+  "workbooks/collision-valid-cleared.xlsx": {
+    "size": 5335,
+    "sha256": "b1c111aa6716273bfad96f01ba10b70dbc1eca322a24fac1a9cc7606a8377103"
+  },
+  "workbooks/collision-valid-empty.xlsx": {
+    "size": 5335,
+    "sha256": "f7b684996a6fbd1c46c8f371f7fc589d5a56f8b8978c0c8e3a6bee98872fc66b"
+  },
+  "workbooks/comments-cycle-1.xlsx": {
+    "size": 3929,
+    "sha256": "a0ee9af5b5a890afce5618a7e44a588152760ca5a044a6c8f340e613f1c700cc"
+  },
+  "workbooks/comments-cycle-2.xlsx": {
+    "size": 3936,
+    "sha256": "ab334fcec670af58835e1501a8774ef623196a42ec9448128a84ffdccb263061"
+  },
+  "workbooks/comments-cycle-3.xlsx": {
+    "size": 3936,
+    "sha256": "8d87bd0a002bb789756d5afcc85efdafc271f6fd281c1d72c7e340d3aeebfd33"
+  },
+  "workbooks/expected-comments.json": {
+    "size": 491,
+    "sha256": "2650e84c00ae2f3cd99c17dd1ed6b82679956684f13a920cc70e94414eefe35f"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "README.md": {
+    "size": 2230,
+    "sha256": "cb2c3f6ba4b3753abb324cee6dd73047211a2e37b1a47ac9313175bd99e8c9fa"
+  },
+  "installed-openpyxl-deserializer-source.txt": {
+    "size": 4523,
+    "sha256": "b7f6f47f0ec18cecc21587f2f6bb0d30571f0dd7d92924f00b19532e7c50285b"
+  },
+  "reader-tightening.patch": {
+    "size": 5562,
+    "sha256": "2b452b84ffd661c8a7a8dd58aede6e8d4b43a53769455f10d9251a32a47ce7af"
+  },
+  "review-after.json": {
+    "size": 2673,
+    "sha256": "017a53a679ecbef2630c844c74dd1792be72c3892bcbf3d75f590572886473d8"
+  },
+  "review-before.json": {
+    "size": 2689,
+    "sha256": "cb00a82ffa0251169efe98ece5c81d8e40fcfdb5f84e56e1fafe446eef6b0732"
+  },
+  "reviewed-reader-after.py": {
+    "size": 27568,
+    "sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867"
+  },
+  "reviewed-reader-before.py": {
+    "size": 26858,
+    "sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a"
+  }
+}

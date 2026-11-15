@@ -1,0 +1,21 @@
+{
+  "runtimes": {
+    "vm": {
+      "cases": 8,
+      "assertions": 248,
+      "verified_zips": 8,
+      "verified_pngs": 10,
+      "wrong_expected_hash_rejected": true
+    },
+    "javascript": {
+      "cases": 8,
+      "assertions": 248,
+      "verified_zips": 8,
+      "verified_pngs": 10,
+      "wrong_expected_hash_rejected": true
+    }
+  },
+  "runtime_outputs_match": true,
+  "compiled_javascript_sha256": "b41eeb4323d6a3b971c831730da18ac6edd4126536e048d2c6c2d35572a5603e",
+  "qualification_success": true
+}

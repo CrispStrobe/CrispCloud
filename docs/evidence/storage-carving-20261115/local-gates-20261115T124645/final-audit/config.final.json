@@ -1,0 +1,75 @@
+{
+  "status": "authorized final read-only audit; all thirteen selected gate receipts saved and review HEAD fixed",
+  "evidence_base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
+  "source_head": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "input_digest": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "input_count": 8621,
+  "quds_pin": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "parser_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "canonical_counts": {
+    "parser": 1832,
+    "quds": 504
+  },
+  "manifest_counts": {
+    "analysis-app": 76,
+    "analysis-engine": 19,
+    "analysis-editor": 6,
+    "analysis-cli": 1,
+    "app": 65,
+    "engine": 23,
+    "editor": 11,
+    "navigation-capture": 1
+  },
+  "gate_suffix": "-final",
+  "gate_labels": {
+    "png-portable": "png-portable-final-2"
+  },
+  "checkpoint_file": "source-checkpoint-final.json",
+  "resolution_file": "resolution/receipt.json",
+  "additional_intake_reports": [
+    "integration-return-audit/integration-return-plan.json",
+    "integration-return-audit/resolved-merge-tree-proof.json",
+    "integration-return-audit/incoming-analysis-receipts-review.json",
+    "integration-return-audit/parser-09a4/canonical-parser-full-qualification.json",
+    "canonical-comments-ownership/linkage.json",
+    "comment-oracle-review/review-after.json"
+  ],
+  "required_runtime_suites": {
+    "engine": [
+      "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+      "packages/quds_office_engine/test/sheet_comments_schema_test.dart"
+    ],
+    "editor": [
+      "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+      "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+    ]
+  },
+  "required_canonical_ancestors": {
+    "quds": [
+      "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+      "4e8c8f80f206e93be8530a94da478e06c0f87608",
+      "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a"
+    ],
+    "parser": [
+      "08296edbee08da013a8ff718798972552ccd03f7"
+    ]
+  },
+  "required_app_ancestors": [
+    "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+    "966345971a50ef93bcb67ed32060c8176b4d2949",
+    "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1"
+  ],
+  "notes": [
+    "Fill final values only from root-announced saved source/checkpoint and actual frozen manifests.",
+    "manifest_counts keys: analysis-app,analysis-engine,analysis-editor,analysis-cli,app,engine,editor,navigation-capture. These are suite/file inventories, not predicted runtime totals.",
+    "Optional gate_labels overrides select an explicitly passed retry label without accepting any earlier attempt.",
+    "Supply exact saved later-intake report paths relative to evidence_base.",
+    "Do not relabel source966 plain gates as current; this configuration defaults to fresh -final labels.",
+    "Thirteen final gates are required, including comments-oracle-final and its separate -artifacts inventory. No runtime totals are predicted.",
+    "Primary parser acceptance is complete4132/144 plus strict18 from immutable09a4 on exact082; older4131 and changed-suite18 receipts remain separate historical evidence.",
+    "source-checkpoint-final.json is prepared in scratch for root to save; source-checkpoint.json remains the historical source966 binding.",
+    "Input count and digest read from the saved passed analysis-app-final receipt; no final gate audit has been run.",
+    "Exclude the preserved png-portable-final PermissionError attempt from acceptance. Select png-portable-final-2 and png-portable-final-2-artifacts after the evidence-only launcher executable-mode correction; launcher bytes, production source, driver and graphs remain unchanged."
+  ],
+  "authorized_review_head": "f43eb7752f3c98505600a4b7d919537602dfb790"
+}

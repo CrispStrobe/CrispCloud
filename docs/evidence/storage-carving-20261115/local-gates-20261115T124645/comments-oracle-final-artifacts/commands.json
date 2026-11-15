@@ -1,0 +1,30 @@
+[
+  {
+    "name": "generate",
+    "argv": [
+      "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+      "run",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/workbooks"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine",
+    "started_at": "2026-11-15T13:51:33.754966+00:00",
+    "finished_at": "2026-11-15T13:51:37.909542+00:00",
+    "returncode": 0
+  },
+  {
+    "name": "independent-reader",
+    "argv": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py",
+      "--input-dir",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/workbooks",
+      "--report",
+      "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/reader-report.json"
+    ],
+    "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine",
+    "started_at": "2026-11-15T13:51:37.915518+00:00",
+    "finished_at": "2026-11-15T13:51:38.303672+00:00",
+    "returncode": 0
+  }
+]

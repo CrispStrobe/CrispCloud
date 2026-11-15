@@ -1,0 +1,32 @@
+[
+  {
+    "cell": "A1",
+    "text": "plain comment",
+    "author": "Alice & Co"
+  },
+  {
+    "cell": "A2",
+    "text": " leading",
+    "author": "Bob"
+  },
+  {
+    "cell": "A3",
+    "text": "trailing ",
+    "author": "Alice & Co"
+  },
+  {
+    "cell": "A4",
+    "text": " \tline one\nline two \t ",
+    "author": "Bob"
+  },
+  {
+    "cell": "A5",
+    "text": "",
+    "author": "Alice & Co"
+  },
+  {
+    "cell": "A6",
+    "text": "A&B <tag> \"quote\" — café 🙂",
+    "author": "Bob"
+  }
+]

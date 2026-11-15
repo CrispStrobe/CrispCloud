@@ -1,0 +1,83 @@
+{
+  "after_entries_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "after_git": {
+    "head": "8542045fad97864fc9027a0d69a24920c70183d5",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/previews/rename-validation.png\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/previews/rename-validation.png.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/previews/worksheet-arabic-narrow.png\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/previews/worksheet-arabic-narrow.png.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/verification.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/workbooks/rejected-draft-corrected.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/workbooks/rename-redo.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/workbooks/rename-undo.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/workbooks/rename.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/workbooks/source.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts/workbooks/switched-draft.xlsx\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final/command.json\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final/metadata.json\n",
+    "tree": "c1003f1408a2a904ad367f508c665724d84c1ba5",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/office-worksheet-navigation-20261115/resume/hosted-7e5af83c/integrity/verify_hosted_artifacts.py": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/artifacts-sha256.json": "070a3c2921605d3923aba1012e0716ba7021e57ef535ea8baface6c49c76a39a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/command.json": "b5eeb5b0c353162912ec2030e5a2db45fc67fc027996ba5dec23f4bb19006426",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/inputs-after.json.gz": "9c90d31c1602d4cef812c4678872e09c779af60c8413444fc16d8e0debbaaa58",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/inputs-before.json.gz": "d02566effccba7c663135497e5cdec6847340d0d3b81c0487bb6708e3ba4208d",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/metadata.json": "cc28e97b21c546d2c730de8b528bf55cc2ee1d644f350fb138f46315f293d2d7",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/produced-files.json": "ebbf4424cecf39d18239a30a8dd2d302442e48a001cb2b0f33fa8ff4014b9d1b",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/stderr.log": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/stdout.jsonl": "77d68faeee6dc36e3a562382cd62d3d135c65c36132d5373cc392fd8184c94c5",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/suites.txt": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/summary.json": "f0efe3833370d48c15c273abcb5a4e313252e044129064f7d46ca3e7b9e8300c",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py": "8ea761641d7f4e0e48debf171e2e03de06b86517b72d89fc0fe160271370d706",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_navigation_capture.py": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "before_entries_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "before_git": {
+    "head": "8542045fad97864fc9027a0d69a24920c70183d5",
+    "source_changes": [],
+    "status": "",
+    "tree": "c1003f1408a2a904ad367f508c665724d84c1ba5",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/office-worksheet-navigation-20261115/resume/hosted-7e5af83c/integrity/verify_hosted_artifacts.py": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/artifacts-sha256.json": "070a3c2921605d3923aba1012e0716ba7021e57ef535ea8baface6c49c76a39a",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/command.json": "b5eeb5b0c353162912ec2030e5a2db45fc67fc027996ba5dec23f4bb19006426",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/inputs-after.json.gz": "9c90d31c1602d4cef812c4678872e09c779af60c8413444fc16d8e0debbaaa58",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/inputs-before.json.gz": "d02566effccba7c663135497e5cdec6847340d0d3b81c0487bb6708e3ba4208d",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/metadata.json": "cc28e97b21c546d2c730de8b528bf55cc2ee1d644f350fb138f46315f293d2d7",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/produced-files.json": "ebbf4424cecf39d18239a30a8dd2d302442e48a001cb2b0f33fa8ff4014b9d1b",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/stderr.log": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/stdout.jsonl": "77d68faeee6dc36e3a562382cd62d3d135c65c36132d5373cc392fd8184c94c5",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/suites.txt": "d578b0c3ec4cc3f14dc8bca4aa8df54c9a45cc3a791739a32e205a6cf8e83015",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final/summary.json": "f0efe3833370d48c15c273abcb5a4e313252e044129064f7d46ca3e7b9e8300c",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_selected_gate.py": "8ea761641d7f4e0e48debf171e2e03de06b86517b72d89fc0fe160271370d706",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_navigation_capture.py": "ce8723e713243f2df39f79e0ec5cbc78d3911c7cea2e9497a9972e24b658d375",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_navigation_capture.py",
+    "--repo",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "--capture-receipt",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-capture-final",
+    "--output",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/navigation-independent-review-final-artifacts"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "elapsed_seconds": 0.5601472720009042,
+  "finished_at": "2026-11-15T13:57:04.984495+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8621,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T13:57:04.422383+00:00",
+  "suite_count": null
+}

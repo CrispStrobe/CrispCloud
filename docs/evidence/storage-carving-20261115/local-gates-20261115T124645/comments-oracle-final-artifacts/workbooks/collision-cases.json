@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "file": "collision-valid-empty.xlsx",
+      "phase": "empty",
+      "sheet_name": "Added",
+      "orphan_part": "xl/comments2.xml",
+      "orphan_base64": "PGNvbW1lbnRzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvc3ByZWFkc2hlZXRtbC8yMDA2L21haW4iPjxhdXRob3JzPjxhdXRob3I+VW5yZWxhdGVkIGF1dGhvcjwvYXV0aG9yPjwvYXV0aG9ycz48Y29tbWVudExpc3Q+PGNvbW1lbnQgcmVmPSJBMSIgYXV0aG9ySWQ9IjAiPjx0ZXh0Pjx0PlJldGFpbiB0aGlzIHVucmVsYXRlZCBwYXJ0PC90PjwvdGV4dD48L2NvbW1lbnQ+PC9jb21tZW50TGlzdD48L2NvbW1lbnRzPg==",
+      "orphan_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+      "orphan_relationships_part": "xl/_rels/comments2.xml.rels",
+      "orphan_relationships_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZEF1ZGl0IiBUeXBlPSJ1cm46ZXhhbXBsZTpvcnBoYW4tYXVkaXQiIFRhcmdldD0iaHR0cHM6Ly9leGFtcGxlLnRlc3Qvb3JwaGFuIiBUYXJnZXRNb2RlPSJFeHRlcm5hbCIvPjwvUmVsYXRpb25zaGlwcz4=",
+      "comments": [],
+      "original_sheet_name": "Original",
+      "original_comments": [
+        {
+          "cell": "A1",
+          "text": "Original note",
+          "author": "Original reviewer"
+        }
+      ]
+    },
+    {
+      "file": "collision-valid-added.xlsx",
+      "phase": "added",
+      "sheet_name": "Added",
+      "orphan_part": "xl/comments2.xml",
+      "orphan_base64": "PGNvbW1lbnRzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvc3ByZWFkc2hlZXRtbC8yMDA2L21haW4iPjxhdXRob3JzPjxhdXRob3I+VW5yZWxhdGVkIGF1dGhvcjwvYXV0aG9yPjwvYXV0aG9ycz48Y29tbWVudExpc3Q+PGNvbW1lbnQgcmVmPSJBMSIgYXV0aG9ySWQ9IjAiPjx0ZXh0Pjx0PlJldGFpbiB0aGlzIHVucmVsYXRlZCBwYXJ0PC90PjwvdGV4dD48L2NvbW1lbnQ+PC9jb21tZW50TGlzdD48L2NvbW1lbnRzPg==",
+      "orphan_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+      "orphan_relationships_part": "xl/_rels/comments2.xml.rels",
+      "orphan_relationships_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZEF1ZGl0IiBUeXBlPSJ1cm46ZXhhbXBsZTpvcnBoYW4tYXVkaXQiIFRhcmdldD0iaHR0cHM6Ly9leGFtcGxlLnRlc3Qvb3JwaGFuIiBUYXJnZXRNb2RlPSJFeHRlcm5hbCIvPjwvUmVsYXRpb25zaGlwcz4=",
+      "comments": [
+        {
+          "cell": "B2",
+          "text": " added & reviewed \n café 🙂 ",
+          "author": "New reviewer"
+        }
+      ],
+      "original_sheet_name": "Original",
+      "original_comments": [
+        {
+          "cell": "A1",
+          "text": "Original note",
+          "author": "Original reviewer"
+        }
+      ]
+    },
+    {
+      "file": "collision-valid-cleared.xlsx",
+      "phase": "cleared",
+      "sheet_name": "Added",
+      "orphan_part": "xl/comments2.xml",
+      "orphan_base64": "PGNvbW1lbnRzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvc3ByZWFkc2hlZXRtbC8yMDA2L21haW4iPjxhdXRob3JzPjxhdXRob3I+VW5yZWxhdGVkIGF1dGhvcjwvYXV0aG9yPjwvYXV0aG9ycz48Y29tbWVudExpc3Q+PGNvbW1lbnQgcmVmPSJBMSIgYXV0aG9ySWQ9IjAiPjx0ZXh0Pjx0PlJldGFpbiB0aGlzIHVucmVsYXRlZCBwYXJ0PC90PjwvdGV4dD48L2NvbW1lbnQ+PC9jb21tZW50TGlzdD48L2NvbW1lbnRzPg==",
+      "orphan_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+      "orphan_relationships_part": "xl/_rels/comments2.xml.rels",
+      "orphan_relationships_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZEF1ZGl0IiBUeXBlPSJ1cm46ZXhhbXBsZTpvcnBoYW4tYXVkaXQiIFRhcmdldD0iaHR0cHM6Ly9leGFtcGxlLnRlc3Qvb3JwaGFuIiBUYXJnZXRNb2RlPSJFeHRlcm5hbCIvPjwvUmVsYXRpb25zaGlwcz4=",
+      "comments": [],
+      "original_sheet_name": "Original",
+      "original_comments": [
+        {
+          "cell": "A1",
+          "text": "Original note",
+          "author": "Original reviewer"
+        }
+      ]
+    },
+    {
+      "file": "collision-malformed-empty.xlsx",
+      "phase": "empty",
+      "sheet_name": "Added",
+      "orphan_part": "xl/comments2.xml",
+      "orphan_base64": "PHVucmVsYXRlZCB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3NwcmVhZHNoZWV0bWwvMjAwNi9tYWluIi8+",
+      "orphan_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+      "orphan_relationships_part": "xl/_rels/comments2.xml.rels",
+      "orphan_relationships_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZEF1ZGl0IiBUeXBlPSJ1cm46ZXhhbXBsZTpvcnBoYW4tYXVkaXQiIFRhcmdldD0iaHR0cHM6Ly9leGFtcGxlLnRlc3Qvb3JwaGFuIiBUYXJnZXRNb2RlPSJFeHRlcm5hbCIvPjwvUmVsYXRpb25zaGlwcz4=",
+      "comments": [],
+      "original_sheet_name": "Original",
+      "original_comments": [
+        {
+          "cell": "A1",
+          "text": "Original note",
+          "author": "Original reviewer"
+        }
+      ]
+    },
+    {
+      "file": "collision-malformed-added.xlsx",
+      "phase": "added",
+      "sheet_name": "Added",
+      "orphan_part": "xl/comments2.xml",
+      "orphan_base64": "PHVucmVsYXRlZCB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3NwcmVhZHNoZWV0bWwvMjAwNi9tYWluIi8+",
+      "orphan_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+      "orphan_relationships_part": "xl/_rels/comments2.xml.rels",
+      "orphan_relationships_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZEF1ZGl0IiBUeXBlPSJ1cm46ZXhhbXBsZTpvcnBoYW4tYXVkaXQiIFRhcmdldD0iaHR0cHM6Ly9leGFtcGxlLnRlc3Qvb3JwaGFuIiBUYXJnZXRNb2RlPSJFeHRlcm5hbCIvPjwvUmVsYXRpb25zaGlwcz4=",
+      "comments": [
+        {
+          "cell": "B2",
+          "text": " added & reviewed \n café 🙂 ",
+          "author": "New reviewer"
+        }
+      ],
+      "original_sheet_name": "Original",
+      "original_comments": [
+        {
+          "cell": "A1",
+          "text": "Original note",
+          "author": "Original reviewer"
+        }
+      ]
+    },
+    {
+      "file": "collision-malformed-cleared.xlsx",
+      "phase": "cleared",
+      "sheet_name": "Added",
+      "orphan_part": "xl/comments2.xml",
+      "orphan_base64": "PHVucmVsYXRlZCB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3NwcmVhZHNoZWV0bWwvMjAwNi9tYWluIi8+",
+      "orphan_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+      "orphan_relationships_part": "xl/_rels/comments2.xml.rels",
+      "orphan_relationships_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZEF1ZGl0IiBUeXBlPSJ1cm46ZXhhbXBsZTpvcnBoYW4tYXVkaXQiIFRhcmdldD0iaHR0cHM6Ly9leGFtcGxlLnRlc3Qvb3JwaGFuIiBUYXJnZXRNb2RlPSJFeHRlcm5hbCIvPjwvUmVsYXRpb25zaGlwcz4=",
+      "comments": [],
+      "original_sheet_name": "Original",
+      "original_comments": [
+        {
+          "cell": "A1",
+          "text": "Original note",
+          "author": "Original reviewer"
+        }
+      ]
+    }
+  ]
+}

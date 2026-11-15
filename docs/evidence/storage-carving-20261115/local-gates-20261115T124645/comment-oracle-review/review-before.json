@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "review_kind": "read-only static review; no runtime gate executed",
+  "app_production_source": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
+  "canonical_source": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "fixture_exactly_matches_canonical": true,
+  "fixture_sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3",
+  "reader_path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py",
+  "reader_before_sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+  "reader_scope": "Supplied scratch overlay; the helper path is absent from the named production-source checkpoint and must be bound separately to its later evidence commit.",
+  "status": "One concrete helper acceptance gap; scratch correction under preparation by evidence_review.",
+  "findings": [
+    {
+      "id": "non-whitespace-container-text-and-tails",
+      "scope": "Claimed plain-comment and explicit-empty-authority XML profile",
+      "counterexample_shapes": [
+        "<comments xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">UNEXPECTED<authors/><commentList/></comments>",
+        "<text><t>expected</t>UNEXPECTED</text>",
+        "<comment ref=\"A1\" authorId=\"0\"><text><t>expected</t></text><unexpected/></comment>"
+      ],
+      "reason": "Current checks validate element inventories only at selected levels, values from leaf.text, and namespaces. They omit root/comment bare text and child tails, and do not restrict comment children to the authored plain text profile. The installed openpyxl deserializer ignores unknown children and container text/tails, so external readback does not close this gap.",
+      "recommended_correction": "Check comments root, each comment and each text container for no non-XML-whitespace bare text or child tails; require exactly one text child and no other element child in the authored plain comment profile.",
+      "production_defect_claim": false,
+      "runtime_reproduction_claim": false
+    }
+  ],
+  "other_reviewed_safeguards": [
+    "Exact eleven regular fresh output files",
+    "Actual canonical fixture bytes match saved app",
+    "Immediate generated-byte binding before reader execution",
+    "Reader inputs before/after equal generated inventory",
+    "Tool and app HEAD stability with enclosing source/resolution recorder",
+    "Generation/reader/postprocessing exceptions fail gate",
+    "Both worksheets checked with distinct authorities",
+    "Orphan bytes, outgoing relationships and content type preserved",
+    "No network traversal of external sentinel",
+    "No source, index, HEAD or dependency changes by reviewer"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "status": "source and resolution frozen; final runtime gates pending",
+  "status": "All13 accepted final local gates passed and independently audited",
   "evidence_base": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645",
   "source_freeze": {
     "commit": "4c2b6ddd87c854525b075dfda8783ad209565d5e",
@@ -207,7 +207,7 @@
       "from_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
       "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_comments.py",
       "incoming_sha256": "47389ed35e2bc2904dc201828a5d78d94272b81e53bf7b6a55f3ba6a546b6666",
-      "new_sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+      "new_sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867",
       "unchanged": false
     }
   },
@@ -216,7 +216,15 @@
     "historical/provenance-overlay-manifest.json",
     "historical/source966-gate-plan.json"
   ],
-  "runtime_results": null,
+  "runtime_results": {
+    "record": "final-acceptance.json",
+    "raw_receipt_commit": "f43eb7752f3c98505600a4b7d919537602dfb790",
+    "host_tests": 1283,
+    "host_suites": 99,
+    "strict_files": 102,
+    "navigation_tests_counted_separately": 12,
+    "independent_audit": "final-audit/README.md"
+  },
   "gate_labels": {
     "analysis-app": "analysis-app-final",
     "analysis-engine": "analysis-engine-final",
@@ -228,12 +236,21 @@
     "scripted-oracle": "scripted-oracle-final",
     "comments-oracle": "comments-oracle-final",
     "source-integrity": "source-integrity-final",
-    "png-portable": "png-portable-final",
+    "png-portable": "png-portable-final-2",
     "navigation-capture": "navigation-capture-final",
     "navigation-independent-review": "navigation-independent-review-final"
   },
   "source966_receipts": {
     "status": "preserved predecessor scope only",
     "label_rule": "Plain labels remain tied to source966; only fresh -final labels qualify the corrected final source."
-  }
+  },
+  "failed_gate_attempts": [
+    {
+      "label": "png-portable-final",
+      "saved_commit": "44a7339a7c7aecb96601b32712e9a7131e694e1a",
+      "reason": "Evidence launcher saved mode100644 caused PermissionError before first Dart process; not a product runtime failure.",
+      "accepted": false,
+      "retry_label": "png-portable-final-2"
+    }
+  ]
 }

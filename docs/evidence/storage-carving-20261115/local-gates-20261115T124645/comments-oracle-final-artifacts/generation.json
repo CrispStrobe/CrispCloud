@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "tested_head": "42f5e864d760473c4193566fd8679e7ba1a21140",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "generated_at": "2026-11-15T13:51:37.913902+00:00",
+  "files": {
+    "collision-cases.json": {
+      "size": 7537,
+      "sha256": "90df1de4d925544aac6e5ca4ec4c8a901379845963caf7a478034370f69096de"
+    },
+    "collision-malformed-added.xlsx": {
+      "size": 5346,
+      "sha256": "2f815ac2e11b30d00a551f291be775f5cf9920457d0472fe4b4078be9a8cdec5"
+    },
+    "collision-malformed-cleared.xlsx": {
+      "size": 5239,
+      "sha256": "a0ca6f75dfb7c22178c5d2f254262185bb8ce8bd005eead96f8211133ae14f09"
+    },
+    "collision-malformed-empty.xlsx": {
+      "size": 5238,
+      "sha256": "ae6c55a82810725c774f911944bef40ea3f05419ad7d10128626aa25467b2f4a"
+    },
+    "collision-valid-added.xlsx": {
+      "size": 5443,
+      "sha256": "cc2a46d8304e8c78c348d6d25945150ee42dec5931ca7a8fa3dc9cacff31dd74"
+    },
+    "collision-valid-cleared.xlsx": {
+      "size": 5335,
+      "sha256": "b1c111aa6716273bfad96f01ba10b70dbc1eca322a24fac1a9cc7606a8377103"
+    },
+    "collision-valid-empty.xlsx": {
+      "size": 5335,
+      "sha256": "f7b684996a6fbd1c46c8f371f7fc589d5a56f8b8978c0c8e3a6bee98872fc66b"
+    },
+    "comments-cycle-1.xlsx": {
+      "size": 3929,
+      "sha256": "a0ee9af5b5a890afce5618a7e44a588152760ca5a044a6c8f340e613f1c700cc"
+    },
+    "comments-cycle-2.xlsx": {
+      "size": 3936,
+      "sha256": "ab334fcec670af58835e1501a8774ef623196a42ec9448128a84ffdccb263061"
+    },
+    "comments-cycle-3.xlsx": {
+      "size": 3936,
+      "sha256": "8d87bd0a002bb789756d5afcc85efdafc271f6fd281c1d72c7e340d3aeebfd33"
+    },
+    "expected-comments.json": {
+      "size": 491,
+      "sha256": "2650e84c00ae2f3cd99c17dd1ed6b82679956684f13a920cc70e94414eefe35f"
+    }
+  },
+  "dart": {
+    "path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "size": 4835712,
+    "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+  },
+  "generator": {
+    "path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+    "size": 4817,
+    "sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3"
+  },
+  "scope": "Fresh outputs from the actual pinned Dart command, hashed before independent readback; the enclosing recorder proves stable source and resolution inputs."
+}

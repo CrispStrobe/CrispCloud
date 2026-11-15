@@ -1,0 +1,171 @@
+{
+  "schema": 1,
+  "commands": [
+    {
+      "name": "managed-office-verifier",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/1e19fe1d39ae/QudsCanonical",
+        "--legacy-source",
+        "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+        "--require-tracked"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:27.436773+00:00",
+      "elapsed_seconds": 1.4014295560009487,
+      "returncode": 0,
+      "unittest_count": null
+    },
+    {
+      "name": "full-source-and-mode-verifier",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py",
+        "--repo",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+        "--quds",
+        "/workspace/scratch/1e19fe1d39ae/QudsCanonical",
+        "--parser",
+        "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+        "--output",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/source-integrity-final-details/source/comparison"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:28.838233+00:00",
+      "elapsed_seconds": 1.0756145250015834,
+      "returncode": 0,
+      "unittest_count": null
+    },
+    {
+      "name": "quds-guarded-sync-dry-run",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/sync_office_fidelity.py",
+        "--source",
+        "/workspace/scratch/1e19fe1d39ae/QudsCanonical",
+        "--ref",
+        "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:29.913923+00:00",
+      "elapsed_seconds": 2.8956338629977836,
+      "returncode": 0,
+      "unittest_count": null
+    },
+    {
+      "name": "parser-guarded-sync-dry-run",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/sync_legacy_doc_parser.py",
+        "--source",
+        "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+        "--ref",
+        "08296edbee08da013a8ff718798972552ccd03f7"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:32.809592+00:00",
+      "elapsed_seconds": 0.8524464789988997,
+      "returncode": 0,
+      "unittest_count": null
+    },
+    {
+      "name": "quds-sync-controls",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_sync_office_fidelity.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:33.662062+00:00",
+      "elapsed_seconds": 0.3256576980020327,
+      "returncode": 0,
+      "unittest_count": 8
+    },
+    {
+      "name": "parser-sync-controls",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_sync_legacy_doc_parser.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:33.987744+00:00",
+      "elapsed_seconds": 1.120803182999225,
+      "returncode": 0,
+      "unittest_count": 19
+    },
+    {
+      "name": "inventory-controls",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "packages/quds_office_engine/tool/fidelity",
+        "-p",
+        "test_inventory.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:35.108573+00:00",
+      "elapsed_seconds": 0.13856511799895088,
+      "returncode": 0,
+      "unittest_count": 21
+    },
+    {
+      "name": "host-evidence-controls",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_office_host_evidence.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+      "started_at": "2026-11-15T13:52:35.247165+00:00",
+      "elapsed_seconds": 13.798383358000137,
+      "returncode": 0,
+      "unittest_count": 34
+    }
+  ],
+  "command_count": 8,
+  "success": true,
+  "python_control_tests": 82,
+  "scope": "Source identity, source synchronization and synthetic inventory/oracle controls; no native execution, Office rendering, produced-output inventory or external schema acceptance.",
+  "deferred_output_gate": {
+    "test": "packages/quds_office_engine/tool/fidelity/test_scripted_oracle.py",
+    "reason": "The positive controls require genuine current engine-produced Office packages; source-only checking cannot supply them.",
+    "generator_suite": "packages/quds_office_engine/test/scripted_workflows_test.dart",
+    "cwd": "packages/quds_office_engine",
+    "commands_after_generator": [
+      "python3 tool/fidelity/scripted_oracle.py",
+      "python3 -m unittest discover -s tool/fidelity -p test_scripted_oracle.py -v"
+    ],
+    "required_outputs": [
+      "build/fidelity-scripted/word/edited.docx",
+      "build/fidelity-scripted/sheet/edited.xlsx",
+      "build/fidelity-scripted/slide/edited.pptx"
+    ],
+    "current_python_test_methods": 17,
+    "status": "pending engine output generation; neither skipped nor passed by this source gate"
+  }
+}

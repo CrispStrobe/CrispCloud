@@ -1,0 +1,95 @@
+{
+  "file": "rename-validation.png",
+  "capture": "complete host render view including modal overlays",
+  "width": 1600,
+  "height": 1000,
+  "device_pixel_ratio": 1.0,
+  "locale": "en",
+  "preview_only_typography": {
+    "material_font_family": "OfficeNavigationPreviewRoboto",
+    "material_font_family_fallback": [
+      "Noto Naskh Arabic"
+    ],
+    "office_font_family": "OfficeNavigationPreviewRoboto",
+    "icon_font_family": "MaterialIcons",
+    "visible_material_icon_code_points": [
+      57415,
+      57492,
+      57496,
+      57645,
+      57705,
+      57706,
+      57744,
+      57745,
+      57746,
+      57787,
+      58027,
+      58029,
+      58030,
+      58031,
+      58032,
+      58033,
+      58035,
+      58198,
+      58335,
+      58727,
+      58734,
+      58834,
+      61109,
+      61453,
+      61544,
+      62260,
+      984570,
+      984666
+    ],
+    "fonts": [
+      {
+        "asset": "assets/fonts/Roboto-Regular.ttf",
+        "family": "OfficeNavigationPreviewRoboto",
+        "bytes": 171676,
+        "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+      },
+      {
+        "asset": "assets/fonts/Roboto-Medium.ttf",
+        "family": "OfficeNavigationPreviewRoboto",
+        "bytes": 172064,
+        "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
+      },
+      {
+        "asset": "assets/fonts/Roboto-Bold.ttf",
+        "family": "OfficeNavigationPreviewRoboto",
+        "bytes": 170760,
+        "sha256": "7d0b991ee3e0be7af01ad7ea8cd2beea6c00a25e679a0226b6737f079aafff86"
+      },
+      {
+        "asset": "packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf",
+        "family": "Noto Naskh Arabic",
+        "bytes": 175792,
+        "sha256": "8c67eaa2f0086872628fc3f7f760386f83c8be5c5e9a1ba3a38891237b2ac7cb"
+      },
+      {
+        "asset": "packages/quds_office_editor/fonts/NotoNaskhArabic-Bold.ttf",
+        "family": "Noto Naskh Arabic",
+        "bytes": 181192,
+        "sha256": "b5cbcb561b4b540ff11d7b6934577dbbbbb9e1d152d47f6f31f19176d58ff39c"
+      },
+      {
+        "asset": "test/store_assets/fixtures/MaterialIcons-Regular.otf",
+        "family": "MaterialIcons",
+        "bytes": 1645184,
+        "sha256": "d9865b671a09d683d13a863089d8825e0f61a37696ce5d7d448bc8023aa62453"
+      }
+    ]
+  },
+  "capture_sources": [
+    {
+      "path": "test/widget/office_sheet_navigation_workflow_test.dart",
+      "sha256": "b16336ffc2d8a861934eb071a1d9540be425f4c031668d0253c6674fa4f2226d"
+    },
+    {
+      "path": "test/support/office_test_harness.dart",
+      "sha256": "5053997b592e618dae47a69029c80765097ae02c3be9f836023229ec2e4852dc"
+    }
+  ],
+  "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693"
+}
