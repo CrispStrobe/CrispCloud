@@ -1,0 +1,900 @@
+{
+  "schema": 2,
+  "started_at": "2026-11-15T13:51:38.187939+00:00",
+  "oracle_script_sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867",
+  "input_directory": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/workbooks",
+  "inputs_before": {
+    "expected-comments.json": {
+      "bytes": 491,
+      "sha256": "2650e84c00ae2f3cd99c17dd1ed6b82679956684f13a920cc70e94414eefe35f"
+    },
+    "collision-cases.json": {
+      "bytes": 7537,
+      "sha256": "90df1de4d925544aac6e5ca4ec4c8a901379845963caf7a478034370f69096de"
+    },
+    "comments-cycle-1.xlsx": {
+      "bytes": 3929,
+      "sha256": "a0ee9af5b5a890afce5618a7e44a588152760ca5a044a6c8f340e613f1c700cc"
+    },
+    "comments-cycle-2.xlsx": {
+      "bytes": 3936,
+      "sha256": "ab334fcec670af58835e1501a8774ef623196a42ec9448128a84ffdccb263061"
+    },
+    "comments-cycle-3.xlsx": {
+      "bytes": 3936,
+      "sha256": "8d87bd0a002bb789756d5afcc85efdafc271f6fd281c1d72c7e340d3aeebfd33"
+    },
+    "collision-malformed-added.xlsx": {
+      "bytes": 5346,
+      "sha256": "2f815ac2e11b30d00a551f291be775f5cf9920457d0472fe4b4078be9a8cdec5"
+    },
+    "collision-malformed-cleared.xlsx": {
+      "bytes": 5239,
+      "sha256": "a0ca6f75dfb7c22178c5d2f254262185bb8ce8bd005eead96f8211133ae14f09"
+    },
+    "collision-malformed-empty.xlsx": {
+      "bytes": 5238,
+      "sha256": "ae6c55a82810725c774f911944bef40ea3f05419ad7d10128626aa25467b2f4a"
+    },
+    "collision-valid-added.xlsx": {
+      "bytes": 5443,
+      "sha256": "cc2a46d8304e8c78c348d6d25945150ee42dec5931ca7a8fa3dc9cacff31dd74"
+    },
+    "collision-valid-cleared.xlsx": {
+      "bytes": 5335,
+      "sha256": "b1c111aa6716273bfad96f01ba10b70dbc1eca322a24fac1a9cc7606a8377103"
+    },
+    "collision-valid-empty.xlsx": {
+      "bytes": 5335,
+      "sha256": "f7b684996a6fbd1c46c8f371f7fc589d5a56f8b8978c0c8e3a6bee98872fc66b"
+    }
+  },
+  "tools": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "python_executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12",
+    "python_executable_sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "openpyxl": "3.1.5",
+    "lxml": "6.1.1.0",
+    "libxml2": "2.14.6"
+  },
+  "primary_sources": [
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.comments?view=openxml-3.0.1",
+      "supports": "A worksheet relationship identifies its comments part; comments contains authors and commentList."
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.commenttext?view=openxml-3.0.1",
+      "supports": "SpreadsheetML x:text is an RstType container."
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.text?view=openxml-3.0.1",
+      "supports": "SpreadsheetML x:t is the plain text leaf."
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.comment?view=openxml-3.0.1",
+      "supports": "Comment ref and authorId identify the cell and the author table entry."
+    },
+    {
+      "url": "https://www.w3.org/TR/xml/#sec-white-space",
+      "supports": "xml:space preserve communicates whitespace preservation intent."
+    },
+    {
+      "url": "https://openpyxl.readthedocs.io/en/3.1/comments.html",
+      "supports": "Non-read-only loading exposes comment text and author; formatting and geometry are outside this reader scope."
+    }
+  ],
+  "setup_failures": [],
+  "tool_module_hashes": {
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/openpyxl/__init__.py": {
+      "bytes": 603,
+      "sha256": "b36b17729f138575c7b3035287e52e422e411eca1ab2e7335328cd373d15ba97"
+    },
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/openpyxl/cell/text.py": {
+      "bytes": 4367,
+      "sha256": "69c53a05940d4a6571e1b0573e015abe8c667e83db558ae6ff3b69d5b19e3a67"
+    },
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/openpyxl/comments/comment_sheet.py": {
+      "bytes": 5753,
+      "sha256": "52fd913e9231ae29033c706be588f574392eb1907def2544f8d413334f849c19"
+    },
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/openpyxl/reader/excel.py": {
+      "bytes": 12357,
+      "sha256": "9204ad42d3b58f4bd5e7a196697c68dc6036117ba8b86b6716b45532872af046"
+    },
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/lxml/etree.cpython-312-x86_64-linux-gnu.so": {
+      "bytes": 5276528,
+      "sha256": "d7597a0fec22576416028238ff20a65f90d97ab6f96f65fe3a620780855add48"
+    }
+  },
+  "expected_comments": [
+    {
+      "cell": "A1",
+      "text": "plain comment",
+      "author": "Alice & Co"
+    },
+    {
+      "cell": "A2",
+      "text": " leading",
+      "author": "Bob"
+    },
+    {
+      "cell": "A3",
+      "text": "trailing ",
+      "author": "Alice & Co"
+    },
+    {
+      "cell": "A4",
+      "text": " \tline one\nline two \t ",
+      "author": "Bob"
+    },
+    {
+      "cell": "A5",
+      "text": "",
+      "author": "Alice & Co"
+    },
+    {
+      "cell": "A6",
+      "text": "A&B <tag> \"quote\" — café 🙂",
+      "author": "Bob"
+    }
+  ],
+  "cycles": [
+    {
+      "file": "comments-cycle-1.xlsx",
+      "checks": 134,
+      "failures": [],
+      "comments": [
+        {
+          "cell": "A1",
+          "text": "plain comment",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A2",
+          "text": " leading",
+          "author_id": "1",
+          "author": "Bob"
+        },
+        {
+          "cell": "A3",
+          "text": "trailing ",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A4",
+          "text": " \tline one\nline two \t ",
+          "author_id": "1",
+          "author": "Bob"
+        },
+        {
+          "cell": "A5",
+          "text": "",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A6",
+          "text": "A&B <tag> \"quote\" — café 🙂",
+          "author_id": "1",
+          "author": "Bob"
+        }
+      ],
+      "external_reader": {
+        "name": "openpyxl",
+        "version": "3.1.5",
+        "warnings": [],
+        "comments": {
+          "A1": {
+            "text": "plain comment",
+            "author": "Alice & Co"
+          },
+          "A2": {
+            "text": " leading",
+            "author": "Bob"
+          },
+          "A3": {
+            "text": "trailing ",
+            "author": "Alice & Co"
+          },
+          "A4": {
+            "text": " \tline one\nline two \t ",
+            "author": "Bob"
+          },
+          "A5": {
+            "text": "",
+            "author": "Alice & Co"
+          },
+          "A6": {
+            "text": "A&B <tag> \"quote\" — café 🙂",
+            "author": "Bob"
+          }
+        }
+      },
+      "input": {
+        "bytes": 3929,
+        "sha256": "a0ee9af5b5a890afce5618a7e44a588152760ca5a044a6c8f340e613f1c700cc"
+      },
+      "worksheet_name": "Notes",
+      "worksheet_part": "xl/worksheets/sheet1.xml",
+      "comments_part": "xl/comments1.xml",
+      "success": true
+    },
+    {
+      "file": "comments-cycle-2.xlsx",
+      "checks": 134,
+      "failures": [],
+      "comments": [
+        {
+          "cell": "A1",
+          "text": "plain comment",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A2",
+          "text": " leading",
+          "author_id": "1",
+          "author": "Bob"
+        },
+        {
+          "cell": "A3",
+          "text": "trailing ",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A4",
+          "text": " \tline one\nline two \t ",
+          "author_id": "1",
+          "author": "Bob"
+        },
+        {
+          "cell": "A5",
+          "text": "",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A6",
+          "text": "A&B <tag> \"quote\" — café 🙂",
+          "author_id": "1",
+          "author": "Bob"
+        }
+      ],
+      "external_reader": {
+        "name": "openpyxl",
+        "version": "3.1.5",
+        "warnings": [],
+        "comments": {
+          "A1": {
+            "text": "plain comment",
+            "author": "Alice & Co"
+          },
+          "A2": {
+            "text": " leading",
+            "author": "Bob"
+          },
+          "A3": {
+            "text": "trailing ",
+            "author": "Alice & Co"
+          },
+          "A4": {
+            "text": " \tline one\nline two \t ",
+            "author": "Bob"
+          },
+          "A5": {
+            "text": "",
+            "author": "Alice & Co"
+          },
+          "A6": {
+            "text": "A&B <tag> \"quote\" — café 🙂",
+            "author": "Bob"
+          }
+        }
+      },
+      "input": {
+        "bytes": 3936,
+        "sha256": "ab334fcec670af58835e1501a8774ef623196a42ec9448128a84ffdccb263061"
+      },
+      "worksheet_name": "Notes",
+      "worksheet_part": "xl/worksheets/sheet1.xml",
+      "comments_part": "xl/comments1.xml",
+      "success": true
+    },
+    {
+      "file": "comments-cycle-3.xlsx",
+      "checks": 134,
+      "failures": [],
+      "comments": [
+        {
+          "cell": "A1",
+          "text": "plain comment",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A2",
+          "text": " leading",
+          "author_id": "1",
+          "author": "Bob"
+        },
+        {
+          "cell": "A3",
+          "text": "trailing ",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A4",
+          "text": " \tline one\nline two \t ",
+          "author_id": "1",
+          "author": "Bob"
+        },
+        {
+          "cell": "A5",
+          "text": "",
+          "author_id": "0",
+          "author": "Alice & Co"
+        },
+        {
+          "cell": "A6",
+          "text": "A&B <tag> \"quote\" — café 🙂",
+          "author_id": "1",
+          "author": "Bob"
+        }
+      ],
+      "external_reader": {
+        "name": "openpyxl",
+        "version": "3.1.5",
+        "warnings": [],
+        "comments": {
+          "A1": {
+            "text": "plain comment",
+            "author": "Alice & Co"
+          },
+          "A2": {
+            "text": " leading",
+            "author": "Bob"
+          },
+          "A3": {
+            "text": "trailing ",
+            "author": "Alice & Co"
+          },
+          "A4": {
+            "text": " \tline one\nline two \t ",
+            "author": "Bob"
+          },
+          "A5": {
+            "text": "",
+            "author": "Alice & Co"
+          },
+          "A6": {
+            "text": "A&B <tag> \"quote\" — café 🙂",
+            "author": "Bob"
+          }
+        }
+      },
+      "input": {
+        "bytes": 3936,
+        "sha256": "8d87bd0a002bb789756d5afcc85efdafc271f6fd281c1d72c7e340d3aeebfd33"
+      },
+      "worksheet_name": "Notes",
+      "worksheet_part": "xl/worksheets/sheet1.xml",
+      "comments_part": "xl/comments1.xml",
+      "success": true
+    }
+  ],
+  "collisions": [
+    {
+      "file": "collision-valid-empty.xlsx",
+      "phase": "empty",
+      "checks": 120,
+      "failures": [],
+      "worksheets": [
+        {
+          "file": "collision-valid-empty.xlsx",
+          "checks": 67,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "A1",
+              "text": "Original note",
+              "author_id": "0",
+              "author": "Original reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "A1": {
+                "text": "Original note",
+                "author": "Original reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5335,
+            "sha256": "f7b684996a6fbd1c46c8f371f7fc589d5a56f8b8978c0c8e3a6bee98872fc66b"
+          },
+          "worksheet_name": "Original",
+          "worksheet_part": "xl/worksheets/sheet1.xml",
+          "comments_part": "xl/comments1.xml",
+          "success": true
+        },
+        {
+          "file": "collision-valid-empty.xlsx",
+          "checks": 52,
+          "failures": [],
+          "comments": [],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {}
+          },
+          "input": {
+            "bytes": 5335,
+            "sha256": "f7b684996a6fbd1c46c8f371f7fc589d5a56f8b8978c0c8e3a6bee98872fc66b"
+          },
+          "worksheet_name": "Added",
+          "worksheet_part": "xl/worksheets/sheet2.xml",
+          "comments_part": "xl/comments2_1.xml",
+          "success": true
+        }
+      ],
+      "orphan": {
+        "part": "xl/comments2.xml",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+        "bytes": 253,
+        "sha256": "8dfe62354f88af2e90789ef7e825d442ae714a91e6baa0df406b5c343a7b4fdd"
+      },
+      "orphan_relationships": {
+        "part": "xl/_rels/comments2.xml.rels",
+        "bytes": 275,
+        "sha256": "3646794076935e5a4c9eba0aa860facf3e83feddfc01cdef08f496befae8f5d8"
+      },
+      "success": true
+    },
+    {
+      "file": "collision-valid-added.xlsx",
+      "phase": "added",
+      "checks": 136,
+      "failures": [],
+      "worksheets": [
+        {
+          "file": "collision-valid-added.xlsx",
+          "checks": 67,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "A1",
+              "text": "Original note",
+              "author_id": "0",
+              "author": "Original reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "A1": {
+                "text": "Original note",
+                "author": "Original reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5443,
+            "sha256": "cc2a46d8304e8c78c348d6d25945150ee42dec5931ca7a8fa3dc9cacff31dd74"
+          },
+          "worksheet_name": "Original",
+          "worksheet_part": "xl/worksheets/sheet1.xml",
+          "comments_part": "xl/comments1.xml",
+          "success": true
+        },
+        {
+          "file": "collision-valid-added.xlsx",
+          "checks": 68,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "B2",
+              "text": " added & reviewed \n café 🙂 ",
+              "author_id": "0",
+              "author": "New reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "B2": {
+                "text": " added & reviewed \n café 🙂 ",
+                "author": "New reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5443,
+            "sha256": "cc2a46d8304e8c78c348d6d25945150ee42dec5931ca7a8fa3dc9cacff31dd74"
+          },
+          "worksheet_name": "Added",
+          "worksheet_part": "xl/worksheets/sheet2.xml",
+          "comments_part": "xl/comments2_1.xml",
+          "success": true
+        }
+      ],
+      "orphan": {
+        "part": "xl/comments2.xml",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+        "bytes": 253,
+        "sha256": "8dfe62354f88af2e90789ef7e825d442ae714a91e6baa0df406b5c343a7b4fdd"
+      },
+      "orphan_relationships": {
+        "part": "xl/_rels/comments2.xml.rels",
+        "bytes": 275,
+        "sha256": "3646794076935e5a4c9eba0aa860facf3e83feddfc01cdef08f496befae8f5d8"
+      },
+      "success": true
+    },
+    {
+      "file": "collision-valid-cleared.xlsx",
+      "phase": "cleared",
+      "checks": 120,
+      "failures": [],
+      "worksheets": [
+        {
+          "file": "collision-valid-cleared.xlsx",
+          "checks": 67,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "A1",
+              "text": "Original note",
+              "author_id": "0",
+              "author": "Original reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "A1": {
+                "text": "Original note",
+                "author": "Original reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5335,
+            "sha256": "b1c111aa6716273bfad96f01ba10b70dbc1eca322a24fac1a9cc7606a8377103"
+          },
+          "worksheet_name": "Original",
+          "worksheet_part": "xl/worksheets/sheet1.xml",
+          "comments_part": "xl/comments1.xml",
+          "success": true
+        },
+        {
+          "file": "collision-valid-cleared.xlsx",
+          "checks": 52,
+          "failures": [],
+          "comments": [],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {}
+          },
+          "input": {
+            "bytes": 5335,
+            "sha256": "b1c111aa6716273bfad96f01ba10b70dbc1eca322a24fac1a9cc7606a8377103"
+          },
+          "worksheet_name": "Added",
+          "worksheet_part": "xl/worksheets/sheet2.xml",
+          "comments_part": "xl/comments2_1.xml",
+          "success": true
+        }
+      ],
+      "orphan": {
+        "part": "xl/comments2.xml",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+        "bytes": 253,
+        "sha256": "8dfe62354f88af2e90789ef7e825d442ae714a91e6baa0df406b5c343a7b4fdd"
+      },
+      "orphan_relationships": {
+        "part": "xl/_rels/comments2.xml.rels",
+        "bytes": 275,
+        "sha256": "3646794076935e5a4c9eba0aa860facf3e83feddfc01cdef08f496befae8f5d8"
+      },
+      "success": true
+    },
+    {
+      "file": "collision-malformed-empty.xlsx",
+      "phase": "empty",
+      "checks": 120,
+      "failures": [],
+      "worksheets": [
+        {
+          "file": "collision-malformed-empty.xlsx",
+          "checks": 67,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "A1",
+              "text": "Original note",
+              "author_id": "0",
+              "author": "Original reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "A1": {
+                "text": "Original note",
+                "author": "Original reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5238,
+            "sha256": "ae6c55a82810725c774f911944bef40ea3f05419ad7d10128626aa25467b2f4a"
+          },
+          "worksheet_name": "Original",
+          "worksheet_part": "xl/worksheets/sheet1.xml",
+          "comments_part": "xl/comments1.xml",
+          "success": true
+        },
+        {
+          "file": "collision-malformed-empty.xlsx",
+          "checks": 52,
+          "failures": [],
+          "comments": [],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {}
+          },
+          "input": {
+            "bytes": 5238,
+            "sha256": "ae6c55a82810725c774f911944bef40ea3f05419ad7d10128626aa25467b2f4a"
+          },
+          "worksheet_name": "Added",
+          "worksheet_part": "xl/worksheets/sheet2.xml",
+          "comments_part": "xl/comments2_1.xml",
+          "success": true
+        }
+      ],
+      "orphan": {
+        "part": "xl/comments2.xml",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+        "bytes": 78,
+        "sha256": "2a8efbf4a0b3f7f672a1ef41b8934a35d6fa49f2f090b3a73fe4a45c7ceb0788"
+      },
+      "orphan_relationships": {
+        "part": "xl/_rels/comments2.xml.rels",
+        "bytes": 275,
+        "sha256": "3646794076935e5a4c9eba0aa860facf3e83feddfc01cdef08f496befae8f5d8"
+      },
+      "success": true
+    },
+    {
+      "file": "collision-malformed-added.xlsx",
+      "phase": "added",
+      "checks": 136,
+      "failures": [],
+      "worksheets": [
+        {
+          "file": "collision-malformed-added.xlsx",
+          "checks": 67,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "A1",
+              "text": "Original note",
+              "author_id": "0",
+              "author": "Original reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "A1": {
+                "text": "Original note",
+                "author": "Original reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5346,
+            "sha256": "2f815ac2e11b30d00a551f291be775f5cf9920457d0472fe4b4078be9a8cdec5"
+          },
+          "worksheet_name": "Original",
+          "worksheet_part": "xl/worksheets/sheet1.xml",
+          "comments_part": "xl/comments1.xml",
+          "success": true
+        },
+        {
+          "file": "collision-malformed-added.xlsx",
+          "checks": 68,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "B2",
+              "text": " added & reviewed \n café 🙂 ",
+              "author_id": "0",
+              "author": "New reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "B2": {
+                "text": " added & reviewed \n café 🙂 ",
+                "author": "New reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5346,
+            "sha256": "2f815ac2e11b30d00a551f291be775f5cf9920457d0472fe4b4078be9a8cdec5"
+          },
+          "worksheet_name": "Added",
+          "worksheet_part": "xl/worksheets/sheet2.xml",
+          "comments_part": "xl/comments2_1.xml",
+          "success": true
+        }
+      ],
+      "orphan": {
+        "part": "xl/comments2.xml",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+        "bytes": 78,
+        "sha256": "2a8efbf4a0b3f7f672a1ef41b8934a35d6fa49f2f090b3a73fe4a45c7ceb0788"
+      },
+      "orphan_relationships": {
+        "part": "xl/_rels/comments2.xml.rels",
+        "bytes": 275,
+        "sha256": "3646794076935e5a4c9eba0aa860facf3e83feddfc01cdef08f496befae8f5d8"
+      },
+      "success": true
+    },
+    {
+      "file": "collision-malformed-cleared.xlsx",
+      "phase": "cleared",
+      "checks": 120,
+      "failures": [],
+      "worksheets": [
+        {
+          "file": "collision-malformed-cleared.xlsx",
+          "checks": 67,
+          "failures": [],
+          "comments": [
+            {
+              "cell": "A1",
+              "text": "Original note",
+              "author_id": "0",
+              "author": "Original reviewer"
+            }
+          ],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {
+              "A1": {
+                "text": "Original note",
+                "author": "Original reviewer"
+              }
+            }
+          },
+          "input": {
+            "bytes": 5239,
+            "sha256": "a0ca6f75dfb7c22178c5d2f254262185bb8ce8bd005eead96f8211133ae14f09"
+          },
+          "worksheet_name": "Original",
+          "worksheet_part": "xl/worksheets/sheet1.xml",
+          "comments_part": "xl/comments1.xml",
+          "success": true
+        },
+        {
+          "file": "collision-malformed-cleared.xlsx",
+          "checks": 52,
+          "failures": [],
+          "comments": [],
+          "external_reader": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "warnings": [],
+            "comments": {}
+          },
+          "input": {
+            "bytes": 5239,
+            "sha256": "a0ca6f75dfb7c22178c5d2f254262185bb8ce8bd005eead96f8211133ae14f09"
+          },
+          "worksheet_name": "Added",
+          "worksheet_part": "xl/worksheets/sheet2.xml",
+          "comments_part": "xl/comments2_1.xml",
+          "success": true
+        }
+      ],
+      "orphan": {
+        "part": "xl/comments2.xml",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+        "bytes": 78,
+        "sha256": "2a8efbf4a0b3f7f672a1ef41b8934a35d6fa49f2f090b3a73fe4a45c7ceb0788"
+      },
+      "orphan_relationships": {
+        "part": "xl/_rels/comments2.xml.rels",
+        "bytes": 275,
+        "sha256": "3646794076935e5a4c9eba0aa860facf3e83feddfc01cdef08f496befae8f5d8"
+      },
+      "success": true
+    }
+  ],
+  "inputs_after": {
+    "expected-comments.json": {
+      "bytes": 491,
+      "sha256": "2650e84c00ae2f3cd99c17dd1ed6b82679956684f13a920cc70e94414eefe35f"
+    },
+    "collision-cases.json": {
+      "bytes": 7537,
+      "sha256": "90df1de4d925544aac6e5ca4ec4c8a901379845963caf7a478034370f69096de"
+    },
+    "comments-cycle-1.xlsx": {
+      "bytes": 3929,
+      "sha256": "a0ee9af5b5a890afce5618a7e44a588152760ca5a044a6c8f340e613f1c700cc"
+    },
+    "comments-cycle-2.xlsx": {
+      "bytes": 3936,
+      "sha256": "ab334fcec670af58835e1501a8774ef623196a42ec9448128a84ffdccb263061"
+    },
+    "comments-cycle-3.xlsx": {
+      "bytes": 3936,
+      "sha256": "8d87bd0a002bb789756d5afcc85efdafc271f6fd281c1d72c7e340d3aeebfd33"
+    },
+    "collision-malformed-added.xlsx": {
+      "bytes": 5346,
+      "sha256": "2f815ac2e11b30d00a551f291be775f5cf9920457d0472fe4b4078be9a8cdec5"
+    },
+    "collision-malformed-cleared.xlsx": {
+      "bytes": 5239,
+      "sha256": "a0ca6f75dfb7c22178c5d2f254262185bb8ce8bd005eead96f8211133ae14f09"
+    },
+    "collision-malformed-empty.xlsx": {
+      "bytes": 5238,
+      "sha256": "ae6c55a82810725c774f911944bef40ea3f05419ad7d10128626aa25467b2f4a"
+    },
+    "collision-valid-added.xlsx": {
+      "bytes": 5443,
+      "sha256": "cc2a46d8304e8c78c348d6d25945150ee42dec5931ca7a8fa3dc9cacff31dd74"
+    },
+    "collision-valid-cleared.xlsx": {
+      "bytes": 5335,
+      "sha256": "b1c111aa6716273bfad96f01ba10b70dbc1eca322a24fac1a9cc7606a8377103"
+    },
+    "collision-valid-empty.xlsx": {
+      "bytes": 5335,
+      "sha256": "f7b684996a6fbd1c46c8f371f7fc589d5a56f8b8978c0c8e3a6bee98872fc66b"
+    }
+  },
+  "inputs_unchanged": true,
+  "failure_counts": {},
+  "checks": 1154,
+  "success": true,
+  "finished_at": "2026-11-15T13:51:38.277904+00:00",
+  "scope": "Nine actual generated XLSX files: three six-comment repeated saves plus two orphan kinds through empty/add/clear save-reopen lifecycles. Independent ZIP/CRC, exact worksheet inventories, explicitly owned comments relationships, SpreadsheetML namespaces, author tables and plain CT_Rst checks plus openpyxl exact text/author reads. Collision cases also preserve original worksheet notes and unrelated XML/relationship bytes and content type, and require a distinct valid empty comments authority after clearing. The deliberately invalid orphan root is preserved without being treated as an owned comments part. Byte hashes bind checked outputs; the enclosing source-bound generator receipt proves their origin. No rich text, VML geometry, external Excel execution or broad Open XML schema certification."
+}

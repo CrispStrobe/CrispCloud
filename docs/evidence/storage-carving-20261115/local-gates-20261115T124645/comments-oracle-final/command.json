@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py",
+    "--repo",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "--dart",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "--tested-head",
+    "42f5e864d760473c4193566fd8679e7ba1a21140",
+    "--source-resolution-sha256",
+    "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+    "--output",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "shell_display": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py --repo /workspace/scratch/1e19fe1d39ae/CrispCloud --dart /workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart --tested-head 42f5e864d760473c4193566fd8679e7ba1a21140 --source-resolution-sha256 3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0 --output /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts"
+}

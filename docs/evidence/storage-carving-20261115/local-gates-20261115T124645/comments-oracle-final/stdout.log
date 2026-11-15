@@ -1,0 +1,99 @@
+{
+  "schema": 2,
+  "success": true,
+  "tested_head": "42f5e864d760473c4193566fd8679e7ba1a21140",
+  "source_resolution_sha256": "3d7609bd6fdbc9beee4179e875c005ce6ccd9fcf9d6d70613706c362c574e9e0",
+  "commands": [
+    {
+      "name": "generate",
+      "argv": [
+        "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+        "run",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/workbooks"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine",
+      "started_at": "2026-11-15T13:51:33.754966+00:00",
+      "finished_at": "2026-11-15T13:51:37.909542+00:00",
+      "returncode": 0
+    },
+    {
+      "name": "independent-reader",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py",
+        "--input-dir",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/workbooks",
+        "--report",
+        "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comments-oracle-final-artifacts/reader-report.json"
+      ],
+      "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine",
+      "started_at": "2026-11-15T13:51:37.915518+00:00",
+      "finished_at": "2026-11-15T13:51:38.303672+00:00",
+      "returncode": 0
+    }
+  ],
+  "tools_before": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py": {
+      "size": 9079,
+      "sha256": "ac788a5e86ffbeb82583e9382fcc2aac061841e3d0fe9ce95425dbfa8869c4d7"
+    },
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart": {
+      "size": 4817,
+      "sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3"
+    },
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py": {
+      "size": 27568,
+      "sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867"
+    },
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": {
+      "size": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12": {
+      "size": 30894944,
+      "sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7"
+    }
+  },
+  "tools_after": {
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_comments_oracle.py": {
+      "size": 9079,
+      "sha256": "ac788a5e86ffbeb82583e9382fcc2aac061841e3d0fe9ce95425dbfa8869c4d7"
+    },
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart": {
+      "size": 4817,
+      "sha256": "1d944b7744b445701c823fc4cf7e9e8fa2735796257e99b89cc90d9cf7a70ec3"
+    },
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/verify_comments.py": {
+      "size": 27568,
+      "sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867"
+    },
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": {
+      "size": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12": {
+      "size": 30894944,
+      "sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7"
+    }
+  },
+  "tools_unchanged": true,
+  "generation_sha256": "3327d27e75186ab8d65652b218cefb5149b58153fb2c9690aee9f8cd6368e75f",
+  "reader_report_sha256": "a5d1a5026e17f3f5484385d9d8870e8de69570b07f74b531d282b276d6ca8439",
+  "reader_success": true,
+  "expected_outputs": [
+    "collision-cases.json",
+    "collision-malformed-added.xlsx",
+    "collision-malformed-cleared.xlsx",
+    "collision-malformed-empty.xlsx",
+    "collision-valid-added.xlsx",
+    "collision-valid-cleared.xlsx",
+    "collision-valid-empty.xlsx",
+    "comments-cycle-1.xlsx",
+    "comments-cycle-2.xlsx",
+    "comments-cycle-3.xlsx",
+    "expected-comments.json"
+  ],
+  "failures": [],
+  "scope": "Three repeated-save XLSX packages with six plain comments, plus six valid/invalid-root orphan-collision lifecycle packages. Independent ZIP/XML relationship and namespace checks, exact orphan bytes/relationship preservation, explicit empty authority, and openpyxl text/author reads. No broad Open XML schema or native Office rendering claim."
+}
