@@ -261,6 +261,8 @@ void main() {
   annotationAndAuthoredDateTests();
   edgeTests();
   defaultAndTimeTests();
+  defaultStyleTests();
+  defaultGeometryTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1362,5 +1364,26 @@ void defaultStyleTests() {
     expect(cell.value, 'Plain');
     expect(cell.fontFamily, 'Liberation Sans');
     expect(cell.fontSize, 10);
+  });
+}
+
+void defaultGeometryTests() {
+  test('ODS document defaults supply column width and row height', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell>'
+        '<x:p>Plain</x:p></t:table-cell></t:table-row></t:table>',
+        namedStyles:
+            '<s:default-style s:family="table-column">'
+            '<s:table-column-properties s:column-width="2in"/>'
+            '</s:default-style>'
+            '<s:default-style s:family="table-row">'
+            '<s:table-row-properties s:row-height="1in"/>'
+            '</s:default-style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.columnWidth(0), greaterThan(160));
+    expect(sheet.rowHeightAt(0), closeTo(96, 0.01));
   });
 }
