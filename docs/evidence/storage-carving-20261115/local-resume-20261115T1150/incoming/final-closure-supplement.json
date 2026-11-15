@@ -1,0 +1,682 @@
+{
+  "scope": "Final immutable production-pin supplement to the same finite 53-head incoming audit; no new upstream observation or runtime claim.",
+  "created_at_utc": "2026-11-15T12:25:13.403676+00:00",
+  "result": "pass",
+  "inherited_report": {
+    "file": "incoming-closure.json",
+    "sha256": "786950634d40ad21123d02771f3c2fe7fb53a2b7ed2db5fad44a19558fd398dd"
+  },
+  "method": "Local immutable Git ancestry, tree/blob/mode equivalence, and SHA-256 of Git blob content; GIT_NO_LAZY_FETCH=1; GIT_OPTIONAL_LOCKS=0.",
+  "repositories": {
+    "app": {
+      "final_commit": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+      "final_tree": "1e49d72fae7760ffbfda553e82b61b8835aab33b",
+      "prior_audited_commit": "48432b5d0eb22caf365e8659e44ab74cb6aa5a46",
+      "prior_audited_commit_is_ancestor": true,
+      "counts": {
+        "ancestor": 20,
+        "superseded": 2
+      },
+      "observed_heads": 22,
+      "heads": [
+        {
+          "head": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+          "labels": [
+            "origin/codex/office-recovery-20261115",
+            "PR#110 codex/office-recovery-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "0c574677be7749969d5c9230a5c036fde95cd87e",
+          "labels": [
+            "origin/continuation/storage-qualification-20261115T1000"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+          "labels": [
+            "origin/feature/new-documents-history-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+          "labels": [
+            "origin/fix/excel-legacy-xls"
+          ],
+          "disposition": "superseded",
+          "ancestor_of_final": false,
+          "inherited_proof": "incoming-closure.json#/repositories/app/heads",
+          "proof_kind": "reviewed_semantic_supersession_with_historical_blob_proof",
+          "proof_ancestors_rechecked": {
+            "59466d8b48f329362ab88e9da5e195c849557069": true,
+            "bda0374b6f773e8797ffa09c24020ef22fb6b649": true,
+            "c730957ba35d79fe9a43dbfef4edb7662945b033": true,
+            "db5e3f7516b1e6c08cc2926f6d5afdceba85792d": true
+          }
+        },
+        {
+          "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+          "labels": [
+            "origin/fix/odf-final",
+            "PR#116 fix/odf-final"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "labels": [
+            "origin/integrate/consistency-20261115",
+            "PR#113 integrate/consistency-20261115"
+          ],
+          "disposition": "superseded",
+          "ancestor_of_final": false,
+          "inherited_proof": "incoming-closure.json#/repositories/app/heads",
+          "proof_kind": "reviewed_semantic_supersession_with_historical_blob_proof",
+          "proof_ancestors_rechecked": {
+            "59466d8b48f329362ab88e9da5e195c849557069": true,
+            "723ab5b43c88e96489a81c13bd427f7c404af87c": true,
+            "db5e3f7516b1e6c08cc2926f6d5afdceba85792d": true
+          }
+        },
+        {
+          "head": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "labels": [
+            "origin/integrate/legacy-xls-preview-20261115",
+            "PR#114 integrate/legacy-xls-preview-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+          "labels": [
+            "origin/integrate/odf-integration-20261115",
+            "PR#117 integrate/odf-integration-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+          "labels": [
+            "origin/integrate/ods-fixes-20261115",
+            "PR#118 integrate/ods-fixes-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+          "labels": [
+            "origin/integrate/ods-style-20261115",
+            "PR#119 integrate/ods-style-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "labels": [
+            "origin/integrate/office-goldens-20261115",
+            "PR#115 integrate/office-goldens-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+          "labels": [
+            "origin/integrate/word-inline-pictures-20261115",
+            "PR#112 integrate/word-inline-pictures-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+          "labels": [
+            "origin/integration/office-reconcile-storage-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "59466d8b48f329362ab88e9da5e195c849557069",
+          "labels": [
+            "origin/integration/storage-carving-20261115",
+            "PR#111 integration/storage-carving-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "dacd3e584abe885058f9dddbde8493976647e5d3",
+          "labels": [
+            "origin/integration/storage-carving-local-qualification-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+          "labels": [
+            "origin/main"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "labels": [
+            "PR#108 fix/excel-legacy-xls"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "1b7680583ac69649b17287ab68738288fec10f51",
+          "labels": [
+            "PR#109 fix/legacy-doc-recover"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "labels": [
+            "PR#107 integration/storage-delta-20261114"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+          "labels": [
+            "PR#120 fix/ods-date-styles",
+            "fix/ods-date-styles final observed head"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "dca83f902dd92fd6338ded42394a2c37ccdc909a",
+          "labels": [
+            "PR#111 integration/storage-carving-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "b0e0f1746e5042f9dfced8ab471222d33bcb63a0",
+          "labels": [
+            "fix/ods-date-styles initial late head"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        }
+      ]
+    },
+    "quds": {
+      "final_commit": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+      "final_tree": "d0a9c4ab05ef0da0dd0bd699fbfbaff5c9ed20de",
+      "prior_audited_commit": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+      "prior_audited_commit_is_ancestor": true,
+      "counts": {
+        "ancestor": 22,
+        "superseded": 2
+      },
+      "observed_heads": 24,
+      "heads": [
+        {
+          "head": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "labels": [
+            "refs/remotes/origin/codex/office-recovery-20261115",
+            "PR#18 codex/office-recovery-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "labels": [
+            "refs/remotes/origin/feat/word-like-selection",
+            "PR#19 feat/word-like-selection"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "b6d2c58783fd296103e8de5f1f5f089f2379bc1c",
+          "labels": [
+            "refs/remotes/origin/fix/excel-legacy-import"
+          ],
+          "disposition": "superseded",
+          "ancestor_of_final": false,
+          "inherited_proof": "incoming-closure.json#/repositories/quds/heads",
+          "proof_kind": "exact_feature_blob_equivalence_and_export_superset",
+          "proof_ancestors_rechecked": {
+            "e002b9584bead9761fac8c7cf818431966d1b1c3": true
+          }
+        },
+        {
+          "head": "e033226bd2d53d1a818c6771ce347c23e6056857",
+          "labels": [
+            "refs/remotes/origin/fix/odf-legacy-spreadsheets",
+            "PR#24 fix/odf-legacy-spreadsheets"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "labels": [
+            "refs/remotes/origin/fix/word-heading-like-word",
+            "PR#21 fix/word-heading-like-word"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "labels": [
+            "refs/remotes/origin/fix/word-inline-pictures",
+            "PR#22 fix/word-inline-pictures"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "labels": [
+            "refs/remotes/origin/fix/word-shape-no-textbox",
+            "PR#20 fix/word-shape-no-textbox"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+          "labels": [
+            "refs/remotes/origin/fix/word-steps-vocabulary",
+            "PR#25 fix/word-steps-vocabulary"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+          "labels": [
+            "refs/remotes/origin/integration/office-storage-reconcile-20261115"
+          ],
+          "disposition": "superseded",
+          "ancestor_of_final": false,
+          "inherited_proof": "incoming-closure.json#/repositories/quds/heads",
+          "proof_kind": "exact_entire_tree_equivalence",
+          "proof_ancestors_rechecked": {
+            "afe8c511f835251d4aca740b89b650c0738bb898": true
+          }
+        },
+        {
+          "head": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
+          "labels": [
+            "refs/remotes/origin/integration/storage-carving-qualification-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "cb9f7a5793c9a4e7415cd9e52c91509ea3304252",
+          "labels": [
+            "refs/remotes/origin/integration/storage-odf-qualification-20261115"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "f90bc0e20e3fa8e4af72a06e8d941faa3677db6d",
+          "labels": [
+            "refs/remotes/origin/main"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+          "labels": [
+            "PR#23 fix/odf-legacy-spreadsheets"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "labels": [
+            "PR#16 fix/excel-legacy-import"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "labels": [
+            "PR#15 fix/word-revision-quadratic"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "labels": [
+            "PR#17 fix/word-header-controls"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "labels": [
+            "PR#14 fix/word-field-loss"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "labels": [
+            "PR#13 fix/word-preserve-vml-pict"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "labels": [
+            "PR#12 integration/crispcloud-storage-reconcile-20261114"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "labels": [
+            "PR#10 fix/word-textbox-nesting"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "labels": [
+            "PR#9 fix/word-sym-chars"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "labels": [
+            "PR#11 fix/word-media-dedupe"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "labels": [
+            "PR#8 fix/word-block-bookmarks"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+          "labels": [
+            "PR#24 fix/odf-legacy-spreadsheets",
+            "fix/odf-legacy-spreadsheets final observed head"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        }
+      ]
+    },
+    "parser": {
+      "final_commit": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+      "final_tree": "e10b7de5423aad5b0ccde16a8ea6183290faf009",
+      "prior_audited_commit": "09c8b3731edb60bf6e5309578260af36b9433570",
+      "prior_audited_commit_is_ancestor": true,
+      "counts": {
+        "ancestor": 7
+      },
+      "observed_heads": 7,
+      "heads": [
+        {
+          "head": "120a3cc93776263c37a501d78a9688c0f6d66932",
+          "labels": [
+            "PR#18 fix/word6-95-text-import"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "89555522726432b1449f0d26e701376ec6f59a27",
+          "labels": [
+            "PR#17 fix/recover-comments-bookmarks",
+            "fix/recover-comments-bookmarks"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
+          "labels": [
+            "PR#16 fix/accept-word98-mac-nfib",
+            "fix/accept-word98-mac-nfib"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
+          "labels": [
+            "PR#15 fix/recover-text-from-damaged-compound",
+            "fix/recover-text-from-damaged-compound"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "9f61e030d320c9086556d3368d6233d25574fdab",
+          "labels": [
+            "PR#14 fix/name-the-real-format",
+            "fix/name-the-real-format"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "d422fa99a3a84830794f0e2dc332d59f923779f7",
+          "labels": [
+            "PR#13 fix/word-written-hyperlinks"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        },
+        {
+          "head": "7df906d2643d1fec39c49fc795733316a49f3278",
+          "labels": [
+            "main final observed head"
+          ],
+          "disposition": "ancestor",
+          "ancestor_of_final": true
+        }
+      ]
+    }
+  },
+  "totals": {
+    "observed_heads": 53,
+    "ancestors": 49,
+    "superseded": 4,
+    "unaccounted": 0
+  },
+  "supersession_rechecks": [
+    {
+      "head": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+      "historical_blob_matches_rechecked": 52,
+      "expected_matches": 52,
+      "semantic_remainder": "Inherited reviewed findings in incoming-closure.json and README.md"
+    },
+    {
+      "head": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "historical_blob_matches_rechecked": 20,
+      "expected_matches": 20,
+      "semantic_remainder": "Inherited reviewed findings in incoming-closure.json and README.md"
+    },
+    {
+      "head": "b6d2c58783fd296103e8de5f1f5f089f2379bc1c",
+      "feature_blob_matches_rechecked": 3,
+      "all_feature_blobs_match_merged_ancestor": true,
+      "old_exports_retained_in_final": true
+    },
+    {
+      "head": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+      "equivalent_ancestor": "afe8c511f835251d4aca740b89b650c0738bb898",
+      "entire_tree_equivalence_rechecked": true,
+      "tree": "83d3afe9597bd5cad919f3acc34f8d80b78ba05d"
+    }
+  ],
+  "cross_repository_binding": {
+    "manifest_path": "tool/office_fidelity_manifest.json",
+    "manifest_blob": "8d6e9d51e692a4d159d015eeebecdbbf4d4478ca",
+    "manifest_sha256": "f734610dc8d741b8180c33d7d5fdba9eff288cca4c6f2dad73faf1c4c9242f54",
+    "source_repository": "CrispStrobe/quds_office_suite",
+    "source_commit": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+    "standalone_parser_commit": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+    "parser_upstream_path": "packages/legacy_doc_parser/UPSTREAM.json",
+    "parser_upstream_blob": "f8acd50dfb5c3654941f8f40bceaa403e287494d",
+    "parser_upstream": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+      "patches": []
+    },
+    "managed_files_verified": 2303,
+    "managed_files_by_canonical": {
+      "quds": 496,
+      "parser": 1807
+    },
+    "unique_blobs_hashed": 2102,
+    "unique_blob_bytes_hashed": 102653311,
+    "blob_type_mode_and_manifest_sha256_mismatches": 0,
+    "key_blob_bindings": {
+      "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "e8eaba8e0ac388511bc282b6b913b127e1194e64",
+        "sha256": "46ec036d0da0306577f22897efe0fdbb2f6968b22858c757257cd9d4bf28ab70"
+      },
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "81c3c80b030f455e26cabb68d76b064ac7879947",
+        "sha256": "5b475596990cd8aa03c16667d33697cfc513810bdf4fd08c86b50d81f9c92e28"
+      },
+      "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "536a797bd8a4785e8fcea3c5cab8b943d07fca13",
+        "sha256": "e45db4e1603135f8a78d1b81cf9bbaf594499799afa6c4bfe7008dd000a0b43d"
+      },
+      "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "47b2a2592b11ac84e4693041a51e6814d21775f1",
+        "sha256": "217abaa2424c04dcfe13697ee85ddc339c188487cfd980beb5611244e32f1e61"
+      },
+      "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "70018b7317dc4fbfde268b46a7a1e593a5269ea4",
+        "sha256": "676cd90ea7dfeb9e7cfa266843303208ba8c8cd815aae62e360452b532970514"
+      },
+      "packages/quds_office_engine/test/sheet_comments_schema_test.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "91830437e646addffdfd465dee469a2d843f72cc",
+        "sha256": "f45ed10dd413aaad6154bfe76aac5633731360ef26a66a9ff9e7e971e0211f44"
+      },
+      "packages/quds_office_engine/test/sml_styles_date_test.dart": {
+        "canonical_repository": "quds",
+        "canonical_path": "packages/quds_office_engine/test/sml_styles_date_test.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "4c5cad2a5f3bd2fc7092263a938f2f469d040273",
+        "sha256": "7d1958191cbb8db7e341d49482c3c09dd1227ca5afd206b4ce47f66d0ab4228f"
+      },
+      "packages/legacy_doc_parser/lib/src/conversion.dart": {
+        "canonical_repository": "parser",
+        "canonical_path": "lib/src/conversion.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "367e75b79b8a77e8fcc5bf5004e91d27b5e705fb",
+        "sha256": "a41743ac05501531b1230dfee2b727603f51ffb0958e35098d33d159b3eb9675"
+      },
+      "packages/legacy_doc_parser/test/compound_directory_recovery_test.dart": {
+        "canonical_repository": "parser",
+        "canonical_path": "test/compound_directory_recovery_test.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "1c29c559251ab72e291d85aba78b176c25dbbeb7",
+        "sha256": "8a14a271aea7c30846582f177a7429fd19351d4a27a51821b04bd0464010140e"
+      },
+      "packages/legacy_doc_parser/test/damaged_compound_recovery_test.dart": {
+        "canonical_repository": "parser",
+        "canonical_path": "test/damaged_compound_recovery_test.dart",
+        "mode": "100644",
+        "type": "blob",
+        "blob": "56083ea3b66a111a5fd6b4db6947099b2a0cfb17",
+        "sha256": "158c72c55c2c766bfd05827dcc10a87bc44ddf069f4edf2c81361140a4740601"
+      }
+    }
+  },
+  "inherited_inventory_hashes_unchanged": {
+    "README.md": true,
+    "branches.json": true,
+    "canonical-branches.json": true,
+    "canonical-prs.json": true,
+    "late-pr-metadata.json": true,
+    "late-refresh-audit.json": true,
+    "late-refresh-audit.md": true,
+    "legacy-branch-app-feature.patch": true,
+    "parser-incoming.json": true,
+    "parser-prs.json": true,
+    "prs.json": true,
+    "superseded-path-lineage.json": true
+  },
+  "original_user_handoff": {
+    "commit": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+    "ancestor_of_final_app": true
+  },
+  "failures": [],
+  "remote_refreshes": 0,
+  "repository_mutations": 0,
+  "runtime_tests_run": 0,
+  "ci_polls_or_waits": 0
+}
