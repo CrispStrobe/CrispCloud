@@ -537,7 +537,7 @@ abstract final class OdsSheetReader {
 
     if (value == null && formula == null && !styled) return null;
 
-    final cell = SmlCell(ref: SmlCellRef(0, 0));
+    final cell = SmlCell(ref: const SmlCellRef(0, 0));
     if (value != null) {
       cell.value = value;
       cell.type = value is bool

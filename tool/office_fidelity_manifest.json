@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "integration/storage-carving-qualification-20261115",
-  "source_commit": "b6bdbc27f79448c394a41edfe74039f1194fe471",
+  "source_commit": "3479cd809ca0e92ef165e8faaf48780720b8f17f",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1859,7 +1859,7 @@
     "packages/quds_office_engine/lib/src/sheet/formula/formula_eval.dart": "c9d13f08e8388c22e12567d50cc57c4f1ed70f340b338bfed39facac59c1d45b",
     "packages/quds_office_engine/lib/src/sheet/formula/formula_functions.dart": "53f4270baaa0aadf5b18da06fb86b81a084a199abdb2e9edb734e24f3a6f5d92",
     "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart": "a7bc75d47fae7234699fb8c4c651a35a45fcc5186cb57a7c19efbd050175fc8b",
-    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "b8d88dfc4471a80f49cfa0dc52fa98b008267323065dcc41ae072d7a025440ed",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "d93b642b4544e6ca64eed4aede82eeae21dacd7fffcb13294ab7abd41725947e",
     "packages/quds_office_engine/lib/src/sheet/model/sheet_rename.dart": "93e0c9103222bc05ddbc08929983129f3285da15839695bc3a2384c68a91089f",
     "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart": "043c0989d14381ad83637be63f81ef13034b594e9a6962f9cbc0d9b2bc8fad45",
     "packages/quds_office_engine/lib/src/sheet/model/sml_power_query.dart": "610f105eef406d0b80f0ac9e8c9c22fb7972a5cf82a9e28e618ce0bf4a19aae7",
@@ -2032,7 +2032,7 @@
     "packages/quds_office_engine/test/note_marker_merge_test.dart": "c5ea2e069021071299b1b191154fe98fcd870dbbc4e6edce174da775ad83e6e8",
     "packages/quds_office_engine/test/note_separator_fidelity_test.dart": "7f086b027fe9be2cd03e5326d9508573dbb14a3d77744ccae62c4585252cd195",
     "packages/quds_office_engine/test/numbering_collision_test.dart": "9b05f637b3965c98f2b16062c4052e8d18310db8724aab04a8f28e7f339e78ea",
-    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "6c2af73e100c1fd271bba992f5649c5add5812d3796692011b672e30f3340562",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": "7bdb31fdc3cc1ff1ffb75318a8cc26c6952d60966aa556948f3bc55b3bc89686",
     "packages/quds_office_engine/test/office_features_test.dart": "baf7bf76e6455acfc14bd8412e0d9aeccaac99b77cf076947939c350111ac7ec",
     "packages/quds_office_engine/test/office_fidelity_oracle_test.dart": "097a6ba4f7b5d433c899eaad8c5df1c41be006d035e5fa76710f6de64f2d6a68",
     "packages/quds_office_engine/test/office_named_fonts_test.dart": "079c26e265a63814c80b748a643dbf6a8e9ce3ab81447e424c6745334b10ee83",

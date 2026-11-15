@@ -259,7 +259,7 @@ void main() {
   });
 
   test('workbook budget is shared by multiple individually small sheets', () {
-    final table =
+    const table =
         '<t:table><t:table-row t:number-rows-repeated="1000">'
         '<t:table-cell t:number-columns-repeated="100" o:value-type="float" '
         'o:value="1"/></t:table-row></t:table>';

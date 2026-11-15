@@ -9,7 +9,7 @@ source identity. The initial audit covered 11 branches and 20 recent PRs; the
 later audit covered 13 branches and newly merged PR #117.
 
 The final observed production cutoff is **2026-11-15 09:37:28 UTC (10:37 CET)**.
-Canonical Quds `b6bdbc27f79448c394a41edfe74039f1194fe471` combines the bounded
+Canonical Quds `3479cd809ca0e92ef165e8faaf48780720b8f17f` combines the bounded
 ODS import branch through `fbe879e8`, the earlier preservation fixes, and the
 last observed `ddaca09c` default-style/time-format update. Its six changed paths
 are synchronized into the app with the guarded tool. All 2,225 managed files
@@ -51,3 +51,12 @@ parents, checks the expected remote head, and reads back the updated ref. No
 force update is used. All checkpoints use `[skip ci]`; no Actions run is awaited
 or restarted. Native macOS toolbar execution, other platforms, external Office
 rendering and broad schema acceptance remain outside these Linux gates.
+
+## First final-analysis attempt
+
+The 53-file app analysis passed at `2420726b`. The engine analysis at
+`5612365d` found two host-specific const lint infos, with source/inputs stable.
+Both receipts are preserved. Canonical `3479cd80` applies only the two const
+keywords required by the app Flutter lint configuration; `b6bdbc27` remains its
+parent. The guarded host sync updates exactly those two source files. Final app
+and engine analysis will run again on the saved corrected source.
