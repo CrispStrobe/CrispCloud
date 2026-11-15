@@ -1,0 +1,8 @@
+oracle: exit 0
+controls: exit 0
+{
+  "success": true,
+  "exports": 12,
+  "controls": 17,
+  "produced_outputs_unchanged": true
+}

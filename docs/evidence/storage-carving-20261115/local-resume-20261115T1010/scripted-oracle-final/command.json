@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/run_scripted_oracle.py",
+    "--repo",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud",
+    "--output",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "shell_display": "python3 docs/evidence/storage-carving-20261115/local-resume-20261115T1010/run_scripted_oracle.py --repo /workspace/scratch/aed049b7e8bd/CrispCloud --output docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final"
+}
