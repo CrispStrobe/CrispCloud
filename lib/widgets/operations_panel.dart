@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/commander_strings.dart';
 import '../l10n/archive_creation_strings.dart';
 import '../l10n/archive_zip_recovery_strings.dart';
+import '../l10n/archive_png_carving_strings.dart';
 import '../l10n/transfer_error_strings.dart';
 import '../models/archive_job.dart';
 import '../models/operation_progress.dart';
@@ -91,6 +92,14 @@ String _stateLabel(_JobState state) => switch (state) {
 };
 
 String _phaseText(BuildContext context, String phase) {
+  final carving = switch (phase) {
+    'pngCarving:scanning' => 'Scanning for PNG images…',
+    'pngCarving:recovering' => 'Recovering files…',
+    'pngCarving:verifying' => 'Verifying recovered ZIP…',
+    'pngCarving:publishing' => 'Saving new ZIP…',
+    _ => null,
+  };
+  if (carving != null) return archivePngCarvingText(context, carving);
   final recovery = switch (phase) {
     'zipRecovery:scanning' => 'Scanning ZIP records…',
     'zipRecovery:recovering' => 'Recovering files…',

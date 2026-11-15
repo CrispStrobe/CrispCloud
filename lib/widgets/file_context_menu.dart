@@ -4,7 +4,9 @@ import 'archive_creation_dialog.dart';
 import 'archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
 import '../l10n/archive_zip_recovery_strings.dart';
+import '../l10n/archive_png_carving_strings.dart';
 import 'archive_zip_recovery_actions.dart';
+import 'archive_png_carving_actions.dart';
 import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/file_conversion_strings.dart';
 import 'file_conversion_dialog.dart';
@@ -1430,6 +1432,31 @@ void showFileContextMenu(
         onTap: () => Future<void>.delayed(Duration.zero, () async {
           if (context.mounted) {
             await showArchiveZipRecoveryForSelection(
+              context,
+              ref,
+              side: side,
+              files: files,
+              sourceOrigin: origin,
+            );
+          }
+        }),
+      ),
+    );
+  }
+
+  if (origin.source is LocalPanelSource &&
+      isArchivePngCarvingSelection(files)) {
+    items.add(
+      PopupMenuItem(
+        child: ListTile(
+          leading: const Icon(Icons.image_search_outlined),
+          title: Text(
+            archivePngCarvingText(context, 'Recover PNG images to ZIP…'),
+          ),
+        ),
+        onTap: () => Future<void>.delayed(Duration.zero, () async {
+          if (context.mounted) {
+            await showArchivePngCarvingForSelection(
               context,
               ref,
               side: side,
