@@ -30,6 +30,9 @@ class OdsSheetFormatException implements Exception {
 
 /// Reads an `.ods` package into [SmlWorkbook].
 abstract final class OdsSheetReader {
+  static const double _odfMaxDigitWidthPx = 7.4;
+  static const double _odfDefaultColumnWidthIn = 0.8898;
+  static const double _odfDefaultRowHeightPoints = 14.95;
   static const int _maxRows = 100000;
   static const int _maxColumns = 4096;
 
@@ -135,6 +138,9 @@ abstract final class OdsSheetReader {
             : 'Sheet$sheetId',
         sheetId: sheetId,
       );
+      sheet.importDefaultColumnWidth(
+        excelWidth: _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx,
+      );
       final columnDefaults = _readColumns(table, sheet, styles);
       var rowIndex = 0;
       for (final row in table.childElements.where(
@@ -200,7 +206,10 @@ abstract final class OdsSheetReader {
           if (rowIndex >= _maxRows) break;
           continue;
         }
-        if (rowHeight != null && rowHeight > 0) {
+        if (rowHeight != null &&
+            rowHeight > 0 &&
+            (hasContent ||
+                (rowHeight - _odfDefaultRowHeightPoints).abs() > 0.1)) {
           for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
             sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
               rowHeight,
@@ -264,7 +273,15 @@ abstract final class OdsSheetReader {
       final defaultStyle = element.getAttribute('default-cell-style-name');
       for (var i = 0; i < repeat && column < _maxColumns; i++) {
         if (width != null && width > 0) {
-          sheet.setColumnWidth(column, width * 96 / 72);
+          // ODF widths are physical lengths. LibreOffice converts them to
+          // Excel character units with its 10pt default-font digit width;
+          // retaining that native width keeps a round trip exact.
+          final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
+          final defaultChars =
+              _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
+          if ((chars - defaultChars).abs() > 0.05) {
+            sheet.importColumnWidth(column, chars);
+          }
         }
         if (defaultStyle != null && defaultStyle.isNotEmpty) {
           defaults[column] = defaultStyle;
