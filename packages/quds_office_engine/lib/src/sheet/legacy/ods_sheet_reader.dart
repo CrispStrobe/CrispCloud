@@ -548,6 +548,7 @@ abstract final class OdsSheetReader {
       } else if (!quoted && char == ';') {
         result.write(',');
       } else if (!quoted &&
+          (i == 0 || !_isFormulaWordCharacter(formula.codeUnitAt(i - 1))) &&
           (formula.startsWith('COM.MICROSOFT.', i) ||
               formula.startsWith('ORG.OPENOFFICE.', i))) {
         i += formula.startsWith('COM.MICROSOFT.', i)
@@ -563,6 +564,14 @@ abstract final class OdsSheetReader {
     final translated = result.toString();
     return translated.trim().isEmpty ? null : translated;
   }
+
+  // Match the ASCII word-boundary rule used by the original prefix regex;
+  // embedded namespace text belongs to an unknown/custom identifier.
+  static bool _isFormulaWordCharacter(int codeUnit) =>
+      (codeUnit >= 0x30 && codeUnit <= 0x39) ||
+      (codeUnit >= 0x41 && codeUnit <= 0x5a) ||
+      (codeUnit >= 0x61 && codeUnit <= 0x7a) ||
+      codeUnit == 0x5f;
 
   static String _odfReference(String raw) {
     var reference = raw.trim();

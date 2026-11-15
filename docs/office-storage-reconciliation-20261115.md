@@ -177,7 +177,7 @@ engine artifact generator. Fresh combined runtime acceptance is recorded in
 ## Reconciled local qualification continuation
 
 The saved continuation retains main `ab7f1536`, shared storage `65e462b1`,
-and all their historical receipts. Quds source `3fd05efadee4eed9a6e64b3f3dcc58755ebd0af2`
+and all their historical receipts. Quds source `07842b7a116e64c75ed7e0945a6f74a9f4bdfccd`
 merges the bounded ODS import corrections with the concurrent quoted-reference
 fix; the standalone parser remains `d422fa99`. All 2,223 managed files retain
 canonical blob identities and modes. Four Office const lint fixes and two app

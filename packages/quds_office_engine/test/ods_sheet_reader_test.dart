@@ -367,6 +367,39 @@ void main() {
     );
   }
 
+  for (final prefix in const ['COM.MICROSOFT.', 'ORG.OPENOFFICE.']) {
+    test('formula namespace $prefix only changes at a token boundary', () async {
+      for (final formula in {
+        'of:=${prefix}SUM(1;2)': 'SUM(1,2)',
+        'of:=X${prefix}SUM(1;2)': 'X${prefix}SUM(1,2)',
+        'of:=S${prefix}UM(1;2)': 'S${prefix}UM(1,2)',
+        'of:=_${prefix}SUM(1;2)': '_${prefix}SUM(1,2)',
+        'of:=SUM(1;${prefix}SUM(2;3))': 'SUM(1,SUM(2,3))',
+        'of:="X${prefix}SUM;[.A1]"': '"X${prefix}SUM;[.A1]"',
+        "of:=SUM(['X${prefix}Data'.A1];1)": "SUM('X${prefix}Data'!A1,1)",
+      }.entries) {
+        final book = OdsSheetReader.readBytes(
+          _ods(
+            '<t:table><t:table-row><t:table-cell o:value-type="string" '
+            'o:string-value="cached" t:formula="${_xmlAttribute(formula.key)}"/>'
+            '</t:table-row></t:table>',
+          ),
+        );
+        final reopened = SheetDeserializer().readBytes(
+          await OfficeIsolateSave.workbook(book, recalculate: false),
+        );
+        for (final current in [book, reopened]) {
+          expect(
+            current.firstSheet.cellA1('A1').formula,
+            formula.value,
+            reason: formula.key,
+          );
+          expect(current.firstSheet.cellA1('A1').value, 'cached');
+        }
+      }
+    });
+  }
+
   test(
     'declines a stored cell where a horizontal covered token is missing',
     () {
