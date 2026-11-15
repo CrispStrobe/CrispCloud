@@ -23,7 +23,7 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `b4950d60eb03365c1798d2dfc66a2c85a4e61be5` on
+The app mirrors Quds `693dfe543ee0cc2934e23bd53aa3dd72156af1b3` on
 `integration/storage-carving-qualification-20261115` and standalone
 legacy parser `09c8b3731edb60bf6e5309578260af36b9433570`; all 2,274 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared

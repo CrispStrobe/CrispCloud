@@ -57,6 +57,22 @@ whitespace after the unchanged complete bounded validation pass. Format section
 splitting now respects quotes/escapes, and literal removal handles escapes
 before quotes. Existing elapsed-time and minute/month context logic remains.
 
+### Downstream author serialization follow-up
+
+After `b4950d60` was saved, review found that the existing OOXML comment writer
+interned authors with `List.contains` and found each output ID with
+`List.indexOf`. The newly admitted bounded ODS annotations could still create
+quadratic save work with many distinct short authors. Root authorized a narrow
+follow-up: staged tree `29a6df12920174f8c7b926cf566e72add3d00fb2`, parent
+`b4950d60eb03365c1798d2dfc66a2c85a4e61be5`.
+
+Only the author-table portion of `sheet_serial.dart` changes. An insertion-ordered
+author-to-index map retains the first-seen author order and exactly the same
+IDs while replacing repeated linear searches. Native default-column geometry
+logic is unchanged. The existing schema suite already checks Alice/Bob/Alice
+with IDs 0/1/0 through two saves plus its legacy-author control, so no duplicate
+test was added. Root publishes this source before any late-source runtime gate.
+
 ## App integration order
 
 1. Save the combined current host recovery, parser and geometry checkpoint.

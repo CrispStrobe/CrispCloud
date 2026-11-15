@@ -72,5 +72,14 @@
   "required_engine_and_analysis_addition": "packages/quds_office_engine/test/sml_styles_date_test.dart",
   "recommended_engine_addition": "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
   "runtime_runs_before_source_checkpoint": false,
-  "actions_polled_or_waited": false
+  "actions_polled_or_waited": false,
+  "comment_writer_followup": {
+    "tree": "29a6df12920174f8c7b926cf566e72add3d00fb2",
+    "parent": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+    "changed_path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "behavior": "First-seen author order and IDs retained with an insertion-ordered map; removes quadratic repeated list search.",
+    "existing_semantic_regression": "sheet_comments_schema_test.dart checks Alice/Bob/Alice and IDs0/1/0 through two saves.",
+    "geometry_logic_unchanged": true,
+    "runtime_tests_before_remote_save": false
+  }
 }

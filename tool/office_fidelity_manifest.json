@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "integration/storage-carving-qualification-20261115",
-  "source_commit": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+  "source_commit": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1912,7 +1912,7 @@
     "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart": "e45db4e1603135f8a78d1b81cf9bbaf594499799afa6c4bfe7008dd000a0b43d",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_drawing_io.dart": "12bdcd3963ce4acb83bc6465f7d4343d9c4a0303d17d124ea76dbe5e83ac9f77",
     "packages/quds_office_engine/lib/src/sheet/serial/sheet_package_fidelity.dart": "f8984392e9f886bdbc121880643f05d22a28d451cc79a7a85f74962f9ad81864",
-    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "39192e6cf19ea4166ef63cef5c17e9634e8550e84a275fc2f743ac6f6e2958ea",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart": "46ec036d0da0306577f22897efe0fdbb2f6968b22858c757257cd9d4bf28ab70",
     "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart": "217abaa2424c04dcfe13697ee85ddc339c188487cfd980beb5611244e32f1e61",
     "packages/quds_office_engine/lib/src/slide/anim/pml_motion_io.dart": "c651ee0235ed5c96b47398ac86fa5ba8f414aad1bc2ae8066752de01af42e88c",
     "packages/quds_office_engine/lib/src/slide/model/pml_arrange.dart": "55b511cf38d76de917fcbde0d80990a2e5eb99f7caf80d5c9c51da48a05948b7",

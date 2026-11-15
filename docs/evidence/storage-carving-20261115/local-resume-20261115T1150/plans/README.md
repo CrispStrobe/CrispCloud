@@ -112,3 +112,23 @@ the final app cohort. The final 63-suite app run includes all six, so targeted
 counts must not be added to the acceptance total. The overlay adds generated
 fixtures and nine regression cases across existing suites, plus localization
 assertions; final counts come from raw machine events.
+
+## Current driver and retry binding
+
+Run one gate with `python3 plans/run_selected_gate.py NAME` from the repository
+using the saved toolchain environment. The driver launches the exact pinned
+Dart/Flutter executables; portable checks resolve and hash the actual Node binary.
+Nested evidence helpers and prerequisite receipts are included in tool hashes.
+
+For a retry, supply a fresh `--label NAME-retry-N`. All auxiliary artifact and
+prior-output directories follow that label. `scripted-oracle --engine-label LABEL`
+and `navigation-independent-review --capture-label LABEL` require a successful
+generator receipt on the identical current source/resolution digest. The driver
+retains prior build outputs before generation and records new output fingerprints
+immediately after it. The independent readers require those exact bytes. A
+postprocessing error explicitly fails the metadata and suite receipt.
+
+Current portable and scripted-oracle copies live in this plans directory; the
+historical evidence drivers remain unchanged. Portable output now has a complete
+recursive size/SHA-256 index. These provenance changes do not expand runtime
+cohorts or count prerequisite executions twice.

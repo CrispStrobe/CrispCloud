@@ -1,11 +1,7 @@
 {
   "at": "2026-11-15T11:33:42.837340+00:00",
   "scope": "Finite observed incoming batch reconciled before local qualification; no later rolling refresh.",
-  "app_parents": [
-    "f2f3b2997e46d5bc958a44f50c035da83ad25d07",
-    "c8fd8d76a5367e2712600451de3a2811b085a6c5"
-  ],
-  "canonical_office": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+  "canonical_office": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
   "standalone_parser": "09c8b3731edb60bf6e5309578260af36b9433570",
   "managed_files": 2274,
   "resolved_app_overlap": "All five late app vendor source/fixture/test blobs equal the canonical incoming head; merged ancestry retained and copies replaced by the canonical bounded resolution through the guarded sync tool.",
@@ -18,5 +14,18 @@
     "ods-geometry-baseline-2"
   ],
   "qualification_status": "Source checkpoint; final local gate results are not yet available.",
-  "actions_waited_or_restarted": false
+  "actions_waited_or_restarted": false,
+  "canonical_office_feature_merge": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+  "canonical_author_index_followup": {
+    "commit": "693dfe543ee0cc2934e23bd53aa3dd72156af1b3",
+    "tree": "29a6df12920174f8c7b926cf566e72add3d00fb2",
+    "behavior": "Preserve author first-seen order/IDs using indexed lookup; existing schema regression covers Alice/Bob/Alice across repeated saves."
+  },
+  "parser_qualification_evidence_head": "2341b86397093a2f8d3efb23eb9a8b81006550c3",
+  "late_app_merge_parents": [
+    "f2f3b2997e46d5bc958a44f50c035da83ad25d07",
+    "c8fd8d76a5367e2712600451de3a2811b085a6c5"
+  ],
+  "late_app_merge_commit": "fb109e8daeebdc5ecfe2f1b98dd05d2ff4dbcee9",
+  "gate_provenance": "plans/provenance-overlay-manifest.json"
 }

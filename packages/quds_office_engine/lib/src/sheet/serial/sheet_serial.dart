@@ -826,14 +826,14 @@ class SheetSerializer {
       w.writeStartElement('comments');
       // CT_Comments requires <authors> before <commentList>, and each comment's
       // author is an index into that table (not a name attribute).
-      final List<String> authors = <String>[];
+      // Retain first-seen order while keeping large imported comment sets
+      // linear; repeated list searches would make distinct authors quadratic.
+      final Map<String, int> authors = <String, int>{};
       for (final SmlComment comment in sheet.comments) {
-        if (!authors.contains(comment.author)) {
-          authors.add(comment.author);
-        }
+        authors.putIfAbsent(comment.author, () => authors.length);
       }
       w.writeStartElement('authors');
-      for (final String author in authors) {
+      for (final String author in authors.keys) {
         w.writeStartElement('author');
         w.writeText(author);
         w.writeEndElement();
@@ -843,7 +843,7 @@ class SheetSerializer {
       for (final SmlComment comment in sheet.comments) {
         w.writeStartElement('comment');
         w.writeAttribute('ref', comment.ref.a1);
-        w.writeAttribute('authorId', '${authors.indexOf(comment.author)}');
+        w.writeAttribute('authorId', '${authors[comment.author]}');
         w.writeStartElement('text');
         w.writeText(comment.text);
         w.writeEndElement();
