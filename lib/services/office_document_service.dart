@@ -838,6 +838,95 @@ List<List<String>> _xlsxRows(String xml, List<String> shared) {
   return rows;
 }
 
+const int _odsMaxRows = 100000;
+const int _odsMaxCols = 4096;
+
+/// Converts an ODF table to rows, honouring typed values, repeats and spans.
+///
+/// ODF stores one cell with `table:number-columns-repeated` instead of a
+/// single cell per column, and values may live in `office:*` attributes rather
+/// than display text. Ignoring either shifts every following column.
+List<List<String>> _odsRows(XmlElement table) {
+  final rows = <List<String>>[];
+  for (final row in table.childElements.where(
+    (element) => element.localName == 'table-row',
+  )) {
+    final rowRepeat =
+        (int.tryParse(row.getAttribute('table:number-rows-repeated') ?? '') ??
+                1)
+            .clamp(1, _odsMaxRows);
+    final cells = <String>[];
+    for (final cell in row.childElements.where(
+      (element) =>
+          element.localName == 'table-cell' ||
+          element.localName == 'covered-table-cell',
+    )) {
+      final covered = cell.localName == 'covered-table-cell';
+      final span = covered
+          ? 1
+          : (int.tryParse(
+                      cell.getAttribute('table:number-columns-spanned') ?? '',
+                    ) ??
+                    1)
+                .clamp(1, _odsMaxCols);
+      final repeat =
+          (int.tryParse(
+                    cell.getAttribute('table:number-columns-repeated') ?? '',
+                  ) ??
+                  1)
+              .clamp(1, _odsMaxCols);
+      final value = covered ? '' : _odsCellValue(cell);
+      for (var r = 0; r < repeat && cells.length < _odsMaxCols; r++) {
+        cells.add(value);
+        for (var s = 1; s < span && cells.length < _odsMaxCols; s++) {
+          cells.add('');
+        }
+      }
+    }
+    while (cells.isNotEmpty && cells.last.isEmpty) {
+      cells.removeLast();
+    }
+    // A repeated all-empty row is trailing padding, not data.
+    if (cells.isEmpty && rowRepeat > 1) continue;
+    for (var r = 0; r < rowRepeat && rows.length < _odsMaxRows; r++) {
+      rows.add(List<String>.from(cells));
+    }
+    if (rows.length >= _odsMaxRows) break;
+  }
+  while (rows.isNotEmpty && rows.last.every((cell) => cell.isEmpty)) {
+    rows.removeLast();
+  }
+  return rows;
+}
+
+String _odsCellValue(XmlElement cell) {
+  final type = cell.getAttribute('office:value-type');
+  switch (type) {
+    case 'float':
+    case 'currency':
+    case 'percentage':
+      final value = cell.getAttribute('office:value');
+      if (value != null) return value;
+    case 'date':
+      final value = cell.getAttribute('office:date-value');
+      if (value != null) return value;
+    case 'time':
+      final value = cell.getAttribute('office:time-value');
+      if (value != null) return value;
+    case 'boolean':
+      final value = cell.getAttribute('office:boolean-value');
+      if (value != null) return value == 'true' ? 'TRUE' : 'FALSE';
+    case 'string':
+      final value = cell.getAttribute('office:string-value');
+      if (value != null) return value;
+  }
+  return cell
+      .findAllElements('text:p')
+      .map((paragraph) => paragraph.innerText)
+      .join(' ')
+      .trim();
+}
+
 Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
   final xml = await _readPart(archive, 'content.xml');
   if (xml == null) {
@@ -855,20 +944,7 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
   var tableNumber = 0;
   for (final table in document.findAllElements('table:table')) {
     tableNumber++;
-    final rows = <List<String>>[];
-    for (final row in table.findAllElements('table:table-row')) {
-      final cells = <String>[];
-      for (final cell in row.findAllElements('table:table-cell')) {
-        cells.add(
-          cell
-              .findAllElements('text:p')
-              .map((p) => p.innerText)
-              .join(' ')
-              .trim(),
-        );
-      }
-      if (cells.any((c) => c.isNotEmpty)) rows.add(cells);
-    }
+    final rows = _odsRows(table);
     if (rows.isEmpty) continue;
     _writeHeading(
       markdown,
@@ -876,6 +952,7 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
       OfficeHeadingKind.sheet,
       tableNumber,
       headings,
+      name: table.getAttribute('table:name'),
     );
     markdown.writeln();
     markdown.writeln(_markdownTable(rows));
@@ -924,9 +1001,9 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
   final presentationXml = await _readPart(archive, 'ppt/presentation.xml');
   if (presentationXml != null) {
     try {
-      final size = XmlDocument.parse(presentationXml)
-          .findAllElements('p:sldSz')
-          .firstOrNull;
+      final size = XmlDocument.parse(
+        presentationXml,
+      ).findAllElements('p:sldSz').firstOrNull;
       final cx = int.tryParse(size?.getAttribute('cx') ?? '');
       final cy = int.tryParse(size?.getAttribute('cy') ?? '');
       if (cx != null && cy != null && cx > 0 && cy > 0) {
@@ -1199,15 +1276,21 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
       case 'p':
         final text = element.innerText.trim();
         if (text.isNotEmpty) blocks.add(text);
-      case 'table':
-        final rows = <List<String>>[];
-        for (final row in element.findAllElements('table:table-row')) {
-          final cells = <String>[];
-          for (final cell in row.findAllElements('table:table-cell')) {
-            cells.add(_escapePipes(cell.innerText.trim()));
-          }
-          if (cells.any((c) => c.isNotEmpty)) rows.add(cells);
+      case 'list':
+        for (final item in element.childElements.where(
+          (child) => child.localName == 'list-item',
+        )) {
+          final text = item
+              .findAllElements('text:p')
+              .map((paragraph) => paragraph.innerText.trim())
+              .where((value) => value.isNotEmpty)
+              .join(' ');
+          if (text.isNotEmpty) blocks.add('- $text');
         }
+      case 'table':
+        final rows = _odsRows(
+          element,
+        ).map((row) => row.map(_escapePipes).toList()).toList();
         final table = _markdownTable(rows);
         if (table.isNotEmpty) blocks.add(table);
       default:
