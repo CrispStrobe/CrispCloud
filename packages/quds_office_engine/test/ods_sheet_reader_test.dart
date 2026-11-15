@@ -1444,6 +1444,33 @@ void hiddenStateTests() {
 }
 
 void conditionalFormatTests() {
+  test('ODS conditional comparison operators keep their meaning', () {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data"><t:table-row><t:table-cell '
+        'o:value-type="float" o:value="5"><x:p>5</x:p></t:table-cell>'
+        '</t:table-row><cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" cal:value="&gt;=5"/>'
+        '<cal:condition cal:apply-style-name="cf" cal:value="&lt;&gt;3"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    final rules = sheet.conditionalFormats;
+    expect(rules.length, 2);
+    expect(rules[0].kind, SmlConditionalKind.greaterOrEqual);
+    expect(rules[1].kind, SmlConditionalKind.notEqual);
+    expect(rules[0].matches(sheet.cellA1('A1'), sheet), isTrue);
+    expect(rules[1].matches(sheet.cellA1('A1'), sheet), isTrue);
+    sheet.cellA1('A1').value = 3;
+    expect(rules[1].matches(sheet.cellA1('A1'), sheet), isFalse);
+  });
+
   test('ODS conditional formats import and serialize', () async {
     final book = OdsSheetReader.readBytes(
       _ods(

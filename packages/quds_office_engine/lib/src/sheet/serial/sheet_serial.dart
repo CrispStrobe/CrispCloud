@@ -1369,8 +1369,11 @@ class SheetSerializer {
         w.writeAttribute('type', 'cellIs');
         w.writeAttribute('operator', switch (rule.kind) {
           SmlConditionalKind.greaterThan => 'greaterThan',
+          SmlConditionalKind.greaterOrEqual => 'greaterThanOrEqual',
           SmlConditionalKind.lessThan => 'lessThan',
+          SmlConditionalKind.lessOrEqual => 'lessThanOrEqual',
           SmlConditionalKind.equal => 'equal',
+          SmlConditionalKind.notEqual => 'notEqual',
           SmlConditionalKind.contains => 'containsText',
           SmlConditionalKind.duplicate => 'duplicateValues',
         });
