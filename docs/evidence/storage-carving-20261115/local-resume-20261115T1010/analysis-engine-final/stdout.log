@@ -1,0 +1,6 @@
+Analyzing quds_office_engine.dart, ods_sheet_reader.dart, ods_sheet_reader_test.dart, sml_styles.dart, sheet_time_number_format_test.dart...
+
+   info - packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart:540:31 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - packages/quds_office_engine/test/ods_sheet_reader_test.dart:262:5 - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const'. - prefer_const_declarations
+
+2 issues found.
