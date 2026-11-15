@@ -1389,8 +1389,24 @@ class SheetSerializer {
         w.writeStartElement('cfRule');
         switch (rule.kind) {
           case SmlConditionalKind.contains:
-            w.writeAttribute('type', 'containsText');
-            w.writeAttribute('operator', 'containsText');
+          case SmlConditionalKind.beginsWith:
+          case SmlConditionalKind.endsWith:
+            w.writeAttribute(
+              'type',
+              rule.kind == SmlConditionalKind.contains
+                  ? 'containsText'
+                  : rule.kind == SmlConditionalKind.beginsWith
+                  ? 'beginsWith'
+                  : 'endsWith',
+            );
+            w.writeAttribute(
+              'operator',
+              rule.kind == SmlConditionalKind.contains
+                  ? 'containsText'
+                  : rule.kind == SmlConditionalKind.beginsWith
+                  ? 'beginsWith'
+                  : 'endsWith',
+            );
             w.writeAttribute('text', rule.formula);
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
@@ -1406,6 +1422,8 @@ class SheetSerializer {
               SmlConditionalKind.between => 'between',
               SmlConditionalKind.notBetween => 'notBetween',
               SmlConditionalKind.contains ||
+              SmlConditionalKind.beginsWith ||
+              SmlConditionalKind.endsWith ||
               SmlConditionalKind.duplicate => throw StateError('handled above'),
             });
         }
@@ -1413,6 +1431,8 @@ class SheetSerializer {
           w.writeAttribute('dxfId', '$dxfId');
         }
         if (rule.kind != SmlConditionalKind.contains &&
+            rule.kind != SmlConditionalKind.beginsWith &&
+            rule.kind != SmlConditionalKind.endsWith &&
             rule.kind != SmlConditionalKind.duplicate) {
           if (rule.formula.isNotEmpty) {
             w.writeStartElement('formula');
