@@ -39,9 +39,8 @@ class SmlColumnMetrics {
 }
 
 /// Return null when the requested font cannot be resolved reliably.
-typedef SmlColumnMetricsResolver = SmlColumnMetrics? Function(
-  SmlNormalFont normalFont,
-);
+typedef SmlColumnMetricsResolver =
+    SmlColumnMetrics? Function(SmlNormalFont normalFont);
 
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
@@ -202,9 +201,9 @@ class SmlStyleSheet {
 
   /// Reads the Latin major/minor theme faces used for the ten ASCII digits.
   static Map<String, String> parseThemeFontFamilies(String xml) {
-    final scheme = XmlDocument.parse(xml).root
-        ?.firstChild('themeElements')
-        ?.firstChild('fontScheme');
+    final scheme = XmlDocument.parse(
+      xml,
+    ).root?.firstChild('themeElements')?.firstChild('fontScheme');
     return <String, String>{
       for (final kind in ['major', 'minor'])
         if (scheme
@@ -1278,9 +1277,9 @@ class SmlStyleSheet {
     }
 
     final int v = int.parse(rgb, radix: 16);
-    final String r = channel((v >> 16) & 0xFF)
-        .toRadixString(16)
-        .padLeft(2, '0');
+    final String r = channel(
+      (v >> 16) & 0xFF,
+    ).toRadixString(16).padLeft(2, '0');
     final String g = channel((v >> 8) & 0xFF).toRadixString(16).padLeft(2, '0');
     final String b = channel(v & 0xFF).toRadixString(16).padLeft(2, '0');
     return '$r$g$b'.toUpperCase();
@@ -1454,12 +1453,14 @@ String _plainNumber(double n) =>
     n == n.roundToDouble() ? '${n.round()}' : n.toString();
 
 bool _isDateFormat(String code) {
-  final String c = code.toLowerCase();
+  final String c = _literalFree(code).toLowerCase();
   return c.contains('yy') ||
       c.contains('mmm') ||
       c.contains('dd') ||
       c.contains('d-m') ||
-      c.contains('mm-');
+      c.contains('mm-') ||
+      c.contains('h') ||
+      c.contains('s');
 }
 
 /// Excel 1900-date-system serial → UTC date (leap-year bug included).
@@ -1490,17 +1491,101 @@ String formatExcelDate(DateTime dt, String code) {
   // Literal escapes (`\.`) and quoted text must not be treated as date
   // tokens; Excel prints dd\.mm\.yyyy as 15.03.2023.
   final List<String> literals = <String>[];
-  var out = code.replaceAllMapped(RegExp(r'\\(.)|"([^"]*)"'), (match) {
+  final String protected = code.replaceAllMapped(RegExp(r'\\(.)|"([^"]*)"'), (
+    match,
+  ) {
     literals.add(match.group(1) ?? match.group(2) ?? '');
     return '\u0000${literals.length - 1}\u0000';
   });
-  out = out.replaceAll('yyyy', '${dt.year}');
-  out = out.replaceAll('yy', pad(dt.year % 100, 2));
-  out = out.replaceAll('mmm', month);
-  out = out.replaceAll('mm', pad(dt.month, 2));
-  out = out.replaceAll('dd', pad(dt.day, 2));
-  out = out.replaceAll('d', '${dt.day}');
-  return out.replaceAllMapped(
+  final String upper = protected.toUpperCase();
+  final bool twelveHour = upper.contains('AM/PM');
+  final StringBuffer out = StringBuffer();
+  var timeMode = false;
+  var i = 0;
+  while (i < protected.length) {
+    // Elapsed-time tokens ([h], [m], [s]) keep their bracketed meaning.
+    if (protected[i] == '[') {
+      final close = protected.indexOf(']', i + 1);
+      if (close > i) {
+        final inner = upper.substring(i + 1, close);
+        if (inner == 'H' || inner == 'HH') timeMode = true;
+        i = close + 1;
+        continue;
+      }
+    }
+    final int ampm = upper.startsWith('AM/PM', i) ? 5 : 0;
+    if (ampm > 0) {
+      out.write(dt.hour < 12 ? 'AM' : 'PM');
+      i += ampm;
+      continue;
+    }
+    if (upper.startsWith('YYYY', i)) {
+      out.write(dt.year);
+      i += 4;
+      continue;
+    }
+    if (upper.startsWith('YY', i)) {
+      out.write(pad(dt.year % 100, 2));
+      i += 2;
+      continue;
+    }
+    if (upper.startsWith('MMM', i)) {
+      out.write(month);
+      i += 3;
+      continue;
+    }
+    if (upper.startsWith('MM', i)) {
+      out.write(timeMode ? pad(dt.minute, 2) : pad(dt.month, 2));
+      i += 2;
+      continue;
+    }
+    if (upper[i] == 'M') {
+      out.write(timeMode ? '${dt.minute}' : '${dt.month}');
+      i += 1;
+      continue;
+    }
+    if (upper.startsWith('DD', i)) {
+      out.write(pad(dt.day, 2));
+      i += 2;
+      continue;
+    }
+    if (upper[i] == 'D') {
+      out.write('${dt.day}');
+      i += 1;
+      continue;
+    }
+    if (upper.startsWith('HH', i)) {
+      timeMode = true;
+      final hour = twelveHour
+          ? (dt.hour % 12 == 0 ? 12 : dt.hour % 12)
+          : dt.hour;
+      out.write(pad(hour, 2));
+      i += 2;
+      continue;
+    }
+    if (upper[i] == 'H') {
+      timeMode = true;
+      final hour = twelveHour
+          ? (dt.hour % 12 == 0 ? 12 : dt.hour % 12)
+          : dt.hour;
+      out.write('$hour');
+      i += 1;
+      continue;
+    }
+    if (upper.startsWith('SS', i)) {
+      out.write(pad(dt.second, 2));
+      i += 2;
+      continue;
+    }
+    if (upper[i] == 'S') {
+      out.write('${dt.second}');
+      i += 1;
+      continue;
+    }
+    out.write(protected[i]);
+    i += 1;
+  }
+  return out.toString().replaceAllMapped(
     RegExp('\u0000(\\d+)\u0000'),
     (match) => literals[int.parse(match.group(1)!)],
   );
