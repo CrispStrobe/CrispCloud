@@ -5911,6 +5911,7 @@ class WordEditorController extends OfficeController {
     }
     final List<WmlBlock>? parent = _parentBlocksOfVisual(visual);
     if (parent == null) {
+      _deleteInlineVisual(visual);
       return;
     }
     final int index = parent.indexOf(visual);
@@ -6089,6 +6090,38 @@ class WordEditorController extends OfficeController {
       return null;
     }
     return parent[next];
+  }
+
+  /// An inline picture lives in a run of its paragraph (one U+FFFC
+  /// character); deleting it removes that run, undoably.
+  void _deleteInlineVisual(WmlVisual visual) {
+    for (final WmlParagraph paragraph in document.paragraphs) {
+      final int index = paragraph.inlines.indexWhere(
+        (inline) => inline is WmlRun && identical(inline.inlineVisual, visual),
+      );
+      if (index < 0) continue;
+      final WmlInline run = paragraph.inlines[index];
+      commands.commit(
+        _CallbackCommand(
+          executeFn: () {
+            paragraph.inlines.remove(run);
+            selectedVisual = null;
+          },
+          undoFn: () {
+            if (!paragraph.inlines.contains(run)) {
+              paragraph.inlines.insert(
+                index.clamp(0, paragraph.inlines.length),
+                run,
+              );
+            }
+            selectedVisual = visual;
+          },
+        ),
+      );
+      relayout();
+      notifyListeners();
+      return;
+    }
   }
 
   List<WmlBlock>? _parentBlocksOfVisual(WmlVisual visual) =>
