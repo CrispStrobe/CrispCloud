@@ -198,5 +198,14 @@
   "github_actions_polled_waited_or_restarted": false,
   "pr": 111,
   "pr_remains_draft": true,
-  "integration_return": "Prepared fast-forward to the final evidence checkpoint; completion will be recorded separately."
+  "integration_return": {
+    "status": "completed",
+    "branch": "integration/storage-carving-20261115",
+    "qualified_acceptance_head": "10891b06a6da9f2502960cdbfe34b30eed271665",
+    "method": "lease-protected fast-forward",
+    "source_unchanged": true,
+    "pr_body_exact_readback": true,
+    "pr_draft": true,
+    "record": "delivery/integration-return.json"
+  }
 }

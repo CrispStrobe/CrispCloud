@@ -1,0 +1,23 @@
+{
+  "pr": 111,
+  "url": "https://github.com/CrispStrobe/CrispCloud/pull/111",
+  "state": "open",
+  "draft": true,
+  "head": "10891b06a6da9f2502960cdbfe34b30eed271665",
+  "branch": "integration/storage-carving-20261115",
+  "base": "686318626e209220011f7da194cfe4e41ca4adeb",
+  "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+  "body_sha256": "92e84964e18b06f19af4b94c3046f90127234f491113f7eeefbfa03d43485f84",
+  "body_exact_readback": true,
+  "updated_at": "2026-11-15T14:04:46Z",
+  "ref_exact_readback": {
+    "ref": "refs/heads/integration/storage-carving-20261115",
+    "node_id": "REF_kwDOQf6hs9oAL3JlZnMvaGVhZHMvaW50ZWdyYXRpb24vc3RvcmFnZS1jYXJ2aW5nLTIwMjYxMTE1",
+    "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/git/refs/heads/integration/storage-carving-20261115",
+    "object": {
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "type": "commit",
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/git/commits/10891b06a6da9f2502960cdbfe34b30eed271665"
+    }
+  }
+}

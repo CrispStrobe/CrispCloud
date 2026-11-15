@@ -1,0 +1,19 @@
+{
+  "reviewer": "qualification_setup independent agent",
+  "scope": "Final README and acceptance record; static review against completed receipts",
+  "result": "No material count, scope or link error",
+  "host_tests": 1283,
+  "host_suites": 99,
+  "strict_files": 102,
+  "parser_tests": 4132,
+  "parser_suites": 144,
+  "accepted_gate_labels_verified": 13,
+  "relative_readme_links_verified": 11,
+  "png_retry_only_selected": true,
+  "overlaps_excluded": true,
+  "parser_existing_run_and_foreign_environment_limit_explicit": true,
+  "source_and_comments_counts_match": true,
+  "runtime_executions": 0,
+  "repository_writes": 0,
+  "upstream_refresh": false
+}

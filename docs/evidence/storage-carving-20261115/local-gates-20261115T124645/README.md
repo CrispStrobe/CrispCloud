@@ -61,3 +61,7 @@ Source20ee and source966 receipts retain their historical scope. The earlier REA
 This acceptance covers the selected Linux Flutter/Dart/native-hook workloads, real Node JavaScript execution, bounded independent semantic readers, exact Linux goldens and the two inspected UI captures. It does not establish external Microsoft Office rendering, broad Open XML schema certification, rich/VML comment geometry or other-platform release acceptance. Optional private corpus scanners remain excluded. Before/after snapshots are not a hermetic cache or proof against transient writes.
 
 PNG recovery remains the bounded complete-PNG profile and reviewed new-ZIP workflow described in [the product profile](../../../archive-png-carving.md): 64 MiB bounds, supported noninterlaced 8-bit formats and explicit refusals. Fragment reconstruction, original filesystem-name inference, other formats, physical devices and browser/cloud publication remain outside this change. PR #111 remains a draft for implementation review.
+
+## Delivery
+
+The qualified acceptance checkpoint `10891b06` was fast-forwarded to `integration/storage-carving-20261115`, and PR #111 was updated and read back with its exact new body and draft status. The source remains `4c2b6ddd`; the delivery checkpoint changes only evidence. See [delivery receipts](delivery/README.md).
