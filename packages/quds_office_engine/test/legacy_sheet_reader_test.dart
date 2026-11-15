@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:quds_office_engine/quds_office_engine.dart';
@@ -44,7 +44,7 @@ void main() {
     expect(styles.format(45000, data.cellA1('A10').styleIndex), '15.03.2023');
 
     expect(
-      data.merges.map((merge) => '${merge.origin.a1}'),
+      data.merges.map((merge) => merge.origin.a1),
       contains('A12'),
     );
     expect(data.exportColumnWidth(0), closeTo(14.00390625, 0.0001));

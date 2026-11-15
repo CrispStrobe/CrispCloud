@@ -53,7 +53,7 @@ void main() {
   });
 
   test('reading the legacy author-name attribute still works', () {
-    var book = SmlWorkbook(
+    final book = SmlWorkbook(
       sheets: [
         SmlWorksheet(name: 'Sheet1', sheetId: 1),
       ],

@@ -44,7 +44,7 @@ void main() {
   });
 
   test('authored formats merge with a native numFmts collection', () async {
-    var book = SheetDeserializer().readBytes(
+    final book = SheetDeserializer().readBytes(
       File('test/fixtures/fidelity/native.xlsx').readAsBytesSync(),
     );
     final styles = book.styles ??= SmlStyleSheet();
