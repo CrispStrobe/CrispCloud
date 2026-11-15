@@ -1991,8 +1991,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ];
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted || !identical(ref.read(pdfEditorMenuProvider), pdf))
+        if (!mounted || !identical(ref.read(pdfEditorMenuProvider), pdf)) {
           return;
+        }
         final ready = await _nativeToolbar.configure(
           title: pdf.title.isEmpty ? l.appTitle : pdf.title,
           visible: true,

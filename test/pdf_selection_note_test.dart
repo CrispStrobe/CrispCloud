@@ -24,7 +24,12 @@ void main() {
       final annotation = reopened.document.page(page).annotations.single;
       expect(annotation.subtype, 'Highlight');
       expect(annotation.contents, 'Review this');
-      expect((reopened.document.cos.resolve(annotation.dict['QuadPoints']) as CosArray).values, hasLength(page == 0 ? 16 : 8));
+      expect(
+        (reopened.document.cos.resolve(
+          annotation.dict['QuadPoints'],
+        ) as CosArray).items,
+        hasLength(page == 0 ? 16 : 8),
+      );
     }
     controller.undo();
     expect(controller.document.page(0).annotations, isEmpty);

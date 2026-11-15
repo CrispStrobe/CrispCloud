@@ -22,8 +22,9 @@ class MacBrowserToolbar {
       !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
   Future<void> _handle(MethodCall call) async {
-    if (_disposed || call.method != 'action' || call.arguments is! String)
+    if (_disposed || call.method != 'action' || call.arguments is! String) {
       return;
+    }
     final id = call.arguments as String;
     if (_enabled.contains(id)) await onAction(id);
   }
