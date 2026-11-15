@@ -48,6 +48,14 @@ ZoteroHttpRequest _request([String? uri]) => ZoteroHttpRequest(
   headers: const {'Zotero-API-Key': 'test-secret', 'Zotero-API-Version': '3'},
 );
 
+ZoteroHttpRequest _localRequest({
+  String uri = 'http://localhost:23119/api/users/0/items?format=json',
+  Map<String, String> headers = const {
+    'Zotero-API-Version': '3',
+    'Zotero-Allowed-Request': '1',
+  },
+}) => ZoteroHttpRequest(uri: Uri.parse(uri), headers: headers);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -86,6 +94,268 @@ void main() {
   );
 
   group('Zotero transport boundary', () {
+    test(
+      'desktop reads use only the explicitly supplied direct client',
+      () async {
+        var cloudClients = 0;
+        var localClients = 0;
+        late http.BaseRequest outbound;
+        final client = _Client((request) async {
+          outbound = request;
+          return http.StreamedResponse(
+            Stream.value(utf8.encode('Nothing to see here.')),
+            200,
+            headers: const {'Zotero-Server-ID': 'localDatabase'},
+          );
+        });
+        final transport = OfficeZoteroTransport(
+          createClient: () {
+            cloudClients++;
+            throw StateError('The proxy must not receive local library data.');
+          },
+          createLocalClient: () {
+            localClients++;
+            return client;
+          },
+        );
+        expect(transport.supportsLocal, isTrue);
+        final response = await transport.send(
+          _localRequest(
+            uri: 'http://localhost:23119/api/',
+            headers: const {
+              'zotero-api-version': '3',
+              'ZOTERO-ALLOWED-REQUEST': '1',
+              'Zotero-Server-ID': 'localDatabase',
+            },
+          ),
+        );
+        expect(cloudClients, 0);
+        expect(localClients, 1);
+        expect(outbound.url.toString(), 'http://localhost:23119/api/');
+        expect(outbound.headers['Zotero-API-Key'], isNull);
+        expect(outbound.headers['Authorization'], isNull);
+        expect(outbound.headers['Zotero-Server-ID'], 'localDatabase');
+        expect(outbound.followRedirects, isFalse);
+        expect(outbound.maxRedirects, 0);
+        expect(response.body, 'Nothing to see here.');
+        expect(client.closeCount, 1);
+        transport.dispose();
+        expect(client.closeCount, 1);
+      },
+    );
+
+    test(
+      'cloud requests retain the selected proxy factory with local enabled',
+      () async {
+        var localClients = 0;
+        final cloud = _Client((request) async {
+          expect(request.url.host, 'api.zotero.org');
+          expect(request.headers['Zotero-API-Key'], 'test-secret');
+          return http.StreamedResponse(const Stream.empty(), 200);
+        });
+        final transport = OfficeZoteroTransport(
+          createClient: () => cloud,
+          createLocalClient: () {
+            localClients++;
+            throw StateError('Cloud requests must not use the direct factory.');
+          },
+        );
+        await transport.send(_request());
+        expect(localClients, 0);
+        expect(cloud.closeCount, 1);
+      },
+    );
+
+    test(
+      'desktop access requires host opt-in before creating any client',
+      () async {
+        var created = 0;
+        final transport = OfficeZoteroTransport(
+          createClient: () {
+            created++;
+            throw StateError('must not send');
+          },
+        );
+        expect(transport.supportsLocal, isFalse);
+        await expectLater(
+          transport.send(_localRequest()),
+          throwsA(isA<OfficeZoteroException>()),
+        );
+        expect(created, 0);
+      },
+    );
+
+    test(
+      'desktop rejects secrets and unexpected headers before client creation',
+      () async {
+        var created = 0;
+        http.Client createClient() {
+          created++;
+          throw StateError('must not send');
+        }
+
+        final transport = OfficeZoteroTransport(
+          createClient: createClient,
+          createLocalClient: createClient,
+        );
+        const safe = {'Zotero-API-Version': '3', 'Zotero-Allowed-Request': '1'};
+        for (final headers in <Map<String, String>>[
+          {...safe, 'Zotero-API-Key': 'test-secret'},
+          {...safe, 'zotero-api-key': 'test-secret'},
+          {...safe, 'Authorization': 'Bearer test-secret'},
+          {...safe, 'Cookie': 'test-secret'},
+          {...safe, 'Proxy-Authorization': 'test-secret'},
+          {...safe, 'Host': 'outside.invalid'},
+          {...safe, 'Zotero-API-Version': '2'},
+          {...safe, 'Zotero-Allowed-Request': '0'},
+          {...safe, 'Zotero-Server-ID': 'bad\r\nX-Secret: test-secret'},
+          {...safe, 'zotero-api-version': '3'},
+          const {'Zotero-API-Version': '3'},
+          const {},
+        ]) {
+          await expectLater(
+            transport.send(_localRequest(headers: headers)),
+            throwsA(
+              isA<OfficeZoteroException>().having(
+                (error) => '$error',
+                'sanitized rejection',
+                isNot(contains('test-secret')),
+              ),
+            ),
+          );
+        }
+        expect(created, 0);
+      },
+    );
+
+    test(
+      'desktop rejects other hosts, ports, paths and URL credentials',
+      () async {
+        var created = 0;
+        http.Client createClient() {
+          created++;
+          throw StateError('must not send');
+        }
+
+        final transport = OfficeZoteroTransport(
+          createClient: createClient,
+          createLocalClient: createClient,
+        );
+        for (final uri in [
+          'http://127.0.0.1:23119/api/users/0/items',
+          'http://localhost.evil.test:23119/api/users/0/items',
+          'http://localhost:23120/api/users/0/items',
+          'https://localhost:23119/api/users/0/items',
+          'http://secret@localhost:23119/api/users/0/items',
+          'http://localhost:23119/connector/ping',
+          'http://localhost:23119/apievil/users/0/items',
+          'http://localhost:23119/api/../connector/ping',
+          'http://localhost:23119/api/%2E%2E/connector/ping',
+          'http://localhost:23119/api/%252e%252e/connector/ping',
+          'http://localhost:23119/api/users%2F0/items',
+          'http://localhost:23119/api/users%5C0/items',
+          'http://localhost:23119/api/users/0/items#fragment',
+          'http://localhost:23119/api/users/0/items?key=test-secret',
+          'http://localhost:23119/api/users/0/items?KEY=test-secret',
+          'http://localhost:23119/api/users/0/items?%6bey=test-secret',
+        ]) {
+          await expectLater(
+            transport.send(_localRequest(uri: uri)),
+            throwsA(isA<OfficeZoteroException>()),
+          );
+        }
+        expect(created, 0);
+      },
+    );
+
+    test('desktop redirects are returned without another request', () async {
+      var sends = 0;
+      final local = _Client((request) async {
+        sends++;
+        expect(request.followRedirects, isFalse);
+        expect(request.maxRedirects, 0);
+        return http.StreamedResponse(
+          const Stream.empty(),
+          302,
+          headers: const {'location': 'https://outside.invalid/?key=secret'},
+        );
+      });
+      final transport = OfficeZoteroTransport(
+        createClient: () => throw StateError('must not use proxy'),
+        createLocalClient: () => local,
+      );
+      expect((await transport.send(_localRequest())).statusCode, 302);
+      expect(sends, 1);
+      expect(local.closeCount, 1);
+    });
+
+    test('desktop responses retain size and total timeout limits', () async {
+      for (final declared in [true, false]) {
+        final local = _Client(
+          (_) async => http.StreamedResponse(
+            Stream.fromIterable([utf8.encode('123'), utf8.encode('456')]),
+            200,
+            contentLength: declared ? 6 : null,
+          ),
+        );
+        final transport = OfficeZoteroTransport(
+          createClient: () => throw StateError('must not use proxy'),
+          createLocalClient: () => local,
+          maxResponseBytes: 5,
+        );
+        await expectLater(
+          transport.send(_localRequest()),
+          throwsA(
+            isA<OfficeZoteroException>().having(
+              (error) => error.message,
+              'safe size error',
+              contains('too large'),
+            ),
+          ),
+        );
+        expect(local.closeCount, 1);
+      }
+      final stalled = _Client((_) => Completer<http.StreamedResponse>().future);
+      final transport = OfficeZoteroTransport(
+        createClient: () => throw StateError('must not use proxy'),
+        createLocalClient: () => stalled,
+        requestTimeout: const Duration(milliseconds: 10),
+      );
+      await expectLater(
+        transport.send(_localRequest()),
+        throwsA(
+          isA<OfficeZoteroException>().having(
+            (error) => error.message,
+            'safe timeout',
+            contains('in time'),
+          ),
+        ),
+      );
+      expect(stalled.closeCount, 1);
+    });
+
+    test(
+      'disposal closes desktop requests and rejects later desktop reads',
+      () async {
+        final pending = Completer<http.StreamedResponse>();
+        final local = _Client((_) => pending.future);
+        final transport = OfficeZoteroTransport(
+          createClient: () => throw StateError('must not use proxy'),
+          createLocalClient: () => local,
+        );
+        final sent = transport.send(_localRequest());
+        transport.dispose();
+        expect(local.closeCount, 1);
+        pending.complete(http.StreamedResponse(const Stream.empty(), 200));
+        await expectLater(sent, throwsA(isA<OfficeZoteroException>()));
+        await expectLater(
+          transport.send(_localRequest()),
+          throwsA(isA<OfficeZoteroException>()),
+        );
+        expect(local.closeCount, 1);
+      },
+    );
+
     test(
       'sends API-key header only to Zotero and never follows redirects',
       () async {

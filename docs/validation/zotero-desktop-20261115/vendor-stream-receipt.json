@@ -1,0 +1,59 @@
+{
+  "checked_at_utc": "2026-11-15T20:14:32Z",
+  "crispcloud_commit": "3c4cd0e24ab36f4fd88363cbc8521455bda811c6",
+  "crispcloud_tree": "51e71da04a8d3dc2db8dab83f0c117093ae7dc0d",
+  "source_commit": "1cc4d251ebeb3e0cce205805e9183396da0c0df4",
+  "source_tree": "7e28fb569a6414d104b7dd004f0df91241f3fc30",
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "stream_source": "https://codeload.github.com/CrispStrobe/CrispCloud/tar.gz/3c4cd0e24ab36f4fd88363cbc8521455bda811c6",
+  "archive_sha256": "d5647bd593a88069c3e5db0a1e4f389ce70e58cc2cc2a7c884323cbe60430a0e",
+  "compressed_archive_bytes_streamed": 285561849,
+  "archive_response_headers": {
+    "Content-Type": "application/x-gzip",
+    "Content-Length": null,
+    "ETag": "\"5f1943c021937deaa73eff7f4b45f196cf3b52b561f8b83237465e8dd1093483\"",
+    "Last-Modified": null
+  },
+  "archive_members_read": 13796,
+  "archive_logical_bytes_traversed": 422897758,
+  "managed_count_expected": 2374,
+  "managed_count_verified": 2374,
+  "source_counts": {
+    "legacy": 1857,
+    "quds": 517
+  },
+  "managed_bytes_verified": 106777747,
+  "mode_counts": {
+    "100644": 2373,
+    "100755": 1
+  },
+  "archive_permission_counts": {
+    "0o664": 2373,
+    "0o775": 1
+  },
+  "permission_check": "Regular files only; reject special permission bits; compare executable-bit class against exact Git mode (GitHub tar group-write bits do not change Git executable mode). Source and target Git modes also match exactly.",
+  "manifest_sha256": "50cc079405991053c110ee22602b0c2b34d05ea55a5106cfd63b5b064bd31f2a",
+  "manifest_git_blob": "2ec57b26d556ebe62ea3b49f13a242656dfca2ae",
+  "manifest_matches_archived_bytes": true,
+  "inventory_sha256": "5a0317579622e40b9cace628cd82b74ee4a6127edbf2b7ef8199cf1891b892c4",
+  "git_metadata_counts": {
+    "quds": 517,
+    "legacy": 1857
+  },
+  "git_metadata_result": "All managed target blobs, sizes, types and modes matched the pinned canonical source trees. All Git tree responses were nontruncated.",
+  "elapsed_seconds": 28.81,
+  "archive_saved": false,
+  "managed_files_extracted_to_disk": false,
+  "failures": [],
+  "result": "passed",
+  "verification_command": "python verify-stream.py > stream-verification.log 2>&1",
+  "verification_exit_code": 0,
+  "source_sizes_independently_compared": 2374,
+  "metadata_inventory_sha256": "88d15d04175719319e89746bd000c40427e18831e0487574241906057e1c10b1",
+  "verification_script_sha256": "b7ccc3d62f1f2885b68659ade97f80f5e1b0830052cd522cc3071bf683f614ea"
+}

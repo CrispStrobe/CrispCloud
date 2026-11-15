@@ -23,11 +23,13 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `1d9552697d2850cbc3b5a7f73daf44a442c4901b`
-on `codex/zotero-support-20261115`, including canonical main `c210315`,
+The app mirrors Quds `875064341656ad9e74daec64f8f8d7befdb48368`
+on `codex/zotero-support-20261115`, including canonical main `b2d5331`,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,374 managed files
-verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
+the manifest retains all 2,374 managed files. The reconciliation checked exact
+Git blob identities for 517 Quds files and retained the unchanged 1,857-file
+standalone parser tree. Earlier executed validation keeps its original source
+cutoff. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
@@ -42,15 +44,19 @@ and [source-bound local validation](../docs/zotero-validation.md). This adds
 targeted Zotero qualification; earlier storage and spreadsheet results retain
 their original source identities.
 
+The current canonical merge also lifts one trailing section break out of a
+body content control while retaining Zotero field handling in the deserializer.
+Its source and regression files are copied from the combined canonical commit.
+
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; conditional formats (numeric, contains-text and duplicate) and list validations
+ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text and duplicate) and list validations
 are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 493
+elapsed time formats survive XLSX saves. The sheet/ODS development cohort recorded upstream is 494
 tests; the combined host qualification remains separately source-bound in the
 storage evidence.
 

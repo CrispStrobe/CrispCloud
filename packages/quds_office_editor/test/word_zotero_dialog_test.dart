@@ -21,6 +21,7 @@ const _offlineSource = <String, dynamic>{
 Future<WordEditorController> _openDialog(
   WidgetTester tester, {
   ZoteroTransport? transport,
+  ZoteroTransport? localTransport,
   ZoteroSession? session,
   Future<void> Function(String? apiKey)? persistApiKey,
   WmlDocument? document,
@@ -45,6 +46,7 @@ Future<WordEditorController> _openDialog(
               context,
               controller: controller,
               transport: transport,
+              localTransport: localTransport,
               session: session,
               persistApiKey: persistApiKey,
             ),
@@ -136,6 +138,204 @@ void _expectNoSavedSecret(WordEditorController controller, String secret) {
 }
 
 void main() {
+  for (final identity in ['account', 'unsynced', 'citation-key']) {
+    testWidgets(
+      'desktop $identity source inserts without using the saved cloud key',
+      (tester) async {
+        const secret = 'cloud-key-never-sent-to-local-zotero';
+        const key = 'ABCD1234';
+        const localUri =
+            'http://zotero.org/users/local/LOCALKEY/items/ABCD1234';
+        final session = ZoteroSession()
+          ..apiKey = secret
+          ..rememberKey = true
+          ..useLocal = true;
+        final requests = <ZoteroHttpRequest>[];
+        final writes = <String?>[];
+        final controller = await _openDialog(
+          tester,
+          session: session,
+          transport: (_) async =>
+              throw StateError('Cloud transport must stay unused'),
+          persistApiKey: (key) async => writes.add(key),
+          localTransport: (request) async {
+            requests.add(request);
+            expect(request.uri.scheme, 'http');
+            expect(request.uri.host, 'localhost');
+            expect(request.uri.port, 23119);
+            expect(request.headers.containsKey('Zotero-API-Key'), isFalse);
+            expect(request.headers['Zotero-Allowed-Request'], '1');
+            expect(request.followRedirects, isFalse);
+            if (request.uri.path == '/api/') {
+              return ZoteroHttpResponse(
+                statusCode: 200,
+                body: 'Nothing to see here.',
+                headers: const {
+                  'Zotero-API-Version': '3',
+                  'Zotero-Server-ID': 'desktop-library',
+                },
+              );
+            }
+            expect(request.headers['Zotero-Server-ID'], 'desktop-library');
+            final Object body;
+            switch (request.uri.path) {
+              case '/api/users/0/groups':
+              case '/api/users/0/collections':
+                body = <Object>[];
+              case '/api/users/0/items/top':
+                body = [
+                  {
+                    ..._apiItem(key, 'Desktop source'),
+                    'library': {
+                      'type': 'user',
+                      'id': identity == 'account' ? 42 : 0,
+                    },
+                    'csljson': jsonEncode([
+                      {
+                        ..._offlineSource,
+                        'title': 'Desktop source',
+                        'id': identity == 'unsynced' ? localUri : 'Hassan2024',
+                      },
+                    ]),
+                  },
+                ];
+              default:
+                throw StateError('Unexpected desktop path');
+            }
+            return _json(
+              body,
+              headers: const {'Zotero-Server-ID': 'desktop-library'},
+            );
+          },
+        );
+        expect(find.byKey(const ValueKey('zotero-api-key')), findsNothing);
+        expect(
+          requests,
+          isEmpty,
+          reason: 'Desktop access requires an explicit connection',
+        );
+        await tester.tap(find.byKey(const ValueKey('zotero-connect-desktop')));
+        await tester.pumpAndSettle();
+        expect(requests, hasLength(4));
+        expect(find.text('Desktop source'), findsOneWidget);
+        final source = find.widgetWithText(CheckboxListTile, 'Desktop source');
+        await tester.ensureVisible(source);
+        await tester.tap(source);
+        await tester.pumpAndSettle();
+        if (identity == 'citation-key') {
+          expect(
+            find.textContaining('embedded without a Zotero link'),
+            findsOneWidget,
+          );
+        }
+        final insert = find.widgetWithText(FilledButton, 'Insert citation');
+        await tester.ensureVisible(insert);
+        await tester.tap(insert);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(_composerButton('Insert citation'));
+        await tester.pumpAndSettle();
+        final item = controller.zoteroFields.single.citation!.items.single;
+        expect(item.itemData!['title'], 'Desktop source');
+        expect(item.uris, switch (identity) {
+          'account' => ['http://zotero.org/users/42/items/ABCD1234'],
+          'unsynced' => [localUri],
+          _ => <String>[],
+        });
+        if (identity == 'citation-key') {
+          expect(item.id, startsWith('quds-offline-'));
+        }
+        expect(writes, isEmpty);
+        expect(session.apiKey, secret);
+        expect(session.rememberKey, isTrue);
+        _expectNoSavedSecret(controller, secret);
+        _expectNoSavedSecret(controller, '/users/0');
+        final disconnect = find.text('Disconnect desktop');
+        await tester.ensureVisible(disconnect);
+        await tester.tap(disconnect);
+        await tester.pumpAndSettle();
+        expect(session.apiKey, secret);
+        expect(writes, isEmpty);
+        expect(find.text('Desktop source'), findsNothing);
+        expect(controller.zoteroFields, hasLength(1));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'switching sources makes no requests and preserves the cloud credential',
+    (tester) async {
+      final session = ZoteroSession()..apiKey = 'retained-cloud-key';
+      var calls = 0;
+      Future<ZoteroHttpResponse> transport(ZoteroHttpRequest _) async {
+        calls++;
+        throw StateError('Do not connect while changing a preference');
+      }
+
+      await _openDialog(
+        tester,
+        session: session,
+        transport: transport,
+        localTransport: transport,
+      );
+      final source = find.byKey(const ValueKey('zotero-library-source'));
+      await tester.tap(source);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Zotero desktop (this computer)').last);
+      await tester.pumpAndSettle();
+      expect(session.useLocal, isTrue);
+      expect(find.byKey(const ValueKey('zotero-api-key')), findsNothing);
+      await tester.tap(source);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Online Zotero library').last);
+      await tester.pumpAndSettle();
+      expect(session.useLocal, isFalse);
+      expect(session.apiKey, 'retained-cloud-key');
+      expect(calls, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a host without desktop transport offers only the supported source',
+    (tester) async {
+      final session = ZoteroSession()..useLocal = true;
+      await _openDialog(tester, session: session);
+      expect(session.useLocal, isFalse);
+      expect(find.byKey(const ValueKey('zotero-library-source')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('zotero-connect-desktop')),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('desktop connection and errors fit a 320 by 640 viewport', (
+    tester,
+  ) async {
+    final session = ZoteroSession()..useLocal = true;
+    final controller = await _openDialog(
+      tester,
+      size: const Size(320, 640),
+      session: session,
+      localTransport: (_) async =>
+          ZoteroHttpResponse(statusCode: 403, body: 'private diagnostic'),
+    );
+    final revision = controller.contentRevision;
+    expect(tester.takeException(), isNull);
+    final connect = find.byKey(const ValueKey('zotero-connect-desktop'));
+    await tester.ensureVisible(connect);
+    await tester.tap(connect);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Settings'), findsWidgets);
+    expect(find.textContaining('private diagnostic'), findsNothing);
+    expect(controller.contentRevision, revision);
+    expect(controller.zoteroFields, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('offline CSL import inserts source metadata and can be undone', (
     tester,
   ) async {

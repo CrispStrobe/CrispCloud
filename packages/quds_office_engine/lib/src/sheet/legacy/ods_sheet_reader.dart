@@ -667,6 +667,7 @@ abstract final class OdsSheetReader {
         if (value == null || value.isEmpty || styleName == null) continue;
         final SmlConditionalKind kind;
         String formula;
+        var formula2 = '';
         if (value.startsWith('<>') || value.startsWith('!=')) {
           kind = SmlConditionalKind.notEqual;
           formula = value.substring(2).trim();
@@ -685,6 +686,20 @@ abstract final class OdsSheetReader {
         } else if (value.startsWith('=')) {
           kind = SmlConditionalKind.equal;
           formula = value.substring(1).trim();
+        } else if ((value.startsWith('between(') ||
+                value.startsWith('not-between(')) &&
+            value.endsWith(')')) {
+          kind = value.startsWith('not-between(')
+              ? SmlConditionalKind.notBetween
+              : SmlConditionalKind.between;
+          final inner = value.substring(
+            value.indexOf('(') + 1,
+            value.length - 1,
+          );
+          final bounds = inner.split(RegExp(r'[,;]'));
+          if (bounds.length != 2) continue;
+          formula = bounds[0].trim();
+          formula2 = bounds[1].trim();
         } else if (value.startsWith('contains-text(') && value.endsWith(')')) {
           kind = SmlConditionalKind.contains;
           formula = value
@@ -711,6 +726,7 @@ abstract final class OdsSheetReader {
             range: range,
             kind: kind,
             formula: formula,
+            formula2: formula2,
             fillRgb: fill ?? 'FFF2CC',
             fontRgb: font ?? '',
           ),

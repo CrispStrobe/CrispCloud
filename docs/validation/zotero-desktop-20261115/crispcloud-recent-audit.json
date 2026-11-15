@@ -1,0 +1,865 @@
+{
+  "repo": "CrispStrobe/CrispCloud",
+  "audited_at": "2026-11-15T19:52:29.808Z",
+  "main": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+  "zotero": "32abdd0f9219486be60d82f97d79d0040e1fee2b",
+  "terminal": "064bd3cec06477f4b58c5afdce2c228c940cb316",
+  "branches": [
+    {
+      "name": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+    },
+    {
+      "name": "codex/terminal-screen-workspace",
+      "sha": "064bd3cec06477f4b58c5afdce2c228c940cb316"
+    },
+    {
+      "name": "codex/zotero-support-20261115",
+      "sha": "32abdd0f9219486be60d82f97d79d0040e1fee2b"
+    },
+    {
+      "name": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+    },
+    {
+      "name": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+    },
+    {
+      "name": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+    },
+    {
+      "name": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4"
+    },
+    {
+      "name": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+    },
+    {
+      "name": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+    },
+    {
+      "name": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+    },
+    {
+      "name": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+    },
+    {
+      "name": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+    },
+    {
+      "name": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+    },
+    {
+      "name": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+    },
+    {
+      "name": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6"
+    },
+    {
+      "name": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01"
+    },
+    {
+      "name": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+    },
+    {
+      "name": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+    },
+    {
+      "name": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+    },
+    {
+      "name": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d"
+    },
+    {
+      "name": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+    },
+    {
+      "name": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+    },
+    {
+      "name": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12"
+    },
+    {
+      "name": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c"
+    },
+    {
+      "name": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665"
+    },
+    {
+      "name": "main",
+      "sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0"
+    }
+  ],
+  "branch_comparisons": [
+    {
+      "branch": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 23,
+      "base": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 3,
+      "base": "0198e9626eaec828eccd6a8f63378e1286871017",
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4,
+          "changes": 8,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 6,
+      "base": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 3,
+          "changes": 7,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 9,
+      "base": "45370df56a6ea01ae8597294ee5522d91676079d",
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 9,
+          "deletions": 7,
+          "changes": 16,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 268,
+      "base": "128f55295107e3ada605b52d160165e03f726cb4",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 1,
+      "base": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+      "files": [
+        {
+          "filename": "docs/file-format-viewers.md",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4,
+          "changes": 8,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 36,
+      "base": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 10,
+      "base": "d86ec1903e66a9086b3b350740a07cc16a66971b",
+      "files": [
+        {
+          "filename": "lib/widgets/office_worksheet_bar.dart",
+          "status": "modified",
+          "additions": 13,
+          "deletions": 4,
+          "changes": 17,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+          "status": "modified",
+          "additions": 13,
+          "deletions": 1,
+          "changes": 14,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_editor/test/sheet_hidden_sheet_test.dart",
+          "status": "added",
+          "additions": 18,
+          "deletions": 0,
+          "changes": 18,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+          "status": "modified",
+          "additions": 13,
+          "deletions": 7,
+          "changes": 20,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0,
+          "changes": 4,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 1,
+          "changes": 7,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+          "status": "modified",
+          "additions": 22,
+          "deletions": 0,
+          "changes": 22,
+          "previous_filename": null
+        },
+        {
+          "filename": "test/widget/office_hidden_sheet_test.dart",
+          "status": "added",
+          "additions": 45,
+          "deletions": 0,
+          "changes": 45,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 6,
+          "changes": 13,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 29,
+      "base": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 267,
+      "base": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 34,
+      "base": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 266,
+      "base": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 5,
+      "base": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+      "files": [
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0,
+          "changes": 4,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 2,
+          "changes": 25,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 2,
+          "changes": 25,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 0,
+          "changes": 6,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5,
+          "changes": 10,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 7,
+      "base": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+      "files": [
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+          "status": "modified",
+          "additions": 13,
+          "deletions": 8,
+          "changes": 21,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+          "status": "modified",
+          "additions": 22,
+          "deletions": 3,
+          "changes": 25,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 0,
+          "changes": 3,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+          "status": "modified",
+          "additions": 27,
+          "deletions": 0,
+          "changes": 27,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5,
+          "changes": 10,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 4,
+      "base": "110824c7c964419e7feae100cc94f47c1ed92d59",
+      "files": [
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+          "status": "modified",
+          "additions": 13,
+          "deletions": 2,
+          "changes": 15,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+          "status": "modified",
+          "additions": 23,
+          "deletions": 12,
+          "changes": 35,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+          "status": "modified",
+          "additions": 41,
+          "deletions": 0,
+          "changes": 41,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 4,
+          "changes": 8,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 29,
+      "base": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 8,
+      "base": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+      "files": [
+        {
+          "filename": "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart",
+          "status": "modified",
+          "additions": 14,
+          "deletions": 3,
+          "changes": 17,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+          "status": "modified",
+          "additions": 96,
+          "deletions": 0,
+          "changes": 96,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/serial/word_bibliography_io.dart",
+          "status": "modified",
+          "additions": 57,
+          "deletions": 1,
+          "changes": 58,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+          "status": "modified",
+          "additions": 41,
+          "deletions": 1,
+          "changes": 42,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/word_bibliography_fidelity_test.dart",
+          "status": "modified",
+          "additions": 21,
+          "deletions": 0,
+          "changes": 21,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 6,
+          "changes": 12,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 30,
+      "base": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 31,
+      "base": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 271,
+      "base": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 2,
+      "base": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+      "files": [
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+          "status": "modified",
+          "additions": 81,
+          "deletions": 0,
+          "changes": 81,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 1,
+          "changes": 6,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 2,
+          "changes": 7,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+          "status": "modified",
+          "additions": 38,
+          "deletions": 0,
+          "changes": 38,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5,
+          "changes": 10,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "status": "diverged",
+      "ahead_by": 1,
+      "behind_by": 8,
+      "base": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+      "files": [
+        {
+          "filename": "packages/QUDS_FORKS.md",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/lib/src/word/serial/word_bibliography_io.dart",
+          "status": "modified",
+          "additions": 57,
+          "deletions": 1,
+          "changes": 58,
+          "previous_filename": null
+        },
+        {
+          "filename": "packages/quds_office_engine/test/word_bibliography_fidelity_test.dart",
+          "status": "modified",
+          "additions": 21,
+          "deletions": 0,
+          "changes": 21,
+          "previous_filename": null
+        },
+        {
+          "filename": "tool/office_fidelity_manifest.json",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3,
+          "changes": 6,
+          "previous_filename": null
+        }
+      ],
+      "error": false
+    },
+    {
+      "branch": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 123,
+      "base": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "files": [],
+      "error": false
+    },
+    {
+      "branch": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 124,
+      "base": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "files": [],
+      "error": false
+    }
+  ],
+  "squash_equivalence": [
+    {
+      "branch": "docs/conditional-complete",
+      "pr": 146,
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "merged_sha": "c5fd9f14fab638a28bb8e21a0ea2b7e687b5cac1",
+      "tree": "da02e789e7eb64258af155086b4da2336e40cfe9",
+      "merged_tree": "da02e789e7eb64258af155086b4da2336e40cfe9",
+      "equal": true
+    },
+    {
+      "branch": "docs/conditional-formats",
+      "pr": 142,
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "merged_sha": "edef30baa1cc8b99fc30ef410d855f364f55bbad",
+      "tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae",
+      "merged_tree": "e114c389df13435d1faf7f73cc3a0d95ffdd61ae",
+      "equal": true
+    },
+    {
+      "branch": "docs/ods-hidden-state",
+      "pr": 138,
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "merged_sha": "ebb8d13cd7688e32c24be81dafd88c6f8de82f0c",
+      "tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111",
+      "merged_tree": "73b04cb1047eea0fe619f382a16d7f2e10b30111",
+      "equal": true
+    },
+    {
+      "branch": "docs/ods-validations",
+      "pr": 148,
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "merged_sha": "50b459323fe798c3638b8b8ce499ea91b89f98c0",
+      "tree": "b46b96d6ede506583d37f0d885892f0bac260cff",
+      "merged_tree": "b46b96d6ede506583d37f0d885892f0bac260cff",
+      "equal": true
+    },
+    {
+      "branch": "feat/hidden-sheets-ui",
+      "pr": 137,
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "merged_sha": "45370df56a6ea01ae8597294ee5522d91676079d",
+      "tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858",
+      "merged_tree": "53e5e9ffbb91a4d56bd72dead477ac703d6d4858",
+      "equal": true
+    },
+    {
+      "branch": "fix/conditional-dxf-vendor",
+      "pr": 144,
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "merged_sha": "110824c7c964419e7feae100cc94f47c1ed92d59",
+      "tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b",
+      "merged_tree": "d28c0c16e1f4352f6a72d080d56ef8f62628ce7b",
+      "equal": true
+    },
+    {
+      "branch": "fix/conditional-operators-vendor",
+      "pr": 141,
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "merged_sha": "2fd549d4331f280b81b0a47e81fb0f6b916ec8fe",
+      "tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39",
+      "merged_tree": "b7a003651330b5e917a8fbf3bacb85aa287e3d39",
+      "equal": true
+    },
+    {
+      "branch": "fix/conditional-text-vendor",
+      "pr": 145,
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "merged_sha": "0198e9626eaec828eccd6a8f63378e1286871017",
+      "tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55",
+      "merged_tree": "339e1bea0e68adf1d598bc7c602dbba2d06aaf55",
+      "equal": true
+    },
+    {
+      "branch": "fix/ods-conditional-vendor",
+      "pr": 139,
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "merged_sha": "b0bb5cdd13cf692e75f2c8cc6cc744f4782ce588",
+      "tree": "3b86bb4bc05d386957be7fe7b3208156a965e685",
+      "merged_tree": "3b86bb4bc05d386957be7fe7b3208156a965e685",
+      "equal": true
+    },
+    {
+      "branch": "fix/ods-validations-vendor",
+      "pr": 147,
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "merged_sha": "9eb596a96fa2e128280e332d4982018352bb2dbf",
+      "tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de",
+      "merged_tree": "f4a69d35ef744a3013df9cb259f93f0782aaa0de",
+      "equal": true
+    }
+  ],
+  "utf16_equivalence": [
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_bibliography_io.dart",
+      "verification": "exact UTF-8 content equality via GitHub fetch",
+      "equal": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_bibliography_fidelity_test.dart",
+      "verification": "exact UTF-8 content equality via GitHub fetch",
+      "equal": true
+    }
+  ],
+  "terminal_zotero_changed_file_overlap": [
+    "docs/terminal-parity.md"
+  ],
+  "open_prs": [
+    {
+      "number": 149,
+      "title": "Integrate Zotero references into the Word editor",
+      "head": "codex/zotero-support-20261115",
+      "head_sha": "32abdd0f9219486be60d82f97d79d0040e1fee2b",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 140,
+      "title": "Extend terminal workspace with screen, tabs, split views, search and SSH profiles",
+      "head": "codex/terminal-screen-workspace",
+      "head_sha": "064bd3cec06477f4b58c5afdce2c228c940cb316",
+      "draft": true,
+      "state": "open"
+    }
+  ],
+  "zotero_comments": [],
+  "recommendation": "No newer main changes. Bring in terminal head by ordinary merge if honoring request to integrate all recent branches; the only overlap is docs/terminal-parity.md. Remaining branches are ancestors or verified squash equivalents; superseded UTF-16 implementation/test blobs match main."
+}

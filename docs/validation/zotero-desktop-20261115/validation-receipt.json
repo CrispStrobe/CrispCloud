@@ -1,0 +1,174 @@
+{
+  "validated_at_utc": "2026-11-15T20:08:14Z",
+  "working_directory": "/workspace/scratch/fc55a57aa1fd/zotero-core-validation",
+  "runtime": {
+    "version": "3.13.7",
+    "reported_version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "source": "https://storage.googleapis.com/dart-archive/channels/stable/release/3.13.7/sdk/dartsdk-linux-x64-release.zip",
+    "archive_bytes": 238850892,
+    "full_sdk_expanded_bytes": 669855691,
+    "installed_files": 485,
+    "installed_logical_bytes": 154762076,
+    "installed_unique_inode_bytes": 146098956,
+    "selected_but_omitted": [
+      "dart-sdk/bin/snapshots/kernel-service.dart.snapshot"
+    ],
+    "not_selected": "Web compilers and platform dills, developer UI assets, sanitizer runtimes, debug symbols, SDK C headers and unrelated compiler snapshots.",
+    "deduplication": "vm_platform.dill and vm_platform_strong.dill are byte-identical hardlinks.",
+    "integrity": "Official HTTPS ZIP byte ranges; local filenames, exact byte counts and CRC32 verified at extraction; all installed subset CRC32/size rechecked; SHA256 recorded for every installed file. Full archive SHA256 was not checked because full archive was never downloaded."
+  },
+  "sources": [
+    {
+      "canonical": "quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "tested": "lib/src/zotero/zotero_client.dart",
+      "byte_identical": true,
+      "sha256": "729b9d431b05d559e831699e761752459ea29c27caf940e9844d026d5ffdf897"
+    },
+    {
+      "canonical": "quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+      "tested": "lib/src/zotero/zotero_models.dart",
+      "byte_identical": true,
+      "sha256": "172663c7fef76d0fa5a1f9977c82c7df83500e9a15f1599ee9ca79ab80c3357b"
+    },
+    {
+      "canonical": "quds_office_suite/packages/quds_office_engine/test/zotero_client_test.dart",
+      "tested": "test/zotero_client_test.dart",
+      "byte_identical": true,
+      "sha256": "8502e4921897cfa3f9c89170f64dd6e60e97e7eecba886935bf6db64fb76ad68"
+    },
+    {
+      "canonical": "CrispCloud/lib/services/office_zotero_transport.dart",
+      "tested": "lib/host_transport.dart",
+      "byte_identical": true,
+      "sha256": "d5916f5524542f15f8efbb9cae9dc8f8eb3c931b01d16422f8cc2b3f8761d394"
+    }
+  ],
+  "test_dependencies": {
+    "test": "1.33.0",
+    "http": "1.6.0",
+    "resolution": "Genuine dart pub get, 50 dependencies, exact pubspec.lock preserved."
+  },
+  "commands": [
+    {
+      "command": "../dart-tool pub get > pub-get.log 2>&1",
+      "exit_code": 0
+    },
+    {
+      "command": "TMPDIR=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/tmp ../runtime-dart-3.13.7/dart-sdk/bin/dartaotruntime ../runtime-dart-3.13.7/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/dart-sdk/ --platform /workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/dart-sdk/lib/_internal/vm_platform_strong.dill --target vm --enable-asserts --no-embed-source-text --packages .dart_tool/package_config.json --output-dill .dart_tool/zotero_client_test.dill test/zotero_client_test.dart > core-compile.log 2>&1",
+      "exit_code": 0
+    },
+    {
+      "command": "TMPDIR=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/tmp PUB_CACHE=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/pub-cache XDG_CONFIG_HOME=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/config ../runtime-dart-3.13.7/dart-sdk/bin/dartvm --enable-asserts --packages=.dart_tool/package_config.json .dart_tool/zotero_client_test.dill > core-tests.log 2>&1",
+      "exit_code": 0,
+      "passed": 34
+    },
+    {
+      "command": "TMPDIR=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/tmp ../runtime-dart-3.13.7/dart-sdk/bin/dartaotruntime ../runtime-dart-3.13.7/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/dart-sdk/ --platform /workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/dart-sdk/lib/_internal/vm_platform_strong.dill --target vm --enable-asserts --no-embed-source-text --no-print-incremental-dependencies --packages .dart_tool/package_config.json --output-dill .dart_tool/host_transport_test.dill test/host_transport_test.dart > host-compile.log 2>&1",
+      "exit_code": 0
+    },
+    {
+      "command": "TMPDIR=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/tmp PUB_CACHE=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/pub-cache XDG_CONFIG_HOME=/workspace/scratch/fc55a57aa1fd/runtime-dart-3.13.7/config ../runtime-dart-3.13.7/dart-sdk/bin/dartvm --enable-asserts --packages=.dart_tool/package_config.json .dart_tool/host_transport_test.dill > host-tests.log 2>&1",
+      "exit_code": 0,
+      "passed": 16
+    },
+    {
+      "command": "../dart-tool analyze --fatal-infos . > analysis.log 2>&1",
+      "exit_code": 0,
+      "result": "No issues found!"
+    }
+  ],
+  "passed_tests": 50,
+  "analysis": "No issues found; actual official analysis_server_aot snapshot via dart analyze --fatal-infos.",
+  "scope": [
+    "Complete unchanged canonical zotero_client_test.dart: 34 tests.",
+    "Byte-identical canonical transport implementation; 16 extracted transport tests plus their original helpers, using package:test imports instead of flutter_test.",
+    "Focused package includes exact production engine/client/models and transport sources; no stubs or replaced production source.",
+    "Frontend compiler and VM execute actual package:test assertions; no full application or Flutter/widget execution claimed."
+  ],
+  "limits": [
+    "No Flutter runtime or full native CrispCloud/Quds build.",
+    "Host credential/controller/widget tests outside transport group were not run this turn.",
+    "Tests use synthetic transports and fixtures; no private Zotero account or live desktop acceptance was run.",
+    "Kernel-service was omitted for disk space; genuine SDK frontend_server_aot compiled tests and genuine dartvm executed resulting kernels.",
+    "Generated kernels were hashed and removed after successful execution to make room for static analyzer; hashes recorded."
+  ],
+  "artifacts": [
+    {
+      "path": "pub-get.log",
+      "sha256": "7736f2b8b1398836b7eeaaae4f0648c39981a1e2107330ee73bead5b4f7bf8f0",
+      "size": 1034
+    },
+    {
+      "path": "dart-version.log",
+      "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4",
+      "size": 82
+    },
+    {
+      "path": "core-compile.log",
+      "sha256": "6571a4d43eef3e2f7861a7184abd4f9390dc7a22b66a508619ba09d8bd986fa0",
+      "size": 46187
+    },
+    {
+      "path": "core-tests.log",
+      "sha256": "0ea2121fcdc173c6ba92c2933d9b29983f44f062e087d90fee0f70149fa4e528",
+      "size": 24
+    },
+    {
+      "path": "host-compile.log",
+      "sha256": "38b466fb8df4c95fa1fe048af0ccf0e227db8730142f8416f2b38a737280f0f3",
+      "size": 156
+    },
+    {
+      "path": "host-tests.log",
+      "sha256": "1cea8d812d7809b66870a659ccd3e4f8ebefc7b726d1dd15fc4fdf4ab206f951",
+      "size": 24
+    },
+    {
+      "path": "analysis.log",
+      "sha256": "6c605f9f216937e88e5895b5d337e05cca90f8379c89447dd528c00a68bd9ad1",
+      "size": 32
+    },
+    {
+      "path": "pubspec.yaml",
+      "sha256": "59d42bacee7cb2afd5fe16c1adf3a5447cbfb87a32bcacbfe3dc891944441dd6",
+      "size": 136
+    },
+    {
+      "path": "pubspec.lock",
+      "sha256": "634e1534b740bbbdf69513878545c326629d314db087f8a45224483ba9f669f3",
+      "size": 11636
+    },
+    {
+      "path": "host-transport-extraction.json",
+      "sha256": "06ccbf50c39b7d20159b438e5ad7916e5159fbeae0a75d623deb48194f95b5f0",
+      "size": 1242
+    },
+    {
+      "path": "compiled-kernel-receipt.json",
+      "sha256": "60575c4cbf77e8de116bab0f6c3edaec17c9580bc7e72acf756aa3b18f3962ec",
+      "size": 432
+    },
+    {
+      "path": "run-focused.sh",
+      "size": 1510,
+      "sha256": "3ec28ada345327695e9721cbfa20d304b925f6128ea684babdde054ff7298a0c"
+    },
+    {
+      "path": "dart-sdk-subset-provenance.json",
+      "size": 101614,
+      "sha256": "743e91d3fe42fe479a1fbe14353a2c9a24753793502fb4ff80f7f77911e8e3aa"
+    },
+    {
+      "path": "extract-host-transport.py",
+      "size": 4481,
+      "sha256": "29a8da7d621d4019637988315e3e4a7d0debb585fb799e2660ffd0ad88b9d998"
+    },
+    {
+      "path": "SETUP.md",
+      "size": 3817,
+      "sha256": "502038b24b4c4763bf52fa6a5a479c1fc655ecbb457d346504affa8cb0280750"
+    }
+  ],
+  "disk_free_at_receipt": 47579136,
+  "host_extraction_check": "extract-host-transport.py --check passed; canonical, staged and section hashes matched the tested bytes."
+}

@@ -9,8 +9,9 @@ export 'zotero_models.dart';
 /// dart:io or Flutter, and never persists the API key.
 /// Transports must disable redirects, so a custom API-key header cannot be
 /// forwarded to another origin. Honor [ZoteroHttpRequest.followRedirects].
-typedef ZoteroTransport =
-    Future<ZoteroHttpResponse> Function(ZoteroHttpRequest request);
+typedef ZoteroTransport = Future<ZoteroHttpResponse> Function(
+  ZoteroHttpRequest request,
+);
 
 class ZoteroHttpRequest {
   ZoteroHttpRequest({required this.uri, required Map<String, String> headers})
@@ -71,25 +72,35 @@ class ZoteroApiException implements Exception {
   String toString() => message;
 }
 
-/// Read-only client for Zotero Web API v3.
+/// Read-only client for Zotero Web API v3 and the opt-in desktop local API.
 ///
-/// All outgoing URLs are built from a fixed HTTPS origin and validated library
-/// IDs/keys. This is intentionally not a general HTTP proxy or local API client.
-/// No method changes a Zotero library. API keys go only in an HTTP header.
+/// The default constructor uses only Zotero's fixed HTTPS origin. [ZoteroClient.local]
+/// uses only `http://localhost:23119/api/` and never accepts an API key.
+/// Neither client accepts arbitrary origins, follows redirects, or changes a library.
 class ZoteroClient {
   ZoteroClient({
     required this.transport,
     String? apiKey,
     DateTime Function()? clock,
-  }) : _apiKey = apiKey?.trim(),
+  }) : isLocal = false,
+       _apiKey = apiKey?.trim(),
        _clock = clock ?? DateTime.now {
     if (_apiKey != null && RegExp(r'[\r\n\x00-\x1f\x7f]').hasMatch(_apiKey)) {
       throw ArgumentError('The Zotero API key contains invalid characters.');
     }
   }
 
+  /// Desktop access must be explicitly enabled by the user in Zotero.
+  /// Hosts must provide a direct loopback transport, without an external proxy.
+  ZoteroClient.local({required this.transport, DateTime Function()? clock})
+    : isLocal = true,
+      _apiKey = null,
+      _clock = clock ?? DateTime.now;
+
   final ZoteroTransport transport;
+  final bool isLocal;
   final String? _apiKey;
+  String? _localServerId;
   final DateTime Function() _clock;
   DateTime? _backoffUntil;
 
@@ -104,7 +115,23 @@ class ZoteroClient {
     return remaining > Duration.zero ? remaining : null;
   }
 
+  /// Checks the local API using its plain-text root response. Zotero 10's
+  /// server identifier is pinned for this client so a database change requires
+  /// reconnecting instead of silently reusing a different desktop library.
+  Future<void> probeLocal() async {
+    if (!isLocal) {
+      throw StateError('Only a local Zotero client can probe the desktop.');
+    }
+    final response = await _get('/');
+    if (response.header('Zotero-API-Version') != '3') {
+      throw _invalidResponse();
+    }
+  }
+
   Future<ZoteroKeyInfo> verifyKey() async {
+    if (isLocal) {
+      throw StateError('Zotero desktop does not use a Web API key.');
+    }
     if (_apiKey == null || _apiKey.isEmpty) {
       throw const ZoteroApiException(
         kind: ZoteroApiErrorKind.authentication,
@@ -134,8 +161,13 @@ class ZoteroClient {
     int start = 0,
     int limit = 50,
   }) async {
-    final library = ZoteroLibrary.user(userId);
-    final uri = _uri('${library.apiPath}/groups', _pagination(start, limit));
+    final library = isLocal && userId == 0
+        ? ZoteroLibrary.localUser()
+        : ZoteroLibrary.user(userId);
+    final uri = _uri(
+      '${_libraryPath(library)}/groups',
+      _pagination(start, limit),
+    );
     final response = await _request(uri);
     final groups = _array(_decode(response)).map((value) {
       final json = _object(value);
@@ -157,7 +189,7 @@ class ZoteroClient {
     int limit = 50,
   }) async {
     final uri = _uri(
-      '${library.apiPath}/collections',
+      '${_libraryPath(library)}/collections',
       _pagination(start, limit),
     );
     final response = await _request(uri);
@@ -189,8 +221,8 @@ class ZoteroClient {
   }) async {
     if (collectionKey != null) validateZoteroKey(collectionKey);
     final path = collectionKey == null
-        ? '${library.apiPath}/items/top'
-        : '${library.apiPath}/collections/$collectionKey/items/top';
+        ? '${_libraryPath(library)}/items/top'
+        : '${_libraryPath(library)}/collections/$collectionKey/items/top';
     final parameters = {
       ..._pagination(start, limit),
       'include': 'data,csljson',
@@ -201,9 +233,9 @@ class ZoteroClient {
     };
     final uri = _uri(path, parameters);
     final response = await _request(uri);
-    final items = _array(
-      _decode(response),
-    ).map((json) => _item(_object(json), library)).toList();
+    final items = _array(_decode(response))
+        .map((json) => _item(_object(json), library))
+        .toList();
     return _page(items, response, uri, start, limit);
   }
 
@@ -216,7 +248,7 @@ class ZoteroClient {
     String locale = 'en-US',
   }) async {
     validateZoteroKey(key);
-    final response = await _get('${library.apiPath}/items/$key', {
+    final response = await _get('${_libraryPath(library)}/items/$key', {
       'include': 'data,csljson,citation,bib',
       ..._formatting(style, locale),
     });
@@ -260,7 +292,7 @@ class ZoteroClient {
     String locale = 'en-US',
   }) async {
     final keys = _selection(itemKeys);
-    final response = await _get('${library.apiPath}/items', {
+    final response = await _get('${_libraryPath(library)}/items', {
       'itemKey': keys.join(','),
       'format': 'bib',
       'linkwrap': '0',
@@ -277,7 +309,7 @@ class ZoteroClient {
     ZoteroExportFormat format = ZoteroExportFormat.cslJson,
   }) async {
     final keys = _selection(itemKeys);
-    final response = await _get('${library.apiPath}/items', {
+    final response = await _get('${_libraryPath(library)}/items', {
       'itemKey': keys.join(','),
       'format': format.apiValue,
       'limit': '${keys.length}',
@@ -312,16 +344,31 @@ class ZoteroClient {
         'Use a Zotero citation style identifier, such as apa.',
       );
     }
-    if (!RegExp(
-      r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$',
-    ).hasMatch(locale)) {
+    if (!RegExp(r'^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$')
+        .hasMatch(locale)) {
       throw ArgumentError('Use a citation locale such as en-US.');
     }
     return {'style': style, 'locale': locale};
   }
 
-  static Uri _uri(String path, [Map<String, String> parameters = const {}]) =>
-      Uri.https('api.zotero.org', path, parameters.isEmpty ? null : parameters);
+  String _libraryPath(ZoteroLibrary library) {
+    if (library.isLocalUser && !isLocal) {
+      throw ArgumentError('The local library alias requires Zotero desktop.');
+    }
+    return library.apiPath;
+  }
+
+  Uri _uri(String path, [Map<String, String> parameters = const {}]) => isLocal
+      ? Uri.http(
+          'localhost:23119',
+          '/api$path',
+          parameters.isEmpty ? null : parameters,
+        )
+      : Uri.https(
+          'api.zotero.org',
+          path,
+          parameters.isEmpty ? null : parameters,
+        );
 
   Future<ZoteroHttpResponse> _get(
     String path, [
@@ -341,7 +388,11 @@ class ZoteroClient {
       uri: uri,
       headers: {
         'Zotero-API-Version': '3',
-        if (_apiKey != null && _apiKey.isNotEmpty) 'Zotero-API-Key': _apiKey,
+        if (isLocal) 'Zotero-Allowed-Request': '1',
+        if (isLocal && _localServerId != null)
+          'Zotero-Server-ID': _localServerId!,
+        if (!isLocal && _apiKey != null && _apiKey.isNotEmpty)
+          'Zotero-API-Key': _apiKey,
       },
     );
     ZoteroHttpResponse response;
@@ -349,9 +400,11 @@ class ZoteroClient {
       response = await transport(request);
     } catch (_) {
       // Transport exceptions may contain URLs or headers. Never surface them.
-      throw const ZoteroApiException(
+      throw ZoteroApiException(
         kind: ZoteroApiErrorKind.network,
-        message: 'Could not reach Zotero. Check the connection and try again.',
+        message: isLocal
+            ? 'Could not reach Zotero desktop. Open Zotero on this computer and try again.'
+            : 'Could not reach Zotero. Check the connection and try again.',
       );
     }
     var backoff = _seconds(response.header('Backoff'));
@@ -367,11 +420,32 @@ class ZoteroClient {
         _backoffUntil = until;
       }
     }
-    if (response.statusCode == 200) return response;
+    if (isLocal && response.statusCode == 412) {
+      throw _localConnectionChanged(response.statusCode);
+    }
+    if (response.statusCode == 200) {
+      if (isLocal) {
+        final serverId = response.header('Zotero-Server-ID');
+        if (_localServerId != null && serverId != _localServerId) {
+          throw _localConnectionChanged(response.statusCode);
+        }
+        if (serverId != null) {
+          if (serverId.isEmpty ||
+              serverId.length > 256 ||
+              RegExp(r'[^\x21-\x7e]').hasMatch(serverId)) {
+            throw _invalidResponse();
+          }
+          _localServerId ??= serverId;
+        }
+      }
+      return response;
+    }
     final (kind, message) = switch (response.statusCode) {
       401 || 403 => (
         ZoteroApiErrorKind.authentication,
-        'Zotero denied access. Check the API key and its library permissions.',
+        isLocal
+            ? 'Zotero desktop denied access. In Zotero Settings → Advanced, enable “Allow other applications on this computer to communicate with Zotero”.'
+            : 'Zotero denied access. Check the API key and its library permissions.',
       ),
       404 => (
         ZoteroApiErrorKind.notFound,
@@ -421,9 +495,9 @@ class ZoteroClient {
         final uri = Uri.tryParse(match.group(1)!);
         // Only extract an offset; never follow an arbitrary URL with the key.
         if (uri == null ||
-            uri.scheme != 'https' ||
-            uri.host != 'api.zotero.org' ||
-            uri.port != 443 ||
+            uri.scheme != request.scheme ||
+            uri.host != request.host ||
+            uri.port != request.port ||
             uri.userInfo.isNotEmpty ||
             uri.path != request.path ||
             uri.hasFragment ||
@@ -451,30 +525,38 @@ class ZoteroClient {
     );
   }
 
-  static ZoteroItem _item(Map<String, dynamic> json, ZoteroLibrary library) {
+  ZoteroItem _item(Map<String, dynamic> json, ZoteroLibrary library) {
     final data = _object(json['data']);
     final key = _responseKey(json['key'] ?? data['key']);
     if (data['key'] != null && data['key'] != key) throw _invalidResponse();
     final itemType = _string(data['itemType']);
     if (itemType.isEmpty) throw _invalidResponse();
+    var sourceLibrary = library;
     if (json['library'] != null) {
       final source = _object(json['library']);
+      final id = _integer(source['id']);
       if (source['type'] != library.type.name ||
-          _integer(source['id']) != library.id) {
+          id == null ||
+          id < 0 ||
+          (!library.isLocalUser && id != library.id)) {
         throw _invalidResponse();
       }
+      if (library.isLocalUser && id > 0) sourceLibrary = ZoteroLibrary.user(id);
+    } else if (library.isLocalUser) {
+      // The routing alias alone says nothing about the persistent identity.
+      throw _invalidResponse();
     }
     final creators = data['creators'];
-    final csl = json['csljson'];
-    Map<String, dynamic>? cslJson;
-    if (csl is Map) {
-      cslJson = _object(csl);
-    } else if (csl is String && csl.isNotEmpty) {
-      try {
-        cslJson = _object(jsonDecode(csl));
-      } on FormatException {
-        throw _invalidResponse();
-      }
+    final cslJson = _singleCsl(json['csljson']);
+    final cslUri = _cslUri(cslJson?['id'], key);
+    final canonicalUri = sourceLibrary.isLocalUser
+        ? cslUri
+        : sourceLibrary.itemUri(key);
+    if (cslUri != null &&
+        (sourceLibrary.isLocalUser
+            ? !cslUri.path.startsWith('/users/local/')
+            : cslUri != canonicalUri)) {
+      throw _invalidResponse();
     }
     return ZoteroItem(
       library: library,
@@ -497,12 +579,63 @@ class ZoteroClient {
             }).toList()
           : const [],
       cslJson: cslJson,
+      citationUri: canonicalUri,
       citationHtml: json['citation'] is String
           ? json['citation'] as String
           : null,
       bibliographyHtml: json['bib'] is String ? json['bib'] as String : null,
     );
   }
+
+  /// Desktop exports include a one-element CSL array as a JSON string;
+  /// Web API responses normally include the object directly. Never select an
+  /// arbitrary first record from an unexpected multi-item export.
+  static Map<String, dynamic>? _singleCsl(dynamic value) {
+    if (value == null || value == '') return null;
+    if (value is String) {
+      try {
+        value = jsonDecode(value);
+      } on FormatException {
+        throw _invalidResponse();
+      }
+    }
+    if (value is Map<String, dynamic> && value.containsKey('items')) {
+      value = value['items'];
+    }
+    if (value is List) {
+      if (value.length != 1) throw _invalidResponse();
+      value = value.single;
+    }
+    return _object(value);
+  }
+
+  /// Canonical URI IDs are verified, while citation keys and Zotero's numeric
+  /// export IDs remain ordinary CSL IDs. In particular users/0 is not an ID.
+  static Uri? _cslUri(dynamic value, String key) {
+    if (value is! String) return null;
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasScheme || uri.host != 'zotero.org') return null;
+    if ((uri.scheme != 'http' && uri.scheme != 'https') ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        uri.port != (uri.scheme == 'https' ? 443 : 80)) {
+      throw _invalidResponse();
+    }
+    final match = RegExp(
+      r'^/(?:users/[1-9][0-9]*|groups/[1-9][0-9]*|users/local/[A-Za-z0-9]{8})/items/([A-Z0-9]{8})$',
+    ).firstMatch(uri.path);
+    if (match == null || match.group(1) != key) throw _invalidResponse();
+    return Uri.parse('http://zotero.org${uri.path}');
+  }
+
+  static ZoteroApiException _localConnectionChanged(int status) =>
+      ZoteroApiException(
+        kind: ZoteroApiErrorKind.unavailable,
+        message:
+            'Zotero desktop library changed. Reconnect to its local library.',
+        statusCode: status,
+      );
 
   static dynamic _decode(ZoteroHttpResponse response) {
     try {

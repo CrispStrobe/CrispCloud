@@ -1,0 +1,2928 @@
+{
+  "version": "3.13.7",
+  "reported_version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "source": "https://storage.googleapis.com/dart-archive/channels/stable/release/3.13.7/sdk/dartsdk-linux-x64-release.zip",
+  "archive_bytes": 238850892,
+  "full_sdk_expanded_bytes": 669855691,
+  "installed_files": 485,
+  "installed_logical_bytes": 154762076,
+  "installed_unique_inode_bytes": 146098956,
+  "selected_but_omitted": [
+    "dart-sdk/bin/snapshots/kernel-service.dart.snapshot"
+  ],
+  "not_selected": "Web compilers and platform dills, developer UI assets, sanitizer runtimes, debug symbols, SDK C headers and unrelated compiler snapshots.",
+  "deduplication": "vm_platform.dill and vm_platform_strong.dill are byte-identical hardlinks.",
+  "integrity": "Official HTTPS ZIP byte ranges; local filenames, exact byte counts and CRC32 verified at extraction; all installed subset CRC32/size rechecked; SHA256 recorded for every installed file. Full archive SHA256 was not checked because full archive was never downloaded.",
+  "files": [
+    {
+      "path": "dart-sdk/sdk_packages.yaml",
+      "size": 160,
+      "crc32": 243690261,
+      "sha256": "f427dcf4f87473458fd4af3d065db5d3a76cd21b2663c242f2c06bf08632c000"
+    },
+    {
+      "path": "dart-sdk/revision",
+      "size": 41,
+      "crc32": 2584178593,
+      "sha256": "768a9c944b0cf6db4e13cdedbd1498f1ab83bbebdb61fe769c6385c2cec07d88"
+    },
+    {
+      "path": "dart-sdk/README",
+      "size": 1271,
+      "crc32": 4154216210,
+      "sha256": "badfd0f9c13687769e68a7f2f48f36d761e5f083f8822262aa45f6ebb46a7fe6"
+    },
+    {
+      "path": "dart-sdk/LICENSE",
+      "size": 1502,
+      "crc32": 601340941,
+      "sha256": "2cfa3ee8e7512e6d44c854b986510810fadc815f93f890373b3a81c1b6ccd256"
+    },
+    {
+      "path": "dart-sdk/version",
+      "size": 7,
+      "crc32": 94363726,
+      "sha256": "3ce16e94590543a327d3e5ae412e663206e0ed1b46628ed3dd5ad29caa1ff5ac"
+    },
+    {
+      "path": "dart-sdk/lib/libraries.json",
+      "size": 26022,
+      "crc32": 4281716502,
+      "sha256": "a4e117a9ea8b5c86038bdd67179c61af76418fd423f6be8d6617a3c1932269d2"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_platform.dill",
+      "size": 8663120,
+      "crc32": 1169254576,
+      "sha256": "883d97292177020d42bed41ffcc3755319bb499872239715dde5e0ae3a723f67"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_platform_product.dill",
+      "size": 8663064,
+      "crc32": 856181204,
+      "sha256": "0d8d95ad3515bcfef1ed6ee4d1f45c0d88a0aad92898eaee9d57e041928a4139"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_platform_strong.dill",
+      "size": 8663120,
+      "crc32": 1169254576,
+      "sha256": "883d97292177020d42bed41ffcc3755319bb499872239715dde5e0ae3a723f67"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/allowed_experiments.json",
+      "size": 380,
+      "crc32": 1887556989,
+      "sha256": "7841d97f021edb07e237f64ff952104ed7077c891e0f1e45839617ece52bb0f1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/date_patch.dart",
+      "size": 20897,
+      "crc32": 3863752490,
+      "sha256": "51af324c978b9f5516f9af503ab9e5eb1d040db996c0208cac9f0f2e73254dda"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/bigint_patch.dart",
+      "size": 102842,
+      "crc32": 1688181422,
+      "sha256": "f6fb8bb36d2d0fb00ec6eae197959ec19e9e04913c9ba179a62e38ea13eb8919"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/uri_encode_patch.dart",
+      "size": 2105,
+      "crc32": 98868307,
+      "sha256": "f42c2316f9006c3c1f5da6c54745fe10ed0221a57d77e3ca03e6afe49cc14727"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/integers_patch.dart",
+      "size": 17270,
+      "crc32": 457915850,
+      "sha256": "3798e3f5a4c0597ac45d3603abcb7316e8868ad0584c958a9730254cd123a625"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/null_patch.dart",
+      "size": 499,
+      "crc32": 2924091821,
+      "sha256": "8c9b306adbc0107942bbf49f2e999667291b56379b676d79065dea1c1cd47065"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+      "size": 1741,
+      "crc32": 1300892347,
+      "sha256": "67aa1604e2d203d64213ab05637050fb31cae2adc81e98a833e98a40d3b27131"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/bool_patch.dart",
+      "size": 2084,
+      "crc32": 2335413435,
+      "sha256": "06aeb73152b4e981650bd77977965cb2430b38ec314da1187ff1d163b665317d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+      "size": 41873,
+      "crc32": 3932310557,
+      "sha256": "69e0870b415ae3129ade9fab8f0a65ceb069492392aa0d009a020838a0b7e2c8"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/collection_patch.dart",
+      "size": 25922,
+      "crc32": 1923980276,
+      "sha256": "a42d0d8bad94b863454e12fd5ff68a48b63ca0fa1b46e6f1b8a5795c62eccd8f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+      "size": 6241,
+      "crc32": 3857697395,
+      "sha256": "f923b009d360b9f6cc4baf700cda1279457e5fa9322e0e34de2455e9d3408f73"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm_shared/lib/check_valid_weak_target_patch.dart",
+      "size": 679,
+      "crc32": 3237472152,
+      "sha256": "a898378ace21ac66e04288f47f441e998173681b4033d58a9cc331f42f9de26c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/regexp_helper.dart",
+      "size": 11160,
+      "crc32": 978263349,
+      "sha256": "ee5634dc09218eb9dfe5d0bc207e15c93b0658ae4abd3388b3ad074c9fb5995e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/weak_patch.dart",
+      "size": 4899,
+      "crc32": 899232335,
+      "sha256": "f3af593aab473184e7e63eaf6d0f06fc14c32012060d40fdc57cb12427083166"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/stack_trace_patch.dart",
+      "size": 461,
+      "crc32": 607121003,
+      "sha256": "f580d79e9011172d120278c51be80165519de8b74a582e965ea9c4ccd2c80a30"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/uri_patch.dart",
+      "size": 2793,
+      "crc32": 2522759699,
+      "sha256": "4714968d27f2464937c55ec1f6eefdf2191fe6d1f42c9daec62d32d628055921"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/double_patch.dart",
+      "size": 1254,
+      "crc32": 2316304191,
+      "sha256": "98db2420bceb8b10fa160e5062b127fe345a360872789013296d4f59801e73c5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_typed_array.dart",
+      "size": 89440,
+      "crc32": 2257145147,
+      "sha256": "3b7f9bca7dba9b1037d6a8fcaa18f692748b84309c65f77c9b1ea2ba6bfa6a71"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/deferred_patch.dart",
+      "size": 4822,
+      "crc32": 3270039323,
+      "sha256": "e6c32f5a44e46c817bad90ddfd0a6379ff8f67bc8a2a0ae02a21057d5cabf78f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_interop_wasm_patch.dart",
+      "size": 538,
+      "crc32": 2341756547,
+      "sha256": "bbac80dc134653ef9f8652ac35a6f617125e4f92b0d42c0a0bb321752d43c137"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/typed_data_copy_from_js.dart",
+      "size": 2929,
+      "crc32": 3468474049,
+      "sha256": "fa2dd0015b595e2c1624b871a6c48b49fdfec9f851894ae08fdd8671cfb48a12"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_array.dart",
+      "size": 16176,
+      "crc32": 2186137290,
+      "sha256": "709195042cd3908e57622ec8c5e9fc96fe225b6ce891ce5acaef5180605506f5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/internal_json_encode_patch.dart",
+      "size": 623,
+      "crc32": 484630981,
+      "sha256": "778ec76ef3e7f5eddefbb3b03f90b1e24cdd04dafffdd60e345a0c4249187440"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_string_convert.dart",
+      "size": 2136,
+      "crc32": 2865290440,
+      "sha256": "9f7a2a5a621a42d45e1efa93c5fb5496c8d474b0f6cae3a3d80004d2f1318a73"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/math_externs_patch.dart",
+      "size": 3832,
+      "crc32": 3247292890,
+      "sha256": "0e39280682237a5ee198d27b2070f100d4dfafebc69452ca0db30870a6fa56f7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_interop_patch.dart",
+      "size": 31146,
+      "crc32": 3550525401,
+      "sha256": "4f12ad225614b4c888b731b3b7b138d69669d7c39f7598bcdc5384ac4811ae13"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_interop_unsafe_patch.dart",
+      "size": 2443,
+      "crc32": 1305057372,
+      "sha256": "6d3be3cab7cd30dbd2f0a2a173de709a7cb186cd49081e9dbe1d4e77c00d21fc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/regexp_patch.dart",
+      "size": 724,
+      "crc32": 2921890063,
+      "sha256": "d1dde2e5f194c364357a37afcf3744352640e0e5450f163ca6b8ea48d1db42b9"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_types.dart",
+      "size": 6848,
+      "crc32": 609918902,
+      "sha256": "6034f17a654b3d6879740d21d83ba2f4e3b06f918c153b52d5b9fdd4033aaf45"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/date_patch_patch.dart",
+      "size": 1423,
+      "crc32": 1773125928,
+      "sha256": "efd7eb2b17a0a83d6fb2550f0234a60c9efd3484eeee033c880a94e7d35c7b3a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/stopwatch_patch.dart",
+      "size": 1234,
+      "crc32": 2032878021,
+      "sha256": "da0ae2f4addb9a9d58281b9bde093137dc126ed05e3afd70ba6d6d73d12f0837"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/invoke_main_patch.dart",
+      "size": 1578,
+      "crc32": 1890786055,
+      "sha256": "e60774507654af8efd8573feddb52b42229e4ab5ed08ad616e426d350acf3b08"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/string_buffer_patch.dart",
+      "size": 2023,
+      "crc32": 4059716676,
+      "sha256": "979061996ed1bccb38490b3270fc396612bacb645390515eb48fcb3eec1028ce"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/print_patch.dart",
+      "size": 429,
+      "crc32": 3673626452,
+      "sha256": "d4d888276f10cd3395d2a797d5173e6a40b00b3a04bf25e5fec1ccf9313bb5f2"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/convert_js_patch.dart",
+      "size": 1783,
+      "crc32": 3707328677,
+      "sha256": "512a91dd5f31aa4c30420dc24ff0c04657d7769beb9ae9448b96d61375a27ed9"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/timer_patch.dart",
+      "size": 5006,
+      "crc32": 4062184786,
+      "sha256": "1c1cbe2ec2d41b93c8b07fd868525d39f11f3a3dd5a0131e1f31e982adf88207"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/boxed_double_patch.dart",
+      "size": 5169,
+      "crc32": 3728141700,
+      "sha256": "e71669759846f6f93c33c9554349e10f118c4dfeaa5449bb35eab3ed27ad31e6"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_string.dart",
+      "size": 26166,
+      "crc32": 2377275022,
+      "sha256": "eec0c1be67fabd4ab33cd501a5d09a9a4dec36827f2b2f7826bc8955e9932395"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_common/js_helper.dart",
+      "size": 29189,
+      "crc32": 2962808021,
+      "sha256": "0c09cb91044b2e75f14ddd5741b52c67e38c93be9709426a3470e0667e3f5900"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js/string_patch.dart",
+      "size": 6154,
+      "crc32": 2603760281,
+      "sha256": "fd6d6d985984e70194b01da6fa571944b1db8a9fa2e8d0ef6627dff66211359b"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js/js_helper_patch.dart",
+      "size": 15755,
+      "crc32": 1698714838,
+      "sha256": "fd7eb19846528a4b1d9160a1727f94f622053f94c70fa5b5fa7d1458ede8cd28"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js/boxed_int_patch.dart",
+      "size": 1134,
+      "crc32": 3781596842,
+      "sha256": "05d081734cdd68944b885601f0aa7ec6a29f61acd9571b940652f3d9e2ed76d1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_compatibility/string_patch.dart",
+      "size": 3649,
+      "crc32": 3422315280,
+      "sha256": "773f2aa55fd6073cf88f4319db39d2ade0815d45e821c464398eae9c39a27456"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_compatibility/js_helper_patch.dart",
+      "size": 2644,
+      "crc32": 124444860,
+      "sha256": "adfe0d6ca4f9bb551ac9eb3d6bcf40cdaf9f1c1c58636b1a70ac953490fa9407"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_compatibility/convert_patch.dart",
+      "size": 48758,
+      "crc32": 1709986729,
+      "sha256": "71d5a67718a558d34dd958da91f9bc12a64c062d225f4f1ed66b921eaa1edfd3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_compatibility/string_buffer_patch.dart",
+      "size": 1627,
+      "crc32": 311175180,
+      "sha256": "a9edd96a3d406ec14dc01c946a9b16f60b2d7cadbe465bac4f87307560222f3a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_compatibility/typed_data_patch.dart",
+      "size": 4003,
+      "crc32": 922573426,
+      "sha256": "b22e38ef3f6bd52f7839555a3166f420e48712fedd6402b91dba0f8d8eab466f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/js_compatibility/boxed_int_patch.dart",
+      "size": 1301,
+      "crc32": 2551331862,
+      "sha256": "1f7c98a7f354d283cdb2b56fed34226a76f7f75a659f206be8cfed29bba643b1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/string_patch.dart",
+      "size": 4758,
+      "crc32": 776885278,
+      "sha256": "eaf2199319cef3c1a73470f4b2e5c359ca0c24695a5867cb5db54439e408b4b0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/weak_patch.dart",
+      "size": 2957,
+      "crc32": 397190777,
+      "sha256": "5e9bc46fc282ea53fcdaa299bad5f81deb368c471408b221832eec558b4faad1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/stack_trace_patch.dart",
+      "size": 900,
+      "crc32": 665579279,
+      "sha256": "7c2e2fb1c52ce4b796646d14050652214ad926df89b29de6051bf08357bebb1e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/uri_patch.dart",
+      "size": 727,
+      "crc32": 2031740928,
+      "sha256": "a40c8b5b6b22694b5c239aa64ea49c313f9d6ce1c2693bdb0644eea597d8e4be"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/double_patch.dart",
+      "size": 839,
+      "crc32": 1729936647,
+      "sha256": "9f81715ecab29e157afc98936c07722bc475e4e4c7ec31bc254eb0fb4eb997f9"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/deferred_patch.dart",
+      "size": 970,
+      "crc32": 2093457908,
+      "sha256": "78f89b9cd8e8e9e2a2ca05d14569649db776540a7f24a6e6b857fb786fb46ab3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/typed_data_copy_from_js.dart",
+      "size": 647,
+      "crc32": 311159641,
+      "sha256": "682259393bda09e984290270e4bbc20e1b4ee17aa881dd6cb4c7b7d742ea5d16"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/internal_json_encode_patch.dart",
+      "size": 522,
+      "crc32": 2085883811,
+      "sha256": "ff95976709f45897eaa6ccf50dd5dea509fa2c525d5876f67c8dd527af69c17e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/embedder.dart",
+      "size": 16291,
+      "crc32": 3424787456,
+      "sha256": "1451914789cbe276cdc0d6a84d4b5b32cd8a137cf4068e50ee1579b6bf5536ac"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/math_externs_patch.dart",
+      "size": 2754,
+      "crc32": 1180314957,
+      "sha256": "fe1261438874ad545b393b44fcf7b19a2d9832058e74be6bacc3877fbf8571d7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/regexp.dart",
+      "size": 5939,
+      "crc32": 69484146,
+      "sha256": "5f25da0e26cdbd2318c8379cabc8e0922f04f7ba6f26373c437cfffd9890a8c0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/regexp_patch.dart",
+      "size": 802,
+      "crc32": 2399586699,
+      "sha256": "a615aeca056462be4fe274719ba975cdced75ea1fd9559c1735ab0bd2078f80c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/embedder_string.dart",
+      "size": 15041,
+      "crc32": 244884775,
+      "sha256": "c96a948a290f5d2c1fb0c676e87850f60abf25d082ca974052b7b7e91ec12236"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/date_patch_patch.dart",
+      "size": 1066,
+      "crc32": 17616942,
+      "sha256": "45355e236c7721472b624158ba34028b5b1947cde182270f9c850a8e9e2ac99d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/stopwatch_patch.dart",
+      "size": 1032,
+      "crc32": 2445419277,
+      "sha256": "eed32427daff08ca3a6696382149734facea4638284ab89d8a8360b9b77e6afa"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/invoke_main_patch.dart",
+      "size": 1278,
+      "crc32": 1112717547,
+      "sha256": "16b7f008d6e2e5967197984a406e800b12cda228e71090ea7e9e6b45ba84e63f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/developer_patch.dart",
+      "size": 4255,
+      "crc32": 2458142983,
+      "sha256": "8f48711a9988efe2647ccf0106caa2120542d46f118ea97963f4c61429e2d106"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/string_buffer_patch.dart",
+      "size": 1967,
+      "crc32": 1957233632,
+      "sha256": "0d7776938600d350349352eab9b5da4e13648f886dc64c3d2c100790f78be135"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/print_patch.dart",
+      "size": 428,
+      "crc32": 2313920512,
+      "sha256": "77bf36f4d99fc7253c595b6531beeb1b737275d383fdc89f82200548c8d06a8e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/timer_patch.dart",
+      "size": 2883,
+      "crc32": 3280250947,
+      "sha256": "f05455e472a1bb4bdc1e438c0c42584655d83d1f7e6bbb0056077ce46bc0d430"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/boxed_double_patch.dart",
+      "size": 3583,
+      "crc32": 80335810,
+      "sha256": "7613b7e8090d7e68fc8f4c83a22dd0ee878f8823dd8656952fb40c6d5464c4d1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/boxed_int_patch.dart",
+      "size": 755,
+      "crc32": 4049875766,
+      "sha256": "3aa0435e7269a53f9f71b380138cf5e5c9b8132aa13d3e0d4364f94a8fb9824d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/standalone/convert_standalone_patch.dart",
+      "size": 1520,
+      "crc32": 3630660387,
+      "sha256": "c03744c87d7ac138198cf91073ba29affaae5ec677f3cbc421b1061e72dcf8d8"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/hash_factories.dart",
+      "size": 2162,
+      "crc32": 681121826,
+      "sha256": "a49a31ea9bccd480f98c9b9c77a23b33819bfd13a74ea839cb8a53b6e06a37b7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/object_patch.dart",
+      "size": 2396,
+      "crc32": 1960748070,
+      "sha256": "67545be2a4fcdafd0ae8cd0aee32af57a3fddd2d892ee85859eb5edd2a316ef8"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/simd_patch.dart",
+      "size": 1282,
+      "crc32": 2767766129,
+      "sha256": "ca0028a22e63a49cacb2cf5af0c2c1449f178f47ba545788e92428370c151516"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/array_patch.dart",
+      "size": 1594,
+      "crc32": 1601219148,
+      "sha256": "68301f26b437b320c7e17e535822ece77c2f04e317bdc71b6c1ab4da17cd7b5d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/typed_data.dart",
+      "size": 113700,
+      "crc32": 2701212579,
+      "sha256": "6270d398c96ac9270eaa2c7143af5eedcabc2fb02100941cef046ecc17f67b87"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/sync_star_patch.dart",
+      "size": 5546,
+      "crc32": 3785277577,
+      "sha256": "bef0d5452bcdb6d4c24a4e87e3bb95a8eaab63f25e89973ba9c9c7b758945106"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/bigint_patch_patch.dart",
+      "size": 663,
+      "crc32": 2074597120,
+      "sha256": "daf3deb936f258e5eaa3ae7bb752b1ee5b7098b43d4d43c3b24929aef2e8672d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/errors_patch.dart",
+      "size": 8202,
+      "crc32": 348956066,
+      "sha256": "33c4f21a37a56d8cce6542fc4826bd19191b1f33df3c151215fc8fe4c2f7666d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/symbol_patch.dart",
+      "size": 1009,
+      "crc32": 3547451866,
+      "sha256": "c1f5b3ef7a65d6f722e3defd746773db4d9a2efdee5be3d28a53d8d06d35fd51"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/simd.dart",
+      "size": 24912,
+      "crc32": 2459776191,
+      "sha256": "d6350a2b33d23ca4d6366a09ef960dc33d85c7ca7530111692520c98b750f466"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/boxed_double.dart",
+      "size": 11084,
+      "crc32": 56276071,
+      "sha256": "d5616b0a544cfb2217f41717ef6327e2d6f05f6c1d8a8df026634b0f2e5db6de"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/ffi_patch.dart",
+      "size": 3920,
+      "crc32": 2254920297,
+      "sha256": "c8b7299975723d95e3048d7c756546b389a8114400adf2ede0f694b5e7b2e4b0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/object_helper.dart",
+      "size": 447,
+      "crc32": 2630267526,
+      "sha256": "41b2201e778ce9143502d6374fe1a609db243dbb417b11243da2523c094a8d0a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/isolate_patch.dart",
+      "size": 4424,
+      "crc32": 3439639281,
+      "sha256": "94b5ba6b789d57d7d45c4bf7addf721ce95b3715d49cae2b18c50b485986e201"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/int_patch.dart",
+      "size": 7771,
+      "crc32": 3248256538,
+      "sha256": "7ccdbc6a6901c47581087b4c95e28263a41ef12b4b4801fd541fe81a9ffe24b3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/boxed_bool.dart",
+      "size": 749,
+      "crc32": 361738587,
+      "sha256": "36450986efb2fb44b2c73f0237afd9886df054604fef0da5f5d29fd9b2f18b9c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/identical_patch.dart",
+      "size": 406,
+      "crc32": 3371620296,
+      "sha256": "01699c80226401ba63a00c7e53cdcdf582ae75c76cb3847def2a817273f27b0e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/internal_patch.dart",
+      "size": 5993,
+      "crc32": 1517081800,
+      "sha256": "5592a8b2a3c29a6c14b2ff1b4d0958c2fbe129e7bd8df79ad780cb75c305e4b8"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/closure.dart",
+      "size": 3544,
+      "crc32": 782462232,
+      "sha256": "492d161a1be2937ff48a4e45c046c4a48be51e0f5a615a366e80bbaa06bcd30a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/error_utils.dart",
+      "size": 10518,
+      "crc32": 39843962,
+      "sha256": "931bd95eef8bee5a5cbcdb659578133cf9996b33f4f6cb729b26f98ea760e241"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/named_parameters.dart",
+      "size": 4172,
+      "crc32": 3290894492,
+      "sha256": "b030121ce6330c6184b8726eea722bbf33b4af7c022048b93dd80fba1ecaddd6"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/int_common_patch.dart",
+      "size": 381,
+      "crc32": 4058311779,
+      "sha256": "30bee987a97b36e5ae5d55c50a32f8f4874bbf00d3d72942522f394d6260674e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/convert_patch.dart",
+      "size": 90576,
+      "crc32": 1681426483,
+      "sha256": "473e92e3ec9391c01535aca4f880da35d6eaad2ae07e35c0bd627b907e419286"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/record_patch.dart",
+      "size": 876,
+      "crc32": 1791952843,
+      "sha256": "24a1183346409f2ed0c0116ea1d87e445a873ac4a7259f1b077ff43431673447"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/class_id.dart",
+      "size": 3826,
+      "crc32": 1794601505,
+      "sha256": "145f73f72d6895c49207637611849cac8f5167351569df8f8f4e2d95129aa3c4"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/string_helper.dart",
+      "size": 8341,
+      "crc32": 3191268845,
+      "sha256": "ff5df3609c1d40344f6e1c609807f4881aa5a743302103c9e10327b43cc0658f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/boxed_int.dart",
+      "size": 11555,
+      "crc32": 210758993,
+      "sha256": "6b76c6e056f407a8e1857dbf4b45eba79bc9d9b4b72c2ff54e4b4e7403de4199"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/math_patch.dart",
+      "size": 4758,
+      "crc32": 2978423710,
+      "sha256": "67544754aa18e76ca40f27fd3dd2ad121904174eaa51990da982759eed4fb93a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/compact_hash.dart",
+      "size": 40091,
+      "crc32": 3063427696,
+      "sha256": "78e8f83cb49c42d3c9d3142cb71377b09d91cf11619fbc9c4b512ae6eca8bd07"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/list.dart",
+      "size": 23181,
+      "crc32": 2571074789,
+      "sha256": "eee6287c3d07a22e36717137101304556de34bc52417beaeec358c440ec52e76"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/async_patch.dart",
+      "size": 3649,
+      "crc32": 1802357726,
+      "sha256": "8f5f21af98e3a8b7c787aff29ab4067a76804bf38e1afda5d5db2dfe3fdd41a6"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/typed_data_patch.dart",
+      "size": 3533,
+      "crc32": 180686610,
+      "sha256": "d43a41560198aba14487854fc508c04756ac28e31a291574227fa15819387262"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/function_patch.dart",
+      "size": 446,
+      "crc32": 977232898,
+      "sha256": "ea80145ce8d97535eb2531907925ed703de60b73cb1cedf3e8652b8e7894f79b"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/io_patch.dart",
+      "size": 17840,
+      "crc32": 3218295484,
+      "sha256": "e494056643d5cc73d8da667cad00a65517599ccbe3ba8d1b155440b97401eba4"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/type.dart",
+      "size": 65214,
+      "crc32": 159935281,
+      "sha256": "b20bbba4dca5624f41d2a70848fd0775afda3b1b9e8cc850f46fa19553b86190"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/wasm/common/core_patch.dart",
+      "size": 1504,
+      "crc32": 1570974885,
+      "sha256": "482b0cff0025c14a245e614b1d0dd659526839ed99dab9d27f71a9b969efc7f0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/linked_hash_set.dart",
+      "size": 8154,
+      "crc32": 3536230593,
+      "sha256": "c8343655294889d84f84295f2d8c44d77200f993347bc18deb6ecc61b9c0438f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/regexp_helper.dart",
+      "size": 10517,
+      "crc32": 3013807234,
+      "sha256": "81d042cee7f72219b3cabe1934f1e6f5f40cad77279d56a906def159064410f4"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/mirror_helper.dart",
+      "size": 375,
+      "crc32": 3540670363,
+      "sha256": "1dd2a4c94a0f109c696592f28440e1d62329945de1d731b8eb3b095e25be57ad"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_number.dart",
+      "size": 18396,
+      "crc32": 2057158358,
+      "sha256": "9010eea317c4769fc5c38aadea82ba83f8c7f24adf8c9beaf165696aea9e0ccb"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/linked_hash_map.dart",
+      "size": 9718,
+      "crc32": 905128127,
+      "sha256": "8c893b8942b301d3c139512ece51f13f914ab4633dc5827f29ec570181b57683"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/custom_hash_map.dart",
+      "size": 7438,
+      "crc32": 2741923922,
+      "sha256": "5a17b018ad96b50d95161bd27b089ab64471ecab4e2847a9859ca32f86b3facd"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/native_typed_data.dart",
+      "size": 77423,
+      "crc32": 3354628518,
+      "sha256": "efe5472d3d3d74e72fa1a77821420ff59bf44ffb1368431b7f57b93b447bf39a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_primitives.dart",
+      "size": 1784,
+      "crc32": 626164121,
+      "sha256": "c1645db05f9e1899e301ca20c2ff66d5bb6a5651b242f7578e2180e983f2e06d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_array.dart",
+      "size": 21713,
+      "crc32": 3702582052,
+      "sha256": "f3a0e4a50ed932f00606e8fab83dab1c21e295a1f27ad2a86d43cc51ac1b38f5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/identity_hash_set.dart",
+      "size": 1646,
+      "crc32": 2533138137,
+      "sha256": "ee4b339d16ff8a12c6466bbd75e09203e63f59ebcfc2e321272c1188bc8cdc05"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/annotations.dart",
+      "size": 2297,
+      "crc32": 4275706184,
+      "sha256": "9d8676fdaf49b806309bd499f0a46379674da82097903fb6027adb9c77a62185"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/foreign_helper.dart",
+      "size": 12542,
+      "crc32": 1763362484,
+      "sha256": "8dd24f8eb9c8fe2dba620645cefc6d2a324f63388a5047fbcd79942f7c6a60f1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/identity_hash_map.dart",
+      "size": 4095,
+      "crc32": 2055410059,
+      "sha256": "900f9897ea6bf385d60e26a86386face6c1dd4c1296b7a61f036ef337ad3a58d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_only.dart",
+      "size": 348,
+      "crc32": 1055487751,
+      "sha256": "7a47ee12c64e173ae88d847241f5d856bb0e3cf2eb9da62d46ca8b40a4b8791a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/native_helper.dart",
+      "size": 786,
+      "crc32": 1630941959,
+      "sha256": "2114c44b4aaff1437ec9cbd5d2fc7d2894dff9a73296aacd21a160d6a7bcc3a3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/string_helper.dart",
+      "size": 9814,
+      "crc32": 3230413210,
+      "sha256": "3d5db1e57a1a475bfa3270184a9f0c3f934c0fc7507f61ea915f5a7a4637445c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/interceptors.dart",
+      "size": 13397,
+      "crc32": 3849217847,
+      "sha256": "b537bc6b02430145d30d59e138ae1b92f331254dbcb7a6ef2e7095c14cd50253"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_names.dart",
+      "size": 615,
+      "crc32": 4021469265,
+      "sha256": "bddbef0145b23d2399df23af8de92158b988f8d0e3ad4f342aec169e3445ae5c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/isolate_helper.dart",
+      "size": 3175,
+      "crc32": 1838141563,
+      "sha256": "b936707375872df1bd11511de5ff0672592efae4d38cffef78249bff8b4ecc75"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/custom_hash_set.dart",
+      "size": 4807,
+      "crc32": 4288583602,
+      "sha256": "ed3577aac7f990b341393c95bd6023133540d1c53aa37cdf5f66cc57747985fc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/debugger.dart",
+      "size": 32826,
+      "crc32": 800833114,
+      "sha256": "172f53a58dc056c496462b3762ed365042f30f073bbd2bde7f2a641dfed31bdc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_rti.dart",
+      "size": 671,
+      "crc32": 3563764667,
+      "sha256": "7886d401ea718fe36f30cc6096bd76e13230173f3e0433a99cc3b76ba4cc3b7f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_string.dart",
+      "size": 15098,
+      "crc32": 147134727,
+      "sha256": "3406a017417b066941d343865ba8d6b8a15e3675e9d6008edd435507b6d02ef5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/js_helper.dart",
+      "size": 34798,
+      "crc32": 10022356,
+      "sha256": "a22ab7b09ee7950688384efdee4cbbbca8d43c034c905b1266ab558494f625e3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/profile.dart",
+      "size": 5171,
+      "crc32": 2515624188,
+      "sha256": "a235a2b784972d3aaf26627bd62e87d304a9781e55f6395924605f1ed102ec73"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/utils.dart",
+      "size": 3885,
+      "crc32": 509189136,
+      "sha256": "4c13ee58c5f74dadf4497480fef6f6866f2e54bbd18fdd00e6052128361b03c3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/runtime.dart",
+      "size": 9288,
+      "crc32": 472966657,
+      "sha256": "ea95b06912c6cc79397a416b7dde56ca19d7331a75bd13d4329921d9bc9418b7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart",
+      "size": 54916,
+      "crc32": 2893117066,
+      "sha256": "4e8c01261d8ef13ec517f02f7a7aa7ecfaf99507f8850df47d6752151460fc16"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/types.dart",
+      "size": 5645,
+      "crc32": 704171083,
+      "sha256": "dcfcff44aab9c1e5a379e3248166647934fb376500815799d935c483e320adf5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/classes.dart",
+      "size": 22978,
+      "crc32": 123147672,
+      "sha256": "9339c75f14154b84409eab4fa451a7812fa90c7790ad7731050268a377108892"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/records.dart",
+      "size": 8327,
+      "crc32": 1382965743,
+      "sha256": "d39bab3dbab4c8cf5476301b9274b3ec2462f319f117d20ceddeef954558c8ec"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart",
+      "size": 12150,
+      "crc32": 1143809902,
+      "sha256": "2ef23cfd69b9184445cb0302e5fb76a092cfc685f221ebda1b1a2cf14fd0dd3e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/debugger.dart",
+      "size": 18873,
+      "crc32": 3893252583,
+      "sha256": "6e94624b41020a5b1300928724ec953005adc5f014885924f04f3395e8bf15ac"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/rtti.dart",
+      "size": 13163,
+      "crc32": 2279019268,
+      "sha256": "7327e34056c027972cf333950c9fb5f93eb750f874560903772cb5ccab6083e7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/bigint_patch.dart",
+      "size": 71822,
+      "crc32": 3998024595,
+      "sha256": "e959309cc0899a397806b9a2d85b106c811ab5c7ec9eb8dd4670b6a4a523119c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/ffi_patch.dart",
+      "size": 23954,
+      "crc32": 1783323341,
+      "sha256": "95109dbcbe37652a9a991dff47e5c022248dd0b03e5483266dea8ca3ecda487f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/isolate_patch.dart",
+      "size": 4117,
+      "crc32": 64025165,
+      "sha256": "447c2d8e1e33cf86d977e1d641ce4d135e1e4c008048d1df11f7bad9bf8a9dcd"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/internal_patch.dart",
+      "size": 3658,
+      "crc32": 2210544745,
+      "sha256": "34489bb072b8b758daf05f3b257a4d8fa744ead8fcd98ea4a0e8904859188a28"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/convert_patch.dart",
+      "size": 12101,
+      "crc32": 1065091941,
+      "sha256": "6f8556e02e74fd10567a8ff0b55a9ba31d3230dd34460c286a20c5c5a075c991"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/js_patch.dart",
+      "size": 12209,
+      "crc32": 381421331,
+      "sha256": "2ba313de904efd489230cb2a83477609f9521d94d2804b2984a93d57d95f6de9"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/math_patch.dart",
+      "size": 9961,
+      "crc32": 3428179919,
+      "sha256": "6d2b362f33173d8bcf6afd8dda6fdac2772f6b3692a567d30e7d5a90a113bbfc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart",
+      "size": 36039,
+      "crc32": 2341111618,
+      "sha256": "b3d879b623d7b8cda3b9424133a3fc0ea78d329bf49e14dc21d9617edcfa0166"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/collection_patch.dart",
+      "size": 4100,
+      "crc32": 2183845664,
+      "sha256": "593b639c1d422d1fcbbdac6025cafa9e03a81c754b1d56bf058cacd31cecf880"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/developer_patch.dart",
+      "size": 11876,
+      "crc32": 2095752122,
+      "sha256": "21f40a0f148083f79f344f9a1f9562011b4435e67376cc938ea612bfd933aab5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/typed_data_patch.dart",
+      "size": 4231,
+      "crc32": 4197534292,
+      "sha256": "4db5832bbc922e158d422aaf2b59ab56486e2f3c3fbd8003613f908ced1fcba5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/js_allow_interop_patch.dart",
+      "size": 10243,
+      "crc32": 800113473,
+      "sha256": "8c14eb5f60f77f03b39c31c7b9972ef5172064ec0db39afd955ee7b18aea07f1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/io_patch.dart",
+      "size": 17934,
+      "crc32": 2204626102,
+      "sha256": "4f2b90d621ab3522bf10071816dcf6d3976a246831d4a1212d3d10133d04d7c1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_dev_runtime/patch/core_patch.dart",
+      "size": 20597,
+      "crc32": 1006105014,
+      "sha256": "c076d0297faec895d09aa6767b2062827489a4cf86ca7034881301fff8901960"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/sdk_library_metadata/lib/libraries.dart",
+      "size": 14061,
+      "crc32": 2633814946,
+      "sha256": "eb820435b76a283e682ecffebafb858de5ad06bc1e2becd5f986211e23a075da"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/late_helper.dart",
+      "size": 3866,
+      "crc32": 262983553,
+      "sha256": "f82a77150e3d2af494d1f9f57c68be43df861351982e68084b5039dfe61ec9d0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/dart2js_only.dart",
+      "size": 352,
+      "crc32": 3155484700,
+      "sha256": "2b0e30effc361428752d644d23d63eb6b6452bbd3d97aea5cb9781a056f22834"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/regexp_helper.dart",
+      "size": 10673,
+      "crc32": 4065117063,
+      "sha256": "037dca0f39ae1a825d01601c8495cdf052f3b621dd987edb81c234025cad86fb"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_number.dart",
+      "size": 23267,
+      "crc32": 2302942712,
+      "sha256": "7cee6d2f8e5b4c4aa7db7812ecc649bdffdff300cf0944dcb0af875fb48ed4dd"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/bigint_patch.dart",
+      "size": 72594,
+      "crc32": 2049428303,
+      "sha256": "05f7e317657ed65929ef5adb7d9aed698e6ae80b74ffa61ffc7f2a2082651996"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/linked_hash_map.dart",
+      "size": 15698,
+      "crc32": 3206175026,
+      "sha256": "5b356558a7780b394b3a2841d14d1e8fc74eb37cad4dc24d836582481d2fe9fc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/native_typed_data.dart",
+      "size": 76333,
+      "crc32": 1101003130,
+      "sha256": "6d71a987e794aab50d2a21730778ab8f268708929f68817f52678623a7c2a1aa"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_primitives.dart",
+      "size": 1624,
+      "crc32": 1659844611,
+      "sha256": "771e87645dba617de2bbfd4b6ee1fbf638780835da265f49f4088e2ef831c520"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_array.dart",
+      "size": 30616,
+      "crc32": 3287342664,
+      "sha256": "2425be1f2534ac54066b16bf00d02d6f30b6a6f71504f1f4faadb46e8c582478"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/isolate_patch.dart",
+      "size": 4947,
+      "crc32": 3849925053,
+      "sha256": "4db8ddd2b1aa3238ba1556e5f9820a1a66cc466b35d87ab3fde19d53d6936bc2"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/constant_map.dart",
+      "size": 12007,
+      "crc32": 4046346081,
+      "sha256": "67721ebeae08226964a92bebce9c327f667ba4e09e5218a6fdb0055dff92bd69"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/internal_patch.dart",
+      "size": 2946,
+      "crc32": 2761434904,
+      "sha256": "d21630282884e65af6c6f49dffbd80845e57173341f638d471a439829a136156"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/records.dart",
+      "size": 9015,
+      "crc32": 2903164487,
+      "sha256": "2f6f23a674db975c48588ee7c6dd10f2bda160284083a379e8811a91020ba623"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/annotations.dart",
+      "size": 374,
+      "crc32": 3901168737,
+      "sha256": "55f5338a3cd24e45e60e0c8bac1cf2900b295d93d62ad2bf6f558ae3eed72289"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/foreign_helper.dart",
+      "size": 14466,
+      "crc32": 618084909,
+      "sha256": "4ad6c0243d1d532dadea384ed956bbf307db8978c2829e117ffb5155fb0ba0d5"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/instantiation.dart",
+      "size": 10885,
+      "crc32": 2168837232,
+      "sha256": "e485ba3418221f46440764151d75394739f15c39b935dde40ae0188f107338c9"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/convert_patch.dart",
+      "size": 12187,
+      "crc32": 1364208333,
+      "sha256": "8199a52c35229095c32b4e077edd776891d351156cb1526004f8ec79d63fa6b7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_patch.dart",
+      "size": 17206,
+      "crc32": 566881491,
+      "sha256": "ec9d8758a2b4bd16cf439efb82fe83a479d1ff5c76c0e9bed309f5c5f7b4cf85"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/native_helper.dart",
+      "size": 21083,
+      "crc32": 633427958,
+      "sha256": "017fda70f6f41aafafe11db514c9db8fc8082667b97706e75672265132cb7b14"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/string_helper.dart",
+      "size": 12261,
+      "crc32": 1275627598,
+      "sha256": "2f2381c6b500aff2753f99889995f0d1c6fc63ed34d826e6b2e12a255e2a055c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/math_patch.dart",
+      "size": 9696,
+      "crc32": 1872412284,
+      "sha256": "326fa5d03c6433e58348e3e94afc89e2b8a2157a2c57e4f44372bd1cd55bf2a0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/interceptors.dart",
+      "size": 20143,
+      "crc32": 3142202356,
+      "sha256": "a8af7afcbaba4c11d760d5a1d5d82ab07430f44bce13883bf12bf9a13920c532"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_names.dart",
+      "size": 1288,
+      "crc32": 3272981939,
+      "sha256": "6bcf5076c75168fcc8f7bb25b6a66c8f11b551609584bddf8d2903b9b24f7a94"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/async_patch.dart",
+      "size": 25268,
+      "crc32": 3953668453,
+      "sha256": "8eb4bc03434c8a38dd7475e9d18da40dcdd996617ab8d448aa7f5b92bbe19bb0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/collection_patch.dart",
+      "size": 44254,
+      "crc32": 89341460,
+      "sha256": "958ea61b1895eece33e9e43c5eced988f6e4983b896474d6a7227be87555934e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/developer_patch.dart",
+      "size": 9511,
+      "crc32": 2268723148,
+      "sha256": "57135b3245c06af05e5edc4e460f5b7317fdd4e3dcc5446281fbb2241d9bbd88"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_string.dart",
+      "size": 14817,
+      "crc32": 2060365314,
+      "sha256": "fcbb3fcbf1dc8319b86460f7b36d0afe75aa677ea95d291976403cc9d3b89b93"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/typed_data_patch.dart",
+      "size": 4282,
+      "crc32": 26332379,
+      "sha256": "8fded330142c3e92080301a89e3ce956f3d32e2804626ad8a6debd9a10c7bd1b"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/dart2js_runtime_metrics.dart",
+      "size": 2471,
+      "crc32": 2097699650,
+      "sha256": "6f68bc1cadae34c186bbbf928f30811658a15b8774a8c226a412fd1fd59ca34c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_helper.dart",
+      "size": 139434,
+      "crc32": 1153527186,
+      "sha256": "e4bbf237b233ee05e12ec2cfd43c3707a9d7f075ce74c311d69fa7b0757493a0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/js_allow_interop_patch.dart",
+      "size": 11709,
+      "crc32": 90299545,
+      "sha256": "10470c69e798325cbc46830b5de46ad1936ea1995d8907b97bb3f62eed43d79f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/io_patch.dart",
+      "size": 17832,
+      "crc32": 1627678885,
+      "sha256": "37b19f5aed2c16fbe5accaac6f5b6a6d9414aba440684e56d2a5aed953936bf0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/core_patch.dart",
+      "size": 24294,
+      "crc32": 3991087338,
+      "sha256": "4963bcdbc78dc1d004336bcfc7e731a27f29f0782fd879341699100169e3b40e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/synced/invocation_mirror_constants.dart",
+      "size": 283,
+      "crc32": 3337495854,
+      "sha256": "6dbe9ffc63c2b43bbf3353008c42a09ad87217adac397cc22b3b7de6d33000a3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/synced/array_flags.dart",
+      "size": 4994,
+      "crc32": 2652348999,
+      "sha256": "12db346024c4474e4999a11646a5cc4da2e51c1fd8190b76a5206b7210396c29"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_runtime/lib/synced/embedded_names.dart",
+      "size": 8330,
+      "crc32": 3239555148,
+      "sha256": "c620b5acf6ab88176d9678c7dfe5983c256923ed90ef4c30e495be14944c8adc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/convert_utf_patch.dart",
+      "size": 6432,
+      "crc32": 3882564368,
+      "sha256": "2abd7b5519cb425549435583327cf19360a1a3e8de45e0a04694e3a1480e5875"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/js_util_patch.dart",
+      "size": 21155,
+      "crc32": 3060327446,
+      "sha256": "4b01adcff85bad7e85babdd7883fc22417e6ea72c385ad161aa4e54c99c61089"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/date_time_patch.dart",
+      "size": 5988,
+      "crc32": 41172947,
+      "sha256": "70430c836c1a1dad0e0da81d7c11e1efb41235da2415e451abc3fea8473472ee"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/js_interop_patch.dart",
+      "size": 17403,
+      "crc32": 1416859544,
+      "sha256": "4d814a18d1e40502621e4412ea66f3020b5175c3549cbda1695296934f7782d8"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/js_interop_unsafe_patch.dart",
+      "size": 2797,
+      "crc32": 1855034124,
+      "sha256": "0a9f657925a001f868fa2ca11f139662268425f458b192a63cdc84a5234d34a7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/js_types.dart",
+      "size": 6981,
+      "crc32": 3066738545,
+      "sha256": "5d1a64efe229ecdbd7021c0f9bc48ed0ecac56fe1d65f6895098c3da9ceffa30"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/http_patch.dart",
+      "size": 435,
+      "crc32": 3825176160,
+      "sha256": "7091a26adedcc6e25e8a58f282d03c7974c1aa666d79021c7a581addabb3549d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/rti.dart",
+      "size": 135744,
+      "crc32": 2824467085,
+      "sha256": "685dc43fa40a998146ca919d63819689e33942543dbd2132a43d34c9a188bf77"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/synced/async_status_codes.dart",
+      "size": 1156,
+      "crc32": 698749992,
+      "sha256": "ef966d0f1847c0d00c555223c71e090e7887be4d30a984b91a40592de21eeb14"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/synced/embedded_names.dart",
+      "size": 3863,
+      "crc32": 2514532194,
+      "sha256": "ea406b1e4d99e926f994b714236887fe6635ac97d2f1d975af98c396e3f5120c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/js_shared/lib/synced/recipe_syntax.dart",
+      "size": 10093,
+      "crc32": 2069760961,
+      "sha256": "1d31d87284cda413501e9b0d62cfb4e7675bd5e8bcc39f5ef0d9dd0069ce6197"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/finalizer_patch.dart",
+      "size": 2640,
+      "crc32": 1039870540,
+      "sha256": "39209a3dc004c2a6fd0e349d1a07da2578efa6fcda758e0bf8c45a61ace4dada"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/hash_factories.dart",
+      "size": 2305,
+      "crc32": 953125949,
+      "sha256": "29cf7a85a658ff61f6b43b959a8620a1002c9bdf5cbfba3eec647e268b0f4805"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/concurrent_patch.dart",
+      "size": 1946,
+      "crc32": 424115216,
+      "sha256": "d075ad0143587b40b34b3e2b0ae0fb24675482a65907b605b47489db1cdbf880"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/string_patch.dart",
+      "size": 48214,
+      "crc32": 2853257811,
+      "sha256": "d0108f9c74d7a54c351edcefe8d91f98a617a4247ddf02983f87a9bfef2fc620"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/object_patch.dart",
+      "size": 2982,
+      "crc32": 110981239,
+      "sha256": "74f29e323b36baad3f4379d0f2d9189cda64964fe2ffab9c89e32126155cc181"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/mirrors_patch.dart",
+      "size": 3257,
+      "crc32": 1908237673,
+      "sha256": "afde6656bff52a057972d3f16b2e25808b6b338a48c790a059fd626a012e587d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/array_patch.dart",
+      "size": 2075,
+      "crc32": 1324500776,
+      "sha256": "40317fad418745854dd51caf555eb765ca7b56aef9387f706c40c618eee8cbed"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/lib_prefix.dart",
+      "size": 3099,
+      "crc32": 885346678,
+      "sha256": "3027bde625b4dbbfc28fef42069ae415178fb144e70c0145f49a23915c24559d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/uri_patch.dart",
+      "size": 895,
+      "crc32": 2610687139,
+      "sha256": "1a2f4b8aa421cb1221b6b0fa91c32aef36c4b4f51020d5c0269a930e952a3ca7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/bigint_patch_patch.dart",
+      "size": 882,
+      "crc32": 2860662168,
+      "sha256": "0734755c55830d92cda3a9b7cba3a0653122ff49832463cb6a6007d52e9144b1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/double.dart",
+      "size": 12718,
+      "crc32": 294482962,
+      "sha256": "c91d6682f04f7920f9e20391aadaee82f2e9a3f13a93f6e2d16971feca49804b"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/errors_patch.dart",
+      "size": 15710,
+      "crc32": 2341127181,
+      "sha256": "eb7fa90f74afb53682295bfb1bf3c62b6dc068f38b3da082eac8f9ce73c23605"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/symbol_patch.dart",
+      "size": 1802,
+      "crc32": 1456805385,
+      "sha256": "57762d90dfa4015f38ce0ca9bb986c5b56936b81bbc1c6ce4b255b173a4a5578"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/double_patch.dart",
+      "size": 3726,
+      "crc32": 1200619493,
+      "sha256": "ef875eba3c2609ce476d0e46e40f443690152becce77849a4336a16ae5e7347a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/schedule_microtask_patch.dart",
+      "size": 2758,
+      "crc32": 1882215930,
+      "sha256": "7de7dd0a6f808e057a676988fded3becbc0882d00a8cdc749378fa946bcf34f7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/immutable_map.dart",
+      "size": 372,
+      "crc32": 2974658496,
+      "sha256": "1c0f13971a26efecd7a05c6272516c07a44f637b993d46cadf888e504a11c129"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/array.dart",
+      "size": 8958,
+      "crc32": 1783834949,
+      "sha256": "7e38c6af9250a56a084833a669d540a4407b647daf29a0a33c74084611dae1bd"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/ffi_patch.dart",
+      "size": 54417,
+      "crc32": 3215539968,
+      "sha256": "ee5289a7e317df3e0d245d661fe6fa2338a09a3133cb401f45739669a5bfbe5d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/ffi_native_finalizer_patch.dart",
+      "size": 4208,
+      "crc32": 3010712852,
+      "sha256": "00a96a6e95823c615afb7c8570a6e8952b75be46a3e65e864bdeead49a674818"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/empty_source.dart",
+      "size": 256,
+      "crc32": 280124323,
+      "sha256": "f3b0ab88efe55811b87ee477a39032c2ef594e9728467f383adad7cea25de8b8"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/isolate_patch.dart",
+      "size": 22605,
+      "crc32": 3983956105,
+      "sha256": "e6b1844d74fa8e3e4c262cb6614efe3a08fdb5d37c2bfb2a9f2c041744ae5979"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/ffi_struct_patch.dart",
+      "size": 1588,
+      "crc32": 631606160,
+      "sha256": "d7f6977a92c8497170f747c93d1802df51d281327e5c721bbfab8a2bb5c52fb1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/identical_patch.dart",
+      "size": 531,
+      "crc32": 735810734,
+      "sha256": "71ff28255a995ccfdab522c9861e8cb71842663d0d2ae1a087c153d932ad8f0a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/internal_patch.dart",
+      "size": 17188,
+      "crc32": 36432579,
+      "sha256": "79e15ab37158ae369d588855e8032c8aff6095ec3d68454f6db6f34930213dfa"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/integers.dart",
+      "size": 24708,
+      "crc32": 4214936878,
+      "sha256": "56027ee26c2a3626c5983e101b3c7982e498ee252a478d5f0d959c576686711d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/invocation_mirror_patch.dart",
+      "size": 7964,
+      "crc32": 3228490374,
+      "sha256": "02947c4af3a6cc5e3110eeb93b7fc22817bf859c20e72dee9be0111c3e1164f3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/mirror_reference.dart",
+      "size": 477,
+      "crc32": 3935627504,
+      "sha256": "3478e33b8cc9092cc3340a05117db5e592355cb9c4debef7008ab89ed874c341"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/class_id_fasta.dart",
+      "size": 1596,
+      "crc32": 4242470466,
+      "sha256": "9e328856b6e057a9f9eee1d5c6f2e6d5c3570201f764cf511bc6ca212f3eed70"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/function.dart",
+      "size": 885,
+      "crc32": 718621429,
+      "sha256": "bd28171f2508fd073978d0c03c65bea6afe373120cfec4a5400e4c030eee137e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/convert_patch.dart",
+      "size": 66248,
+      "crc32": 704447501,
+      "sha256": "c7b380dcbfd6792892b966e08c3e020504e139d1e5f6f049790f6a9561f7fdbf"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/record_patch.dart",
+      "size": 2747,
+      "crc32": 3642236702,
+      "sha256": "44a00d1e0c8038c8b1a8d7695514c68e59f73ad4e38573e4bd1d7ed3a8774c9e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/regexp_patch.dart",
+      "size": 9480,
+      "crc32": 732231079,
+      "sha256": "84adba8ae91ac7656bfb8dff670f2eecd7080a5938b1435e041f0c17fe36ffc3"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/timeline.dart",
+      "size": 609,
+      "crc32": 297478726,
+      "sha256": "ff1b1f68b98d937019b4cfd25814618b8197402a53ff00e4c8327023a1dc8145"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/weak_property.dart",
+      "size": 866,
+      "crc32": 1460467494,
+      "sha256": "0841fcd9cdbf3052ee6ae2274039c16b9c659e137d34b4674f18a3cfa48d5a9d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/math_patch.dart",
+      "size": 9268,
+      "crc32": 1985512909,
+      "sha256": "3cd16c96c4c1b6985317c6d3f9fab3e4b0466b87a9450230784249070d687790"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/stopwatch_patch.dart",
+      "size": 1864,
+      "crc32": 3283192552,
+      "sha256": "e3dd6a5e359ce6d3a6307c69b899352b1e9718497e005f253723d2dfcf5c09fa"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/type_patch.dart",
+      "size": 1686,
+      "crc32": 743628594,
+      "sha256": "17fa59cbf64c25f808f17a2da9e2bbe65ddff566e55876af305bece5f45e1ce0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/http_patch.dart",
+      "size": 570,
+      "crc32": 1255325188,
+      "sha256": "e9de2d372b88268ceda281083e7f906a7090e24df3561d71764636cb0fb486a7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/async_patch.dart",
+      "size": 18479,
+      "crc32": 2520079127,
+      "sha256": "25bfafeab559ad078f5df336f94ec5664ffd879671fdb80b18645fc26559e483"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/mirrors_impl.dart",
+      "size": 46304,
+      "crc32": 3803442494,
+      "sha256": "15bdc3e462b1ca71215f17b7ccc475dda55dcf9dc3cc7f0283ace7178ee46ecf"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/profiler.dart",
+      "size": 921,
+      "crc32": 3993143730,
+      "sha256": "b7ffe676218d507a60f35609e477fae854fae404640605feddbc19580b50166a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/developer.dart",
+      "size": 9290,
+      "crc32": 408654584,
+      "sha256": "1d95f0abe942b666f1db7ae2049c0a1cb61a130d95cbd132d668415d68ddd8e4"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/timer_impl.dart",
+      "size": 16105,
+      "crc32": 1859773554,
+      "sha256": "50485a234298e22ea1d9e721ab4c49b9ce813a4d75e41b5588c7e8a4029d607c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/ffi_native_type_patch.dart",
+      "size": 2103,
+      "crc32": 257473563,
+      "sha256": "59d47e5c9c010583ba5fc2c0901a3518a6e4b82637ab573c2bc306611b7b3027"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/stacktrace.dart",
+      "size": 405,
+      "crc32": 1933423570,
+      "sha256": "4636186717fa36aa2b12b4c1481301c03bfea60c19429d742d4574460f2d5179"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/print_patch.dart",
+      "size": 785,
+      "crc32": 2449990844,
+      "sha256": "7029625079aa68709e3e88236ae4a8223bd5d8c9c17faf2b3f86fcbe963dc1a6"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/timer_patch.dart",
+      "size": 1058,
+      "crc32": 2655817769,
+      "sha256": "c598588e712a1b470b39d7ef575eb32a9be36a84b6216e3e2837945e6433d436"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/growable_array.dart",
+      "size": 19898,
+      "crc32": 2817880980,
+      "sha256": "79d70d002049df073b3dd0b3b0173d2f38b8f63975d419ce802c2751acead3f6"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/ffi_allocation_patch.dart",
+      "size": 629,
+      "crc32": 3790292318,
+      "sha256": "8963a8350c24d03fac1534867b7d7e9ca2a1f21dc2dc46e59df4b97888ce8bd7"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/typed_data_patch.dart",
+      "size": 176954,
+      "crc32": 3944714306,
+      "sha256": "044e322a02a44a25c5091c29b4dde13ba1f4c3778255acf2b40970f3506fdf26"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/expando_patch.dart",
+      "size": 4837,
+      "crc32": 1038540379,
+      "sha256": "71f6f154bf6bee401cd038953ad4c8ce7f4d8a7c23051ffea8ae20f010c311cb"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/function_patch.dart",
+      "size": 1498,
+      "crc32": 2164225861,
+      "sha256": "84190769daeeb819806531998cd92634a7004535f2200c5159a1caff8971e756"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/core_patch.dart",
+      "size": 2954,
+      "crc32": 851309296,
+      "sha256": "62c4899c95be24a169c410600a9209cd3585cb1663a84b52e5b45fb726ab9cea"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/lib/ffi_dynamic_library_patch.dart",
+      "size": 2086,
+      "crc32": 2072827539,
+      "sha256": "b148dd4ee6656bb5b9c635ab5b5fb92d38694274c98868e75e4c90674cb1485a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/builtin.dart",
+      "size": 20208,
+      "crc32": 4076434918,
+      "sha256": "c4b9a2fd2057a09bd5cc810a276b7e60f447bc2f5f0682e57d47c335fcfd4478"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/io_service_patch.dart",
+      "size": 1741,
+      "crc32": 2361471824,
+      "sha256": "b2f21071b14d44f6c6225e34b2fdb19fe6aba5bcdd83c73c7842912eede47461"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/eventhandler_patch.dart",
+      "size": 538,
+      "crc32": 3930721278,
+      "sha256": "9b34bd4418bedb65bed90fb6cd484ae84de0c317fa0ce90f51ab0f670777458a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/secure_socket_patch.dart",
+      "size": 10937,
+      "crc32": 3373900270,
+      "sha256": "eda57e143bac03f782970c9cc3c52ce9d111d2356f0322eacb74230233173b6a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/vmservice_io.dart",
+      "size": 9669,
+      "crc32": 496171966,
+      "sha256": "994352cdd56084b4575e484be2ba75a0fd8eb190aa3b6fba21a32d115559e23e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/common_patch.dart",
+      "size": 1954,
+      "crc32": 398839813,
+      "sha256": "4fdcc5bb5f1396cd44e3caf1fe9a2558b2d88392725eaf8a490fa06bc4a5992c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/process_patch.dart",
+      "size": 18859,
+      "crc32": 684776243,
+      "sha256": "fc0f05b0fbe20aa7b5321e2cb6d6fb3740cb2bf3265ea038d7e26e9cc271466d"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/directory_patch.dart",
+      "size": 2745,
+      "crc32": 3637335231,
+      "sha256": "9322cdd0dc9ef51cc133fd05f84be19430b9dc12b32842b6b62c94d6b2cf675c"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/sync_socket_patch.dart",
+      "size": 9280,
+      "crc32": 1304269742,
+      "sha256": "5261b017e6162062e1e5e53decc0b5046f6f191cb9f427c46a7aefcc5bfb43b1"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/namespace_patch.dart",
+      "size": 1735,
+      "crc32": 3912265426,
+      "sha256": "d907dd80e9c4013e7b1d1c30742a3250e9d79fe7ba28013d62dce5fb3ca5e695"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/file_system_entity_patch.dart",
+      "size": 899,
+      "crc32": 703952176,
+      "sha256": "7316f1cf0d078d0489f1c05f5f687afe937dec53fa6fa75c970bd3d26c73e0dc"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/stdio_patch.dart",
+      "size": 5413,
+      "crc32": 444928518,
+      "sha256": "1092c030077784f3632e09b1f10d256ef84cb6871a6680b9a71b66f1dfdc0f6f"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/socket_patch.dart",
+      "size": 97254,
+      "crc32": 4181027687,
+      "sha256": "d7b9a4bdcca4b4c50d4a253713c42b4fb15dc1ac15d89f3db54377192599370e"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/resident_compiler_utils.dart",
+      "size": 2640,
+      "crc32": 2757408621,
+      "sha256": "4a9d392eca2d54110f1941b2d742bcf14d833786f22596207de19fd5abbfb409"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/platform_patch.dart",
+      "size": 2186,
+      "crc32": 400737759,
+      "sha256": "57073103fc28ceb180fa0d4c68ae5bac9cfaf8ace86b9d9ebb65bf251557a1b0"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/filter_patch.dart",
+      "size": 2118,
+      "crc32": 3848445729,
+      "sha256": "c382bc456a8f50d24c95869364908c6a1edcff5d46d4bea3ff794bc4c752aa6a"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/vmservice_server.dart",
+      "size": 22347,
+      "crc32": 2472310163,
+      "sha256": "26710bb1e970d2e15d7797c33e39ed97ad1d3c3373d0d83212e787ada0bddf1b"
+    },
+    {
+      "path": "dart-sdk/lib/_internal/vm/bin/file_patch.dart",
+      "size": 22499,
+      "crc32": 962446820,
+      "sha256": "e467d4e7edd7d837c005df63229c96b8ca30de26288e5fd86c10b22d4267708d"
+    },
+    {
+      "path": "dart-sdk/lib/typed_data/typed_data.dart",
+      "size": 162321,
+      "crc32": 3334339834,
+      "sha256": "57cb57a349407389427b0602382b188f1bd1b92ca9995561f31d54f35c39df08"
+    },
+    {
+      "path": "dart-sdk/lib/io/io_resource_info.dart",
+      "size": 6146,
+      "crc32": 4166310847,
+      "sha256": "2dffbd800c3de31755a85c63ead237e26faf8e6284b5eaa1168421db73c4aaf1"
+    },
+    {
+      "path": "dart-sdk/lib/io/security_context.dart",
+      "size": 13061,
+      "crc32": 3060604311,
+      "sha256": "e2ecbeb4bf19e25ac06cc9f6f020e1e779777240094ddb879b3b097620516e37"
+    },
+    {
+      "path": "dart-sdk/lib/io/link.dart",
+      "size": 13748,
+      "crc32": 1000308656,
+      "sha256": "06551ea4fc6d5d0dd3ab7c391900e91583c68f8be7118903facacb40b5b5afb7"
+    },
+    {
+      "path": "dart-sdk/lib/io/directory_impl.dart",
+      "size": 12726,
+      "crc32": 402162457,
+      "sha256": "432d1e22b525d5fa85b5544a54eda8643b2179465556357ef977e2eaa0974266"
+    },
+    {
+      "path": "dart-sdk/lib/io/common.dart",
+      "size": 4551,
+      "crc32": 1184068626,
+      "sha256": "8ce5dadde272519859ec43f8579d26370756e6aa388abe0aef134a26017907be"
+    },
+    {
+      "path": "dart-sdk/lib/io/socket.dart",
+      "size": 53182,
+      "crc32": 1050116570,
+      "sha256": "03e31293f04e32ccf292f7b196f94a924ac62d5ed45da6128d761b5369c9a0f7"
+    },
+    {
+      "path": "dart-sdk/lib/io/overrides.dart",
+      "size": 19345,
+      "crc32": 3638416544,
+      "sha256": "8315f191d13eebc795d68bd8a3c19e0b88e9bf531288f777658ddf23adcf2553"
+    },
+    {
+      "path": "dart-sdk/lib/io/embedder_config.dart",
+      "size": 955,
+      "crc32": 511372630,
+      "sha256": "9bc19cbf9d49367789bc3b08ba5fa41d341801b0fcf7c26a6e892f27f3e31a24"
+    },
+    {
+      "path": "dart-sdk/lib/io/sync_socket.dart",
+      "size": 3785,
+      "crc32": 1106890751,
+      "sha256": "25c7f159c181722d75d6369381956e6bc174b6122471f2ad290948affcb3c5db"
+    },
+    {
+      "path": "dart-sdk/lib/io/io_service.dart",
+      "size": 2138,
+      "crc32": 3314619040,
+      "sha256": "174c6562ea1ea97a017c1995c1a92ac2841c1ec7f13cb6dcfdf672a080b5c61f"
+    },
+    {
+      "path": "dart-sdk/lib/io/platform_impl.dart",
+      "size": 6036,
+      "crc32": 255628682,
+      "sha256": "fc5052522c19b509b0f834d191020d67deecf985ddb0349319a3088e6aa5e728"
+    },
+    {
+      "path": "dart-sdk/lib/io/file_impl.dart",
+      "size": 35044,
+      "crc32": 3803962621,
+      "sha256": "b103af4d5250589088457c9d8456877694e5977a680be6f5e95d72ccf80667c1"
+    },
+    {
+      "path": "dart-sdk/lib/io/data_transformer.dart",
+      "size": 20730,
+      "crc32": 2754966772,
+      "sha256": "c888b2f44b8113a0a7439a2848bca0d02895e1770bde58ede1df851d057e6e3a"
+    },
+    {
+      "path": "dart-sdk/lib/io/stdio.dart",
+      "size": 19455,
+      "crc32": 2022306094,
+      "sha256": "91bcbe02ae96f926ea224b9900bcd84d33efde3129568166a99f2c7471fc5a38"
+    },
+    {
+      "path": "dart-sdk/lib/io/file_system_entity.dart",
+      "size": 38089,
+      "crc32": 2839335552,
+      "sha256": "2bb475cab1f6ae240b6ddbd85204b50b4662e7d3ed3add0a101064bb587836fc"
+    },
+    {
+      "path": "dart-sdk/lib/io/network_profiling.dart",
+      "size": 12075,
+      "crc32": 2767011225,
+      "sha256": "2c605fc99433da454612e47f4733341f5cf1ad78cf294ccfb2657575e13d08f7"
+    },
+    {
+      "path": "dart-sdk/lib/io/secure_socket.dart",
+      "size": 50394,
+      "crc32": 3398796244,
+      "sha256": "efead7dc89e2c146f7801321d07169d06ed6bdf452b297eb70666e4d7536d835"
+    },
+    {
+      "path": "dart-sdk/lib/io/io.dart",
+      "size": 9316,
+      "crc32": 2505028474,
+      "sha256": "94a61f118c3e3dc5d92d60c92cf9cc15bb30d04fc70e3079deba5cf21db5f385"
+    },
+    {
+      "path": "dart-sdk/lib/io/eventhandler.dart",
+      "size": 340,
+      "crc32": 1135807075,
+      "sha256": "21877e42176e79ca76b474195c139651ccfa27f8a09ecaeafbc379979b980333"
+    },
+    {
+      "path": "dart-sdk/lib/io/io_sink.dart",
+      "size": 10493,
+      "crc32": 3204386218,
+      "sha256": "1dd31b7ec01a835f17699bb524d8f1c727614081dca05f274098ca78df7e7e7a"
+    },
+    {
+      "path": "dart-sdk/lib/io/directory.dart",
+      "size": 15059,
+      "crc32": 313445892,
+      "sha256": "8aebfa425d3fadfb670199a0450f8c6eca1c8310884c36d5ffb84ac4e8222217"
+    },
+    {
+      "path": "dart-sdk/lib/io/file.dart",
+      "size": 46861,
+      "crc32": 72432251,
+      "sha256": "938dba699cfce2755162d7044f9da50ea53cc7e2f59f6ad14d42115c93315b7f"
+    },
+    {
+      "path": "dart-sdk/lib/io/namespace_impl.dart",
+      "size": 1148,
+      "crc32": 3893502859,
+      "sha256": "da183754e75f12ec2fc5a230c16ef7bde62a4c35c4f99d3e547099eae94d25ea"
+    },
+    {
+      "path": "dart-sdk/lib/io/process.dart",
+      "size": 28183,
+      "crc32": 1991230680,
+      "sha256": "b2b26de0aa2fb060c2f12879bd37e5189b1c1dc31b10feeea028a37dc06fe535"
+    },
+    {
+      "path": "dart-sdk/lib/io/secure_server_socket.dart",
+      "size": 10853,
+      "crc32": 2256078343,
+      "sha256": "cbc498fe8b8176ca8b8bc59dd9bee24d7617c86cae98e6f965c41079500799b6"
+    },
+    {
+      "path": "dart-sdk/lib/io/string_transformer.dart",
+      "size": 3419,
+      "crc32": 3336928145,
+      "sha256": "24285f093a380e32cb4f72cd7f20f302d740fd96a7ca5f5c5dd116effe820d14"
+    },
+    {
+      "path": "dart-sdk/lib/io/platform.dart",
+      "size": 9758,
+      "crc32": 408054608,
+      "sha256": "cb58f33f0b7c800055f47f344a64ae0bbeae481abfd7304a641ed9d1be9102c6"
+    },
+    {
+      "path": "dart-sdk/lib/io/service_object.dart",
+      "size": 713,
+      "crc32": 843633968,
+      "sha256": "0a8f644917bbc5626112e2ea976d4f7c78d1bbf4bfeb63a5e3c75d08d708146b"
+    },
+    {
+      "path": "dart-sdk/lib/collection/linked_hash_set.dart",
+      "size": 8039,
+      "crc32": 804847124,
+      "sha256": "00bb0a12ec69cadb7678fb4839a59ca433fb4683b41a3077515999558b54dd69"
+    },
+    {
+      "path": "dart-sdk/lib/collection/collection.dart",
+      "size": 3029,
+      "crc32": 632269715,
+      "sha256": "f1bd6d31410bdda26c2e7db718ce5fab1d887be0337e1f263cef5eaf8d529bc3"
+    },
+    {
+      "path": "dart-sdk/lib/collection/linked_hash_map.dart",
+      "size": 11644,
+      "crc32": 1305883144,
+      "sha256": "e54d4555d7d33f306345993ed8f6b915ded17510fddb8c6e280f34a06a82142e"
+    },
+    {
+      "path": "dart-sdk/lib/collection/splay_tree.dart",
+      "size": 40696,
+      "crc32": 1450126691,
+      "sha256": "5ff2e8efd857a98545fa7e0bd660ccbaf31513c96c8dd468d19efb63991a4f75"
+    },
+    {
+      "path": "dart-sdk/lib/collection/iterator.dart",
+      "size": 2004,
+      "crc32": 3734439540,
+      "sha256": "b4a42ac428ad30ccb84f2f3ef2cca5b96cf1104cc7b72e21f353b219e6da9aca"
+    },
+    {
+      "path": "dart-sdk/lib/collection/linked_list.dart",
+      "size": 9773,
+      "crc32": 2615072663,
+      "sha256": "611f94238cc5e5bb93d78f07d78fb32f466cb9a690a9e76621ec1bcbaf0fed16"
+    },
+    {
+      "path": "dart-sdk/lib/collection/hash_set.dart",
+      "size": 7664,
+      "crc32": 437032926,
+      "sha256": "8a00ebc3497aaa92f5ee8557a37956505fb0d07c57578620ac2ec3369481e336"
+    },
+    {
+      "path": "dart-sdk/lib/collection/list.dart",
+      "size": 17386,
+      "crc32": 1051955488,
+      "sha256": "5585e174f073f571aa28c13ab7797bca5840810fe452becca043a071238f8b9b"
+    },
+    {
+      "path": "dart-sdk/lib/collection/collections.dart",
+      "size": 1259,
+      "crc32": 2499957168,
+      "sha256": "8988e217a55f7d5fed484806d402715ae8a628d71c51e36134f75a98f71b57fe"
+    },
+    {
+      "path": "dart-sdk/lib/collection/iterable.dart",
+      "size": 3494,
+      "crc32": 151799449,
+      "sha256": "8178a38fcfc294afb05c6a044f09f7ef69d2d1b1c9df255e47a70e377ba40f57"
+    },
+    {
+      "path": "dart-sdk/lib/collection/maps.dart",
+      "size": 12515,
+      "crc32": 4271368328,
+      "sha256": "dec1eab536fd819c5da147d496e73068649bed649e809cdf05b12e8e26a489e1"
+    },
+    {
+      "path": "dart-sdk/lib/collection/set.dart",
+      "size": 12518,
+      "crc32": 563104270,
+      "sha256": "ac38d0881112120154f52e601f1a59eb6dff5c7f62d35d24907afa23ac28fc77"
+    },
+    {
+      "path": "dart-sdk/lib/collection/queue.dart",
+      "size": 31269,
+      "crc32": 1809331633,
+      "sha256": "825d022b6ce9cba864a7e6c34486f642b0a2370d0c7478f0ce042618bbd35c4c"
+    },
+    {
+      "path": "dart-sdk/lib/collection/hash_map.dart",
+      "size": 11825,
+      "crc32": 1388612618,
+      "sha256": "59a1e6503e0c58c86e22fe559b9fd251cc1814e05395d2b2ce762e6765625288"
+    },
+    {
+      "path": "dart-sdk/lib/js_util/js_util.dart",
+      "size": 10469,
+      "crc32": 2815460886,
+      "sha256": "f5a43288a52ffaa7a372d4da782f5eeefae2cc9908166cd7194143c907440ff0"
+    },
+    {
+      "path": "dart-sdk/lib/js_util/js_util_wasm.dart",
+      "size": 339,
+      "crc32": 1227358158,
+      "sha256": "548a18edbad537bc66c4eacac4e8e37685c84f559f9dacf446667964003e18cc"
+    },
+    {
+      "path": "dart-sdk/lib/web_sql/dart2js/web_sql_dart2js.dart",
+      "size": 10200,
+      "crc32": 1642343170,
+      "sha256": "76d86ce6dbdb775ac985663403a6f5d6351e3b955e031d61992e9e415d325bd3"
+    },
+    {
+      "path": "dart-sdk/lib/web_audio/dart2js/web_audio_dart2js.dart",
+      "size": 47283,
+      "crc32": 2385421259,
+      "sha256": "7b7af86ae127308fddd3502a5259b515c936bc1d26e1ea152a54a8712f44cdb2"
+    },
+    {
+      "path": "dart-sdk/lib/_js_interop_wasm/js_interop_wasm.dart",
+      "size": 750,
+      "crc32": 3549906792,
+      "sha256": "f026a90a0479af5a0dff87afbce8b03778147288abe911f52dab7c0304e8deb0"
+    },
+    {
+      "path": "dart-sdk/lib/web_gl/dart2js/web_gl_dart2js.dart",
+      "size": 129296,
+      "crc32": 2798755319,
+      "sha256": "88344f9ace3df8ce0250760d5a947335ea256c2f9259c32f46769f3f5aae6c78"
+    },
+    {
+      "path": "dart-sdk/lib/mirrors/mirrors.dart",
+      "size": 39495,
+      "crc32": 2735590232,
+      "sha256": "3c9f770b27e9a40029041cf006e991c823c2336c7031d69822a920b39f00f597"
+    },
+    {
+      "path": "dart-sdk/lib/js/js.dart",
+      "size": 8212,
+      "crc32": 1237751466,
+      "sha256": "31ecece5396154afccfdd1cfbfd440bd4eb10b8677784285145fb4b4c7f6465e"
+    },
+    {
+      "path": "dart-sdk/lib/js/_js_client.dart",
+      "size": 731,
+      "crc32": 904638845,
+      "sha256": "a3d06ef7af6a7aa8d1ec7a7752303dbe1491147ae3bf31fab3f9bc2047b41b2b"
+    },
+    {
+      "path": "dart-sdk/lib/js/js_wasm.dart",
+      "size": 532,
+      "crc32": 2081719187,
+      "sha256": "6b6c2ed32ccb043aa81f3f15b7fba2a75ea30e08cb9bdeac94ab19fd8f0c0d70"
+    },
+    {
+      "path": "dart-sdk/lib/js/_js_server.dart",
+      "size": 360,
+      "crc32": 920289552,
+      "sha256": "685d444a083265c2618a2e9374e1acd338b44f10f3c10ab061e73162c6961743"
+    },
+    {
+      "path": "dart-sdk/lib/js/_js_annotations.dart",
+      "size": 1460,
+      "crc32": 960705149,
+      "sha256": "ed60fb7a870e8cf1041568b9c3d5f6e8c8bea366773edf17dbae302137dcb4e5"
+    },
+    {
+      "path": "dart-sdk/lib/js/_js.dart",
+      "size": 945,
+      "crc32": 3447390723,
+      "sha256": "86db9f030a462d87ed67974a6e051df06be7d4e9edcb4df812cd2b150ff93cb9"
+    },
+    {
+      "path": "dart-sdk/lib/cli/cli.dart",
+      "size": 585,
+      "crc32": 772874916,
+      "sha256": "cc43bfcd9be0f7d4f02d1691f58e0c4cac2478f3c86922c6fad1133764bc67b6"
+    },
+    {
+      "path": "dart-sdk/lib/math/math.dart",
+      "size": 8861,
+      "crc32": 2745052501,
+      "sha256": "23cca0dbe9456c47bfeacded50fd83b5acec63572ce8941a069217a7e08ca529"
+    },
+    {
+      "path": "dart-sdk/lib/math/rectangle.dart",
+      "size": 13068,
+      "crc32": 99726418,
+      "sha256": "2204bdfd2ed6ca0d469d7875e07bdabe6e425978a0072bc132ad13572f7cdd83"
+    },
+    {
+      "path": "dart-sdk/lib/math/random.dart",
+      "size": 2853,
+      "crc32": 2900782651,
+      "sha256": "3a0f12382164c089710d7f58fffdba8b37592b93f922f6b1e0ca7fe9429dfa26"
+    },
+    {
+      "path": "dart-sdk/lib/math/point.dart",
+      "size": 5858,
+      "crc32": 3120615548,
+      "sha256": "9378a83ba0b649bc1f9b47585b4ae129e402e331ebb5301bb44048f5362edc76"
+    },
+    {
+      "path": "dart-sdk/lib/async/zone.dart",
+      "size": 36220,
+      "crc32": 1842152151,
+      "sha256": "e0dcdb3439e9a83aad63ca4dec9744931cfeddf8c537894b994b1e9ad4e89d17"
+    },
+    {
+      "path": "dart-sdk/lib/async/async.dart",
+      "size": 5467,
+      "crc32": 3725493302,
+      "sha256": "f3c65eaebd0daa70a020988a8e3c1d356a792ed9324031df12d80fd23dac1b43"
+    },
+    {
+      "path": "dart-sdk/lib/async/stream.dart",
+      "size": 105926,
+      "crc32": 1159774330,
+      "sha256": "ff3fecee3e63f09f0507d9eb89c8bb75baa082a1fce4cbf7eefeaf2f5cd21196"
+    },
+    {
+      "path": "dart-sdk/lib/async/async_error.dart",
+      "size": 1146,
+      "crc32": 3115771763,
+      "sha256": "b329f0f24a2810f848f1a5788851df5ff965b158d63b1766edcee932454e97b3"
+    },
+    {
+      "path": "dart-sdk/lib/async/future_extensions.dart",
+      "size": 19474,
+      "crc32": 506786810,
+      "sha256": "29b7e52905bb2ab2ed60fe8776de8c2aace06e463650f0ae21ef7cd9c8030c62"
+    },
+    {
+      "path": "dart-sdk/lib/async/future.dart",
+      "size": 53156,
+      "crc32": 1673696005,
+      "sha256": "b34ddcd6071b0434a48008bd84e312349f885d383c4688910572f56614a7df2c"
+    },
+    {
+      "path": "dart-sdk/lib/async/future_impl.dart",
+      "size": 38542,
+      "crc32": 1832995397,
+      "sha256": "102d6a513d3cb65c4a42b48d95d3454c77eed1cf0aff05236e937cb3c2069311"
+    },
+    {
+      "path": "dart-sdk/lib/async/zone_specification.dart",
+      "size": 20959,
+      "crc32": 2642369337,
+      "sha256": "3724370a3d6e607b0c4441b02fcb197d3aaef659db1f69a36724037605a0af7e"
+    },
+    {
+      "path": "dart-sdk/lib/async/zone_api.dart",
+      "size": 6255,
+      "crc32": 2267161015,
+      "sha256": "b679806677447f9f25b1630b793bd1cf29d866b43130af2c7abcb90f0c177778"
+    },
+    {
+      "path": "dart-sdk/lib/async/stream_transformers.dart",
+      "size": 9775,
+      "crc32": 2681257515,
+      "sha256": "aeee0922e3ec35054c23381149b2185db49b8e4e8e333e0c8781b54109e782a4"
+    },
+    {
+      "path": "dart-sdk/lib/async/stream_controller.dart",
+      "size": 35966,
+      "crc32": 970001421,
+      "sha256": "befcdc875351c1363aade64095fb975ac70a95b16d9999e0b4a8c76eace1c3ee"
+    },
+    {
+      "path": "dart-sdk/lib/async/schedule_microtask.dart",
+      "size": 5542,
+      "crc32": 2088227344,
+      "sha256": "093d6e4ed04693eca15c38559bcc132b044e8a8030a52fe4002f23d39d60624a"
+    },
+    {
+      "path": "dart-sdk/lib/async/stream_pipe.dart",
+      "size": 13685,
+      "crc32": 3829115389,
+      "sha256": "48bd94fece4739a5500b8d2a839cf9a5ea653a4e819b9766703baf683ee14900"
+    },
+    {
+      "path": "dart-sdk/lib/async/stream_impl.dart",
+      "size": 37374,
+      "crc32": 3937846296,
+      "sha256": "06d2f96f90a4ed3e70c876b07dad4f87b4a7cc195a86bcd899b3a654d68af713"
+    },
+    {
+      "path": "dart-sdk/lib/async/deferred_load.dart",
+      "size": 497,
+      "crc32": 2170796788,
+      "sha256": "43c1011d00edd9de9487c5f1ee931742e25f52da2a4416550a470e3142be521a"
+    },
+    {
+      "path": "dart-sdk/lib/async/timer.dart",
+      "size": 5749,
+      "crc32": 1713054284,
+      "sha256": "dd23554547616775c04f0738f3f85d5abf84eaa8021b981ab78ed85497058f16"
+    },
+    {
+      "path": "dart-sdk/lib/async/zone_root.dart",
+      "size": 3857,
+      "crc32": 2049866487,
+      "sha256": "852c2df1d27da3c3fc99a1c02163f6cf58fc840c9fcb6ecb4475be39e9f955fc"
+    },
+    {
+      "path": "dart-sdk/lib/async/broadcast_stream_controller.dart",
+      "size": 15570,
+      "crc32": 486028018,
+      "sha256": "184cb75c25009f4637996b9b8c8b9cf46ab731f9940e79ce4a7774814ffc8029"
+    },
+    {
+      "path": "dart-sdk/lib/async/zone_delegate.dart",
+      "size": 6812,
+      "crc32": 1901608205,
+      "sha256": "f0094e77c50ef2dcc50b7b162293b97c2000562a961479d1f5709c7b6092130a"
+    },
+    {
+      "path": "dart-sdk/lib/concurrent/concurrent.dart",
+      "size": 2220,
+      "crc32": 3216015308,
+      "sha256": "4cced10b12f82931841ebb24ee5dece5e0535189ef05a2b8236830a57f5875ef"
+    },
+    {
+      "path": "dart-sdk/lib/developer/http_profiling.dart",
+      "size": 1195,
+      "crc32": 4167614735,
+      "sha256": "75c3643b9954868bfe732fd97484f3588e9f5d580bc83d4f12fb1386d737a4db"
+    },
+    {
+      "path": "dart-sdk/lib/developer/service.dart",
+      "size": 5856,
+      "crc32": 685419721,
+      "sha256": "9265cbb9ab48e81e41423a9c62d0f152717eb980a7817b30c0fe5ef0c9e6e690"
+    },
+    {
+      "path": "dart-sdk/lib/developer/creation_tracking.dart",
+      "size": 3025,
+      "crc32": 1084586119,
+      "sha256": "71c5436e1a535ed06ed915e47c423ad527fa5bede38c7abbce889777ac11af72"
+    },
+    {
+      "path": "dart-sdk/lib/developer/timeline.dart",
+      "size": 12606,
+      "crc32": 2763401602,
+      "sha256": "ff07b375803b53e31a0fa8d6fd98b3da36edc206da06f2e77843b4111218bea6"
+    },
+    {
+      "path": "dart-sdk/lib/developer/profiler.dart",
+      "size": 928,
+      "crc32": 1861834296,
+      "sha256": "7a58ee3ddcf767f0282e26710eb118ad2640ed75d4fb334bf58365614a1b9561"
+    },
+    {
+      "path": "dart-sdk/lib/developer/developer.dart",
+      "size": 10419,
+      "crc32": 4118296344,
+      "sha256": "1ccd92ae69be85ff867c6a0c62a49886e9af6bf197ce634238ed263e7cb5dcdc"
+    },
+    {
+      "path": "dart-sdk/lib/developer/extension.dart",
+      "size": 7192,
+      "crc32": 692668874,
+      "sha256": "fa9448861fe607e0c24445621fa5c29a8a225b263e10ae961a02929477145bd0"
+    },
+    {
+      "path": "dart-sdk/lib/internal/bytes_builder.dart",
+      "size": 6590,
+      "crc32": 939574804,
+      "sha256": "f01a79385d9956b56cee55ddc50699273e72dbde4cce0ad1c29dccd3ed669e50"
+    },
+    {
+      "path": "dart-sdk/lib/internal/cast.dart",
+      "size": 9804,
+      "crc32": 3619802814,
+      "sha256": "7669f327a05a2bcc4aa4aa24b68dc63e14e6c593be2735ad922245d406155e6b"
+    },
+    {
+      "path": "dart-sdk/lib/internal/sort.dart",
+      "size": 12273,
+      "crc32": 1643496760,
+      "sha256": "07adc32cc4936416148df2ad7f762b6f4bac2f365d2ddea0aaaf35aafa068275"
+    },
+    {
+      "path": "dart-sdk/lib/internal/lowering.dart",
+      "size": 318,
+      "crc32": 4207103010,
+      "sha256": "facdce98d8b5c4c3750f39cecc551e701241b7da4e0492c98b12f6e06f001394"
+    },
+    {
+      "path": "dart-sdk/lib/internal/internal.dart",
+      "size": 34119,
+      "crc32": 796056418,
+      "sha256": "1f365485f6eb9f45681af25ee6a37aa591966faca70eda49eaff0060c1cbb896"
+    },
+    {
+      "path": "dart-sdk/lib/internal/patch.dart",
+      "size": 317,
+      "crc32": 2779045888,
+      "sha256": "e6232ce6a2da0c0ddbed5bd5688cb07b0e3be8eeadc939b5576fec2034bb77ac"
+    },
+    {
+      "path": "dart-sdk/lib/internal/errors.dart",
+      "size": 2972,
+      "crc32": 3185511827,
+      "sha256": "9ab94142b4eea5b8b80d4e1618aa943db6163c84705c044d84b89c484194f097"
+    },
+    {
+      "path": "dart-sdk/lib/internal/symbol.dart",
+      "size": 1157,
+      "crc32": 1114650246,
+      "sha256": "13b1320aa8f6d61deaf3b8631c9a23cf2b2bf4028da4ad9a13b430936bedaf8a"
+    },
+    {
+      "path": "dart-sdk/lib/internal/linked_list.dart",
+      "size": 3343,
+      "crc32": 2359748067,
+      "sha256": "e40328d63c8f2f735d5701676518de941dc7ff82f305d97bbe66d1c6b3146736"
+    },
+    {
+      "path": "dart-sdk/lib/internal/async_cast.dart",
+      "size": 3807,
+      "crc32": 2587762889,
+      "sha256": "a0becdb5e617e52270bab7eda9b1014d9416f1908cd2521fbaea00773672742c"
+    },
+    {
+      "path": "dart-sdk/lib/internal/list.dart",
+      "size": 11840,
+      "crc32": 4044651305,
+      "sha256": "997a292f6d4ed6e7164ded6b88136189e5d248001ea441512d7d92847be3a107"
+    },
+    {
+      "path": "dart-sdk/lib/internal/iterable.dart",
+      "size": 29886,
+      "crc32": 3453511847,
+      "sha256": "534ca0c3af7dfe8b860176bc1b99b222923bddd644ac30582e83117b29d370f8"
+    },
+    {
+      "path": "dart-sdk/lib/internal/print.dart",
+      "size": 628,
+      "crc32": 314477701,
+      "sha256": "b9d9022756079590f1ccfa6967c8317ba9d29e2383a58a4a08f532b8e380c067"
+    },
+    {
+      "path": "dart-sdk/lib/_vm/_vm.dart",
+      "size": 4335,
+      "crc32": 3804364420,
+      "sha256": "92e8ae6e7e35714a4c1eedd2a7b08ba6b9fbba7dc5c22ef3251250511e1bc064"
+    },
+    {
+      "path": "dart-sdk/lib/isolate/isolate.dart",
+      "size": 53545,
+      "crc32": 2290176269,
+      "sha256": "635b51d99245dd38c0a8782961e80d1ad1f4cd2852750fbab24d2962a952f1f2"
+    },
+    {
+      "path": "dart-sdk/lib/isolate/capability.dart",
+      "size": 1284,
+      "crc32": 879591561,
+      "sha256": "ea3fd5280c3f96f0b4d8eaeca63f938e6b09345993129dfa5f9acf23f2622501"
+    },
+    {
+      "path": "dart-sdk/lib/indexed_db/dart2js/indexed_db_dart2js.dart",
+      "size": 39633,
+      "crc32": 1998991488,
+      "sha256": "037e5fdf4ae0794bc7745faaea4a607e27443738501ed9a5890729bc7ac1829e"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http_impl.dart",
+      "size": 123236,
+      "crc32": 1979733721,
+      "sha256": "133d8c2fd4e7bb608710c45b18c5be9c42c3f1e2c1c0fbf5678b32ad65375df5"
+    },
+    {
+      "path": "dart-sdk/lib/_http/crypto.dart",
+      "size": 8962,
+      "crc32": 1759843213,
+      "sha256": "e70adad7e6d6ce74bbc45d87a1dd9a8a269952089c26e0e662fdc80ee4f3124f"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http_parser.dart",
+      "size": 43745,
+      "crc32": 658359024,
+      "sha256": "3cd5f4256afddd9a2e28169186d19920a4e1da48d74d01947566e37d641f401c"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http_headers.dart",
+      "size": 41826,
+      "crc32": 4145175207,
+      "sha256": "28194bc41e0a33185ca296d42a0653b480fdc7dfeeebdd2f1b13361ca14ddcff"
+    },
+    {
+      "path": "dart-sdk/lib/_http/overrides.dart",
+      "size": 4259,
+      "crc32": 2533987099,
+      "sha256": "f1f873e614009ac95c4d6d2010479340e128bdde00d4653013ec7d47db1073e6"
+    },
+    {
+      "path": "dart-sdk/lib/_http/embedder_config.dart",
+      "size": 897,
+      "crc32": 3074340635,
+      "sha256": "5b05adf0a19d24f18b6deb63136be711f95a01620f8b21761370e612fa07f7c8"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http_session.dart",
+      "size": 5352,
+      "crc32": 2329108208,
+      "sha256": "5465d039ef70924656d99fe8fa3a7b3a283ad80ea4fac4959c429871ecb693a8"
+    },
+    {
+      "path": "dart-sdk/lib/_http/websocket.dart",
+      "size": 18314,
+      "crc32": 475600443,
+      "sha256": "ab9cbd62d95db1ffc8967a4b313a946714b09300ed1821d1a62b3d6ad286e90d"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http_testing.dart",
+      "size": 2884,
+      "crc32": 3866145279,
+      "sha256": "508523a38d3b2cf5d622cce87412279d13b77c4b499b10fcae747a26542775cc"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http_date.dart",
+      "size": 23988,
+      "crc32": 1602810597,
+      "sha256": "35a7a0db63f42b0f640cd62b10c9d8002290629ac500e326d4102927dd7f5cfe"
+    },
+    {
+      "path": "dart-sdk/lib/_http/websocket_impl.dart",
+      "size": 51524,
+      "crc32": 4077301537,
+      "sha256": "96533243c2e7997fd3c7473f83f84aaf4b3f776d767504fae1ac41d73b7c7a86"
+    },
+    {
+      "path": "dart-sdk/lib/_http/http.dart",
+      "size": 80662,
+      "crc32": 474266128,
+      "sha256": "c9d9fb7f6f27db9950c50c81a18ff081c337bfcad8271a9c681dfd652b40004b"
+    },
+    {
+      "path": "dart-sdk/lib/js_interop_unsafe/js_interop_unsafe.dart",
+      "size": 5045,
+      "crc32": 2023513227,
+      "sha256": "d5b81af4a1b4172bb5d43d9a1af0b2581e799e65eaf28b3b0fd234965c573541"
+    },
+    {
+      "path": "dart-sdk/lib/js_interop/js_interop.dart",
+      "size": 93095,
+      "crc32": 2222773058,
+      "sha256": "2396e8da3a3485b911a5c8c8744a519d5bde7938fac5a503c3e4bb6b232045e8"
+    },
+    {
+      "path": "dart-sdk/lib/convert/utf.dart",
+      "size": 25067,
+      "crc32": 3164172426,
+      "sha256": "412a8ad437caeb27a9aeb97cc0db4848ed45c9ecc3276fc242ca7f6d90f405bb"
+    },
+    {
+      "path": "dart-sdk/lib/convert/latin1.dart",
+      "size": 7389,
+      "crc32": 3828677584,
+      "sha256": "b7b138ff6f6074b61778d5ee3f4979e71fbde653a20d7c0bbc92154aa19a6da4"
+    },
+    {
+      "path": "dart-sdk/lib/convert/encoding.dart",
+      "size": 2903,
+      "crc32": 935187984,
+      "sha256": "35e22986ad0be28db4162d8030c67a3e7a2907cbe43d5c7b30bd200979089de9"
+    },
+    {
+      "path": "dart-sdk/lib/convert/chunked_conversion.dart",
+      "size": 2572,
+      "crc32": 4132593017,
+      "sha256": "b32f56cf514f418194730fc30df5056df311b82286c6924d04f2ee41caf74624"
+    },
+    {
+      "path": "dart-sdk/lib/convert/converter.dart",
+      "size": 2693,
+      "crc32": 775542580,
+      "sha256": "7d0dafd2d86b04d8c8eb3282f9bb256314392d01e93ee6dc21cef568708f27cd"
+    },
+    {
+      "path": "dart-sdk/lib/convert/convert.dart",
+      "size": 6401,
+      "crc32": 3853597990,
+      "sha256": "1499a12d41b1134b3991ee1e6fc0d7d7dca24a9e8bf741d9b8f9488e5008b1fa"
+    },
+    {
+      "path": "dart-sdk/lib/convert/json.dart",
+      "size": 40840,
+      "crc32": 3988552949,
+      "sha256": "e97ad4bb28ed4d968d7c2d309e751c84f5474d6797b63f1f111a6e2a33d0b541"
+    },
+    {
+      "path": "dart-sdk/lib/convert/ascii.dart",
+      "size": 10836,
+      "crc32": 1927419019,
+      "sha256": "010cdb66e78d3eb561d0de58c7fc66e21c7b9cf839c8cf84191e172c9988ce56"
+    },
+    {
+      "path": "dart-sdk/lib/convert/codec.dart",
+      "size": 3406,
+      "crc32": 4153404284,
+      "sha256": "7b0dac66c5ec685d9cb30e6be050e3590bb15376347f071d26eebae64d262f38"
+    },
+    {
+      "path": "dart-sdk/lib/convert/line_splitter.dart",
+      "size": 9030,
+      "crc32": 3036907131,
+      "sha256": "37ee3d233026eff4deed94f972de619434fa18c329c7fe963cff64ae38051e57"
+    },
+    {
+      "path": "dart-sdk/lib/convert/base64.dart",
+      "size": 32647,
+      "crc32": 2255533041,
+      "sha256": "db95fe2459011ca9e8a2478d60b0d133376984687493dfdf0d01b14f7b7669ee"
+    },
+    {
+      "path": "dart-sdk/lib/convert/html_escape.dart",
+      "size": 10031,
+      "crc32": 3181896448,
+      "sha256": "69727b8920cef079634058dc22d17b1ff3caefc47e2956c5df5a2654953aa1b9"
+    },
+    {
+      "path": "dart-sdk/lib/convert/byte_conversion.dart",
+      "size": 3111,
+      "crc32": 2552204380,
+      "sha256": "81f9b1bed95268ab3d33e8b7698ebc5ed1723dfb57b2f94b64152d26c5e2683c"
+    },
+    {
+      "path": "dart-sdk/lib/convert/string_conversion.dart",
+      "size": 9414,
+      "crc32": 2090152069,
+      "sha256": "fd3bcfaf8821a70e473025f0388bab50f1c1d7a3302e74b626cee56d695e8335"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/filtered_element_list.dart",
+      "size": 4271,
+      "crc32": 1051014095,
+      "sha256": "c992eadaf50a7e85df801f3863c190816d65d40f20478325136679197001c0d9"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/css_class_set.dart",
+      "size": 7527,
+      "crc32": 2940912278,
+      "sha256": "c44e5d59fee37f3612e49c174aae6254d4f0d63a4dda316b629ca64758d53afb"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/lists.dart",
+      "size": 1973,
+      "crc32": 1901106373,
+      "sha256": "be0f182ccf5e3d92ba75694b16c3c1b306c2a766156635bbf50b424d9bce2bc2"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/device.dart",
+      "size": 1686,
+      "crc32": 1238178873,
+      "sha256": "fb007503a3ea2d7334adacd88f5906653023b06077ccf0d7889fc10dda563d3f"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/conversions_dart2js.dart",
+      "size": 5468,
+      "crc32": 4278669813,
+      "sha256": "bea97cad5171807b600c0fdb1e9840b4b7ab1d50a4e788bf194132e7d7817d62"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/html_common_dart2js.dart",
+      "size": 924,
+      "crc32": 3111831131,
+      "sha256": "b37cd1e6cc35d510063439f7f29a88085de62a0c2c7a3d94b1ec2bab021da4f4"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/html_common.dart",
+      "size": 585,
+      "crc32": 2691244364,
+      "sha256": "8bba4e67c1269323f72feb5dc20dbc5b0ad805d856ef8cd07856aca012c7c3e1"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/metadata.dart",
+      "size": 1918,
+      "crc32": 3906715424,
+      "sha256": "9e582233ec330c36439353e90782d8fa68aa3eccfb845d902202992f51c2615e"
+    },
+    {
+      "path": "dart-sdk/lib/html/html_common/conversions.dart",
+      "size": 12822,
+      "crc32": 4291124346,
+      "sha256": "51cbd277be4630fe58e25540ec485d35249d513692eba17cb93a5c2274572651"
+    },
+    {
+      "path": "dart-sdk/lib/html/dart2js/html_dart2js.dart",
+      "size": 1268964,
+      "crc32": 2502237836,
+      "sha256": "eb8e7ebc5aeb7b3de12aa274d5a92d8933fc364d645e9c4becf74ad0e829b69e"
+    },
+    {
+      "path": "dart-sdk/lib/html/dartium/nativewrappers.dart",
+      "size": 912,
+      "crc32": 3744419105,
+      "sha256": "3cd43a6bfcf3c7e549e02ee221443ebb6e2d90b44d55ed852381379ded3af4a8"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/struct.dart",
+      "size": 6608,
+      "crc32": 994668258,
+      "sha256": "ca09ce5e1eeb535d2835cdf85ce8309c48c4f604560d5c3ddcd0fb83aa22c7f3"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/ffi.dart",
+      "size": 107605,
+      "crc32": 3123969378,
+      "sha256": "611d4e6f24c46aa65a3c3d8b1762f7d7c9fbf974cca1afb584827c36a888d204"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/c_type.dart",
+      "size": 16896,
+      "crc32": 3544178028,
+      "sha256": "81cd809c8a76e140450d39488ad07600095cfde36655f800674164c03ea43c76"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/annotations.dart",
+      "size": 1239,
+      "crc32": 3598754369,
+      "sha256": "e20a6854938381defb63bc3a94f7417538092d28c3c8f992439e2e2844cf34a7"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/union.dart",
+      "size": 4953,
+      "crc32": 832375666,
+      "sha256": "715219c31d77025ebb7537151e4a057aef70477b295b467e68f3d5cb98651ecf"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/dynamic_library.dart",
+      "size": 5444,
+      "crc32": 1440629125,
+      "sha256": "08ec8bcf2a6ca7aeffe8a8a78a490c48882c241cd5a879d58b2938a6f014c8ac"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/allocation.dart",
+      "size": 3934,
+      "crc32": 256893968,
+      "sha256": "b409ba9b0338a941b138a8cec0d12ce95d705942e262124de901b7363e581ef5"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/abi.dart",
+      "size": 6202,
+      "crc32": 546190522,
+      "sha256": "277b0d00103b0ab17b1e99d65263ea686b82ee70ce564a99d70a4db80eac10bd"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/native_finalizer.dart",
+      "size": 14755,
+      "crc32": 203237931,
+      "sha256": "fe02f28b35e37d907950be12bf0b6a90428b9ce8988ddabe4375498f0a2fe0b1"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/abi_specific.dart",
+      "size": 1874,
+      "crc32": 2000715300,
+      "sha256": "6c21e75f3a33f5fea28b8863d6c0be073efb5bfe8e95694e1d69cb895988d8dd"
+    },
+    {
+      "path": "dart-sdk/lib/ffi/native_type.dart",
+      "size": 7183,
+      "crc32": 2699340519,
+      "sha256": "a1bab2005a3453ab554efadd1904160d5c3df77ca4a80aa97d593e708f300049"
+    },
+    {
+      "path": "dart-sdk/lib/_wasm/memory.dart",
+      "size": 6387,
+      "crc32": 283944398,
+      "sha256": "1f941f9635b2b0715564b5f922008ade9fe8e02f5ec294c93ee6f5fdb1fdf1be"
+    },
+    {
+      "path": "dart-sdk/lib/_wasm/wasm_types.dart",
+      "size": 27693,
+      "crc32": 2329574803,
+      "sha256": "961cbfcb66e5df34438fac649605ee0f7ffdf68a991c2269e971cac64f90eae7"
+    },
+    {
+      "path": "dart-sdk/lib/core/object.dart",
+      "size": 19168,
+      "crc32": 348681165,
+      "sha256": "c7aae496efb9454da19d528847400fbb455c90fb5e64a0435d8c391a192bc646"
+    },
+    {
+      "path": "dart-sdk/lib/core/map.dart",
+      "size": 21247,
+      "crc32": 1090960203,
+      "sha256": "eb6f8bc5035d35ea623acd47f04d2b782f8dad29744a5eddcfbd8ea9c2cd1965"
+    },
+    {
+      "path": "dart-sdk/lib/core/bigint.dart",
+      "size": 20695,
+      "crc32": 390502927,
+      "sha256": "22fdfa0cc913d91660bc3624ebc3c257772f7d2e825926452882ddcebdfe4140"
+    },
+    {
+      "path": "dart-sdk/lib/core/stopwatch.dart",
+      "size": 4521,
+      "crc32": 2073282967,
+      "sha256": "9018f42379c5067d5c4daffa66b71caf05e923ee879a36bc8c2dbe51ce890ed8"
+    },
+    {
+      "path": "dart-sdk/lib/core/sink.dart",
+      "size": 800,
+      "crc32": 2378610601,
+      "sha256": "5710f06d661bfb3a014d13c2dbdc52b63bc83ca064ce81fd0b41d98d0bf500b0"
+    },
+    {
+      "path": "dart-sdk/lib/core/double.dart",
+      "size": 9281,
+      "crc32": 4237219197,
+      "sha256": "f51931950bce0faa4326334fd86ad1e01cdc828859ba7ab6625976733b8d4297"
+    },
+    {
+      "path": "dart-sdk/lib/core/string.dart",
+      "size": 37049,
+      "crc32": 3062321221,
+      "sha256": "d6676a9cc1b761b1b322713ec72a3276aed7b84c20111d8c262bfe096b4ec2b7"
+    },
+    {
+      "path": "dart-sdk/lib/core/exceptions.dart",
+      "size": 6520,
+      "crc32": 1457000646,
+      "sha256": "a80c35bd587a82119aad78082ca42e80c04c391aa38da0c6f8cc610c8e0e84f3"
+    },
+    {
+      "path": "dart-sdk/lib/core/duration.dart",
+      "size": 17675,
+      "crc32": 2712371708,
+      "sha256": "1ac8933d7ba1483e7d71096dda9a8ba1b977a037ff06c61649488669662b3be2"
+    },
+    {
+      "path": "dart-sdk/lib/core/invocation.dart",
+      "size": 5462,
+      "crc32": 982658558,
+      "sha256": "2cf7e949cb4bf0246abe4daa4406b2985b53d34a3668163ac06bd69dd368c7e0"
+    },
+    {
+      "path": "dart-sdk/lib/core/pattern.dart",
+      "size": 5101,
+      "crc32": 991970187,
+      "sha256": "2bdb72ded342c69f4e6e8f335855e3f1aef8719e14dd9b9be52629479c75d020"
+    },
+    {
+      "path": "dart-sdk/lib/core/enum.dart",
+      "size": 6661,
+      "crc32": 2064668375,
+      "sha256": "7ff0f5d18f6a72b3c4d48f9b0f153da0501f22f87aef73f9d650311c59e4603a"
+    },
+    {
+      "path": "dart-sdk/lib/core/uri.dart",
+      "size": 192196,
+      "crc32": 1297301427,
+      "sha256": "43d812c9572e4b7b5d43a1a31d4252e7f628e259df509bb429094a9166f71814"
+    },
+    {
+      "path": "dart-sdk/lib/core/iterator.dart",
+      "size": 3542,
+      "crc32": 3244020931,
+      "sha256": "0c4892ae950866a61e046667ee82e75f7d8a9deac72042d1d611e51685859ea9"
+    },
+    {
+      "path": "dart-sdk/lib/core/weak.dart",
+      "size": 12385,
+      "crc32": 804899203,
+      "sha256": "c34b088c848f2c0dcce4e29828c89af029cb8e527212e3a3c793b77e8127c0a3"
+    },
+    {
+      "path": "dart-sdk/lib/core/annotations.dart",
+      "size": 14616,
+      "crc32": 4008549914,
+      "sha256": "20b7efb191730c4da767643dbdae8216c6b8db9ceb20e4556d859a8091761dfb"
+    },
+    {
+      "path": "dart-sdk/lib/core/record.dart",
+      "size": 6480,
+      "crc32": 1933024004,
+      "sha256": "df2b5d78b3d8ceaa06b4321777970b35c6c982a22edc3720bd55f93c713fbb5c"
+    },
+    {
+      "path": "dart-sdk/lib/core/errors.dart",
+      "size": 23223,
+      "crc32": 1313426187,
+      "sha256": "3831a19bfb128a81867478c657404e861ee3ff7f4f8b9e0ebcd31f464092120d"
+    },
+    {
+      "path": "dart-sdk/lib/core/regexp.dart",
+      "size": 20412,
+      "crc32": 1456048644,
+      "sha256": "8d055e21928e5fbef03bde3d93e40b5f73812976edf9863a0a7d303774789976"
+    },
+    {
+      "path": "dart-sdk/lib/core/symbol.dart",
+      "size": 3227,
+      "crc32": 2642759718,
+      "sha256": "77e89b71d65f578b1b728e4f729ad4964748dca2e1a4c191b6782b0217f904b0"
+    },
+    {
+      "path": "dart-sdk/lib/core/function.dart",
+      "size": 8424,
+      "crc32": 1738993630,
+      "sha256": "9384249215bc16199e2d56340fa3fc2a9a747a26ffbd7e624a22a4e1381881e8"
+    },
+    {
+      "path": "dart-sdk/lib/core/int.dart",
+      "size": 18691,
+      "crc32": 2143816498,
+      "sha256": "d0b9c6c9e4b8a4c63d057a8bc9def90c109f5c921d2dc37e8f45f697707532c5"
+    },
+    {
+      "path": "dart-sdk/lib/core/core.dart",
+      "size": 7124,
+      "crc32": 1072998768,
+      "sha256": "1478ebe95178ce234b9c8d8395039182009adf3bdf16f44c51665765620291d9"
+    },
+    {
+      "path": "dart-sdk/lib/core/comparable.dart",
+      "size": 3831,
+      "crc32": 2504386435,
+      "sha256": "75bf4992ce6b0845304cd5c850c486d6ea8f52ea48cbffc7334df2d52be5dec5"
+    },
+    {
+      "path": "dart-sdk/lib/core/identical.dart",
+      "size": 4182,
+      "crc32": 3340346894,
+      "sha256": "f830262f25f41ded15d946cc729ed8d2e5f9890b8a0267db1790235b23f2ef32"
+    },
+    {
+      "path": "dart-sdk/lib/core/string_sink.dart",
+      "size": 1693,
+      "crc32": 3514397510,
+      "sha256": "e6efe0d1598a819481ae7e3f6612c02d21f333579af8d5cb9f0e973975ebc460"
+    },
+    {
+      "path": "dart-sdk/lib/core/num.dart",
+      "size": 23919,
+      "crc32": 4200147465,
+      "sha256": "b218d2ce2578a7b6ca9b31e03d9c3722f757753112b21cd66c27769c3c926130"
+    },
+    {
+      "path": "dart-sdk/lib/core/date_time.dart",
+      "size": 34230,
+      "crc32": 539271002,
+      "sha256": "d9c129b3c594bd48946b7f715eacecee6f3b7ca4b62ab608ce0276468d595c0b"
+    },
+    {
+      "path": "dart-sdk/lib/core/list.dart",
+      "size": 33445,
+      "crc32": 4262079401,
+      "sha256": "637c144491a0b456ebb2ed2d64acb242076515787209345d2dd0876dd0001154"
+    },
+    {
+      "path": "dart-sdk/lib/core/bool.dart",
+      "size": 9266,
+      "crc32": 2836131463,
+      "sha256": "d1c3552c85a098901cbc96d45fa4a5418f86fa68a934266b4dd05399a1b5b932"
+    },
+    {
+      "path": "dart-sdk/lib/core/iterable.dart",
+      "size": 39743,
+      "crc32": 821176156,
+      "sha256": "1bd90966d09fe127b0ea73e6a686ee9d74c372b13dd2d2c3581716cb8ffefaee"
+    },
+    {
+      "path": "dart-sdk/lib/core/set.dart",
+      "size": 13839,
+      "crc32": 3547944507,
+      "sha256": "f00320a1d4aeb04839d4a993719f9a69294eae30370f25cd088b601bf1eec33f"
+    },
+    {
+      "path": "dart-sdk/lib/core/null.dart",
+      "size": 1175,
+      "crc32": 863791867,
+      "sha256": "6237f7371f90dff808cffcd6122f935743df3fa5cd697ce94d77fc58bb932e3a"
+    },
+    {
+      "path": "dart-sdk/lib/core/stacktrace.dart",
+      "size": 2167,
+      "crc32": 611401387,
+      "sha256": "46ffb5135b402f11972a9371ae7d389fa09d9183c3a664b6aa473c3d02e07a19"
+    },
+    {
+      "path": "dart-sdk/lib/core/string_buffer.dart",
+      "size": 3927,
+      "crc32": 2317941926,
+      "sha256": "d4db7bbc6eaae0a1864fcefb1b4ff0091776323cb6f25a09136359a3790fd8a3"
+    },
+    {
+      "path": "dart-sdk/lib/core/type.dart",
+      "size": 2158,
+      "crc32": 2394358067,
+      "sha256": "215bd79cb723a42c7add08a88d02f2067c961f5628d5249b75e2328ec4abf2d0"
+    },
+    {
+      "path": "dart-sdk/lib/core/print.dart",
+      "size": 992,
+      "crc32": 1437882020,
+      "sha256": "2e63725a7fafdadd08b6b0fae05f687a8088cd74d66475c5afefa20a93e7252d"
+    },
+    {
+      "path": "dart-sdk/lib/svg/dart2js/svg_dart2js.dart",
+      "size": 114440,
+      "crc32": 4007605922,
+      "sha256": "b2c8dd9a5989999be0e5b9dd7fcdfc702dacf2824e82661af8e6cb0ff2564bff"
+    },
+    {
+      "path": "dart-sdk/bin/dart",
+      "size": 4835712,
+      "crc32": 3498623155,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    {
+      "path": "dart-sdk/bin/dartaotruntime",
+      "size": 5710176,
+      "crc32": 988337840,
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72"
+    },
+    {
+      "path": "dart-sdk/bin/dartvm",
+      "size": 42998912,
+      "crc32": 2720055777,
+      "sha256": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d"
+    },
+    {
+      "path": "dart-sdk/bin/snapshots/dartdev_aot.dart.snapshot",
+      "size": 22954416,
+      "crc32": 1589762944,
+      "sha256": "3f675fe483acfb56e752121c2cf0b1505d4db0edf0fc16ca996d3d76eb252b55"
+    },
+    {
+      "path": "dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot",
+      "size": 17153416,
+      "crc32": 29764215,
+      "sha256": "0c484223020a7aad5874e1ef3bdcc43c9d0b36a1402f223d538ee2d4cc0b847a"
+    },
+    {
+      "path": "dart-sdk/bin/snapshots/analysis_server_aot.dart.snapshot",
+      "size": 26789904,
+      "crc32": 3976257613,
+      "sha256": "2effb1def007ae4812cdc5d229587ca3df575586dd95ac7e36cd5c178490632a"
+    }
+  ]
+}

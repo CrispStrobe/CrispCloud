@@ -13,18 +13,23 @@ import 'word_zotero_format.dart';
 class ZoteroSession {
   String? apiKey;
   bool rememberKey = false;
+  bool useLocal = false;
   ZoteroLibrary? library;
   String style = 'apa';
   String locale = 'en-US';
 }
 
 /// Shared Quds citation workspace. The host supplies its own network transport
-/// and may opt into its existing credential store. Without a transport, local
+/// and may opt into its existing credential store. [localTransport] explicitly
+/// enables desktop access and must connect directly to localhost without a
+/// remote proxy. It is never used as a fallback for the web transport.
+/// Without a transport, local
 /// CSL import, field editing, and embedded-source export remain available.
 Future<void> showWordZoteroDialog(
   BuildContext context, {
   required WordEditorController controller,
   ZoteroTransport? transport,
+  ZoteroTransport? localTransport,
   ZoteroSession? session,
   Future<void> Function(String? apiKey)? persistApiKey,
 }) {
@@ -34,6 +39,7 @@ Future<void> showWordZoteroDialog(
     builder: (_) => _WordZoteroDialog(
       controller: controller,
       transport: transport,
+      localTransport: localTransport,
       session: session ?? ZoteroSession(),
       persistApiKey: persistApiKey,
     ),
@@ -66,11 +72,13 @@ class _WordZoteroDialog extends StatefulWidget {
   const _WordZoteroDialog({
     required this.controller,
     this.transport,
+    this.localTransport,
     required this.session,
     this.persistApiKey,
   });
   final WordEditorController controller;
   final ZoteroTransport? transport;
+  final ZoteroTransport? localTransport;
   final ZoteroSession session;
   final Future<void> Function(String? apiKey)? persistApiKey;
   @override
@@ -102,6 +110,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   final _imported = <ZoteroCitationItem>[];
   WordEditorController get _controller => widget.controller;
   ZoteroSession get _session => widget.session;
+  bool get _useLocal => _session.useLocal;
   bool get _canEdit =>
       !_controller.isDisposed &&
       _controller.config.allowsMutation &&
@@ -117,7 +126,15 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _key = TextEditingController(text: _session.apiKey ?? '');
     _style = TextEditingController(text: _session.style);
     _locale = TextEditingController(text: _session.locale);
-    if (widget.transport != null) {
+    if (_session.useLocal && widget.localTransport == null) {
+      _session.useLocal = false;
+      _session.library = null;
+    }
+    if (_useLocal) {
+      // Reconnect explicitly so a previous session never supplies an unpinned
+      // local database to document refresh or bibliography requests.
+      _session.library = null;
+    } else if (widget.transport != null) {
       _client = ZoteroClient(
         transport: widget.transport!,
         apiKey: _session.apiKey,
@@ -160,8 +177,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
             StateError e => e.message,
             ArgumentError _ =>
               'Check the library ID, selected sources, style, and locale.',
-            _ =>
-              'The operation could not finish. Existing document content was kept.',
+            _ => 'The operation could not finish. Existing document content was kept.',
           };
         });
       }
@@ -183,6 +199,62 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     action();
     _target = _editTarget(_controller);
     setState(() => _notice = 'Document updated. You can undo this change.');
+  }
+
+  void _clearLibrary() {
+    _identity = null;
+    _session.library = null;
+    _groups.clear();
+    _collections.clear();
+    _collectionKey = null;
+    _moreGroups = null;
+    _moreCollections = null;
+    _page = null;
+    _selected.clear();
+  }
+
+  void _switchSource(bool local) {
+    if (_busy || (local && widget.localTransport == null)) return;
+    setState(() {
+      _session.useLocal = local;
+      _clearLibrary();
+      _client = !local && widget.transport != null
+          ? ZoteroClient(transport: widget.transport!, apiKey: _session.apiKey)
+          : null;
+      _error = null;
+      _notice = null;
+    });
+  }
+
+  Future<void> _connectLocal() => _run(() async {
+    final transport = widget.localTransport;
+    if (transport == null) {
+      throw StateError('Desktop Zotero is unavailable in this host.');
+    }
+    final client = ZoteroClient.local(transport: transport);
+    await client.probeLocal();
+    final groups = await client.groups(0);
+    if (!mounted) return;
+    _clearLibrary();
+    _client = client;
+    _session.library = ZoteroLibrary.localUser();
+    _groups.addAll(groups.items);
+    _moreGroups = groups.nextStart;
+    await _loadLibrary();
+    if (mounted) {
+      setState(
+        () => _notice = 'Connected to Zotero desktop. Local library access is read-only; no API key is used.',
+      );
+    }
+  });
+
+  void _disconnectLocal() {
+    setState(() {
+      _clearLibrary();
+      _client = null;
+      _error = null;
+      _notice = 'Desktop Zotero disconnected. Citations stay in the document.';
+    });
   }
 
   Future<void> _connect() => _run(() async {
@@ -282,8 +354,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         ? null
         : ZoteroClient(transport: widget.transport!);
     setState(
-      () => _notice =
-          'Disconnected. The saved key was removed; citations remain in the document.',
+      () => _notice = 'Disconnected. The saved key was removed; citations remain in the document.',
     );
   });
 
@@ -320,12 +391,23 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     if (data == null) {
       throw const FormatException('Zotero returned no CSL data for this item.');
     }
-    setState(
-      () => _selected[item.sourceId] = ZoteroCitationItem.fromCsl(
-        itemData: data,
-        uris: [item.canonicalUri.toString()],
-      ),
-    );
+    final uri = full.citationUri;
+    final offlineId =
+        'quds-offline-${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 30)}';
+    setState(() {
+      _selected[item.sourceId] = uri == null
+          ? ZoteroCitationItem.fromJson({
+              'id': offlineId,
+              'uris': <String>[],
+              'itemData': {...data, 'id': offlineId},
+            })
+          : ZoteroCitationItem.fromCsl(itemData: data, uris: [uri.toString()]);
+    });
+    if (uri == null) {
+      setState(
+        () => _notice = 'This source will be embedded without a Zotero link because the desktop library did not provide a persistent item URI.',
+      );
+    }
   });
 
   Future<void> _compose(
@@ -386,76 +468,75 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _session.locale = _locale.text.trim();
   }
 
-  Future<void> _bibliography({
-    required bool online,
-    WmlZoteroField? field,
-  }) => _run(() async {
-    _checkTarget();
-    if (field != null &&
-        const ['uncited', 'omitted', 'custom'].any((name) {
-          final value = field.metadata?[name];
-          return value != null && (value is! List || value.isNotEmpty);
-        })) {
-      throw UnsupportedError(
-        'This bibliography has Zotero additions, exclusions, or custom entries. Update it with Zotero to retain those choices.',
-      );
-    }
-    _saveFormat();
-    final items = _documentItems;
-    if (items.isEmpty) {
-      throw const FormatException(
-        'Insert a citation before creating its bibliography.',
-      );
-    }
-    String text;
-    if (online) {
-      final addresses = <String, ZoteroSourceAddress>{};
-      for (final item in items) {
-        final address = item.uris
-            .map(ZoteroSourceAddress.parse)
-            .whereType<ZoteroSourceAddress>()
-            .firstOrNull;
-        if (address == null) {
-          throw const FormatException(
-            'Some sources are offline or unlinked. Use the basic bibliography.',
+  Future<void> _bibliography({required bool online, WmlZoteroField? field}) =>
+      _run(() async {
+        _checkTarget();
+        if (field != null &&
+            const ['uncited', 'omitted', 'custom'].any((name) {
+              final value = field.metadata?[name];
+              return value != null && (value is! List || value.isNotEmpty);
+            })) {
+          throw UnsupportedError(
+            'This bibliography has Zotero additions, exclusions, or custom entries. Update it with Zotero to retain those choices.',
           );
         }
-        addresses['${address.library.apiPath}/${address.key}'] = address;
-      }
-      final library = addresses.values.first.library;
-      if (addresses.values.any((item) => item.library != library) ||
-          addresses.length > 50) {
-        throw const FormatException(
-          'A Zotero-formatted bibliography needs at most 50 sources in one library. Use basic format or export CSL JSON.',
+        _saveFormat();
+        final items = _documentItems;
+        if (items.isEmpty) {
+          throw const FormatException(
+            'Insert a citation before creating its bibliography.',
+          );
+        }
+        String text;
+        if (online) {
+          final addresses = <String, ZoteroSourceAddress>{};
+          for (final item in items) {
+            final address = item.uris
+                .map(ZoteroSourceAddress.parse)
+                .whereType<ZoteroSourceAddress>()
+                .firstOrNull;
+            if (address == null) {
+              throw const FormatException(
+                'Some sources cannot be resolved through this library connection. Use the basic bibliography or copy embedded CSL JSON.',
+              );
+            }
+            addresses['${address.library.apiPath}/${address.key}'] = address;
+          }
+          final library = addresses.values.first.library;
+          if (addresses.values.any((item) => item.library != library) ||
+              addresses.length > 50) {
+            throw const FormatException(
+              'A Zotero-formatted bibliography needs at most 50 sources in one library. Use basic format or export CSL JSON.',
+            );
+          }
+          if (_client == null)
+            throw StateError('Connect a Zotero library first.');
+          text = zoteroHtmlToPlainText(
+            await _client!.bibliography(
+              library,
+              itemKeys: addresses.values.map((item) => item.key).toList(),
+              style: _session.style,
+              locale: _session.locale,
+            ),
+          );
+        } else {
+          text = zoteroBasicBibliography(items);
+        }
+        if (!mounted) return;
+        if (text.trim().isEmpty) {
+          throw const FormatException('No bibliography text was returned.');
+        }
+        final reviewed = await _reviewText(
+          online ? 'Zotero bibliography — plain text' : 'Basic bibliography',
+          text,
         );
-      }
-      if (_client == null) throw StateError('Connect a Zotero library first.');
-      text = zoteroHtmlToPlainText(
-        await _client!.bibliography(
-          library,
-          itemKeys: addresses.values.map((item) => item.key).toList(),
-          style: _session.style,
-          locale: _session.locale,
-        ),
-      );
-    } else {
-      text = zoteroBasicBibliography(items);
-    }
-    if (!mounted) return;
-    if (text.trim().isEmpty) {
-      throw const FormatException('No bibliography text was returned.');
-    }
-    final reviewed = await _reviewText(
-      online ? 'Zotero bibliography — plain text' : 'Basic bibliography',
-      text,
-    );
-    if (!mounted || reviewed == null) return;
-    _write(
-      () => field == null
-          ? _controller.insertZoteroBibliography(text: reviewed)
-          : _controller.updateZoteroBibliography(field, text: reviewed),
-    );
-  });
+        if (!mounted || reviewed == null) return;
+        _write(
+          () => field == null
+              ? _controller.insertZoteroBibliography(text: reviewed)
+              : _controller.updateZoteroBibliography(field, text: reviewed),
+        );
+      });
 
   Future<void> _refresh() => _run(() async {
     _checkTarget();
@@ -526,9 +607,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   Future<void> _copySources({ZoteroExportFormat? format}) => _run(() async {
     String text;
     if (format == null) {
-      text = const JsonEncoder.withIndent(
-        '  ',
-      ).convert(WordZotero.embeddedItems(_controller.document));
+      text = const JsonEncoder.withIndent('  ')
+          .convert(WordZotero.embeddedItems(_controller.document));
     } else {
       final addresses = _selected.values
           .map(
@@ -657,7 +737,9 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                   children: [
                     _scrollableTab(
                       _libraryTab(),
-                      minHeight: size.width < 600 ? 820 : 660,
+                      minHeight: size.width < 600
+                          ? (widget.localTransport == null ? 820 : 920)
+                          : (widget.localTransport == null ? 660 : 760),
                     ),
                     _documentTab(),
                     _scrollableTab(_importTab(), minHeight: 600),
@@ -694,69 +776,121 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     padding: const EdgeInsets.all(16),
     child: Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                key: const ValueKey('zotero-api-key'),
-                controller: _key,
-                enabled: !_busy && widget.transport != null,
-                obscureText: true,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: const InputDecoration(
-                  labelText: 'Read-only Zotero API key',
-                  border: OutlineInputBorder(),
-                  isDense: true,
+        if (widget.localTransport != null) ...[
+          DropdownButtonFormField<bool>(
+            key: const ValueKey('zotero-library-source'),
+            initialValue: _useLocal,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Reference library source',
+              isDense: true,
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: false,
+                child: Text('Online Zotero library'),
+              ),
+              DropdownMenuItem(
+                value: true,
+                child: Text('Zotero desktop (this computer)'),
+              ),
+            ],
+            onChanged: _busy
+                ? null
+                : (local) {
+                    if (local != null) _switchSource(local);
+                  },
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (_useLocal) ...[
+          const Text(
+            'Open Zotero on this computer. In Settings → Advanced, enable “Allow other applications on this computer to communicate with Zotero”. No API key is needed.',
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              FilledButton(
+                key: const ValueKey('zotero-connect-desktop'),
+                onPressed: _busy ? null : _connectLocal,
+                child: const Text('Connect desktop'),
+              ),
+              if (_client != null)
+                TextButton(
+                  onPressed: _busy ? null : _disconnectLocal,
+                  child: const Text('Disconnect desktop'),
                 ),
-                onSubmitted: (_) {
-                  if (!_busy && widget.transport != null) _connect();
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: _busy || widget.transport == null ? null : _connect,
-              child: const Text('Connect'),
-            ),
-          ],
-        ),
-        Wrap(
-          spacing: 10,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            TextButton(
-              onPressed: () => launchUrl(
-                Uri.parse('https://www.zotero.org/settings/keys/new'),
-                mode: LaunchMode.externalApplication,
-              ),
-              child: const Text('Create a read-only key'),
-            ),
-            if (widget.persistApiKey != null)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: _session.rememberKey,
-                    onChanged: _busy
-                        ? null
-                        : (value) => _remember(value ?? false),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ] else ...[
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const ValueKey('zotero-api-key'),
+                  controller: _key,
+                  enabled: !_busy && widget.transport != null,
+                  obscureText: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: const InputDecoration(
+                    labelText: 'Read-only Zotero API key',
+                    border: OutlineInputBorder(),
+                    isDense: true,
                   ),
-                  const Text('Remember key when connecting'),
-                ],
+                  onSubmitted: (_) {
+                    if (!_busy && widget.transport != null) _connect();
+                  },
+                ),
               ),
-            if (_session.apiKey != null)
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _busy || widget.transport == null ? null : _connect,
+                child: const Text('Connect'),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
               TextButton(
-                onPressed: _busy ? null : _disconnect,
-                child: const Text('Disconnect & forget'),
+                onPressed: () => launchUrl(
+                  Uri.parse('https://www.zotero.org/settings/keys/new'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: const Text('Create a read-only key'),
               ),
-          ],
-        ),
-        if (widget.transport == null)
+              if (widget.persistApiKey != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: _session.rememberKey,
+                      onChanged: _busy
+                          ? null
+                          : (value) => _remember(value ?? false),
+                    ),
+                    const Text('Remember key when connecting'),
+                  ],
+                ),
+              if (_session.apiKey != null)
+                TextButton(
+                  onPressed: _busy ? null : _disconnect,
+                  child: const Text('Disconnect & forget'),
+                ),
+            ],
+          ),
+        ],
+        if (!_useLocal && widget.transport == null)
           const Text(
             'Online access is unavailable in this host. Import CSL JSON to work offline.',
           ),
-        if (_identity != null || _groups.isNotEmpty)
+        if ((_useLocal && _client != null) ||
+            _identity != null ||
+            _groups.isNotEmpty)
           Row(
             children: [
               Expanded(
@@ -799,7 +933,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                       ? null
                       : () => _run(() async {
                           final page = await _client!.groups(
-                            _identity!.userId,
+                            _useLocal ? 0 : _identity!.userId,
                             start: _moreGroups!,
                           );
                           if (mounted) {
@@ -813,57 +947,58 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 ),
             ],
           ),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          title: const Text(
-            'Open a library by ID',
-            style: TextStyle(fontSize: 13),
-          ),
-          children: [
-            Wrap(
-              spacing: 10,
-              runSpacing: 6,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                DropdownButton<bool>(
-                  value: _publicGroup,
-                  items: const [
-                    DropdownMenuItem(value: true, child: Text('Group')),
-                    DropdownMenuItem(value: false, child: Text('User')),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (value) => setState(() => _publicGroup = value!),
-                ),
-                SizedBox(
-                  width: 160,
-                  child: TextField(
-                    controller: _libraryId,
-                    enabled: !_busy,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Numeric library ID',
-                      isDense: true,
+        if (!_useLocal)
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text(
+              'Open a library by ID',
+              style: TextStyle(fontSize: 13),
+            ),
+            children: [
+              Wrap(
+                spacing: 10,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  DropdownButton<bool>(
+                    value: _publicGroup,
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Group')),
+                      DropdownMenuItem(value: false, child: Text('User')),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (value) => setState(() => _publicGroup = value!),
+                  ),
+                  SizedBox(
+                    width: 160,
+                    child: TextField(
+                      controller: _libraryId,
+                      enabled: !_busy,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Numeric library ID',
+                        isDense: true,
+                      ),
                     ),
                   ),
-                ),
-                OutlinedButton(
-                  onPressed: _busy || widget.transport == null
-                      ? null
-                      : _openPublic,
-                  child: const Text('Open library'),
-                ),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Text(
-                'Public libraries work without a key. Private libraries need read access.',
-                style: TextStyle(fontSize: 12),
+                  OutlinedButton(
+                    onPressed: _busy || widget.transport == null
+                        ? null
+                        : _openPublic,
+                    child: const Text('Open library'),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Public libraries work without a key. Private libraries need read access.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
         if (_session.library != null) ...[
           Row(
             children: [
@@ -941,7 +1076,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         Expanded(
           child: _page == null
               ? const Center(
-                  child: Text('Connect Zotero or open a public library.'),
+                  child: Text('Connect a Zotero library to browse references.'),
                 )
               : _page!.items.where((item) => item.isCitable).isEmpty
               ? const Center(child: Text('No citable references on this page.'))
@@ -963,6 +1098,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                           item.creatorSummary,
                           item.year,
                           item.itemType,
+                          if (item.citationUri == null) 'Embedded source only',
                         ].where((text) => text.isNotEmpty).join(' · '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1049,6 +1185,8 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   );
 
   Map<ZoteroLibrary, String> _libraryOptions() => {
+    if (_useLocal && _client != null)
+      ZoteroLibrary.localUser(): 'My library (desktop)',
     if (_identity?.canReadPersonalLibrary == true)
       ZoteroLibrary.user(_identity!.userId): 'My library',
     for (final group in _groups) group.library: group.name,
@@ -1373,9 +1511,7 @@ class _CitationComposerState extends State<_CitationComposer> {
     } catch (error) {
       if (mounted) {
         setState(
-          () => _error = error is ZoteroApiException
-              ? error.message
-              : 'The style preview could not be loaded. Your current text was kept.',
+          () => _error = error is ZoteroApiException ? error.message : 'The style preview could not be loaded. Your current text was kept.',
         );
       }
     } finally {
