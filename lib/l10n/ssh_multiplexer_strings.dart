@@ -1,0 +1,212 @@
+import 'package:flutter/widgets.dart';
+
+import '../models/ssh_multiplexer_session.dart';
+
+extension SshMultiplexerContextStrings on BuildContext {
+  String sshMultiplexerTr(String english) {
+    final language = Localizations.maybeLocaleOf(this)?.languageCode ?? 'en';
+    final index = _languages.indexOf(language);
+    return index < 0 ? english : _values[english]?[index] ?? english;
+  }
+
+  String sshMultiplexerDiscoveryError(SshMultiplexerDiscoveryException error) {
+    final template = error.message.replaceAll(error.kind.name, '{tool}');
+    final message = sshMultiplexerTr(template).replaceAll('{tool}', error.kind.name);
+    final detail = error.displayDetail;
+    return detail == null || detail.isEmpty ? message : '$message\n$detail';
+  }
+}
+
+const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
+const _values = <String, List<String>>{
+  "Browse tmux sessions": [
+    "tmux-Sitzungen durchsuchen",
+    "Parcourir les sessions tmux",
+    "Explorar sesiones tmux",
+    "Explorar sessões tmux",
+    "浏览 tmux 会话",
+    "tmux セッションを参照",
+    "tmux 세션 찾아보기",
+    "استعراض جلسات tmux",
+  ],
+  "Browse screen sessions": [
+    "screen-Sitzungen durchsuchen",
+    "Parcourir les sessions screen",
+    "Explorar sesiones screen",
+    "Explorar sessões screen",
+    "浏览 screen 会话",
+    "screen セッションを参照",
+    "screen 세션 찾아보기",
+    "استعراض جلسات screen",
+  ],
+  "tmux sessions": [
+    "tmux-Sitzungen",
+    "Sessions tmux",
+    "Sesiones tmux",
+    "Sessões tmux",
+    "tmux 会话",
+    "tmux セッション",
+    "tmux 세션",
+    "جلسات tmux",
+  ],
+  "screen sessions": [
+    "screen-Sitzungen",
+    "Sessions screen",
+    "Sesiones screen",
+    "Sessões screen",
+    "screen 会话",
+    "screen セッション",
+    "screen 세션",
+    "جلسات screen",
+  ],
+  "Filter sessions": [
+    "Sitzungen filtern",
+    "Filtrer les sessions",
+    "Filtrar sesiones",
+    "Filtrar sessões",
+    "筛选会话",
+    "セッションを絞り込む",
+    "세션 필터",
+    "تصفية الجلسات",
+  ],
+  "No sessions found.": [
+    "Keine Sitzungen gefunden.",
+    "Aucune session trouvée.",
+    "No se encontraron sesiones.",
+    "Nenhuma sessão encontrada.",
+    "未找到会话。",
+    "セッションが見つかりません。",
+    "세션이 없습니다.",
+    "لم يتم العثور على جلسات.",
+  ],
+  "No sessions match this filter.": [
+    "Keine Sitzung entspricht diesem Filter.",
+    "Aucune session ne correspond au filtre.",
+    "Ninguna sesión coincide con el filtro.",
+    "Nenhuma sessão corresponde ao filtro.",
+    "没有与筛选条件匹配的会话。",
+    "条件に一致するセッションがありません。",
+    "필터와 일치하는 세션이 없습니다.",
+    "لا توجد جلسات تطابق التصفية.",
+  ],
+  "Attached": [
+    "Verbunden",
+    "Connectée",
+    "Conectada",
+    "Ligada",
+    "已连接",
+    "接続中",
+    "연결됨",
+    "متصلة",
+  ],
+  "Detached": [
+    "Getrennt",
+    "Détachée",
+    "Desconectada",
+    "Desligada",
+    "已分离",
+    "デタッチ済み",
+    "분리됨",
+    "منفصلة",
+  ],
+  "Unavailable": [
+    "Nicht verfügbar",
+    "Indisponible",
+    "No disponible",
+    "Indisponível",
+    "不可用",
+    "利用不可",
+    "사용 불가",
+    "غير متاحة",
+  ],
+  "Unsupported session name": [
+    "Nicht unterstützter Sitzungsname",
+    "Nom de session non pris en charge",
+    "Nombre de sesión no compatible",
+    "Nome de sessão não suportado",
+    "不支持的会话名称",
+    "未対応のセッション名",
+    "지원하지 않는 세션 이름",
+    "اسم جلسة غير مدعوم",
+  ],
+  "{n} windows": [
+    "{n} Fenster",
+    "{n} fenêtres",
+    "{n} ventanas",
+    "{n} janelas",
+    "{n} 个窗口",
+    "{n} ウィンドウ",
+    "창 {n}개",
+    "{n} نوافذ",
+  ],
+  "{n} attached clients": [
+    "{n} verbundene Clients",
+    "{n} clients connectés",
+    "{n} clientes conectados",
+    "{n} clientes ligados",
+    "{n} 个已连接客户端",
+    "{n} クライアントが接続中",
+    "연결된 클라이언트 {n}개",
+    "{n} عملاء متصلون",
+  ],
+  "Choose a session to attach. Other clients stay connected.": [
+    "Wählen Sie eine Sitzung. Andere Clients bleiben verbunden.",
+    "Choisissez une session. Les autres clients restent connectés.",
+    "Elige una sesión. Los demás clientes permanecen conectados.",
+    "Escolha uma sessão. Os outros clientes permanecem ligados.",
+    "选择要连接的会话。其他客户端将保持连接。",
+    "接続するセッションを選択してください。他のクライアントの接続は維持されます。",
+    "연결할 세션을 선택하세요. 다른 클라이언트는 연결을 유지합니다.",
+    "اختر جلسة للاتصال بها. يبقى العملاء الآخرون متصلين.",
+  ],
+  "{tool} is not installed or available on this server.": [
+    "{tool} ist auf diesem Server nicht installiert oder verfügbar.",
+    "{tool} n’est pas installé ou disponible sur ce serveur.",
+    "{tool} no está instalado o disponible en este servidor.",
+    "{tool} não está instalado ou disponível neste servidor.",
+    "此服务器未安装或无法使用 {tool}。",
+    "このサーバーでは {tool} が未インストールまたは利用できません。",
+    "이 서버에 {tool}이 설치되어 있지 않거나 사용할 수 없습니다.",
+    "{tool} غير مثبت أو غير متاح على هذا الخادم.",
+  ],
+  "Could not list {tool} sessions.": [
+    "{tool}-Sitzungen konnten nicht aufgelistet werden.",
+    "Impossible de lister les sessions {tool}.",
+    "No se pudieron listar las sesiones de {tool}.",
+    "Não foi possível listar as sessões de {tool}.",
+    "无法列出 {tool} 会话。",
+    "{tool} セッションを一覧表示できませんでした。",
+    "{tool} 세션 목록을 가져올 수 없습니다.",
+    "تعذر عرض قائمة جلسات {tool}.",
+  ],
+  "Listing {tool} sessions timed out.": [
+    "Zeitüberschreitung beim Auflisten der {tool}-Sitzungen.",
+    "Le délai de recherche des sessions {tool} a expiré.",
+    "Se agotó el tiempo para listar sesiones de {tool}.",
+    "O tempo para listar sessões de {tool} expirou.",
+    "列出 {tool} 会话超时。",
+    "{tool} セッションの取得がタイムアウトしました。",
+    "{tool} 세션 목록 요청 시간이 초과되었습니다.",
+    "انتهت مهلة عرض قائمة جلسات {tool}.",
+  ],
+  "The {tool} session listing exceeds the supported limit.": [
+    "Die {tool}-Sitzungsliste überschreitet das unterstützte Limit.",
+    "La liste des sessions {tool} dépasse la limite prise en charge.",
+    "La lista de sesiones de {tool} supera el límite admitido.",
+    "A lista de sessões de {tool} excede o limite suportado.",
+    "{tool} 会话列表超出支持的限制。",
+    "{tool} セッション一覧が対応上限を超えています。",
+    "{tool} 세션 목록이 지원 한도를 초과했습니다.",
+    "تتجاوز قائمة جلسات {tool} الحد المدعوم.",
+  ],
+  "The server returned an invalid {tool} session listing.": [
+    "Der Server hat eine ungültige {tool}-Sitzungsliste geliefert.",
+    "Le serveur a renvoyé une liste de sessions {tool} non valide.",
+    "El servidor devolvió una lista de sesiones de {tool} no válida.",
+    "O servidor devolveu uma lista de sessões de {tool} inválida.",
+    "服务器返回了无效的 {tool} 会话列表。",
+    "サーバーが無効な {tool} セッション一覧を返しました。",
+    "서버가 잘못된 {tool} 세션 목록을 반환했습니다.",
+    "أعاد الخادم قائمة جلسات {tool} غير صالحة.",
+  ],
+};

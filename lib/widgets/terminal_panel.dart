@@ -10,10 +10,12 @@ import 'package:xterm2/xterm.dart';
 import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_shell_strings.dart';
+import '../l10n/ssh_multiplexer_strings.dart';
 import '../l10n/screen_terminal_strings.dart';
 import '../l10n/terminal_mount_error_strings.dart';
 import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
+import '../models/ssh_multiplexer_session.dart';
 import '../models/terminal_arrangement.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_workspace_provider.dart';
@@ -33,6 +35,7 @@ import 'terminal_workspace_dialog.dart';
 import 'external_terminal_dialog.dart';
 import 'ssh_terminal_connect_dialog.dart';
 import 'ssh_terminal_profiles_dialog.dart';
+import 'ssh_multiplexer_sessions_dialog.dart';
 import 'terminal_tabs.dart';
 import 'terminal_search_bar.dart';
 import 'terminal_command_history_dialog.dart';
@@ -112,6 +115,8 @@ enum _PanelAction {
   local,
   reconnect,
   profiles,
+  browseTmux,
+  browseScreen,
   saveProfile,
   external,
   stage,
@@ -547,13 +552,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   Future<void> _connectSsh({
     bool reconnect = false,
     SshTerminalConfig? initialConfig,
+    SshMultiplexer? browse,
   }) async {
     if (_session.isConnecting) return;
     _activateInput();
     final config = await showDialog<SshTerminalConfig>(
       context: context,
       builder: (_) => SshTerminalConnectDialog(
-        initialConfig: initialConfig ?? (reconnect ? _lastSshConfig : null),
+        initialConfig:
+            initialConfig ?? (reconnect || browse != null ? _lastSshConfig : null),
+        showSessionOptions: browse == null,
       ),
     );
     if (!mounted || config == null || !widget.visible) return;
@@ -572,11 +580,18 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _lastSshConfig = config.withoutSecrets();
     _publishPaneState();
 
+    var launchConfig = config;
+    var selectionCancelled = false;
     Terminal? connectingTerminal;
     bool currentAttempt() =>
         mounted &&
         _session.isConnecting &&
         identical(_session.terminal, connectingTerminal);
+
+    String connectionLabel(SshTerminalConfig value) =>
+        '${value.username}@${value.host}'
+        '${value.tmux == null ? '' : ' · tmux: ${value.tmux!.sessionName}'}'
+        '${value.screen == null ? '' : ' · screen: ${value.screen!.sessionName}'}';
 
     Future<bool> prompt(String endpoint, String fingerprint) async {
       if (!currentAttempt() || !widget.visible) return false;
@@ -635,31 +650,109 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           if (!currentAttempt()) {
             throw StateError('SSH connection was cancelled');
           }
+          final multiplexer = browse;
+          if (multiplexer != null) {
+            final sessions = await _ssh.listMultiplexerSessions(
+              session.id,
+              kind: multiplexer,
+              isCurrent: () => currentAttempt() && widget.visible,
+            );
+            if (!currentAttempt() || !widget.visible) {
+              selectionCancelled = true;
+              throw StateError('SSH session selection was cancelled');
+            }
+            final selected = await _chooseMultiplexerSession(
+              multiplexer,
+              sessions,
+              isCurrent: currentAttempt,
+            );
+            if (!currentAttempt() ||
+                !widget.visible ||
+                selected == null ||
+                !selected.selectable ||
+                selected.kind != multiplexer) {
+              selectionCancelled = true;
+              throw StateError('SSH session selection was cancelled');
+            }
+            launchConfig = SshTerminalConfig(
+              host: config.host,
+              port: config.port,
+              username: config.username,
+              password: config.password,
+              privateKey: config.privateKey,
+              passphrase: config.passphrase,
+              authentication: config.authentication,
+              gateway: config.gateway,
+              jumpHosts: config.jumpHosts,
+              tmux: selected.tmuxOptions,
+              screen: selected.screenOptions,
+            );
+            launchConfig.validateSessionOptions();
+            _lastSshConfig = launchConfig.withoutSecrets();
+            _publishPaneState();
+            _session.label = connectionLabel(launchConfig);
+            _tmuxTerminal =
+                launchConfig.tmux == null ? null : connectingTerminal;
+            _screenTerminal =
+                launchConfig.screen == null ? null : connectingTerminal;
+          }
           final stream = await _ssh.startShell(
             session.id,
             width: columns,
             height: rows,
-            tmux: config.tmux,
-            screen: config.screen,
+            tmux: launchConfig.tmux,
+            screen: launchConfig.screen,
           );
           return SshTerminalConnection(_ssh, session.id, stream);
-        } catch (_) {
+        } catch (error) {
           await _ssh.disconnect(session.id);
+          if (browse != null && (!currentAttempt() || !widget.visible)) {
+            selectionCancelled = true;
+          }
+          if (error is SshMultiplexerDiscoveryException && currentAttempt()) {
+            throw Exception(context.sshMultiplexerDiscoveryError(error));
+          }
           rethrow;
         }
       },
       kind: TerminalSessionKind.ssh,
-      label:
-          '${config.username}@${config.host}'
-          '${config.tmux == null ? '' : ' · tmux: ${config.tmux!.sessionName}'}'
-          '${config.screen == null ? '' : ' · screen: ${config.screen!.sessionName}'}',
+      label: connectionLabel(config),
     );
     connectingTerminal = _session.terminal;
     _tmuxTerminal = config.tmux == null ? null : connectingTerminal;
     _screenTerminal = config.screen == null ? null : connectingTerminal;
     await connecting;
     if (mounted && identical(_session.terminal, connectingTerminal)) {
+      if (selectionCancelled) await _session.disconnect();
       _focusIfVisible();
+    }
+  }
+
+  Future<SshMultiplexerSession?> _chooseMultiplexerSession(
+    SshMultiplexer kind,
+    List<SshMultiplexerSession> sessions, {
+    required bool Function() isCurrent,
+  }) async {
+    if (!isCurrent() || !widget.visible) return null;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final route = DialogRoute<SshMultiplexerSession>(
+      context: context,
+      builder: (_) =>
+          SshMultiplexerSessionsDialog(kind: kind, sessions: sessions),
+    );
+    // Close only our owned dialog if the connection is replaced or the panel
+    // disappears. A late picker result can never attach to a different tab.
+    final timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if ((!isCurrent() || !widget.visible) &&
+          navigator.mounted &&
+          route.isActive) {
+        navigator.removeRoute(route);
+      }
+    });
+    try {
+      return await navigator.push(route);
+    } finally {
+      timer.cancel();
     }
   }
 
@@ -980,6 +1073,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         unawaited(_connectSsh(reconnect: true));
       case _PanelAction.profiles:
         unawaited(_showProfiles());
+      case _PanelAction.browseTmux:
+        unawaited(_connectSsh(browse: SshMultiplexer.tmux));
+      case _PanelAction.browseScreen:
+        unawaited(_connectSsh(browse: SshMultiplexer.screen));
       case _PanelAction.saveProfile:
         unawaited(_saveProfile());
       case _PanelAction.external:
@@ -1111,6 +1208,20 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         enabled: !_session.isConnecting,
                         child: Text(
                           context.terminalControlsTr('Saved SSH profiles'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.browseTmux,
+                        enabled: !_session.isConnecting,
+                        child: Text(
+                          context.sshMultiplexerTr('Browse tmux sessions'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.browseScreen,
+                        enabled: !_session.isConnecting,
+                        child: Text(
+                          context.sshMultiplexerTr('Browse screen sessions'),
                         ),
                       ),
                       if (_lastSshConfig != null)
