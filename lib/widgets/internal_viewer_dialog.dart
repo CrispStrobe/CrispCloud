@@ -3755,9 +3755,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: SegmentedButton<bool>(
           style: _compactButtonStyle,
-          segments: const [
-            ButtonSegment(value: false, label: Text('Grid')),
-            ButtonSegment(value: true, label: Text('Legacy')),
+          segments: [
+            const ButtonSegment(value: false, label: Text('Grid')),
+            ButtonSegment(
+              value: true,
+              label: Text(_isLegacyExcelName ? 'Legacy' : 'Table'),
+            ),
           ],
           selected: {_legacySpreadsheet},
           onSelectionChanged: (selection) {
