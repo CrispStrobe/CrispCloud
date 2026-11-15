@@ -94,6 +94,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang libsqlite3-dev
       - run: flutter pub get
       - name: Shared corpus and host save workflow
+        env:
+          OFFICE_NAVIGATION_PREVIEW: '1'
         run: python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
       - uses: actions/upload-artifact@v4
         if: always()
@@ -108,6 +110,13 @@ jobs:
             build/office-style-history-acceptance/
             build/office-sheet-navigation-acceptance/
             packages/quds_office_engine/build/fidelity*
+      - name: Preserve worksheet UI captures
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: office-worksheet-ui-evidence
+          path: build/office-sheet-navigation-preview/
+          if-no-files-found: error
   external-schema:
     needs: host-roundtrip
     runs-on: ubuntu-latest
