@@ -8,3 +8,6 @@ ios/Resources/BuildProvenance.json
 
 __pycache__/
 coverage/
+
+# Also ignore a generated build directory relocated through a symlink.
+.build

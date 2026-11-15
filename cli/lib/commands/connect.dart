@@ -13,6 +13,7 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
+import 'package:crisp_storage/crisp_storage.dart' show parseSmbBackend;
 
 import '../adapters/cli_adapter_factory.dart';
 import '../adapters/s3_adapter.dart';
@@ -30,7 +31,8 @@ class ConnectCommand extends Command<int> {
       'Connect a cloud storage provider and save its credentials.';
 
   @override
-  String get invocation => '${runner?.executableName ?? 'crispcloud'} connect <type> <identity>';
+  String get invocation =>
+      '${runner?.executableName ?? 'crispcloud'} connect <type> <identity>';
 
   final CliConfig config;
 
@@ -39,8 +41,9 @@ class ConnectCommand extends Command<int> {
       ..addOption(
         'smb-backend',
         allowed: ['libsmb2', 'rust', 'auto'],
-        defaultsTo: 'libsmb2',
-        help: 'SMB transport; Rust requires the optional native library.',
+        defaultsTo: 'rust',
+        help:
+            'Bundled Rust SMB transport; old libsmb2/auto aliases migrate to Rust.',
       )
       ..addFlag(
         'require-encryption',
@@ -54,7 +57,8 @@ class ConnectCommand extends Command<int> {
       )
       ..addOption(
         'host-key',
-        help: 'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',
+        help:
+            'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',
       )
       ..addOption(
         'name',
@@ -138,7 +142,7 @@ class ConnectCommand extends Command<int> {
         providerMap = {
           'type': 'smb',
           ...SmbCliAdapter.parseIdentity(identity, secret),
-          'smbBackend': argResults!['smb-backend'],
+          'smbBackend': parseSmbBackend(argResults!['smb-backend'])!.name,
           'requireEncryption': argResults!['require-encryption'],
         };
         break;

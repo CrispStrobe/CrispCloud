@@ -59,7 +59,11 @@ class RustSmbSession implements SmbTransport {
   final RemoteConnection connection;
   late final SmbPaths _paths = SmbPaths(connection);
   late final int _id;
-  bool _closed = false, _downloading = false;
+  bool _closed = false, _downloading = false, _cancelled = false;
+
+  /// Cancellation permanently ends a native session; the facade retires it
+  /// after the owned operation completes, before a later explicit retry.
+  bool get requiresReconnect => _cancelled;
 
   /// The native session holds at most [maxOpenHandles] read/write handles
   /// (MAX_HANDLES in crisp_smb). Extra streams/uploads wait for a slot
@@ -69,7 +73,7 @@ class RustSmbSession implements SmbTransport {
   final _slotWaiters = <Completer<void>>[];
 
   Future<void> _acquireHandle() async {
-    if (_closed) {
+    if (_closed || _cancelled) {
       throw const RemoteException(
         'SMB connection closed.',
         code: RemoteErrorCode.closed,
@@ -146,7 +150,7 @@ class RustSmbSession implements SmbTransport {
   }
 
   Future<T> _guard<T>(Future<T> Function() action) async {
-    if (_closed) {
+    if (_closed || _cancelled) {
       throw const RemoteException(
         'SMB connection closed.',
         code: RemoteErrorCode.closed,
@@ -319,6 +323,7 @@ class RustSmbSession implements SmbTransport {
           } catch (e, s) {
             callbackError = e;
             callbackStack = s;
+            _cancelled = true;
             native.cancelSession(id: _id);
           }
         });

@@ -47,8 +47,9 @@ persisted settings and bounded session-only history. See
   corpus tests passed with the final import implementation.
 - Print generation and oversized-dimension refusal: two tests passed. The
   image guard checks dimensions without an overflowing pixel multiplication.
-- Full application-library analysis reported zero errors and warnings; 233
-  informational style/deprecation diagnostics remain in the existing tree.
+- Full application-library analysis reported zero errors, 26 existing warnings
+  and 207 informational diagnostics. The later dependency cleanup retains the
+  same 26 warnings and reports 209 informational diagnostics.
 
 No new macOS crash report accompanied the reported Text-tool exit. The disposed
 viewer-provider cleanup error was observed and corrected, but the original

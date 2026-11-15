@@ -48,7 +48,6 @@ jobs:
         run: python3 ../tool/build_cli_bundle.py --dart dart
       - name: Bundle format licence notices
         run: |
-          cp packages/crisp_storage/NOTICE-LIBSMB2.txt cli/build/cli/bundle/
           cp packages/crisp_catalog/native/vendor/crispcat-format/LICENSE cli/build/cli/bundle/LICENSE-CRISPCAT-MIT.txt
           cp packages/crisp_catalog/README.md cli/build/cli/bundle/CATALOG-README.md
           python3 tool/collect_catalog_licenses.py --output cli/build/cli/bundle/catalog-licenses

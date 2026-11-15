@@ -1,7 +1,7 @@
 name: crisp
 description: CrispCloud CLI companion — manage cloud storage from the terminal.
 publish_to: 'none'
-version: 1.3.3
+version: 1.3.4
 
 executables:
   crispcloud:
@@ -34,3 +34,9 @@ dependency_overrides:
   pointycastle: ^4.0.0
   pdf_document:
     path: ../packages/pdf_document
+
+# SMB uses the reviewed Rust engine; no libsmb2 native asset is bundled.
+hooks:
+  user_defines:
+    crisp_storage:
+      rust_smb: true

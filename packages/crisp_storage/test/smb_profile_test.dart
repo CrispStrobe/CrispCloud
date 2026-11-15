@@ -19,9 +19,9 @@ void main() {
       final restored = RemoteConnection.fromJson(
         original.toJson(credentials: true),
       );
-      expect(restored.smbBackend, backend);
+      expect(restored.smbBackend, SmbBackend.rust);
       final session = SmbSession(restored);
-      expect(session.backend, backend);
+      expect(session.backend, SmbBackend.rust);
       session.close();
     });
   }
@@ -31,13 +31,13 @@ void main() {
     );
     expect(legacy.smbBackend, isNull);
     final defaultSession = SmbSession(legacy);
-    expect(defaultSession.backend, SmbBackend.libsmb2);
+    expect(defaultSession.backend, SmbBackend.rust);
     defaultSession.close();
     final override = SmbSession(
       profile(backend: SmbBackend.rust),
       backend: SmbBackend.libsmb2,
     );
-    expect(override.backend, SmbBackend.libsmb2);
+    expect(override.backend, SmbBackend.rust);
     override.close();
     for (final invalid in ['RUST', '', 'native', false, 42]) {
       expect(

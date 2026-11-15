@@ -8,6 +8,8 @@ class MountBackendStrings {
   final String language;
   List<String> get _labels => _strings[language] ?? _strings['en']!;
   String get title => _labels[0];
+  String get runtimeLicense =>
+      _runtimeLicenses[language] ?? _runtimeLicenses['en']!;
   String label(MacFuseBackend backend) => _labels[backend.index + 1];
   String get kernelWarning =>
       _kernelWarnings[language] ?? _kernelWarnings['en']!;
@@ -20,6 +22,18 @@ class MountBackendStrings {
       (_rcloneErrors[language] ?? _rcloneErrors['en']!)[0];
   String get rcloneFailed =>
       (_rcloneErrors[language] ?? _rcloneErrors['en']!)[1];
+
+  static const _runtimeLicenses = <String, String>{
+    'en': 'Separately installed runtimes. Commercial use or integration may require a paid licence. See About → Open Source Licences.',
+    'de': 'Separat installierte Laufzeiten. Kommerzielle Nutzung oder Integration kann eine kostenpflichtige Lizenz erfordern. Siehe Über → Open-Source-Lizenzen.',
+    'fr': 'Moteurs installés séparément. Une licence payante peut être nécessaire pour un usage ou une intégration commerciale. Voir À propos → Licences libres.',
+    'es': 'Motores instalados por separado. El uso o la integración comercial puede requerir una licencia de pago. Consulte Acerca de → Licencias.',
+    'pt': 'Motores instalados separadamente. O uso ou a integração comercial pode exigir licença paga. Consulte Sobre → Licenças.',
+    'zh': '运行时需单独安装。商业使用或集成可能需要付费许可。请参阅“关于”中的开源许可。',
+    'ja': 'ランタイムは別途インストールします。商用利用や統合には有料ライセンスが必要な場合があります。「アプリについて」のライセンスを確認してください。',
+    'ar': 'تُثبّت بيئات التشغيل بشكل منفصل. قد يتطلب الاستخدام أو الدمج التجاري ترخيصًا مدفوعًا. راجع التراخيص في «حول».',
+    'ru': 'Среды устанавливаются отдельно. Для коммерческого использования или интеграции может требоваться платная лицензия. См. лицензии в разделе «О программе».',
+  };
 
   static const _rcloneErrors = <String, List<String>>{
     'en': [

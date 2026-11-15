@@ -13,7 +13,7 @@ class SmbBackendField extends StatelessWidget {
     final strings = ConnectionDialogExtraStrings(context);
     return DropdownButtonFormField<SmbBackend>(
       key: const Key('smb-backend'),
-      value: value,
+      value: SmbBackend.rust,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: strings.text('smbBackend'),
@@ -21,7 +21,7 @@ class SmbBackendField extends StatelessWidget {
         helperMaxLines: 3,
       ),
       items: [
-        for (final backend in SmbBackend.values)
+        for (final backend in const [SmbBackend.rust])
           DropdownMenuItem(
             value: backend,
             child: Text(strings.text('smbBackend_${backend.name}')),

@@ -108,7 +108,8 @@ class _ConfigSetDefaultCommand extends Command<int> {
   _ConfigSetDefaultCommand(this.config);
 
   @override
-  String get invocation => '${runner?.executableName ?? 'crispcloud'} config set-default <provider-name>';
+  String get invocation =>
+      '${runner?.executableName ?? 'crispcloud'} config set-default <provider-name>';
 
   @override
   Future<int> run() async {
@@ -142,7 +143,8 @@ class _ConfigRemoveCommand extends Command<int> {
   _ConfigRemoveCommand(this.config);
 
   @override
-  String get invocation => '${runner?.executableName ?? 'crispcloud'} config remove <provider-name>';
+  String get invocation =>
+      '${runner?.executableName ?? 'crispcloud'} config remove <provider-name>';
 
   @override
   Future<int> run() async {
@@ -167,14 +169,17 @@ class _ConfigSmbBackendCommand extends Command<int> {
   @override
   final name = 'smb-backend';
   @override
-  final description = 'Show or set a saved SMB transport: libsmb2, rust, auto.';
+  final description =
+      'Show or set Rust SMB transport (legacy aliases migrate to Rust).';
   final CliConfig config;
   _ConfigSmbBackendCommand(this.config);
   @override
   Future<int> run() async {
     final args = argResults!.rest;
     if (args.isEmpty || args.length > 2) {
-      usageException('${runner?.executableName ?? 'crispcloud'} config smb-backend <provider> [libsmb2|rust|auto]');
+      usageException(
+        '${runner?.executableName ?? 'crispcloud'} config smb-backend <provider> [libsmb2|rust|auto]',
+      );
     }
     final provider = config.providerConfig(args.first, strict: true);
     if (provider == null || provider['type'] != 'smb') {
@@ -184,7 +189,7 @@ class _ConfigSmbBackendCommand extends Command<int> {
       provider['smbBackend'] = parseSmbBackend(args[1])!.name;
       config.saveProvider(args.first, provider);
     }
-    // A legacy profile inherits the build setting, which may not be libsmb2.
+    // A legacy profile inherits the reviewed Rust build default.
     stdout.writeln(
       parseSmbBackend(provider['smbBackend'])?.name ?? 'build default',
     );

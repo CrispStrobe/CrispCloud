@@ -33,16 +33,14 @@
   ],
   "build_helpers": {
     "automake-missing": {
-      "repository": "https://github.com/autotools-mirror/automake",
-      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
-      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/missing",
-      "sha256": "b1a337b731bbb58846d31ca2f5143c293a455fa41b481e236e89a9016d96b034"
+      "origin": "project-authored",
+      "license": "MIT",
+      "sha256": "02e364ee04b468175b23b8f53899b8ffed743cc85979235fa00652c8aa8998e2"
     },
     "automake-compile": {
-      "repository": "https://github.com/autotools-mirror/automake",
-      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
-      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/compile",
-      "sha256": "41856428226c049fa0ea4ca7a574c28416de2769b55ed7feea4ab5e60283af16"
+      "origin": "project-authored",
+      "license": "MIT",
+      "sha256": "4d966c6352ad69a25e4021628f1f5c769837fdffd18795a4c7a3f0ceb4d8d5d2"
     },
     "automake-install-sh": {
       "repository": "https://github.com/autotools-mirror/automake",
@@ -51,10 +49,9 @@
       "sha256": "d7c113e5484fce8b48f9a34a7a91e385ec279247d415b0b7d749bd56ad8ee8a2"
     },
     "automake-depcomp": {
-      "repository": "https://github.com/autotools-mirror/automake",
-      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
-      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/depcomp",
-      "sha256": "786149ab4493e86b837077ebaecab65ef6230ae8a619b17fa5c1695564a427e9"
+      "origin": "project-authored",
+      "license": "MIT",
+      "sha256": "ce38752b7026e6dec0021656c9117a537f91869006233f2960dacb0e96d98722"
     }
   }
 }

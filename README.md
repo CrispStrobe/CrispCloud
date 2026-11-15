@@ -177,7 +177,7 @@ qualify their binaries, servers, settings or delta behavior:
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
 - **CLI companion** (`crispcloud`, with `crisp` compatibility alias): headless S3/SFTP/SMB/WebDAV operations, largest-file/folder scans (`crispcloud du PATH`), persistent Rust/SQLite catalogues and Cathy/Catfish CAF interchange, PDF tools and shell completions; see [CLI capabilities](cli/README.md). Filen/Internxt CLI adapters are planned.
 - **Plugin system** with local REST API and automation rules
-- **Experimental macOS mounts:** read-only macFUSE FSKit, explicitly selected FUSE-T, or a separately configured rclone NFS remote. Runtime installation, limitations and current test status are described in the [mount guide](docs/USER_GUIDE.md#fuse-mounted-drives). Linux and Windows mounting is not yet implemented.
+- **Experimental macOS mounts:** a separately configured rclone NFS remote. macFUSE/FUSE-T integration requires a compile-time `CRISP_ENABLE_FUSE=true` opt-in; neither runtime is bundled. Runtime installation, limitations and current test status are described in the [mount guide](docs/USER_GUIDE.md#fuse-mounted-drives). Linux and Windows mounting is not yet implemented.
 - **Unified Settings:** one surface for language, theme/accent, file-list fonts, quick search, cache, proxy/provider networking, accessibility, privacy and advanced options
 - **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR — persisted in-app language switch, ~256 localized strings
 - **Accessibility:** 48dp touch targets on mobile, Semantics on file list items, tooltips on all buttons
@@ -284,6 +284,10 @@ to change a binding, review conflicts or restore defaults.
 ## License
 
 AGPL-3.0. See [LICENSE.txt](LICENSE.txt).
+
+Native SMB uses the reviewed Rust engine; libsmb2 is no longer bundled. Optional
+mount integration, iOS shell exceptions, complete notices and codec-patent review
+limits are recorded in [distribution boundaries](docs/distribution-license-cleanup-20261115.md).
 
 Not affiliated with any cloud provider. All trademarks belong to their respective owners.
 

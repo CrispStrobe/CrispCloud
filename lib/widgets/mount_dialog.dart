@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/access_and_fkey_strings.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/mount_provider.dart';
@@ -167,7 +168,12 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
   final _labelController = TextEditingController();
   bool _mounting = false;
   String? _error;
-  MacFuseBackend _backend = MacFuseBackend.automatic;
+  MacFuseBackend _backend =
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS
+      ? (nativeMacFuseEnabled
+            ? MacFuseBackend.automatic
+            : MacFuseBackend.rcloneNfs)
+      : MacFuseBackend.automatic;
 
   @override
   void dispose() {
@@ -188,17 +194,18 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) ...[
-                if (_backend != MacFuseBackend.rcloneNfs) Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: Colors.orange),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        MountDialogStrings(context).text('readOnlyWarning'),
+                if (_backend != MacFuseBackend.rcloneNfs)
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          MountDialogStrings(context).text('readOnlyWarning'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<MacFuseBackend>(
                   initialValue: _backend,
@@ -206,14 +213,29 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                     labelText: MountBackendStrings(context).title,
                     border: const OutlineInputBorder(),
                   ),
-                  items: MacFuseBackend.values.map((backend) => DropdownMenuItem(
-                    value: backend,
-                    child: Text(MountBackendStrings(context).label(backend)),
-                  )).toList(),
-                  onChanged: _mounting ? null : (value) {
-                    if (value != null) setState(() => _backend = value);
-                  },
+                  items: availableMacMountBackends
+                      .map(
+                        (backend) => DropdownMenuItem(
+                          value: backend,
+                          child: Text(
+                            MountBackendStrings(context).label(backend),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _mounting
+                      ? null
+                      : (value) {
+                          if (value != null) setState(() => _backend = value);
+                        },
                 ),
+                if (nativeMacFuseEnabled) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    MountBackendStrings(context).runtimeLicense,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
                 if (_backend == MacFuseBackend.macFuseKernel) ...[
                   const SizedBox(height: 8),
                   Text(MountBackendStrings(context).kernelWarning),
@@ -238,7 +260,9 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                 controller: _remoteController,
                 decoration: InputDecoration(
                   labelText: MountDialogStrings(context).text('remotePath'),
-                  hintText: AccessAndFKeyStrings(Localizations.localeOf(context)).remotePathHint,
+                  hintText: AccessAndFKeyStrings(
+                    Localizations.localeOf(context),
+                  ).remotePathHint,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.cloud),
                 ),

@@ -208,7 +208,7 @@ void main() {
     await tester.ensureVisible(backendField);
     await tester.tap(backendField);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Rust (experimental)').last);
+    await tester.tap(find.text('Rust SMB').last);
     await tester.pumpAndSettle();
     expect(_connectButton(tester).onPressed, isNotNull);
     expect(
@@ -236,7 +236,7 @@ void main() {
       host: 'smb://second.example/Second/',
       user: 'second-user',
       requireEncryption: true,
-      backend: SmbBackend.libsmb2,
+      backend: SmbBackend.rust,
     );
     expect(_connectButton(tester).onPressed, isNotNull);
     expect(
@@ -252,7 +252,7 @@ void main() {
       host: 'smb://legacy.example/Legacy/',
       user: 'legacy-user',
       requireEncryption: true,
-      backend: SmbBackend.libsmb2,
+      backend: SmbBackend.rust,
     );
     expect(_connectButton(tester).onPressed, isNotNull);
     expect(

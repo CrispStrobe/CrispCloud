@@ -1,9 +1,9 @@
-name: Experimental Rust SMB
+name: Rust SMB transport
 on:
   push:
-    paths: ['.gitattributes', 'packages/dart_smb2/**', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
+    paths: ['.gitattributes', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   pull_request:
-    paths: ['.gitattributes', 'packages/dart_smb2/**', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
+    paths: ['.gitattributes', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   workflow_dispatch:
 jobs:
   host:
@@ -23,13 +23,9 @@ jobs:
           sdk: '3.13.7'
       - run: cargo test --manifest-path native/crisp_smb/Cargo.toml --locked
       - run: cargo build --manifest-path rust/Cargo.toml --release --locked
-      - run: python3 ../dart_smb2/tool/test_recipe.py
       - run: dart pub get
       - run: dart analyze
       - run: dart test
-      - if: runner.os == 'macOS'
-        name: Verify macOS install-name padding
-        run: python3 ../dart_smb2/tool/check_apple_archive.py .dart_tool/hooks_runner/shared/dart_smb2/build/*/apple-source/release_builds/libsmb2_macos.xcframework.zip
       - if: runner.os == 'Linux'
         run: |
           python3 -m venv .fixture-venv
@@ -38,7 +34,7 @@ jobs:
           python3 tool/check_rust_licenses.py
       - uses: actions/upload-artifact@v4
         with:
-          name: experimental-smb-${{ matrix.os }}
+          name: rust-smb-${{ matrix.os }}
           path: |
             packages/crisp_storage/rust/target/release/*crisp_smb_bridge.so
             packages/crisp_storage/rust/target/release/*crisp_smb_bridge.dylib
@@ -55,14 +51,9 @@ jobs:
       - run: |
           cargo build --manifest-path packages/crisp_storage/rust/Cargo.toml --locked --release --target aarch64-apple-ios
           cargo build --manifest-path packages/crisp_storage/rust/Cargo.toml --locked --release --target aarch64-apple-ios-sim
-      - name: Build and verify libsmb2 Apple install-name padding
-        working-directory: packages/dart_smb2/native
-        run: |
-          bash scripts/build_libsmb2_ios.sh
-          python3 ../tool/check_apple_archive.py release_builds/libsmb2_ios.xcframework.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: experimental-smb-ios-static
+          name: rust-smb-ios-static
           path: packages/crisp_storage/rust/target/aarch64-apple-*/release/libcrisp_smb_bridge.a
           if-no-files-found: error
   surfaces:

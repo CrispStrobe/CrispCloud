@@ -283,6 +283,7 @@ flutter:
     - assets/fonts/MaterialIcons_LICENSE.txt
     - assets/fonts/Roboto_LICENSE.txt
     - assets/fonts/RobotoMono_LICENSE.txt
+    - macos/vendor/fuse/COPYING.LIB
     - assets/licenses/pdfium/
     - assets/licenses/office_fonts/
     - assets/licenses/pdf_fonts/
@@ -346,3 +347,9 @@ flutter_launcher_icons:
     generate: true
   linux:
     generate: true
+
+# SMB uses the reviewed Rust engine; no libsmb2 native asset is bundled.
+hooks:
+  user_defines:
+    crisp_storage:
+      rust_smb: true

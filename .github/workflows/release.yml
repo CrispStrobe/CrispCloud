@@ -274,6 +274,9 @@ jobs:
       - run: flutter pub get
       - run: flutter build web --release --dart-define=APP_VERSION="${{ needs.create-release.outputs.app_version }}" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
 
+      - name: Check distribution component boundary
+        run: python3 tool/check_distribution_components.py --artifact build/web
+
       - name: Package
         run: tar czf crispcloud-web.tar.gz -C build/web .
 
@@ -333,6 +336,9 @@ jobs:
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
       - run: flutter build linux --release --dart-define=APP_VERSION="${{ needs.create-release.outputs.app_version }}" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
+
+      - name: Check distribution component boundary
+        run: python3 tool/check_distribution_components.py --artifact build/linux/x64/release/bundle
 
       - name: Package
         run: tar czf crispcloud-linux-x64.tar.gz -C build/linux/x64/release/bundle .
@@ -414,6 +420,9 @@ jobs:
       #       --entitlements macos/Runner/Release.entitlements \
       #       "build/macos/Build/Products/Release/CrispCloud.app"
       # ────────────────────────────────────────────────────────────────────
+
+      - name: Check distribution component boundary
+        run: python3 tool/check_distribution_components.py --artifact build/macos/Build/Products/Release/CrispCloud.app
 
       - name: Package macOS build (.zip + .dmg)
         run: |
@@ -538,6 +547,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Native drag protocol test did not build" }
           & ./build/windows/x64/native-tests/Release/crisp_file_drag_data_test.exe
           if ($LASTEXITCODE -ne 0) { throw "Native drag protocol test failed" }
+
+      - name: Check distribution component boundary
+        run: python3 tool/check_distribution_components.py --artifact build/windows/x64/runner/Release
 
       - name: Package Windows build
         shell: pwsh
@@ -672,6 +684,9 @@ jobs:
           fi
           sed -n 's/.*certificate SHA-256 digest: //p' signing.txt | head -1 > crispcloud-android-signing-cert.sha256.txt
           rm -f android/play-upload.jks android/key.properties
+
+      - name: Check distribution component boundary
+        run: python3 tool/check_distribution_components.py --artifact crispcloud-android.apk
 
       - name: Record the APK's crypto release evidence
         run: |
@@ -810,6 +825,14 @@ jobs:
             -authenticationKeyPath $HOME/.appstoreconnect/private_keys/AuthKey_9RMU3C7422.p8 \
             -authenticationKeyID 9RMU3C7422 \
             -authenticationKeyIssuerID 5f618ba3-98ef-42ad-835c-fbbef6c76cf5
+
+      - name: Check distribution component boundary
+        run: |
+          if [ "${HAS_APPSTORE_KEY:-false}" = true ]; then
+            python3 tool/check_distribution_components.py --artifact build/ios/export/Runner.ipa
+          else
+            python3 tool/check_distribution_components.py --artifact build/ios/iphoneos/Runner.app
+          fi
 
       - name: Validate IPA
         if: env.HAS_APPSTORE_KEY == 'true'

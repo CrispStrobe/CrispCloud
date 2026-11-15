@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'remote_client.dart';
-import 'libsmb2_session.dart';
 import 'rust_smb_session.dart';
 import 'smb_backend.dart';
 import 'smb_paths.dart';
 import 'smb_transport.dart';
 export 'smb_backend.dart' show SmbBackend, parseSmbBackend;
 
-/// Compatibility facade: apps retain the same API and libsmb2 default.
+/// Shared Rust SMB transport; legacy profiles migrate without an LGPL fallback.
 class SmbSession implements SmbTransport {
   final RemoteConnection connection;
   final SmbBackend backend;
@@ -18,7 +17,9 @@ class SmbSession implements SmbTransport {
   bool _closed = false;
   late final _paths = SmbPaths(connection);
   SmbSession(this.connection, {SmbBackend? backend})
-    : backend = backend ?? connection.smbBackend ?? configuredSmbBackend() {
+    : backend = parseSmbBackend(
+        (backend ?? connection.smbBackend ?? configuredSmbBackend()).name,
+      )! {
     if (connection.kind != 'smb') {
       throw ArgumentError('Expected SMB connection');
     }
@@ -48,9 +49,7 @@ class SmbSession implements SmbTransport {
           effectiveBackend = selected;
           // This happens outside fallback handling: all config/auth/network/security
           // failures stay with the selected backend, without another login attempt.
-          return selected == SmbBackend.rust
-              ? RustSmbSession(connection)
-              : Libsmb2Session(connection);
+          return RustSmbSession(connection);
         })().catchError((Object e, StackTrace s) {
           _opening = null;
           Error.throwWithStackTrace(e, s);
@@ -78,8 +77,22 @@ class SmbSession implements SmbTransport {
     File output, {
     void Function(int)? onBytes,
     required int limit,
-  }) async =>
-      (await _open()).download(path, output, onBytes: onBytes, limit: limit);
+  }) async {
+    final opening = _open();
+    final transport = await opening;
+    try {
+      await transport.download(path, output, onBytes: onBytes, limit: limit);
+    } catch (_) {
+      if (transport is RustSmbSession && transport.requiresReconnect) {
+        // The failed future has completed: no native write can race the next
+        // explicit resume. Never reconnect or replay this operation here.
+        if (identical(_opening, opening)) _opening = null;
+        transport.close();
+      }
+      rethrow;
+    }
+  }
+
   @override
   Future<void> write(String path, Uint8List bytes) async =>
       (await _open()).write(path, bytes);

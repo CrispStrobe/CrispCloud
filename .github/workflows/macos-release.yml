@@ -73,10 +73,10 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
 
-      - name: Prime dart_smb2 Apple asset cache
+      - name: Prime pinned Apple SQLite cache
         env:
           GH_TOKEN: ${{ github.token }}
-        run: tool/prime_dart_smb2_cache.sh
+        run: tool/prime_apple_sqlite_cache.sh
 
       - name: Check crypto release inputs and compatibility
         run: |
@@ -320,6 +320,9 @@ jobs:
           xcrun altool --validate-app -f "$PKG" --type macos \
             --apiKey "${{ secrets.ASC_KEY_ID }}" --apiIssuer "${{ secrets.ASC_ISSUER_ID }}" \
             2>&1 | tail -20
+
+      - name: Check distribution component boundary
+        run: python3 tool/check_distribution_components.py --artifact build/macos/Build/Products/Release/CrispCloud.app
 
       - name: Upload to App Store Connect
         if: github.event_name == 'push' || inputs.dry_run == false

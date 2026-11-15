@@ -14,21 +14,23 @@ CrispCloud integration source uses the application's AGPL-3.0 license. The
 `ios_system` wrapper has its own BSD license. Native utility source files retain
 their own notices; they are not all covered by the wrapper's license.
 
-**Dash is not described here as entirely BSD.** At the pinned Dash revision,
-`COPYING` explicitly identifies `src/mksignames.c` as GPL version 2 **or any later
-version**, and explicitly states that its generated output is linked into Dash.
-That is why `licenses/GPL-2.0.txt` is included. This is an *or-later* grant, not a
-GPL-2.0-only dependency. The original BSD notices, Dash's complete COPYING file,
-and the GPL text are preserved. Distributors must keep the corresponding source
-available, including the pinned upstream archives, these patches and build
-scripts. The build does not silently rewrite or relicense third-party notices.
+The upstream GPL Bash-derived `mksignames.c` is replaced before compilation
+with `tool/crisp-signal-table.c`, an independently authored MIT generator using
+Darwin SDK/libSystem signal metadata. Old generated signal tables are removed
+so the build cannot reuse them. The generator hash is a build input. Original
+upstream COPYING is retained as provenance, not rewritten to imply upstream
+licensed its generator differently.
 
-The pinned Automake `missing`, `compile`, and `depcomp` build helpers carry
-GPL-2.0-or-later terms with their explicit Autoconf distribution exception.
-`install-sh` retains the X Consortium permission notice and identifies the FSF
-changes as public domain. Their complete header notices are retained both in
-the source scripts and in the aggregate LICENSE; they are build tools rather
-than code linked into the iOS frameworks.
+The GPL Automake missing/compile/depcomp helpers are replaced with minimal MIT
+adapters for the pinned clang build. Dependency tracking is disabled and
+maintainer-tool regeneration fails explicitly. The X Consortium install-sh
+helper retains its permission/public-domain notices.
+
+The AWK generated parser retains the Bison larger-work exception. The collector
+preserves its adjacent exception block as well as the GPL notice. This is not
+plain-GPL classification of AWK or the app. Unused source in the complete pinned
+archives, and retained upstream provenance notices, are not a runtime bill of
+materials. See the target/command allowlist and the distribution audit.
 
 `LICENSE` combines the integration license and all copyright/license notices
 collected from the relevant upstream source directories. Flutter includes this

@@ -89,7 +89,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   bool get _ftpProfileNeedsSecurity =>
       _selectedProvider == CloudProvider.ftp && _invalidFtpProfile;
   bool _smbRequireEncryption = true;
-  SmbBackend _smbBackend = SmbBackend.libsmb2;
+  SmbBackend _smbBackend = SmbBackend.rust;
   bool _invalidSmbProfile = false;
   CloudEngine _cloudEngine = configuredCloudEngine(RustCloudProvider.filen);
 
@@ -318,7 +318,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         // previous transport. Recovery requires an explicit valid choice.
         final SmbBackend backend;
         try {
-          backend = parseSmbBackend(f['smbBackend']) ?? SmbBackend.libsmb2;
+          backend = parseSmbBackend(f['smbBackend']) ?? SmbBackend.rust;
         } on FormatException {
           setState(() {
             _invalidSmbProfile = true;

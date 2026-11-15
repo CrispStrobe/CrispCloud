@@ -10,7 +10,22 @@ void main() {
     'Windows PDFium notice is readable through the real asset bundle',
     () async {
       registerPlatformRuntimeLicenses();
-      final entries = await LicenseRegistry.licenses.toList();
+      final allEntries = await LicenseRegistry.licenses.toList();
+      final entries = allEntries
+          .where((e) => e.packages.contains('PDFium (Windows renderer)'))
+          .toList();
+      final optional = allEntries.where(
+        (e) =>
+            e.packages.contains('Optional macFUSE/FUSE-T libfuse API headers'),
+      );
+      if (const bool.fromEnvironment('CRISP_ENABLE_FUSE')) {
+        expect(
+          optional.single.paragraphs.map((p) => p.text).join('\n'),
+          contains('GNU LESSER GENERAL PUBLIC LICENSE'),
+        );
+      } else {
+        expect(optional, isEmpty);
+      }
       expect(entries.single.packages, contains('PDFium (Windows renderer)'));
       final text = entries.single.paragraphs.map((p) => p.text).join('\n');
       expect(text, contains('Copyright 2014 PDFium Authors'));

@@ -10,11 +10,10 @@ and fresh checkouts do not need sibling repositories.
   are rejected. HTTP resume requires a strong ETag and validates Content-Range;
   an incompatible revision restarts. SFTP resumes using size/mtime validators.
 - `SmbSession`: native SMB2/3 browsing, streaming, validated resumable downloads
-  and file operations through the default `dart_smb2` / LGPL-2.1 libsmb2
-  backend or optional shared Rust engine. Signing is enabled;
+  and file operations through the default shared Rust engine (the libsmb2 dependency and fallback are removed). Signing is enabled;
   SMB3 encryption is required unless the user explicitly opts out. Downloads
   await each bounded disk write. Failed initial connections can be retried by
-  a later operation. See `NOTICE-LIBSMB2.txt` and the app's distribution review.
+  a later operation. See `NOTICES` and the app's distribution review.
 - `openVerifiedSsh` / `SshKnownHosts`: SHA256 host-key verification before
   authentication. Unknown keys require an explicit acceptance callback;
   changed keys fail closed. Inject secure read/write callbacks. Accepted keys
@@ -49,9 +48,9 @@ CRISPER_SMB_PYTHON=/path/to/python-with-impacket dart test test/smb_transfer_tes
 The fixture validates SMB2 behavior; it does not qualify SMB3 encryption or
 device-specific performance. Never disable production encryption for this test.
 
-## Experimental Rust SMB
+## Default Rust SMB
 
-The default remains libsmb2. See [rollout and qualification](../../docs/SMB_RUST_ROLLOUT.md) for strict Rust/auto selection, native host builds and test gates.
+Rust is the sole bundled SMB engine; legacy libsmb2/auto profile values migrate to Rust. See [rollout and qualification](../../docs/SMB_RUST_ROLLOUT.md) for strict Rust/auto selection, native host builds and test gates.
 
 ## Filen/Internxt and the Dart/Rust boundary
 

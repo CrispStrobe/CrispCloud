@@ -34,16 +34,8 @@ class RustTarget {
     switch (os.toLowerCase()) {
       case 'ios':
         return switch ((architecture, iosSimulator)) {
-          ('arm64', false) => RustTarget(
-            'aarch64-apple-ios',
-            apple,
-            apple,
-          ),
-          ('arm64', true) => RustTarget(
-            'aarch64-apple-ios-sim',
-            apple,
-            apple,
-          ),
+          ('arm64', false) => RustTarget('aarch64-apple-ios', apple, apple),
+          ('arm64', true) => RustTarget('aarch64-apple-ios-sim', apple, apple),
           ('x64', true) => RustTarget('x86_64-apple-ios', apple, apple),
           _ => null,
         };
@@ -60,6 +52,17 @@ class RustTarget {
           'arm64' => RustTarget('aarch64-unknown-linux-gnu', so, so),
           _ => null,
         };
+      case 'android':
+        final triple = switch (architecture) {
+          'arm64' => 'aarch64-linux-android',
+          'arm' => 'armv7-linux-androideabi',
+          'x64' => 'x86_64-linux-android',
+          'ia32' => 'i686-linux-android',
+          _ => null,
+        };
+        return triple == null
+            ? null
+            : RustTarget(triple, 'lib$stem.so', 'lib$stem.so');
       case 'windows':
         final dll = '$stem.dll';
         return switch (architecture) {

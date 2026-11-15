@@ -351,7 +351,7 @@ Future<void> _startCrispCloud() async {
     registerMediaVideoLicenses();
     LicenseRegistry.addLicense(
       () => Stream.value(
-        const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense),
+        LicenseEntryWithLineBreaks(['Rust SMB transport'], smbLicense),
       ),
     );
 

@@ -17,7 +17,10 @@ void main() {
       ('linux', 'ia32', false): null,
       ('windows', 'x64', false): 'x86_64-pc-windows-msvc',
       ('windows', 'arm64', false): 'aarch64-pc-windows-msvc',
-      ('android', 'arm64', false): null,
+      ('android', 'arm64', false): 'aarch64-linux-android',
+      ('android', 'arm', false): 'armv7-linux-androideabi',
+      ('android', 'x64', false): 'x86_64-linux-android',
+      ('android', 'ia32', false): 'i686-linux-android',
       ('fuchsia', 'x64', false): null,
       // package:code_assets reports OS names in lowercase.
       ('ios', 'arm64', true): 'aarch64-apple-ios-sim',

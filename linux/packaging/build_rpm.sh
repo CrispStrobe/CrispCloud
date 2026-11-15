@@ -80,7 +80,7 @@ Name:           ${PACKAGE_NAME}
 Version:        ${VERSION}
 Release:        ${RELEASE}%{?dist}
 Summary:        ${SUMMARY}
-License:        Proprietary
+License:        AGPL-3.0-only
 URL:            ${URL}
 BuildArch:      x86_64
 

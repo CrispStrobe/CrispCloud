@@ -5,7 +5,7 @@
 // - `rust_cloud` -> `package:crisp_storage/crisp_cloud_bridge` (rust_cloud/,
 //                   Filen and Internxt)
 //
-// Both are off by default, so apps using only libsmb2 and the Dart cloud
+// The SMB bridge is enabled by app/CLI pubspecs. Apps using only the Dart cloud
 // clients need no Rust toolchain. Enable them in the APP's pubspec:
 //
 //   hooks:
@@ -18,8 +18,7 @@
 //         # rust_cloud_library: path/to/libcrisp_cloud_bridge.dylib
 //
 // Supported Cargo targets: iOS (device + simulator), macOS, Linux and Windows.
-// Other targets (Android for now) bundle nothing; `SmbBackend.auto` then falls
-// back to libsmb2 and strict `rust` reports the library as unavailable.
+// Android builds use the installed NDK, as does the catalogue engine.
 // Required rustup targets: aarch64-apple-ios, aarch64-apple-ios-sim,
 // x86_64-apple-ios, aarch64-apple-darwin, x86_64-apple-darwin (as built).
 
@@ -69,112 +68,163 @@ Future<void> _buildBridge(
   BuildOutputBuilder output,
   _Bridge bridge,
 ) async {
-    final code = input.config.code;
-    final target = RustTarget.of(
+  final code = input.config.code;
+  final target = RustTarget.of(
+    os: code.targetOS.name,
+    architecture: code.targetArchitecture.name,
+    iosSimulator:
+        code.targetOS == OS.iOS && code.iOS.targetSdk == IOSSdk.iPhoneSimulator,
+    stem: bridge.stem,
+  );
+  if (target == null) {
+    if (bridge.define == 'rust_smb') {
+      throw UnsupportedError(
+        'No Rust SMB bridge target for ${code.targetOS} ${code.targetArchitecture}; no fallback is bundled.',
+      );
+    }
+    stderr.writeln(
+      'crisp_storage: ${bridge.stem} is not built for ${code.targetOS} '
+      '${code.targetArchitecture}; no native SMB fallback is bundled.',
+    );
+    return;
+  }
+  final out = File.fromUri(input.outputDirectory.resolve(target.fileName));
+
+  final prebuilt = input.userDefines.path('${bridge.define}_library');
+  if (prebuilt != null) {
+    final file = File.fromUri(prebuilt);
+    if (!file.existsSync()) {
+      throw StateError(
+        'crisp_storage: ${bridge.define}_library ${file.path} is missing',
+      );
+    }
+    output.dependencies.add(prebuilt);
+    await file.copy(out.path);
+  } else {
+    final root = input.packageRoot;
+    final manifest = root.resolve(bridge.manifest);
+    for (final dir in bridge.sources) {
+      for (final entity in Directory.fromUri(
+        root.resolve(dir),
+      ).listSync(recursive: true).whereType<File>()) {
+        final p = entity.path;
+        if (p.contains('/target/')) continue;
+        if (p.endsWith('.rs') ||
+            p.endsWith('Cargo.toml') ||
+            p.endsWith('Cargo.lock')) {
+          output.dependencies.add(entity.uri);
+        }
+      }
+    }
+    final targetDir = Directory.fromUri(
+      input.outputDirectoryShared.resolve('cargo/'),
+    );
+    final environment = <String, String>{
+      'CARGO_TARGET_DIR': targetDir.path,
+      if (code.targetOS == OS.iOS)
+        // ignore: deprecated_member_use
+        'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
+      if (code.targetOS == OS.macOS)
+        // ignore: deprecated_member_use
+        'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0',
+    };
+    // Hooks run with a filtered environment: give C build scripts in the
+    // Cargo graph (e.g. oslog) the SDK Xcode would otherwise provide.
+    final sdk = appleSdkName(
       os: code.targetOS.name,
-      architecture: code.targetArchitecture.name,
       iosSimulator:
           code.targetOS == OS.iOS &&
           code.iOS.targetSdk == IOSSdk.iPhoneSimulator,
-      stem: bridge.stem,
     );
-    if (target == null) {
-      stderr.writeln(
-        'crisp_storage: ${bridge.stem} is not built for ${code.targetOS} '
-        '${code.targetArchitecture}; the Dart/libsmb2 engines remain available.',
-      );
-      return;
-    }
-    final out = File.fromUri(input.outputDirectory.resolve(target.fileName));
-
-    final prebuilt = input.userDefines.path('${bridge.define}_library');
-    if (prebuilt != null) {
-      final file = File.fromUri(prebuilt);
-      if (!file.existsSync()) {
-        throw StateError(
-          'crisp_storage: ${bridge.define}_library ${file.path} is missing',
-        );
+    if (sdk != null) {
+      final xcrun = await Process.run('xcrun', [
+        '--sdk',
+        sdk,
+        '--show-sdk-path',
+      ]);
+      if (xcrun.exitCode == 0) {
+        environment['SDKROOT'] = (xcrun.stdout as String).trim();
       }
-      output.dependencies.add(prebuilt);
-      await file.copy(out.path);
-    } else {
-      final root = input.packageRoot;
-      final manifest = root.resolve(bridge.manifest);
-      for (final dir in bridge.sources) {
-        for (final entity in Directory.fromUri(
-          root.resolve(dir),
-        ).listSync(recursive: true).whereType<File>()) {
-          final p = entity.path;
-          if (p.contains('/target/')) continue;
-          if (p.endsWith('.rs') ||
-              p.endsWith('Cargo.toml') ||
-              p.endsWith('Cargo.lock')) {
-            output.dependencies.add(entity.uri);
-          }
+    }
+    if (code.targetOS == OS.android) {
+      var ndk =
+          Platform.environment['ANDROID_NDK_HOME'] ??
+          Platform.environment['ANDROID_NDK_ROOT'];
+      if (ndk == null) {
+        final sdk =
+            Platform.environment['ANDROID_HOME'] ??
+            Platform.environment['ANDROID_SDK_ROOT'];
+        if (sdk != null) {
+          final versions = Directory('$sdk/ndk').existsSync()
+              ? Directory('$sdk/ndk').listSync().whereType<Directory>().toList()
+              : <Directory>[];
+          versions.sort((a, b) => b.path.compareTo(a.path));
+          if (versions.isNotEmpty) ndk = versions.first.path;
         }
       }
-      final targetDir = Directory.fromUri(
-        input.outputDirectoryShared.resolve('cargo/'),
-      );
-      final environment = <String, String>{
-        'CARGO_TARGET_DIR': targetDir.path,
-        if (code.targetOS == OS.iOS)
-          // ignore: deprecated_member_use
-          'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
-        if (code.targetOS == OS.macOS)
-          // ignore: deprecated_member_use
-          'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0',
-      };
-      // Hooks run with a filtered environment: give C build scripts in the
-      // Cargo graph (e.g. oslog) the SDK Xcode would otherwise provide.
-      final sdk = appleSdkName(
-        os: code.targetOS.name,
-        iosSimulator:
-            code.targetOS == OS.iOS &&
-            code.iOS.targetSdk == IOSSdk.iPhoneSimulator,
-      );
-      if (sdk != null) {
-        final xcrun = await Process.run('xcrun', [
-          '--sdk',
-          sdk,
-          '--show-sdk-path',
-        ]);
-        if (xcrun.exitCode == 0) {
-          environment['SDKROOT'] = (xcrun.stdout as String).trim();
-        }
+      if (ndk == null) {
+        throw StateError('Set ANDROID_NDK_HOME for the native SMB engine.');
       }
-      final cargo = findCargo(Platform.environment);
-      final result = await Process.run(cargo, [
-        'build',
-        '--release',
-        '--locked',
-        '--manifest-path',
-        File.fromUri(manifest).path,
-        '--target',
-        target.triple,
-      ], environment: environment);
-      if (result.exitCode != 0) {
-        throw ProcessException(
-          cargo,
-          ['build', '--target', target.triple],
-          'crisp_storage: cargo failed for ${target.triple}. Install the '
-          'target with `rustup target add ${target.triple}`.\n'
-          '${result.stdout}\n${result.stderr}',
-          result.exitCode,
+      final host = Platform.isMacOS
+          ? 'darwin-x86_64'
+          : Platform.isWindows
+          ? 'windows-x86_64'
+          : 'linux-x86_64';
+      final bin = '$ndk/toolchains/llvm/prebuilt/$host/bin';
+      final api = code.android.targetNdkApi;
+      if (api < 21) {
+        throw UnsupportedError(
+          'The SMB engine requires Android API 21 or newer.',
         );
       }
-      final built = File(
-        '${targetDir.path}${target.triple}/release/${target.cargoOutput}',
-      );
-      await built.copy(out.path);
+      final clangTarget = target.triple == 'armv7-linux-androideabi'
+          ? 'armv7a-linux-androideabi'
+          : target.triple;
+      final clang =
+          '$bin/$clangTarget$api-clang${Platform.isWindows ? '.cmd' : ''}';
+      if (!File(clang).existsSync()) {
+        throw StateError('Android NDK compiler is missing: $clang');
+      }
+      environment['CARGO_TARGET_${target.triple.toUpperCase().replaceAll('-', '_')}_LINKER'] =
+          clang;
+      environment['CC_${target.triple.replaceAll('-', '_')}'] = clang;
+      environment['AR_${target.triple.replaceAll('-', '_')}'] =
+          '$bin/llvm-ar${Platform.isWindows ? '.exe' : ''}';
+      environment['CARGO_ENCODED_RUSTFLAGS'] =
+          '-Clink-arg=-Wl,-z,max-page-size=16384';
     }
-
-    output.assets.code.add(
-      CodeAsset(
-        package: input.packageName,
-        name: bridge.stem,
-        linkMode: DynamicLoadingBundled(),
-        file: out.uri,
-      ),
+    final cargo = findCargo(Platform.environment);
+    final result = await Process.run(cargo, [
+      'build',
+      '--release',
+      '--locked',
+      '--manifest-path',
+      File.fromUri(manifest).path,
+      '--target',
+      target.triple,
+    ], environment: environment);
+    if (result.exitCode != 0) {
+      throw ProcessException(
+        cargo,
+        ['build', '--target', target.triple],
+        'crisp_storage: cargo failed for ${target.triple}. Install the '
+        'target with `rustup target add ${target.triple}`.\n'
+        '${result.stdout}\n${result.stderr}',
+        result.exitCode,
+      );
+    }
+    final built = File(
+      '${targetDir.path}/${target.triple}/release/${target.cargoOutput}',
     );
+    await built.copy(out.path);
+  }
+
+  output.assets.code.add(
+    CodeAsset(
+      package: input.packageName,
+      name: bridge.stem,
+      linkMode: DynamicLoadingBundled(),
+      file: out.uri,
+    ),
+  );
 }

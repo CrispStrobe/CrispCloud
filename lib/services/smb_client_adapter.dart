@@ -22,7 +22,7 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
   SmbSession? _session;
   String? _username, _server;
   bool requireEncryption = true;
-  SmbBackend smbBackend = SmbBackend.libsmb2;
+  SmbBackend smbBackend = SmbBackend.rust;
   SmbBackend? get effectiveBackend => _session?.effectiveBackend;
   SmbClientAdapter({required this.config});
   @override
@@ -103,7 +103,7 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
       'url': email.substring(split + 1),
       'password': password,
       'requireEncryption': '$requireEncryption',
-      'smbBackend': smbBackend.name,
+      'smbBackend': parseSmbBackend(smbBackend.name)!.name,
     };
     final session = await _connect(credentials);
     try {

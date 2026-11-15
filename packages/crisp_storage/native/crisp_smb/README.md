@@ -1,10 +1,10 @@
-# crisp_smb (experimental)
+# crisp_smb
 
-Independent experimental Rust SMB wrapper. The shared Dart package now exposes
-an optional application bridge and explicit backend selection; `dart_smb2` /
-libsmb2 remains the default. Rust requires a separately built native library.
-Application packaging and real-server/device acceptance remain subject to the
-[rollout qualification](../../../../docs/SMB_RUST_ROLLOUT.md).
+Independent Rust SMB wrapper used by CrispCloud's default native SMB bridge.
+The LGPL libsmb2 transport is removed. App/CLI builds compile and bundle this
+bridge from pinned source; legacy profiles migrate to Rust. Application
+packaging and real-server/device acceptance remain subject to the
+[qualification limits](../../../../docs/SMB_RUST_ROLLOUT.md).
 
 - Pins `smb2` 0.43.0; no Samba/libsmb2 dependency in this crate.
 - Named authentication, mandatory signing, encryption required unless explicitly

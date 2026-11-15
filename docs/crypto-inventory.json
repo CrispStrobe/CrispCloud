@@ -15,7 +15,6 @@
     "bip39",
     "dartssh2",
     "dart_pg",
-    "dart_smb2",
     "archive",
     "koni_archive",
     "koni_archive_core",
@@ -142,18 +141,15 @@
       "algorithms": [
         "TLS via platform/Dart networking",
         "SSH via dartssh2",
-        "SMB signing and SMB3 encryption requirements through the default libsmb2 transport or an explicitly selected native Rust wrapper",
+        "SMB signing and SMB3 encryption requirements through the default native Rust SMB wrapper",
         "S3/Azure signing and SAS credentials",
         "platform secure storage",
         "WebCrypto browser storage"
       ],
       "sources": [
         "https://pub.dev/packages/dartssh2",
-        "https://pub.dev/packages/dart_smb2",
-        "https://github.com/sahlberg/libsmb2",
         "packages/crisp_storage/lib/src/smb_backend.dart",
         "packages/crisp_storage/lib/src/smb_session.dart",
-        "packages/crisp_storage/lib/src/libsmb2_session.dart",
         "packages/crisp_storage/lib/src/rust_smb_session.dart",
         "packages/crisp_storage/native/crisp_smb/src/lib.rs",
         "packages/crisp_storage/native/crisp_smb/Cargo.lock",
@@ -163,7 +159,7 @@
         "cli/lib/adapters/smb_adapter.dart",
         "cli/lib/config/cli_config.dart"
       ],
-      "note": "libsmb2 remains the default SMB transport. Strict Rust selection requires the optional native bridge; Auto falls back only when native loading or bridge initialization is unavailable, before constructing a transport session. Authentication, network, signing, encryption and transfer failures do not trigger backend fallback. Signing remains required and encryption is required by default; these source-level policy checks do not establish every negotiated algorithm or server/platform behavior. GUI credentials use the configured SecureStorage backend. CLI credentials remain in its separate plaintext YAML configuration, with mode 0600 applied on non-Windows writes; the native wrapper adds no credential store. An external CRISP_SMB_LIBRARY selection requires separate verification of the actual library bytes. Review negotiated algorithms, native dependency sources and packaged artifacts for each resolved release; TLS is not the complete app crypto scope."
+      "note": "The existing Rust bridge is now the sole bundled SMB transport. Old libsmb2/auto profiles migrate to Rust; there is no LGPL native fallback. A missing library fails explicitly before credentials/network use. Authentication, network, signing, encryption and transfer failures do not trigger backend fallback. Signing remains required and encryption is required by default; these source-level policy checks do not establish every negotiated algorithm or server/platform behavior. GUI credentials use the configured SecureStorage backend. CLI credentials remain in its separate plaintext YAML configuration, with mode 0600 applied on non-Windows writes; the native wrapper adds no credential store. An external CRISP_SMB_LIBRARY selection requires separate verification of the actual library bytes. Review negotiated algorithms, native dependency sources and packaged artifacts for each resolved release; TLS is not the complete app crypto scope."
     },
     {
       "name": "Application credential storage and App Lock gates",
@@ -789,6 +785,7 @@
     "macos/Runner/CustomKeychainStore.swift",
     "macos/Runner/Info.plist",
     "macos/Runner/MainFlutterWindow.swift",
+    "macos/build_fuse_bridge.sh",
     "packages/apple_lzfse/UPSTREAM.json",
     "packages/crisp_catalog/hook/build.dart",
     "packages/crisp_catalog/lib/crisp_catalog.dart",
@@ -801,8 +798,12 @@
     "packages/crisp_catalog/native/src/lib.rs",
     "packages/crisp_ios_shell/UPSTREAM.md",
     "packages/crisp_ios_shell/ios/crisp_ios_shell.podspec",
+    "packages/crisp_ios_shell/tool/automake-compile",
+    "packages/crisp_ios_shell/tool/automake-depcomp",
+    "packages/crisp_ios_shell/tool/automake-missing",
+    "packages/crisp_ios_shell/tool/crisp-signal-table.c",
+    "packages/crisp_ios_shell/tool/prepare.py",
     "packages/crisp_ios_shell/tool/sources.json",
-    "packages/crisp_storage/NOTICE-LIBSMB2.txt",
     "packages/crisp_storage/NOTICES",
     "packages/crisp_storage/bin/build_smb.dart",
     "packages/crisp_storage/hook/build.dart",
@@ -812,7 +813,6 @@
     "packages/crisp_storage/lib/src/cloud_engine.dart",
     "packages/crisp_storage/lib/src/download_state.dart",
     "packages/crisp_storage/lib/src/host_keys.dart",
-    "packages/crisp_storage/lib/src/libsmb2_session.dart",
     "packages/crisp_storage/lib/src/profiles.dart",
     "packages/crisp_storage/lib/src/remote_client.dart",
     "packages/crisp_storage/lib/src/rust/api.dart",
@@ -1178,6 +1178,7 @@
     "pubspec.yaml",
     "tool/apple_export_preflight.py",
     "tool/build_cli_bundle.py",
+    "tool/check_distribution_components.py",
     "tool/crypto_release_evidence.py",
     "tool/macos_startup_smoke.sh",
     "tool/office_fidelity_manifest.json",
@@ -1213,7 +1214,8 @@
     "Long in-memory text lines use bounded byte windows with 2 KiB unwrapped/1 KiB wrapped layout budgets and scalar-boundary preservation. Wrapped Find and Go To retain byte identity; wrap toggles retain the visible source location and full-file legacy encoding detection. Window indexing avoids repeated visible-row reconstruction. The change does not rewrite source bytes or add cryptography.",
     "Final concurrent-main reconciliation pins CrisperBooks a18b93c1, canonical legacy parser 0f9f085 and Quds 05a581d. Earlier real Chrome selection and fixed-layout bridge checks belong to CrisperBooks 3796381 and predate the final synchronous-disposal cleanup. ADC/XZ UDIF and ISO multi-extent decoding add bounded read-only compression/container parsing; independent 7-Zip 26.06 extraction verifies complete member bytes. Shared black syntax canvases, matching token colours, empty-directory parent navigation and capability-based image choices are presentation changes; cryptographic algorithms and distribution classification are unchanged.",
     "The archive continuation and concurrent main are merged with both histories retained. The reviewed path set is the union of both source inventories, including both retained CFB-name and Word-font sources. Distribution declarations are unchanged. Encrypted split-7z lifetime fixes, bounded reader selections and explicit pane-source capture add no cipher, credential store or network destination. All original branch/PR heads and exact-source validation receipts remain reachable.",
-    "Final canonical parser pin 731e370 includes bounded CFB metadata and complete directory ownership, typed display-field evidence, explicit opt-in cached-result export and list visibility/formatting audits. Quds consumes it at 389e879. The combined parser passed 3406 Dart tests, 188 Python controls and actual JavaScript acceptance; Quds engine passed 1634 tests and the app legacy-Word cohort passed 35 tests. Changes add validation and document conversion, not encryption or activation of embedded objects."
+    "Final canonical parser pin 731e370 includes bounded CFB metadata and complete directory ownership, typed display-field evidence, explicit opt-in cached-result export and list visibility/formatting audits. Quds consumes it at 389e879. The combined parser passed 3406 Dart tests, 188 Python controls and actual JavaScript acceptance; Quds engine passed 1634 tests and the app legacy-Word cohort passed 35 tests. Changes add validation and document conversion, not encryption or activation of embedded objects.",
+    "Dependency cleanup removes the bundled libsmb2 implementation and enables the already reviewed Rust SMB graph by default. Signing/encryption requirements remain in force; real platform/NAS qualification is separate. Optional macFUSE/FUSE-T integration now requires CRISP_ENABLE_FUSE=true at compile time, and is absent from default artifacts. The iOS signal generator and three Automake helper adapters are independently authored MIT code; the AWK Bison exception is preserved completely. These licensing changes do not establish patent clearance or change Apple distribution declarations."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

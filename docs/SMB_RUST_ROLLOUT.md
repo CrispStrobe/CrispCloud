@@ -1,4 +1,4 @@
-# Rust SMB rollout — experimental, libsmb2 remains default
+# Rust SMB transport — default, with no LGPL fallback
 
 Decision: reuse `smb2` 0.43.0 through an independent `crisp_smb` Rust crate and
 flutter_rust_bridge 2.11.1. Do not reimplement the protocol in Dart or add Go's
@@ -9,21 +9,17 @@ Dart/Rust split and proposed Filen/Internxt integration, see
 
 ## Backend policy
 
-`SmbSession` preserves its API. Optional `backend: SmbBackend.rust` selects Rust
-per session. Otherwise the compile-time `CRISP_SMB_BACKEND` chooses:
-
-| Value | Behavior |
-| --- | --- |
-| `libsmb2` (default) | Existing worker-isolate implementation; never loads Rust |
-| `rust` | Strict Rust; missing native library is an error |
-| `auto` | Rust preferred; fallback only if native loading/bridge initialization fails |
+`SmbSession` preserves its API. Rust is the default and sole shipped native
+transport. Existing saved `libsmb2`/`auto` selections migrate to Rust. Missing
+native code fails explicitly; no alternate SMB library is bundled. Unknown
+profile values are rejected. The legacy enum values remain source-compatible.
 
 Selection happens before passing credentials or connecting. Authentication,
 network, signing, encryption, protocol and transfer failures NEVER trigger
 fallback. Unknown mode values are rejected. `effectiveBackend` is diagnostic
 only; do not include credentials or remote paths in telemetry.
 
-Both backends require signing. Encryption remains required by default. Rust
+The Rust backend requires signing. Encryption remains required by default. Rust
 rejects guest sessions and disables DFS and automatic mutation replay. URL
 confinement is not a server-side filesystem sandbox: configure share permissions
 and do not expose symlink/reparse-point ancestors outside the intended root.
@@ -65,16 +61,15 @@ hooks:
 `packages/crisp_storage/hook/build.dart` then runs `cargo build --release
 --locked --target <triple>` for each Flutter build target and bundles the
 cdylib as the code asset `package:crisp_storage/crisp_smb_bridge`. Flutter
-embeds and signs it (`crisp_smb_bridge.framework` on iOS/macOS, next to
-`libdart_smb2.framework`). Supported: iOS device/simulator, macOS (both
-architectures for universal builds), Linux and Windows. Other targets bundle
-nothing, so `auto` keeps using libsmb2. Install the matching rustup targets
+embeds and signs it (`crisp_smb_bridge.framework` on iOS/macOS). Supported target
+mappings include iOS device/simulator, macOS, Linux, Windows and Android.
+Android uses the installed NDK; platform binary acceptance remains separate. Install the matching rustup targets
 (`aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`,
 `aarch64-apple-darwin`, `x86_64-apple-darwin`). The hook finds `cargo` via
 `$CARGO`, `PATH` or `~/.cargo/bin` (Xcode phases have a reduced PATH) and
 sets `SDKROOT` with `xcrun`. `rust_smb_library: <path>` bundles a prebuilt
-library instead. Without the opt-in nothing changes and no Rust toolchain is
-needed.
+library instead. App and CLI pubspecs enable the bridge by default. A Rust toolchain is required
+unless an explicitly reviewed prebuilt bridge is provided.
 
 At runtime `RustSmbSession.initialize` tries, in order: `CRISP_SMB_LIBRARY`
 (define or environment), the app-bundled locations from
@@ -90,8 +85,9 @@ with `TooManyHandles`, matching libsmb2's behavior under concurrent use.
 Rust-to-disk downloads keep file bytes native, cap reads at 256 KiB and use four
 read-ahead requests. Native writes complete before progress advances; cancellation
 cannot leave a background file write racing a new resume. Progress is coalesced
-at 100 ms with a final value. A callback exception cancels the session; create a
-new session to resume. There is one download per session and eight file handles
+at 100 ms with a final value. A callback exception cancels the native session. The shared facade retires it
+after the failed operation completes; a later explicit resume opens a new
+native session. It never automatically replays the failed operation. There is one download per session and eight file handles
 maximum. Stream consumers receive bounded typed byte buffers and backpressure.
 
 Resume validates source, size, timestamps and file identity when the server can
@@ -101,7 +97,7 @@ bytes under another backend's validator. The app publishes the staging file only
 after success. Uploads retain existing create/truncate semantics and are neither
 resumable nor atomic. No transparent write replay is enabled.
 
-## Qualification gates before changing the default
+## Qualification limits
 
 | Gate | Current evidence / next check |
 | --- | --- |
@@ -121,21 +117,20 @@ selected where dual/triple licensing also offers copyleft. `unicode-ident` also
 requires Unicode-3.0 notices. `allo-isolate` uses an Apache-2.0 license file.
 The FRB crates omit license files in their archives; the upstream v2.11.1 MIT
 license is recorded separately. `r-efi` publishes its SPDX grant and author list;
-complete notice assembly is still a packaging gate. Existing libsmb2 LGPL
-obligations remain while it ships. The surrounding app/package license is not
+the complete reviewed notices are packaged in `crisp_storage/NOTICES`.
+The libsmb2 dependency has been removed. The surrounding app/package license is not
 changed by the permissively licensed independent Rust crates.
 
 ## GUI and CLI settings
 
-The installed GUI's connection dialog offers **SMB transport**: libsmb2, Rust or
-Auto. Save it with a connection profile or reconnect to apply it. The choice is
-stored as `smbBackend` beside `requireEncryption`; credentials remain in the
-existing secure store. Browser builds still cannot open SMB sockets.
+The installed GUI's connection dialog shows **Rust SMB**. Existing libsmb2/auto
+profiles are migrated and newly saved credentials use `smbBackend: rust`.
+Credentials remain in the existing secure store. Browser builds still cannot open SMB sockets.
 
 The CLI now provides the same shared SMB session through `SmbCliAdapter`:
 
 ```
-crisp connect smb 'DOMAIN\reader@smb://nas/Books/' --name nas --smb-backend libsmb2
+crisp connect smb 'DOMAIN\reader@smb://nas/Books/' --name nas --smb-backend rust
 crisp config smb-backend nas rust
 crisp config smb-backend nas
 crisp ls / --provider nas --json
@@ -165,41 +160,15 @@ The `surfaces` CI job runs both. Live SMB tests require the two fixture environm
 variables described above. These fixture tests do not replace real SMB3/device
 qualification.
 
-## Surface validation checkpoint — 11 November 2026
+## Release acceptance
 
-Local checks covered 24 shared Dart tests (23 transport tests plus notice
-consistency), the complete 109-test CLI suite and 8 native core unit tests.
-The loopback SMB fixture was enabled for transport tests. These are recorded
-checks, not a guarantee for every future revision or provider.
+The historical prototype checks do not certify a new combined release. Current
+local loopback tests exercise authentication, CRUD, bounded transfers, resume,
+cancellation and refusal of an SMB2-only server when encryption is required.
+They do not establish SMB3 encryption interoperability on every NAS, Windows
+server or physical mobile device. Final app embedding/signing, per-platform
+builds and actual NAS qualification remain separate gates.
 
-[The workflow at `13ca681`](https://github.com/CrispStrobe/CrispCloud/actions/runs/43012455534)
-passed Linux, macOS, iOS compilation/Apple padding checks, and the GUI/CLI
-`surfaces` job. The Windows job stopped in recipe integrity verification because
-Git converted the pinned LF files to CRLF. Package-specific Git attributes preserve the original bytes. The subsequent
-Windows run passed recipe verification, then found CRLF/LF differences between
-the distributed notice and Dart's runtime string. The notice now also retains
-LF; recipe integrity and notice consistency were verified locally after export
-with `core.autocrlf=true`. A full Windows rerun must still confirm both fixes.
-
-The earlier macOS prebuilt-library install-name failure is addressed by the
-source recipe below and passed the subsequent macOS/iOS CI checks. Final app
-embedding/signing, physical-device and real signing/encryption NAS qualification
-remain separate gates.
-
-CLI settings/listing output labels old profiles without an explicit choice as
-`build default`, matching the shared adapter's compile-time default behavior.
-
-## Apple fallback packaging
-
-GUI and standalone CLI resolve the same `packages/dart_smb2` fork (0.2.5+crisp.1).
-The libsmb2 backend remains available and remains the default. Apple builds now
-compile the pinned r10 source with install-name header padding, so long checkout
-paths work with Dart and Flutter native assets. Xcode command-line tools, Python 3,
-curl and zip are required. Other platforms use checksum-verified r10 binaries.
-See [recipe provenance and licensing](../packages/dart_smb2/CRISP_PATCHES.md).
-This fixes packaging without changing backend selection or fallback policy.
-
-CI runs shared tests on Linux, Windows and macOS, GUI/CLI fixture tests on Linux,
-and iOS device/simulator compilation. Both Apple recipes are checked by rewriting
-a compiled binary's install name to a long path and re-signing it. SMB3 encryption
-against production servers and physical-device testing remain qualification gates.
+The CI workflow builds the Rust bridge on Linux, Windows, macOS and iOS targets.
+Default builds never download a libsmb2 binary. Source licence evidence and
+final artifact guards run separately; see the current distribution audit.

@@ -35,8 +35,20 @@ import 'macos_app_store.dart';
 // ---------------------------------------------------------------------------
 
 /// Runtime used for a mount on macOS.
+const nativeMacFuseEnabled = bool.fromEnvironment('CRISP_ENABLE_FUSE');
+
+/// Restricted runtime integration is absent from default builds.
+List<MacFuseBackend> get availableMacMountBackends => nativeMacFuseEnabled
+    ? MacFuseBackend.values
+    : const [MacFuseBackend.rcloneNfs];
+
 enum MacFuseBackend {
-  automatic, fuseT, macFuseFsKit, macFuseKernel, rcloneNfs, fuseTSmb;
+  automatic,
+  fuseT,
+  macFuseFsKit,
+  macFuseKernel,
+  rcloneNfs,
+  fuseTSmb;
 
   bool get usesFuseT => this == fuseT || this == fuseTSmb;
 }
@@ -96,7 +108,11 @@ class MountEntry {
     label: m['label']!,
     provider: m['provider']!,
     remotePath: m['remotePath']!,
-    macBackend: MacFuseBackend.values.where((v) => v.name == m['macBackend']).firstOrNull ?? MacFuseBackend.automatic,
+    macBackend:
+        MacFuseBackend.values
+            .where((v) => v.name == m['macBackend'])
+            .firstOrNull ??
+        MacFuseBackend.automatic,
   );
 
   MountEntry copyWith({
@@ -152,7 +168,9 @@ class FuseMountService {
     MacFuseBackend.fuseTSmb => 'fuse-t-smb',
     MacFuseBackend.macFuseFsKit => 'macfuse-fskit',
     MacFuseBackend.macFuseKernel => 'macfuse-kernel',
-    MacFuseBackend.rcloneNfs => throw ArgumentError('rclone does not use the FUSE bridge'),
+    MacFuseBackend.rcloneNfs => throw ArgumentError(
+      'rclone does not use the FUSE bridge',
+    ),
   };
 
   // Stable app-authored messages used by the mount UI for localization.
@@ -246,6 +264,7 @@ class FuseMountService {
 
   Future<String?> _checkMacFuse() async {
     if (await _rclonePath() != null) return null;
+    if (!nativeMacFuseEnabled) return rcloneMissing;
     if (!await File(macBridgePath).exists()) return bridgeMissing;
     if (await File('/usr/local/lib/libfuse-t.dylib').exists()) return null;
     if (await File('/usr/local/lib/libfuse.2.dylib').exists() &&
@@ -297,6 +316,13 @@ class FuseMountService {
     if (_unmountAllComplete != null) {
       throw StateError('Cannot mount while mounts are being shut down');
     }
+    if (Platform.isMacOS &&
+        macBackend != MacFuseBackend.rcloneNfs &&
+        !nativeMacFuseEnabled) {
+      throw UnsupportedError(
+        'This build excludes macFUSE/FUSE-T. Use rclone NFS or compile with CRISP_ENABLE_FUSE=true.',
+      );
+    }
     if (macBackend.usesFuseT && !fuseTNonCommercialAcknowledged) {
       throw ArgumentError('FUSE-T requires non-commercial-use acknowledgement');
     }
@@ -308,17 +334,20 @@ class FuseMountService {
     }
     if (macBackend == MacFuseBackend.rcloneNfs &&
         !isValidRcloneRemote(remotePath)) {
-      throw ArgumentError('An rclone remote such as work:documents is required');
+      throw ArgumentError(
+        'An rclone remote such as work:documents is required',
+      );
     }
 
     final canonical = _canonicalize(mountPoint);
     if (_pendingMounts.containsKey(canonical) ||
         _pendingUnmounts.containsKey(canonical) ||
-        _processes.containsKey(canonical) || {
-      MountStatus.mounting,
-      MountStatus.mounted,
-      MountStatus.unmounting,
-    }.contains(_mounts[canonical]?.status)) {
+        _processes.containsKey(canonical) ||
+        {
+          MountStatus.mounting,
+          MountStatus.mounted,
+          MountStatus.unmounting,
+        }.contains(_mounts[canonical]?.status)) {
       throw TerminalMountArgumentError(
         TerminalMountCode.mountDuplicate,
         'Mount point "$canonical" is already mounted',
@@ -391,7 +420,9 @@ class FuseMountService {
         if (_processes.containsKey(canonical) &&
             _mounts[canonical]?.status != MountStatus.error) {
           _mounts[canonical] = entry.copyWith(status: MountStatus.mounted);
-          _log.info('Mounted ${entry.provider}:${entry.remotePath} → $canonical');
+          _log.info(
+            'Mounted ${entry.provider}:${entry.remotePath} → $canonical',
+          );
         }
       } on _MountBridgeFailure catch (e, st) {
         _log.error('Mount failed for $canonical', e, st);
@@ -422,7 +453,8 @@ class FuseMountService {
     final entry = _mounts[canonical];
     if (entry == null) return;
     if (!_processes.containsKey(canonical) ||
-        (entry.status != MountStatus.mounted && entry.status != MountStatus.error)) {
+        (entry.status != MountStatus.mounted &&
+            entry.status != MountStatus.error)) {
       return;
     }
 
@@ -439,8 +471,12 @@ class FuseMountService {
         _log.info('Unmounted $canonical');
       } catch (e, st) {
         _log.error('Unmount failed for $canonical', e, st);
-        _setError(canonical, e.toString(),
-            errorKey: 'unmountFailed', errorValues: {'error': '$e'});
+        _setError(
+          canonical,
+          e.toString(),
+          errorKey: 'unmountFailed',
+          errorValues: {'error': '$e'},
+        );
       }
 
       await _persistMounts();
@@ -460,7 +496,9 @@ class FuseMountService {
     _unmountAllComplete = completion;
     try {
       await Future.wait(_pendingMounts.values.map((pending) => pending.future));
-      await Future.wait(_pendingUnmounts.values.map((pending) => pending.future));
+      await Future.wait(
+        _pendingUnmounts.values.map((pending) => pending.future),
+      );
       final keys = List<String>.from(_mounts.keys);
       for (final key in keys) {
         if (_processes.containsKey(key)) {
@@ -469,7 +507,9 @@ class FuseMountService {
       }
       // A separate unmount can start while a previous operation is awaited,
       // including one whose helper subsequently exits.
-      await Future.wait(_pendingUnmounts.values.map((pending) => pending.future));
+      await Future.wait(
+        _pendingUnmounts.values.map((pending) => pending.future),
+      );
     } finally {
       _unmountAllComplete = null;
       completion.complete();
@@ -498,8 +538,10 @@ class FuseMountService {
     final canonical = _canonicalize(mountPoint);
     if (_pendingMounts.containsKey(canonical) ||
         _pendingUnmounts.containsKey(canonical) ||
-        {MountStatus.mounting, MountStatus.unmounting}
-        .contains(_mounts[canonical]?.status)) {
+        {
+          MountStatus.mounting,
+          MountStatus.unmounting,
+        }.contains(_mounts[canonical]?.status)) {
       throw StateError('Cannot remove a mount while its state is changing');
     }
     if (_processes.containsKey(canonical)) {
@@ -546,8 +588,13 @@ class FuseMountService {
       final prefs = await SharedPreferences.getInstance();
       final list = _mounts.values
           .map(
-            (e) =>
-                [e.mountPoint, e.label, e.provider, e.remotePath, e.macBackend.name].join('\x1F'),
+            (e) => [
+              e.mountPoint,
+              e.label,
+              e.provider,
+              e.remotePath,
+              e.macBackend.name,
+            ].join('\x1F'),
           )
           .toList();
       await prefs.setStringList(_prefKey, list);
@@ -714,7 +761,8 @@ class FuseMountService {
           if (_processes[entry.mountPoint] == process) {
             _processes.remove(entry.mountPoint);
             final stoppedFilesystem = _filesystems.remove(entry.mountPoint);
-            if (stoppedFilesystem != null) unawaited(stoppedFilesystem.dispose());
+            if (stoppedFilesystem != null)
+              unawaited(stoppedFilesystem.dispose());
             _setError(
               entry.mountPoint,
               'FUSE bridge exited ($code)',
@@ -750,8 +798,12 @@ class FuseMountService {
     final executable = await _rclonePath();
     if (executable == null) throw StateError(rcloneMissing);
     final process = await Process.start(executable, [
-      'nfsmount', entry.remotePath, entry.mountPoint, '--read-only',
-      '--addr', '127.0.0.1:0',
+      'nfsmount',
+      entry.remotePath,
+      entry.mountPoint,
+      '--read-only',
+      '--addr',
+      '127.0.0.1:0',
     ]);
     final errors = StringBuffer();
     process.stdout.drain<void>();
@@ -771,24 +823,35 @@ class FuseMountService {
       }
       if (!mounted) {
         throw _MountBridgeFailure(
-          'rcloneFailed', 'rclone NFS mount failed: $errors', {'error': '$errors'},
+          'rcloneFailed',
+          'rclone NFS mount failed: $errors',
+          {'error': '$errors'},
         );
       }
       _processes[entry.mountPoint] = process;
       entry.helperPid = process.pid;
-      unawaited(process.exitCode.then((code) {
-        if (_processes[entry.mountPoint] == process) {
-          _processes.remove(entry.mountPoint);
-          _setError(entry.mountPoint, 'rclone exited ($code)',
-              errorKey: 'helperExited', errorValues: {'code': code, 'error': ''});
-        }
-      }));
+      unawaited(
+        process.exitCode.then((code) {
+          if (_processes[entry.mountPoint] == process) {
+            _processes.remove(entry.mountPoint);
+            _setError(
+              entry.mountPoint,
+              'rclone exited ($code)',
+              errorKey: 'helperExited',
+              errorValues: {'code': code, 'error': ''},
+            );
+          }
+        }),
+      );
     } catch (_) {
       process.kill();
-      await process.exitCode.timeout(const Duration(seconds: 3), onTimeout: () {
-        process.kill(ProcessSignal.sigkill);
-        return -1;
-      });
+      await process.exitCode.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          process.kill(ProcessSignal.sigkill);
+          return -1;
+        },
+      );
       rethrow;
     }
   }
@@ -823,23 +886,20 @@ class FuseMountService {
   @visibleForTesting
   Future<void> performPlatformUnmount(String mountPoint) async {
     ProcessResult? result;
-      if (Platform.isLinux) {
-        // Try fusermount3 first, fall back to fusermount.
-        result = await Process.run('fusermount3', ['-u', mountPoint]);
-        if (result.exitCode != 0) {
-          result = await Process.run('fusermount', ['-u', mountPoint]);
-        }
-      } else if (Platform.isMacOS) {
-        result = await Process.run('diskutil', [
-          'unmount',
-          'force',
-          mountPoint,
-        ]);
-      } else if (Platform.isWindows) {
-        // WinFsp: net use /delete or the WinFsp net command.
-        result = await Process.run('net', ['use', mountPoint, '/delete', '/y']);
+    if (Platform.isLinux) {
+      // Try fusermount3 first, fall back to fusermount.
+      result = await Process.run('fusermount3', ['-u', mountPoint]);
+      if (result.exitCode != 0) {
+        result = await Process.run('fusermount', ['-u', mountPoint]);
       }
-    if (result != null && result.exitCode != 0 &&
+    } else if (Platform.isMacOS) {
+      result = await Process.run('diskutil', ['unmount', 'force', mountPoint]);
+    } else if (Platform.isWindows) {
+      // WinFsp: net use /delete or the WinFsp net command.
+      result = await Process.run('net', ['use', mountPoint, '/delete', '/y']);
+    }
+    if (result != null &&
+        result.exitCode != 0 &&
         await isPlatformMountPoint(mountPoint)) {
       throw FileSystemException('Unmount failed: ${result.stderr}', mountPoint);
     }

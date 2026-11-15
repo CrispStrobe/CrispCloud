@@ -115,7 +115,7 @@ migration or live actions from imported CAFs are enabled.
 | S3 | Dart HTTP/crypto adapter | Existing adapter |
 | SFTP | Dart `dartssh2` adapter | Existing adapter |
 | WebDAV | Dart HTTP adapter | Existing adapter |
-| SMB | Shared `crisp_storage` adapter | `libsmb2` (default), strict `rust`, or `auto` |
+| SMB | Shared `crisp_storage` adapter | Rust (default and sole bundled engine); old `libsmb2`/`auto` profiles migrate |
 | Filen / Internxt | Not implemented in this CLI factory | Proposed shared Dart/Rust adapters; no engine flag exists yet |
 
 The CLI runs independently of the GUI. Its profiles and credentials are in its

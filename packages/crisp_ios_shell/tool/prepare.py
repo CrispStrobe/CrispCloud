@@ -125,6 +125,12 @@ def prepare_sources(manifest: dict) -> dict[str, Path]:
         destination = result["dash"] / filename.removeprefix("automake-")
         shutil.copy2(helper, destination)
         destination.chmod(0o755)
+    # Replace the GPL Bash-derived generator before it can be compiled or run.
+    # The replacement reads Darwin SDK/libSystem signal metadata only.
+    shutil.copy2(PACKAGE / 'tool/crisp-signal-table.c', result['dash'] / 'src/mksignames.c')
+    generated = result['dash'] / 'src/signames.c'
+    if generated.exists():
+        generated.unlink()  # force regeneration with the reviewed replacement
     # Dash and the runtime must use exactly the same stream/getopt/exec API.
     shutil.copy2(result["ios_system"] / "ios_error.h", result["dash"] / "ios_error.h")
     return result
@@ -159,7 +165,7 @@ def source_notices(sources: dict[str, Path]) -> str:
             elif path.suffix in {".c", ".h", ".m", ".cc", ".cpp"}:
                 content = path.read_text(errors="replace")[:20000]
                 for comment in re.findall(r"/\*.*?\*/", content, re.S):
-                    if re.search(r"copyright|redistribution|general public license|permission is hereby", comment, re.I):
+                    if re.search(r"copyright|redistribution|general public license|permission is hereby|special exception|as an exception|larger work|under terms of your choice", comment, re.I):
                         groups.setdefault(comment.strip(), []).append(relative)
     # These pinned build-only shell helpers carry licenses/exceptions in '#'
     # headers rather than C comments. Retain those conditions in the aggregate
@@ -187,21 +193,23 @@ def source_notices(sources: dict[str, Path]) -> str:
     introduction = (
         "CrispCloud embedded iOS shell\n\n"
         "CrispCloud integration code is licensed under AGPL-3.0. Third-party components retain\n"
-        "their own terms below. Dash COPYING explicitly identifies GPL-2.0-or-later material\n"
-        "in the output of mksignames.c; do not describe the entire binary as BSD-only.\n"
-        "Pinned Automake build helpers retain their GPL-2.0-or-later distribution exception\n"
-        "and X Consortium notices below; these scripts are corresponding build source.\n"
+        "their own terms below. The original Dash signal generator is replaced before compilation\n"
+        "by CrispCloud MIT code using Darwin SDK signal metadata. The unchanged upstream COPYING\n"
+        "is retained for provenance; its original-generator paragraph does not describe this build.\n"
+        "Minimal MIT adapters replace the GPL Automake missing/compile/depcomp helpers.\n"
+        "The original X Consortium install-sh permission notice remains below.\n"
         "Exact corresponding source, patches and reproducible build instructions: tool/sources.json,\n"
         "patches/, tool/prepare.py and UPSTREAM.md in packages/crisp_ios_shell at\n"
         "https://github.com/CrispStrobe/CrispCloud\n\n"
     )
-    return introduction + own + "\n\n" + "\n\n".join(sections) + "\n\nGNU GPL version 2\n\n" + gpl
+    return introduction + own + "\n\n" + (PACKAGE / "licenses/CrispCloud-build-tools-MIT.txt").read_text() + "\n\n" + "\n\n".join(sections) + "\n\nGNU GPL version 2\n\n" + gpl
 
 
 def fingerprint(manifest: dict) -> dict:
     return {
         "manifest": manifest,
         "preparation_sha256": sha256(Path(__file__)),
+        "signal_generator_sha256": sha256(PACKAGE / "tool/crisp-signal-table.c"),
         "patches": {path.name: sha256(path) for path in sorted((PACKAGE / "patches").glob("*.patch"))},
         "commands_sha256": sha256(PACKAGE / "ios/Resources/commands.plist"),
     }
@@ -269,7 +277,7 @@ def build_dash(source: Path, products: dict[str, Path], manifest: dict) -> None:
             "LDFLAGS": shlex.join([*common, "-dynamiclib", "-Wl,-headerpad_max_install_names", "-F", str(products[sdk]), "-framework", "ios_system"]),
         })
         host = "armv8" if arch == "arm64" else "x86_64"
-        run(["./configure", f"--build={host_arch}-apple-darwin", f"--host={host}-apple-darwin", "cross_compiling=yes", "--without-libedit"], cwd=build, env=env)
+        run(["./configure", f"--build={host_arch}-apple-darwin", f"--host={host}-apple-darwin", "cross_compiling=yes", "--without-libedit", "--disable-dependency-tracking"], cwd=build, env=env)
         run(["make", f"-j{min(os.cpu_count() or 2, 8)}"], cwd=build, env=env)
         binaries[(sdk, arch)] = build / "src/dash"
     simulator = BUILD / "dash-simulator"

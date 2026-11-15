@@ -9,7 +9,7 @@ fi
 root="$(cd "$(dirname "$0")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/cc-fuse-signing.XXXXXX")"
 trap 'rm -rf "$fixture"' EXIT
-SRCROOT="$root/macos" TARGET_BUILD_DIR="$fixture" \
+DART_DEFINES=Q1JJU1BfRU5BQkxFX0ZVU0U9dHJ1ZQ== SRCROOT="$root/macos" TARGET_BUILD_DIR="$fixture" \
   UNLOCALIZED_RESOURCES_FOLDER_PATH=Resources \
   EXPANDED_CODE_SIGN_IDENTITY=- sh "$root/macos/build_fuse_bridge.sh"
 helper="$fixture/Resources/crispcloud_fuse_bridge"
@@ -29,3 +29,10 @@ assert actual == expected, f'Unexpected helper entitlements: {actual}'
 PYENTS
 lipo "$helper" -verify_arch arm64 x86_64
 echo 'Universal FUSE helper signature and sandbox inheritance verified'
+
+# Rebuilding with defaults must remove the previously opted-in generated helper.
+SRCROOT="$root/macos" TARGET_BUILD_DIR="$fixture" \
+  UNLOCALIZED_RESOURCES_FOLDER_PATH=Resources DART_DEFINES= \
+  sh "$root/macos/build_fuse_bridge.sh"
+[[ ! -e "$helper" ]] || { echo 'Default build retained an optional FUSE helper'; exit 1; }
+echo 'Default build excludes the optional helper, including after an opt-in build'

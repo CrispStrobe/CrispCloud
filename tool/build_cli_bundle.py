@@ -35,9 +35,8 @@ with tempfile.TemporaryDirectory(prefix='.crispcloud-cli-', dir=output.parent) a
                 raise SystemExit(f'Native asset differs between CLI names: {file.name}')
         else:
             shutil.copy2(file, target)
-    shutil.copy2(root / 'packages/crisp_storage/NOTICE-LIBSMB2.txt', bundle)
-    if (root / 'LICENSE').exists():
-        shutil.copy2(root / 'LICENSE', bundle / 'LICENSE-CRISPCLOUD.txt')
+    shutil.copy2(root / 'LICENSE.txt', bundle / 'LICENSE-CRISPCLOUD.txt')
+    shutil.copy2(root / 'packages/crisp_storage/NOTICES', bundle / 'STORAGE-NOTICES.txt')
     shutil.copy2(root / 'packages/crisp_catalog/README.md', bundle / 'CATALOG-README.md')
     subprocess.run([sys.executable, str(root / 'tool/collect_catalog_licenses.py'), '--output', str(bundle / 'catalog-licenses')], check=True)
     destination = output / 'bundle'

@@ -2,43 +2,35 @@ import 'package:crisp_storage/src/smb_backend.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('default does not load Rust', () async {
-    expect(configuredSmbBackend(), SmbBackend.libsmb2);
-    expect(
-      await selectSmbBackend(
-        SmbBackend.libsmb2,
-        () async => fail('must not load'),
-      ),
-      SmbBackend.libsmb2,
-    );
+  test('default and legacy saved profiles select Rust', () {
+    expect(configuredSmbBackend(), SmbBackend.rust);
+    for (final value in ['libsmb2', 'rust', 'auto']) {
+      expect(parseSmbBackend(value), SmbBackend.rust);
+    }
+    expect(() => parseSmbBackend('typo'), throwsFormatException);
   });
-  test('auto falls back only when the native library is unavailable', () async {
-    expect(
-      await selectSmbBackend(
-        SmbBackend.auto,
-        () async => throw const RustSmbUnavailable(),
-      ),
-      SmbBackend.libsmb2,
-    );
-    expect(
-      await selectSmbBackend(SmbBackend.auto, () async {}),
-      SmbBackend.rust,
-    );
-    await expectLater(
-      selectSmbBackend(
-        SmbBackend.auto,
-        () async => throw StateError('security failure'),
-      ),
-      throwsStateError,
-    );
-  });
-  test('strict Rust never falls back', () async {
-    await expectLater(
-      selectSmbBackend(
+  test('all selections load Rust without an LGPL fallback', () async {
+    for (final value in SmbBackend.values) {
+      var loads = 0;
+      expect(
+        await selectSmbBackend(value, () async {
+          loads++;
+        }),
         SmbBackend.rust,
-        () async => throw const RustSmbUnavailable(),
-      ),
-      throwsA(isA<RustSmbUnavailable>()),
-    );
+      );
+      expect(loads, 1);
+      await expectLater(
+        selectSmbBackend(value, () async {
+          throw const RustSmbUnavailable();
+        }),
+        throwsA(isA<RustSmbUnavailable>()),
+      );
+      await expectLater(
+        selectSmbBackend(value, () async {
+          throw StateError('security failure');
+        }),
+        throwsStateError,
+      );
+    }
   });
 }

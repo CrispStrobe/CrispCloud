@@ -54,7 +54,7 @@ void main() {
           client.requireEncryption = false;
           await client.login(identity, 'fixture-password');
           expect(client.isAuthenticated, isTrue);
-          expect((await config.readCredentials())!['smbBackend'], backend.name);
+          expect((await config.readCredentials())!['smbBackend'], 'rust');
           await client.createFolderPath('/Audio Books/Disc 1');
           await client.uploadStream(
             Stream.fromIterable([
@@ -93,7 +93,7 @@ void main() {
           restored = SmbClientAdapter(config: config);
           expect(await restored.restoreCredentials(), isTrue);
           expect(restored.requireEncryption, isFalse);
-          expect(restored.smbBackend, backend);
+          expect(restored.smbBackend, SmbBackend.rust);
           await restored.renamePath(
             '/Audio Books/Disc 1/Chapter #1.mp3',
             'Chapter 2.mp3',
