@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/document_conversion.dart';
-import 'package:pdf_document/pdf_document.dart' show PdfBlankDocument;
+import 'package:pdf_document/pdf_document.dart' as pdf;
 import 'package:quds_office_editor/quds_office_editor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,7 +12,7 @@ void main() {
   test(
     'PDF conversion is detected by content and scan limitations are retained',
     () async {
-      final blank = PdfBlankDocument.create(pageCount: 2);
+      final blank = pdf.PdfBlankDocument.create(pageCount: 2);
       expect(
         documentConversionFormats('unknown.bin', blank),
         containsAll(['docx', 'xlsx', 'pptx', 'txt']),
@@ -81,6 +81,36 @@ void main() {
       expect(await source.readAsBytes(), orderedEquals(before));
     },
   );
+  test('Office PDF conversion loads fonts through the host and produces a readable PDF', () async {
+    final docx = await convertDocument(
+      Uint8List.fromList(utf8.encode('Host font export')),
+      sourceName: 'notes.txt',
+      extension: 'docx',
+    );
+    final result = await convertDocument(
+      docx.bytes,
+      sourceName: 'notes.docx',
+      extension: 'pdf',
+    );
+    expect(pdf.PdfDocument.open(result.bytes).pageCount, greaterThan(0));
+    expect(result.notices.join(' '), contains('unencrypted'));
+  });
+  test('UTF-16 CSV input uses the shared text decoder', () async {
+    final text = 'name,value\nAlpha,42';
+    final encoded = Uint8List.fromList([
+      255,
+      254,
+      for (final unit in text.codeUnits) ...[unit & 255, unit >> 8],
+    ]);
+    final result = await convertDocument(
+      encoded,
+      sourceName: 'table.csv',
+      extension: 'xlsx',
+    );
+    final sheet = SheetEditorController.fromBytes(result.bytes);
+    expect(sheet.sheet.cellA1('A2').value, 'Alpha');
+    sheet.dispose();
+  });
   test('unsupported routes fail before output', () async {
     await expectLater(
       convertDocument(

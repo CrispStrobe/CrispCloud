@@ -273,6 +273,13 @@ Future<DocumentConversionResult> _convert(
 }
 
 Future<Uint8List> _textWord(String text) async {
+  if (utf8.encode(text).length > 8 * 1024 * 1024) {
+    throw const FormatException('Text conversion is limited to 8 MiB.');
+  }
+  final lines = const LineSplitter().convert(text);
+  if (lines.length > 100000) {
+    throw const FormatException('Text conversion is limited to 100,000 lines.');
+  }
   final document = WmlDocument.empty();
   document.sections.first.blocks
     ..clear()

@@ -105,11 +105,12 @@ class _DocumentHistoryDialogState extends ConsumerState<DocumentHistoryDialog> {
     } catch (error) {
       if (mounted) setState(() => _message = '$error');
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _busy = false;
           _awaitingDecision = false;
         });
+      }
     }
   }
 
@@ -179,6 +180,7 @@ class _DocumentHistoryDialogState extends ConsumerState<DocumentHistoryDialog> {
     if (mounted) setState(() => _awaitingDecision = false);
     if (accepted == true && mounted) {
       await ref.read(documentHistoryProvider).importJson(raw, replace: replace);
+      if (mounted) setState(() => _filter = 'All');
     }
   }
 
@@ -304,7 +306,7 @@ class _DocumentHistoryDialogState extends ConsumerState<DocumentHistoryDialog> {
                   ),
                   if (_busy && !_awaitingDecision)
                     const LinearProgressIndicator(),
-                  if (_message ?? history.persistenceError
+                  if (history.persistenceError ?? _message
                       case final String message)
                     Padding(
                       padding: const EdgeInsets.all(8),

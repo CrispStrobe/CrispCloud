@@ -36,6 +36,9 @@ void main() {
   testWidgets('purge requires confirmation and clears persisted entries', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final history = container.read(documentHistoryProvider);

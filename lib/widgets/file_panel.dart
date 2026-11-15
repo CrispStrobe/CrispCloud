@@ -814,8 +814,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      '${FilePanelStrings(context).text(panel.isQuickFilterActive ? 'filter' : 'find')}: ' +
-                                          panel.filterQuery,
+                                      '${FilePanelStrings(context).text(panel.isQuickFilterActive ? 'filter' : 'find')}: ${panel.filterQuery}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(

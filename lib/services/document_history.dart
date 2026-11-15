@@ -94,7 +94,19 @@ class DocumentHistory extends ChangeNotifier {
       recordEdits = prefs.getBool('$storageKey.edits') ?? true;
       recordOpens = prefs.getBool('$storageKey.opens') ?? false;
       final raw = prefs.getString(storageKey);
-      if (raw != null && epoch == _epoch) _merge(decode(raw));
+      if (raw != null) {
+        final loaded = decode(raw);
+        final data = jsonDecode(raw);
+        if (data is Map) {
+          if (data['recordEdits'] is bool) {
+            recordEdits = data['recordEdits'] as bool;
+          }
+          if (data['recordOpens'] is bool) {
+            recordOpens = data['recordOpens'] as bool;
+          }
+        }
+        if (epoch == _epoch) _merge(loaded);
+      }
       notifyListeners();
     } catch (error) {
       if (!_disposed) {
@@ -219,9 +231,15 @@ class DocumentHistory extends ChangeNotifier {
   Future<void> _save() => _lock.synchronized(() async {
     try {
       final prefs = await _preferences();
-      if (!await prefs.setString(storageKey, exportJson()) ||
-          !await prefs.setBool('$storageKey.edits', recordEdits) ||
-          !await prefs.setBool('$storageKey.opens', recordOpens)) {
+      // Recording preferences and entries are one replaceable record, so a
+      // partial preference update cannot unexpectedly enable opened logging.
+      final persisted = jsonEncode({
+        'version': 1,
+        'recordEdits': recordEdits,
+        'recordOpens': recordOpens,
+        'entries': [for (final entry in _entries) entry.toJson()],
+      });
+      if (!await prefs.setString(storageKey, persisted)) {
         throw StateError('Could not persist document history.');
       }
       if (!_disposed && persistenceError != null) {

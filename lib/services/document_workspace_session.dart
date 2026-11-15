@@ -31,9 +31,10 @@ class DocumentWorkspaceSession {
       container.read(documentWorkspaceSessionProvider),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!session._disposed && route.isCurrent)
+      if (!session._disposed && route.isCurrent) {
         container.read(documentWorkspaceSessionProvider.notifier).state =
             session;
+      }
     });
     return session;
   }
