@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../opc/zip/zip_reader.dart';
+import '../../visual/office_visual.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../model/sml_analysis.dart';
@@ -19,11 +20,18 @@ import '../model/sml_workbook.dart';
 import '../styles/sml_styles.dart';
 
 typedef _OdsAnnotation = ({String text, String author});
+typedef _OdsImage = ({
+  String name,
+  Uint8List bytes,
+  double width,
+  double height,
+});
 typedef _OdsCellContent = ({
   Object? value,
   String? formula,
   String? valueType,
   _OdsAnnotation? annotation,
+  List<_OdsImage> images,
 });
 
 /// Thrown when an ODS package cannot be read safely.
@@ -53,6 +61,11 @@ abstract final class OdsSheetReader {
   static const _dc = 'http://purl.org/dc/elements/1.1/';
   static const _fo =
       'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
+  static const _drawing =
+      'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0';
+  static const _svg =
+      'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0';
+  static const _xlink = 'http://www.w3.org/1999/xlink';
 
   /// Reads a bounded spreadsheet, declining unsupported expansion instead of
   /// silently clipping cells. Empty padding advances coordinates arithmetically.
@@ -152,10 +165,12 @@ abstract final class OdsSheetReader {
                 int rowSpan,
                 SmlCell? cell,
                 _OdsAnnotation? annotation,
+                List<_OdsImage> images,
               })
             >[];
         var column = 0;
         var pendingCovered = 0;
+        var hasData = false;
         for (final element in row.childElements) {
           if (element.namespaceUri != _table ||
               (element.localName != 'table-cell' &&
@@ -198,7 +213,7 @@ abstract final class OdsSheetReader {
           }
           // Parse values and formulas once, then resolve each column's style.
           // Repetition can cross columns with different default cell styles.
-          final content = _readCellContent(element);
+          final content = _readCellContent(element, zip, budget);
           if (content.annotation != null) budget.comments(repeat * rowRepeat);
           final explicitStyle = _attribute(element, 'style-name', _table);
           final defaultStyle = explicitStyle ?? rowDefault;
@@ -238,6 +253,9 @@ abstract final class OdsSheetReader {
                 );
               }
               if (cell != null) {
+                if (cell.value != null || cell.formula != null) {
+                  hasData = true;
+                }
                 final count = run.repeat * rowRepeat;
                 budget.cells(count);
                 final value = cell.value;
@@ -262,6 +280,7 @@ abstract final class OdsSheetReader {
                 rowSpan: rowSpan,
                 cell: cell,
                 annotation: content.annotation,
+                images: content.images,
               ));
             }
           }
@@ -281,7 +300,7 @@ abstract final class OdsSheetReader {
         }
         if (rowHeight != null &&
             rowHeight > 0 &&
-            (entries.isNotEmpty ||
+            (hasData ||
                 (rowHeight - _odfDefaultRowHeightPoints).abs() > 0.1) &&
             rowIndex + rowRepeat <= _maxRows) {
           final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
@@ -326,6 +345,24 @@ abstract final class OdsSheetReader {
                       author: annotation.author,
                     ),
                   );
+                }
+                if (entry.images.isNotEmpty && c == 0 && r == 0) {
+                  for (final image in entry.images) {
+                    budget.image(image.bytes.length);
+                    sheet.drawings.add(
+                      SmlDrawing(
+                        visual: OfficeVisual(
+                          kind: OfficeVisualKind.picture,
+                          title: image.name,
+                          imageBytes: image.bytes,
+                          width: image.width,
+                          height: image.height,
+                        ),
+                        col: ref.col,
+                        row: ref.row,
+                      ),
+                    );
+                  }
                 }
                 if (entry.colSpan > 1 || entry.rowSpan > 1) {
                   final merge = SmlMerge(
@@ -450,7 +487,7 @@ abstract final class OdsSheetReader {
         // Retain the native Excel character units used by ODF producers so
         // an XLSX round trip does not apply a second pixel conversion.
         final chars = width * 96 / 72 / _odfMaxDigitWidthPx;
-        final defaultChars =
+        const defaultChars =
             _odfDefaultColumnWidthIn * 96 / _odfMaxDigitWidthPx;
         if ((chars - defaultChars).abs() > 0.05) {
           budget.dimensions(count);
@@ -503,7 +540,11 @@ abstract final class OdsSheetReader {
     }
   }
 
-  static _OdsCellContent _readCellContent(XmlElement element) {
+  static _OdsCellContent _readCellContent(
+    XmlElement element,
+    ZipReader zip,
+    _OdsBudget budget,
+  ) {
     Object? value;
     final valueType = _attribute(element, 'value-type', _office);
     switch (valueType) {
@@ -553,7 +594,38 @@ abstract final class OdsSheetReader {
       formula: formula,
       valueType: valueType,
       annotation: _readAnnotation(element),
+      images: _readImages(element, zip, budget),
     );
+  }
+
+  static List<_OdsImage> _readImages(
+    XmlElement element,
+    ZipReader zip,
+    _OdsBudget budget,
+  ) {
+    final images = <_OdsImage>[];
+    for (final frame in _descendants(element, 'frame', _drawing)) {
+      final image = _descendants(frame, 'image', _drawing).firstOrNull;
+      if (image == null) continue;
+      final href = _attribute(image, 'href', _xlink);
+      if (href == null || href.isEmpty) continue;
+      final path = href.startsWith('/') ? href.substring(1) : href;
+      if (!zip.contains(path)) continue;
+      try {
+        final bytes = zip.read(path, maxBytes: 8 * 1024 * 1024);
+        if (bytes.isEmpty) continue;
+        budget.image(bytes.length);
+        images.add((
+          name: _attribute(frame, 'name', _drawing) ?? 'Picture',
+          bytes: bytes,
+          width: _lengthToPoints(_attribute(frame, 'width', _svg)) ?? 120,
+          height: _lengthToPoints(_attribute(frame, 'height', _svg)) ?? 90,
+        ));
+      } on Object {
+        // A missing or oversized picture must not hide readable cell data.
+      }
+    }
+    return images;
   }
 
   static _OdsAnnotation? _readAnnotation(XmlElement element) {
@@ -602,11 +674,12 @@ abstract final class OdsSheetReader {
     _OdsBudget budget, {
     required bool preserveEmptyStyle,
   }) {
-    final (:value, :formula, :valueType, :annotation) = content;
+    final (:value, :formula, :valueType, :annotation, images: _) = content;
     // The named Default style on empty spreadsheet padding is not cell data.
     if (value == null &&
         formula == null &&
         annotation == null &&
+        content.images.isEmpty &&
         (styleName == null || styleName == 'Default')) {
       return null;
     }
@@ -648,7 +721,11 @@ abstract final class OdsSheetReader {
             family != null ||
             numFmt != null);
 
-    if (value == null && formula == null && !styled && annotation == null) {
+    if (value == null &&
+        formula == null &&
+        !styled &&
+        annotation == null &&
+        content.images.isEmpty) {
       return null;
     }
 
@@ -1135,6 +1212,8 @@ class _OdsBudget {
   int _cellText = 0;
   int _styleWork = 0;
   int _mergeCoverageWork = 0;
+  int _imageBytes = 0;
+  int _images = 0;
 
   void comments(int count) {
     if (count > 10000 - _comments) {
@@ -1173,6 +1252,16 @@ class _OdsBudget {
       throw const OdsSheetFormatException('ODS style work limit');
     }
     _styleWork += count;
+  }
+
+  void image(int bytes) {
+    if (++_images > 1000) {
+      throw const OdsSheetFormatException('ODS image limit (1000)');
+    }
+    if (bytes > 32 * 1024 * 1024 - _imageBytes) {
+      throw const OdsSheetFormatException('ODS image byte limit (32 MiB)');
+    }
+    _imageBytes += bytes;
   }
 
   void mergeCoverage(int count) {
