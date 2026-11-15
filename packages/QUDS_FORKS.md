@@ -52,6 +52,33 @@ continues to use strict parsing.
 - Audit harness and recipes: <https://github.com/CrispStrobe/excel-steering>
   (private workbooks are never committed).
 
+## State (14 November 2026, spreadsheet fidelity)
+
+- Pinned fork revision: `0918d2e5ad86ed5e57bb6637e3b9c9038f9e6f1e` (fork
+  `main`, resolved by the sync tool), also containing the recovery checkpoint
+  `2d2a7be4`.
+- Four spreadsheet defects found by the Excel fidelity audit are fixed and
+  regression-tested:
+  - cell comments now write a schema-valid `CT_Comments` part (`<authors>`,
+    `<commentList>`, `authorId`), the comments content type, and the worksheet
+    relationship (`2536169e`);
+  - `OfficeIsolateSave.workbook` accepts `recalculate: false`, so a no-edit
+    save preserves native formula caches instead of overwriting them with the
+    engine's approximate evaluator (`f8983b46`);
+  - frozen panes are anchored on `topLeftCell`, not positional `xSplit`, and
+    `state="frozenSplit"` is accepted (`f8983b46`, `574f834`);
+  - authored custom number formats are emitted as `<numFmts>` entries and merge
+    with native collections in schema order (`5d57de3`);
+  - legacy `.xls` workbooks (BIFF8 and HTML tables) import into the shared
+    model with typed values, formulas, shared formula groups, formats, merges,
+    widths and frozen panes (`cb9eabe`, `fbf3600`, `0918d2e`);
+  - fonts carry a family through import/save instead of collapsing to Calibri,
+    and XML text encoding drops characters XML 1.0 forbids (`de18049`,
+    `fbf3600`).
+- Sheet cohort: 361 tests pass in the fork and in this checkout.
+- Audit harness and recipes: <https://github.com/CrispStrobe/excel-steering>
+  (private workbooks are never committed).
+
 ## State (12 November 2026)
 
 - Pinned fork revision: `84b11839126a9577b6688b6acf80edd3cc2601ee` (fork

@@ -71,6 +71,7 @@ export 'src/sheet/model/sml_analysis.dart';
 export 'src/sheet/model/sml_power_query.dart';
 export 'src/sheet/model/sml_solver.dart';
 export 'src/sheet/model/sml_sparkline.dart';
+export 'src/sheet/legacy/legacy_sheet_reader.dart';
 export 'src/sheet/model/sml_workbook.dart';
 export 'src/sheet/serial/sheet_drawing_io.dart';
 export 'src/sheet/serial/sheet_serial.dart';

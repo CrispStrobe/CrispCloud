@@ -107,9 +107,11 @@ void main() {
     cell.styleIndex = 1;
     // Keep the modeled direct font equal to the newly chosen existing style.
     cell.fontSize = book.styles!.sizeAt(1);
+    cell.fontFamily = book.styles!.familyAt(1) ?? cell.fontFamily;
     expect(_styles(SheetSerializer().write(book)), {'A1': '1'});
     cell.styleIndex = 0;
     cell.fontSize = book.styles!.sizeAt(0);
+    cell.fontFamily = book.styles!.familyAt(0) ?? cell.fontFamily;
     expect(_styles(SheetSerializer().write(book)), {'A1': '0'});
   });
 

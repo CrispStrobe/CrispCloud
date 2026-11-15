@@ -13,6 +13,7 @@ private workbooks and converted copies never enter a repository.
 | Quds open → save | **1.000000** | 35 sampled workbooks, no edits |
 | Excel open → save (baseline) | 0.9995 | shows comparator noise |
 | Legacy worker `.xls` → `.xlsx` | **0.722** (min 0.055) | display grid only |
+| Quds `.xls` → `.xlsx` (BIFF import) | **0.887** (min 0.467) | typed values, 100% formats/merges |
 
 The legacy path is a **preview reader**, not a conversion path:
 
@@ -24,8 +25,10 @@ The legacy path is a **preview reader**, not a conversion path:
 - hard limits: 100k rows, 512 columns, 1e6 cells, 32 MiB, 30 s. A 5 MB
   workbook is rejected outright (`worksheet layout limit exceeded`).
 
-CrispCloud has no `.xls` writer and Quds has no BIFF reader, so legacy Excel
-must be converted on import. That policy should stay explicit in the UI.
+Quds now reads BIFF8 (and Excel's HTML-table `.xls`) into the shared workbook
+model: values stay typed, formulas/merges/formats survive, and the sheet opens
+in the editor as XLSX. CrispCloud still never writes `.xls`; Save creates a new
+`.xlsx` copy so the original BIFF file is untouched.
 
 ## Defects fixed in the Quds fork
 
@@ -52,6 +55,11 @@ recorded in [`packages/QUDS_FORKS.md`](../packages/QUDS_FORKS.md).
   Quds always writes a formula. Set `General` first in recipes that compute.
 - The preview's hard failure on large sheets should become a bounded window or
   an explicit "preview unavailable" state.
+- BIFF formula coverage: shared groups and ordinary formulas decode, but
+  `_xlfn` functions encoded as name tokens (e.g. NUMBERVALUE) keep only their
+  cached value. Excel's 56-colour palette also quantizes theme fills, and
+  xls-to-xlsx width quantization leaves ~18% of geometry cells slightly off.
+  These are format limits, not save bugs.
 
 Re-run a stage at any time from the harness; work is keyed by content hash and
 resumes where it stopped.

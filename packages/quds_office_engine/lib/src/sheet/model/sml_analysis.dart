@@ -326,6 +326,7 @@ abstract final class SmlAnalysis {
           ..hasExplicitFontColorEdit = src.hasExplicitFontColorEdit
           ..fontBold = src.fontBold
           ..fontSize = src.fontSize
+        ..fontFamily = src.fontFamily
           ..horizontalAlign = src.horizontalAlign
           ..borderRgb = src.borderRgb
           ..borderWidth = src.borderWidth

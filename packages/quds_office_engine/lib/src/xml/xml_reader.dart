@@ -612,6 +612,12 @@ StringBuffer? _escape(
           repl = '&apos;';
         }
     }
+    if (repl == null && !_isXmlChar(raw, i)) {
+      // XML 1.0 forbids most control characters (and lone surrogates). A
+      // legacy .xls SST can contain NULs; emitting them makes the whole
+      // package unparseable for strict readers.
+      repl = '\uFFFD';
+    }
     if (repl != null) {
       buffer ??= StringBuffer(raw.substring(0, i));
       buffer.write(repl);
@@ -620,6 +626,24 @@ StringBuffer? _escape(
     }
   }
   return buffer;
+}
+
+bool _isXmlChar(String raw, int index) {
+  final int ch = raw.codeUnitAt(index);
+  if (ch == 0x09 || ch == 0x0A || ch == 0x0D) return true;
+  if (ch >= 0x20 && ch <= 0xD7FF) return true;
+  if (ch >= 0xE000 && ch <= 0xFFFD) return true;
+  if (ch >= 0xD800 && ch <= 0xDBFF) {
+    if (index + 1 >= raw.length) return false;
+    final int next = raw.codeUnitAt(index + 1);
+    return next >= 0xDC00 && next <= 0xDFFF;
+  }
+  if (ch >= 0xDC00 && ch <= 0xDFFF) {
+    if (index == 0) return false;
+    final int previous = raw.codeUnitAt(index - 1);
+    return previous >= 0xD800 && previous <= 0xDBFF;
+  }
+  return false;
 }
 
 int _entityCodePoint(String body) {
