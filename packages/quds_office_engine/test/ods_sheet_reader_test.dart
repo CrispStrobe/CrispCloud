@@ -966,11 +966,6 @@ void defaultAndTimeTests() {
 Future<SmlWorkbook> _roundTrip(SmlWorkbook book) async => SheetDeserializer()
     .readBytes(await OfficeIsolateSave.workbook(book, recalculate: false));
 
-String _xmlAttribute(String value) => value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('"', '&quot;');
-
 Uint8List _odsRows(String rows, {String styles = ''}) {
   final zip = ZipWriter()
     ..addFile(
