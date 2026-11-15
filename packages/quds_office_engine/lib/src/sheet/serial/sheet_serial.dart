@@ -477,6 +477,7 @@ class SheetDeserializer {
         current.hasExplicitFontColorEdit = false;
         current.fontBold = styles?.boldAt(s) ?? false;
         current.fontSize = styles?.sizeAt(s) ?? 11;
+        current.fontFamily = styles?.familyAt(s) ?? 'Calibri';
         current.type = switch (t) {
           's' => SmlCellType.string,
           'b' => SmlCellType.boolean,
@@ -964,6 +965,7 @@ class SheetSerializer {
           fontColorExplicit: cell.hasExplicitFontColorEdit,
           bold: cell.fontBold,
           size: cell.fontSize,
+          fontFamily: cell.fontFamily,
         );
       }
     }

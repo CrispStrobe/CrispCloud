@@ -110,7 +110,18 @@ Future<void> showFileEditorDialog(
       // Office documents get the rich Word/Sheet/Slides editor instead of the
       // plain-text editor.
       if (isOfficeFileName(file.name)) {
-        await showOfficeEditorDialog(context, ref, file, side);
+        final ext = file.name.split('.').last.toLowerCase();
+        // Legacy Excel opens as an in-memory XLSX import; Save writes a copy.
+        final saveAsName = (ext == 'xls' || ext == 'xlt')
+            ? '${file.name.substring(0, file.name.length - ext.length)}xlsx'
+            : null;
+        await showOfficeEditorDialog(
+          context,
+          ref,
+          file,
+          side,
+          saveAsName: saveAsName,
+        );
         return;
       }
       // F4 and the native menu can be invoked even when the viewer's Edit

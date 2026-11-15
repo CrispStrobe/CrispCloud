@@ -7945,6 +7945,7 @@ class SheetEditorController extends OfficeController {
       cell
         ..fontBold = false
         ..fontSize = 11
+        ..fontFamily = ''
         ..horizontalAlign = SmlHAlign.general
         ..fillRgb = ''
         ..fontRgb = ''
@@ -12014,6 +12015,7 @@ class _SheetGridSnap {
         ..hasExplicitFontColorEdit = cell.hasExplicitFontColorEdit
         ..fontBold = cell.fontBold
         ..fontSize = cell.fontSize
+        ..fontFamily = cell.fontFamily
         ..borderRgb = cell.borderRgb
         ..borderWidth = cell.borderWidth
         ..locked = cell.locked;

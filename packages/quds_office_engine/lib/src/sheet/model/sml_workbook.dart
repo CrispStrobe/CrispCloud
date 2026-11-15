@@ -200,6 +200,7 @@ class SmlCell {
     this.hasExplicitFontColorEdit = false,
     this.fontBold = false,
     this.fontSize = 11,
+    this.fontFamily = '',
     this.borderRgb = '',
     this.borderWidth = 0,
     this.locked = true,
@@ -262,6 +263,9 @@ class SmlCell {
 
   /// Point size from the cell xf font; `11` is Calibri default.
   double fontSize;
+
+  /// Font family from the cell xf font; `Calibri` is the OOXML default.
+  String fontFamily;
 
   /// Uniform cell border as `RRGGBB`; empty means no true border.
   String borderRgb;

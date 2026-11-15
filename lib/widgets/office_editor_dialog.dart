@@ -5,9 +5,10 @@
 // this dialog provides the host chrome: loading, save, undo/redo, dirty state
 // and the unsaved-changes prompt.
 //
-// Legacy (.doc/.xls/.ppt) and ODF (.odt/.ods/.odp) files cannot be written
-// back safely with the OOXML serializer, so they get a clear message instead
-// of opening a text editor that would corrupt them.
+// Legacy .xls workbooks are imported into the shared spreadsheet model and
+// opened as XLSX; Save writes a new .xlsx copy so the original BIFF file is
+// never overwritten. .doc/.ppt and ODF still get a clear message because they
+// cannot be converted in-process yet.
 
 import 'dart:async';
 import 'dart:io';
@@ -21,7 +22,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:quds_office_editor/quds_office_editor.dart'
     hide WordPackagePreservation;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show WordPackagePreservation;
+    show LegacySheetReader, OfficeIsolateSave, WordPackagePreservation;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -87,6 +88,7 @@ Future<void> showOfficeEditorDialog(
   Uint8List? bytesOverride,
   CapturedFileTarget? targetOverride,
   OfficeDeviceExporter copyExporter = exportOfficeCopy,
+  String? saveAsName,
 }) {
   return showDialog<void>(
     context: context,
@@ -98,6 +100,7 @@ Future<void> showOfficeEditorDialog(
         bytesOverride: bytesOverride,
         targetOverride: targetOverride,
         copyExporter: copyExporter,
+        saveAsName: saveAsName,
       ),
     ),
   );
@@ -117,6 +120,9 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
   /// Independent device-copy export; never changes the original save target.
   final OfficeDeviceExporter copyExporter;
 
+  /// Output name when the loaded workbook is a converted legacy `.xls`.
+  final String? saveAsName;
+
   const OfficeEditorDialog({
     super.key,
     required this.file,
@@ -124,6 +130,7 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
     this.bytesOverride,
     this.targetOverride,
     this.copyExporter = exportOfficeCopy,
+    this.saveAsName,
   });
 
   @override
@@ -141,6 +148,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   bool _exporting = false;
   bool _closing = false;
   bool _dirty = false;
+  bool _convertedLegacySheet = false;
   String? _error;
   final FocusNode _focusNode = FocusNode(debugLabel: 'QudsOfficeEditor');
   final GlobalKey<OfficeEditorRibbonState> _ribbonKey =
@@ -196,6 +204,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   OfficeEditorKind _kindFor(String name) {
     final ext = name.split('.').last.toLowerCase();
+    // Legacy Excel is converted to XLSX in memory before the controller loads.
+    if (ext == 'xls' || ext == 'xlt') return OfficeEditorKind.sheet;
     if (!_isEditableOoxml(name)) return OfficeEditorKind.unsupported;
     switch (ext) {
       case 'docx':
@@ -219,7 +229,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     });
     try {
       await DocumentFonts.ensureRegistered();
-      final Uint8List bytes;
+      Uint8List bytes;
       if (widget.bytesOverride case final supplied?) {
         bytes = supplied;
       } else {
@@ -230,11 +240,23 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       if (!mounted) return;
 
+      // BIFF workbooks are imported into the shared model and opened as XLSX.
+      // Saving writes a new .xlsx copy; the original .xls is never rewritten.
+      final sourceExt = widget.file.name.split('.').last.toLowerCase();
+      if (sourceExt == 'xls' || sourceExt == 'xlt') {
+        final workbook = LegacySheetReader.readBytes(bytes);
+        bytes = await OfficeIsolateSave.workbook(
+          workbook,
+          recalculate: false,
+        );
+        _convertedLegacySheet = true;
+      }
+
       // Retain an immutable original even if safe-edit admission rejects it.
       // Recovery must never run a refused package through a serializer.
       _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
 
-      final kind = _kindFor(widget.file.name);
+      final kind = _kindFor(widget.saveAsName ?? widget.file.name);
       if (kind == OfficeEditorKind.unsupported) {
         setState(() {
           _loading = false;
@@ -312,6 +334,12 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   Future<void> _save({bool popAfter = false}) async {
     final controller = _controller;
     if (controller == null || _saving || _exporting) return;
+    if (_convertedLegacySheet) {
+      // The source is BIFF; writing OOXML bytes over it would corrupt it.
+      await _saveCopy();
+      if (popAfter && mounted && !_dirty) Navigator.of(context).pop();
+      return;
+    }
     setState(() => _saving = true);
     try {
       // Keep the existing pre-save backup as well as the edited recovery copy.
@@ -451,7 +479,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
       final outcome = await widget.copyExporter(
         Uint8List.fromList(bytes).asUnmodifiableView(),
-        officeCopyName(widget.file.name),
+        _copyOutputName(),
         context.tr(original ? 'Export original' : 'Save a copy'),
       );
       if (!mounted || outcome == null) return;
@@ -483,6 +511,12 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
+  }
+
+  String _copyOutputName() {
+    final base = widget.saveAsName ?? widget.file.name;
+    if (_convertedLegacySheet) return officeCopyName(base);
+    return officeCopyName(widget.file.name);
   }
 
   Future<void> _saveSnapshot(Uint8List bytes, {required String kind}) async {
