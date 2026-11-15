@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "simulation_only": true,
+  "ours_receipt_tip": "b1af46116cdc6636ab602d78b54bf425e802eb1a",
+  "qualified_source": "966345971a50ef93bcb67ed32060c8176b4d2949",
+  "incoming_tip": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "unresolved_merge_tree": "c7a67dbf6843b3420f882a1f331afd11d5720ad5",
+  "conflicts": [
+    "packages/QUDS_FORKS.md",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "resolved_proposal_tree": "24a8e8a4ea1c9eeeb14f4b0f13364bf1514995d8",
+  "resolution": "Both conflicted metadata/documentation blobs selected byte-for-byte from observed incoming tip, as instructed by root. No repository HEAD/ref/worktree/index change; an isolated scratch index constructed only the proposal tree.",
+  "non_evidence_tree_equal_to_incoming": true,
+  "managed_manifest_paths": 2336,
+  "managed_paths_git_identity_equal": true,
+  "manifest_sha256_entries_verified": 2336,
+  "unique_managed_blobs_verified": 2129,
+  "our_current_receipt_paths_retained_unchanged": 111,
+  "restored_ods_tests_equal": true,
+  "incoming_comment_source_commit": "b99a31c5a8f92df48d52bb545c4d461d9e08afcd",
+  "pins": {
+    "quds": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+    "parser": "08296edbee08da013a8ff718798972552ccd03f7"
+  },
+  "qualification_note": "The entire resulting non-evidence tree equals incoming3e9560c9. That preserves the already-matching ODS tests but changes sheet_serial.dart from qualified96634597. Old gate receipts remain source-scoped; changed comment behavior needs applicable fresh or independently validated incoming evidence."
+}

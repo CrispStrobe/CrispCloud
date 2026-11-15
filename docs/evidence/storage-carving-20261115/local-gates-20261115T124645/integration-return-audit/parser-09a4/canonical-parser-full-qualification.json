@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "repository": "CrispStrobe/legacy-doc-parser",
+  "canonical_source_pin": "08296edbee08da013a8ff718798972552ccd03f7",
+  "qualification_commit": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+  "observed_through_app_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "remote_evidence_base": "doc/evidence/incoming-reconcile-20261115",
+  "remote_summary_url": "https://github.com/CrispStrobe/legacy-doc-parser/blob/09a4a531a4aa210a638a220de45c9d53d44c84e1/doc/evidence/incoming-reconcile-20261115/summary.json",
+  "remote_archive": {
+    "path": "doc/evidence/incoming-reconcile-20261115/artifacts.tar.xz",
+    "url": "https://github.com/CrispStrobe/legacy-doc-parser/blob/09a4a531a4aa210a638a220de45c9d53d44c84e1/doc/evidence/incoming-reconcile-20261115/artifacts.tar.xz",
+    "size": 206644,
+    "sha256": "353e4386a5e0a9fec060e2f75ff113a08a392febd565c32c2edcec074981c95d",
+    "members": 32,
+    "manifest_path": "doc/evidence/incoming-reconcile-20261115/artifacts-manifest.json"
+  },
+  "verified_runtime": {
+    "suites": 144,
+    "tests": 4132,
+    "passed": 4132,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "hidden_loader_tests_excluded": 144,
+    "unique_paired_event_ids": true,
+    "source_head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "input_count": 949,
+    "input_sha256": "32dabe44736cbf4eba905a4c48bb9e58b2cac488bc4ce3e076250b1dbbac8e4c",
+    "before_after_source_and_inputs_stable": true
+  },
+  "verified_strict_analysis": {
+    "files": 18,
+    "fatal_infos": true,
+    "fatal_warnings": true,
+    "issues": 0,
+    "source_head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "before_after_source_and_inputs_stable": true
+  },
+  "independent_audit": {
+    "file": "independent-verification.json",
+    "sha256": "ecc57282917d68dbec29b44d81f34e7fc7846112928700cfcfc3fb5203cacb26",
+    "tracked_non_evidence_files_checked": 937,
+    "archive_members_checked": 32,
+    "inner_index_entries_checked": 23,
+    "same_sdk_binaries_as_current": true,
+    "same_standalone_lock_as_current": true,
+    "normalized_package_graph_equal": true,
+    "configuration_note": "Recorded paths belong to another workspace; config/graph serialization is not byte-identical. Exact lock matches and graph nodes normalize identically. Acceptance remains bound to the recorded source, inputs and tool hashes."
+  },
+  "retained_separate_records": [
+    {
+      "evidence_commit": "84264525417b924476af3a9c8cfa9bbe19b6437b",
+      "branch": "qualification/parser-observed-08296ed-20261115",
+      "scope": "18-test changed suite plus one-file strict analysis on08296ed",
+      "add_to_full_run_total": false,
+      "preserved_unchanged": true
+    },
+    {
+      "evidence_commit": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+      "scope": "Earlier complete144-suite/4131-test run before one additive test",
+      "add_to_full_run_total": false,
+      "preserved_unchanged": true
+    }
+  ],
+  "scope": "Use4,132 tests across144 suites as the independently audited full parser result for08296ed. Do not add overlapping focused or historical results. Standalone native Dart unit/strict-analysis scope; host graph acceptance remains separate. No tests or Actions were run by this read-only evidence audit."
+}

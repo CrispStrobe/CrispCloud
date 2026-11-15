@@ -1,0 +1,594 @@
+{
+  "common_input_digest": "fac95c4fce0b6e6265be9112571e03915253c2391df235d7f1beaec4f7a439b0",
+  "complete_final_qualification_present": false,
+  "difference_to_source966": {
+    "added": [
+      "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+      "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+    ],
+    "changed": [
+      ".dart_tool/package_config.json",
+      "packages/QUDS_FORKS.md",
+      "packages/legacy_doc_parser/.dart_tool/package_config.json",
+      "packages/quds_office_editor/.dart_tool/package_config.json",
+      "packages/quds_office_editor/.dart_tool/package_graph.json",
+      "packages/quds_office_engine/.dart_tool/package_config.json",
+      "packages/quds_office_engine/.dart_tool/package_graph.json",
+      "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "tool/office_fidelity_manifest.json"
+    ],
+    "removed": []
+  },
+  "distinct_analysis_targets_verified": 101,
+  "incoming_input_count": 8621,
+  "missing_gate_categories": [
+    "analysis-cli",
+    "app runtime",
+    "engine runtime",
+    "editor runtime",
+    "independent scripted Office oracle",
+    "source integrity",
+    "portable PNG VM/JS/Python",
+    "navigation capture",
+    "navigation independent review"
+  ],
+  "observed_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+  "receipts": [
+    {
+      "analyzed_files": 76,
+      "archive_members": 7,
+      "archive_sha256": "a981c343495f07bfd0d11cc0ab58d4f0b76ca0c73f4b7fa3e45dc11521d08c3d",
+      "command_target_hashes_equal_git": true,
+      "current_tool_comparison": [
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py",
+          "expected_sha256": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py"
+        },
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-app-files.txt",
+          "expected_sha256": "743fdb517e7752fdf2d59ef56dd336f679dc713fa28c966024e4eb2464f975aa",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-app-files.txt"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py",
+          "expected_sha256": "a038b05c9512f590205375bea90bd952b38fde5d3ae044e533c161416bb23778",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh",
+          "expected_sha256": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/toolchains/env.sh"
+        },
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+          "expected_sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart"
+        }
+      ],
+      "delta_to_source966_snapshot": [
+        ".dart_tool/package_config.json",
+        "packages/QUDS_FORKS.md",
+        "packages/legacy_doc_parser/.dart_tool/package_config.json",
+        "packages/quds_office_editor/.dart_tool/package_config.json",
+        "packages/quds_office_editor/.dart_tool/package_graph.json",
+        "packages/quds_office_engine/.dart_tool/package_config.json",
+        "packages/quds_office_engine/.dart_tool/package_graph.json",
+        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+        "tool/office_fidelity_manifest.json"
+      ],
+      "files": [
+        "lib/l10n/archive_png_carving_strings.dart",
+        "lib/models/archive_job.dart",
+        "lib/models/archive_operation.dart",
+        "lib/models/browser_menu_layout.dart",
+        "lib/providers/transfer_provider.dart",
+        "lib/screens/file_browser_screen.dart",
+        "lib/services/archive_png_carving_service.dart",
+        "lib/services/archive_png_carving_workflow.dart",
+        "lib/services/document_conversion.dart",
+        "lib/services/file_operation_backend.dart",
+        "lib/services/file_operation_service.dart",
+        "lib/services/internal_viewer_service.dart",
+        "lib/services/office_document_service.dart",
+        "lib/services/s3_client_adapter.dart",
+        "lib/widgets/active_pane_frame.dart",
+        "lib/widgets/archive_job_recovery_dialog.dart",
+        "lib/widgets/archive_png_carving_actions.dart",
+        "lib/widgets/archive_png_carving_dialog.dart",
+        "lib/widgets/command_palette.dart",
+        "lib/widgets/document_conversion_dialog.dart",
+        "lib/widgets/document_history_dialog.dart",
+        "lib/widgets/file_context_menu.dart",
+        "lib/widgets/file_editor_dialog.dart",
+        "lib/widgets/internal_viewer_dialog.dart",
+        "lib/widgets/new_document_dialog.dart",
+        "lib/widgets/office_editor_dialog.dart",
+        "lib/widgets/operations_panel.dart",
+        "lib/widgets/panel_header.dart",
+        "lib/widgets/panel_splitter.dart",
+        "test/archive_png_carving_queue_test.dart",
+        "test/archive_png_carving_service_test.dart",
+        "test/archive_png_carving_workflow_test.dart",
+        "test/file_operation_backend_test.dart",
+        "test/internal_viewer_test.dart",
+        "test/office_document_service_test.dart",
+        "test/panel_header_i18n_test.dart",
+        "test/pdf_document_workspace_portability_test.dart",
+        "test/remote_path_style_test.dart",
+        "test/support/archive_png_carving_web_acceptance.dart",
+        "test/support/office_test_harness.dart",
+        "test/support/png_carving_fixture.dart",
+        "test/support/png_carving_reference_data.dart",
+        "test/support/zip_recovery_workflow_fixture.dart",
+        "test/widget/active_pane_frame_test.dart",
+        "test/widget/archive_job_recovery_dialog_test.dart",
+        "test/widget/archive_png_carving_dialog_test.dart",
+        "test/widget/new_document_dialog_test.dart",
+        "test/widget/new_document_workflow_test.dart",
+        "test/widget/ods_editor_workflow_test.dart",
+        "test/widget/office_save_fidelity_test.dart",
+        "test/widget/office_sheet_navigation_workflow_test.dart",
+        "test/widget/panel_header_navigation_test.dart",
+        "test/widget/panel_splitter_test.dart",
+        "lib/main.dart",
+        "lib/screens/about_dialog.dart",
+        "lib/services/app_legal_notices.dart",
+        "lib/services/pdf_font_licenses.dart",
+        "lib/services/platform_runtime_licenses.dart",
+        "test/app_legal_notices_test.dart",
+        "test/pdf_font_licenses_test.dart",
+        "test/platform_runtime_licenses_test.dart",
+        "test/widget/internal_viewer_widget_test.dart",
+        "test/widget/ods_viewer_workflow_test.dart",
+        "lib/l10n/legacy_word_conversion_strings.dart",
+        "lib/services/legacy_word_copy.dart",
+        "lib/services/word_conversion_inspection.dart",
+        "lib/widgets/legacy_word_conversion_dialog.dart",
+        "test/document_conversion_test.dart",
+        "test/legacy_word_conversion_strings_test.dart",
+        "test/word_conversion_inspection_test.dart",
+        "test/widget/structured_legacy_word_conversion_dialog_test.dart",
+        "test/support/legacy_word_recovery_fixture.dart",
+        "lib/l10n/office_ribbon_control_strings.dart",
+        "lib/widgets/office_editor_ribbon.dart",
+        "lib/widgets/office_editor_dialogs.dart",
+        "test/office_ribbon_controls_i18n_test.dart"
+      ],
+      "inner_index_verified": true,
+      "inputs": 8621,
+      "label": "analysis-app-final",
+      "repo_tool_hashes_equal_tested_git": [
+        "docs/evidence/storage-carving-20261115/record_gate.py",
+        "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-app-files.txt",
+        "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+      ],
+      "same_dart_executable_as_local": true,
+      "source_resolution_sha256": "fac95c4fce0b6e6265be9112571e03915253c2391df235d7f1beaec4f7a439b0",
+      "source_tree_equal_to_observed3e": true,
+      "success": true,
+      "tested_head": "b99a31c5a8f92df48d52bb545c4d461d9e08afcd"
+    },
+    {
+      "analyzed_files": 19,
+      "archive_members": 7,
+      "archive_sha256": "1a44b35b3e951ae69881bb873dfe415831ab1b9ffb28ffa9240e46517aec5623",
+      "command_target_hashes_equal_git": true,
+      "current_tool_comparison": [
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py",
+          "expected_sha256": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-engine-files.txt",
+          "expected_sha256": "63826c5e180b89179eedbc5c0eb1f3a33743cdfd9a02c59f5c4d63947b1faed4",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-engine-files.txt"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py",
+          "expected_sha256": "a038b05c9512f590205375bea90bd952b38fde5d3ae044e533c161416bb23778",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh",
+          "expected_sha256": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/toolchains/env.sh"
+        },
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+          "expected_sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart"
+        }
+      ],
+      "delta_to_source966_snapshot": [
+        ".dart_tool/package_config.json",
+        "packages/QUDS_FORKS.md",
+        "packages/legacy_doc_parser/.dart_tool/package_config.json",
+        "packages/quds_office_editor/.dart_tool/package_config.json",
+        "packages/quds_office_editor/.dart_tool/package_graph.json",
+        "packages/quds_office_engine/.dart_tool/package_config.json",
+        "packages/quds_office_engine/.dart_tool/package_graph.json",
+        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+        "tool/office_fidelity_manifest.json"
+      ],
+      "files": [
+        "packages/quds_office_engine/lib/quds_office_engine.dart",
+        "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+        "packages/quds_office_engine/test/sheet_time_number_format_test.dart",
+        "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
+        "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+        "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart",
+        "packages/quds_office_engine/tool/fidelity/word_steps.dart",
+        "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
+        "packages/quds_office_engine/test/office_pdf_export_test.dart",
+        "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
+        "packages/quds_office_engine/test/sml_styles_date_test.dart",
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+      ],
+      "inner_index_verified": true,
+      "inputs": 8621,
+      "label": "analysis-engine-final",
+      "repo_tool_hashes_equal_tested_git": [
+        "docs/evidence/storage-carving-20261115/record_gate.py",
+        "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-engine-files.txt",
+        "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+      ],
+      "same_dart_executable_as_local": true,
+      "source_resolution_sha256": "fac95c4fce0b6e6265be9112571e03915253c2391df235d7f1beaec4f7a439b0",
+      "source_tree_equal_to_observed3e": true,
+      "success": true,
+      "tested_head": "3e764dc2f95e5d449782aefe3b63890ec03a2e9c"
+    },
+    {
+      "analyzed_files": 6,
+      "archive_members": 7,
+      "archive_sha256": "09bb1cf40cb570494f2bc6a8600d508c69120b36c2d5265e498e93c6f0b54717",
+      "command_target_hashes_equal_git": true,
+      "current_tool_comparison": [
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py",
+          "expected_sha256": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py"
+        },
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-editor-files.txt",
+          "expected_sha256": "95b0c4ae127ecc9e7fb639cf6e497a60d92da6f87a8821d41ee9ee6ab990887c",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-editor-files.txt"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py",
+          "expected_sha256": "a038b05c9512f590205375bea90bd952b38fde5d3ae044e533c161416bb23778",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/CrispCloud/docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+        },
+        {
+          "current_equal": false,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh",
+          "expected_sha256": "77c6b5314e8ddf17932322b58697d12e86fd4ebe0fed0491ca79cbf51dd66b04",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/toolchains/env.sh"
+        },
+        {
+          "current_equal": true,
+          "current_exists": true,
+          "current_path": "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+          "expected_sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+          "remote_path": "/workspace/scratch/0b93849cdeb9/toolchains/flutter/bin/cache/dart-sdk/bin/dart"
+        }
+      ],
+      "delta_to_source966_snapshot": [
+        ".dart_tool/package_config.json",
+        "packages/QUDS_FORKS.md",
+        "packages/legacy_doc_parser/.dart_tool/package_config.json",
+        "packages/quds_office_editor/.dart_tool/package_config.json",
+        "packages/quds_office_editor/.dart_tool/package_graph.json",
+        "packages/quds_office_engine/.dart_tool/package_config.json",
+        "packages/quds_office_engine/.dart_tool/package_graph.json",
+        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart",
+        "tool/office_fidelity_manifest.json"
+      ],
+      "files": [
+        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+        "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart",
+        "packages/quds_office_editor/test/word_operation_history_test.dart",
+        "packages/quds_office_editor/test/word_split_identity_test.dart",
+        "packages/quds_office_editor/test/office_fidelity_golden_test.dart",
+        "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+      ],
+      "inner_index_verified": true,
+      "inputs": 8621,
+      "label": "analysis-editor-final",
+      "repo_tool_hashes_equal_tested_git": [
+        "docs/evidence/storage-carving-20261115/record_gate.py",
+        "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-editor-files.txt",
+        "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+      ],
+      "same_dart_executable_as_local": true,
+      "source_resolution_sha256": "fac95c4fce0b6e6265be9112571e03915253c2391df235d7f1beaec4f7a439b0",
+      "source_tree_equal_to_observed3e": true,
+      "success": true,
+      "tested_head": "564d88d45b71bc50ab9f3dc672c4b8ec9363d41d"
+    }
+  ],
+  "remote_refreshes": 0,
+  "repository_writes": 0,
+  "resolution_comparison": {
+    ".dart_tool/package_config.json": {
+      "identical": false,
+      "incoming": {
+        "kind": "file",
+        "sha256": "831f876ee6c5b55fafd3fa75d21a0bbf52605711473a5161959353c14814d99d",
+        "size": 59405
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "204d6b16b77c43994d3a84643b3649efe64fb5fa957ee36b8abe074c286591a0",
+        "size": 59405
+      }
+    },
+    ".dart_tool/package_graph.json": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "e5428055c188f2baf66b2fea2b111f6b9e867e982aa8eaddcf11e20a6f8d63a7",
+        "size": 52197
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "e5428055c188f2baf66b2fea2b111f6b9e867e982aa8eaddcf11e20a6f8d63a7",
+        "size": 52197
+      }
+    },
+    "cli/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89",
+        "size": 20155
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89",
+        "size": 20155
+      }
+    },
+    "packages/crisp_catalog/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "1d2bba2be9a507aee12786d1866467cba00d1e040f764f9922bc97e5b0e76a6b",
+        "size": 12327
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "1d2bba2be9a507aee12786d1866467cba00d1e040f764f9922bc97e5b0e76a6b",
+        "size": 12327
+      }
+    },
+    "packages/dart_smb2/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "0227ee4d33ec5881a00e911c30c481d2c2edbef5fb08813cfb4aafbf6a48a051",
+        "size": 13939
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "0227ee4d33ec5881a00e911c30c481d2c2edbef5fb08813cfb4aafbf6a48a051",
+        "size": 13939
+      }
+    },
+    "packages/legacy_doc_parser/.dart_tool/package_config.json": {
+      "identical": false,
+      "incoming": {
+        "kind": "file",
+        "sha256": "8a711cfd784ca3a51544b312d49baa28199854e089b341eff11d92a7612dccaf",
+        "size": 11850
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "b8da91cc7d6b9ee7f60a672e68e251cf4752a0a5a6a9a2577d55218500a8b1bf",
+        "size": 11850
+      }
+    },
+    "packages/legacy_doc_parser/.dart_tool/package_graph.json": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+        "size": 8935
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "9918c135dc730ef46088b686171143298af960a8ea7a086c25ca092690f8dd92",
+        "size": 8935
+      }
+    },
+    "packages/legacy_doc_parser/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+        "size": 12536
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+        "size": 12536
+      }
+    },
+    "packages/quds_office_editor/.dart_tool/package_config.json": {
+      "identical": false,
+      "incoming": {
+        "kind": "file",
+        "sha256": "e12a59ab1f02b689873e0c8e573d609c85499763acb0a0643646147e3fa8262c",
+        "size": 9733
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "63485671a8fb2d7443d8b40988bf3975e6a418925dfad92444e9b71058172de1",
+        "size": 9733
+      }
+    },
+    "packages/quds_office_editor/.dart_tool/package_graph.json": {
+      "identical": false,
+      "incoming": {
+        "kind": "file",
+        "sha256": "fa8e469d3e7648bb072a3e6e50aa150f4f4b98e7e13d66671f69b34180ce946c",
+        "size": 7021
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "e118abc63499db61fca547b3c997676de58e80a389fd303e45cd7e0adec4b49a",
+        "size": 7021
+      }
+    },
+    "packages/quds_office_editor/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "29e3da52f589163abf9e2207a8ce75dbcef43640444f96789208c8ddda43341a",
+        "size": 9775
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "29e3da52f589163abf9e2207a8ce75dbcef43640444f96789208c8ddda43341a",
+        "size": 9775
+      }
+    },
+    "packages/quds_office_engine/.dart_tool/package_config.json": {
+      "identical": false,
+      "incoming": {
+        "kind": "file",
+        "sha256": "f76273dce533aa9b6e942d30d3cf635b6c5bef27a30c2a28e143c1f108f19d2e",
+        "size": 11802
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "000d668b06c154cbfc09a8bf63efa0c7a46f8814b372c4ddc3ee3e3a7d137d6a",
+        "size": 11802
+      }
+    },
+    "packages/quds_office_engine/.dart_tool/package_graph.json": {
+      "identical": false,
+      "incoming": {
+        "kind": "file",
+        "sha256": "b210bfb5817587c25112f60f79d4f2b69bd1f9ddcebfa34c2b660b369257f3e1",
+        "size": 8918
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "608ca20056036a3c76a95a222192fbc4ee7d0b74c17bad96d7ebd24368095b45",
+        "size": 8918
+      }
+    },
+    "packages/quds_office_engine/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "3b55c7eb8535653c0733db7abc99934bf3f23fdf3835eb5fb673c1044a848379",
+        "size": 12488
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "3b55c7eb8535653c0733db7abc99934bf3f23fdf3835eb5fb673c1044a848379",
+        "size": 12488
+      }
+    },
+    "packages/quds_reports/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "069ffb5d065d653eac9ec0ba199b8e612fcdfd253ba93344e432245b4b3776e5",
+        "size": 12639
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "069ffb5d065d653eac9ec0ba199b8e612fcdfd253ba93344e432245b4b3776e5",
+        "size": 12639
+      }
+    },
+    "pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+        "size": 63283
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+        "size": 63283
+      }
+    },
+    "tool/benchmarks/dart_scan_probe/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "73aebea82a6af898deb6c8fa2efe2366dec1d5e17f0437288f98131922b12dfc",
+        "size": 1690
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "73aebea82a6af898deb6c8fa2efe2366dec1d5e17f0437288f98131922b12dfc",
+        "size": 1690
+      }
+    },
+    "tool/benchmarks/native_scan_lab/pubspec.lock": {
+      "identical": true,
+      "incoming": {
+        "kind": "file",
+        "sha256": "00e455c14fde26dd6e54856b76529535fadfdd597714f934f1c1d3f8fc6328bc",
+        "size": 1005
+      },
+      "source966": {
+        "kind": "file",
+        "sha256": "00e455c14fde26dd6e54856b76529535fadfdd597714f934f1c1d3f8fc6328bc",
+        "size": 1005
+      }
+    }
+  },
+  "reuse_conclusion": "Valid immutable source-bound strict passes on source equal to observed3e, using the same Dart binary. They are not a complete qualification set or current workspace receipts: recorder, runner/env and raw resolution identity differ. Do not transplant them into the new one-digest local final cohort.",
+  "runtime_tests_executed": 0,
+  "scope": "Only immutable incoming compressed receipt inventory; no runtime, repository writes or remote refresh.",
+  "source966_input_count": 8619
+}
