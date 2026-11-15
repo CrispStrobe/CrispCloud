@@ -1,0 +1,20 @@
+{
+  "from": "0d9b008720b01371bc9db498efd063e3077be279",
+  "to": "c0a858ac62afe41bcc68633c24ae1b29053001c6",
+  "write": [
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+    "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+    "packages/quds_office_editor/test/word_zotero_controller_test.dart",
+    "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+    "packages/quds_office_engine/lib/quds_office_engine.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+    "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart",
+    "packages/quds_office_engine/test/word_zotero_formatted_bibliography_test.dart",
+    "packages/quds_office_engine/test/word_zotero_simple_field_test.dart",
+    "packages/quds_office_engine/test/zotero_formatted_text_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2379,
+  "applied": true
+}

@@ -1,6 +1,50 @@
 # Zotero validation — 15 November 2026
 
-## Local identity continuation: current code
+## Rich formatting continuation: current executed results
+
+The final shared source is pinned to Quds
+`f40aa887325982ea70c8285b25f8ff5b92a46eb9`, whose library/test trees are identical
+to the fully tested code commit `b09537fb34dd711118ae6df5872184b6e813d2df`.
+The final actual host qualification ran at
+`9f1c8e144958fc88451be558d09f304f35ea0640`.
+
+| Local check | Result |
+| --- | ---: |
+| Canonical engine/client/parser/Word import and related regressions | 232 passed |
+| Canonical shared Flutter controller/formatter/dialog regressions | 81 passed |
+| Actual CrispCloud service/transport/credential/target and ribbon tests | 23 passed |
+| **Combined selected tests** | **336 passed** |
+| Canonical changed-path and seven-target host strict analyzers | Clean |
+| Canonical changed Dart formatter check | Clean |
+| Normal Python vendor guard and Git-index guard | 2,379 managed entries verified |
+| Integrated terminal Bash/Zsh smoke, counted separately | 3 scenarios passed, none skipped |
+
+The preceding Quds source independently passed 171 baseline tests, including
+all **39 previously unexecuted cases**. Those overlapping baseline results are
+not added again to 336. This continuation adds **63 canonical regression cases**.
+
+Current evidence, exact source identities, manifests/locks, log hashes and
+reproduction steps are under
+[validation/zotero-rich-text-20261115](validation/zotero-rich-text-20261115/README.md).
+The actual host/vendored library hashes were unchanged during tests and analysis;
+analyzer source copies were byte-identical to production. Official Flutter
+3.47.8 / Dart 3.13.7 and genuine enforced Pub lockfiles were used. Production
+manifests and dependency constraints were not relaxed.
+
+The normal guarded sync verified **522 Quds + 1,857 standalone parser files**.
+The parser pin remains `4895712158127b2fc930d796e17035c3ca0dac62`.
+Main through Quds #42 and CrispCloud #152 and the newer terminal #140 commits
+through `4cd8065a` are included. No GitHub Actions were polled, awaited or rerun;
+new remote checkpoints use `[skip ci]`.
+
+Full native builds, live desktop/private-account connectivity, real OS-keychain
+acceptance and native Word/Zotero refresh remain unverified. This increment does
+not add a full document-wide CSL processor, native picker/HTTP citing adapter,
+active ODT transfer, small-caps/paragraph-layout rendering or new mixed-format
+inline citation generation. Earlier sections below retain their original source
+revisions and historical limitations.
+
+## Earlier local identity continuation: historical source review
 
 This continuation adds identity-checked desktop operations for unsynced
 `users/local/<localUserKey>/items/<itemKey>` references. It also checks numeric

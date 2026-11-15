@@ -1,0 +1,10 @@
+{
+  "from": "c0a858ac62afe41bcc68633c24ae1b29053001c6",
+  "to": "f40aa887325982ea70c8285b25f8ff5b92a46eb9",
+  "write": [
+    "packages/quds_office_engine/lib/src/zotero/zotero_formatted_text.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2379,
+  "applied": false
+}

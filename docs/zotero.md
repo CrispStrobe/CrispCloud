@@ -100,12 +100,40 @@ timeout and 8 MB response limit, and are closed when the editor closes. Errors d
 response bodies or diagnostic dumps. Keys never enter document metadata or
 reference exports. Zotero library access is read-only.
 
+## Formatted bibliographies and citation preservation
+
+Choose **Document → Zotero bibliography** to review a formatted result before
+inserting it. **Keep Zotero formatting** preserves bold, italics, underline,
+strike-through, superscript and subscript as native Word formatting. Numeric
+labels stay beside their bibliography entries. Turn the option off to edit and
+insert the text explicitly as plain text. Cancelling leaves the document
+unchanged. The reviewed result also refuses insertion if the document or caret
+changed while it was open.
+
+Small caps, hanging indents, paragraph spacing, multi-column margins and
+arbitrary CSS are simplified, with known limitations shown in the review.
+Entry order and line breaks are retained. Links are inert text; external
+resources and active content are never loaded. Malformed formatted output is
+refused rather than silently replacing a field.
+
+Rich bibliographies can be saved, reopened, updated and undone/redone. Rich
+replacement requires a complete bibliography paragraph without surrounding
+text or outside structural markers. The plain-text workflow remains available
+for other editable fields.
+
+Imported citations with several styled runs now keep their Zotero link,
+metadata and styles through DOCX saves, including Word simple fields. Numeric
+citation results and the locator label `page` are no longer confused with a
+Word page-number field. Editing a citation without changing its visible text
+keeps its rich result and processor-specific formatting metadata. The composer
+shows the actual field cache even when imported plain-text metadata is stale.
+
 ## Scope and preservation
 
 New citations use complex DOCX fields following Zotero field-code conventions
 and embed CSL source snapshots. Imported Zotero field JSON, cached text, and
-native document preferences are preserved on ordinary saves. Unsupported locked/nested/rich or
-multi-paragraph field replacements are refused; explicit unlink retains text.
+native document preferences are preserved on ordinary saves. Locked, nested,
+opaque or multi-paragraph field replacements are refused; explicit unlink retains text.
 Track-changes mode and unresolved revisions in affected paragraphs also guard
 reference edits. A changed document, caret, story or selection invalidates an
 asynchronous insertion instead of targeting a different place.
@@ -113,8 +141,8 @@ asynchronous insertion instead of targeting a different place.
 Basic author-year formatting is an offline fallback. Zotero's individual
 citation preview is not a full document-wide CSL run. Complete connected
 bibliographies use one identity-verification request followed by one formatted
-request for at most 50 distinct sources in one library, then are reviewed and
-inserted as plain text. Larger/mixed-library
+request for at most 50 distinct sources in one library, then are reviewed with
+the rich-formatting or plain-text choice described above. Larger/mixed-library
 sets can use the basic bibliography or CSL export. Refresh updates Quds basic
 citations for at most 50 distinct linked sources atomically; imported and
 custom-style caches are left alone. Bibliographies with imported nonempty
@@ -126,6 +154,8 @@ Full CSL numbering/disambiguation/ibid, the native Zotero desktop picker and
 HTTP citing adapter, ODT active-citation transfer, and native Word/Zotero refresh
 acceptance remain outside this increment. The native app talks directly to the
 local API; the desktop option is not exposed through a server-side proxy.
+New inline citations retain their existing atomic plain-result workflow;
+mixed-format inline citation generation is not added by this increment.
 
 ## Shared source and local checks
 
@@ -139,10 +169,9 @@ PRs, integrated CrispCloud main through #152 and Quds main through #42, and
 included the newer terminal-workspace #140 changes. Work is saved incrementally
 to remote branches using `[skip ci]`. No GitHub Actions queue was awaited.
 
-The execution environment was unavailable during this continuation. Its new
-Dart/Flutter regressions, analyzers and native builds were not run. Fresh
-verification covers source integration, remote checkpoint heads and managed
-file identities. The previous desktop increment's 34 client and 16 transport
-test passes are historical evidence for their recorded source revisions.
-See [zotero-validation.md](zotero-validation.md) for current checks, pending
-commands, exact source hashes and prior logs.
+Local execution is available for this continuation. The frozen preceding
+Quds head passed 171 focused engine/editor tests, including all 39 regressions
+previously left unexecuted. This increment adds separate rich-formatting,
+DOCX preservation and UI regression coverage. See
+[zotero-validation.md](zotero-validation.md) for exact tested source identities,
+current results, reproducible commands and the remaining native acceptance limits.
