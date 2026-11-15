@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "kind": "zotero-local-identity-source-review",
+  "repository": "CrispStrobe/quds_office_suite",
+  "branch": "codex/zotero-support-20261115",
+  "codeCommit": "b2bf856d153315b41e8f647856558ebc58b0c3ea",
+  "codeTree": "dab9cc5a290482eb870b285ac5cc40f6e951028d",
+  "integrationBase": "875064341656ad9e74daec64f8f8d7befdb48368",
+  "checkpoints": [
+    {
+      "sha": "875064341656ad9e74daec64f8f8d7befdb48368",
+      "purpose": "recent-main integration"
+    },
+    {
+      "sha": "51bf97635d7053a4f73b56fb614dd29a07a1bcfb",
+      "purpose": "client identity guards and metadata-only reads"
+    },
+    {
+      "sha": "df824e4351b7df7f8b7d6df2deb64f95bfe2ef2d",
+      "purpose": "new citation identity validation and DOCX regressions"
+    },
+    {
+      "sha": "b2bf856d153315b41e8f647856558ebc58b0c3ea",
+      "purpose": "shared dialog workflows and helper/widget regressions"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+      "gitBlob": "bfe918ba12b1a4f77524af176440026a11a0ca4b",
+      "size": 63154,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/word_zotero_format.dart",
+      "gitBlob": "9834a4eb6b17a776eb82a5f99b67a529d456811d",
+      "size": 9618,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+      "gitBlob": "c6e62f2409a00b4d801611fb20fbc1a56d7f9d0b",
+      "size": 43016,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_format_test.dart",
+      "gitBlob": "980dd7eb8703cc0e120e664fd27b7cdaf0fbf97f",
+      "size": 19589,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+      "gitBlob": "fbe28b5faa7f471b60b975c035105e43addf340d",
+      "size": 28329,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "gitBlob": "c5a585d9751218bd2da848e7b5ad787ff9596d03",
+      "size": 30264,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_zotero_test.dart",
+      "gitBlob": "53f29938b5f31cff40648f356c444d06f96183ba",
+      "size": 21044,
+      "mode": "100644",
+      "status": "modified"
+    },
+    {
+      "path": "packages/quds_office_engine/test/zotero_identity_client_test.dart",
+      "gitBlob": "42b2d545fa44937df3680b3be0215ea11ad9bb57",
+      "size": 20093,
+      "mode": "100644",
+      "status": "added"
+    }
+  ],
+  "addedRegressionCases": {
+    "apiClient": 19,
+    "wordModelAndDocx": 3,
+    "formatHelpers": 5,
+    "dialogWidgets": 12,
+    "total": 39,
+    "executed": 0
+  },
+  "updatedExistingHelperCases": 3,
+  "review": {
+    "independentSourceReview": true,
+    "rootSourceReview": true,
+    "remoteGitBlobAndModeVerification": true,
+    "sourceSyntaxInspected": true,
+    "dartParserExecuted": false,
+    "dartAnalyzerExecuted": false,
+    "dartFormatterExecuted": false,
+    "dartOrFlutterTestsExecuted": false,
+    "fullApplicationBuildExecuted": false,
+    "nativeZoteroAcceptanceExecuted": false,
+    "runtimeUnavailableError": "No usable execution environment is available.",
+    "testScope": "New regression assertions are committed, not executed. Export format tests use mock raw bodies and verify request routing, identity guards, and raw-body preservation, not real translator output."
+  },
+  "protocolSources": [
+    "https://www.zotero.org/support/dev/web_api/v3/local_api",
+    "https://github.com/zotero/zotero/blob/045d5204410f1abfd80910e1cd0aa92dceec741b/chrome/content/zotero/xpcom/server/server_localAPI.js"
+  ],
+  "invariants": [
+    "Persistent local profile URI and /users/0 request alias are separate",
+    "Connected linked item reads validate same-response expected URI",
+    "Metadata-only refresh sends no style or locale",
+    "Aggregate keys and identities are verified exactly before output",
+    "Local aggregate output pins database and compares reported library version",
+    "No automatic relinking from an old local identity to a new account identity",
+    "Original citation metadata is retained and document refresh stays atomic",
+    "New linked identities are strict; imported unsupported JSON is retained",
+    "GitHub Actions not awaited or used for qualification"
+  ],
+  "versionGuardLimit": "Detects reported changes between responses; does not create a server-side snapshot transaction",
+  "reviewDetails": "REVIEW.md"
+}

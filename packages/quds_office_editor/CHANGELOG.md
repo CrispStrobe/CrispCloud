@@ -4,6 +4,12 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Resolve unsynced local Zotero references through the matching desktop
+  connection for basic refresh, individual previews, reference export and
+  formatted bibliography. Keep local profile identities distinct, validate
+  connected sources before requests, preserve original citation metadata, and
+  deduplicate URI aliases in the offline bibliography.
+
 - Offer explicit online/desktop library selection in native hosts. Browse and
   cite local Zotero sources without an API key, preserve unsynced CSL links,
   and label sources without persistent identities as offline embedded records.

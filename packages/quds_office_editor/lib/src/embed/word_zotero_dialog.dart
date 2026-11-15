@@ -375,6 +375,30 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     });
   }
 
+  ZoteroSourceAddress? _addressOf(ZoteroCitationItem item) {
+    final addresses = item.uris
+        .map(ZoteroSourceAddress.parse)
+        .whereType<ZoteroSourceAddress>()
+        .toList();
+    // Zotero can retain an old local URI alongside a newer account URI.
+    // Online connections keep using a numeric identity when one is present.
+    return (!_useLocal
+            ? addresses.where((address) => !address.isLocal).firstOrNull
+            : null) ??
+        addresses.firstOrNull;
+  }
+
+  ZoteroClient _connectedClient(ZoteroSourceAddress address) {
+    final client = _client;
+    if (client == null) throw StateError('Connect a Zotero library first.');
+    if (address.isLocal && !client.isLocal) {
+      throw const FormatException(
+        'This source belongs to an unsynced desktop library. Choose Zotero desktop and connect to the matching library.',
+      );
+    }
+    return client;
+  }
+
   Future<void> _selectItem(ZoteroItem item, bool selected) => _run(() async {
     if (!selected) {
       setState(() => _selected.remove(item.sourceId));
@@ -383,8 +407,18 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     if (_selected.length >= 20) {
       throw const FormatException('Select at most 20 sources per citation.');
     }
+    if (item.cslJson == null && item.citationUri == null) {
+      throw const FormatException(
+        'Zotero did not provide enough source data. Refresh the library and select this item again.',
+      );
+    }
     final full = item.cslJson == null
-        ? await _client!.item(item.library, item.key)
+        ? await _client!.item(
+            item.library,
+            item.key,
+            expectedCitationUri: item.citationUri,
+            includeFormatted: false,
+          )
         : item;
     if (!mounted) return;
     final data = full.cslJson;
@@ -416,12 +450,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
   }) => _run(() async {
     _checkTarget();
     _saveFormat();
-    final address = items.length == 1
-        ? items.single.uris
-              .map(ZoteroSourceAddress.parse)
-              .whereType<ZoteroSourceAddress>()
-              .firstOrNull
-        : null;
+    final address = items.length == 1 ? _addressOf(items.single) : null;
     final result = await _showReview<ZoteroCitation>(
       (_) => _CitationComposer(
         items: items,
@@ -430,9 +459,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         loadStyleSnapshot: address == null || _client == null
             ? null
             : () async {
-                final item = await _client!.item(
+                final item = await _connectedClient(address).item(
                   address.library,
                   address.key,
+                  expectedCitationUri: address.canonicalUri,
                   style: _session.style,
                   locale: _session.locale,
                 );
@@ -491,30 +521,29 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         if (online) {
           final addresses = <String, ZoteroSourceAddress>{};
           for (final item in items) {
-            final address = item.uris
-                .map(ZoteroSourceAddress.parse)
-                .whereType<ZoteroSourceAddress>()
-                .firstOrNull;
+            final address = _addressOf(item);
             if (address == null) {
               throw const FormatException(
                 'Some sources cannot be resolved through this library connection. Use the basic bibliography or copy embedded CSL JSON.',
               );
             }
-            addresses['${address.library.apiPath}/${address.key}'] = address;
+            addresses[address.canonicalUri.toString()] = address;
           }
-          final library = addresses.values.first.library;
-          if (addresses.values.any((item) => item.library != library) ||
+          final first = addresses.values.first;
+          if (addresses.values.any((item) => item.scope != first.scope) ||
               addresses.length > 50) {
             throw const FormatException(
               'A Zotero-formatted bibliography needs at most 50 sources in one library. Use basic format or export CSL JSON.',
             );
           }
-          if (_client == null)
-            throw StateError('Connect a Zotero library first.');
           text = zoteroHtmlToPlainText(
-            await _client!.bibliography(
-              library,
+            await _connectedClient(first).bibliography(
+              first.library,
               itemKeys: addresses.values.map((item) => item.key).toList(),
+              expectedItemUris: {
+                for (final address in addresses.values)
+                  address.key: address.canonicalUri,
+              },
               style: _session.style,
               locale: _session.locale,
             ),
@@ -558,41 +587,63 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         'One or more citations cannot be safely edited.',
       );
     }
+    // Validate the whole operation before making a request. In particular, an
+    // online connection must not partially fetch a document with local sources.
+    final addresses = <String, ZoteroSourceAddress>{};
+    for (final field in fields) {
+      for (final item in field.citation!.items) {
+        final address = _addressOf(item);
+        if (address == null) continue;
+        _connectedClient(address);
+        addresses[address.canonicalUri.toString()] = address;
+      }
+    }
+    if (addresses.length > 50) {
+      throw const FormatException('Refresh at most 50 linked sources at once.');
+    }
+    if (addresses.values
+            .where((address) => address.isLocal)
+            .map((address) => address.scope)
+            .toSet()
+            .length >
+        1) {
+      throw const FormatException(
+        'These sources belong to different Zotero desktop libraries. Their embedded data was kept.',
+      );
+    }
     final fetched = <String, Map<String, dynamic>>{};
+    for (final entry in addresses.entries) {
+      final address = entry.value;
+      final remote = await _connectedClient(address).item(
+        address.library,
+        address.key,
+        expectedCitationUri: address.canonicalUri,
+        includeFormatted: false,
+      );
+      if (!mounted) return;
+      if (remote.cslJson == null) {
+        throw const FormatException(
+          'A source has no CSL data. Existing citations were kept.',
+        );
+      }
+      fetched[entry.key] = remote.cslJson!;
+    }
     final updates = <String, ZoteroCitation>{};
     for (final field in fields) {
       final citation = field.citation!;
       final items = <ZoteroCitationItem>[];
       for (final item in citation.items) {
-        final address = item.uris
-            .map(ZoteroSourceAddress.parse)
-            .whereType<ZoteroSourceAddress>()
-            .firstOrNull;
-        if (address == null) {
-          items.add(item);
-          continue;
-        }
-        final uri = address.library.itemUri(address.key).toString();
-        if (!fetched.containsKey(uri)) {
-          if (fetched.length >= 50) {
-            throw const FormatException(
-              'Refresh at most 50 linked sources at once.',
-            );
-          }
-          final remote = await _client!.item(address.library, address.key);
-          if (!mounted) return;
-          if (remote.cslJson == null) {
-            throw const FormatException(
-              'A source has no CSL data. Existing citations were kept.',
-            );
-          }
-          fetched[uri] = remote.cslJson!;
-        }
+        final address = _addressOf(item);
+        final data = address == null
+            ? null
+            : fetched[address.canonicalUri.toString()];
         items.add(
-          ZoteroCitationItem.fromJson({
-            ...item.toJson(),
-            'itemData': {...fetched[uri]!, 'id': item.id},
-          }),
+          data == null
+              ? item
+              : ZoteroCitationItem.fromJson({
+                  ...item.toJson(),
+                  'itemData': {...data, 'id': item.id},
+                }),
         );
       }
       updates[citation.citationId] = citation.withItems(
@@ -610,26 +661,25 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
       text = const JsonEncoder.withIndent('  ')
           .convert(WordZotero.embeddedItems(_controller.document));
     } else {
-      final addresses = _selected.values
-          .map(
-            (item) => item.uris
-                .map(ZoteroSourceAddress.parse)
-                .whereType<ZoteroSourceAddress>()
-                .firstOrNull,
-          )
-          .toList();
+      final addresses = _selected.values.map(_addressOf).toList();
       if (addresses.isEmpty ||
           addresses.any((address) => address == null) ||
           addresses.any(
-            (address) => address!.library != addresses.first!.library,
+            (address) => address!.scope != addresses.first!.scope,
           )) {
         throw const FormatException(
           'Select sources from one Zotero library to export.',
         );
       }
-      text = await _client!.exportItems(
-        addresses.first!.library,
-        addresses.map((address) => address!.key).toList(),
+      final sources = addresses.whereType<ZoteroSourceAddress>().toList();
+      final first = sources.first;
+      text = await _connectedClient(first).exportItems(
+        first.library,
+        sources.map((address) => address.key).toList(),
+        expectedItemUris: {
+          for (final address in sources)
+            address.key: address.canonicalUri,
+        },
         format: format,
       );
     }
@@ -1511,7 +1561,12 @@ class _CitationComposerState extends State<_CitationComposer> {
     } catch (error) {
       if (mounted) {
         setState(
-          () => _error = error is ZoteroApiException ? error.message : 'The style preview could not be loaded. Your current text was kept.',
+          () => _error = switch (error) {
+            ZoteroApiException e => e.message,
+            FormatException e => e.message,
+            StateError e => e.message,
+            _ => 'The style preview could not be loaded. Your current text was kept.',
+          },
         );
       }
     } finally {

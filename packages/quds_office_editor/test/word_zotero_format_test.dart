@@ -116,14 +116,24 @@ void main() {
       expect(item.itemData!['id'], uri);
     });
 
-    test('preserves unsynced desktop identities without Web API routing', () {
+    test('preserves unsynced identity separately from the desktop API route', () {
       const uri = 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234';
       final item = zoteroImportCslJson(jsonEncode(_source(id: uri))).single;
       expect(item.uris, [uri]);
       expect(item.id, uri);
       expect(item.itemData!['id'], uri);
       expect(ZoteroSourceAddress.isLocalItemUri(uri), isTrue);
-      expect(ZoteroSourceAddress.parse(uri), isNull);
+      final address = ZoteroSourceAddress.parse(uri)!;
+      expect(address.library.isLocalUser, isTrue);
+      expect(address.library.apiPath, '/users/0');
+      expect(address.isLocal, isTrue);
+      expect(address.scope, '/users/local/LOCALKEY');
+      expect(address.canonicalUri.toString(), uri);
+      expect(
+        () => address.library.itemUri(address.key),
+        throwsStateError,
+        reason: 'The routing alias cannot become a citation identity.',
+      );
     });
 
     test('rejects local routing aliases and malformed desktop identities', () {
@@ -133,6 +143,10 @@ void main() {
         'http://zotero.org/users/local/LOCALKEY/items/ABCD1234#fragment',
         'http://secret@zotero.org/users/local/LOCALKEY/items/ABCD1234',
         'http://zotero.org:23119/users/local/LOCALKEY/items/ABCD1234',
+        'http://zotero.org:80/users/local/LOCALKEY/items/ABCD1234',
+        'https://zotero.org:443/users/local/LOCALKEY/items/ABCD1234',
+        'http://zotero.org/users/local/%4COCALKEY/items/ABCD1234',
+        'http://zotero.org/users/local/LOCALKEY/items/ABCD1234\n',
         'http://zotero.org/users/local/too-short/items/ABCD1234',
         'http://zotero.org/users/local/LOCALKEY/items/not-a-key',
         'http://localhost:23119/api/users/0/items/ABCD1234',
@@ -219,6 +233,12 @@ void main() {
         for (final url in [
           'https://secret@zotero.org/users/12/items/ABCD1234',
           'https://zotero.org:8443/users/12/items/ABCD1234',
+          'https://zotero.org:443/users/12/items/ABCD1234',
+          'http://zotero.org:80/users/12/items/ABCD1234',
+          'https://zotero.org/users/012/items/ABCD1234',
+          'https://zotero.org/users/12/items/%41BCD1234',
+          'https://zotero.org/users/12/extra/../items/ABCD1234',
+          'https://zotero.org/users/12/items/ABCD1234\n',
           'https://zotero.org/users/12/items/ABCD1234?foo=bar',
           'https://zotero.org/users/12/items/ABCD1234#section',
           'https://zotero.org/users/0/items/ABCD1234',
@@ -232,6 +252,67 @@ void main() {
         }
       },
     );
+  });
+
+  group('desktop source identity', () {
+    test('normalizes aliases without changing the original imported source', () {
+      const original =
+          'https://www.zotero.org/users/local/LocaL123/items/ABCD1234';
+      final source = zoteroImportCslJson(jsonEncode(_source(id: original))).single;
+      final address = ZoteroSourceAddress.parse(original)!;
+      expect(address.key, 'ABCD1234');
+      expect(address.scope, '/users/local/LocaL123');
+      expect(
+        address.canonicalUri.toString(),
+        'http://zotero.org/users/local/LocaL123/items/ABCD1234',
+      );
+      expect(source.id, original);
+      expect(source.uris, [original]);
+      expect(source.itemData!['id'], original);
+    });
+
+    test('same request route and item key do not conflate desktop profiles', () {
+      final first = ZoteroSourceAddress.parse(
+        'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
+      )!;
+      final second = ZoteroSourceAddress.parse(
+        'http://zotero.org/users/local/OTHERKEY/items/ABCD1234',
+      )!;
+      expect(first.library, second.library);
+      expect(first.key, second.key);
+      expect(first.scope, isNot(second.scope));
+      expect(first.canonicalUri, isNot(second.canonicalUri));
+    });
+
+    test('local and numeric identities have distinct scopes', () {
+      final local = ZoteroSourceAddress.parse(
+        'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
+      )!;
+      final account = ZoteroSourceAddress.parse(
+        'https://www.zotero.org/users/42/items/ABCD1234',
+      )!;
+      final group = ZoteroSourceAddress.parse(
+        'https://zotero.org/groups/42/items/ABCD1234',
+      )!;
+      expect({local.scope, account.scope, group.scope}, hasLength(3));
+      expect(local.isLocal, isTrue);
+      expect(account.isLocal, isFalse);
+      expect(group.isLocal, isFalse);
+      expect(account.canonicalUri, Uri.parse(
+        'http://zotero.org/users/42/items/ABCD1234',
+      ));
+    });
+
+    test('the source-compatible remote constructor retains canonical identity', () {
+      final address = ZoteroSourceAddress(ZoteroLibrary.group(42), 'ABCD1234');
+      expect(address.scope, '/groups/42');
+      expect(
+        address.canonicalUri.toString(),
+        'http://zotero.org/groups/42/items/ABCD1234',
+      );
+      final alias = ZoteroSourceAddress(ZoteroLibrary.localUser(), 'ABCD1234');
+      expect(() => alias.canonicalUri, throwsStateError);
+    });
   });
 
   group('formatted references become inert text', () {
@@ -417,6 +498,31 @@ void main() {
         ),
       ];
       expect(zoteroBasicBibliography(sources).split('\n\n'), hasLength(1));
+    });
+
+    test('local URI aliases dedupe while identical keys in other profiles do not', () {
+      final sources = [
+        _citation(
+          id: 'first',
+          uri: 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234',
+          title: 'First profile',
+        ),
+        _citation(
+          id: 'alias',
+          uri: 'https://www.zotero.org/users/local/LOCALKEY/items/ABCD1234',
+          title: 'Duplicate alias',
+        ),
+        _citation(
+          id: 'other',
+          uri: 'https://zotero.org/users/local/OTHERKEY/items/ABCD1234',
+          title: 'Other profile',
+        ),
+      ];
+      final text = zoteroBasicBibliography(sources);
+      expect(text.split('\n\n'), hasLength(2));
+      expect(text, contains('First profile'));
+      expect(text, contains('Other profile'));
+      expect(text, isNot(contains('Duplicate alias')));
     });
 
     test('keeps container/DOI data, strips title markup and skips missing snapshots', () {

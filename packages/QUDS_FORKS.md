@@ -23,7 +23,7 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `df824e4351b7df7f8b7d6df2deb64f95bfe2ef2d`
+The app mirrors Quds `0d9b008720b01371bc9db498efd063e3077be279`
 on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
 all 2,375 managed files
@@ -34,7 +34,7 @@ header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
 
-Zotero support adds a shared references workspace, a read-only Web API client,
+Zotero support adds a shared references workspace, read-only online and desktop clients,
 offline CSL import/export, guarded DOCX citation and bibliography fields, and
 undoable editing. CrispCloud supplies its selected proxy/TLS transport and
 optional existing credential store. See [usage and formatting limits](../docs/zotero.md)
@@ -49,12 +49,24 @@ sources; the six changed managed files were freshly hashed. See the
 [integration receipt](../docs/validation/zotero-local-identity-20261115/recent-integration.json).
 No application test or build result is claimed for this source integration.
 
-The incremental Zotero engine checkpoint adds expected citation-identity checks
-for individual references and complete selections, metadata-only refresh without
-loading a citation style, and canonical identity handling in document sources.
-Its four changed/new managed files were freshly hashed; new regression tests
-are committed but were not executed. Shared-dialog wiring follows separately.
-See the [interim feature receipt](../docs/validation/zotero-local-identity-20261115/feature-checkpoint.json).
+The completed local-identity checkpoint connects unsynced local references to
+individual style previews, metadata-only atomic basic refresh, selected exports
+and formatted bibliographies. Every connected operation verifies the expected
+source identity. Desktop aggregate output additionally requires the database
+identifier and library-version headers provided by Zotero 10 or later; it
+refuses changed or incomplete selections. Older desktops can still use
+same-response previews and metadata refresh when the returned identity matches.
+
+The continuation adds 39 regression cases across client, model/DOCX, helper and
+widget suites. All are committed and source-reviewed; none was executed. No
+Dart parser, formatter, analyzer, application build or live Zotero acceptance
+is claimed. The final managed inventory contains 2,375 files: six changed files
+were freshly hashed in this checkpoint, and 2,369 immutable blobs/modes/sizes
+retain prior digest evidence, including the four files freshly hashed at the
+[interim engine checkpoint](../docs/validation/zotero-local-identity-20261115/feature-checkpoint.json).
+The [source review](../docs/validation/zotero-local-identity-20261115/REVIEW.md)
+and [complete source inventory and final receipt](../docs/validation/zotero-local-identity-20261115/final-integration.json)
+record the workflow limits, all managed source identities and verification scope.
 
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
