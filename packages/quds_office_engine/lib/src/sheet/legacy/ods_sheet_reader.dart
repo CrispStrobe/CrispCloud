@@ -592,7 +592,7 @@ abstract final class OdsSheetReader {
         final styleName = _attribute(condition, 'apply-style-name', _calcext);
         if (value == null || value.isEmpty || styleName == null) continue;
         final SmlConditionalKind kind;
-        final String formula;
+        String formula;
         if (value.startsWith('<>') || value.startsWith('!=')) {
           kind = SmlConditionalKind.notEqual;
           formula = value.substring(2).trim();
@@ -611,10 +611,21 @@ abstract final class OdsSheetReader {
         } else if (value.startsWith('=')) {
           kind = SmlConditionalKind.equal;
           formula = value.substring(1).trim();
+        } else if (value.startsWith('contains-text(') && value.endsWith(')')) {
+          kind = SmlConditionalKind.contains;
+          formula = value
+              .substring('contains-text('.length, value.length - 1)
+              .trim();
+          if (formula.startsWith('"') && formula.endsWith('"')) {
+            formula = formula.substring(1, formula.length - 1);
+          }
+        } else if (value == 'duplicate') {
+          kind = SmlConditionalKind.duplicate;
+          formula = '';
         } else {
           continue;
         }
-        if (formula.isEmpty) continue;
+        if (formula.isEmpty && kind != SmlConditionalKind.duplicate) continue;
         final style = _styleChain(styles, 'table-cell', styleName);
         final fill = _hex(
           _property(style, 'table-cell-properties', 'background-color', _fo),

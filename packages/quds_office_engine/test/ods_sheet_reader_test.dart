@@ -1444,6 +1444,47 @@ void hiddenStateTests() {
 }
 
 void conditionalFormatTests() {
+  test('ODS text and duplicate conditions keep their type', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell><x:p>apple</x:p></t:table-cell>'
+        '<t:table-cell><x:p>pear</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell><x:p>apple</x:p></t:table-cell>'
+        '<t:table-cell><x:p>pear</x:p></t:table-cell></t:table-row>'
+        '<cal:conditional-formats>'
+        '<cal:conditional-format cal:target-range-address="Data.A1:Data.A10">'
+        '<cal:condition cal:apply-style-name="cf" '
+        'cal:value="contains-text(&quot;app&quot;)"/>'
+        '</cal:conditional-format>'
+        '<cal:conditional-format cal:target-range-address="Data.B1:Data.B10">'
+        '<cal:condition cal:apply-style-name="cf" cal:value="duplicate"/>'
+        '</cal:conditional-format></cal:conditional-formats></t:table>',
+        styles:
+            '<s:style s:name="cf" s:family="table-cell">'
+            '<s:table-cell-properties f:background-color="#00ff00"/>'
+            '</s:style>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    final rules = sheet.conditionalFormats;
+    expect(rules.length, 2);
+    expect(rules[0].kind, SmlConditionalKind.contains);
+    expect(rules[0].formula, 'app');
+    expect(rules[1].kind, SmlConditionalKind.duplicate);
+    expect(rules[0].matches(sheet.cellA1('A1'), sheet), isTrue);
+    expect(rules[1].matches(sheet.cellA1('B1'), sheet), isTrue);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('type="containsText"'));
+    expect(sheetXml, contains('text="app"'));
+    expect(sheetXml, contains('type="duplicateValues"'));
+  });
+
   test('ODS conditional comparison operators keep their meaning', () {
     final book = OdsSheetReader.readBytes(
       _ods(
