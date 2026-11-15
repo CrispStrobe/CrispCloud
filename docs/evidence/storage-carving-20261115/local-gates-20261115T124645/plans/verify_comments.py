@@ -83,6 +83,13 @@ def verify_file(path, expected, *, sheet_name='Notes', sheet_names=None, collisi
         return bool(ok)
     def parse(data):
         return ET.fromstring(data, parser=ET.XMLParser(resolve_entities=False, no_network=True, load_dtd=False, remove_blank_text=False))
+    def no_bare_container_text(element, code, location):
+        # XML element-only containers permit only XML whitespace between children.
+        tails = [child.tail for child in element]
+        return check(not (element.text or '').strip(' \t\r\n')
+                     and all(not (tail or '').strip(' \t\r\n') for tail in tails),
+                     code, {'text': element.text, 'tails': tails},
+                     'Only XML whitespace outside child elements', location)
     try:
         data = path.read_bytes()
         result['input'] = {'bytes': len(data), 'sha256': sha(data)}
@@ -158,6 +165,7 @@ def verify_file(path, expected, *, sheet_name='Notes', sheet_names=None, collisi
                             check(declared == [COMMENTS_TYPE], 'comments_content_type', declared, [COMMENTS_TYPE], comments_uri)
                             comment_root = parse(archive.read(comments_uri))
                             check(local(comment_root) == 'comments', 'comments_root_name', local(comment_root), 'comments', comments_uri)
+                            no_bare_container_text(comment_root, 'comments_root_no_bare_container_text', comments_uri)
                             for element in comment_root.iter():
                                 if isinstance(element.tag, str):
                                     check(ET.QName(element).namespace == S, 'comments_element_namespace', element.tag, S, comments_uri+':'+local(element))
@@ -168,7 +176,7 @@ def verify_file(path, expected, *, sheet_name='Notes', sheet_names=None, collisi
                             if check(len(author_roots) == 1, 'authors_count', len(author_roots), 1, comments_uri):
                                 author_elements = [e for e in author_roots[0] if isinstance(e.tag,str)]
                                 check(all(local(e)=='author' and len(e)==0 for e in author_elements), 'authors_only_author_leaves', [local(e) for e in author_elements], 'Only leaf author elements', comments_uri)
-                                check(not (author_roots[0].text or '').strip() and all(not (e.tail or '').strip() for e in author_elements), 'authors_no_bare_container_text', None, 'Text only in author leaves', comments_uri)
+                                no_bare_container_text(author_roots[0], 'authors_no_bare_container_text', comments_uri)
                                 author_values = [''.join(e.itertext()) for e in children(author_roots[0], 'author')]
                                 wanted_authors = list(dict.fromkeys(row['author'] for row in expected))
                                 check(author_values == wanted_authors, 'author_table_first_seen_identity', author_values, wanted_authors, comments_uri)
@@ -176,7 +184,7 @@ def verify_file(path, expected, *, sheet_name='Notes', sheet_names=None, collisi
                             if check(len(lists) == 1, 'comment_list_count', len(lists), 1, comments_uri):
                                 list_elements = [e for e in lists[0] if isinstance(e.tag,str)]
                                 check(all(local(e)=='comment' for e in list_elements), 'comment_list_only_comments', [local(e) for e in list_elements], 'Only comment elements', comments_uri)
-                                check(not (lists[0].text or '').strip() and all(not (e.tail or '').strip() for e in list_elements), 'comment_list_no_bare_container_text', None, 'No bare text in commentList', comments_uri)
+                                no_bare_container_text(lists[0], 'comment_list_no_bare_container_text', comments_uri)
                                 comments = children(lists[0], 'comment')
                                 actual_refs = [comment.get('ref') for comment in comments]
                                 wanted_refs = [row['cell'] for row in expected]
@@ -185,6 +193,9 @@ def verify_file(path, expected, *, sheet_name='Notes', sheet_names=None, collisi
                                 for comment in comments:
                                     ref = comment.get('ref')
                                     location = comments_uri+':'+str(ref)
+                                    no_bare_container_text(comment, 'comment_no_bare_container_text', location)
+                                    comment_children = [local(e) for e in comment if isinstance(e.tag,str)]
+                                    check(comment_children == ['text'], 'plain_comment_child_inventory', comment_children, ['text'], location)
                                     author_id = comment.get('authorId')
                                     try:
                                         index = int(author_id)
@@ -196,7 +207,7 @@ def verify_file(path, expected, *, sheet_name='Notes', sheet_names=None, collisi
                                     value = None
                                     if check(len(texts) == 1, 'comment_text_container_count', len(texts), 1, location):
                                         container = texts[0]
-                                        check(not (container.text or '').strip(), 'rst_has_no_bare_text', container.text, 'Text in child t', location)
+                                        no_bare_container_text(container, 'rst_has_no_bare_text', location)
                                         leaves = children(container, 't')
                                         child_names = [local(e) for e in container if isinstance(e.tag, str)]
                                         if check(child_names == ['t'] and len(leaves) == 1, 'plain_rst_text_leaf', child_names, ['t'], location):

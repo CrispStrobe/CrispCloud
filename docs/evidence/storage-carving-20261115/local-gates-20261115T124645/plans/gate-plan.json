@@ -207,7 +207,7 @@
       "from_commit": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
       "from_path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_comments.py",
       "incoming_sha256": "47389ed35e2bc2904dc201828a5d78d94272b81e53bf7b6a55f3ba6a546b6666",
-      "new_sha256": "33d2956fa082a1349f0af705f8fd50cfe8e841f0c098d16481256d6d7116971a",
+      "new_sha256": "9d25bc2eca26284cd370f73488edef8e32d07f409dbcaaf26f2194ff3dab1867",
       "unchanged": false
     }
   },
