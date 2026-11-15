@@ -1125,7 +1125,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
                 ),
           body: Column(
             children: [
-              if (_busy) const LinearProgressIndicator(),
+              if (_busy && !_notePromptOpen) const LinearProgressIndicator(),
               if (_copyOnly)
                 _banner(
                   'This PDF contains digital signatures. Save a copy to preserve the signed original.',

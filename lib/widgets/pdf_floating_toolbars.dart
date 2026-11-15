@@ -91,9 +91,14 @@ class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
     }
   }
 
-  Size _size(int i) =>
-      _keys[i].currentContext?.size ??
-      (_vertical[i] ? const Size(60, 450) : const Size(720, 60));
+  Size _size(int i) {
+    final box = _keys[i].currentContext?.findRenderObject();
+    // Element.size asserts during build. A previously laid-out render box
+    // supplies the last measured card size without forcing layout here.
+    if (box is RenderBox && box.hasSize) return box.size;
+    return _vertical[i] ? const Size(60, 450) : const Size(720, 60);
+  }
+
   Offset _room(int i) => Offset(
     (_viewport.width - _size(i).width - 12).clamp(0, double.infinity),
     (_viewport.height - _size(i).height - 12).clamp(0, double.infinity),
