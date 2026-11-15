@@ -32,7 +32,7 @@ commits do not change the tested application code.
 | Interactive shell helpers | Bash 5.2 scalar and array forms, Zsh 5.9 hooks: all 3 scenarios passed | [Source hash and log](shell-smoke.log) |
 | Production widget captures | 4 scenarios passed; 16 PNGs inspected, including before/after profile-layout repair | [Visual report](visual/README.md) |
 | Workflow configuration | YAML parses; all 169 test references resolve to 103 existing paths using their step working directories | [Receipt](workflow-check.json) |
-| Full application web release | First attempt terminated externally; isolated release retry is being recorded separately | [Initial log](web-release-first-attempt.log), [initial source/command receipt](web-release-first-attempt.json) |
+| Full application web release | Passed with standard release/O4 settings; 4,173 input hashes unchanged | [Summary](web-release-summary.json), [build log](web-release.log), [command and source receipt](web-release.json) |
 | Browser execution | 0 tests; Chromium failed before startup because Unix-socket creation was denied | [Startup log](browser-startup-block.log) |
 
 Committed text logs retain their output with trailing whitespace normalized.
@@ -60,9 +60,15 @@ Windows machine, signed macOS application or physical mobile device is qualified
 The full web release attempt reached the compiler, then dart2js exited with
 signal 9; the optional WebAssembly probe also exited unsuccessfully. No Dart
 compile diagnostic was emitted. Memory pressure is a possible explanation, not
-a confirmed diagnosis. The isolated retry disables only the optional WebAssembly
-probe and keeps the release/O4 compiler settings and production manifests.
-Browser runtime remains unqualified even if a web build completes.
+a confirmed diagnosis. The isolated retry **passed** after disabling only the
+optional WebAssembly compatibility probe, keeping the release/O4 compiler
+settings and production manifests. It produced `build/web` in 216.3 seconds
+with `APP_VERSION=1.3.4+27` and `GIT_HASH=710422b5` verified in the artifact.
+All 4,173 hashed inputs remained unchanged. The 29,164,959-byte `main.dart.js`
+has SHA-256 `046355d47121872062a0389f36cbdcfda14839953a2f94ddba0e44d220e0f88d`.
+The [successful build summary](web-release-summary.json) links both attempts and
+the complete input hash inventory. This qualifies production release JavaScript
+compilation; browser execution and Wasm compatibility remain unqualified.
 
 The Bash/Zsh checks use real interactive shells with pipes. They cover exit
 statuses 1 and 7, prompt-hook status/order, Unicode directory encoding and
@@ -117,6 +123,8 @@ PY
 python3 tool/run_terminal_live_smoke.py --flutter /path/to/flutter
 python3 tool/terminal_shell_setup_smoke.py
 python3 tool/terminal_ssh_config_oracle.py --dart /path/to/dart
+flutter build web --release --no-pub --no-wasm-dry-run \
+  --dart-define=APP_VERSION=1.3.4+27 --dart-define=GIT_HASH=710422b5
 ```
 
 The OpenSSH oracle executes only authored `ssh -G` fixtures, without connecting,

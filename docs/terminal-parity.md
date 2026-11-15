@@ -195,7 +195,7 @@ overlap and are not added to that total.
 | Bash/Zsh setup | 3 real interactive-shell scenarios passed: Bash scalar/array and Zsh hook behavior |
 | Production widget captures | 4 scenarios passed; 16 inspected PNGs cover desktop/narrow panes, importer and key-binding controls |
 | Workflow references | YAML parses and every referenced test resolves under its configured working directory |
-| Full web release build | Initial compiler was killed externally; isolated release retry is recorded separately |
+| Full web release build | Passed at standard release/O4 settings with optional Wasm probe disabled; 4,173 input hashes unchanged |
 | GitHub Actions | No result queried, awaited or required |
 
 The native skips are the macOS-only shell fixture and Windows ConPTY. The
