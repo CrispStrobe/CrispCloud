@@ -87,6 +87,39 @@ abstract final class OdsSheetReader {
       }
     }
 
+    // Named styles and number styles usually live in styles.xml, while
+    // automatic styles stay in content.xml. Both are needed for formats.
+    if (zip.contains('styles.xml')) {
+      try {
+        final stylesXml = zip.read('styles.xml', maxBytes: 64 * 1024 * 1024);
+        final stylesDocument = XmlDocument.parse(
+          utf8.decode(stylesXml, allowMalformed: true),
+        );
+        final stylesRoot = stylesDocument.root;
+        if (stylesRoot != null) {
+          for (final collection in <String>['automatic-styles', 'styles']) {
+            for (final element in _elements(stylesRoot, collection)) {
+              for (final style in element.childElements) {
+                final name = style.getAttribute('name');
+                if (name == null) continue;
+                if (style.localName == 'style') {
+                  styles.putIfAbsent(name, () => style);
+                } else if (style.localName == 'number-style' ||
+                    style.localName == 'currency-style' ||
+                    style.localName == 'percentage-style' ||
+                    style.localName == 'date-style' ||
+                    style.localName == 'time-style') {
+                  numberStyles.putIfAbsent(name, () => style);
+                }
+              }
+            }
+          }
+        }
+      } on Object {
+        // A malformed styles.xml must not hide readable cell data.
+      }
+    }
+
     final book = SmlWorkbook(sheets: <SmlWorksheet>[], styles: SmlStyleSheet());
     final engineStyles = book.styles!;
     final tables = _elements(root, 'table').toList();
@@ -102,7 +135,7 @@ abstract final class OdsSheetReader {
             : 'Sheet$sheetId',
         sheetId: sheetId,
       );
-      _readColumns(table, sheet, styles);
+      final columnDefaults = _readColumns(table, sheet, styles);
       var rowIndex = 0;
       for (final row in table.childElements.where(
         (element) => element.localName == 'table-row',
@@ -113,7 +146,8 @@ abstract final class OdsSheetReader {
           _property(rowStyle, 'table-row-properties', 'row-height'),
         );
 
-        final parsed = <({int column, int span, SmlCell cell})>[];
+        final rowDefault = row.getAttribute('default-cell-style-name');
+        final parsed = <({int column, int span, int rowSpan, SmlCell cell})>[];
         var column = 0;
         var hasContent = false;
         for (final element in row.childElements) {
@@ -125,6 +159,9 @@ abstract final class OdsSheetReader {
           final span = covered
               ? 1
               : _repeat(element, 'number-columns-spanned', _maxColumns);
+          final rowSpan = covered
+              ? 1
+              : _repeat(element, 'number-rows-spanned', _maxRows);
           final repeat = _repeat(
             element,
             'number-columns-repeated',
@@ -139,10 +176,18 @@ abstract final class OdsSheetReader {
                 engineStyles,
                 styles,
                 numberStyles,
+                element.getAttribute('style-name') ??
+                    rowDefault ??
+                    columnDefaults[column],
               );
               if (cell != null) {
                 hasContent = true;
-                parsed.add((column: column, span: span, cell: cell));
+                parsed.add((
+                  column: column,
+                  span: span,
+                  rowSpan: rowSpan,
+                  cell: cell,
+                ));
               }
             }
             column += span;
@@ -164,7 +209,7 @@ abstract final class OdsSheetReader {
                 c0: entry.column,
                 r0: rowIndex,
                 c1: entry.column + entry.span - 1,
-                r1: rowIndex,
+                r1: rowIndex + entry.rowSpan - 1,
               ),
             );
           }
@@ -196,11 +241,12 @@ abstract final class OdsSheetReader {
     return book;
   }
 
-  static void _readColumns(
+  static Map<int, String> _readColumns(
     XmlElement table,
     SmlWorksheet sheet,
     Map<String, XmlElement> styles,
   ) {
+    final defaults = <int, String>{};
     var column = 0;
     for (final element in table.childElements.where(
       (child) => child.localName == 'table-column',
@@ -210,16 +256,18 @@ abstract final class OdsSheetReader {
       final width = _lengthToPoints(
         _property(style, 'table-column-properties', 'column-width'),
       );
-      if (width != null && width > 0) {
-        final px = width * 96 / 72;
-        for (var i = 0; i < repeat && column < _maxColumns; i++) {
-          sheet.setColumnWidth(column, px);
-          column++;
+      final defaultStyle = element.getAttribute('default-cell-style-name');
+      for (var i = 0; i < repeat && column < _maxColumns; i++) {
+        if (width != null && width > 0) {
+          sheet.setColumnWidth(column, width * 96 / 72);
         }
-      } else {
-        column += repeat;
+        if (defaultStyle != null && defaultStyle.isNotEmpty) {
+          defaults[column] = defaultStyle;
+        }
+        column++;
       }
     }
+    return defaults;
   }
 
   static SmlCell? _createCell(
@@ -229,6 +277,7 @@ abstract final class OdsSheetReader {
     SmlStyleSheet engineStyles,
     Map<String, XmlElement> styles,
     Map<String, XmlElement> numberStyles,
+    String? styleName,
   ) {
     Object? value;
     switch (element.getAttribute('value-type')) {
@@ -253,7 +302,7 @@ abstract final class OdsSheetReader {
     if (value is String && value.isEmpty) value = null;
     final formula = _translateFormula(element.getAttribute('formula'));
 
-    final style = styles[element.getAttribute('style-name')];
+    final style = styles[styleName];
     final text = style == null ? null : _child(style, 'text-properties');
     final cellProperties = style == null
         ? null
@@ -342,6 +391,11 @@ abstract final class OdsSheetReader {
   static String _odfReference(String raw) {
     var reference = raw.trim();
     if (reference.startsWith('.')) reference = reference.substring(1);
+    // ODF marks an absolute sheet reference with a leading `$`; A1 cells use
+    // `$A$1` and have no dot, so only strip it before a sheet name.
+    if (reference.startsWith('\$') && reference.contains('.')) {
+      reference = reference.substring(1);
+    }
     final dot = reference.lastIndexOf('.');
     if (dot <= 0) return reference;
     var sheet = reference.substring(0, dot).trim();
@@ -368,6 +422,13 @@ abstract final class OdsSheetReader {
       case 'date-style':
         return 'DD.MM.YYYY';
       case 'time-style':
+        final hours = _descendants(style, 'hours').isNotEmpty;
+        final minutes = _descendants(style, 'minutes').isNotEmpty;
+        final seconds = _descendants(style, 'seconds').isNotEmpty;
+        if (hours && minutes && seconds) return 'h:mm:ss';
+        if (hours && minutes) return 'h:mm';
+        if (minutes && seconds) return 'mm:ss';
+        if (hours) return 'h';
         return 'h:mm:ss';
       case 'number-style':
         final decimals = _decimals(style);
@@ -393,8 +454,18 @@ abstract final class OdsSheetReader {
   }
 
   static double _excelSerial(DateTime value) {
+    // ODF date-times carry no timezone; treat the fields as wall time.
     final epoch = DateTime.utc(1899, 12, 30);
-    return value.toUtc().difference(epoch).inMilliseconds / 86400000;
+    final wall = DateTime.utc(
+      value.year,
+      value.month,
+      value.day,
+      value.hour,
+      value.minute,
+      value.second,
+      value.millisecond,
+    );
+    return wall.difference(epoch).inMilliseconds / 86400000;
   }
 
   static double? _odfDurationDays(String? value) {
