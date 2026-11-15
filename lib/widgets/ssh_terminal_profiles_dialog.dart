@@ -79,6 +79,15 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
               ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const ValueKey('ssh-profiles-import-config'),
+                onPressed: _busy ? null : _importConfig,
+                icon: const Icon(Icons.file_download_outlined),
+                label: Text(context.sshConfigImportTr('Import OpenSSH config')),
+              ),
+            ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -125,11 +134,6 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
       ),
     ),
     actions: [
-      TextButton(
-        key: const ValueKey('ssh-profiles-import-config'),
-        onPressed: _busy ? null : _importConfig,
-        child: Text(context.sshConfigImportTr('Import OpenSSH config')),
-      ),
       TextButton(
         onPressed: _busy ? null : () => Navigator.pop(context),
         child: Text(context.terminalTr('Cancel')),

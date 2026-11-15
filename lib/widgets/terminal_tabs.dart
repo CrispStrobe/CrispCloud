@@ -784,6 +784,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               child: Semantics(
                 label: context.terminalArrangementTr('Resize split'),
                 value: '${(divider.fraction * 100).round()}%',
+                increasedValue:
+                    '${(divider.adjustedFraction(0.05) * 100).round()}%',
+                decreasedValue:
+                    '${(divider.adjustedFraction(-0.05) * 100).round()}%',
                 onIncrease: () =>
                     _resizePaneSplit(divider, divider.usable * 0.05),
                 onDecrease: () =>
@@ -1232,4 +1236,11 @@ class _PaneDivider {
   final double upper;
   final double fraction;
   bool get horizontal => split.axis == TerminalSplitAxis.horizontal;
+  double adjustedFraction(double step) => (fraction + step)
+      .clamp(
+        TerminalPaneLayout.minimumFraction,
+        TerminalPaneLayout.maximumFraction,
+      )
+      .clamp(lower, upper)
+      .toDouble();
 }

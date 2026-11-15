@@ -176,7 +176,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   int _shellNotificationSerial = 0;
   CellAnchor? _commandNavigationAnchor;
   bool _revealingCommand = false;
-  final _mappedKeyPresses = <PhysicalKeyboardKey>{};
+  Set<PhysicalKeyboardKey> get _mappedKeyPresses =>
+      ref.read(terminalKeyBindingPressesProvider);
 
   bool get _desktop =>
       !kIsWeb &&

@@ -52,6 +52,18 @@ void main() {
     await Future<void>.delayed(Duration.zero);
   });
 
+  Future<void> settle(WidgetTester tester) async {
+    if (sessions.any((session) => session.isConnecting)) {
+      // A pending opener intentionally keeps an indeterminate spinner alive.
+      // Advance route transitions without waiting for that spinner to stop.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump();
+    } else {
+      await tester.pumpAndSettle();
+    }
+  }
+
   Future<void> mount(WidgetTester tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(1000, 900);
@@ -74,28 +86,28 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> layout(WidgetTester tester, String label) async {
     await tester.tap(find.byKey(const ValueKey('terminal-layout')));
-    await tester.pumpAndSettle();
+    await settle(tester);
     final item = find.text(label).last;
     await tester.ensureVisible(item);
     await tester.tap(item);
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> chooseSaved(WidgetTester tester, String name) async {
     await layout(tester, 'Saved arrangements');
     await tester.tap(find.byKey(ValueKey('terminal-arrangement-$name')));
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> restore(WidgetTester tester, String name) async {
     await chooseSaved(tester, name);
     await tester.tap(find.widgetWithText(FilledButton, 'Restore'));
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> save(WidgetTester tester, String name) async {
@@ -105,7 +117,7 @@ void main() {
       name,
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Iterable<TerminalPanel> panels(WidgetTester tester) =>
@@ -123,11 +135,11 @@ void main() {
         matching: find.byKey(const ValueKey('terminal-actions')),
       ),
     );
-    await tester.pumpAndSettle();
+    await settle(tester);
     final item = find.text(label).last;
     await tester.ensureVisible(item);
     await tester.tap(item);
-    await tester.pumpAndSettle();
+    await settle(tester);
   }
 
   Future<void> unmount(WidgetTester tester) async {
@@ -168,7 +180,7 @@ void main() {
     (tester) async {
       await mount(tester);
       await tester.tap(find.byKey(const ValueKey('terminal-new-tab')));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await layout(tester, 'Split side by side');
       await layout(tester, 'Rename terminal');
       await tester.enterText(
@@ -176,7 +188,7 @@ void main() {
         'Build pane',
       );
       await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await paneAction(tester, 'Increase font size');
       await paneAction(tester, 'Increase font size');
       await layout(tester, 'Move terminal left');
@@ -184,7 +196,7 @@ void main() {
         find.byKey(const ValueKey('terminal-split-divider')),
         const Offset(100, 0),
       );
-      await tester.pumpAndSettle();
+      await settle(tester);
       await save(tester, 'Daily');
       final captured = (await store.load()).single;
       expect(captured.tabs, hasLength(3));
@@ -253,7 +265,7 @@ void main() {
     expect(dialog.initialConfig!.password, isEmpty);
     expect(dialog.initialConfig!.screen!.sessionName, '142.work');
     await tester.tap(find.text('Cancel').last);
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(
       restored.every(
         (panel) => panel.session!.status == TerminalSessionStatus.idle,
@@ -304,7 +316,7 @@ void main() {
         find.byKey(const ValueKey('terminal-split-divider-11')),
         const Offset(25, 0),
       );
-      await tester.pumpAndSettle();
+      await settle(tester);
       await layout(tester, 'Zoom active pane');
       expect(panels(tester).where((panel) => panel.visible), hasLength(1));
       await save(tester, 'Nested edited');
@@ -349,7 +361,7 @@ void main() {
     await chooseSaved(tester, 'Remote work');
     expect(find.text('Replace current terminals?'), findsOneWidget);
     await tester.tap(find.text('Cancel').last);
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(connection.closes, 0);
     expect(first.isConnected, isTrue);
     expect(
@@ -372,7 +384,7 @@ void main() {
     await store.save(remoteArrangement());
     await mount(tester);
     await tester.tap(find.byKey(const ValueKey('terminal-new-tab')));
-    await tester.pumpAndSettle();
+    await settle(tester);
     first.terminal.write('keep first');
     sessions[1].terminal.write('keep second');
     await restore(tester, 'Remote work');
@@ -417,7 +429,7 @@ void main() {
     expect(first.isConnecting, isTrue);
     expect(first.disposals, 0);
     opening.complete(connection);
-    await tester.pumpAndSettle();
+    await settle(tester);
     await pending;
     expect(first.isConnected, isTrue);
     expect(connection.closes, 0);
@@ -439,12 +451,12 @@ void main() {
     );
     expect(raw, '{"version":99,"arrangements":[]}');
     await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     await layout(tester, 'Saved arrangements');
     expect(find.byType(TerminalArrangementsDialog), findsOneWidget);
     expect(find.text('Could not load arrangements.'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });
@@ -456,19 +468,19 @@ void main() {
     await mount(tester);
     await layout(tester, 'Saved arrangements');
     await tester.tap(find.byTooltip('Delete'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('Delete arrangement?'), findsOneWidget);
     await tester.tap(find.text('Cancel').last);
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(await store.load(), hasLength(1));
     await tester.tap(find.byTooltip('Delete'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(await store.load(), isEmpty);
     expect(find.text('No saved arrangements'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(panels(tester).single.session, same(first));
     expect(first.status, TerminalSessionStatus.idle);
     expect(tester.takeException(), isNull);

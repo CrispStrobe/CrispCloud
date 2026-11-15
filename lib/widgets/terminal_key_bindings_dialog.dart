@@ -447,6 +447,7 @@ class _EditTerminalKeyBindingDialogState
                     maxLength: TerminalKeyBinding.maximumTextLength,
                     decoration: InputDecoration(
                       labelText: context.terminalKeyBindingTr('Text'),
+                      errorMaxLines: 3,
                     ),
                     validator: (value) =>
                         TerminalKeyBinding.isValidText(value ?? '')
