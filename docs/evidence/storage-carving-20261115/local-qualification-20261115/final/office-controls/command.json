@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py",
+    "--summary",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/unittest-summary.json"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "shell_display": "python3 docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py --summary docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/unittest-summary.json"
+}

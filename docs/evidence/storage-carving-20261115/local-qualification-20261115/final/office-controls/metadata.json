@@ -1,0 +1,51 @@
+{
+  "after_entries_sha256": "b6ae4b74e0450fb0a39c22f1df82370bf81e4fb9625234085cf02a4f3b54d016",
+  "after_git": {
+    "head": "f19709b4b60a2dd22878ecbe8fb15785ccbba535",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/analysis-files.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/metadata.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/unittest-summary.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/source-freeze.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/inputs-after.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/metadata.json\n",
+    "tree": "7b238b90aa247fc365228a795db6405dfb1b445a",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1f80e59755df/CrispCloud/docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py": "0bbe1d9e7a2e140c8efe383cd916d85d47a6b2c9ef1d25366d15791ae2c0f294",
+    "/workspace/scratch/1f80e59755df/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7"
+  },
+  "before_entries_sha256": "b6ae4b74e0450fb0a39c22f1df82370bf81e4fb9625234085cf02a4f3b54d016",
+  "before_git": {
+    "head": "f19709b4b60a2dd22878ecbe8fb15785ccbba535",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/analysis-files.txt\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/source-freeze.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/command.json\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/inputs-after.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-qualification-20261115/final/strict-analysis/metadata.json\n",
+    "tree": "7b238b90aa247fc365228a795db6405dfb1b445a",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1f80e59755df/CrispCloud/docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py": "0bbe1d9e7a2e140c8efe383cd916d85d47a6b2c9ef1d25366d15791ae2c0f294",
+    "/workspace/scratch/1f80e59755df/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7"
+  },
+  "command": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/run_office_controls.py",
+    "--summary",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/final/office-controls/unittest-summary.json"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "elapsed_seconds": 14.309813576000124,
+  "finished_at": "2026-11-15T09:53:20.114657+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8490,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T09:53:05.802826+00:00",
+  "suite_count": null
+}

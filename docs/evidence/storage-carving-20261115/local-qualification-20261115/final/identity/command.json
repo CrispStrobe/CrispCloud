@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/verify_office_committed_identity.py",
+    "--app",
+    ".",
+    "--ref",
+    "f19709b4b60a2dd22878ecbe8fb15785ccbba535",
+    "--quds",
+    "/workspace/scratch/1f80e59755df/office_audit/quds_office_suite",
+    "--parser",
+    "/workspace/scratch/1f80e59755df/office_audit/legacy-doc-parser",
+    "--output",
+    "docs/evidence/storage-carving-20261115/local-qualification-20261115/final/identity/office-committed-identity.json"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "shell_display": "python3 docs/evidence/storage-carving-20261115/local-qualification-20261115/verify_office_committed_identity.py --app . --ref f19709b4b60a2dd22878ecbe8fb15785ccbba535 --quds /workspace/scratch/1f80e59755df/office_audit/quds_office_suite --parser /workspace/scratch/1f80e59755df/office_audit/legacy-doc-parser --output docs/evidence/storage-carving-20261115/local-qualification-20261115/final/identity/office-committed-identity.json"
+}

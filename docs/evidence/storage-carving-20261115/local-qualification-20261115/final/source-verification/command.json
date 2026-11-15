@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python3",
+    "tool/verify_office_fidelity.py",
+    "--source",
+    "/workspace/scratch/1f80e59755df/office_audit/quds_office_suite",
+    "--legacy-source",
+    "/workspace/scratch/1f80e59755df/office_audit/legacy-doc-parser",
+    "--require-tracked"
+  ],
+  "cwd": "/workspace/scratch/1f80e59755df/CrispCloud",
+  "shell_display": "python3 tool/verify_office_fidelity.py --source /workspace/scratch/1f80e59755df/office_audit/quds_office_suite --legacy-source /workspace/scratch/1f80e59755df/office_audit/legacy-doc-parser --require-tracked"
+}
