@@ -32,6 +32,7 @@ void main() {
     double width = 640,
     bool active = true,
     int focusRequest = 0,
+    FocusNode? terminalFocus,
     KeyEventResult Function(KeyEvent)? onWorkspaceKey,
   }) async {
     await tester.pumpWidget(
@@ -64,6 +65,7 @@ void main() {
                       key: view,
                       controller: controller,
                       scrollController: scroll,
+                      focusNode: terminalFocus,
                       readOnly: true,
                       autofocus: false,
                     ),
@@ -209,6 +211,33 @@ void main() {
     expect(field.focusNode!.hasFocus, isTrue);
     expect(field.controller!.text, 'hit');
     expect(find.text('1/1'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('deactivation preserves the parent viewport focus handoff', (
+    tester,
+  ) async {
+    final terminalFocus = FocusNode();
+    addTearDown(terminalFocus.dispose);
+    terminal.write('hit');
+    await mount(tester, terminalFocus: terminalFocus);
+    await findText(tester, 'hit');
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('terminal-search-query')),
+    );
+    expect(field.focusNode!.hasFocus, isTrue);
+
+    // A cramped parent hides its retained search and schedules a viewport
+    // focus request before the child's didUpdateWidget runs in this frame.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => terminalFocus.requestFocus(),
+    );
+    await mount(tester, active: false, terminalFocus: terminalFocus);
+    await tester.pump();
+    expect(terminalFocus.hasFocus, isTrue);
+    expect(field.focusNode!.hasFocus, isFalse);
+    expect(field.controller!.text, 'hit');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

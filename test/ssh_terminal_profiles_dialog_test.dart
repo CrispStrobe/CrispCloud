@@ -151,8 +151,15 @@ void main() {
     await store.save(SshTerminalProfile(name: 'Production', config: config));
     await open(tester, SshTerminalProfilesDialog(store: store));
     expect(tester.takeException(), isNull);
-    await tester.ensureVisible(
+    await tester.scrollUntilVisible(
       find.byKey(const ValueKey('ssh-profile-Production')),
+      80,
+      scrollable: find
+          .descendant(
+            of: find.byType(SshTerminalProfilesDialog),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);

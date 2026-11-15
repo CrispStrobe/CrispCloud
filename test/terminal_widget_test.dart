@@ -356,8 +356,6 @@ void main() {
   testWidgets(
     'font shortcuts resize only the viewport and reset without sending shell input',
     (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
       await mount(tester);
       final before = session.columns;
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
@@ -393,13 +391,12 @@ void main() {
       await tester.pump();
       expect(tester.takeException(), isNull);
     },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
   testWidgets(
     'find shortcut isolates query input and preserves query while the viewport is cramped',
     (tester) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(800, 600);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -458,6 +455,7 @@ void main() {
       await tester.pump();
       expect(tester.takeException(), isNull);
     },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
   testWidgets(

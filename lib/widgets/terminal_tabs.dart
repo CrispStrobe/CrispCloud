@@ -275,61 +275,78 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   for (final tab in _tabs)
                     Semantics(
                       selected: tab.id == _active,
-                      child: InkWell(
-                        key: ValueKey('terminal-tab-${tab.id}'),
-                        onTap: () => _activate(tab.id),
-                        onDoubleTap: () => unawaited(_rename(tab)),
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 200),
-                          padding: const EdgeInsets.only(left: 10),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                width: 2,
-                                color: tab.id == _active
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.transparent,
-                              ),
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 200),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              width: 2,
+                              color: tab.id == _active
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.transparent,
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                tab.session.isConnected
-                                    ? Icons.circle
-                                    : Icons.circle_outlined,
-                                size: 8,
-                                color:
-                                    tab.session.status ==
-                                        TerminalSessionStatus.failed
-                                    ? Theme.of(context).colorScheme.error
-                                    : null,
-                              ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Tooltip(
-                                  message: _label(tab),
-                                  child: Text(
-                                    _label(tab),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Flexible(
+                              child: InkWell(
+                                key: ValueKey('terminal-tab-${tab.id}'),
+                                onTap: () => _activate(tab.id),
+                                onDoubleTap: () => unawaited(_rename(tab)),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 10,
+                                    right: 6,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        tab.session.isConnected
+                                            ? Icons.circle
+                                            : Icons.circle_outlined,
+                                        size: 8,
+                                        color:
+                                            tab.session.status ==
+                                                TerminalSessionStatus.failed
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .error
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Tooltip(
+                                          message: _label(tab),
+                                          child: Text(
+                                            _label(tab),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              IconButton(
-                                key: ValueKey('terminal-close-tab-${tab.id}'),
-                                tooltip: context.terminalControlsTr(
-                                  'Close terminal',
-                                ),
-                                icon: const Icon(Icons.close, size: 14),
-                                onPressed: _tabs.length > 1
-                                    ? () => unawaited(_closeTab(tab))
-                                    : null,
-                                visualDensity: VisualDensity.compact,
+                            ),
+                            // Keep close outside the double-tap rename target:
+                            // a fast retry must always close, never rename.
+                            IconButton(
+                              key: ValueKey('terminal-close-tab-${tab.id}'),
+                              tooltip: context.terminalControlsTr(
+                                'Close terminal',
                               ),
-                            ],
-                          ),
+                              icon: const Icon(Icons.close, size: 14),
+                              onPressed: _tabs.length > 1
+                                  ? () => unawaited(_closeTab(tab))
+                                  : null,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ],
                         ),
                       ),
                     ),

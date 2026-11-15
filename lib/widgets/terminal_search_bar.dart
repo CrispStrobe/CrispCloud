@@ -85,6 +85,11 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
       });
     }
     final requestedFocus = oldWidget.focusRequest != widget.focusRequest;
+    if (oldWidget.active && !widget.active) {
+      // Release focus before the parent's post-frame handoff. Deferring this
+      // unfocus could overwrite a pending request for the terminal viewport.
+      _focus.unfocus();
+    }
     if (oldWidget.active != widget.active ||
         (widget.active && requestedFocus)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,8 +97,6 @@ class _TerminalSearchBarState extends State<TerminalSearchBar> {
         _search.setActive(widget.active);
         if (widget.active && (widget.autofocus || requestedFocus)) {
           _focus.requestFocus();
-        } else if (!widget.active) {
-          _focus.unfocus();
         }
       });
     }

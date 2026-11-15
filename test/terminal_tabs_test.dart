@@ -244,24 +244,27 @@ void main() {
     'mobile control keys activate their pane before subsequent typing',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
-      await mount(tester);
-      await layout(tester, 'Split side by side');
-      expect(view(tester, 1).focusNode!.hasFocus, isTrue);
-      final control = find.descendant(
-        of: find.byKey(const ValueKey('terminal-pane-1')),
-        matching: find.text('Ctrl+A'),
-      );
-      await tester.tap(control);
-      await tester.pump();
-      await tester.pump();
-      expect(view(tester, 0).focusNode!.hasFocus, isTrue);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyB, character: 'b');
-      await tester.pump();
-      expect(fixtures[0].connection.input.join(), '\x01b');
-      expect(fixtures[1].connection.input, isEmpty);
-      expect(tester.takeException(), isNull);
-      await unmount(tester);
+      try {
+        await mount(tester);
+        await layout(tester, 'Split side by side');
+        expect(view(tester, 1).focusNode!.hasFocus, isTrue);
+        final control = find.descendant(
+          of: find.byKey(const ValueKey('terminal-pane-1')),
+          matching: find.text('Ctrl+A'),
+        );
+        await tester.tap(control);
+        await tester.pump();
+        await tester.pump();
+        expect(view(tester, 0).focusNode!.hasFocus, isTrue);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyB, character: 'b');
+        await tester.pump();
+        expect(fixtures[0].connection.input.join(), '\x01b');
+        expect(fixtures[1].connection.input, isEmpty);
+        expect(tester.takeException(), isNull);
+        await unmount(tester);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     },
     skip: kIsWeb,
   );
@@ -403,6 +406,7 @@ void main() {
       expect(fixtures[1].connection.closes, 0);
       expect(find.byKey(const ValueKey('terminal-tab-2')), findsOneWidget);
       await closeTab(tester, 2);
+      expect(find.text('Close terminal?'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Close terminal'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('terminal-tab-2')), findsNothing);
@@ -431,6 +435,7 @@ void main() {
     expect(fixtures[1].session.disposals, 0);
     expect(fixtures[0].connection.closes, 0);
     await closeTab(tester, 2);
+    expect(find.text('Close terminal?'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Close terminal'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('terminal-tab-2')), findsNothing);
@@ -534,25 +539,28 @@ void main() {
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    await mount(tester);
-    await _chord(tester, [
-      LogicalKeyboardKey.metaLeft,
-    ], LogicalKeyboardKey.keyT);
-    expect(fixtures, hasLength(2));
-    await _chord(tester, [
-      LogicalKeyboardKey.metaLeft,
-    ], LogicalKeyboardKey.keyW);
-    await tester.pumpAndSettle();
-    expect(find.text('Close terminal?'), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(
-      fixtures.every((fixture) => fixture.connection.input.isEmpty),
-      isTrue,
-    );
-    expect(tester.takeException(), isNull);
-    await unmount(tester);
+    try {
+      await mount(tester);
+      await _chord(tester, [
+        LogicalKeyboardKey.metaLeft,
+      ], LogicalKeyboardKey.keyT);
+      expect(fixtures, hasLength(2));
+      await _chord(tester, [
+        LogicalKeyboardKey.metaLeft,
+      ], LogicalKeyboardKey.keyW);
+      await tester.pumpAndSettle();
+      expect(find.text('Close terminal?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(
+        fixtures.every((fixture) => fixture.connection.input.isEmpty),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('renaming a tab preserves its connection and other tab labels', (
@@ -560,7 +568,12 @@ void main() {
   ) async {
     await mount(tester);
     await newTab(tester);
-    await layout(tester, 'Rename terminal');
+    final label = find.byKey(const ValueKey('terminal-tab-2'));
+    await tester.tap(label);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(label);
+    await tester.pumpAndSettle();
+    expect(find.text('Rename terminal'), findsOneWidget);
     await tester.enterText(
       find.byKey(const ValueKey('terminal-tab-name')),
       'Build machine',

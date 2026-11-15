@@ -639,6 +639,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (!mounted ||
         !widget.visible ||
         !_activePane ||
+        !_focus.hasFocus ||
+        _focusAreaState.state != FocusArea.terminal ||
         !_session.isConnected ||
         !identical(terminal, _session.terminal)) {
       return;
@@ -930,6 +932,19 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                           child: Text(context.terminalTr('Reconnect SSH')),
                         ),
                       PopupMenuItem(
+                        value: _PanelAction.disconnect,
+                        enabled: _canDisconnect,
+                        child: Text(
+                          _usingScreen
+                              ? context.screenTr('Detach from screen')
+                              : context.terminalTr(
+                                  _usingTmux
+                                      ? 'Detach from tmux'
+                                      : 'Disconnect',
+                                ),
+                        ),
+                      ),
+                      PopupMenuItem(
                         value: _PanelAction.local,
                         child: Text(
                           context.terminalTr(
@@ -1017,19 +1032,6 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         enabled: _fontSize != 13,
                         child: Text(
                           context.terminalControlsTr('Reset font size'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: _PanelAction.disconnect,
-                        enabled: _canDisconnect,
-                        child: Text(
-                          _usingScreen
-                              ? context.screenTr('Detach from screen')
-                              : context.terminalTr(
-                                  _usingTmux
-                                      ? 'Detach from tmux'
-                                      : 'Disconnect',
-                                ),
                         ),
                       ),
                       PopupMenuItem(
