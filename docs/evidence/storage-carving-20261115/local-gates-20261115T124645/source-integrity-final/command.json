@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_source_and_notices.py",
+    "--repo",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+    "--quds",
+    "/workspace/scratch/1e19fe1d39ae/QudsCanonical",
+    "--parser",
+    "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+    "--output",
+    "/workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/source-integrity-final-details"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/CrispCloud",
+  "shell_display": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/plans/run_source_and_notices.py --repo /workspace/scratch/1e19fe1d39ae/CrispCloud --quds /workspace/scratch/1e19fe1d39ae/QudsCanonical --parser /workspace/scratch/1e19fe1d39ae/ParserCanonical --output /workspace/scratch/1e19fe1d39ae/CrispCloud/docs/evidence/storage-carving-20261115/local-gates-20261115T124645/source-integrity-final-details"
+}

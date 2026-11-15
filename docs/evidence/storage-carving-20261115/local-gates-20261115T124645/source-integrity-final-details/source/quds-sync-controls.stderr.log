@@ -1,0 +1,13 @@
+test_apply_without_source_modes_keeps_existing_permission_behavior (test_sync_office_fidelity.SyncOfficeFidelityTest.test_apply_without_source_modes_keeps_existing_permission_behavior) ... ok
+test_deleted_tracked_file_is_removed_from_manifest (test_sync_office_fidelity.SyncOfficeFidelityTest.test_deleted_tracked_file_is_removed_from_manifest) ... ok
+test_dry_run_is_read_only_and_apply_pins_exact_bytes (test_sync_office_fidelity.SyncOfficeFidelityTest.test_dry_run_is_read_only_and_apply_pins_exact_bytes) ... ok
+test_modified_pinned_file_refuses_every_write (test_sync_office_fidelity.SyncOfficeFidelityTest.test_modified_pinned_file_refuses_every_write) ... ok
+test_new_path_collision_refuses_every_write (test_sync_office_fidelity.SyncOfficeFidelityTest.test_new_path_collision_refuses_every_write) ... ok
+test_unknown_commit_does_not_write (test_sync_office_fidelity.SyncOfficeFidelityTest.test_unknown_commit_does_not_write) ... ok
+test_unrelated_app_and_package_configuration_are_not_synced (test_sync_office_fidelity.SyncOfficeFidelityTest.test_unrelated_app_and_package_configuration_are_not_synced) ... ok
+test_unsafe_manifest_path_is_rejected (test_sync_office_fidelity.SyncOfficeFidelityTest.test_unsafe_manifest_path_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.266s
+
+OK
