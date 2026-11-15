@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only narrative preparation; no final host runtime totals claimed",
+  "evidence_checkpoint_observed": "40d9bf353150c05b81b4f9c70ab044e20b315e1a",
+  "sources": {
+    "incoming_boundary": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/integration-return-audit/README.md",
+      "blob": "96c3f14ee4a882bb5fc4725851692915b82451b8",
+      "size": 5938,
+      "sha256": "f5c1871d28e7be8953f437d5b1939b996c51c75a522dd0012a028d45ce134757"
+    },
+    "incoming_merge_proof": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/integration-return-audit/resolved-merge-tree-proof.json",
+      "blob": "2da894d780aa3b92fd1c784c77f32fec8ae17302",
+      "size": 1557,
+      "sha256": "f7c4251439a5c344699ea72d6409526dc906f45a16717e897e175b8eb3824980"
+    },
+    "geometry_failure": {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/ods-geometry-baseline-2/summary.json",
+      "blob": "7f9b85d987521c04f7767467e5747bbd9dd13542",
+      "size": 1464,
+      "sha256": "cfd1ce0c64f18d058a36706b8229ef8a8f85067aa6a8b991bbfd3856bf0deab1"
+    },
+    "earlier_fixes_and_scope": {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/README.md",
+      "blob": "6caf34ea754507266f3a4d1f7c54f1c0e8bac908",
+      "size": 10639,
+      "sha256": "c9be3856a2a5cfc0a0f539828833beb79aa471622e6a66950376f60c812f5325"
+    },
+    "ods_restoration": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/canonical-ods-restoration/linkage.json",
+      "blob": "417b2b02f848e36166b25444dd83cd3253e414e4",
+      "size": 6539,
+      "sha256": "47f1f54a2d100086c8b08fa86315ffa7836a0b28f3df1a2b9a06b5bf7c596d7a"
+    },
+    "comments_correction": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/canonical-comments-ownership/linkage.json",
+      "blob": "746a375bab29d75cb3ff9bad1db223aeb187684a",
+      "size": 3819,
+      "sha256": "8c10170b7c36bfcc6d88e1a2db5ef80ebd176dfb4280621e33fcddb5ba52c9e9"
+    },
+    "comments_independent_review": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/comment-ownership-review/README.md",
+      "blob": "55805afeab411b3f23871069a36079850f1c417f",
+      "size": 2835,
+      "sha256": "bb4049307dc67e4ab2a0ca6220c2a14d91544dba5887e95d385bc851160dcd82"
+    },
+    "underline_review": {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/underline-overlay-independent-review.json",
+      "blob": "31056846dea449f34c8ad4eafe20a67082813b6c",
+      "size": 2892,
+      "sha256": "19676f3fdaa49692b98567d86d634f399abb64d7f8d69c984f4c1951a54a6e2c"
+    },
+    "host_failure_classification": {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/app-runtime-failure-classification.json",
+      "blob": "bce6e40db84d1fee061923f1c69bbf2643473e3f",
+      "size": 25309,
+      "sha256": "29f63c190363049a345f19105947f9142c9760c1476d34d7d2a8fb45bb4b7634"
+    },
+    "host_recovery_review": {
+      "path": "docs/evidence/storage-carving-20261115/local-resume-20261115T1150/incoming/host-recovery-independent-review.md",
+      "blob": "482276fe4830c33d4a175dd0a2ea68ae67298360",
+      "size": 4209,
+      "sha256": "cd1b7bf84128fb63627ff24c0e24e2664054acb31637fdc8408802c97b9a33ff"
+    },
+    "parser_full_run": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/integration-return-audit/parser-09a4/canonical-parser-full-qualification.json",
+      "blob": "b7337411166eba8ce6772c5392add894890f748b",
+      "size": 3235,
+      "sha256": "0df1c03912671a66f9f2717f79b0769ba10bf7b40193b42b7ac3800101d959e7"
+    },
+    "parser_full_audit": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/integration-return-audit/parser-09a4/independent-verification.json",
+      "blob": "22db91b7d7b497cfe1897abd90781f7a602fc1d9",
+      "size": 8067,
+      "sha256": "ecc57282917d68dbec29b44d81f34e7fc7846112928700cfcfc3fb5203cacb26"
+    },
+    "linux_golden_review": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/incoming-review/README.md",
+      "blob": "63e154fdd5799997133bc1d61f445716097540e5",
+      "size": 8346,
+      "sha256": "7d2120f6d3026582cb25f94e0b3b570efda76a083986e1139715eefd14d76445"
+    },
+    "comments_oracle_scope": {
+      "path": "docs/evidence/storage-carving-20261115/local-gates-20261115T124645/COMMENTS-ORACLE-PLAN.md",
+      "blob": "cf45909fd959e0961792f35e19dc2f15d84dd577",
+      "size": 4091,
+      "sha256": "356fe23344bb5b1fecfe7805e75d4accf017e73dac440bfad651ca6369202c10"
+    }
+  },
+  "current_host_counts_inferred": false,
+  "canonical_source": "47e44e0ae35adcc406eee2a2ae2118dd2a4a082a",
+  "parser_source": "08296edbee08da013a8ff718798972552ccd03f7",
+  "parser_full_evidence": "09a4a531a4aa210a638a220de45c9d53d44c84e1",
+  "parser_verified_tests": 4132,
+  "parser_verified_suites": 144,
+  "repo_mutations": false,
+  "runtime_started": false,
+  "upstream_refreshed": false
+}
