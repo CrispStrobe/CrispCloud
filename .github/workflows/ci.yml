@@ -270,6 +270,10 @@ jobs:
           python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
           python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
 
+      - name: Stress native toolbar replacement and window teardown
+        if: runner.os == 'macOS'
+        run: python3 tool/test_macos_browser_toolbar.py
+
       - name: Verify custom keychain isolation without changing user defaults
         if: runner.os == 'macOS'
         run: |
