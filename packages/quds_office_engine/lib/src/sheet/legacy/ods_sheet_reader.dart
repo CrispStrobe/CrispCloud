@@ -14,8 +14,17 @@ import 'dart:typed_data';
 import '../../opc/zip/zip_reader.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
+import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import '../styles/sml_styles.dart';
+
+typedef _OdsAnnotation = ({String text, String author});
+typedef _OdsCellContent = ({
+  Object? value,
+  String? formula,
+  String? valueType,
+  _OdsAnnotation? annotation,
+});
 
 /// Thrown when an ODS package cannot be read safely.
 class OdsSheetFormatException implements Exception {
@@ -41,6 +50,7 @@ abstract final class OdsSheetReader {
   static const _textNs = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
   static const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
   static const _number = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
+  static const _dc = 'http://purl.org/dc/elements/1.1/';
   static const _fo =
       'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
 
@@ -141,6 +151,7 @@ abstract final class OdsSheetReader {
                 int colSpan,
                 int rowSpan,
                 SmlCell? cell,
+                _OdsAnnotation? annotation,
               })
             >[];
         var column = 0;
@@ -155,7 +166,8 @@ abstract final class OdsSheetReader {
           if (element.localName == 'covered-table-cell') {
             if (_attribute(element, 'value-type', _office) != null ||
                 _attribute(element, 'formula', _table) != null ||
-                _text(element).isNotEmpty) {
+                _text(element).isNotEmpty ||
+                _readAnnotation(element) != null) {
               throw const OdsSheetFormatException('Covered cell contains data');
             }
             // A spanning origin already reserves its covered columns. Consume
@@ -230,7 +242,13 @@ abstract final class OdsSheetReader {
                   ((value is String ? utf8.encode(value).length : 0) +
                           (cell.formula == null
                               ? 0
-                              : utf8.encode(cell.formula!).length)) *
+                              : utf8.encode(cell.formula!).length) +
+                          (content.annotation == null
+                              ? 0
+                              : utf8.encode(content.annotation!.text).length +
+                                    utf8
+                                        .encode(content.annotation!.author)
+                                        .length)) *
                       count,
                 );
               }
@@ -240,6 +258,7 @@ abstract final class OdsSheetReader {
                 colSpan: colSpan,
                 rowSpan: rowSpan,
                 cell: cell,
+                annotation: content.annotation,
               ));
             }
           }
@@ -293,6 +312,17 @@ abstract final class OdsSheetReader {
                 }
                 if (entry.cell case final source?) {
                   _copyCell(source, sheet.cell(ref));
+                }
+                if (entry.annotation case final annotation?) {
+                  // Every coordinate is materialized once, after the shared
+                  // cell/text budgets and merge coverage have been checked.
+                  sheet.comments.add(
+                    SmlComment(
+                      ref: ref,
+                      text: annotation.text,
+                      author: annotation.author,
+                    ),
+                  );
                 }
                 if (entry.colSpan > 1 || entry.rowSpan > 1) {
                   final merge = SmlMerge(
@@ -351,7 +381,16 @@ abstract final class OdsSheetReader {
       if (roots != 1 || open != 0) {
         throw const OdsSheetFormatException('Unbalanced XML document');
       }
-      return XmlDocument.parse(source).root!;
+      // ODF number:text whitespace is an authored separator. The generic
+      // document parser drops leading whitespace-only nodes; the element
+      // reader retains them after the same complete bounded validation.
+      final materializer = XmlPullReader(source);
+      while (materializer.next()) {
+        if (materializer.eventType == XmlEventType.startElement) {
+          return XmlDocument.readElement(materializer);
+        }
+      }
+      throw const OdsSheetFormatException('Missing XML document root');
     } on OdsSheetFormatException {
       rethrow;
     } on Object catch (error) {
@@ -461,9 +500,7 @@ abstract final class OdsSheetReader {
     }
   }
 
-  static ({Object? value, String? formula, String? valueType}) _readCellContent(
-    XmlElement element,
-  ) {
+  static _OdsCellContent _readCellContent(XmlElement element) {
     Object? value;
     final valueType = _attribute(element, 'value-type', _office);
     switch (valueType) {
@@ -508,11 +545,53 @@ abstract final class OdsSheetReader {
     }
     if (value is String && value.isEmpty) value = null;
     final formula = _translateFormula(_attribute(element, 'formula', _table));
-    return (value: value, formula: formula, valueType: valueType);
+    return (
+      value: value,
+      formula: formula,
+      valueType: valueType,
+      annotation: _readAnnotation(element),
+    );
+  }
+
+  static _OdsAnnotation? _readAnnotation(XmlElement element) {
+    Iterable<XmlElement> annotationNodes(XmlElement parent) sync* {
+      for (final child in parent.childElements) {
+        if (child.localName == 'annotation') yield child;
+        yield* annotationNodes(child);
+      }
+    }
+
+    final annotations = annotationNodes(element).toList();
+    if (annotations.isEmpty) return null;
+    if (annotations.length != 1 ||
+        annotations.single.namespaceUri != _office ||
+        annotations.single.parent != element) {
+      throw const OdsSheetFormatException(
+        'Multiple or foreign-namespace ODS annotations are not supported',
+      );
+    }
+    final annotation = annotations.single;
+    final creators = annotation.childElements
+        .where((child) => child.localName == 'creator')
+        .toList();
+    if (creators.length > 1 ||
+        creators.any((creator) => creator.namespaceUri != _dc)) {
+      throw const OdsSheetFormatException(
+        'Ambiguous or foreign-namespace ODS annotation author',
+      );
+    }
+    final author = creators.firstOrNull?.text.trim();
+    if (author != null && author.length > 1024 * 1024) {
+      throw const OdsSheetFormatException('ODS annotation author limit');
+    }
+    return (
+      text: _text(annotation),
+      author: author == null || author.isEmpty ? 'Quds Office' : author,
+    );
   }
 
   static SmlCell? _createCell(
-    ({Object? value, String? formula, String? valueType}) content,
+    _OdsCellContent content,
     String? styleName,
     SmlStyleSheet engineStyles,
     Map<String, XmlElement> styles,
@@ -520,10 +599,11 @@ abstract final class OdsSheetReader {
     _OdsBudget budget, {
     required bool preserveEmptyStyle,
   }) {
-    final (:value, :formula, :valueType) = content;
+    final (:value, :formula, :valueType, :annotation) = content;
     // The named Default style on empty spreadsheet padding is not cell data.
     if (value == null &&
         formula == null &&
+        annotation == null &&
         (styleName == null || styleName == 'Default')) {
       return null;
     }
@@ -565,7 +645,9 @@ abstract final class OdsSheetReader {
             family != null ||
             numFmt != null);
 
-    if (value == null && formula == null && !styled) return null;
+    if (value == null && formula == null && !styled && annotation == null) {
+      return null;
+    }
 
     final cell = SmlCell(ref: const SmlCellRef(0, 0));
     if (value != null) {
@@ -711,7 +793,7 @@ abstract final class OdsSheetReader {
         if (symbol == null || symbol.isEmpty) return base;
         return '"$symbol"$base';
       case 'date-style':
-        return 'DD.MM.YYYY';
+        return _dateFormat(style);
       case 'time-style':
         return _timeFormat(style);
       case 'number-style':
@@ -725,6 +807,48 @@ abstract final class OdsSheetReader {
         return decimals == 0 ? integer : '$integer.${'0' * decimals}';
     }
     return null;
+  }
+
+  /// Keeps the authored component order and literal text of an ODF date style.
+  static String _dateFormat(XmlElement style) {
+    final buffer = StringBuffer();
+    for (final child in style.childElements) {
+      if (child.namespaceUri != _number) continue;
+      final short = _attribute(child, 'style', _number) == 'short';
+      switch (child.localName) {
+        case 'year':
+          buffer.write(short ? 'YY' : 'YYYY');
+        case 'month':
+          final textual = _attribute(child, 'textual', _number);
+          buffer.write(
+            textual == 'true' || textual == '1'
+                ? (short ? 'MMM' : 'MMMM')
+                : (short ? 'M' : 'MM'),
+          );
+        case 'day':
+          buffer.write(short ? 'D' : 'DD');
+        case 'day-of-week':
+          buffer.write(
+            _attribute(child, 'style', _number) == 'long' ? 'DDDD' : 'DDD',
+          );
+        case 'hours':
+          buffer.write(short ? 'H' : 'HH');
+        case 'minutes':
+          buffer.write(short ? 'M' : 'MM');
+        case 'seconds':
+          buffer.write(short ? 'S' : 'SS');
+        case 'am-pm':
+          buffer.write('AM/PM');
+        case 'text':
+          // Each literal character is escaped, including format letters,
+          // quotes, slashes and semicolons; it cannot become an Excel token.
+          // Retain an empty component and any authored spaces exactly.
+          for (final code in child.text.runes) {
+            buffer.write('\\${String.fromCharCode(code)}');
+          }
+      }
+    }
+    return buffer.isEmpty ? 'DD.MM.YYYY' : buffer.toString();
   }
 
   static String _timeFormat(XmlElement style) {
@@ -802,7 +926,17 @@ abstract final class OdsSheetReader {
   }
 
   static String _text(XmlElement element) {
-    final paragraphs = _descendants(element, 'p', _textNs).toList();
+    Iterable<XmlElement> bodyParagraphs(XmlElement parent) sync* {
+      for (final child in parent.childElements) {
+        // An annotation is a separate story, never part of its cell value.
+        // Its own text is read by calling _text on the annotation root.
+        if (child.localName == 'annotation') continue;
+        if (_is(child, 'p', _textNs)) yield child;
+        yield* bodyParagraphs(child);
+      }
+    }
+
+    final paragraphs = bodyParagraphs(element).toList();
     final buffer = StringBuffer();
     void write(String value) {
       if (buffer.length + value.length > 1024 * 1024) {
@@ -817,6 +951,7 @@ abstract final class OdsSheetReader {
       } else if (node is XmlCdata) {
         write(node.text);
       } else if (node is XmlElement) {
+        if (node.localName == 'annotation') return;
         if (_is(node, 's', _textNs)) {
           final count = _repeat(node, 'c', namespace: _textNs);
           if (count > 1024 * 1024) {

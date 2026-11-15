@@ -1,0 +1,76 @@
+{
+  "finite_cutoff": {
+    "app_branch_first_observed": "b0e0f1746e5042f9dfced8ab471222d33bcb63a0",
+    "app_pr120_followup_observed": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+    "canonical_pr24": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+    "parser_main": "7df906d2643d1fec39c49fc795733316a49f3278"
+  },
+  "app_first_parent": "b0e0f1746e5042f9dfced8ab471222d33bcb63a0",
+  "app_followup_changed_paths": [
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "app_followup_matches_canonical_source": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "canonical": "2e66897deff23729572a93eb0db337d0b07cd3d4",
+      "app": "2e66897deff23729572a93eb0db337d0b07cd3d4"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+      "canonical": "8830f108322ac01431ae3155cc2f14fd19459361",
+      "app": "8830f108322ac01431ae3155cc2f14fd19459361"
+    },
+    {
+      "path": "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods",
+      "canonical": "f82f396145214a3514731c8def45875d772bb673",
+      "app": "f82f396145214a3514731c8def45875d772bb673"
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "canonical": "3455adcd8cf4b855dfded9de1471c7b807a6c03f",
+      "app": "3455adcd8cf4b855dfded9de1471c7b807a6c03f"
+    },
+    {
+      "path": "packages/quds_office_engine/test/sml_styles_date_test.dart",
+      "canonical": "65d62cb14dc466a4f0cbcf8e57a8306f4088bf17",
+      "app": "65d62cb14dc466a4f0cbcf8e57a8306f4088bf17"
+    }
+  ],
+  "canonical_late_commits": [
+    "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661 edaa328d21fb455fe43b29ed6a2cc93ddd6f882b feat(sheet): keep ODS cell comments on import",
+    "edaa328d21fb455fe43b29ed6a2cc93ddd6f882b 5ab1afda502a69cd9524a46a7221caea983117f3 fix(sheet): render full month and weekday date tokens",
+    "5ab1afda502a69cd9524a46a7221caea983117f3 e033226bd2d53d1a818c6771ce347c23e6056857 fix(sheet): honor the authored ODS date-style order"
+  ],
+  "parser_source_equivalence": {
+    "our_original_merged_commit": "9864ac623a95b82c305ea2923f4ac783bbd200fe",
+    "late_main": "7df906d2643d1fec39c49fc795733316a49f3278",
+    "all_changed_paths": [
+      "README.md"
+    ],
+    "new_lib_test_pubspec_bytes": false
+  },
+  "published_canonical_resolution": {
+    "commit": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+    "tree": "f0687114070721dea2e655b6c0f2a882a1706492",
+    "parents": [
+      "cd56ae1550f37367ef5ec921d124211c7d7e224b",
+      "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661"
+    ],
+    "changed_paths": [
+      "packages/quds_office_engine/CHANGELOG.md",
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+      "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods",
+      "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "packages/quds_office_engine/test/sml_styles_date_test.dart"
+    ]
+  },
+  "geometry_paths_unchanged": true,
+  "required_engine_and_analysis_addition": "packages/quds_office_engine/test/sml_styles_date_test.dart",
+  "recommended_engine_addition": "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
+  "runtime_runs_before_source_checkpoint": false,
+  "actions_polled_or_waited": false
+}

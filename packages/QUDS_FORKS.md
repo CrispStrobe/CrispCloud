@@ -23,9 +23,9 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `cd56ae1550f37367ef5ec921d124211c7d7e224b` on
+The app mirrors Quds `b4950d60eb03365c1798d2dfc66a2c85a4e61be5` on
 `integration/storage-carving-qualification-20261115` and standalone
-legacy parser `5ba4993c24c88eb366ffbb4f5e16b8da6b418064`; all 2,259 managed files
+legacy parser `09c8b3731edb60bf6e5309578260af36b9433570`; all 2,274 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -69,6 +69,13 @@ The current pin above combines the subsequent canonical main, inline-picture
 and wrap-text branches, preserves the standalone parser source, and includes
 targeted wrap regressions. The source cutoff and new qualification are recorded
 in the storage evidence directory; earlier totals below retain their own pins.
+
+The final observed ODS batch preserves authored date component order and literal
+text, full month/weekday names, and bounded cell annotations with authors.
+Annotation text remains separate from cell values and is charged to the shared
+expansion budgets. Native default/base column geometry survives repeated copies.
+The standalone parser pin merges its observed main ancestry and retains bounded
+legacy Word text recovery with explicit host review before a separate copy.
 
 ## Spreadsheet audit checkpoint (14 November 2026)
 

@@ -1306,7 +1306,7 @@ String applyNumberFormat(Object? value, String code) {
     return value.toString();
   }
 
-  final List<String> sections = code.split(';');
+  final List<String> sections = _numberFormatSections(code);
   // Sections: positive; negative; zero. A negative section prints its own
   // sign (e.g. parentheses), so the value is formatted without one.
   var section = sections.first;
@@ -1332,11 +1332,28 @@ String applyNumberFormat(Object? value, String code) {
   return out;
 }
 
+// A literal semicolon must not turn one authored format into extra sections.
+List<String> _numberFormatSections(String code) {
+  final sections = <String>[];
+  var start = 0;
+  var quoted = false;
+  for (var i = 0; i < code.length; i++) {
+    if (code[i] == r'\') {
+      i++;
+    } else if (code[i] == '"') {
+      quoted = !quoted;
+    } else if (code[i] == ';' && !quoted) {
+      sections.add(code.substring(start, i));
+      start = i + 1;
+    }
+  }
+  sections.add(code.substring(start));
+  return sections;
+}
+
 /// [code] without quoted literals, escapes, and `[…]` blocks.
-String _literalFree(String code) => code
-    .replaceAll(RegExp(r'"[^"]*"'), '')
-    .replaceAll(RegExp(r'\\.'), '')
-    .replaceAll(RegExp(r'\[[^\]]*\]'), '');
+String _literalFree(String code) =>
+    code.replaceAll(RegExp(r'\\.|"[^"]*"|\[[^\]]*\]'), '');
 
 /// Formats one numeric section: `0` / `#` / `?` digits, `,` grouping and
 /// thousands scaling, `.` decimals, `%`, and literal prefix / suffix text.
@@ -1477,7 +1494,7 @@ DateTime excelSerialToDate(double serial) {
 
 /// formatExcelDate API.
 String formatExcelDate(DateTime dt, String code) {
-  const List<String> months = <String>[
+  const List<String> shortMonths = <String>[
     'Jan',
     'Feb',
     'Mar',
@@ -1491,8 +1508,40 @@ String formatExcelDate(DateTime dt, String code) {
     'Nov',
     'Dec',
   ];
+  const List<String> longMonths = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const List<String> shortDays = <String>[
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+  const List<String> longDays = <String>[
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
   String pad(int value, int width) => value.toString().padLeft(width, '0');
-  final String month = months[dt.month - 1];
+  final String month = shortMonths[dt.month - 1];
   // Literal escapes (`\.`) and quoted text must not be treated as date
   // tokens; Excel prints dd\.mm\.yyyy as 15.03.2023.
   final List<String> literals = <String>[];
@@ -1577,6 +1626,11 @@ String formatExcelDate(DateTime dt, String code) {
       i += 2;
       continue;
     }
+    if (upper.startsWith('MMMM', i)) {
+      out.write(longMonths[dt.month - 1]);
+      i += 4;
+      continue;
+    }
     if (upper.startsWith('MMM', i)) {
       out.write(month);
       i += 3;
@@ -1594,6 +1648,16 @@ String formatExcelDate(DateTime dt, String code) {
         minutePositions.contains(i) ? '${clock.minute}' : '${dt.month}',
       );
       i += 1;
+      continue;
+    }
+    if (upper.startsWith('DDDD', i)) {
+      out.write(longDays[dt.weekday - 1]);
+      i += 4;
+      continue;
+    }
+    if (upper.startsWith('DDD', i)) {
+      out.write(shortDays[dt.weekday - 1]);
+      i += 3;
       continue;
     }
     if (upper.startsWith('DD', i)) {

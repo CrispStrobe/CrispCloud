@@ -1,19 +1,27 @@
 # Latest integration continuation
 
-The remote checkpoints preserve current main through `4933ffc2`, ODF `7dec00fb`, both parallel qualification histories, canonical Office and all five newly found parser branches. The raw preceding 996-test receipts, Office oracle, source audit and VM/JavaScript PNG proof retain their original source scope; an independent audit revalidated them.
+## Saved integration scope
 
-## Current development checkpoint
+Current main through `4933ffc2`, ODF `7dec00fb`, both parallel qualification histories, and all observed canonical Office and parser work are incorporated. The finite final refresh includes app PR 120 through `c8fd8d76` (including `b0e0f174`), canonical ODS dates/comments through `9cc8c6e9`, and parser main `7df906d2`. Exact ancestry, overlapping-file equivalence and resolution are recorded in `incoming/late-refresh-audit.json` and `final-source-reconciliation.json`. Later upstream work is outside this recorded cohort.
 
-Canonical Office is `cd56ae1550f37367ef5ec921d124211c7d7e224b`; standalone parser is `5ba4993c24c88eb366ffbb4f5e16b8da6b418064`. All 2259 managed files match their current source pins. The app includes explicit, localized text-only recovery classification and consent, retains unknown source inventory as unknown, and keeps create-only copy saving and retry ownership.
+The app mirrors canonical Office `b4950d60eb03365c1798d2dfc66a2c85a4e61be5` and standalone parser `09c8b3731edb60bf6e5309578260af36b9433570`; all **2,274 managed files** match their source pins. The latest source is checkpointed before runtime qualification.
 
-The ODS baseline first exposed a duplicate test helper, then reproduced default columns shrinking from 81px to 64px after copy-save. Both failed gates are retained unchanged. The canonical correction stores native default/base column geometry and adds repeated direct/isolate save checks.
+## Corrections and preserved failures
 
-The parser baseline reproduced 13 failures in 16 targeted cases. Bounded recovery, Word6 Unicode/encoding handling, authoritative stream bounds and half-open story cleanup are corrected; the revised 17-case gate passes separately on the exact canonical pin. Later complete parser qualification is linked separately, without changing this pin for evidence-only commits.
+The ODS baseline first exposed a duplicate test helper, then reproduced default columns shrinking from **81px to 64px** after copy-save. Both failed gates remain unchanged. The canonical correction preserves native default/base geometry and tests repeated direct and isolate saves. The late date/comment integration preserves authored date order and literals, month/weekday rendering, and namespace-aware bounded annotations kept separate from cell values.
 
-## Remaining finite-cutoff integration and qualification
+The parser baseline reproduced 13 failures in 16 targeted cases. Canonical corrections cover cumulative recovery work/input bounds, authoritative stream bounds, Word6 Unicode/declared encoding handling, Word98 identification and half-open story cleanup. All 17 revised targeted regressions pass on the identical production/test bytes retained by the current source pin. Complete parser strict/full-suite qualification is recorded on its canonical integration branch separately.
 
-The saved final remote refresh found one later app ODS date-style branch, the matching canonical date/comment changes, and parser main merging already incorporated source. That last reconciliation is underway before the final source freeze. Newer work outside this recorded refresh is outside this cohort.
+The host now represents unreadable source inventory as unknown, propagates explicit text-only recovery classification, requires localized loss disclosure and acknowledgement, and retains create-only copy saving and retry ownership. A separate source review covers this host integration.
 
-The planned final cohorts contain 63 app, 9 editor and 20 engine suites, plus 143 standalone parser suites under its separately recorded development graph. Four app-side strict-analysis groups, independent Office outputs, source/notices controls, actual VM/compiled-JavaScript PNG checks, and genuine font-backed navigation captures remain source-bound gates. Development runs and retries are never added to final acceptance totals.
+## Local qualification in progress
 
-App and CLI dependency resolution passes with their committed locks unchanged. No native hook is disabled or substituted. Each completed gate, including failures, is saved remotely before the next gate. Every checkpoint uses `[skip ci]`; no GitHub Actions run is awaited or restarted.
+The final selected cohorts contain **63 app / 9 editor / 22 engine suites**. Strict analysis covers **72 app / 16 engine / 4 editor / 1 CLI files**. The standalone parser runs all 143 unit suites under its separately recorded development dependency graph. Test counts will come from completed raw machine reports, not the predecessor totals.
+
+Remaining source-bound gates include strict analysis, the selected runtime cohorts, independent checks of actual Office outputs, source/notices controls, actual VM and compiled-JavaScript PNG recovery, and real font-backed worksheet navigation captures with independent artifact and visual review. Development runs and retries never inflate final acceptance totals.
+
+App and CLI locked offline resolution passes with their committed locks unchanged. Native hooks remain enabled and use the verified real toolchain. Each completed gate, including failures, is saved remotely before the next gate. Checkpoint commits use `[skip ci]`; no GitHub Actions run is awaited or restarted.
+
+## Evidence boundaries
+
+The independently revalidated predecessor evidence comprises 996 tests, Office output/oracle checks, source controls and VM/JavaScript PNG proof on its original source. Those raw receipts remain preserved and are not acceptance for this newer combined source. External native Office applications, other operating systems and broad Open XML schema certification remain separate scopes. Two optional HOME-scanning corpus harnesses are preserved without execution or vacuous acceptance.

@@ -18,7 +18,8 @@ Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
   const bindings =
       'xmlns:o="$_office" xmlns:t="$_table" '
       'xmlns:x="$_text" xmlns:s="$_style" xmlns:f="$_fo" '
-      'xmlns:e="urn:test:extension"';
+      'xmlns:e="urn:test:extension" '
+      'xmlns:dc="http://purl.org/dc/elements/1.1/"';
   zip.addFile(
     'content.xml',
     utf8.encode(
@@ -50,10 +51,204 @@ String _xmlAttribute(String value) => value
 
 Matcher get _invalidOds => throwsA(isA<OdsSheetFormatException>());
 
+void annotationAndAuthoredDateTests() {
+  test(
+    'repeated annotations stay separate from cell values through save',
+    () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-row t:number-rows-repeated="2">'
+          '<t:table-cell t:number-columns-repeated="2">'
+          '<o:annotation><dc:creator>Éva</dc:creator>'
+          '<x:p>First<x:s x:c="2"/>note</x:p><x:p>Next</x:p>'
+          '</o:annotation></t:table-cell>'
+          '<t:table-cell><x:p>Visible value</x:p>'
+          '<o:annotation><x:p>Private note</x:p></o:annotation>'
+          '</t:table-cell></t:table-row></t:table>',
+        ),
+      );
+      void check(SmlWorkbook value) {
+        final sheet = value.firstSheet;
+        expect(sheet.comments.map((comment) => comment.ref.a1), [
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          'B2',
+          'C2',
+        ]);
+        for (final ref in ['A1', 'B1', 'A2', 'B2']) {
+          final comment = sheet.comments.singleWhere(
+            (note) => note.ref.a1 == ref,
+          );
+          expect(comment.text, 'First  note\nNext');
+          expect(comment.author, 'Éva');
+          expect(sheet.cellA1(ref).value, isNull);
+        }
+        for (final ref in ['C1', 'C2']) {
+          expect(sheet.cellA1(ref).value, 'Visible value');
+          final comment = sheet.comments.singleWhere(
+            (note) => note.ref.a1 == ref,
+          );
+          expect(comment.text, 'Private note');
+          expect(comment.author, 'Quds Office');
+        }
+      }
+
+      check(book);
+      check(
+        SheetDeserializer().readBytes(
+          await OfficeIsolateSave.workbook(book, recalculate: false),
+        ),
+      );
+    },
+  );
+
+  test(
+    'ambiguous and foreign annotations are refused without inventing a value',
+    () {
+      for (final contents in [
+        '<o:annotation><x:p>One</x:p></o:annotation>'
+            '<o:annotation><x:p>Two</x:p></o:annotation>',
+        '<e:annotation><x:p>Foreign note</x:p></e:annotation>',
+        '<x:p><o:annotation><x:p>Nested note</x:p></o:annotation></x:p>',
+        '<o:annotation><e:creator>Wrong namespace</e:creator>'
+            '<x:p>Note</x:p></o:annotation>',
+        '<o:annotation><dc:creator>One</dc:creator>'
+            '<dc:creator>Two</dc:creator><x:p>Note</x:p></o:annotation>',
+      ]) {
+        expect(
+          () => OdsSheetReader.readBytes(
+            _ods(
+              '<t:table><t:table-row><t:table-cell>$contents</t:table-cell>'
+              '</t:table-row></t:table>',
+            ),
+          ),
+          _invalidOds,
+          reason: contents,
+        );
+      }
+    },
+  );
+
+  test(
+    'repeated annotation text and author consume the expanded text budget',
+    () {
+      for (final note in [
+        '<x:p><x:s x:c="4096"/></x:p>',
+        '<dc:creator>${'a' * 4096}</dc:creator><x:p>x</x:p>',
+      ]) {
+        expect(
+          () => OdsSheetReader.readBytes(
+            _ods(
+              '<t:table><t:table-row><t:table-cell t:number-columns-repeated="2048">'
+              '<o:annotation>$note</o:annotation></t:table-cell>'
+              '</t:table-row></t:table>',
+            ),
+          ),
+          _invalidOds,
+        );
+      }
+    },
+  );
+
+  test('annotation-only cells obey materialized-cell and grid bounds', () {
+    for (final dimensions in [
+      (rows: 51, columns: 4096),
+      (rows: 1, columns: 4097),
+      (rows: 100001, columns: 1),
+    ]) {
+      expect(
+        () => OdsSheetReader.readBytes(
+          _ods(
+            '<t:table><t:table-row t:number-rows-repeated="${dimensions.rows}">'
+            '<t:table-cell t:number-columns-repeated="${dimensions.columns}">'
+            '<o:annotation/></t:table-cell></t:table-row></t:table>',
+          ),
+        ),
+        _invalidOds,
+      );
+    }
+  });
+
+  test('covered cells cannot silently discard annotations', () {
+    expect(
+      () => OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-row><t:table-cell t:number-columns-spanned="2"/>'
+          '<t:covered-table-cell><o:annotation><x:p>Hidden note</x:p>'
+          '</o:annotation></t:covered-table-cell></t:table-row></t:table>',
+        ),
+      ),
+      _invalidOds,
+    );
+  });
+
+  test('authored date literals retain spaces quotes and format-like text', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table><t:table-row><t:table-cell t:style-name="date" '
+        'o:value-type="date" o:date-value="2024-03-04T13:45:00"/>'
+        '</t:table-row></t:table>',
+        styles:
+            '<n:date-style xmlns:n="$_number" s:name="dateFormat">'
+            '<e:year/><n:year n:style="long"/><n:text>-</n:text>'
+            '<n:month n:style="long"/><n:text>-</n:text><n:day n:style="long"/>'
+            '<n:text>   </n:text><n:hours n:style="long"/>'
+            '<n:text>:</n:text><n:minutes n:style="long"/><n:text/>'
+            r'<n:text> "m;\H"</n:text>'
+            '</n:date-style><s:style s:name="date" s:family="table-cell" '
+            's:data-style-name="dateFormat"/>',
+      ),
+    );
+    void check(SmlWorkbook value) {
+      final cell = value.firstSheet.cellA1('A1');
+      expect(
+        value.styles!.format(cell.value, cell.styleIndex),
+        r'2024-03-04   13:45 "m;\H"',
+      );
+    }
+
+    check(book);
+    check(
+      SheetDeserializer().readBytes(
+        await OfficeIsolateSave.workbook(book, recalculate: false),
+      ),
+    );
+  });
+
+  test(
+    'authored textual dates use namespace-aware widths and weekday names',
+    () {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-row><t:table-cell t:style-name="date" '
+          'o:value-type="date" o:date-value="2024-01-02"/>'
+          '</t:table-row></t:table>',
+          styles:
+              '<n:date-style xmlns:n="$_number" s:name="dateFormat">'
+              '<n:day-of-week n:style="long"/><n:text>, </n:text>'
+              '<n:month e:textual="false" n:textual="1" n:style="long"/>'
+              '<n:text> </n:text><n:day e:style="long" n:style="short"/>'
+              '<n:text>, </n:text><n:year n:style="long"/>'
+              '</n:date-style><s:style s:name="date" s:family="table-cell" '
+              's:data-style-name="dateFormat"/>',
+        ),
+      );
+      final cell = book.firstSheet.cellA1('A1');
+      expect(
+        book.styles!.format(cell.value, cell.styleIndex),
+        'Tuesday, January 2, 2024',
+      );
+    },
+  );
+}
+
 /// Synthetic LibreOffice-generated ODS (values, formulas, styles, merge).
 void main() {
   edgeTests();
   defaultAndTimeTests();
+  annotationAndAuthoredDateTests();
   final bytes = File('test/fixtures/fidelity/legacy-sheet.ods')
       .readAsBytesSync();
 
@@ -1020,8 +1215,19 @@ void edgeTests() {
     expect(merge.r1, 1);
     expect(sheet.cellA1('D1').horizontalAlign, SmlHAlign.center);
     expect(book.sheets[1].cellA1('A1').value, 41);
+    expect(sheet.comments.single.ref.a1, 'A5');
+    expect(sheet.comments.single.text, 'Review this');
+    expect(sheet.comments.single.author, 'Alice');
     expect(sheet.cellA1('E3').value, 'A    B');
     expect(sheet.cellA1('E4').value, 'L1\nL2');
+    expect(
+      styles.format(sheet.cellA1('F3').value, sheet.cellA1('F3').styleIndex),
+      '2024-03-04',
+    );
+    expect(
+      styles.format(sheet.cellA1('F4').value, sheet.cellA1('F4').styleIndex),
+      '2024-03-04 13:45',
+    );
   });
 
   test('edge ODS survives an xlsx round trip', () async {
@@ -1033,6 +1239,7 @@ void edgeTests() {
     expect(reopened.sheets.first.cellA1('A1').value, 45293);
     expect(reopened.sheets.first.cellA1('B1').formula, 'Sheet2!A1+1');
     expect(reopened.sheets.first.merges, hasLength(1));
+    expect(reopened.sheets.first.comments.single.text, 'Review this');
     expect(
       reopened.styles!.format(
         45293,

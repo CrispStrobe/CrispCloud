@@ -1,12 +1,18 @@
 # legacy_doc_parser
 
-A portable Dart library for reading Word 97–2003 binary `.doc` and `.dot` files,
+A portable Dart library for reading supported Word 97–2003 binary `.doc` and `.dot` files,
 producing a structured document model and safe previews, and converting a
 separate copy to DOCX or explicitly requested DOCM. The package runs on the Dart
 VM and in JavaScript builds without Flutter, installed Office or a network
 service.
 
 The codebase currently supports:
+
+- Content-based identification of legacy Word, RTF and other supported container
+  signatures, independent of the filename; accepted Word 98 Mac version markers.
+- Word 6.0/95 main-text import and opt-in text recovery from damaged compound
+  directories. These paths are deliberately text-only: they do not claim the
+  rich formatting, stories or layout of the structured Word 97+ importer.
 
 - Main text, sections, headers, footers, footnotes, endnotes, comments and
   bookmarks, with original UTF-16 character positions retained in the model.
@@ -38,7 +44,8 @@ The codebase currently supports:
   objects, macros and signature evidence are retained only within the documented
   conversion contracts; the library never executes them.
 - Canonical built-in style names in generated DOCX, independent of source UI language.
-- Opt-in recovery for damaged auxiliary features, with explicit diagnostics for
+- Opt-in recovery for damaged auxiliary features, including contradictory comments
+  or bookmarks, with explicit diagnostics for
   degraded output; strict parsing remains the default.
 - Explicit warnings, conversion limitations and preservation counts, so callers
   can distinguish supported output, recovered structures and retained evidence.

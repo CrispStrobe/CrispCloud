@@ -1,0 +1,89 @@
+[
+  {
+    "repository": "CrispStrobe/CrispCloud",
+    "prs": [
+      {
+        "number": 120,
+        "state": "open",
+        "title": "Vendor ODS date-style fidelity fixes",
+        "updated_at": "2026-11-15T11:23:23Z",
+        "merged_at": null,
+        "head": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+        "branch": "fix/ods-date-styles",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/120"
+      },
+      {
+        "number": 111,
+        "state": "open",
+        "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+        "updated_at": "2026-11-15T11:10:56Z",
+        "merged_at": null,
+        "head": "dca83f902dd92fd6338ded42394a2c37ccdc909a",
+        "branch": "integration/storage-carving-20261115",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/111"
+      },
+      {
+        "number": 116,
+        "state": "closed",
+        "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+        "updated_at": "2026-11-15T10:28:59Z",
+        "merged_at": null,
+        "head": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+        "branch": "fix/odf-final",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/116"
+      },
+      {
+        "number": 119,
+        "state": "closed",
+        "title": "Vendor ODS style/date fixes and live ODF corpus coverage",
+        "updated_at": "2026-11-15T10:16:48Z",
+        "merged_at": "2026-11-15T10:16:48Z",
+        "head": "f74f1fceb9959b1197fc21218e047240f215ba75",
+        "branch": "integrate/ods-style-20261115",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/119"
+      },
+      {
+        "number": 118,
+        "state": "closed",
+        "title": "Preserve ODS cell positions and cover ODS copy saves",
+        "updated_at": "2026-11-15T09:50:45Z",
+        "merged_at": "2026-11-15T09:50:45Z",
+        "head": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+        "branch": "integrate/ods-fixes-20261115",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/118"
+      }
+    ]
+  },
+  {
+    "repository": "CrispStrobe/quds_office_suite",
+    "prs": [
+      {
+        "number": 24,
+        "state": "open",
+        "title": "Finish ODS fidelity: geometry and date formats",
+        "updated_at": "2026-11-15T11:20:01Z",
+        "merged_at": null,
+        "head": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+        "branch": "fix/odf-legacy-spreadsheets",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/pull/24"
+      },
+      {
+        "number": 25,
+        "state": "open",
+        "title": "Accept OOXML step vocabulary, keep all Word underline styles, continue formatting after a split",
+        "updated_at": "2026-11-15T10:29:22Z",
+        "merged_at": null,
+        "head": "b6d27c84a72d622f670a7e646e36ba4bd920cfc8",
+        "branch": "fix/word-steps-vocabulary",
+        "base": "main",
+        "url": "https://github.com/CrispStrobe/quds_office_suite/pull/25"
+      }
+    ]
+  }
+]

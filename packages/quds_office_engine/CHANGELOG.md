@@ -4,6 +4,12 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve ODS authored date-component order, literal separators, full month and
+  weekday names, and cell annotations through XLSX copies. Annotation text stays
+  separate from cell values; repeated notes and authors share the existing cell
+  and expanded-text limits. Multiple, nested or foreign-namespace annotations
+  and ambiguous authors explicitly decline. Escaped/quoted format literals do
+  not become date tokens or numeric section separators.
 - Reconcile current ODS geometry, currency and explicit whitespace imports with
   bounded namespace-aware parsing. Keep inherited empty-cell padding sparse,
   retain explicit formatted blanks, and reject stored cells hidden inside an

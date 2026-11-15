@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-15T11:33:42.837340+00:00",
+  "scope": "Finite observed incoming batch reconciled before local qualification; no later rolling refresh.",
+  "app_parents": [
+    "f2f3b2997e46d5bc958a44f50c035da83ad25d07",
+    "c8fd8d76a5367e2712600451de3a2811b085a6c5"
+  ],
+  "canonical_office": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+  "standalone_parser": "09c8b3731edb60bf6e5309578260af36b9433570",
+  "managed_files": 2274,
+  "resolved_app_overlap": "All five late app vendor source/fixture/test blobs equal the canonical incoming head; merged ancestry retained and copies replaced by the canonical bounded resolution through the guarded sync tool.",
+  "parser_source_scope": "Stable main/README merge source pin; later standalone evidence-only commits are linked separately and do not force another app source pin.",
+  "canonical_geometry_preserved": true,
+  "dependency_resolution": "final-source-resolution/receipt.json",
+  "late_source_audit": "incoming/late-refresh-audit.json",
+  "prior_failed_development_gates": [
+    "ods-geometry-baseline",
+    "ods-geometry-baseline-2"
+  ],
+  "qualification_status": "Source checkpoint; final local gate results are not yet available.",
+  "actions_waited_or_restarted": false
+}

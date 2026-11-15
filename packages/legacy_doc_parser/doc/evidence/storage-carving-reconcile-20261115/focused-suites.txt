@@ -1,0 +1,12 @@
+test/recovery_reconciliation_bounds_test.dart
+test/damaged_compound_recovery_test.dart
+test/file_kind_test.dart
+test/recover_comments_bookmarks_test.dart
+test/word6_text_import_test.dart
+test/word98_mac_nfib_test.dart
+test/legacy_word_recovery_mode_test.dart
+test/legacy_word_text_extraction_test.dart
+test/legacy_word_text_unicode_test.dart
+test/compound_header_bounds_test.dart
+test/compound_stream_size_test.dart
+test/legacy_word_fib_extension_test.dart

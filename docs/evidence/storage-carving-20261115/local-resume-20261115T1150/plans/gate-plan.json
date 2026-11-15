@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "prepared for post-merge clean saved source; not execution results",
+  "status": "final observed source cohort; execution results must come from separately recorded gates",
   "source_inputs": {
     "CrispCloud prior qualified integration": "59466d8b48f329362ab88e9da5e195c849557069",
     "CrispCloud main": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
@@ -14,7 +14,12 @@
     "Parser PR15": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
     "Parser PR16": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
     "Parser PR17": "89555522726432b1449f0d26e701376ec6f59a27",
-    "Parser PR18": "120a3cc93776263c37a501d78a9688c0f6d66932"
+    "Parser PR18": "120a3cc93776263c37a501d78a9688c0f6d66932",
+    "CrispCloud PR120 observed descendant": "c8fd8d76a5367e2712600451de3a2811b085a6c5",
+    "Quds PR24 final observed": "9cc8c6e91ff9acf0f52a68aea7c0da69934a2661",
+    "Quds current integrated pin": "b4950d60eb03365c1798d2dfc66a2c85a4e61be5",
+    "Parser main final observed": "7df906d2643d1fec39c49fc795733316a49f3278",
+    "Parser current integrated pin": "09c8b3731edb60bf6e5309578260af36b9433570"
   },
   "manifests": {
     "app-suites.txt": {
@@ -47,11 +52,13 @@
     },
     "engine-suites.txt": {
       "prior_count": 17,
-      "count": 20,
+      "count": 22,
       "additions": [
         "packages/quds_office_engine/test/word_steps_vocabulary_test.dart",
         "packages/quds_office_engine/test/office_pdf_export_test.dart",
-        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart"
+        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
+        "packages/quds_office_engine/test/sml_styles_date_test.dart",
+        "packages/quds_office_engine/test/sheet_comments_schema_test.dart"
       ]
     },
     "analysis-app-files.txt": {
@@ -81,7 +88,7 @@
     },
     "analysis-engine-files.txt": {
       "prior_count": 5,
-      "count": 15,
+      "count": 16,
       "additions": [
         "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart",
         "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart",
@@ -92,7 +99,8 @@
         "packages/quds_office_engine/test/office_pdf_export_test.dart",
         "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
         "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
-        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart"
+        "packages/quds_office_engine/test/sheet_normal_font_metrics_test.dart",
+        "packages/quds_office_engine/test/sml_styles_date_test.dart"
       ]
     },
     "analysis-cli-files.txt": {
@@ -135,7 +143,6 @@
     "engine",
     "scripted-oracle",
     "source-integrity",
-    "bundled-notices",
     "png-portable",
     "navigation-capture",
     "navigation-independent-review"
@@ -165,6 +172,8 @@
     "Structured conversion dialog and conversion service regressions": "Generated Word6, directory-damaged CFBF and unsupported counted FIB must yield explicit reviewed text-only copies, no structured claims, no source mutation, and durable recovery identity through collision retry; encrypted and non-Word input remain rejected.",
     "Legacy copy target and installed-conversion dialog suites": "Host source-inspection initialization, LegacyWordCopy classification and reviewed-save retry changed; preserve captured sibling-only saves and native-converter behavior for valid inspectable input.",
     "Legacy conversion localization suite": "Recovery label, explicit notice and acceptance text exist in all nine supported languages without falling back to English.",
-    "sheet_normal_font_metrics_test and model/serializer": "Reproduced 81px-to-64px ODS copy-save loss; new direct/isolate save cycles verify explicit, base-only and zero default widths without changing existing native attributes."
+    "sheet_normal_font_metrics_test and model/serializer": "Reproduced 81px-to-64px ODS copy-save loss; new direct/isolate save cycles verify explicit, base-only and zero default widths without changing existing native attributes.",
+    "sml_styles_date_test": "Authored ODS date order/literals, full month and weekday rendering; literal semicolons must not become number-format sections.",
+    "sheet_comments_schema_test": "New ODS annotations reach XLSX comment serialization; retain author-table, content-type, and worksheet-relationship schema checks."
   }
 }

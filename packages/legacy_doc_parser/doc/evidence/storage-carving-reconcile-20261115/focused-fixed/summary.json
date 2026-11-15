@@ -1,0 +1,39 @@
+{
+  "done_events": [
+    {
+      "success": true,
+      "time": 1595,
+      "type": "done"
+    }
+  ],
+  "done_success": true,
+  "errors": [],
+  "hidden_test_done": 1,
+  "missing_suites": [],
+  "non_json_lines": 0,
+  "non_object_json_lines": 0,
+  "nonpassing_requested_suites": [],
+  "qualification_success": true,
+  "suites": [
+    {
+      "errors": 0,
+      "failed": 0,
+      "observed": true,
+      "other_results": 0,
+      "passed": 17,
+      "path": "test/recovery_reconciliation_bounds_test.dart",
+      "result": "passed",
+      "skipped": 0,
+      "tests": 17
+    }
+  ],
+  "totals": {
+    "errors": 0,
+    "failed": 0,
+    "other_results": 0,
+    "passed": 17,
+    "skipped": 0,
+    "tests": 17
+  },
+  "unexpected_suites": []
+}
