@@ -1,0 +1,164 @@
+{
+  "at": "2026-11-15T12:32:26.561931+00:00",
+  "canonical_parser": {
+    "app_link_report_sha256": "ddcddb85ea86ed38763feaa6358e32e12d85166fca0bbba46af94ed0b9519033",
+    "final_evidence_head": "57442c79239fb4d483e274e0ebb04f34686beb6c",
+    "gates": [
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "0de0eb9dfe28575bfdd3f6cdf7196f3d56649ed4afbdbfc54df0ca25e7c0def4",
+        "current_source_and_declaration_inputs": 949,
+        "current_tools_verified": 5,
+        "errors": 0,
+        "hidden_success_events": 1,
+        "label": "directory-focused-fixed",
+        "recorded_input_count": 1819,
+        "recorded_input_digest": "5d03427cd02051507f614cbd4c44ce679d095d3244c5dfe11de7ba58d1c8b391",
+        "skipped": 0,
+        "source_identity_equal_to_app_pin": true,
+        "success": true,
+        "suites": 1,
+        "tested_head": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+        "tests": 9
+      },
+      {
+        "analyzed_files": 18,
+        "artifact_files": 6,
+        "artifact_index_sha256": "0d3dbd95a704f1081d6208d650a5b8ee676febfbc10e57781eba8d09024e3abf",
+        "current_source_and_declaration_inputs": 949,
+        "current_tools_verified": 4,
+        "fatal_infos_explicit": true,
+        "label": "directory-strict-analysis",
+        "no_analyzer_issues_reported": true,
+        "recorded_input_count": 1828,
+        "recorded_input_digest": "4785552882e3e2afcb2dfc09105ce14b0af871b8cc24c97fa9dc711a5b21c0e7",
+        "source_identity_equal_to_app_pin": true,
+        "success": true,
+        "tested_head": "fde5685965db83e9cfb6807ecba1205438d7e819"
+      },
+      {
+        "all_starts_have_one_successful_end": true,
+        "artifact_files": 8,
+        "artifact_index_sha256": "a950c3f7b72f252b3acedea5748f487060f7ec136234ba93064e0b03ac817af3",
+        "current_source_and_declaration_inputs": 949,
+        "current_tools_verified": 5,
+        "errors": 0,
+        "hidden_success_events": 144,
+        "label": "directory-all-parser-final",
+        "recorded_input_count": 1835,
+        "recorded_input_digest": "6574327c24c222b3016eccec1e2de598b81acb4c1275a9383427ff5fadef6533",
+        "skipped": 0,
+        "source_identity_equal_to_app_pin": true,
+        "success": true,
+        "suites": 144,
+        "tested_head": "337b2fad504ce68f9e5e5053ae859bb5905f3dd8",
+        "tests": 4131
+      }
+    ],
+    "normalized_source_resolution_sha256": "6149dc897d58ac97384d135303acad721fbbfe24cf39dca2c92ef0cdcc577447",
+    "only_evidence_diffs_after_pin": true,
+    "scope": "Standalone parser development graph; host graph qualification remains the separate app/engine/editor gates.",
+    "source_git_entries": 937,
+    "source_pin": "9bdcc7eba3f1ce80b7d834d7740895774eeca615"
+  },
+  "ci_polls_or_waits": 0,
+  "evidence_only_paths_since_production_checkpoint": 194,
+  "incoming_closure": {
+    "ancestors_independently_rechecked": 49,
+    "observed_heads": 53,
+    "scope": "Final immutable production-pin supplement to the same finite 53-head incoming audit; no new upstream observation or runtime claim.",
+    "superseded_with_separate_reviewed_equivalence_proofs": 4,
+    "supplement_sha256": "0ff4f18f2228deb2e5e692c31aed69b4563ef45380b429c29504b6a6097befb0",
+    "unaccounted": 0
+  },
+  "managed_source": {
+    "all_bytes_git_blobs_modes_match": true,
+    "by_canonical": {
+      "parser": 1807,
+      "quds": 496
+    },
+    "canonical_pins": {
+      "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+      "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+    },
+    "files": 2303,
+    "full_checkout_gate_tracked_files": 11366,
+    "manifest_sha256": "f734610dc8d741b8180c33d7d5fdba9eff288cca4c6f2dad73faf1c4c9242f54",
+    "source_controls": 85
+  },
+  "navigation": {
+    "capture_tests_separate_from_host_total": 12,
+    "captures": [
+      {
+        "dimensions": [
+          1600,
+          1000
+        ],
+        "file": "rename-validation.png",
+        "fonts": 6,
+        "locale": "en",
+        "sha256": "081e408dc6062dc9c1bdcc7cf7e6b3ddea64e4d747d0ea1ca551a5107240b693",
+        "source_files": 2
+      },
+      {
+        "dimensions": [
+          390,
+          1000
+        ],
+        "file": "worksheet-arabic-narrow.png",
+        "fonts": 6,
+        "locale": "ar",
+        "sha256": "fd621aedbfd1cd3a4748d2d5fce7c6c637ba757e4cdfda57e0b5426fb5ac718d",
+        "source_files": 2
+      }
+    ],
+    "generator_binding_sha256": "dd2a92fda5a6c11f69d60c068fc0632b0fdad1a09d80a4c90e07593691cf617d",
+    "retained_and_live_output_hashes_match": true,
+    "visual_review": "Separate root-agent visual inspection; this script makes only hash/receipt/dimension checks.",
+    "workbooks": 6
+  },
+  "portable_png": {
+    "actual_node": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "compiled_js_sha256": "b41eeb4323d6a3b971c831730da18ac6edd4126536e048d2c6c2d35572a5603e",
+    "node_sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d",
+    "runtimes": {
+      "javascript": {
+        "assertions": 248,
+        "candidate_receipt_sha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+        "cases": 8,
+        "pngs": 10,
+        "wrong_hash_control": true,
+        "zips": 8
+      },
+      "vm": {
+        "assertions": 248,
+        "candidate_receipt_sha256": "3ae71f9662b3e600ad2fa64d80b1ff6aa58baa8438dca41c37fb66314e02eaa7",
+        "cases": 8,
+        "pngs": 10,
+        "wrong_hash_control": true,
+        "zips": 8
+      }
+    },
+    "vm_js_payload_identity": true
+  },
+  "production_source": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+  "recorded_gates_report_sha256": "3e774566c64b0a01eb3e6f5baa5d0a49a06be3e5c9f24d876754a61603b109d0",
+  "repository_writes": 0,
+  "review_head": "cc92423bb98789239380864d5e8343c19c25e815",
+  "reviewer_sha256": "498ba9a7adf84d8011c73b3617cb164e629a0a76d4a89ccf3c3820cf2d95f1b5",
+  "runtime_tests_rerun": 0,
+  "schema": 1,
+  "scripted_office": {
+    "exports": 12,
+    "generation_binding_sha256": "1c7f27f99410c16bc90e7536614adb0ff316c7a41ae4fab421e75c5696e1597e",
+    "oracle_controls": 17,
+    "retained_and_live_output_hashes_match": true,
+    "semantic_report": {
+      "exports": 12,
+      "failures": []
+    }
+  },
+  "source_resolution_sha256": "8987e08d73b266e89dbf0e4f4615333155ee6754b9a38fd90380444d02d64c8b",
+  "success": true
+}
