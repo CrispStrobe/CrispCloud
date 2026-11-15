@@ -1,0 +1,242 @@
+{
+  "schema": "crispcloud.continuation_audit_summary.v1",
+  "source_cutoff_started_at": "2026-11-15T07:07:43.157892+00:00",
+  "source_cutoff_completed_at": "2026-11-15T07:07:49.633264+00:00",
+  "scope": "Fixed snapshot of all advertised app/Quds branch and PR heads; comparisons use only captured immutable SHAs. No subsequent source polling.",
+  "exact_refs_file": "source-ref-cutoff.json",
+  "deltas_file": "source-ref-deltas.json",
+  "ancestry_file": "source-cutoff-ancestry.json",
+  "app": {
+    "repository": "CrispStrobe/CrispCloud",
+    "candidate_commit": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+    "main_commit": "fa030137fd203467d5560b68b767019194b95ebd",
+    "pull_request": 111,
+    "state": "open",
+    "draft": true,
+    "unresolved_review_threads": 0,
+    "branch_count": 5,
+    "pull_request_head_count": 101,
+    "incoming_commit": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8",
+    "incoming_branch": "fix/excel-legacy-xls",
+    "incoming_summary": "One commit adds nullable cell wrap state, style parse/write, HTML 10pt/wrapped/centered-header defaults and snapshot/sort copies; six managed Dart files plus manifest.",
+    "incoming_manifest_canonical_pin": "4b51c5c098041f3f4243ca911660ef6083ba6ed7",
+    "incoming_manifest_standalone_pin": "f9d10b5a5e68b4216892d64622caa8b0a15c7afd",
+    "current_standalone_pin": "d422fa99a3a84830794f0e2dc332d59f923779f7"
+  },
+  "quds": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "current_pin": "eae58542dffd73cf30e97cc60a59a5474656d676",
+    "branch_count": 8,
+    "pull_request_head_count": 22,
+    "incoming": [
+      {
+        "branch": "fix/excel-legacy-import",
+        "sha": "4b51c5c098041f3f4243ca911660ef6083ba6ed7",
+        "source_only_commits": 1,
+        "base_only_commits": 23,
+        "merge_base": "fd749d8ee140be623597493cdbc05ce20f1f5151",
+        "summary": "Canonical wrap-state implementation vendored by app ca6156e8."
+      },
+      {
+        "branch": "fix/word-inline-pictures",
+        "pull_request": 22,
+        "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+        "source_only_commits": 2,
+        "base_only_commits": 0,
+        "merge_base": "eae58542dffd73cf30e97cc60a59a5474656d676",
+        "summary": "Inline-picture layout/model/save/history support with engine/editor regression suites, plus heading oracle style inheritance resolution."
+      }
+    ],
+    "integration_plan": "Preserve eae58542 ancestry while merging both exact incoming tips and qualifying corrections; sync app from canonical final commit through existing guarded tool. Retain independently pinned DOC parser.",
+    "review_findings": [
+      {
+        "severity": "needs_fix_before_qualification",
+        "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+        "issue": "SmlStyleSheet.parse omits cellXfsWrap:<bool>[] despite constructor default [false]; then appending flags shifts indexed import flags by one.",
+        "status": "Reported to Office implementation owner; read-only review."
+      },
+      {
+        "severity": "needs_regression_check",
+        "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "issue": "Style emission guard omits standalone wrapText edits, so a fresh wrap-only workbook may skip styles.",
+        "status": "Reported to Office implementation owner."
+      },
+      {
+        "severity": "needs_regression_check",
+        "path": "packages/quds_office_engine/lib/src/sheet/styles/sml_styles.dart",
+        "issue": "xfFor no-base reuse treats null wrap as wildcard even though desiredWrap is false, potentially choosing wrapped style for default unwrapped state.",
+        "status": "Reported to Office implementation owner."
+      }
+    ]
+  },
+  "ci": {
+    "observed_at": "2026-11-15 07:07:12 UTC",
+    "commit": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+    "workflow_runs": [
+      {
+        "id": 43686658434,
+        "name": "Storage capabilities",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658434"
+      },
+      {
+        "id": 43686658491,
+        "name": "Shared HTTP transfer bandwidth",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658491"
+      },
+      {
+        "id": 43686658508,
+        "name": "Image editor",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658508"
+      },
+      {
+        "id": 43686658418,
+        "name": "Media editor",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658418"
+      },
+      {
+        "id": 43686658531,
+        "name": "Experimental Rust SMB",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658531"
+      },
+      {
+        "id": 43686658445,
+        "name": "PDF editor",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658445"
+      },
+      {
+        "id": 43686658475,
+        "name": "CI",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658475"
+      },
+      {
+        "id": 43686658499,
+        "name": "Ebook application integration",
+        "status": "queued",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658499"
+      },
+      {
+        "id": 43686658453,
+        "name": "Shared encrypted providers",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658453"
+      },
+      {
+        "id": 43686658446,
+        "name": "File workspace UX",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658446"
+      },
+      {
+        "id": 43686658425,
+        "name": "Office fidelity integration",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658425"
+      },
+      {
+        "id": 43686658515,
+        "name": "Native catalogue CLI",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658515"
+      },
+      {
+        "id": 43686658635,
+        "name": "Commander archive workflows",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658635"
+      },
+      {
+        "id": 43686658591,
+        "name": "Text and hex editor",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658591"
+      }
+    ],
+    "storage": {
+      "run_id": 43686658434,
+      "portable_job_id": 132728438452,
+      "portable_conclusion": "success",
+      "native_job_id": 132728438641,
+      "native_status": "queued",
+      "qualification_limit": "Portable job covers its configured BSD/JavaScript gate; it does not establish native PNG regression acceptance."
+    },
+    "office": {
+      "run_id": 43686658425,
+      "host_job_id": 132728438370,
+      "host_conclusion": "failure",
+      "error": "heading: expected {'val': '2'}, got {}",
+      "files": [
+        "word/edited.docx",
+        "word/roundtrip-1.docx",
+        "word/roundtrip-2.docx",
+        "word/roundtrip-3.docx"
+      ],
+      "downstream": "Host script abort prevented worksheet UI capture, then capture upload failed and external-schema job was skipped.",
+      "browser_job_id": 132728438579,
+      "browser_conclusion": "success",
+      "raw_log": "office-host-roundtrip-132728438370.log.gz",
+      "artifact_id": 14150639285,
+      "artifact_size_bytes": 2764038,
+      "artifact_sha256": "93559a60fa41cd2d29bc935f76a0e5fb9b9323efd98150f39efd8471b690ccda"
+    },
+    "archive": {
+      "run_id": 43686658635,
+      "job_id": 132728439098,
+      "conclusion": "success",
+      "passed_steps": [
+        "Analyze archive integration",
+        "Validate portable archive codecs",
+        "Run archive and menu regression suites",
+        "Build the versioned web application",
+        "Verify dependency inputs were restored"
+      ]
+    },
+    "status_api_warning": "Legacy combined status API returned no statuses; this is not a passing CI claim."
+  },
+  "host_merge_advice": [
+    "Do not take incoming ca6156e manifest wholesale: it carries the older standalone DOC pin and pre-reconciliation canonical inventory.",
+    "Finalize canonical merge/fixes first. From clean app 5a62b10f, merge ca6156e with --no-commit; resolve the six incoming managed Dart files and manifest to exact premerge baseline before guarded sync, then sync to canonical final SHA and commit the merge. This preserves app ancestry while deriving final vendor bytes from one exact source.",
+    "Run exact provenance checks after sync and retain source-bound qualification receipts; update PR #111 pending results text only with accessible evidence."
+  ],
+  "remote_mutations": false,
+  "source_polling_after_cutoff": false,
+  "ancestry_results": {
+    "app": {
+      "total_refs": 106,
+      "already_contained_refs": 105,
+      "not_contained_refs": [
+        {
+          "ref": "refs/heads/fix/excel-legacy-xls",
+          "sha": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8"
+        }
+      ]
+    },
+    "quds": {
+      "total_refs": 30,
+      "already_contained_refs": 26,
+      "not_contained_refs": 4,
+      "additional_merge_only_history": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+      "history_disposition": "Previous integration branch has one merge-only commit outside eae58542; final main has equivalent functional source, with only README prose and existing export order differing. Current app correctly pins eae58542. Do not downgrade to old integration bytes."
+    }
+  }
+}

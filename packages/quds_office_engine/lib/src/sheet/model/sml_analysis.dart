@@ -328,6 +328,7 @@ abstract final class SmlAnalysis {
           ..fontSize = src.fontSize
         ..fontFamily = src.fontFamily
           ..horizontalAlign = src.horizontalAlign
+        ..wrapText = src.wrapText
           ..borderRgb = src.borderRgb
           ..borderWidth = src.borderWidth
           ..locked = src.locked;

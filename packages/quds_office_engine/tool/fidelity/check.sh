@@ -27,6 +27,7 @@ dart test \
   test/sheet_normal_font_metrics_test.dart \
   test/sheet_explicit_style_fidelity_test.dart \
   test/sheet_style_namespace_fidelity_test.dart \
+  test/sheet_wrap_text_fidelity_test.dart \
   test/sheet_fill_fidelity_test.dart \
   test/sheet_cell_state_preservation_test.dart \
   test/style_cascade_test.dart test/story_media_fidelity_test.dart \
@@ -55,6 +56,7 @@ dart test \
   test/word_table_nested_layout_test.dart test/word_table_tall_toc_layout_test.dart \
   test/word_table_tall_frame_layout_test.dart test/word_table_picture_pagination_test.dart \
   test/word_auxiliary_content_control_test.dart test/word_native_presentation_test.dart \
+  test/word_heading_apply_test.dart test/word_inline_picture_test.dart \
   test/word_style_introduction_test.dart test/word_table_direction_test.dart \
   test/scripted_transitions_test.dart
 dart run tool/fidelity/scenarios.dart

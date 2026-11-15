@@ -23,8 +23,9 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `eae58542dffd73cf30e97cc60a59a5474656d676` and standalone
-legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,214 managed files
+The app mirrors Quds `dcefdc051ac8dddcef0f07baaa00bfbc2c35817a` on
+`integration/storage-carving-qualification-20261115` and standalone
+legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,217 managed files
 verify. New work includes supported BIFF8/HTML spreadsheet imports, shared
 formulas and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -32,10 +33,19 @@ header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
 
+The resumed storage qualification also integrates Word inline-picture retention
+and Excel wrap-text support. Import preserves the correct wrap flag for each
+native style, unwrapped cells cannot reuse wrapped styles, and wrap-only edits
+survive new-workbook saves. The scripted Word oracle resolves heading outline
+levels through paragraph styles and their inheritance while retaining explicit
+override and malformed-style negative controls.
+
 The storage continuation retains its earlier combined canonical checkpoint
 `01f167cc` in [the reconciliation record](../docs/office-storage-reconciliation-20261115.md).
-The current pin above follows the newer merged main and preserves its exact
-export ordering and standalone parser source.
+The current pin above combines the subsequent canonical main, inline-picture
+and wrap-text branches, preserves the standalone parser source, and includes
+targeted wrap regressions. The source cutoff and new qualification are recorded
+in the storage evidence directory; earlier totals below retain their own pins.
 
 ## Spreadsheet audit checkpoint (14 November 2026)
 

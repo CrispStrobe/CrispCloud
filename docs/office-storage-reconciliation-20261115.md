@@ -80,3 +80,28 @@ does not close another PR or merge the storage branch into upstream main.
 The storage evidence directory records qualification against the saved combined
 source. Earlier totals above remain historical and do not establish current
 runtime, rendering or external schema acceptance.
+
+## Resumed source cutoff and wrap-text repair
+
+The next audit captured 106 app branch/PR refs and 30 canonical Quds refs at
+07:07:43–07:07:49 UTC on 15 November 2026. App main and worksheet navigation
+were unchanged. The app Excel branch had advanced to `ca6156e8` after its PR
+merged; its managed wrap-text changes originate at canonical `4b51c5c0`.
+Canonical Word `4637ddce` adds inline-picture preservation and repairs the
+scripted heading oracle's incorrect assumption that outline levels must be
+direct paragraph properties.
+
+Canonical integration `dcefdc051ac8dddcef0f07baaa00bfbc2c35817a` combines those
+heads and corrects three defects in the incoming wrap support: shifted imported
+XF flags, accidental reuse of a wrapped style for an unwrapped cell, and missing
+style emission for a new workbook's wrap-only edit. Seven new wrap tests cover
+native/prefixed XML, explicit overrides, repeated saves and HTML import; six
+additional oracle controls exercise inherited headings and reject incorrect
+overrides, missing properties and cyclic inheritance.
+
+The app merge retains `ca6156e8` as a parent, while guarded synchronization takes
+the final managed bytes from that exact canonical integration. The incoming
+Excel manifest's older DOC parser pin is not adopted: the standalone parser
+remains `d422fa99`. The managed inventory now covers 2,217 files. Audit receipts
+are in `evidence/storage-carving-20261115/resume-audit/`; runtime acceptance is
+recorded separately against the saved combined candidate.

@@ -1,0 +1,13 @@
+{
+  "repository": "CrispStrobe/quds_office_suite",
+  "branch": "integration/storage-carving-qualification-20261115",
+  "saved_commit": "dcefdc051ac8dddcef0f07baaa00bfbc2c35817a",
+  "qualified_local_commit": "f6be70d1e4d6425d90c82ad6b19011c0ebdffdf4",
+  "tree": "3ea4d38a2db67843aca0e5a4fb0fb2d60ad5bc52",
+  "verification": "Fetched saved commit; git diff --exit-code between the complete local and remote trees returned 0. GitHub tree API returned the same tree SHA.",
+  "parents": [
+    "4637ddce4154f4b50105c7322fedc1c75fd02193",
+    "4b51c5c098041f3f4243ca911660ef6083ba6ed7"
+  ],
+  "save_method": "Connected GitHub API; local Git transport had no write credential."
+}

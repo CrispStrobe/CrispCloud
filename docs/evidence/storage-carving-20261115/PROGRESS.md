@@ -89,3 +89,19 @@ raw logs. Resolved external dependency-cache payloads are not archived; these
 are source-bound local results, not a hermetic execution claim. Hosted CI,
 complete Office rendering/schema acceptance and other platforms remain
 separate qualification scopes.
+
+## Resumed qualification
+
+The next continuation recovered the exact remote checkpoint
+`5a62b10fc7f366b0229434667b91baccc0af8b53`. The preceding conversation reported
+619 passing tests and final receipts in preparation, but neither those receipts
+nor the final README/PR update reached that branch. Those conversation totals
+are retained as handoff context only. This continuation records fresh commands,
+saved source identities, before/after input hashes and raw results.
+
+A bounded new remote audit also found Excel wrap-text and Word inline-picture
+changes after the preceding cutoff. They are reconciled through the canonical
+Office repository before a new source freeze. The incoming Word branch repairs
+the stale scripted heading oracle that failed hosted Office CI; its check must
+respect an inherited Heading3 outline level as well as direct paragraph values.
+Local qualification and hosted workflow conclusions remain separately recorded.

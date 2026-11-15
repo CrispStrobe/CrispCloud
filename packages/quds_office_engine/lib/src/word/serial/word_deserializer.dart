@@ -6,6 +6,7 @@ import '../../opc/ole/embedded_part.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
+import '../../visual/office_visual.dart';
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
@@ -573,6 +574,7 @@ class WordDeserializer {
     final previousFrames = Set<WmlFrame>.identity()..addAll(_pendingFrames);
     _readParagraphContent(reader, package, docUri, paragraph);
     _settleFieldSpans(paragraph);
+    _settleInlinePictures(paragraph);
     for (final frame in _pendingFrames) {
       if (previousFrames.contains(frame)) continue;
       frame.anchorParagraphProperties ??= paragraph.properties.copy()
@@ -933,11 +935,26 @@ class WordDeserializer {
           inlines.add(WmlRun(text: run.text, properties: run.properties));
           run.text = '';
         }
+        final int pendingBefore = _pendingVisuals.length;
         if (!_takeDrawing(reader, package, docUri)) {
           final WmlObject? obj = _readObject(reader, package, docUri);
           if (obj != null) {
             inlines.add(obj);
           }
+        } else if (_pendingVisuals.length == pendingBefore + 1 &&
+            _pendingVisuals.last.visual.kind == OfficeVisualKind.picture &&
+            !_pendingVisuals.last.visual.isDiagram &&
+            _pendingVisuals.last.visual.picture.wrap == PictureWrap.inline) {
+          // An inline picture stays in its line of text (settled in
+          // _settleInlinePictures once the paragraph is complete).
+          inlines.add(
+            WmlRun(
+              text: _inlinePictureChar,
+              properties: run.properties.copy(),
+              commentIds: List<int>.of(_openCommentIds),
+              inlineVisual: _pendingVisuals.removeLast(),
+            ),
+          );
         }
       }
     }
@@ -1583,6 +1600,27 @@ class WordDeserializer {
       ..fieldSeparate = false
       ..fieldEnd = false
       ..pageNumberField = false;
+  }
+
+  static const String _inlinePictureChar = '\uFFFC';
+
+  /// Inline pictures stay inline only in paragraphs that also hold text.
+  /// A paragraph with nothing but pictures keeps the established block
+  /// representation (the pictures follow the paragraph as visuals).
+  void _settleInlinePictures(WmlParagraph paragraph) {
+    final runs = paragraph.inlines
+        .whereType<WmlRun>()
+        .where((run) => run.inlineVisual != null)
+        .toList();
+    if (runs.isEmpty) return;
+    final text = paragraph.text.replaceAll(_inlinePictureChar, '');
+    if (text.trim().isNotEmpty) return;
+    for (final run in runs) {
+      _pendingVisuals.add(run.inlineVisual!);
+    }
+    paragraph.inlines.removeWhere(
+      (inline) => inline is WmlRun && inline.inlineVisual != null,
+    );
   }
 
   void _readRPr(XmlPullReader reader, WmlRunProps props) {

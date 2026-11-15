@@ -1,0 +1,49 @@
+[
+  {
+    "repository": "CrispStrobe/CrispCloud",
+    "old_count": 105,
+    "new_count": 106,
+    "added": [
+      {
+        "sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+        "ref": "refs/pull/111/head"
+      }
+    ],
+    "changed": [
+      {
+        "sha": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8",
+        "ref": "refs/heads/fix/excel-legacy-xls",
+        "previous_sha": "a77364501d274e0fde2e9fffeefb121258ae9614"
+      },
+      {
+        "sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+        "ref": "refs/heads/integration/storage-carving-20261115",
+        "previous_sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417"
+      }
+    ],
+    "removed": []
+  },
+  {
+    "repository": "CrispStrobe/quds_office_suite",
+    "old_count": 28,
+    "new_count": 30,
+    "added": [
+      {
+        "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+        "ref": "refs/heads/fix/word-inline-pictures"
+      },
+      {
+        "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+        "ref": "refs/pull/22/head"
+      }
+    ],
+    "changed": [
+      {
+        "sha": "4b51c5c098041f3f4243ca911660ef6083ba6ed7",
+        "ref": "refs/heads/fix/excel-legacy-import",
+        "previous_sha": "fd749d8ee140be623597493cdbc05ce20f1f5151"
+      }
+    ],
+    "removed": []
+  }
+]

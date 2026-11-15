@@ -1,0 +1,579 @@
+{
+  "schema": "crispcloud.remote_ref_cutoff.v1",
+  "started_at": "2026-11-15T07:07:43.157892+00:00",
+  "completed_at": "2026-11-15T07:07:49.633264+00:00",
+  "repositories": [
+    {
+      "repository": "CrispStrobe/CrispCloud",
+      "command": [
+        "git",
+        "ls-remote",
+        "https://github.com/CrispStrobe/CrispCloud.git",
+        "refs/heads/*",
+        "refs/pull/*/head"
+      ],
+      "returncode": 0,
+      "refs": [
+        {
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "ref": "refs/heads/codex/office-recovery-20261115"
+        },
+        {
+          "sha": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8",
+          "ref": "refs/heads/fix/excel-legacy-xls"
+        },
+        {
+          "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+          "ref": "refs/heads/integration/office-reconcile-storage-20261115"
+        },
+        {
+          "sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+          "ref": "refs/heads/integration/storage-carving-20261115"
+        },
+        {
+          "sha": "fa030137fd203467d5560b68b767019194b95ebd",
+          "ref": "refs/heads/main"
+        },
+        {
+          "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+          "ref": "refs/pull/10/head"
+        },
+        {
+          "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+          "ref": "refs/pull/100/head"
+        },
+        {
+          "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+          "ref": "refs/pull/101/head"
+        },
+        {
+          "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+          "ref": "refs/pull/102/head"
+        },
+        {
+          "sha": "d504409acc779b670de482247f3231a7247dcd92",
+          "ref": "refs/pull/103/head"
+        },
+        {
+          "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+          "ref": "refs/pull/104/head"
+        },
+        {
+          "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+          "ref": "refs/pull/105/head"
+        },
+        {
+          "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+          "ref": "refs/pull/106/head"
+        },
+        {
+          "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+          "ref": "refs/pull/107/head"
+        },
+        {
+          "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+          "ref": "refs/pull/108/head"
+        },
+        {
+          "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+          "ref": "refs/pull/109/head"
+        },
+        {
+          "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+          "ref": "refs/pull/11/head"
+        },
+        {
+          "sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+          "ref": "refs/pull/110/head"
+        },
+        {
+          "sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+          "ref": "refs/pull/111/head"
+        },
+        {
+          "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+          "ref": "refs/pull/12/head"
+        },
+        {
+          "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+          "ref": "refs/pull/13/head"
+        },
+        {
+          "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+          "ref": "refs/pull/14/head"
+        },
+        {
+          "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+          "ref": "refs/pull/15/head"
+        },
+        {
+          "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+          "ref": "refs/pull/16/head"
+        },
+        {
+          "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+          "ref": "refs/pull/17/head"
+        },
+        {
+          "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+          "ref": "refs/pull/18/head"
+        },
+        {
+          "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+          "ref": "refs/pull/19/head"
+        },
+        {
+          "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+          "ref": "refs/pull/20/head"
+        },
+        {
+          "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+          "ref": "refs/pull/21/head"
+        },
+        {
+          "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+          "ref": "refs/pull/22/head"
+        },
+        {
+          "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+          "ref": "refs/pull/23/head"
+        },
+        {
+          "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+          "ref": "refs/pull/24/head"
+        },
+        {
+          "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+          "ref": "refs/pull/25/head"
+        },
+        {
+          "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+          "ref": "refs/pull/26/head"
+        },
+        {
+          "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+          "ref": "refs/pull/27/head"
+        },
+        {
+          "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+          "ref": "refs/pull/28/head"
+        },
+        {
+          "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+          "ref": "refs/pull/29/head"
+        },
+        {
+          "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+          "ref": "refs/pull/30/head"
+        },
+        {
+          "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+          "ref": "refs/pull/31/head"
+        },
+        {
+          "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+          "ref": "refs/pull/32/head"
+        },
+        {
+          "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+          "ref": "refs/pull/33/head"
+        },
+        {
+          "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+          "ref": "refs/pull/34/head"
+        },
+        {
+          "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+          "ref": "refs/pull/35/head"
+        },
+        {
+          "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+          "ref": "refs/pull/36/head"
+        },
+        {
+          "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+          "ref": "refs/pull/37/head"
+        },
+        {
+          "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+          "ref": "refs/pull/38/head"
+        },
+        {
+          "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+          "ref": "refs/pull/39/head"
+        },
+        {
+          "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+          "ref": "refs/pull/40/head"
+        },
+        {
+          "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+          "ref": "refs/pull/41/head"
+        },
+        {
+          "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+          "ref": "refs/pull/42/head"
+        },
+        {
+          "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+          "ref": "refs/pull/43/head"
+        },
+        {
+          "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+          "ref": "refs/pull/45/head"
+        },
+        {
+          "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+          "ref": "refs/pull/47/head"
+        },
+        {
+          "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+          "ref": "refs/pull/49/head"
+        },
+        {
+          "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+          "ref": "refs/pull/5/head"
+        },
+        {
+          "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+          "ref": "refs/pull/50/head"
+        },
+        {
+          "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+          "ref": "refs/pull/51/head"
+        },
+        {
+          "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+          "ref": "refs/pull/52/head"
+        },
+        {
+          "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+          "ref": "refs/pull/53/head"
+        },
+        {
+          "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+          "ref": "refs/pull/54/head"
+        },
+        {
+          "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+          "ref": "refs/pull/55/head"
+        },
+        {
+          "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+          "ref": "refs/pull/56/head"
+        },
+        {
+          "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+          "ref": "refs/pull/57/head"
+        },
+        {
+          "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+          "ref": "refs/pull/58/head"
+        },
+        {
+          "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+          "ref": "refs/pull/59/head"
+        },
+        {
+          "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+          "ref": "refs/pull/6/head"
+        },
+        {
+          "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+          "ref": "refs/pull/60/head"
+        },
+        {
+          "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+          "ref": "refs/pull/61/head"
+        },
+        {
+          "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "ref": "refs/pull/62/head"
+        },
+        {
+          "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+          "ref": "refs/pull/63/head"
+        },
+        {
+          "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+          "ref": "refs/pull/64/head"
+        },
+        {
+          "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+          "ref": "refs/pull/65/head"
+        },
+        {
+          "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+          "ref": "refs/pull/66/head"
+        },
+        {
+          "sha": "403e942dc99779883210125a01841ef209e19d2e",
+          "ref": "refs/pull/67/head"
+        },
+        {
+          "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+          "ref": "refs/pull/68/head"
+        },
+        {
+          "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+          "ref": "refs/pull/69/head"
+        },
+        {
+          "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+          "ref": "refs/pull/7/head"
+        },
+        {
+          "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+          "ref": "refs/pull/70/head"
+        },
+        {
+          "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+          "ref": "refs/pull/71/head"
+        },
+        {
+          "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+          "ref": "refs/pull/72/head"
+        },
+        {
+          "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+          "ref": "refs/pull/73/head"
+        },
+        {
+          "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+          "ref": "refs/pull/74/head"
+        },
+        {
+          "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+          "ref": "refs/pull/75/head"
+        },
+        {
+          "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+          "ref": "refs/pull/76/head"
+        },
+        {
+          "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+          "ref": "refs/pull/77/head"
+        },
+        {
+          "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+          "ref": "refs/pull/78/head"
+        },
+        {
+          "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+          "ref": "refs/pull/79/head"
+        },
+        {
+          "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+          "ref": "refs/pull/8/head"
+        },
+        {
+          "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+          "ref": "refs/pull/80/head"
+        },
+        {
+          "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+          "ref": "refs/pull/81/head"
+        },
+        {
+          "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+          "ref": "refs/pull/82/head"
+        },
+        {
+          "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+          "ref": "refs/pull/83/head"
+        },
+        {
+          "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+          "ref": "refs/pull/84/head"
+        },
+        {
+          "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+          "ref": "refs/pull/85/head"
+        },
+        {
+          "sha": "120f839ab9091bdbedf326621347ee737140e043",
+          "ref": "refs/pull/86/head"
+        },
+        {
+          "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+          "ref": "refs/pull/87/head"
+        },
+        {
+          "sha": "b100cd751688f13609a8829180b487b381588d14",
+          "ref": "refs/pull/88/head"
+        },
+        {
+          "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+          "ref": "refs/pull/89/head"
+        },
+        {
+          "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+          "ref": "refs/pull/9/head"
+        },
+        {
+          "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+          "ref": "refs/pull/90/head"
+        },
+        {
+          "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+          "ref": "refs/pull/91/head"
+        },
+        {
+          "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+          "ref": "refs/pull/92/head"
+        },
+        {
+          "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+          "ref": "refs/pull/93/head"
+        },
+        {
+          "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+          "ref": "refs/pull/94/head"
+        },
+        {
+          "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+          "ref": "refs/pull/95/head"
+        },
+        {
+          "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+          "ref": "refs/pull/97/head"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "repository": "CrispStrobe/quds_office_suite",
+      "command": [
+        "git",
+        "ls-remote",
+        "https://github.com/CrispStrobe/quds_office_suite.git",
+        "refs/heads/*",
+        "refs/pull/*/head"
+      ],
+      "returncode": 0,
+      "refs": [
+        {
+          "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "ref": "refs/heads/codex/office-recovery-20261115"
+        },
+        {
+          "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "ref": "refs/heads/feat/word-like-selection"
+        },
+        {
+          "sha": "4b51c5c098041f3f4243ca911660ef6083ba6ed7",
+          "ref": "refs/heads/fix/excel-legacy-import"
+        },
+        {
+          "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "ref": "refs/heads/fix/word-heading-like-word"
+        },
+        {
+          "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "ref": "refs/heads/fix/word-inline-pictures"
+        },
+        {
+          "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "ref": "refs/heads/fix/word-shape-no-textbox"
+        },
+        {
+          "sha": "01f167cc84e7064d4d9dbeecf3d3cff9e3d8a9ca",
+          "ref": "refs/heads/integration/office-storage-reconcile-20261115"
+        },
+        {
+          "sha": "eae58542dffd73cf30e97cc60a59a5474656d676",
+          "ref": "refs/heads/main"
+        },
+        {
+          "sha": "54f0f8de01416640560519aa9d732f668f603709",
+          "ref": "refs/pull/1/head"
+        },
+        {
+          "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+          "ref": "refs/pull/10/head"
+        },
+        {
+          "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+          "ref": "refs/pull/11/head"
+        },
+        {
+          "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+          "ref": "refs/pull/12/head"
+        },
+        {
+          "sha": "73b354efdf0f2e7fbe0e87bc67f332a9dfb4903e",
+          "ref": "refs/pull/13/head"
+        },
+        {
+          "sha": "d4e2a0fcf1fe18e0e5158ac7d86b1f71bf3b70da",
+          "ref": "refs/pull/14/head"
+        },
+        {
+          "sha": "448eff5aac55054a34eccd4f8a1e79e754909a05",
+          "ref": "refs/pull/15/head"
+        },
+        {
+          "sha": "78a7b6f4e613c7d18d4bcc6434cda12b50ed184e",
+          "ref": "refs/pull/16/head"
+        },
+        {
+          "sha": "89c7f06c592edde0c67774e9c7e087d96f52184b",
+          "ref": "refs/pull/17/head"
+        },
+        {
+          "sha": "f31cf308013ceb4527e3f4de677785894bb1bfc0",
+          "ref": "refs/pull/18/head"
+        },
+        {
+          "sha": "e8227569a3b90fb21db598483690bd13fe74ddef",
+          "ref": "refs/pull/19/head"
+        },
+        {
+          "sha": "08b09485588d2b6270f594a07c983689c087587d",
+          "ref": "refs/pull/2/head"
+        },
+        {
+          "sha": "5278aafd512640608fe06b8f7d357c4cffe8520a",
+          "ref": "refs/pull/20/head"
+        },
+        {
+          "sha": "1f30a823b30678e3684c98fee6a2cd5c4945c4f2",
+          "ref": "refs/pull/21/head"
+        },
+        {
+          "sha": "4637ddce4154f4b50105c7322fedc1c75fd02193",
+          "ref": "refs/pull/22/head"
+        },
+        {
+          "sha": "e550723b0f2a7cd849970f58820d260c36857502",
+          "ref": "refs/pull/3/head"
+        },
+        {
+          "sha": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+          "ref": "refs/pull/4/head"
+        },
+        {
+          "sha": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+          "ref": "refs/pull/5/head"
+        },
+        {
+          "sha": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+          "ref": "refs/pull/6/head"
+        },
+        {
+          "sha": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+          "ref": "refs/pull/7/head"
+        },
+        {
+          "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7",
+          "ref": "refs/pull/8/head"
+        },
+        {
+          "sha": "58de54567d45e38c05dd77064b7607c577374b9d",
+          "ref": "refs/pull/9/head"
+        }
+      ],
+      "stderr": ""
+    }
+  ]
+}

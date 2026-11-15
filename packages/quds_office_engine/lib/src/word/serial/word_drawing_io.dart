@@ -263,6 +263,26 @@ abstract final class WordDrawingIo {
     required OfficeVisual visual,
     required int docPrId,
   }) {
+    w.writeStartElement('p', prefix: 'w');
+    w.writeStartElement('r', prefix: 'w');
+    writeInlineDrawing(
+      w,
+      relationshipId: relationshipId,
+      visual: visual,
+      docPrId: docPrId,
+    );
+    w.writeEndElement(); // w:r
+    w.writeEndElement(); // w:p
+  }
+
+  /// The `w:drawing` element of a picture, for use inside an existing run
+  /// (inline pictures in a line of text) or by [writeInline].
+  static void writeInlineDrawing(
+    XmlWriter w, {
+    required String relationshipId,
+    required OfficeVisual visual,
+    required int docPrId,
+  }) {
     final int cx = sizeToEmu(visual.width);
     final int cy = sizeToEmu(visual.height);
     final PictureAdjust adj = visual.picture;
@@ -270,8 +290,6 @@ abstract final class WordDrawingIo {
     final String descr = adj.altDescription.isNotEmpty
         ? adj.altDescription
         : (adj.altTitle.isNotEmpty ? adj.altTitle : name);
-    w.writeStartElement('p', prefix: 'w');
-    w.writeStartElement('r', prefix: 'w');
     w.writeStartElement('drawing', prefix: 'w');
     _writeAnchorOrInline(w, visual: visual, cx: cx, cy: cy);
     w.writeEmptyElement(
@@ -347,8 +365,6 @@ abstract final class WordDrawingIo {
     w.writeEndElement(); // a:graphic
     w.writeEndElement(); // wp:inline or wp:anchor
     w.writeEndElement(); // w:drawing
-    w.writeEndElement(); // w:r
-    w.writeEndElement(); // w:p
   }
 
   static void _writeAnchorOrInline(
