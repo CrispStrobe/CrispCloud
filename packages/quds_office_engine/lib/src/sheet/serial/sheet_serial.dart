@@ -1384,21 +1384,32 @@ class SheetSerializer {
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeStartElement('cfRule');
-        w.writeAttribute('type', 'cellIs');
-        w.writeAttribute('operator', switch (rule.kind) {
-          SmlConditionalKind.greaterThan => 'greaterThan',
-          SmlConditionalKind.greaterOrEqual => 'greaterThanOrEqual',
-          SmlConditionalKind.lessThan => 'lessThan',
-          SmlConditionalKind.lessOrEqual => 'lessThanOrEqual',
-          SmlConditionalKind.equal => 'equal',
-          SmlConditionalKind.notEqual => 'notEqual',
-          SmlConditionalKind.contains => 'containsText',
-          SmlConditionalKind.duplicate => 'duplicateValues',
-        });
+        switch (rule.kind) {
+          case SmlConditionalKind.contains:
+            w.writeAttribute('type', 'containsText');
+            w.writeAttribute('operator', 'containsText');
+            w.writeAttribute('text', rule.formula);
+          case SmlConditionalKind.duplicate:
+            w.writeAttribute('type', 'duplicateValues');
+          default:
+            w.writeAttribute('type', 'cellIs');
+            w.writeAttribute('operator', switch (rule.kind) {
+              SmlConditionalKind.greaterThan => 'greaterThan',
+              SmlConditionalKind.greaterOrEqual => 'greaterThanOrEqual',
+              SmlConditionalKind.lessThan => 'lessThan',
+              SmlConditionalKind.lessOrEqual => 'lessThanOrEqual',
+              SmlConditionalKind.equal => 'equal',
+              SmlConditionalKind.notEqual => 'notEqual',
+              SmlConditionalKind.contains ||
+              SmlConditionalKind.duplicate => throw StateError('handled above'),
+            });
+        }
         if (rule.dxfId case final dxfId?) {
           w.writeAttribute('dxfId', '$dxfId');
         }
-        if (rule.formula.isNotEmpty) {
+        if (rule.kind != SmlConditionalKind.contains &&
+            rule.kind != SmlConditionalKind.duplicate &&
+            rule.formula.isNotEmpty) {
           w.writeStartElement('formula');
           w.writeText(rule.formula);
           w.writeEndElement();
