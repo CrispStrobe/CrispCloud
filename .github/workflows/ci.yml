@@ -52,6 +52,11 @@ jobs:
           python3 -m unittest discover -s tool -p test_verify_ebook_sources.py -v
           python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
           python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
+      - name: Verify bundled notice coverage
+        run: |
+          python3 tool/verify_bundled_notices.py
+          python3 -m unittest discover -s tool -p test_bundled_notice_guards.py -v
+
       - name: Check provider dependencies and Apple declaration
         run: python3 tool/crypto_release_evidence.py --check
       - name: Verify TestFlight distribution failure paths

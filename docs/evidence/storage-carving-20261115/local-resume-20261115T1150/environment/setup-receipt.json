@@ -1,0 +1,14 @@
+{
+  "recorded_at": "2026-11-15T10:54:07.248079+00:00",
+  "root": "/workspace/scratch/1e19fe1d39ae/toolchains",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "scope": "Toolchain setup only. Not app runtime acceptance.",
+  "native_hooks_disabled": false,
+  "source_modified": false,
+  "flutter_commit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "free_disk": 27185823744,
+  "downloads_verified": true,
+  "sdk_cache_preloaded": true,
+  "linux_precache_success": true,
+  "native_probes_passed": true
+}

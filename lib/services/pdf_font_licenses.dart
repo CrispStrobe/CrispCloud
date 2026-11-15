@@ -60,6 +60,14 @@ const _fontNotices = [
       '$_fontLicenseDirectory/LPPL-1.3c.txt',
     ],
   ),
+  _FontNotice(
+    ['Liberation Sans', 'Liberation Serif', 'Liberation Mono'],
+    ['assets/licenses/office_fonts/Liberation-LICENSE.txt'],
+  ),
+  _FontNotice(
+    ['Noto Naskh Arabic'],
+    ['assets/licenses/office_fonts/Noto-Naskh-Arabic-LICENSE.txt'],
+  ),
   _FontNotice(['Roboto'], ['assets/fonts/Roboto_LICENSE.txt']),
   _FontNotice(['Roboto Mono'], ['assets/fonts/RobotoMono_LICENSE.txt']),
   _FontNotice(['Material Icons'], ['assets/fonts/MaterialIcons_LICENSE.txt']),

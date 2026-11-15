@@ -1,0 +1,8 @@
+{
+  "scope": "Exact LICENSE supplied with the pinned Windows archive; transitive native licence coverage remains under review.",
+  "version": "MAJOR=97\nMINOR=0\nBUILD=4690\nPATCH=0\n",
+  "source": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/4690/pdfium-win-x64.tgz",
+  "archive_sha256": "dedcdc9f495cb089ed8cf77c54c48378aa438905d089aa8e937198ab9fc4a8bc",
+  "license_sha256": "76621fcfb65adfd6602b700708b74c8e20f3325b32f1a54bec83a5cf7c679f53",
+  "dll_sha256": "2cf494dbb6f953cfcaccc3df8b16c417384d390a96ea4be9213435def473cd33"
+}

@@ -19,10 +19,23 @@ Uint8List _zip(Map<String, String> files) {
   return Uint8List.fromList(ZipEncoder().encode(archive));
 }
 
+Uint8List _zipBytes(Map<String, List<int>> files) {
+  final archive = Archive();
+  for (final entry in files.entries) {
+    archive.addFile(ArchiveFile.bytes(entry.key, entry.value));
+  }
+  return Uint8List.fromList(ZipEncoder().encode(archive));
+}
+
+final _png = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+);
+
 void main() {
   odfTests();
   odtRichTests();
   odpTests();
+  imageTests();
   test('DOCX produces Markdown with headings, bold runs and tables', () async {
     const xml = '''
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -774,5 +787,59 @@ void odpTests() {
     expect(shape.textColorHex, '112233');
     expect(shape.fillColorHex, 'FFEEAA');
     expect(doc.markdown, contains('*Notes: Speaker note*'));
+  });
+}
+
+void imageTests() {
+  const namespaces =
+      'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+      'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" '
+      'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" '
+      'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+      'xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" '
+      'xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" '
+      'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" '
+      'xmlns:xlink="http://www.w3.org/1999/xlink"';
+
+  test('ODP loads framed images from the package', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:presentation>
+    <draw:page draw:name="Slide1">
+      <draw:frame svg:x="1cm" svg:y="1cm" svg:width="3cm" svg:height="3cm">
+        <draw:image xlink:href="Pictures/p.png" xlink:type="simple"/>
+      </draw:frame>
+    </draw:page>
+  </office:presentation></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({'content.xml': utf8.encode(xml), 'Pictures/p.png': _png}),
+      'image.odp',
+    );
+    final shape = doc.deck!.slides.single.shapes.single;
+    expect(shape.image, isNotNull);
+    expect(shape.image!.length, _png.length);
+  });
+
+  test('ODT keeps a bounded image marker', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:text>
+    <text:p>Before <draw:frame draw:name="Picture 1">
+      <draw:image xlink:href="Pictures/p.png" xlink:type="simple"/>
+    </draw:frame> after</text:p>
+  </office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({'content.xml': utf8.encode(xml), 'Pictures/p.png': _png}),
+      'image.odt',
+    );
+    expect(doc.markdown, contains('Before'));
+    expect(doc.markdown, contains('*[Image: Picture 1]*'));
+    expect(doc.markdown, contains('after'));
   });
 }

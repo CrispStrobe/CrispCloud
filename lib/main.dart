@@ -51,6 +51,8 @@ import 'services/locale_preference.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
+import 'services/platform_runtime_licenses.dart';
+import 'services/app_legal_notices.dart';
 import 'services/terminal_licenses.dart';
 import 'services/file_viewer_binary_license.dart';
 import 'services/mesh_preview_license.dart';
@@ -327,7 +329,9 @@ Future<void> _startCrispCloud() async {
     if (!kIsWeb) await CredentialStorageFirstSetup.complete();
     await InstallationIdentityService.instance.initialize();
     registerBundledEditorAssets();
+    registerAppLegalNotices();
     registerPdfFontLicenses();
+    registerPlatformRuntimeLicenses();
     registerTerminalLicenses();
     registerFileViewerBinaryLicense();
     registerMeshPreviewLicense();
