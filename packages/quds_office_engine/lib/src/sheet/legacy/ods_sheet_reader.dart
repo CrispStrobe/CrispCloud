@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import '../../opc/zip/zip_reader.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
+import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import '../styles/sml_styles.dart';
 
@@ -141,6 +142,7 @@ abstract final class OdsSheetReader {
                 int colSpan,
                 int rowSpan,
                 SmlCell? cell,
+                ({String text, String author})? annotation,
               })
             >[];
         final rowMerges = <SmlMerge>[];
@@ -188,6 +190,16 @@ abstract final class OdsSheetReader {
           // Parse values and formulas once, then resolve each column's style.
           // Repetition can cross columns with different default cell styles.
           final content = _readCellContent(element);
+          final annotation = _readAnnotation(element);
+          if (annotation != null) {
+            final count = repeat * rowRepeat;
+            budget.comments(count);
+            budget.cellText(
+              (utf8.encode(annotation.text).length +
+                      utf8.encode(annotation.author).length) *
+                  count,
+            );
+          }
           final defaultStyle =
               _attribute(element, 'style-name', _table) ?? rowDefault;
           for (final run in _cellStyleRuns(
@@ -205,7 +217,10 @@ abstract final class OdsSheetReader {
               numberStyles,
               budget,
             );
-            if (cell != null || colSpan > 1 || rowSpan > 1) {
+            if (cell != null ||
+                annotation != null ||
+                colSpan > 1 ||
+                rowSpan > 1) {
               if (run.column + run.repeat + colSpan - 1 > _maxColumns ||
                   rowIndex + rowRepeat + rowSpan - 1 > _maxRows) {
                 throw const OdsSheetFormatException(
@@ -248,15 +263,15 @@ abstract final class OdsSheetReader {
                   ),
                 );
               }
-              if (cell != null) {
+              if (cell != null || annotation != null) {
                 final count = run.repeat * rowRepeat;
                 budget.cells(count);
-                final value = cell.value;
+                final value = cell?.value;
                 budget.cellText(
                   ((value is String ? utf8.encode(value).length : 0) +
-                          (cell.formula == null
+                          (cell?.formula == null
                               ? 0
-                              : utf8.encode(cell.formula!).length)) *
+                              : utf8.encode(cell!.formula!).length)) *
                       count,
                 );
               }
@@ -266,6 +281,7 @@ abstract final class OdsSheetReader {
                 colSpan: colSpan,
                 rowSpan: rowSpan,
                 cell: cell,
+                annotation: annotation,
               ));
             }
           }
@@ -311,6 +327,11 @@ abstract final class OdsSheetReader {
                 final ref = SmlCellRef(entry.column + c, rowIndex + r);
                 if (entry.cell case final source?) {
                   _copyCell(source, sheet.cell(ref));
+                }
+                if (entry.annotation case final note?) {
+                  sheet.comments.add(
+                    SmlComment(ref: ref, text: note.text, author: note.author),
+                  );
                 }
                 if (entry.colSpan > 1 || entry.rowSpan > 1) {
                   final merge = SmlMerge(
@@ -475,6 +496,30 @@ abstract final class OdsSheetReader {
       // padding does not allocate or iterate beyond the admitted columns.
       yield (column: admittedEnd, repeat: end - admittedEnd, styleName: null);
     }
+  }
+
+  static ({String text, String author})? _readAnnotation(XmlElement element) {
+    final note = element
+        .childrenNamed('annotation', namespaceUri: _office)
+        .firstOrNull;
+    if (note == null) return null;
+    final text = _text(note).trim();
+    if (text.isEmpty) return null;
+    final author = note
+        .childrenNamed(
+          'creator',
+          namespaceUri: 'http://purl.org/dc/elements/1.1/',
+        )
+        .firstOrNull
+        ?.text
+        .trim();
+    if (author != null && author.length > 4096) {
+      throw const OdsSheetFormatException('ODS comment author limit');
+    }
+    return (
+      text: text,
+      author: author == null || author.isEmpty ? 'Quds Office' : author,
+    );
   }
 
   static ({Object? value, String? formula, String? valueType}) _readCellContent(
@@ -772,7 +817,9 @@ abstract final class OdsSheetReader {
           buffer.write(child.getAttribute('style') == 'short' ? 'YY' : 'YYYY');
         case 'month':
           if (child.getAttribute('textual') == 'true') {
-            buffer.write(child.getAttribute('style') == 'short' ? 'MMM' : 'MMMM');
+            buffer.write(
+              child.getAttribute('style') == 'short' ? 'MMM' : 'MMMM',
+            );
           } else {
             buffer.write(child.getAttribute('style') == 'short' ? 'M' : 'MM');
           }
@@ -842,7 +889,18 @@ abstract final class OdsSheetReader {
   }
 
   static String _text(XmlElement element) {
-    final paragraphs = _descendants(element, 'p', _textNs).toList();
+    Iterable<XmlElement> textParagraphs(XmlElement parent) sync* {
+      for (final child in parent.childElements) {
+        if (_is(child, 'annotation', _office)) continue;
+        if (_is(child, 'p', _textNs)) {
+          yield child;
+        } else {
+          yield* textParagraphs(child);
+        }
+      }
+    }
+
+    final paragraphs = textParagraphs(element).toList();
     final buffer = StringBuffer();
     void write(String value) {
       if (buffer.length + value.length > 1024 * 1024) {
@@ -1029,6 +1087,7 @@ abstract final class OdsSheetReader {
 /// hundreds of millions of cells or unbounded merge/dimension bookkeeping.
 class _OdsBudget {
   int _cells = 0;
+  int _comments = 0;
   int _dimensions = 0;
   int _merges = 0;
   int _xmlBytes = 0;
@@ -1036,6 +1095,13 @@ class _OdsBudget {
   int _cellText = 0;
   int _styleWork = 0;
   int _mergeCoverageWork = 0;
+
+  void comments(int count) {
+    if (count > 10000 - _comments) {
+      throw const OdsSheetFormatException('ODS comment limit (10000)');
+    }
+    _comments += count;
+  }
 
   void cells(int count) {
     if (count > 200000 - _cells) {

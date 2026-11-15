@@ -54,6 +54,11 @@ File → Print (Cmd/Ctrl+P) is available in suitable viewers and editors,
 using the current document without saving it. Markdown, HTML and EPUB use an
 explicitly labelled text layout. See [printing support and limits](docs/document-printing.md).
 
+Copy and move start directly with Enter; Preview is optional. Finished queues
+hide automatically. Notification bars have close buttons and a configurable
+30-second default lifetime, plus a bounded session history in Settings.
+See [notification and queue behavior](docs/notifications.md).
+
 ## Providers
 
 | Provider | Features |
