@@ -22,6 +22,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:quds_office_editor/quds_office_editor.dart'
     hide WordPackagePreservation;
@@ -808,8 +809,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           !controller.config.allowsMutation) {
         return;
       }
+      final supportsDesktopZotero =
+          !kIsWeb &&
+          (Platform.isLinux || Platform.isWindows || Platform.isMacOS);
       transport = OfficeZoteroTransport(
         createClient: ref.read(proxyServiceProvider).createHttpClient,
+        createLocalClient: supportsDesktopZotero
+            ? () => IOClient(HttpClient()..findProxy = (_) => 'DIRECT')
+            : null,
       );
       _zoteroTransport = transport;
       await showWordZoteroDialog(
@@ -817,6 +824,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         controller: controller,
         session: _zoteroSession,
         transport: transport.send,
+        localTransport: transport.supportsLocal ? transport.send : null,
         persistApiKey: credentials.canPersist ? credentials.save : null,
       );
     } catch (_) {

@@ -20,8 +20,14 @@ class ZoteroLibrary {
   factory ZoteroLibrary.group(int id) =>
       ZoteroLibrary(type: ZoteroLibraryType.group, id: id);
 
+  /// Routing alias for the current user's Zotero desktop library.
+  /// Zero is never a persistent Zotero account or citation identifier.
+  ZoteroLibrary.localUser() : type = ZoteroLibraryType.user, id = 0;
+
   final ZoteroLibraryType type;
   final int id;
+
+  bool get isLocalUser => type == ZoteroLibraryType.user && id == 0;
 
   String get apiPath =>
       '/${type == ZoteroLibraryType.user ? 'users' : 'groups'}/$id';
@@ -30,6 +36,9 @@ class ZoteroLibrary {
   /// all network access to the Web API uses HTTPS.
   Uri itemUri(String key) {
     validateZoteroKey(key);
+    if (isLocalUser) {
+      throw StateError('The local library alias has no persistent item URI.');
+    }
     return Uri.parse('http://zotero.org$apiPath/items/$key');
   }
 
@@ -132,9 +141,11 @@ class ZoteroItem {
     this.url = '',
     List<ZoteroCreator> creators = const [],
     Map<String, dynamic>? cslJson,
+    Uri? citationUri,
     this.citationHtml,
     this.bibliographyHtml,
   }) : creators = List.unmodifiable(creators),
+       _citationUri = citationUri,
        cslJson = cslJson == null ? null : Map.unmodifiable(cslJson) {
     validateZoteroKey(key);
   }
@@ -157,8 +168,21 @@ class ZoteroItem {
   final String? citationHtml;
   final String? bibliographyHtml;
 
-  Uri get canonicalUri => library.itemUri(key);
-  String get sourceId => canonicalUri.toString();
+  final Uri? _citationUri;
+
+  /// Durable citation identity, independent of desktop's `/users/0` alias.
+  /// An unsynced item whose export replaces its URI with a citation key may
+  /// have no recoverable identity. Embed that item as an offline reference.
+  Uri? get citationUri =>
+      _citationUri ?? (library.isLocalUser ? null : library.itemUri(key));
+
+  Uri get canonicalUri =>
+      citationUri ??
+      (throw StateError('This local item has no persistent Zotero URI.'));
+
+  /// The fallback is for selection state only; never embed it as an item URI.
+  String get sourceId =>
+      citationUri?.toString() ?? 'zotero-local:${library.apiPath}/items/$key';
   String get creatorSummary => creators.map((c) => c.displayName).join(', ');
   String get year => RegExp(r'\b\d{4}\b').firstMatch(date)?.group(0) ?? '';
   bool get isCitable =>

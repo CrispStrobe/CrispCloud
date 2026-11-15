@@ -211,7 +211,11 @@ List<ZoteroCitationItem> zoteroImportCslJson(String input) {
     ];
     final uris = candidates
         .whereType<String>()
-        .where((value) => ZoteroSourceAddress.parse(value) != null)
+        .where(
+          (value) =>
+              ZoteroSourceAddress.parse(value) != null ||
+              ZoteroSourceAddress.isLocalItemUri(value),
+        )
         .toSet()
         .toList();
     result.add(
@@ -232,6 +236,22 @@ class ZoteroSourceAddress {
   const ZoteroSourceAddress(this.library, this.key);
   final ZoteroLibrary library;
   final String key;
+
+  /// Unsynced desktop identities are preserved as links but cannot be routed
+  /// through the Web API. In particular, /users/0 is never a citation identity.
+  static bool isLocalItemUri(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null &&
+        const ['http', 'https'].contains(uri.scheme) &&
+        const ['zotero.org', 'www.zotero.org'].contains(uri.host) &&
+        uri.userInfo.isEmpty &&
+        !uri.hasPort &&
+        !uri.hasQuery &&
+        !uri.hasFragment &&
+        RegExp(r'^/users/local/[A-Za-z0-9]{8}/items/[A-Z0-9]{8}$')
+            .hasMatch(uri.path);
+  }
+
   static ZoteroSourceAddress? parse(String value) {
     final uri = Uri.tryParse(value);
     if (uri == null ||
