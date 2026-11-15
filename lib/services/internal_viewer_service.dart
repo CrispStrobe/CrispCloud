@@ -176,6 +176,12 @@ class ViewerContent {
 /// convenience API and remote (memory-limited) paths.
 const _kMaxViewSizeBytes = 50 * 1024 * 1024;
 
+/// Filename hints only: the encrypted header is verified before browsing.
+bool isVeraCryptViewerName(String name) {
+  final lower = name.toLowerCase();
+  return const ['.vc', '.hc', '.tc'].any(lower.endsWith);
+}
+
 class InternalViewerService {
   const InternalViewerService();
 
@@ -188,6 +194,9 @@ class InternalViewerService {
     ..._standardExtensions,
     ViewerMode.archive: [
       for (final format in archiveFormatCapabilities) ...format.suffixes,
+      '.vc',
+      '.hc',
+      '.tc',
     ],
   };
 
@@ -480,6 +489,10 @@ class InternalViewerService {
     if (lower.endsWith('.stl') || lower.endsWith('.3mf')) {
       return ViewerMode.model3d;
     }
+
+    // These containers have no plaintext signature. A credential dialog and
+    // validated header, not a magic-byte guess, determine their contents.
+    if (isVeraCryptViewerName(filename)) return ViewerMode.archive;
 
     // Compound archive suffixes must win over content-based text guessing.
     final archiveFormat = archiveFormatForName(filename);

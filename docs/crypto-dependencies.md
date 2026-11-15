@@ -12,6 +12,17 @@ The KeePass addition and intervening source differences were reviewed on
 2026-11-12; see the dedicated section below and
 [source-review record](crypto-source-review-2026-11-12.md).
 
+## VeraCrypt extension, 15 November 2026
+
+The [bundled container reader](veracrypt-support.md) reuses the lockfile's MIT
+PointyCastle 4.0.0 and archive CRC helper, plus explicitly MIT-licensed reader
+and worker components and existing MIT filesystem readers. The dependency declarations and resolved
+lockfile are unchanged. Botan (BSD-2-Clause) and VaultPonyCore (Apache-2.0,
+reviewed reference `f746a3af6448636eba837ea62de2e432d3f0e6a5`) were evaluated;
+neither is linked or vendored by this change. No GPL/LGPL runtime is added for
+VeraCrypt support. Python `cryptography` is only the independent test-fixture
+generator, not an application dependency.
+
 ## Required provider source
 
 The published package archives below were downloaded and their SHA-256 digests

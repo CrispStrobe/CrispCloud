@@ -1,0 +1,17 @@
+Analyzing panel_source_provider.dart, panel_provider.dart, veracrypt_panel_transfer_test.dart...
+
+   info - lib/providers/panel_provider.dart:118:8 - Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._owner') to initialize the field. - prefer_initializing_formals
+   info - lib/providers/panel_provider.dart:121:8 - Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._isCurrent') to initialize the field. - prefer_initializing_formals
+   info - lib/providers/panel_provider.dart:122:8 - Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._revision') to initialize the field. - prefer_initializing_formals
+   info - lib/providers/panel_provider.dart:3958:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:5002:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:5166:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:5207:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:7351:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:7571:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:7580:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:7859:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:7879:11 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib/providers/panel_provider.dart:7905:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+
+13 issues found.

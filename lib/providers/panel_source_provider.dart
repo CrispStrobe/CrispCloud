@@ -7,13 +7,18 @@
 //   • availableSourcesProvider    — list of selectable sources for the dropdown
 //   • activeFKeyContextProvider   — FKeyContext for the currently active panel
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:koni_archive/koni_archive.dart' as koni;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/panel_side.dart';
 import '../services/fkey_action_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/veracrypt_container_reader.dart';
+import '../services/veracrypt_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'error_provider.dart';
@@ -39,8 +44,9 @@ Future<void> swapPanelSources(WidgetRef ref) async {
   final active = ref.read(activePanelProvider);
   final focus = ref.read(focusAreaProvider);
   try {
-    if (!await leftPanel.swapViewWith(rightPanel) || !ref.context.mounted)
+    if (!await leftPanel.swapViewWith(rightPanel) || !ref.context.mounted) {
       return;
+    }
     // A slow provider must not steal a newer focus choice on completion.
     if (ref.read(activePanelProvider) != active) return;
     final next = oppositePanel(active);
@@ -66,6 +72,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   final PanelSide side;
   int _sourceRevision = 0;
+  List<PanelSource>? _deferredContainerReleases;
 
   PanelSourceNotifier(this.side) : super(const LocalPanelSource('/')) {
     _restore();
@@ -79,8 +86,51 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
       'setSource: ${source.displayName} path=${source.currentPath} side=$side',
     );
     _sourceRevision++;
+    _releaseContainers(state, keeping: source);
     state = source;
     _persist();
+  }
+
+  /// Transfers two captured pane locations without closing either session
+  /// between assignments. Source listeners may dispose or navigate a pane;
+  /// cleanup uses the sources still owned by the surviving panes afterward.
+  bool swapSourcesWith(
+    PanelSourceNotifier other, {
+    required PanelSource incoming,
+    required PanelSource otherIncoming,
+  }) {
+    if (identical(this, other) ||
+        !mounted ||
+        !other.mounted ||
+        _deferredContainerReleases != null ||
+        other._deferredContainerReleases != null) {
+      return false;
+    }
+    final releases = <PanelSource>[state, other.state, incoming, otherIncoming];
+    _deferredContainerReleases = other._deferredContainerReleases = releases;
+    final revision = ++_sourceRevision;
+    final otherRevision = ++other._sourceRevision;
+    try {
+      state = incoming;
+      // A listener's newer navigation or disposal must win over this swap.
+      if (other.mounted && other._sourceRevision == otherRevision) {
+        other.state = otherIncoming;
+      }
+      return mounted &&
+          other.mounted &&
+          _sourceRevision == revision &&
+          other._sourceRevision == otherRevision &&
+          identical(state, incoming) &&
+          identical(other.state, otherIncoming);
+    } finally {
+      _deferredContainerReleases = other._deferredContainerReleases = null;
+      _closeUnretainedContainers(
+        releases,
+        keeping: [if (mounted) state, if (other.mounted) other.state],
+      );
+      if (mounted) _persist();
+      if (other.mounted) other._persist();
+    }
   }
 
   /// Navigate inside the current source to a sub-path.
@@ -101,12 +151,44 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   }
 
   /// Unlock and enter an encrypted container.
-  void enterContainer(String containerPath, String password) {
+  Future<bool> enterContainer(
+    String containerPath,
+    String password, {
+    koni.ByteSource? byteSource,
+    VeraCryptUnlockOptions options = const VeraCryptUnlockOptions(),
+    VeraCryptHeaderLocation headerLocation = VeraCryptHeaderLocation.primary,
+  }) async {
     _log.debug('enterContainer: $containerPath');
-    _sourceRevision++;
+    final revision = ++_sourceRevision;
+    final parent = state;
+    var adopted = false;
     const service = PanelSourceService();
-    state = service.enterContainer(containerPath, password, state);
-    _persist();
+    try {
+      final unlocked = await service.enterContainer(
+        containerPath,
+        password,
+        parent,
+        byteSource: byteSource,
+        options: options,
+        headerLocation: headerLocation,
+        // A later directory navigation cancels a pending unlock, but must not
+        // invalidate an adopted session, including one transferred to another
+        // pane. Explicit session ownership controls its lifetime from then on.
+        isCancelled: () =>
+            !adopted && (!mounted || revision != _sourceRevision),
+      );
+      if (!mounted || revision != _sourceRevision) {
+        await service.lockContainer(unlocked);
+        return false;
+      }
+      adopted = true;
+      state = unlocked;
+      _persist();
+      return true;
+    } catch (_) {
+      if (!mounted || revision != _sourceRevision) return false;
+      rethrow;
+    }
   }
 
   /// Navigate to the parent source (exit archive/container).
@@ -114,8 +196,64 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
     _log.debug('exitToParent from ${state.displayName}');
     _sourceRevision++;
     const service = PanelSourceService();
-    state = service.exitToParent(state);
+    final parent = service.exitToParent(state);
+    _releaseContainers(state, keeping: parent);
+    state = parent;
     _persist();
+  }
+
+  /// Navigation within a container keeps its session. Leaving its source tree
+  /// or disposing the pane closes every no-longer-reachable container session.
+  void _releaseContainers(PanelSource source, {PanelSource? keeping}) {
+    final deferred = _deferredContainerReleases;
+    if (deferred != null) {
+      deferred.add(source);
+      return;
+    }
+    _closeUnretainedContainers(
+      [source],
+      keeping: [if (keeping != null) keeping],
+    );
+  }
+
+  static Iterable<ContainerPanelSource> _containersIn(
+    PanelSource source,
+  ) sync* {
+    PanelSource? cursor = source;
+    while (cursor != null) {
+      if (cursor is ContainerPanelSource) yield cursor;
+      cursor = switch (cursor) {
+        final ArchivePanelSource s => s.parent,
+        final ContainerPanelSource s => s.parent,
+        _ => null,
+      };
+    }
+  }
+
+  static void _closeUnretainedContainers(
+    Iterable<PanelSource> sources, {
+    required Iterable<PanelSource> keeping,
+  }) {
+    final retained = Set<Object>.identity();
+    for (final source in keeping) {
+      retained.addAll(_containersIn(source).map((s) => s.unlockSession));
+    }
+    final released = Set<Object>.identity();
+    for (final source in sources) {
+      for (final container in _containersIn(source)) {
+        if (!retained.contains(container.unlockSession) &&
+            released.add(container.unlockSession)) {
+          unawaited(const PanelSourceService().lockContainer(container));
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _sourceRevision++;
+    _releaseContainers(state);
+    super.dispose();
   }
 
   // ---- Persistence ----------------------------------------------------------

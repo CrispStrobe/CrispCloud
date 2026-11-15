@@ -48,7 +48,7 @@ Uint8List _buildVeraCryptHeader({
   bd.setUint16(4, 5, Endian.big);
 
   // Minimum program version (offset 6)
-  bd.setUint16(6, 0x0700, Endian.big);
+  bd.setUint16(6, 0x010b, Endian.big);
 
   // Offsets here are relative to byte 64 of the complete header.
   // Sector size (absolute offset 128, uint32 big-endian)

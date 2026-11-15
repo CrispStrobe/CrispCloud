@@ -1,0 +1,128 @@
+{
+  "audited_utc": "2026-11-15T13:13:54.386464+00:00",
+  "refs": {
+    "old_storage": "7d0de79eeb5932e355e66af0be073d58f9fcf3c4",
+    "new_storage": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+    "old_local": "6a5603236c9f3f9e186c5eb3ba5fd76a085b1df6",
+    "new_local": "22c4f42acc575bee8f5119a4803af13b57ef7cbc",
+    "head": "b322b4dcdc76009f53510483610631413168d716"
+  },
+  "manifest_deltas": {
+    "storage": {
+      "metadata_before": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "integration/office-storage-reconcile-20261115",
+        "source_commit": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "08296edbee08da013a8ff718798972552ccd03f7"
+          }
+        }
+      },
+      "metadata_after": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "integration/office-storage-reconcile-20261115",
+        "source_commit": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "08296edbee08da013a8ff718798972552ccd03f7"
+          }
+        }
+      },
+      "files_before": 2334,
+      "files_after": 2336,
+      "added": [
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+      ],
+      "removed": [],
+      "hash_changed": [
+        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ]
+    },
+    "local": {
+      "metadata_before": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "integration/office-storage-reconcile-20261115",
+        "source_commit": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "08296edbee08da013a8ff718798972552ccd03f7"
+          }
+        }
+      },
+      "metadata_after": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "integration/ods-regression-restore-20261115T1246",
+        "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "08296edbee08da013a8ff718798972552ccd03f7"
+          }
+        }
+      },
+      "files_before": 2334,
+      "files_after": 2334,
+      "added": [],
+      "removed": [],
+      "hash_changed": [
+        "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+      ]
+    },
+    "storage_vs_local": {
+      "metadata_before": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "integration/office-storage-reconcile-20261115",
+        "source_commit": "4e8c8f80f206e93be8530a94da478e06c0f87608",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "08296edbee08da013a8ff718798972552ccd03f7"
+          }
+        }
+      },
+      "metadata_after": {
+        "source_repository": "CrispStrobe/quds_office_suite",
+        "source_branch": "integration/ods-regression-restore-20261115T1246",
+        "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+        "standalone_sources": {
+          "packages/legacy_doc_parser": {
+            "repository": "CrispStrobe/legacy-doc-parser",
+            "commit": "08296edbee08da013a8ff718798972552ccd03f7"
+          }
+        }
+      },
+      "files_before": 2336,
+      "files_after": 2334,
+      "added": [],
+      "removed": [
+        "packages/quds_office_engine/test/sheet_comments_namespace_test.dart",
+        "packages/quds_office_engine/tool/fidelity/comment_schema_fixture.dart"
+      ],
+      "hash_changed": [
+        "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart"
+      ]
+    }
+  },
+  "three_way_simulation": {
+    "packages/QUDS_FORKS.md": {
+      "exit_code": 1,
+      "conflict_markers": 1
+    },
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "exit_code": 0,
+      "conflict_markers": 0
+    },
+    "tool/office_fidelity_manifest.json": {
+      "exit_code": 1,
+      "conflict_markers": 1
+    }
+  },
+  "repository_mutated": false,
+  "recommendation": "Merge storage head 3e9560c9 first. Then merge local head 22c4f42a preserving storage versions of QUDS_FORKS.md and office_fidelity_manifest.json; identical ODS regression tests merge unchanged. Keep both evidence directories. Neither incoming delta overlaps current VeraCrypt feature or dirty changes."
+}

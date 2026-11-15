@@ -123,20 +123,6 @@
       "note": "Format primitives and authenticated config/header parsing, not a complete cloud vault filesystem."
     },
     {
-      "name": "VeraCrypt helpers and desktop CLI",
-      "algorithms": [
-        "AES-XTS header decryption",
-        "PBKDF2-HMAC-SHA512",
-        "PBKDF2-HMAC-SHA256",
-        "PBKDF2-HMAC-Whirlpool",
-        "CRC-32 format validation"
-      ],
-      "sources": [
-        "https://veracrypt.io/en/VeraCrypt%20Volume%20Format%20Specification.html"
-      ],
-      "note": "Bundled parser supports a limited set of volume headers. Full mounting is a separately installed desktop executable and unavailable in App Store/mobile builds. CRC is a format check, not cryptographic authentication."
-    },
-    {
       "name": "Transport, accounts, and remote storage",
       "algorithms": [
         "TLS via platform/Dart networking",
@@ -456,6 +442,25 @@
         "lib/services/archive_png_carving_workflow.dart"
       ],
       "note": "Bounded original parser for supported complete contiguous PNG images in a native local file. Selected images and an offset/hash report are packaged in a new ZIP. The journal holds hashes and recipe metadata, not source bytes or credentials. Guarded native publication repeats complete source/stage proofs after pauses and checks captured identity and cancellation synchronously before exclusive installation. Existing encryption, credentials, protocol and distribution decisions are retained; no runtime dependency or new encryption algorithm is added."
+    },
+    {
+      "name": "Bundled VeraCrypt/TrueCrypt reader and separate desktop CLI",
+      "algorithms": [
+        "AES-256-XTS header and bounded data-unit decryption",
+        "PBKDF2-HMAC-SHA512",
+        "PBKDF2-HMAC-SHA256",
+        "PBKDF2-HMAC-Whirlpool",
+        "PBKDF2-HMAC-RIPEMD160 (legacy compatibility)",
+        "Argon2id v1.3, one lane, 192-byte header derivation (native only)",
+        "CRC-32 header validation and keyfile mixing"
+      ],
+      "sources": [
+        "https://veracrypt.io/en/VeraCrypt%20Volume%20Format%20Specification.html",
+        "https://veracrypt.io/en/Header%20Key%20Derivation.html",
+        "https://veracrypt.io/en/Personal%20Iterations%20Multiplier%20(PIM).html",
+        "docs/veracrypt-support.md"
+      ],
+      "note": "Read-only AES-XTS file containers with PIM/keyfiles/native TrueCrypt, four explicitly selected header slots, and bounded FAT/NTFS/ext browsing. Argon2id is native-only; browser PBKDF2 is bounded. Existing MIT PointyCastle dependency, no new runtime dependency. Cascades, system encryption, exFAT and writes unsupported. Desktop CLI remains separate. CRC/XTS do not authenticate payload contents."
     }
   ],
   "reviewed_files": [
@@ -1197,7 +1202,34 @@
     "windows/runner/CMakeLists.txt",
     "windows/runner/file_drag_data.h",
     "windows/runner/file_operations.cpp",
-    "windows/runner/tests/file_drag_data_test.cpp"
+    "windows/runner/tests/file_drag_data_test.cpp",
+    "docs/veracrypt-support.md",
+    "lib/l10n/veracrypt_strings.dart",
+    "lib/providers/panel_source_provider.dart",
+    "lib/services/panel_source_service.dart",
+    "lib/services/veracrypt_container_reader.dart",
+    "lib/services/veracrypt_file_source.dart",
+    "lib/services/veracrypt_file_source_io.dart",
+    "lib/services/veracrypt_file_source_stub.dart",
+    "lib/services/veracrypt_header_worker.dart",
+    "lib/services/veracrypt_header_worker_io.dart",
+    "lib/services/veracrypt_header_worker_stub.dart",
+    "lib/widgets/veracrypt_unlock_dialog.dart",
+    "test/fixtures/veracrypt/compatibility_vectors.json",
+    "test/fixtures/veracrypt/generate_compatibility_vectors.py",
+    "test/fixtures/veracrypt/web_compatibility_probe.dart",
+    "test/support/generate_veracrypt_container_fixtures.py",
+    "test/support/veracrypt_container_fixture.dart",
+    "test/support/veracrypt_web_smoke.dart",
+    "test/veracrypt_compatibility_test.dart",
+    "test/veracrypt_container_reader_test.dart",
+    "test/veracrypt_header_worker_test.dart",
+    "test/veracrypt_panel_transfer_test.dart",
+    "test/veracrypt_viewer_routing_test.dart",
+    "test/widget/veracrypt_unlock_dialog_test.dart",
+    "test/widget/veracrypt_viewer_test.dart",
+    "tool/check_veracrypt.sh",
+    "tool/run_dart_web_probe.cjs"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
@@ -1215,7 +1247,8 @@
     "Final concurrent-main reconciliation pins CrisperBooks a18b93c1, canonical legacy parser 0f9f085 and Quds 05a581d. Earlier real Chrome selection and fixed-layout bridge checks belong to CrisperBooks 3796381 and predate the final synchronous-disposal cleanup. ADC/XZ UDIF and ISO multi-extent decoding add bounded read-only compression/container parsing; independent 7-Zip 26.06 extraction verifies complete member bytes. Shared black syntax canvases, matching token colours, empty-directory parent navigation and capability-based image choices are presentation changes; cryptographic algorithms and distribution classification are unchanged.",
     "The archive continuation and concurrent main are merged with both histories retained. The reviewed path set is the union of both source inventories, including both retained CFB-name and Word-font sources. Distribution declarations are unchanged. Encrypted split-7z lifetime fixes, bounded reader selections and explicit pane-source capture add no cipher, credential store or network destination. All original branch/PR heads and exact-source validation receipts remain reachable.",
     "Final canonical parser pin 731e370 includes bounded CFB metadata and complete directory ownership, typed display-field evidence, explicit opt-in cached-result export and list visibility/formatting audits. Quds consumes it at 389e879. The combined parser passed 3406 Dart tests, 188 Python controls and actual JavaScript acceptance; Quds engine passed 1634 tests and the app legacy-Word cohort passed 35 tests. Changes add validation and document conversion, not encryption or activation of embedded objects.",
-    "Dependency cleanup removes the bundled libsmb2 implementation and enables the already reviewed Rust SMB graph by default. Signing/encryption requirements remain in force; real platform/NAS qualification is separate. Optional macFUSE/FUSE-T integration now requires CRISP_ENABLE_FUSE=true at compile time, and is absent from default artifacts. The iOS signal generator and three Automake helper adapters are independently authored MIT code; the AWK Bison exception is preserved completely. These licensing changes do not establish patent clearance or change Apple distribution declarations."
+    "Dependency cleanup removes the bundled libsmb2 implementation and enables the already reviewed Rust SMB graph by default. Signing/encryption requirements remain in force; real platform/NAS qualification is separate. Optional macFUSE/FUSE-T integration now requires CRISP_ENABLE_FUSE=true at compile time, and is absent from default artifacts. The iOS signal generator and three Automake helper adapters are independently authored MIT code; the AWK Bison exception is preserved completely. These licensing changes do not establish patent clearance or change Apple distribution declarations.",
+    "The 15 November VeraCrypt extension reuses MIT PointyCastle for AES-XTS with native Argon2id, PBKDF2 PIMs, keyfiles and native TrueCrypt headers. The bundled read-only FAT/NTFS/ext path keeps captured byte-source ownership, explicit header selection, bounded reads and non-persisted keys. Native derivation uses a serialized cancellable isolate queue; browser Argon2 is refused and PBKDF2 is capped. No new dependency, credential store, network destination or distribution decision is introduced. Independent Python/OpenSSL fixtures and compiled-JavaScript probes qualify the documented profile, not arbitrary upstream containers or native device packaging."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

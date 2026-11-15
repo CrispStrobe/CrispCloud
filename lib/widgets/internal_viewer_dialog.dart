@@ -55,6 +55,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/veracrypt_strings.dart';
 import '../l10n/binary_structure_strings.dart';
 import '../l10n/disk_partition_strings.dart';
 import '../l10n/lrc_strings.dart';
@@ -81,6 +82,8 @@ import '../services/file_operation_service.dart';
 import '../services/viewer_spool.dart';
 import '../services/viewer_tail_service.dart';
 import '../services/viewer_search_service.dart';
+import '../services/veracrypt_container_reader.dart';
+import '../services/veracrypt_service.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/lrc_parser.dart';
 import '../services/lrc_source.dart';
@@ -124,6 +127,7 @@ import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/archive_integrity_strings.dart';
 import 'archive_integrity_dialog.dart';
+import 'veracrypt_unlock_dialog.dart';
 import '../l10n/native_preview_error_strings.dart';
 import '../l10n/office_pdf_error_strings.dart';
 import '../l10n/installed_office_preview_strings.dart';
@@ -1624,6 +1628,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _openArchive(int token) async {
+    if (isVeraCryptViewerName(_expansionName ?? _viewName)) {
+      await _openVeraCryptContainer(token);
+      return;
+    }
     final source = _source;
     if (source == null) {
       throw const ArchiveViewException('The archive source is unavailable.');
@@ -1726,6 +1734,108 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       }
     }
     if (!mounted || !current()) return;
+    setState(() {
+      _preparing = false;
+      _richError = InternalViewerStrings(context).text('tooMany');
+    });
+  }
+
+  Future<void> _openVeraCryptContainer(int token) async {
+    final source = _source;
+    if (source == null) {
+      throw const ArchiveViewException('The container source is unavailable.');
+    }
+    final loadToken = _loadToken;
+    final name = _expansionName ?? _viewName;
+    bool current() =>
+        mounted &&
+        token == _prepareToken &&
+        loadToken == _loadToken &&
+        identical(_source, source) &&
+        _mode == ViewerMode.archive;
+    var wrongCredentials = false;
+    var trueCryptMode = name.toLowerCase().endsWith('.tc');
+    var kdf = VeraCryptKdf.auto;
+    var pim = 0;
+    var header = VeraCryptHeaderLocation.primary;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (!mounted || !current()) return;
+      setState(() => _preparing = false);
+      final credentials = await showVeraCryptUnlockDialog(
+        context,
+        name: name,
+        wrongCredentials: wrongCredentials,
+        trueCryptMode: trueCryptMode,
+        initialKdf: kdf,
+        initialPim: pim,
+        initialHeaderLocation: header,
+      );
+      if (credentials == null) {
+        if (current()) {
+          setState(() {
+            _preparing = false;
+            _richError = InternalViewerStrings(context).text('protected');
+          });
+        }
+        return;
+      }
+      ArchiveViewerSource? borrowed;
+      ViewerArchive? opened;
+      var accepted = false;
+      try {
+        if (!current()) return;
+        // Keep only non-password choices for this bounded retry loop. Keyfile
+        // prefixes are disposed after every attempt and must be chosen again.
+        trueCryptMode = credentials.options.trueCryptMode;
+        kdf = credentials.options.kdf;
+        pim = credentials.options.pim;
+        header = credentials.headerLocation;
+        setState(() => _preparing = true);
+        borrowed = _borrowArchiveSource(source, token, loadToken, name);
+        opened = await openVeraCryptArchive(
+          borrowed,
+          password: credentials.password,
+          options: credentials.options,
+          headerLocation: credentials.headerLocation,
+          isCancelled: () => !current(),
+        );
+        if (!current()) return;
+        final previous = _archive;
+        final previousSource = _archiveSource;
+        setState(() {
+          _archive = opened;
+          _archiveSource = borrowed;
+          _archiveMembers = opened!.members;
+          _archivePassword = null;
+          _preparing = false;
+          _richError = null;
+        });
+        accepted = true;
+        _releaseArchiveSource(previousSource);
+        if (previous != null) unawaited(previous.close());
+        return;
+      } on ArchivePasswordRequiredException {
+        if (!current()) return;
+        wrongCredentials = true;
+      } catch (error) {
+        if (current()) {
+          setState(() {
+            _preparing = false;
+            _richError = error is ArchiveViewException
+                ? localizedArchiveViewerError(context, error)
+                : error.toString();
+          });
+        }
+        return;
+      } finally {
+        credentials.dispose();
+        if (!accepted) {
+          await opened?.close();
+          _releaseArchiveSource(borrowed);
+        }
+      }
+    }
+    if (!current()) return;
     setState(() {
       _preparing = false;
       _richError = InternalViewerStrings(context).text('tooMany');
@@ -4852,11 +4962,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           alignment: AlignmentDirectional.centerEnd,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: TextButton.icon(
-              key: const ValueKey('test-archive'),
-              onPressed: () => unawaited(_testArchiveIntegrity()),
-              icon: const Icon(Icons.fact_check_outlined),
-              label: Text(archiveIntegrityText(context, 'Test archive')),
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              children: [
+                if (isVeraCryptViewerName(_expansionName ?? _viewName))
+                  TextButton.icon(
+                    key: const ValueKey('veracrypt-lock'),
+                    // Changing mode revokes borrowed reads immediately and
+                    // closes the archive/key owner through the normal cleanup.
+                    onPressed: () => _selectMode(ViewerMode.binary),
+                    icon: const Icon(Icons.lock_outline),
+                    label: Text(veraCryptText(context, 'Lock container')),
+                  ),
+                TextButton.icon(
+                  key: const ValueKey('test-archive'),
+                  onPressed: () => unawaited(_testArchiveIntegrity()),
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: Text(archiveIntegrityText(context, 'Test archive')),
+                ),
+              ],
             ),
           ),
         ),
@@ -4918,6 +5042,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               Wrap(
                 spacing: 8,
                 children: [
+                  if (_mode == ViewerMode.archive &&
+                      isVeraCryptViewerName(_expansionName ?? _viewName))
+                    OutlinedButton.icon(
+                      key: const ValueKey('veracrypt-retry'),
+                      onPressed: () => _selectMode(ViewerMode.archive),
+                      icon: const Icon(Icons.lock_open),
+                      label: Text(veraCryptText(context, 'Unlock container')),
+                    ),
                   OutlinedButton(
                     onPressed: () => _selectMode(ViewerMode.hex),
                     child: Text(context.commanderTr("Hex view")),

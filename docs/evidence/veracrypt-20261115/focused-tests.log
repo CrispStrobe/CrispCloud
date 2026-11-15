@@ -1,0 +1,558 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart
+00:00 +0: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection detects .vc extension as container
+00:00 +1: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection detects .hc extension as container
+00:00 +2: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection rejects .zip extension
+00:00 +3: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection rejects no extension
+00:00 +4: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection rejects .VC (upper-case) — detection is case-insensitive
+00:00 +5: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection rejects .HC (upper-case) — case-insensitive
+00:00 +6: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection .vc with file too small returns false when fileSize provided
+00:00 +7: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainer — extension detection .vc with adequate file size returns true
+00:00 +8: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainerStrict returns true for .vc with size >= 512
+00:00 +9: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainerStrict returns true for .hc with size >= 512
+00:00 +10: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainerStrict returns false for .vc with size < 512
+00:00 +11: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: detectContainerStrict returns false for unknown extension even with large size
+00:00 +12: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — size validation accepts exactly 512-byte buffer
+00:00 +13: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — size validation accepts buffers larger than 512 bytes
+00:00 +14: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — size validation throws FormatException for buffer < 512 bytes
+00:00 +15: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — size validation throws FormatException for empty buffer
+00:00 +16: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — size validation throws FormatException for 100-byte buffer
+00:00 +17: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — salt extraction extracts first 64 bytes as salt
+00:00 +18: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — salt extraction salt is exactly 64 bytes
+00:00 +19: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — salt extraction salt from zeroed header is all zeros
+00:00 +20: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: parseHeader — salt extraction different headers produce different salts
+00:00 +21: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: VERA magic bytes VeraCryptVolumeHeader.magicBytes is [0x56, 0x45, 0x52, 0x41]
+00:00 +22: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: VERA magic bytes magic bytes decode to "VERA" in ASCII
+00:00 +23: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: VERA magic bytes tryDecryptHeader returns null for all-zero header (no VERA magic)
+00:00 +24: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: VERA magic bytes tryDecryptHeader returns null for random-looking bytes
+00:00 +25: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedAlgorithms returns a non-empty list
+00:00 +26: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedAlgorithms includes AES-256-XTS
+00:00 +27: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedAlgorithms advertises only the implemented AES-XTS decryptor
+00:00 +28: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedAlgorithms all entries are non-empty strings
+00:00 +29: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedHashAlgorithms returns a non-empty list
+00:00 +30: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedHashAlgorithms includes SHA-512
+00:00 +31: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedHashAlgorithms includes SHA-256
+00:00 +32: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedHashAlgorithms includes Whirlpool
+00:00 +33: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: getSupportedHashAlgorithms all entries are non-empty strings
+00:00 +34: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey rejects unknown KDFs instead of silently selecting SHA-512
+00:00 +35: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey validates salt length and iteration count
+00:00 +36: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey returns 64 bytes (512 bits)
+00:00 +37: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey returns 64 bytes with SHA-256
+00:00 +38: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey returns 64 bytes with Whirlpool
+00:00 +39: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey same inputs produce same key (deterministic)
+00:00 +40: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey different passwords produce different keys
+00:00 +41: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey different salts produce different keys
+00:00 +42: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: deriveKey SHA-512 and SHA-256 produce different keys for same inputs
+00:00 +43: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: invalid / corrupted headers tryDecryptHeader with empty header returns null
+00:00 +44: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: invalid / corrupted headers tryDecryptHeader with 511-byte header returns null
+00:00 +45: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: invalid / corrupted headers parseHeader throws FormatException on 0-byte input
+00:00 +46: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_test.dart: invalid / corrupted headers tryDecryptHeader with corrupted magic returns null
+00:00 +47: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +48: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +49: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +50: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +51: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +52: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +53: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +54: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +55: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +56: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +57: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +58: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +59: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +60: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +61: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +62: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +63: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +64: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +65: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: reads independent AES-XTS headers at the official offsets
+00:00 +66: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: rejects corruption even when the VERA magic block is unchanged
+00:00 +67: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: rejects impossible sector geometry even when both CRCs are correct
+00:00 +68: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_header_vectors_test.dart: wrong password cannot unlock an independent header
+00:00 +69: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:01 +70: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:01 +71: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:01 +72: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +73: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +74: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +75: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +76: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +77: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +78: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +79: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +80: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +81: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +82: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +83: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +84: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +85: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +86: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +87: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +88: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +89: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +90: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +91: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +92: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +93: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +94: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +95: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +96: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +97: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +98: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +99: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +100: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +101: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +102: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +103: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +104: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +105: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +106: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +107: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +108: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +109: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +110: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +111: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +112: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +113: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +114: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +115: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +116: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +117: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +118: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +119: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +120: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +121: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +122: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +123: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +124: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +125: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +126: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +127: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +128: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +129: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +130: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +131: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +132: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +133: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +134: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +135: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +136: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +137: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +138: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +139: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +140: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +141: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +142: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +143: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +144: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +145: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +146: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +147: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +148: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +149: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +150: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +151: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +152: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +153: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +154: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +155: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +156: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +157: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +158: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +159: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +160: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +161: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +162: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +163: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +164: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +165: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +166: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +167: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +168: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +169: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +170: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +171: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +172: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +173: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +174: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +175: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +176: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +177: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +178: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +179: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +180: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +181: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_pim1
+00:02 +182: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_container_reader_test.dart: vera-pim1: real FAT names and file bytes through public reader
+00:03 +183: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_container_reader_test.dart: vera-pim1: real FAT names and file bytes through public reader
+00:03 +184: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +185: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +186: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +187: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +188: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +189: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +190: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +191: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +192: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +193: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +194: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +195: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +196: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +197: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +198: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +199: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +200: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +201: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +202: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +203: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +204: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +205: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +206: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +207: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +208: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +209: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +210: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +211: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +212: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +213: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +214: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +215: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +216: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +217: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +218: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +219: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +220: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +221: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +222: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +223: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +224: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +225: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +225: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_source_restore_test.dart: source selection wins over a pending startup restore
+🐛 [PanelSource] setSource: Local path=/chosen side=PanelSide.remote
+00:03 +226: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +226: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_source_restore_test.dart: same-source selection wins over a pending startup restore
+🐛 [PanelSource] setSource: Local path=/ side=PanelSide.remote
+00:03 +227: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +227: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_source_restore_test.dart: path navigation wins over a pending startup restore
+🐛 [PanelSource] navigateTo: /chosen side=PanelSide.remote
+00:03 +228: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +228: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_source_restore_test.dart: archive entry wins over a pending startup restore
+🐛 [PanelSource] enterArchive: /chosen.zip
+00:03 +229: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +229: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_source_restore_test.dart: parent navigation wins over a pending startup restore
+🐛 [PanelSource] exitToParent from Local
+00:03 +230: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +230: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_source_restore_test.dart: a pending local marker cannot reset newer navigation to root
+🐛 [PanelSource] setSource: Local path=/local side=PanelSide.remote
+🐛 [PanelSource] navigateTo: /two side=PanelSide.remote
+00:03 +231: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +232: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +233: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +234: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +235: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +236: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +237: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +238: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +239: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +240: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +241: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +242: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +243: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +244: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +245: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +246: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +247: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +248: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +249: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:03 +250: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:04 +251: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:04 +251: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: container and local pane exchange preserves the transferred session
+🐛 [PanelSource] enterContainer: /left.tc
+00:04 +252: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:04 +252: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: container and local pane exchange preserves the transferred session
+🐛 [PanelSource] setSource: Local path=/destination side=PanelSide.remote
+00:04 +253: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:04 +254: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:04 +254: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: swapping pane views exchanges both directions
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+00:04 +254: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: two container sessions move with their paths and close once per owner
+🐛 [PanelSource] enterContainer: /left.tc
+00:04 +254: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: swapping pane views exchanges both directions
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /beta (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+00:04 +255: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_whirlpool_pim1
+00:04 +256: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_container_reader_test.dart: bad credentials and unsupported filesystems are distinct and close input
+00:04 +256: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: two container sessions move with their paths and close once per owner
+🐛 [PanelSource] enterContainer: /right.tc
+00:04 +257: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: two container sessions move with their paths and close once per owner
+00:04 +258: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: two container sessions move with their paths and close once per owner
+🐛 [PanelSource] navigateTo: DOCS side=PanelSide.local
+00:04 +259: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: public source swap uses visible paths and bypasses locks once
+00:04 +259: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: disposal during exchange closes only sessions without a surviving owner
+🐛 [PanelSource] enterContainer: /left.tc
+00:04 +259: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: public source swap uses visible paths and bypasses locks once
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /beta (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+00:04 +260: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: public source swap uses visible paths and bypasses locks once
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+00:04 +261: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +261: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: swap invalidates an earlier listing while the new listing is pending
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /beta (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+00:04 +262: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +262: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: mixed file lists preserve each row source after swapping
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+🐛 [PanelSource] setSource: Memory path=/cloud side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Memory (path=/cloud)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] Showing 2 items in Both sources
+🐛 [PanelNotifier] selectTab: tab_0
+00:04 +263: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +263: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: leaving a branch view before swapping restores a verified folder
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /cloud (side=PanelSide.remote, web=false)
+00:04 +263: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_panel_transfer_test.dart: disposal during exchange closes only sessions without a surviving owner
+🐛 [PanelSource] enterContainer: /right.tc
+00:04 +263: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: leaving a branch view before swapping restores a verified folder
+ℹ️ [PanelNotifier] Showing 1 items in Branch: /cloud
+ℹ️ [PanelNotifier] navigateToPath: /other (side=PanelSide.remote, web=false)
+00:04 +264: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +264: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: leaving a branch view before swapping restores a verified folder
+🐛 [PanelSource] setSource: Test path=/other side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+00:04 +265: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +266: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +266: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: a slow swap respects a newer active-pane choice
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /beta (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+🐛 [PanelNotifier] _loadLocalFiles: /beta (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+🐛 [PanelNotifier] listDirectory("/beta") returned 0 entities
+00:04 +267: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +267: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_view_test.dart: swap during a legacy cloud refresh retains the actual endpoint
+ℹ️ [PanelNotifier] navigateToPath: /alpha (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /cloud (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /alpha (web=false)
+🐛 [PanelNotifier] listDirectory("/alpha") returned 0 entities
+00:04 +268: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +269: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +270: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +270: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_container_reader_test.dart: panel navigation wins over a late unlock and disposes the unused source
+🐛 [PanelSource] enterContainer: /test.tc
+🐛 [PanelSource] setSource: Local path=/newer side=PanelSide.local
+00:04 +271: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +271: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_container_reader_test.dart: leaving the panel locks its keys; in-container navigation keeps them
+🐛 [PanelSource] enterContainer: /test.tc
+🐛 [PanelSource] navigateTo: DOCS side=PanelSide.local
+🐛 [PanelSource] exitToParent from Container: test.tc
+00:04 +272: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:04 +273: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:05 +273: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_virtual_test.dart: swapped transient collections retain missing and replacement references
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 11 entities
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/left") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/right side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/right)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/right (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/right (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/right") returned 0 entities
+🐛 [PanelSource] setSource: Memory path=/collection side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Memory (path=/collection)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] Showing 3 items in Transient search
+🐛 [PanelNotifier] toggleSelection: kept.txt shift=false ctrl=true lastSelected=null side=PanelSide.remote
+ℹ️ [PanelNotifier] Showing 3 items in Search results
+🐛 [PanelNotifier] selectTab: tab_0
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PDZOIU/left") returned 0 entities
+ℹ️ [PanelNotifier] Showing 3 items in Search results
+ℹ️ [PanelNotifier] Showing 3 items in Search results
+ℹ️ [PanelNotifier] navigateToPath: /collection (side=PanelSide.local, web=false)
+00:05 +274: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:05 +274: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_virtual_test.dart: nested archive handles move with the pane and close on leaving
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 11 entities
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/left") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/left") returned 1 entities
+ℹ️ [PanelNotifier] enterArchive: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/left/outer.zip (Local)
+ℹ️ [PanelNotifier] navigateInto: folder isFolder=true path=folder/
+ℹ️ [PanelNotifier] navigateInto: inner.zip isFolder=false path=folder/inner.zip
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_PIQCQP/right") returned 0 entities
+00:05 +275: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:05 +275: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_virtual_test.dart: parent rows leave nested archives, their folders, then storage
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 11 entities
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/right side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/right)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/right (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/right (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/right") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left") returned 1 entities
+ℹ️ [PanelNotifier] enterArchive: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left/outer.zip (Local)
+ℹ️ [PanelNotifier] navigateInto: folder isFolder=true path=folder/
+ℹ️ [PanelNotifier] navigateInto: inner.zip isFolder=false path=folder/inner.zip
+🐛 [PanelNotifier] toggleSelection: .. shift=false ctrl=false lastSelected=null side=PanelSide.local
+ℹ️ [PanelNotifier] navigateInto: .. isFolder=true path=..
+ℹ️ [PanelNotifier] navigateInto: .. isFolder=true path=..
+ℹ️ [PanelNotifier] navigateInto: .. isFolder=true path=..
+ℹ️ [PanelNotifier] navigateInto: .. isFolder=true path=..
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_OYVTQR/left") returned 1 entities
+00:05 +276: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:05 +276: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_virtual_test.dart: empty archive has a usable parent row
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 11 entities
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/right side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/right)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/right (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/right (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/right") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left") returned 1 entities
+ℹ️ [PanelNotifier] enterArchive: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left/empty.zip (Local)
+ℹ️ [PanelNotifier] navigateInto: .. isFolder=true path=..
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_CPJUAJ/left") returned 1 entities
+00:05 +277: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:05 +277: /workspace/scratch/8c751e85cb23/CrispCloud/test/panel_swap_virtual_test.dart: disposing the receiver during swap releases unclaimed archive handles
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 11 entities
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/left (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/left") returned 0 entities
+🐛 [PanelSource] setSource: Local path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/left (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/left") returned 1 entities
+ℹ️ [PanelNotifier] enterArchive: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/left/outer.zip (Local)
+ℹ️ [PanelNotifier] navigateInto: folder isFolder=true path=folder/
+ℹ️ [PanelNotifier] navigateInto: inner.zip isFolder=false path=folder/inner.zip
+🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right (web=false)
+🐛 [PanelNotifier] listDirectory("/workspace/scratch/8c751e85cb23/toolchains/tmp/panel_swap_virtual_KEFHOC/right") returned 0 entities
+00:05 +278: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_ripemd160_pim1
+00:05 +279: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_keyfiles
+00:07 +280: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_keyfiles
+00:07 +281: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_keyfiles
+00:07 +282: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_unlock_dialog_test.dart: cancelled keyfile selection clears a late picker result
+00:07 +283: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +284: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +285: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +286: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +287: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +288: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +289: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:08 +290: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_long_keyfiles
+00:09 +291: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_sha512_keyfiles_only
+00:12 +292: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors truecrypt_v4_sha512
+00:12 +293: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors truecrypt_v5_sha512
+00:12 +294: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors truecrypt_v5_ripemd160
+00:12 +295: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors truecrypt_v5_whirlpool
+00:12 +296: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors truecrypt_v5_keyfiles
+00:12 +297: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors truecrypt_high_offset
+00:12 +298: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_hidden_4096
+00:14 +299: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_current_required
+00:16 +300: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: independent current and legacy format vectors veracrypt_argon2id_pim1
+00:17 +301: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +302: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +303: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +304: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +305: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +306: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +307: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:17 +308: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: F3 unlocks independent TrueCrypt FAT and previews a real member
+00:18 +309: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: wrong credentials and invalid headers wrong password, PIM and keyfile do not unlock
+00:20 +310: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: wrong credentials and invalid headers wrong password, PIM and keyfile do not unlock
+00:20 +311: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: Lock closes the key owner; reopening requests credentials again
+00:20 +312: /workspace/scratch/8c751e85cb23/CrispCloud/test/widget/veracrypt_viewer_test.dart: Lock closes the key owner; reopening requests credentials again
+00:21 +313: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: wrong credentials and invalid headers CRC, versions, flags, bounds and web-unsafe integers are rejected
+00:21 +314: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: wrong credentials and invalid headers CRC, versions, flags, bounds and web-unsafe integers are rejected
+00:22 +315: /workspace/scratch/8c751e85cb23/CrispCloud/test/veracrypt_compatibility_test.dart: session disposal, read bounds and metadata keep keys private
+00:22 +316: All tests passed!
+Compiled 13,306,270 input bytes (7,827,435 characters source) to 259,584 characters JavaScript in 2.16 seconds
+PASS: 5 independent JS PBKDF/header/data/keyfile vectors, 3 invalid geometries, browser Argon2 allocation and PBKDF2 work guards.
+Compiled 14,623,156 input bytes (9,144,321 characters source) to 429,260 characters JavaScript in 3.26 seconds
+PASS: compiled-JavaScript VeraCrypt PIM and native-header TrueCrypt FAT listing, cross-sector file reads, nested files and closed sessions.

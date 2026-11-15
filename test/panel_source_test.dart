@@ -5,10 +5,13 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:koni_archive/koni_archive.dart' as koni;
 
-import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
+import 'package:crisp_cloud/services/veracrypt_service.dart';
+
+import 'support/veracrypt_container_fixture.dart';
 
 // ---------------------------------------------------------------------------
 // Minimal stub CloudStorageClient for tests
@@ -135,7 +138,7 @@ void main() {
 
     test('ContainerPanelSource isContainer', () {
       const parent = LocalPanelSource('/home');
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/home/vault.vc',
         innerPath: '',
         parent: parent,
@@ -174,10 +177,10 @@ void main() {
     });
 
     test('ContainerPanelSource displayName contains container filename', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/data/secure.vc',
         innerPath: '',
-        parent: const LocalPanelSource('/data'),
+        parent: LocalPanelSource('/data'),
         unlockSession: Object(),
       );
       expect(src.displayName, contains('secure.vc'));
@@ -201,10 +204,10 @@ void main() {
     });
 
     test('ContainerPanelSource currentPath is innerPath', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/a.vc',
         innerPath: 'docs/',
-        parent: const LocalPanelSource('/'),
+        parent: LocalPanelSource('/'),
         unlockSession: Object(),
       );
       expect(src.currentPath, 'docs/');
@@ -230,7 +233,7 @@ void main() {
       );
       final next = src.withPath('/documents');
       expect(next, isA<RemotePanelSource>());
-      expect((next as RemotePanelSource).providerName, 'Filen');
+      expect(next.providerName, 'Filen');
       expect(next.currentPath, '/documents');
     });
 
@@ -241,7 +244,7 @@ void main() {
         parent: LocalPanelSource('/'),
       );
       final next = src.withPath('folder/');
-      expect((next as ArchivePanelSource).innerPath, 'folder/');
+      expect(next.innerPath, 'folder/');
       expect(next.archivePath, '/a.zip');
     });
   });
@@ -371,28 +374,49 @@ void main() {
   // ---- enterContainer ------------------------------------------------------
 
   group('enterContainer', () {
-    test('returns ContainerPanelSource with empty innerPath', () {
+    test('returns ContainerPanelSource with empty innerPath', () async {
       const parent = LocalPanelSource('/mnt');
-      final container = service.enterContainer(
+      final container = await service.enterContainer(
         '/mnt/secure.vc',
-        'p@ssw0rd',
+        veraCryptFixturePassword,
         parent,
+        byteSource: koni.MemoryByteSource(veraCryptContainerFixture()),
+        options: const VeraCryptUnlockOptions(trueCryptMode: true),
       );
+      addTearDown(() => service.lockContainer(container));
       expect(container, isA<ContainerPanelSource>());
       expect(container.containerPath, '/mnt/secure.vc');
       expect(container.innerPath, '');
     });
 
-    test('parent source is preserved', () {
+    test('parent source is preserved', () async {
       const parent = LocalPanelSource('/mnt');
-      final container = service.enterContainer('/mnt/vault.vc', 'pass', parent);
+      final container = await service.enterContainer(
+        '/mnt/vault.vc',
+        veraCryptFixturePassword,
+        parent,
+        byteSource: koni.MemoryByteSource(veraCryptContainerFixture()),
+        options: const VeraCryptUnlockOptions(trueCryptMode: true),
+      );
+      addTearDown(() => service.lockContainer(container));
       expect(container.parent, parent);
     });
 
-    test('unlockSession is not null', () {
+    test('unlockSession is backed by an actual filesystem', () async {
       const parent = LocalPanelSource('/');
-      final container = service.enterContainer('/vault.vc', 'secret', parent);
+      final container = await service.enterContainer(
+        '/vault.vc',
+        veraCryptFixturePassword,
+        parent,
+        byteSource: koni.MemoryByteSource(veraCryptContainerFixture()),
+        options: const VeraCryptUnlockOptions(trueCryptMode: true),
+      );
+      addTearDown(() => service.lockContainer(container));
       expect(container.unlockSession, isNotNull);
+      expect(
+        (await service.listFiles(container)).map((file) => file.name),
+        containsAll(['HELLO.TXT', 'DOCS']),
+      );
     });
   });
 
@@ -412,7 +436,7 @@ void main() {
 
     test('exit container returns parent source', () {
       const parent = LocalPanelSource('/data');
-      final container = ContainerPanelSource(
+      const container = ContainerPanelSource(
         containerPath: '/data/vault.vc',
         innerPath: '',
         parent: parent,
@@ -428,28 +452,25 @@ void main() {
       expect(result, local);
     });
 
-    test(
-      'nested archive: exit inner returns outer archive, exit outer returns local',
-      () {
-        const localParent = LocalPanelSource('/docs');
-        const outerArchive = ArchivePanelSource(
-          archivePath: '/docs/outer.zip',
-          innerPath: '',
-          parent: localParent,
-        );
-        const innerArchive = ArchivePanelSource(
-          archivePath: '/docs/outer.zip',
-          innerPath: 'inner/',
-          parent: outerArchive,
-        );
+    test('nested archive: exit inner returns outer archive, exit outer returns local', () {
+      const localParent = LocalPanelSource('/docs');
+      const outerArchive = ArchivePanelSource(
+        archivePath: '/docs/outer.zip',
+        innerPath: '',
+        parent: localParent,
+      );
+      const innerArchive = ArchivePanelSource(
+        archivePath: '/docs/outer.zip',
+        innerPath: 'inner/',
+        parent: outerArchive,
+      );
 
-        final afterFirstExit = service.exitToParent(innerArchive);
-        expect(afterFirstExit, outerArchive);
+      final afterFirstExit = service.exitToParent(innerArchive);
+      expect(afterFirstExit, outerArchive);
 
-        final afterSecondExit = service.exitToParent(afterFirstExit);
-        expect(afterSecondExit, localParent);
-      },
-    );
+      final afterSecondExit = service.exitToParent(afterFirstExit);
+      expect(afterSecondExit, localParent);
+    });
   });
 
   // ---- Both panels same type -----------------------------------------------
@@ -541,10 +562,10 @@ void main() {
     });
 
     test('ContainerPanelSource toJson omits unlockSession', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/vault.vc',
         innerPath: '',
-        parent: const LocalPanelSource('/'),
+        parent: LocalPanelSource('/'),
         unlockSession: Object(),
       );
       final json = src.toJson();
@@ -553,10 +574,10 @@ void main() {
     });
 
     test('ContainerPanelSource fromJson restores correctly', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/vault.hc',
         innerPath: 'docs/',
-        parent: const LocalPanelSource('/'),
+        parent: LocalPanelSource('/'),
         unlockSession: Object(),
       );
       final json = src.toJson();
@@ -608,72 +629,65 @@ void main() {
       expect({a, b}.length, 2);
     });
 
-    test(
-      'archive and container equality retains parent account and unlocked session',
-      () {
-        final a = RemotePanelSource(
-          providerName: 'X',
-          client: StubCloudClient('X'),
-          path: '/',
-        );
-        final b = RemotePanelSource(
-          providerName: 'X',
-          client: StubCloudClient('X'),
-          path: '/',
-        );
-        expect(
+    test('archive and container equality retains parent account and unlocked session', () {
+      final a = RemotePanelSource(
+        providerName: 'X',
+        client: StubCloudClient('X'),
+        path: '/',
+      );
+      final b = RemotePanelSource(
+        providerName: 'X',
+        client: StubCloudClient('X'),
+        path: '/',
+      );
+      expect(
+        ArchivePanelSource(archivePath: '/same.zip', innerPath: '', parent: a),
+        isNot(
           ArchivePanelSource(
             archivePath: '/same.zip',
             innerPath: '',
-            parent: a,
+            parent: b,
           ),
-          isNot(
-            ArchivePanelSource(
-              archivePath: '/same.zip',
-              innerPath: '',
-              parent: b,
-            ),
-          ),
-        );
-        final session = Object();
-        final first = ContainerPanelSource(
+        ),
+      );
+      final session = Object();
+      final first = ContainerPanelSource(
+        containerPath: '/same.vc',
+        innerPath: '',
+        parent: a,
+        unlockSession: session,
+      );
+      expect(
+        first,
+        ContainerPanelSource(
           containerPath: '/same.vc',
           innerPath: '',
           parent: a,
           unlockSession: session,
-        );
-        expect(
-          first,
+        ),
+      );
+      expect(
+        first,
+        isNot(
           ContainerPanelSource(
             containerPath: '/same.vc',
             innerPath: '',
             parent: a,
+            unlockSession: Object(),
+          ),
+        ),
+      );
+      expect(
+        first,
+        isNot(
+          ContainerPanelSource(
+            containerPath: '/same.vc',
+            innerPath: '',
+            parent: b,
             unlockSession: session,
           ),
-        );
-        expect(
-          first,
-          isNot(
-            ContainerPanelSource(
-              containerPath: '/same.vc',
-              innerPath: '',
-              parent: a,
-              unlockSession: Object(),
-            ),
-          ),
-        );
-        expect(
-          first,
-          isNot(
-            ContainerPanelSource(
-              containerPath: '/same.vc',
-              innerPath: '',
-              parent: b,
-              unlockSession: session,
-            ),
-          ),
-        );
-      },
-    );
+        ),
+      );
+    });
   });
 }
