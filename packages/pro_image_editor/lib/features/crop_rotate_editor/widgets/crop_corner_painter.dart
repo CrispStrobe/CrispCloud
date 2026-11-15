@@ -358,6 +358,34 @@ class CropCornerPainter extends CustomPainter {
           )
           ..style = PaintingStyle.fill,
       );
+      // Visible two-axis grips, with a constant screen-space size. The larger
+      // corner-first hit target is independent of these unobtrusive circles.
+      final radius = 6 / rotationScaleFactor;
+      for (final point in [
+        cropRect.topLeft,
+        cropRect.topRight,
+        cropRect.bottomLeft,
+        cropRect.bottomRight,
+      ]) {
+        canvas.drawCircle(
+          point,
+          radius,
+          Paint()
+            ..color = style.cropCornerColor.withValues(
+              alpha: fadeInOpacity * frameOpacity,
+            ),
+        );
+        canvas.drawCircle(
+          point,
+          radius,
+          Paint()
+            ..color = style.background.withValues(
+              alpha: fadeInOpacity * frameOpacity,
+            )
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5 / rotationScaleFactor,
+        );
+      }
     } else {
       double calculateAngleFromArcLength(
         double circumference,

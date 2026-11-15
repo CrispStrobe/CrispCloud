@@ -1,3 +1,5 @@
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 // lib/widgets/file_editor_dialog.dart
@@ -1024,12 +1026,18 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     return _cachedHighlightTheme;
   }
 
+  Future<void> _printDocument() async {
+    final text = _controller.text;
+    final bytes = await textPrintPdf(text, widget.file.name);
+    if (mounted) await printPdfSnapshot(context, bytes, widget.file.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final document = _document;
 
-    return PopScope(
+    final printContent = PopScope(
       canPop: _canPop,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_closeEditor());
@@ -1073,6 +1081,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             ],
           ),
           actions: [
+            const DocumentPrintMenu(),
             if (_language != null)
               IconButton(
                 icon: Icon(
@@ -1202,6 +1211,11 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           ],
         ),
       ),
+    );
+    return DocumentPrintScope(
+      enabled: _document != null && !_loading && !_isSaving && !_closing,
+      onPrint: _printDocument,
+      child: printContent,
     );
   }
 

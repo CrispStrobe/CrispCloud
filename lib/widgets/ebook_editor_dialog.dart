@@ -1,3 +1,5 @@
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
@@ -1744,6 +1746,25 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       .replaceAll('PDF', 'ebook')
       .replaceFirst('Bad state: ', '');
 
+  Future<void> _printDocument() async {
+    if (!_applyDrafts()) return;
+    final document = _document;
+    if (document == null) return;
+    final content = StringBuffer();
+    var total = 0;
+    for (final chapter in document.chapters.where((c) => c.linear)) {
+      final text = document.readText(chapter.path);
+      total += utf8.encode(text).length;
+      if (total > 8 * 1024 * 1024)
+        throw const FormatException(
+          'Book printing is limited to 8 MiB of text.',
+        );
+      content.write(text);
+    }
+    final bytes = await richTextPrintPdf(content.toString(), _name);
+    if (mounted) await printPdfSnapshot(context, bytes, '$_name — text layout');
+  }
+
   @override
   Widget build(BuildContext context) {
     final platform = Theme.of(context).platform;
@@ -1765,7 +1786,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       const SingleActivator(LogicalKeyboardKey.escape): () =>
           unawaited(_requestClose()),
     };
-    return PopScope(
+    final printContent = PopScope(
       canPop: _allowPop,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_requestClose());
@@ -1790,6 +1811,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 actions: [
+                  if (_document != null) const DocumentPrintMenu(),
                   if (widget.positionLabel != null) Text(widget.positionLabel!),
                   if (widget.onPrevious != null)
                     IconButton(
@@ -1962,6 +1984,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           ),
         ),
       ),
+    );
+    return DocumentPrintScope(
+      enabled: _document != null && !_loading && !_busy,
+      onPrint: _printDocument,
+      child: printContent,
     );
   }
 

@@ -1,3 +1,5 @@
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
@@ -1054,11 +1056,21 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     },
   );
 
+  Future<void> _printDocument() async {
+    if (!_flushPendingInk() || _controller == null) return;
+    await printPdfDocumentSnapshot(
+      context,
+      _controller!.document,
+      widget.file.name,
+      currentPage: _viewer.currentPage,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dirty = _isDirty;
     final controller = _controller;
-    return PopScope(
+    final printContent = PopScope(
       canPop: _allowPop,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) unawaited(_requestClose());
@@ -1097,6 +1109,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
                     ],
                   ),
                   actions: [
+                    const DocumentPrintMenu(),
                     if (controller != null) ...[
                       IconButton(
                         key: const ValueKey('pdf-save'),
@@ -1191,6 +1204,11 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
           ),
         ),
       ),
+    );
+    return DocumentPrintScope(
+      enabled: _controller != null && !_loading && !_busy && !_closing,
+      onPrint: _printDocument,
+      child: printContent,
     );
   }
 }

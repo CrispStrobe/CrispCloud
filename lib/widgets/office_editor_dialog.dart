@@ -1,3 +1,5 @@
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 // lib/widgets/office_editor_dialog.dart
@@ -24,7 +26,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:quds_office_editor/quds_office_editor.dart'
     hide WordPackagePreservation;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show LegacySheetReader, OdsSheetReader, OfficeIsolateSave, WordPackagePreservation;
+    show
+        LegacySheetReader,
+        OdsSheetReader,
+        OfficeIsolateSave,
+        WordPackagePreservation;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -259,10 +265,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         final workbook = sourceExt == 'ods'
             ? OdsSheetReader.readBytes(bytes)
             : LegacySheetReader.readBytes(bytes);
-        bytes = await OfficeIsolateSave.workbook(
-          workbook,
-          recalculate: false,
-        );
+        bytes = await OfficeIsolateSave.workbook(workbook, recalculate: false);
         _convertedLegacySheet = true;
       }
 
@@ -300,6 +303,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         return;
       }
       controller?.addListener(_onControllerChanged);
+      controller?.onPrintRequested = () =>
+          ref.read(documentPrintProvider)?.run();
       // Documents with footnotes or endnotes open with the notes pane, the
       // place where their text is edited.
       if (controller is WordEditorController &&
@@ -609,10 +614,19 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
   }
 
+  Future<void> _printDocument() async {
+    final controller = _controller;
+    if (controller == null) return;
+    controller.commitPendingEdits();
+    final bytes = await controller.saveBytesAsync();
+    final pdf = await officePrintPdf(bytes);
+    if (mounted) await printPdfSnapshot(context, pdf, widget.file.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return PopScope<void>(
+    final printContent = PopScope<void>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) unawaited(_close());
@@ -663,6 +677,11 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           body: SafeArea(top: true, bottom: false, child: _buildBody(theme)),
         ),
       ),
+    );
+    return DocumentPrintScope(
+      enabled: _controller != null && !_loading && !_saving && !_exporting,
+      onPrint: _printDocument,
+      child: printContent,
     );
   }
 
@@ -725,6 +744,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           config: _config,
           onSave: () => unawaited(_save()),
           onSaveCopy: () => unawaited(_saveCopy()),
+          onPrint: () => ref.read(documentPrintProvider)?.run(),
           onClose: () => unawaited(_close()),
           onConfigChanged: _onConfigChanged,
           onFind: _requestFind,

@@ -1,3 +1,7 @@
+import '../services/viewer_text_decoder.dart';
+import '../services/editor_document.dart';
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 import '../services/document_activity.dart';
 // lib/widgets/internal_viewer_dialog.dart
 //
@@ -44,8 +48,7 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:file_viewer_documents/file_viewer_documents.dart';
-import 'package:quds_office_editor/quds_office_editor.dart'
-    hide PdfDocument;
+import 'package:quds_office_editor/quds_office_editor.dart' hide PdfDocument;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:universal_html/html.dart' as html;
@@ -474,6 +477,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   /// True while a macOS/iOS security scope is held for PdfDocument.openFile.
   bool _pdfStreamAccess = false;
+  LocalFileService? _pdfLeaseService;
+  LocalFileService? _mediaLeaseService;
   bool _mediaStreamAccess = false;
   VideoPlayerController? _videoController;
   String? _mediaBlobUrl;
@@ -1178,6 +1183,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           }
           _pdfDoc = doc;
           _pdfStreamAccess = streamAccess;
+          _pdfLeaseService = streamAccess ? localSvc : null;
           _pdfController = PdfController(document: Future.value(doc));
           setState(() => _preparing = false);
           return;
@@ -1353,9 +1359,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _preparing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$error')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 
@@ -1389,12 +1394,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _pdfDoc = null;
     final releasePdfStream = _pdfStreamAccess;
     _pdfStreamAccess = false;
-    final pdfLocalService = releasePdfStream
-        ? ref.read(localFileServiceProvider)
-        : null;
+    final pdfLocalService = _pdfLeaseService;
+    _pdfLeaseService = null;
     final mediaAccess = _mediaStreamAccess;
     _mediaStreamAccess = false;
-    final mediaLocal = mediaAccess ? ref.read(localFileServiceProvider) : null;
+    final mediaLocal = _mediaLeaseService;
+    _mediaLeaseService = null;
     final video = _videoController;
     _videoController = null;
     final tempPath = _tempMediaPath;
@@ -1721,6 +1726,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted || token != _prepareToken) return;
       _videoController = candidate;
       _mediaStreamAccess = local != null;
+      _mediaLeaseService = local;
       retained = true;
     } finally {
       if (!retained) {
@@ -3043,10 +3049,100 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // Build
   // ---------------------------------------------------------------------------
 
+  bool get _canPrintDocument =>
+      !_loading &&
+      !_preparing &&
+      _error == null &&
+      const {
+        ViewerMode.text,
+        ViewerMode.markdown,
+        ViewerMode.csv,
+        ViewerMode.image,
+        ViewerMode.pdf,
+        ViewerMode.office,
+        ViewerMode.email,
+        ViewerMode.html,
+        ViewerMode.xml,
+      }.contains(_mode);
+
+  Future<void> _printDocument() async {
+    if (!_canPrintDocument) return;
+    final token = _loadToken;
+    final mode = _mode;
+    Uint8List bytes;
+    if (mode == ViewerMode.pdf) {
+      bytes =
+          await _readDocumentBytes(printInputLimit, _prepareToken) ??
+          (throw StateError('Document is unavailable.'));
+    } else if (mode == ViewerMode.image) {
+      final source = await _readDocumentBytes(printInputLimit, _prepareToken);
+      if (source == null) throw StateError('Image is unavailable.');
+      bytes = imagePrintPdf(source, _viewName);
+    } else if (mode == ViewerMode.office && _sheetController != null) {
+      bytes = await officePrintPdf(await _sheetController!.saveBytesAsync());
+    } else if (mode == ViewerMode.office &&
+        const [
+          'docx',
+          'docm',
+          'xlsx',
+          'xlsm',
+          'pptx',
+          'pptm',
+        ].contains(_viewName.toLowerCase().split('.').last)) {
+      final source = await _readDocumentBytes(printInputLimit, _prepareToken);
+      if (source == null) throw StateError('Document is unavailable.');
+      bytes = await officePrintPdf(source);
+    } else if (mode == ViewerMode.csv) {
+      final source = await _readDocumentBytes(8 * 1024 * 1024, _prepareToken);
+      if (source == null) throw StateError('Table is unavailable.');
+      bytes = await csvPrintPdf(source, _viewName);
+    } else if (mode == ViewerMode.markdown || mode == ViewerMode.html) {
+      final content = _richText;
+      if (content == null) throw StateError('Document is unavailable.');
+      bytes = await richTextPrintPdf(
+        content,
+        _viewName,
+        markdown: mode == ViewerMode.markdown,
+      );
+    } else {
+      String? text;
+      if (mode == ViewerMode.text || mode == ViewerMode.xml) {
+        final source = await _readDocumentBytes(8 * 1024 * 1024, _prepareToken);
+        if (source == null) throw StateError('Text is unavailable.');
+        text = _encodingOverride == null
+            ? EditorDocument.decode(source).text
+            : ViewerTextDecoder(_encodingOverride!)
+                  .add(source, 0, last: true)
+                  .text;
+      } else if (mode == ViewerMode.email)
+        text = _emailMessage?.searchText;
+      else if (mode == ViewerMode.office)
+        text = _officeDoc?.plainText;
+      else if (mode == ViewerMode.markdown || mode == ViewerMode.html)
+        text = _richText;
+      else
+        text = _decodedText;
+      if (text == null) {
+        final source = await _readDocumentBytes(8 * 1024 * 1024, _prepareToken);
+        if (source == null) throw StateError('Text is unavailable.');
+        text = EditorDocument.decode(source).text;
+      }
+      bytes = await textPrintPdf(text, _viewName);
+    }
+    if (!mounted || token != _loadToken || mode != _mode) return;
+    await printPdfSnapshot(
+      context,
+      bytes,
+      (mode == ViewerMode.markdown || mode == ViewerMode.html)
+          ? '$_viewName — text layout'
+          : _viewName,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return CallbackShortcuts(
+    final printContent = CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): () =>
             widget.onPrevious?.call(),
@@ -3080,6 +3176,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             title: Text(_title, overflow: TextOverflow.ellipsis),
             titleTextStyle: theme.textTheme.titleMedium,
             actions: [
+              if (_canPrintDocument) const DocumentPrintMenu(),
               ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: math.max(
@@ -3324,6 +3421,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           ),
         ),
       ),
+    );
+    return DocumentPrintScope(
+      enabled: _canPrintDocument,
+      onPrint: _printDocument,
+      child: printContent,
     );
   }
 

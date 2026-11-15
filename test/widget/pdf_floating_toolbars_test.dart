@@ -74,4 +74,76 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets(
+    'default vertical bars flank the viewer and stay outside resized thumbnails',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(1000, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final controller = PdfEditingController(buildPdfEditorFixture());
+      final viewer = PdfViewerController();
+      final commands = PdfEditorCommands(
+        controller: controller,
+        viewerController: viewer,
+      );
+      addTearDown(() {
+        commands.dispose();
+        viewer.dispose();
+        controller.dispose();
+      });
+      var sidebar = 180.0;
+      late StateSetter resize;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                resize = setState;
+                return PdfFloatingToolbars(
+                  controller: controller,
+                  commands: commands,
+                  barBuilder: (context, primary, vertical, handle) {
+                    expect(vertical, isTrue);
+                    return SizedBox(
+                      key: ValueKey(primary ? 'main-bar' : 'context-bar'),
+                      width: 48,
+                      height: 200,
+                      child: Material(child: Column(children: [handle])),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      SizedBox(width: sidebar, child: const Text('Pages')),
+                      Expanded(
+                        child: PdfViewer(
+                          document: controller.document,
+                          controller: viewer,
+                          autoRenderWorker: false,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(find.byKey(const ValueKey('main-bar'))).dx,
+        greaterThanOrEqualTo(180),
+      );
+      resize(() => sidebar = 280);
+      controller.preferences.thumbnailSidebarWidth = 280;
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(find.byKey(const ValueKey('main-bar'))).dx,
+        greaterThanOrEqualTo(280),
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    },
+  );
 }

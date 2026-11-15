@@ -1,3 +1,4 @@
+import '../widgets/document_print_scope.dart';
 import '../widgets/new_document_dialog.dart';
 import '../services/document_workspace_session.dart';
 import '../widgets/document_conversion_dialog.dart';
@@ -852,6 +853,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   List<PlatformMenuItem> _documentWorkspaceFileItems(BuildContext context) => [
+    if (ref.watch(documentPrintProvider) case final printing?)
+      PlatformMenuItem(
+        label: printLabel(context),
+        shortcut: const SingleActivator(LogicalKeyboardKey.keyP, meta: true),
+        onSelected: printing.isEnabled() ? () => printing.run() : null,
+      ),
     PlatformMenuItem(
       label: documentTr(context, 'New…'),
       shortcut: const SingleActivator(LogicalKeyboardKey.keyN, meta: true),
@@ -896,6 +903,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     TerminalMenuActions? terminal,
   ) {
     ref.watch(documentWorkspaceSessionProvider);
+    ref.watch(documentPrintProvider);
     final appMenu = PlatformMenu(
       label: context.commanderTr("CrispCloud"),
       menus: <PlatformMenuItem>[
@@ -1043,6 +1051,33 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ];
     }
 
+    final printing = ref.watch(documentPrintProvider);
+    if (editor == null && printing != null) {
+      return [
+        appMenu,
+        PlatformMenu(
+          label: context.commanderTr('File'),
+          menus: [
+            PlatformMenuItem(
+              label: printLabel(context),
+              shortcut: const SingleActivator(
+                LogicalKeyboardKey.keyP,
+                meta: true,
+              ),
+              onSelected: printing.isEnabled() ? () => printing.run() : null,
+            ),
+            PlatformMenuItem(
+              label: context.commanderTr('Close'),
+              shortcut: const SingleActivator(
+                LogicalKeyboardKey.keyW,
+                meta: true,
+              ),
+              onSelected: printing.close,
+            ),
+          ],
+        ),
+      ];
+    }
     final PanelSide activeSide = ref.read(activePanelProvider);
 
     final List<PlatformMenuItem> viewMenus = <PlatformMenuItem>[

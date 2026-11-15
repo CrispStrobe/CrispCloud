@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   crisp_ebook_reader
+  dart_pdf_printing
   desktop_drop
   dynamic_color
   file_selector_linux

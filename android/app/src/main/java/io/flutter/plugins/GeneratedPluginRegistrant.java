@@ -21,6 +21,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin cryptography_flutter, dev.dint.cryptography_flutter.CryptographyFlutterPlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new dev.milanko.dart_pdf_printing.DartPdfPrintingPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin dart_pdf_printing, dev.milanko.dart_pdf_printing.DartPdfPrintingPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new one.mixin.desktop.drop.DesktopDropPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin desktop_drop, one.mixin.desktop.drop.DesktopDropPlugin", e);

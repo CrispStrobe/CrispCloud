@@ -34,6 +34,9 @@ class PdfFloatingToolbars extends StatefulWidget {
 class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
   static const _prefix = 'crispcloud.pdf.toolbars.v1';
   final _keys = [GlobalKey(), GlobalKey()];
+  final _surfaceKey = GlobalKey();
+  Rect? _viewerRect;
+  bool _measureScheduled = false;
   final List<Offset?> _positions = [null, null];
   final _vertical = [false, false];
   bool _snap = false;
@@ -44,12 +47,7 @@ class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
   @override
   void initState() {
     super.initState();
-    final dock = widget.controller.preferences.toolbarDock;
-    _vertical.fillRange(
-      0,
-      2,
-      dock == PdfPanelDock.left || dock == PdfPanelDock.right,
-    );
+    _vertical.fillRange(0, 2, true);
     unawaited(_restore());
   }
 
@@ -103,36 +101,40 @@ class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
     (_viewport.width - _size(i).width - 12).clamp(0, double.infinity),
     (_viewport.height - _size(i).height - 12).clamp(0, double.infinity),
   );
-  Offset _default(int i) {
-    final dock = widget.controller.preferences.toolbarDock;
-    final primary = switch (dock) {
-      PdfPanelDock.left => const Offset(0, .5),
-      PdfPanelDock.right => const Offset(1, .5),
-      PdfPanelDock.top => const Offset(.5, 0),
-      PdfPanelDock.bottom => const Offset(.5, 1),
-    };
-    if (i == 0) return primary;
-    final origin = _pixel(0);
-    final room = _room(1);
-    final point = _vertical[0]
-        ? Offset(
-            origin.dx +
-                (dock == PdfPanelDock.right
-                    ? -_size(1).width - 4
-                    : _size(0).width + 4),
-            origin.dy,
-          )
-        : Offset(
-            origin.dx,
-            origin.dy +
-                (dock == PdfPanelDock.top
-                    ? _size(0).height + 4
-                    : -_size(1).height - 4),
-          );
-    return Offset(
-      room.dx == 0 ? 0 : ((point.dx - 6) / room.dx).clamp(0, 1),
-      room.dy == 0 ? 0 : ((point.dy - 6) / room.dy).clamp(0, 1),
-    );
+  // Default bars flank the actual document viewport, outside side panels.
+  Offset _default(int i) => Offset(i == 0 ? 0 : 1, .5);
+
+  void _measureViewer() {
+    if (_measureScheduled) return;
+    _measureScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureScheduled = false;
+      if (!mounted) return;
+      final overlay = context.findRenderObject();
+      final surface = _surfaceKey.currentContext;
+      if (overlay is! RenderBox || !overlay.hasSize || surface == null) return;
+      Rect? found;
+      void visit(Element element) {
+        if (found != null) return;
+        if (element.widget is PdfViewer) {
+          final box = element.findRenderObject();
+          if (box is RenderBox &&
+              box.attached &&
+              box.hasSize &&
+              box.size.width > 80 &&
+              box.size.height > 80) {
+            found =
+                (box.localToGlobal(Offset.zero, ancestor: overlay) & box.size)
+                    .intersect(Offset.zero & overlay.size);
+          }
+          return;
+        }
+        element.visitChildren(visit);
+      }
+
+      (surface as Element).visitChildren(visit);
+      if (found != _viewerRect) setState(() => _viewerRect = found);
+    });
   }
 
   Offset _pixel(int i) {
@@ -238,7 +240,7 @@ class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
                 _vertical[i] = !_vertical[i];
               case 'reset':
                 _positions.fillRange(0, 2, null);
-                _vertical.fillRange(0, 2, false);
+                _vertical.fillRange(0, 2, true);
             }
           });
           unawaited(_persist());
@@ -249,10 +251,16 @@ class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) {
-      _viewport = box.biggest;
+      _viewport = (_viewerRect?.size ?? box.biggest);
+      _measureViewer();
       return ListenableBuilder(
-        listenable: Listenable.merge([widget.commands, widget.controller]),
+        listenable: Listenable.merge([
+          widget.commands,
+          widget.controller,
+          widget.controller.preferences,
+        ]),
         builder: (context, _) {
+          _measureViewer();
           final group = widget.commands.currentGroupId;
           final contextVisible =
               widget.controller.selectedAnnotation != null ||
@@ -260,10 +268,13 @@ class _PdfFloatingToolbarsState extends State<PdfFloatingToolbars> {
               (group != null && group != 'select');
           return Stack(
             children: [
-              Positioned.fill(child: widget.child),
+              Positioned.fill(
+                child: KeyedSubtree(key: _surfaceKey, child: widget.child),
+              ),
               for (var i = 0; i < 2; i++)
                 if (i == 0 || contextVisible)
-                  Positioned.fill(
+                  Positioned.fromRect(
+                    rect: _viewerRect ?? (Offset.zero & box.biggest),
                     child: Padding(
                       padding: const EdgeInsets.all(6),
                       child: Align(

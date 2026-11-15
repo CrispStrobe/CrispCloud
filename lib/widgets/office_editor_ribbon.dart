@@ -52,6 +52,7 @@ class OfficeEditorRibbon extends StatefulWidget {
     required this.config,
     required this.onSave,
     this.onSaveCopy,
+    this.onPrint,
     required this.onClose,
     required this.onConfigChanged,
     required this.onFind,
@@ -65,6 +66,7 @@ class OfficeEditorRibbon extends StatefulWidget {
   final OfficeSurfaceConfig config;
   final VoidCallback onSave;
   final VoidCallback? onSaveCopy;
+  final VoidCallback? onPrint;
   final VoidCallback onClose;
   final ValueChanged<OfficeSurfaceConfig> onConfigChanged;
   final VoidCallback onFind;
@@ -179,6 +181,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         'Save a copy',
         widget.saving ? null : widget.onSaveCopy,
         icon: Icons.save_as_outlined,
+      ),
+    if (widget.onPrint != null)
+      _menuItem(
+        'Print…',
+        widget.saving ? null : widget.onPrint,
+        icon: Icons.print_outlined,
       ),
     if (widget.kind == OfficeEditorKind.word)
       _menuItem('Page setup…', _pageSetupMenu, icon: Icons.tune),

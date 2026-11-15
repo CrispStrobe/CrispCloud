@@ -53,6 +53,7 @@ import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
 import 'services/platform_runtime_licenses.dart';
 import 'services/app_legal_notices.dart';
+import 'package:dart_pdf_printing/dart_pdf_printing.dart' show DartPdfPrintingLocalizations;
 import 'services/terminal_licenses.dart';
 import 'services/file_viewer_binary_license.dart';
 import 'services/mesh_preview_license.dart';
@@ -1000,6 +1001,7 @@ class MyApp extends ConsumerWidget {
       themeMode: themeService.themeMode,
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        DartPdfPrintingLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

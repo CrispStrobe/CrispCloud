@@ -154,3 +154,14 @@ artifact `13399568292`.
 | --- | --- |
 | `lib/web/web_worker.dart.js` | `4c4babba03f5bd2a26e1e90d6933230e493ba3a00dbeeb8a6dc86ecacdb22682` |
 | `lib/web/web_worker.dart.js.map` | `818430180e560a78406c486fad251f70dabc6aa571374abc92bd15950eb8ddda` |
+
+## 15 November 2026 follow-up
+
+- Rectangular crop hit tests use the crop painter's coordinate space after
+  zoom/pan. Corner targets take priority over thin edge bands, with 44px desktop
+  and 56px touch targets; visible circular grips mark all four corners.
+- Text-tool opening returns an awaitable Future and rejects duplicate launches.
+  Failed launches reset tool state and propagate to the host's error UI. Empty
+  custom font lists fall back to the default style; deferred text callbacks and
+  rebuild notifications reject disposed editors.
+- Original licences and retained third-party notices remain unchanged.

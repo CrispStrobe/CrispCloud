@@ -1,3 +1,5 @@
+import '../services/document_printing.dart';
+import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
@@ -50,6 +52,7 @@ Future<void> showImageEditorDialog(
 class ImageEditorDialog extends ConsumerStatefulWidget {
   const ImageEditorDialog({
     super.key,
+    this.textToolOpenerOverride,
     required this.file,
     required this.side,
     this.storeOverride,
@@ -72,6 +75,9 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
   final ImageProjectStore? projectStoreOverride;
   final ImageProjectExporter? projectExporterOverride;
   final ImageOverlayPicker? overlayPickerOverride;
+
+  /// Optional opener seam for exercising asynchronous tool-launch failures.
+  final Future<void> Function(ProImageEditorState)? textToolOpenerOverride;
 
   @override
   ConsumerState<ImageEditorDialog> createState() => _ImageEditorDialogState();
@@ -98,6 +104,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool _loading = true;
   bool _loadInProgress = false;
   bool _ready = false;
+  bool _openingText = false;
   bool _restoringProject = false;
   bool _showLayers = false;
   bool _closing = false;
@@ -458,7 +465,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       case ImageEditorAction.paint:
         editor?.openPaintEditor();
       case ImageEditorAction.text:
-        editor?.openTextEditor();
+        unawaited(_openTextTool());
       case ImageEditorAction.filter:
         editor?.openFilterEditor();
       case ImageEditorAction.blur:
@@ -467,6 +474,24 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         editor?.openTuneEditor();
     }
     _scheduleRefresh();
+  }
+
+  Future<void> _openTextTool() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !_canEdit || _openingText) return;
+    _openingText = true;
+    try {
+      await (widget.textToolOpenerOverride?.call(editor) ??
+          editor.openTextEditor());
+    } catch (error, stack) {
+      _log.warn('Could not open image text tool', error, stack);
+      if (mounted) {
+        _showMessage('Could not open text editor: $error', error: true);
+      }
+    } finally {
+      _openingText = false;
+      _scheduleRefresh();
+    }
   }
 
   Future<bool> _save() async {
@@ -849,6 +874,22 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     _ => fallback,
   };
 
+  Future<void> _printDocument() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !_canEdit) return;
+    Uint8List capture;
+    setState(() => _exporting = true);
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      capture = await editor.captureEditorImage();
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+    final pdf = imagePrintPdf(capture, widget.file.name);
+    if (mounted) await printPdfSnapshot(context, pdf, widget.file.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final actions = _actions();
@@ -885,7 +926,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       const SingleActivator(LogicalKeyboardKey.escape): () =>
           unawaited(_close()),
     };
-    return PopScope(
+    final printContent = PopScope(
       canPop: _allowPop,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_close());
@@ -915,6 +956,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         ),
       ),
     );
+    return DocumentPrintScope(
+      enabled: _canEdit,
+      onPrint: _printDocument,
+      child: printContent,
+    );
   }
 
   Widget _header(ImageEditorMenuActions actions) {
@@ -937,6 +983,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                   icon: const Icon(Icons.close),
                 ),
                 const SizedBox(width: 6),
+                const DocumentPrintMenu(),
                 Expanded(
                   child: Text(
                     widget.file.name,

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import '../enums/crop_area_part.dart';
@@ -14,6 +15,7 @@ CropAreaPart determineCropAreaPart({
   required Offset localPosition,
   required Offset translate,
   required double interactiveCornerArea,
+  double? cornerHitArea,
   required double userScaleFactor,
   required Rect cropRect,
   required CropMode cropMode,
@@ -96,48 +98,35 @@ CropAreaPart determineCropAreaPart({
     }
   }
 
-  Rect rect = Rect.fromCenter(
-    center: cropRect.center - translate,
-    width: cropRect.width + interactiveCornerArea,
-    height: cropRect.height + interactiveCornerArea,
+  // The event is below the zoom/translation, but cropRect is painted above
+  // both. Use the same inverse mapping as the drag's grab-offset calculation.
+  final point =
+      offset +
+      Offset(renderedImageSize.width / 2, renderedImageSize.height / 2);
+  final radius = math.min(
+    (cornerHitArea ?? math.max(44, interactiveCornerArea)) / 2,
+    math.min(cropRect.width, cropRect.height) / 3,
   );
-
-  double halfCropWidth = rect.width / 2;
-  double halfCropHeight = rect.height / 2;
-
-  double left = dx + halfCropWidth;
-  double right = dx - halfCropWidth;
-  double top = dy + halfCropHeight;
-  double bottom = dy - halfCropHeight;
-
-  bool nearLeftEdge = left.abs() <= interactiveCornerArea;
-  bool nearRightEdge = right.abs() <= interactiveCornerArea;
-  bool nearTopEdge = top.abs() <= interactiveCornerArea;
-  bool nearBottomEdge = bottom.abs() <= interactiveCornerArea;
-
-  if (rect.contains(localPosition)) {
-    if (nearLeftEdge && nearTopEdge) {
-      return CropAreaPart.topLeft;
-    } else if (nearRightEdge && nearTopEdge) {
-      return CropAreaPart.topRight;
-    } else if (nearLeftEdge && nearBottomEdge) {
-      return CropAreaPart.bottomLeft;
-    } else if (nearRightEdge && nearBottomEdge) {
-      return CropAreaPart.bottomRight;
-    } else if (nearLeftEdge) {
-      return CropAreaPart.left;
-    } else if (nearRightEdge) {
-      return CropAreaPart.right;
-    } else if (nearTopEdge) {
-      return CropAreaPart.top;
-    } else if (nearBottomEdge) {
-      return CropAreaPart.bottom;
-    } else {
-      return CropAreaPart.inside;
-    }
-  } else {
-    return CropAreaPart.none;
+  final corners = <(Offset, CropAreaPart)>[
+    (cropRect.topLeft, CropAreaPart.topLeft),
+    (cropRect.topRight, CropAreaPart.topRight),
+    (cropRect.bottomLeft, CropAreaPart.bottomLeft),
+    (cropRect.bottomRight, CropAreaPart.bottomRight),
+  ];
+  for (final corner in corners) {
+    if ((point - corner.$1).distance <= radius) return corner.$2;
   }
+  if (!cropRect.inflate(interactiveCornerArea).contains(point))
+    return CropAreaPart.none;
+  if ((point.dx - cropRect.left).abs() <= interactiveCornerArea)
+    return CropAreaPart.left;
+  if ((point.dx - cropRect.right).abs() <= interactiveCornerArea)
+    return CropAreaPart.right;
+  if ((point.dy - cropRect.top).abs() <= interactiveCornerArea)
+    return CropAreaPart.top;
+  if ((point.dy - cropRect.bottom).abs() <= interactiveCornerArea)
+    return CropAreaPart.bottom;
+  return cropRect.contains(point) ? CropAreaPart.inside : CropAreaPart.none;
 }
 
 /// Converts a pointer position into crop-relative coordinates,

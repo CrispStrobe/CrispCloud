@@ -1482,6 +1482,7 @@ class CropRotateEditorState extends State<CropRotateEditor>
       localPosition: localPosition,
       translate: translate,
       interactiveCornerArea: _interactiveCornerArea,
+      cornerHitArea: (isDesktop ? 44.0 : 56.0) / _rotationScaleFactor,
       userScaleFactor: userScaleFactor,
       cropRect: cropRect,
       cropMode: cropMode,

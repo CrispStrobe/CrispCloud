@@ -214,13 +214,15 @@ class TextEditorState extends State<TextEditor>
 
     selectedTextStyle =
         widget.layer?.textStyle ??
-        textEditorConfigs.customTextStyles?.first ??
+        (textEditorConfigs.customTextStyles?.isNotEmpty == true
+            ? textEditorConfigs.customTextStyles!.first
+            : null) ??
         textEditorConfigs.defaultTextStyle;
     _initializeFromLayer();
 
     textEditorCallbacks?.onInit?.call();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      textEditorCallbacks?.onAfterViewInit?.call();
+      if (mounted) textEditorCallbacks?.onAfterViewInit?.call();
     });
   }
 
@@ -234,7 +236,7 @@ class TextEditorState extends State<TextEditor>
 
   @override
   void setState(void Function() fn) {
-    if (!mounted) return;
+    if (!mounted || _rebuildController.isClosed) return;
     _rebuildController.add(null);
     textEditorCallbacks?.handleUpdateUI();
     super.setState(fn);

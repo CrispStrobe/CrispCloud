@@ -343,6 +343,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.0.0"
+  dart_pdf_printing:
+    dependency: "direct main"
+    description:
+      name: dart_pdf_printing
+      sha256: b401c3f7651ff3d5315dc8f64556fb5550e0a75b65bbf4ffe6a29aabcb8309f4
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.11.0"
   dart_pg:
     dependency: transitive
     description:
@@ -1172,7 +1180,7 @@ packages:
     source: path
     version: "0.1.0"
   markdown:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: markdown
       sha256: ee85086ad7698b42522c6ad42fe195f1b9898e4d974a1af4576c1a3a176cada9
