@@ -30,10 +30,10 @@ void main() {
         contains('GNU AFFERO GENERAL PUBLIC LICENSE'),
       );
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: AboutAppDialog()),
+          home: Scaffold(body: AboutAppDialog()),
         ),
       );
       await tester.pumpAndSettle();
