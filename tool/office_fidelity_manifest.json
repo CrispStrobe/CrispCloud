@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "fix/odf-legacy-spreadsheets",
-  "source_commit": "e002b9584bead9761fac8c7cf818431966d1b1c3",
+  "source_branch": "main",
+  "source_commit": "793c64ac4fc2e896706aa65c13eaa70bd27f7267",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",

@@ -1,0 +1,1053 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "audited_at_utc": "2026-11-15T09:13:59.312Z",
+  "branches": [
+    {
+      "name": "codex/office-recovery-20261115",
+      "commit": {
+        "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/d97705dabbdae5969a67bf4bf74b6c604d934419"
+      },
+      "protected": false
+    },
+    {
+      "name": "feature/new-documents-history-20261115",
+      "commit": {
+        "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      },
+      "protected": false
+    },
+    {
+      "name": "fix/excel-legacy-xls",
+      "commit": {
+        "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25"
+      },
+      "protected": false
+    },
+    {
+      "name": "fix/odf-final",
+      "commit": {
+        "sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/bda0374b6f773e8797ffa09c24020ef22fb6b649"
+      },
+      "protected": false
+    },
+    {
+      "name": "integrate/consistency-20261115",
+      "commit": {
+        "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/eab538e7af002ddffa2746b5932fdbbbd3a97334"
+      },
+      "protected": false
+    },
+    {
+      "name": "integrate/legacy-xls-preview-20261115",
+      "commit": {
+        "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+      },
+      "protected": false
+    },
+    {
+      "name": "integrate/office-goldens-20261115",
+      "commit": {
+        "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/74f97cba657d43f18f6e95553a465d23e21ceb20"
+      },
+      "protected": false
+    },
+    {
+      "name": "integrate/word-inline-pictures-20261115",
+      "commit": {
+        "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/bb981ec37c40369ba15bacdd9c21c520807a200c"
+      },
+      "protected": false
+    },
+    {
+      "name": "integration/office-reconcile-storage-20261115",
+      "commit": {
+        "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/59b6a50990c4a368e03cd4d03b8075248edc6ffb"
+      },
+      "protected": false
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "commit": {
+        "sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f"
+      },
+      "protected": false
+    },
+    {
+      "name": "main",
+      "commit": {
+        "sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+        "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/6fcc4497efd0e63a1494e2eda5e7871c7142091a"
+      },
+      "protected": false
+    }
+  ],
+  "continuation_pr": {
+    "number": 111,
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/111",
+    "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+    "state": "open",
+    "draft": true,
+    "updated_at": "2026-11-15T08:10:10Z",
+    "head": {
+      "ref": "integration/storage-carving-20261115",
+      "sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f"
+    },
+    "base": {
+      "ref": "main",
+      "sha": "5b7daacc3eaaed09670c105627af420caac5ebe2"
+    },
+    "mergeable": false,
+    "mergeable_state": "dirty",
+    "body": "## Why\n\nAdvance Stage 6 of the storage roadmap with recovery of complete supported PNG images from a bounded damaged file or image. The implementation, source reconciliations and qualification state are preserved as incremental remote checkpoints.\n\n## Resulting behavior\n\n- **Recover PNG images to ZIP…** is available for one native local regular file of at most 64 MiB, through the context menu, Tools menu and command palette.\n- The scan reviews candidate source ranges, dimensions and findings. Only validated noninterlaced 8-bit grayscale/RGB/gray-alpha/RGBA PNGs are selectable. CRCs, chunk ordering, complete zlib framing/Adler, exact scanline lengths and filter bytes must pass.\n- Selected PNGs and `recovery-report.json` are written to a separately verified new ZIP. The report retains source offsets, hashes, classifications and coverage; no original filesystem names are claimed.\n- The shared queue owns admitted work. Publication rehashes source and staged output after the durable committing checkpoint. A new native exclusive-publication guard checks captured authority/cancellation synchronously after the final asynchronous path probe; pause epochs force fresh proofs, including a transient pause/resume.\n- Existing destinations and source files are retained. A completed install remains successful if Stop or a completion observer arrives afterward. Restart requires a fresh scan and review; the journal retains digests/receipts, not source bytes.\n- No runtime dependency was added. New code is original MIT; the existing source inventory records SHA-256 integrity use without changing encryption or distribution decisions.\n\n## Reconciliation\n\nCurrent saved head: **71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f**. Runtime source checkpoint: **97e6aa18625e74169c085085ecaecd9adf917283**.\n\nThe 15 November 08:06 UTC cutoff incorporates:\n\n- Main `5b7daacc`, including merged Word PR #112.\n- Worksheet navigation through `d97705da`: newer font-aware capture code, retained hosted evidence and the latest separate local status.\n- All six commits of `feature/new-documents-history-20261115` through `ab94bedb`: new documents, reviewed conversion copies, persistent recent-file history, save-aware editor handoff, active-pane indicators and translations.\n- Previously included Excel `ca6156e8`, DOC recovery and Office reconciliation work.\n\nThe four shared source/document files preserve both incoming document commands and existing PNG recovery actions. The other 33 document-workspace paths use their exact incoming blobs.\n\nAll **2,220 managed Office files** match the canonical Git blob identities, sizes and modes at Quds `b23d033620f07cf2659209eff4c4c8e2d71ee89c` and standalone parser `d422fa99a3a84830794f0e2dc332d59f923779f7`. Commit `6e9284e3` corrects 41 pre-existing executable flags on Dart files without changing their contents. The newer canonical-main merge does not replace the Linux golden correction.\n\n## Validation status\n\n**Local runtime qualification is blocked by exhausted workspace capacity; it is not running. This PR remains a draft.**\n\nCompleted in this continuation:\n\n- Verified the complete 10,413-file source union: no unintended additions, omissions or changes.\n- Read back all four merged files and checked exact content. Incoming hunks reproduce the incoming source from its common base, match unique context in the integration source and reverse to the unchanged pre-merge source.\n- Verified all 2,220 managed Office blob identities, sizes and modes, complete standalone inventory and pin declarations.\n- Saved progress in six incremental remote commits, including the audit and qualification handoff.\n- Expanded the app test manifest from 31 to **41 suites**, adding the ten relevant new/changed document-workspace test suites.\n\n**No fresh Flutter/Dart suite executed in this continuation.** The recovered `c68c03ae` branch did not contain the final raw receipts described in the pasted handoff. Earlier reported test totals remain historical and are not acceptance for this combined source. A full local manifest SHA-256 rehash also remains pending; the completed comparison used canonical committed Git blob identities.\n\nThe filesystem prevents shell and patch-tool startup with `No space left on device`. Cleanup through elevated execution was rejected because the workspace disables sandbox escalation; the computer-use runtime was unavailable. Source and audit work were nevertheless saved directly to the remote branch.\n\nPer the user's instruction, **no GitHub Actions run was awaited or restarted**. The saved continuation lists the remaining source-bound local app/editor/engine, strict analysis, inventory, portable VM/JavaScript/Python and preview checks, with immediate remote saving after each gate.\n\n[Current continuation and exact remaining work](https://github.com/CrispStrobe/CrispCloud/blob/71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f/docs/evidence/storage-carving-20261115/resume-0806/README.md) · [Profile and limits](https://github.com/CrispStrobe/CrispCloud/blob/71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f/docs/archive-png-carving.md) · [Office reconciliation](https://github.com/CrispStrobe/CrispCloud/blob/71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f/docs/office-storage-reconciliation-20261115.md)\n\n## Boundaries\n\n64 MiB input/output and separate bounded parser-work/expansion limits. Indexed/interlaced/animated PNGs, other bit depths, unknown/compressed ancillary chunks and smaller zlib windows explicitly decline. Fragment reconstruction, original names/directories, physical devices, rescue imaging, undelete and JPEG/PDF carving remain future profiles.\n\nPortable core acceptance does not enable browser/cloud publication or establish other-platform execution. The native verify/rename boundary is not atomic compare-and-swap against arbitrary external writers. This is a draft implementation review, not a signed release or broad Office rendering/schema acceptance."
+  },
+  "odf_pr": {
+    "number": 116,
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/116",
+    "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+    "state": "open",
+    "draft": false,
+    "updated_at": "2026-11-15T09:01:55Z",
+    "head": {
+      "ref": "fix/odf-final",
+      "sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649"
+    },
+    "base": {
+      "ref": "main",
+      "sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01"
+    },
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "body": "Follow-up to #108 (merged) and CrispStrobe/quds_office_suite#23.\n\n## Legacy Excel preview\n- F3 on `.xls`/`.xlt` imports BIFF into the shared model and renders a typed, formula-aware **read-only grid** (styles, merges, freeze). A **Grid/Legacy** toggle keeps the File Viewer spreadsheet grid as the explicit alternative and automatic fallback. `.xlsb` stays on the File Viewer route.\n\n## ODS\n- `.ods` is imported by Quds (`OdsSheetReader`): typed values, repeated rows/columns, spans/covered cells, ODF formulas translated to A1, cell styles, number formats, column widths and row heights.\n- **F4 editing**: import → sheet editor; Save writes a new `.xlsx` copy and never rewrites the original `.ods`.\n- F3 table extraction now keeps numbers/types, repeats and merges.\n\n## ODT\n- Inline bold/italic via text styles, safe links, ordered/unordered and nested lists, numbered footnote bodies, repeat/span-aware tables and image markers.\n\n## ODP\n- Real slide deck model: page size from the page layout, frames/custom shapes with positions and sizes, text styles/colours, fills, images, page backgrounds and speaker notes; rendered by the existing slide viewer.\n\n## Boundaries\n- ODF has no writer in Quds; saving an imported ODS produces `.xlsx`.\n- ODT/ODP remain read-only; ODT images are textual markers.\n- ODF no longer offers the OOXML PDF tab.\n\n## Verification\n- `flutter analyze` clean for the four touched files.\n- `office_document_service_test.dart` 14 tests (ODS typed/repeats/merge, ODT rich text/lists/notes, ODP deck).\n- Engine ODS/legacy reader tests pass; vendored pin `e002b95` (fork PR #23)."
+  },
+  "recent_prs": [
+    {
+      "number": 116,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/116",
+      "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+      "state": "open",
+      "draft": false,
+      "updated_at": "2026-11-15T09:01:55Z",
+      "merged_at": null,
+      "head_ref": "fix/odf-final",
+      "head_sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+      "merge_commit_sha": "8f6b832311b452214901dbebf56c32835d1cb82b"
+    },
+    {
+      "number": 108,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/108",
+      "title": "Open legacy .xls workbooks as XLSX",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T08:54:45Z",
+      "merged_at": "2026-11-15T06:27:18Z",
+      "head_ref": "fix/excel-legacy-xls",
+      "head_sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "merge_commit_sha": "d764308cf77b535265a15c5065bbe4a0d66e227f"
+    },
+    {
+      "number": 115,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/115",
+      "title": "Vendor host-specific selection golden references",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T08:43:07Z",
+      "merged_at": "2026-11-15T08:43:07Z",
+      "head_ref": "integrate/office-goldens-20261115",
+      "head_sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "merge_commit_sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01"
+    },
+    {
+      "number": 114,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/114",
+      "title": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T08:38:34Z",
+      "merged_at": "2026-11-15T08:38:34Z",
+      "head_ref": "integrate/legacy-xls-preview-20261115",
+      "head_sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "merge_commit_sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954"
+    },
+    {
+      "number": 113,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/113",
+      "title": "Integrate the new document workspace and spreadsheet wrap-text",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T08:20:04Z",
+      "merged_at": null,
+      "head_ref": "integrate/consistency-20261115",
+      "head_sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "merge_commit_sha": "62a1c521030ce2eafbf71adaaac6bfd8b1bf7362"
+    },
+    {
+      "number": 111,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/111",
+      "title": "feat(storage): recover validated PNG images to reviewed new ZIPs",
+      "state": "open",
+      "draft": true,
+      "updated_at": "2026-11-15T08:10:10Z",
+      "merged_at": null,
+      "head_ref": "integration/storage-carving-20261115",
+      "head_sha": "71c14b98a9e4824dc613b6bb3d77e11b2cc49c9f",
+      "merge_commit_sha": null
+    },
+    {
+      "number": 110,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/110",
+      "title": "Add draft-safe worksheet navigation and complete host validation",
+      "state": "open",
+      "draft": true,
+      "updated_at": "2026-11-15T08:06:52Z",
+      "merged_at": null,
+      "head_ref": "codex/office-recovery-20261115",
+      "head_sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "merge_commit_sha": "b58c06ab56c350361c433eb4b46a7020e35596e2"
+    },
+    {
+      "number": 112,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/112",
+      "title": "Vendor the current Quds Word fixes, including inline pictures",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T07:18:18Z",
+      "merged_at": "2026-11-15T07:18:17Z",
+      "head_ref": "integrate/word-inline-pictures-20261115",
+      "head_sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "merge_commit_sha": "5b7daacc3eaaed09670c105627af420caac5ebe2"
+    },
+    {
+      "number": 109,
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/109",
+      "title": "Open damaged .doc files with parser recovery; read RTF files named .doc",
+      "state": "closed",
+      "draft": false,
+      "updated_at": "2026-11-15T06:29:51Z",
+      "merged_at": "2026-11-15T06:27:18Z",
+      "head_ref": "fix/legacy-doc-recover",
+      "head_sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "merge_commit_sha": "22f4d709dff82447ea80fe6bcdd2f10d076e0c93"
+    }
+  ],
+  "comparisons_against_storage_71c14b98": [
+    {
+      "branch": "codex/office-recovery-20261115",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 44,
+      "merge_base": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "commits": []
+    },
+    {
+      "branch": "feature/new-documents-history-20261115",
+      "sha": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 26,
+      "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "commits": []
+    },
+    {
+      "branch": "fix/excel-legacy-xls",
+      "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+      "status": "diverged",
+      "ahead_by": 6,
+      "behind_by": 50,
+      "merge_base": "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8",
+      "commits": [
+        {
+          "sha": "dace199566a7e6294ed90d87a921cf19d5429c0b",
+          "message": "Preview legacy .xls through Quds and enrich ODF extraction\n\n- F3 on .xls/.xlt now imports BIFF into the shared model and renders a typed,\n  formula-aware read-only grid; the File Viewer spreadsheet grid remains the\n  explicit Legacy toggle and the automatic fallback when import fails.\n- ODS keeps office:value types, repeated rows/columns, spans and real sheet\n  names instead of shifting columns or dropping numbers.\n- ODT renders lists and uses the same repeat/span-aware table extraction.\n- .xlsb stays on the File Viewer route; there is still no BIFF12 reader.\n\nTests: office_document_service (12) and document_preview_integration (14) pass.",
+          "parents": [
+            "ca6156e833aa3d22fc2b13cb107ae0aa4e4852c8"
+          ]
+        },
+        {
+          "sha": "d46677d3dc194d0c63b59962ba8db21f024814d2",
+          "message": "Edit ODS workbooks by importing them as XLSX\n\nVendors quds 9b81058 (OdsSheetReader). F4 on .ods imports typed values,\nformulas, repeats/spans, styles, number formats and geometry, opens the sheet\neditor, and saves a new .xlsx copy. F3 keeps the enriched typed table.\nODT gains inline styles/links/lists/notes; ODP renders a positioned slide deck\nwith size, shapes, text, images and speaker notes.",
+          "parents": [
+            "dace199566a7e6294ed90d87a921cf19d5429c0b"
+          ]
+        },
+        {
+          "sha": "d274540eb335a0fc6aa7c3da45b83e90472bdfef",
+          "message": "Render ODP page backgrounds and custom shapes",
+          "parents": [
+            "d46677d3dc194d0c63b59962ba8db21f024814d2"
+          ]
+        },
+        {
+          "sha": "5b36ea58b3be34c9bafe4df5c304706951148f70",
+          "message": "Refresh the formatted ODS reader",
+          "parents": [
+            "d274540eb335a0fc6aa7c3da45b83e90472bdfef"
+          ]
+        },
+        {
+          "sha": "45b68bba47b3d338496780b108822b870291e506",
+          "message": "Document the ODT/ODP preview routes",
+          "parents": [
+            "5b36ea58b3be34c9bafe4df5c304706951148f70"
+          ]
+        },
+        {
+          "sha": "7bfe1ed6d48e935ffed0ce4c7d28fef6781e3b25",
+          "message": "Pin the rebased ODS reader",
+          "parents": [
+            "45b68bba47b3d338496780b108822b870291e506"
+          ]
+        }
+      ]
+    },
+    {
+      "branch": "fix/odf-final",
+      "sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+      "status": "diverged",
+      "ahead_by": 16,
+      "behind_by": 24,
+      "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "commits": [
+        {
+          "sha": "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+          "message": "Cover portable conversion and full new-document launch workflows",
+          "parents": [
+            "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+          ]
+        },
+        {
+          "sha": "8c8d451c364806cf8a5e33f1a193a14f32cea19e",
+          "message": "Merge remote-tracking branch 'origin/main' into feature/new-documents-history-20261115",
+          "parents": [
+            "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+            "5b7daacc3eaaed09670c105627af420caac5ebe2"
+          ]
+        },
+        {
+          "sha": "c39465be1378554141b2e9866e789fed1a4ba171",
+          "message": "Verify normal destination folders before document creation",
+          "parents": [
+            "8c8d451c364806cf8a5e33f1a193a14f32cea19e"
+          ]
+        },
+        {
+          "sha": "723ab5b43c88e96489a81c13bd427f7c404af87c",
+          "message": "Refresh Office wrap fidelity and document workspace acceptance",
+          "parents": [
+            "c39465be1378554141b2e9866e789fed1a4ba171"
+          ]
+        },
+        {
+          "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "message": "Preview legacy .xls through Quds and enrich ODF extraction\n\n- F3 on .xls/.xlt now imports BIFF into the shared model and renders a typed,\n  formula-aware read-only grid; the File Viewer spreadsheet grid remains the\n  explicit Legacy toggle and the automatic fallback when import fails.\n- ODS keeps office:value types, repeated rows/columns, spans and real sheet\n  names instead of shifting columns or dropping numbers.\n- ODT renders lists and uses the same repeat/span-aware table extraction.\n- .xlsb stays on the File Viewer route; there is still no BIFF12 reader.\n\nTests: office_document_service (12) and document_preview_integration (14) pass.",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        },
+        {
+          "sha": "052a15c9fbd012af3b07a519b844720f3404f373",
+          "message": "Reduce active pane outline to a subtle one-pixel border",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        },
+        {
+          "sha": "8bf1a11fead48a7466c94495d90a28ebf3697323",
+          "message": "Refresh reviewed source fingerprint for pane styling",
+          "parents": [
+            "052a15c9fbd012af3b07a519b844720f3404f373"
+          ]
+        },
+        {
+          "sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+          "message": "Merge pull request #114 from CrispStrobe/integrate/legacy-xls-preview-20261115\n\nPreview legacy .xls through Quds and enrich ODF extraction",
+          "parents": [
+            "8bf1a11fead48a7466c94495d90a28ebf3697323",
+            "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+          ]
+        },
+        {
+          "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "message": "Vendor host-specific selection golden references",
+          "parents": [
+            "8d64b2e69efd819f3e63f4b58a0ca8950684a954"
+          ]
+        },
+        {
+          "sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01",
+          "message": "Merge pull request #115 from CrispStrobe/integrate/office-goldens-20261115\n\nVendor host-specific selection golden references",
+          "parents": [
+            "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+            "74f97cba657d43f18f6e95553a465d23e21ceb20"
+          ]
+        },
+        {
+          "sha": "e49140809cfa7338ec1637bb798882e779efa370",
+          "message": "Preview legacy .xls through Quds and enrich ODF extraction",
+          "parents": [
+            "50bbece22c9e4d85ac239cf1f6bed15430f36f01"
+          ]
+        },
+        {
+          "sha": "c730957ba35d79fe9a43dbfef4edb7662945b033",
+          "message": "Edit ODS workbooks by importing them as XLSX",
+          "parents": [
+            "e49140809cfa7338ec1637bb798882e779efa370"
+          ]
+        },
+        {
+          "sha": "fe8854e26c3fe0660de58dc1b3cd4cf6dd7cee75",
+          "message": "Render ODP page backgrounds and custom shapes",
+          "parents": [
+            "c730957ba35d79fe9a43dbfef4edb7662945b033"
+          ]
+        },
+        {
+          "sha": "c196f80a67e96ca4cdec3c4ab598e8907e0e9df3",
+          "message": "Document the ODT/ODP preview routes",
+          "parents": [
+            "fe8854e26c3fe0660de58dc1b3cd4cf6dd7cee75"
+          ]
+        },
+        {
+          "sha": "9c6533000b9699f0450b4053c9445253faf3fe92",
+          "message": "Test ODT rich text and ODP decks; hide the OOXML PDF tab for ODF",
+          "parents": [
+            "c196f80a67e96ca4cdec3c4ab598e8907e0e9df3"
+          ]
+        },
+        {
+          "sha": "bda0374b6f773e8797ffa09c24020ef22fb6b649",
+          "message": "Vendor the ODS reader and pin its fork revision",
+          "parents": [
+            "9c6533000b9699f0450b4053c9445253faf3fe92"
+          ]
+        }
+      ]
+    },
+    {
+      "branch": "integrate/consistency-20261115",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "status": "diverged",
+      "ahead_by": 2,
+      "behind_by": 24,
+      "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "commits": [
+        {
+          "sha": "39974e92f1cdade24d568a27d03a9254a0a6c787",
+          "message": "Merge new document workspace and history features",
+          "parents": [
+            "5b7daacc3eaaed09670c105627af420caac5ebe2",
+            "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+          ]
+        },
+        {
+          "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+          "message": "Vendor spreadsheet wrap-text and reconcile the new document workspace",
+          "parents": [
+            "39974e92f1cdade24d568a27d03a9254a0a6c787"
+          ]
+        }
+      ]
+    },
+    {
+      "branch": "integrate/legacy-xls-preview-20261115",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "status": "diverged",
+      "ahead_by": 5,
+      "behind_by": 24,
+      "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "commits": [
+        {
+          "sha": "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+          "message": "Cover portable conversion and full new-document launch workflows",
+          "parents": [
+            "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+          ]
+        },
+        {
+          "sha": "8c8d451c364806cf8a5e33f1a193a14f32cea19e",
+          "message": "Merge remote-tracking branch 'origin/main' into feature/new-documents-history-20261115",
+          "parents": [
+            "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+            "5b7daacc3eaaed09670c105627af420caac5ebe2"
+          ]
+        },
+        {
+          "sha": "c39465be1378554141b2e9866e789fed1a4ba171",
+          "message": "Verify normal destination folders before document creation",
+          "parents": [
+            "8c8d451c364806cf8a5e33f1a193a14f32cea19e"
+          ]
+        },
+        {
+          "sha": "723ab5b43c88e96489a81c13bd427f7c404af87c",
+          "message": "Refresh Office wrap fidelity and document workspace acceptance",
+          "parents": [
+            "c39465be1378554141b2e9866e789fed1a4ba171"
+          ]
+        },
+        {
+          "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "message": "Preview legacy .xls through Quds and enrich ODF extraction\n\n- F3 on .xls/.xlt now imports BIFF into the shared model and renders a typed,\n  formula-aware read-only grid; the File Viewer spreadsheet grid remains the\n  explicit Legacy toggle and the automatic fallback when import fails.\n- ODS keeps office:value types, repeated rows/columns, spans and real sheet\n  names instead of shifting columns or dropping numbers.\n- ODT renders lists and uses the same repeat/span-aware table extraction.\n- .xlsb stays on the File Viewer route; there is still no BIFF12 reader.\n\nTests: office_document_service (12) and document_preview_integration (14) pass.",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        }
+      ]
+    },
+    {
+      "branch": "integrate/office-goldens-20261115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "status": "diverged",
+      "ahead_by": 9,
+      "behind_by": 24,
+      "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "commits": [
+        {
+          "sha": "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+          "message": "Cover portable conversion and full new-document launch workflows",
+          "parents": [
+            "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+          ]
+        },
+        {
+          "sha": "8c8d451c364806cf8a5e33f1a193a14f32cea19e",
+          "message": "Merge remote-tracking branch 'origin/main' into feature/new-documents-history-20261115",
+          "parents": [
+            "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+            "5b7daacc3eaaed09670c105627af420caac5ebe2"
+          ]
+        },
+        {
+          "sha": "c39465be1378554141b2e9866e789fed1a4ba171",
+          "message": "Verify normal destination folders before document creation",
+          "parents": [
+            "8c8d451c364806cf8a5e33f1a193a14f32cea19e"
+          ]
+        },
+        {
+          "sha": "723ab5b43c88e96489a81c13bd427f7c404af87c",
+          "message": "Refresh Office wrap fidelity and document workspace acceptance",
+          "parents": [
+            "c39465be1378554141b2e9866e789fed1a4ba171"
+          ]
+        },
+        {
+          "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "message": "Preview legacy .xls through Quds and enrich ODF extraction\n\n- F3 on .xls/.xlt now imports BIFF into the shared model and renders a typed,\n  formula-aware read-only grid; the File Viewer spreadsheet grid remains the\n  explicit Legacy toggle and the automatic fallback when import fails.\n- ODS keeps office:value types, repeated rows/columns, spans and real sheet\n  names instead of shifting columns or dropping numbers.\n- ODT renders lists and uses the same repeat/span-aware table extraction.\n- .xlsb stays on the File Viewer route; there is still no BIFF12 reader.\n\nTests: office_document_service (12) and document_preview_integration (14) pass.",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        },
+        {
+          "sha": "052a15c9fbd012af3b07a519b844720f3404f373",
+          "message": "Reduce active pane outline to a subtle one-pixel border",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        },
+        {
+          "sha": "8bf1a11fead48a7466c94495d90a28ebf3697323",
+          "message": "Refresh reviewed source fingerprint for pane styling",
+          "parents": [
+            "052a15c9fbd012af3b07a519b844720f3404f373"
+          ]
+        },
+        {
+          "sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+          "message": "Merge pull request #114 from CrispStrobe/integrate/legacy-xls-preview-20261115\n\nPreview legacy .xls through Quds and enrich ODF extraction",
+          "parents": [
+            "8bf1a11fead48a7466c94495d90a28ebf3697323",
+            "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+          ]
+        },
+        {
+          "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "message": "Vendor host-specific selection golden references",
+          "parents": [
+            "8d64b2e69efd819f3e63f4b58a0ca8950684a954"
+          ]
+        }
+      ]
+    },
+    {
+      "branch": "integrate/word-inline-pictures-20261115",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 31,
+      "merge_base": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "commits": []
+    },
+    {
+      "branch": "integration/office-reconcile-storage-20261115",
+      "sha": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "status": "behind",
+      "ahead_by": 0,
+      "behind_by": 43,
+      "merge_base": "59b6a50990c4a368e03cd4d03b8075248edc6ffb",
+      "commits": []
+    },
+    {
+      "branch": "main",
+      "sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+      "status": "diverged",
+      "ahead_by": 15,
+      "behind_by": 24,
+      "merge_base": "ab94bedba9529aafe71f4128d0e781d1930c77c9",
+      "commits": [
+        {
+          "sha": "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+          "message": "Cover portable conversion and full new-document launch workflows",
+          "parents": [
+            "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+          ]
+        },
+        {
+          "sha": "8c8d451c364806cf8a5e33f1a193a14f32cea19e",
+          "message": "Merge remote-tracking branch 'origin/main' into feature/new-documents-history-20261115",
+          "parents": [
+            "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+            "5b7daacc3eaaed09670c105627af420caac5ebe2"
+          ]
+        },
+        {
+          "sha": "c39465be1378554141b2e9866e789fed1a4ba171",
+          "message": "Verify normal destination folders before document creation",
+          "parents": [
+            "8c8d451c364806cf8a5e33f1a193a14f32cea19e"
+          ]
+        },
+        {
+          "sha": "723ab5b43c88e96489a81c13bd427f7c404af87c",
+          "message": "Refresh Office wrap fidelity and document workspace acceptance",
+          "parents": [
+            "c39465be1378554141b2e9866e789fed1a4ba171"
+          ]
+        },
+        {
+          "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+          "message": "Preview legacy .xls through Quds and enrich ODF extraction\n\n- F3 on .xls/.xlt now imports BIFF into the shared model and renders a typed,\n  formula-aware read-only grid; the File Viewer spreadsheet grid remains the\n  explicit Legacy toggle and the automatic fallback when import fails.\n- ODS keeps office:value types, repeated rows/columns, spans and real sheet\n  names instead of shifting columns or dropping numbers.\n- ODT renders lists and uses the same repeat/span-aware table extraction.\n- .xlsb stays on the File Viewer route; there is still no BIFF12 reader.\n\nTests: office_document_service (12) and document_preview_integration (14) pass.",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        },
+        {
+          "sha": "052a15c9fbd012af3b07a519b844720f3404f373",
+          "message": "Reduce active pane outline to a subtle one-pixel border",
+          "parents": [
+            "723ab5b43c88e96489a81c13bd427f7c404af87c"
+          ]
+        },
+        {
+          "sha": "8bf1a11fead48a7466c94495d90a28ebf3697323",
+          "message": "Refresh reviewed source fingerprint for pane styling",
+          "parents": [
+            "052a15c9fbd012af3b07a519b844720f3404f373"
+          ]
+        },
+        {
+          "sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+          "message": "Merge pull request #114 from CrispStrobe/integrate/legacy-xls-preview-20261115\n\nPreview legacy .xls through Quds and enrich ODF extraction",
+          "parents": [
+            "8bf1a11fead48a7466c94495d90a28ebf3697323",
+            "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+          ]
+        },
+        {
+          "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+          "message": "Vendor host-specific selection golden references",
+          "parents": [
+            "8d64b2e69efd819f3e63f4b58a0ca8950684a954"
+          ]
+        },
+        {
+          "sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01",
+          "message": "Merge pull request #115 from CrispStrobe/integrate/office-goldens-20261115\n\nVendor host-specific selection golden references",
+          "parents": [
+            "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+            "74f97cba657d43f18f6e95553a465d23e21ceb20"
+          ]
+        },
+        {
+          "sha": "09610aa3f489cf60802d7a685b986b92b53c36a6",
+          "message": "Compact folder chrome and new-document chooser; isolate native toolbar lifetime",
+          "parents": [
+            "50bbece22c9e4d85ac239cf1f6bed15430f36f01"
+          ]
+        },
+        {
+          "sha": "3b7e1fe68a1c1333a18433a1bfea21634c85b153",
+          "message": "Run native toolbar lifetime regression in macOS CI and record crash evidence",
+          "parents": [
+            "09610aa3f489cf60802d7a685b986b92b53c36a6"
+          ]
+        },
+        {
+          "sha": "a6686e0c36cece43724a277724e271d17e584f45",
+          "message": "Clean up layout test diagnostics and document native control limits",
+          "parents": [
+            "3b7e1fe68a1c1333a18433a1bfea21634c85b153"
+          ]
+        },
+        {
+          "sha": "8ca647a7a11a2e814637a5309b0c1f41d4f2fbff",
+          "message": "Keep new-document format grid visible on opening",
+          "parents": [
+            "a6686e0c36cece43724a277724e271d17e584f45"
+          ]
+        },
+        {
+          "sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+          "message": "Verify visible native toolbar transitions and responsive format tiles",
+          "parents": [
+            "8ca647a7a11a2e814637a5309b0c1f41d4f2fbff"
+          ]
+        }
+      ]
+    }
+  ],
+  "main_recent_commits": [
+    {
+      "sha": "6fcc4497efd0e63a1494e2eda5e7871c7142091a",
+      "date": "2026-11-15T09:08:43Z",
+      "message": "Verify visible native toolbar transitions and responsive format tiles",
+      "parents": [
+        "8ca647a7a11a2e814637a5309b0c1f41d4f2fbff"
+      ]
+    },
+    {
+      "sha": "8ca647a7a11a2e814637a5309b0c1f41d4f2fbff",
+      "date": "2026-11-15T09:05:49Z",
+      "message": "Keep new-document format grid visible on opening",
+      "parents": [
+        "a6686e0c36cece43724a277724e271d17e584f45"
+      ]
+    },
+    {
+      "sha": "a6686e0c36cece43724a277724e271d17e584f45",
+      "date": "2026-11-15T09:05:15Z",
+      "message": "Clean up layout test diagnostics and document native control limits",
+      "parents": [
+        "3b7e1fe68a1c1333a18433a1bfea21634c85b153"
+      ]
+    },
+    {
+      "sha": "3b7e1fe68a1c1333a18433a1bfea21634c85b153",
+      "date": "2026-11-15T09:04:24Z",
+      "message": "Run native toolbar lifetime regression in macOS CI and record crash evidence",
+      "parents": [
+        "09610aa3f489cf60802d7a685b986b92b53c36a6"
+      ]
+    },
+    {
+      "sha": "09610aa3f489cf60802d7a685b986b92b53c36a6",
+      "date": "2026-11-15T09:02:41Z",
+      "message": "Compact folder chrome and new-document chooser; isolate native toolbar lifetime",
+      "parents": [
+        "50bbece22c9e4d85ac239cf1f6bed15430f36f01"
+      ]
+    },
+    {
+      "sha": "50bbece22c9e4d85ac239cf1f6bed15430f36f01",
+      "date": "2026-11-15T08:43:07Z",
+      "message": "Merge pull request #115 from CrispStrobe/integrate/office-goldens-20261115\n\nVendor host-specific selection golden references",
+      "parents": [
+        "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+        "74f97cba657d43f18f6e95553a465d23e21ceb20"
+      ]
+    },
+    {
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "date": "2026-11-15T08:42:55Z",
+      "message": "Vendor host-specific selection golden references",
+      "parents": [
+        "8d64b2e69efd819f3e63f4b58a0ca8950684a954"
+      ]
+    },
+    {
+      "sha": "8d64b2e69efd819f3e63f4b58a0ca8950684a954",
+      "date": "2026-11-15T08:38:34Z",
+      "message": "Merge pull request #114 from CrispStrobe/integrate/legacy-xls-preview-20261115\n\nPreview legacy .xls through Quds and enrich ODF extraction",
+      "parents": [
+        "8bf1a11fead48a7466c94495d90a28ebf3697323",
+        "eba6c9dcb24108d7277dea2f0042acbb19f8fb72"
+      ]
+    },
+    {
+      "sha": "8bf1a11fead48a7466c94495d90a28ebf3697323",
+      "date": "2026-11-15T08:32:31Z",
+      "message": "Refresh reviewed source fingerprint for pane styling",
+      "parents": [
+        "052a15c9fbd012af3b07a519b844720f3404f373"
+      ]
+    },
+    {
+      "sha": "052a15c9fbd012af3b07a519b844720f3404f373",
+      "date": "2026-11-15T08:32:18Z",
+      "message": "Reduce active pane outline to a subtle one-pixel border",
+      "parents": [
+        "723ab5b43c88e96489a81c13bd427f7c404af87c"
+      ]
+    },
+    {
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "date": "2026-11-15T08:22:05Z",
+      "message": "Preview legacy .xls through Quds and enrich ODF extraction\n\n- F3 on .xls/.xlt now imports BIFF into the shared model and renders a typed,\n  formula-aware read-only grid; the File Viewer spreadsheet grid remains the\n  explicit Legacy toggle and the automatic fallback when import fails.\n- ODS keeps office:value types, repeated rows/columns, spans and real sheet\n  names instead of shifting columns or dropping numbers.\n- ODT renders lists and uses the same repeat/span-aware table extraction.\n- .xlsb stays on the File Viewer route; there is still no BIFF12 reader.\n\nTests: office_document_service (12) and document_preview_integration (14) pass.",
+      "parents": [
+        "723ab5b43c88e96489a81c13bd427f7c404af87c"
+      ]
+    },
+    {
+      "sha": "723ab5b43c88e96489a81c13bd427f7c404af87c",
+      "date": "2026-11-15T08:15:21Z",
+      "message": "Refresh Office wrap fidelity and document workspace acceptance",
+      "parents": [
+        "c39465be1378554141b2e9866e789fed1a4ba171"
+      ]
+    },
+    {
+      "sha": "c39465be1378554141b2e9866e789fed1a4ba171",
+      "date": "2026-11-15T08:10:24Z",
+      "message": "Verify normal destination folders before document creation",
+      "parents": [
+        "8c8d451c364806cf8a5e33f1a193a14f32cea19e"
+      ]
+    },
+    {
+      "sha": "8c8d451c364806cf8a5e33f1a193a14f32cea19e",
+      "date": "2026-11-15T08:07:20Z",
+      "message": "Merge remote-tracking branch 'origin/main' into feature/new-documents-history-20261115",
+      "parents": [
+        "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+        "5b7daacc3eaaed09670c105627af420caac5ebe2"
+      ]
+    },
+    {
+      "sha": "917ede72a0fae13ee2b1ead003c89ffc7337f87c",
+      "date": "2026-11-15T08:05:41Z",
+      "message": "Cover portable conversion and full new-document launch workflows",
+      "parents": [
+        "ab94bedba9529aafe71f4128d0e781d1930c77c9"
+      ]
+    }
+  ],
+  "pr111_reviews": [],
+  "pr111_comments": [],
+  "pr111_head_checks": {
+    "total_count": 0,
+    "check_runs": []
+  },
+  "recent_workflows": [
+    {
+      "id": 43691242464,
+      "name": "Storage capabilities",
+      "head_sha": "c68c03aed83027b3cf7392255fa8e92e7f5477fa",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T07:43:56Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43691242464"
+    },
+    {
+      "id": 43689613214,
+      "name": "Storage capabilities",
+      "head_sha": "db5e3f7516b1e6c08cc2926f6d5afdceba85792d",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "created_at": "2026-11-15T07:21:52Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43689613214"
+    },
+    {
+      "id": 43686658425,
+      "name": "Office fidelity integration",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658425"
+    },
+    {
+      "id": 43686658515,
+      "name": "Native catalogue CLI",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658515"
+    },
+    {
+      "id": 43686658635,
+      "name": "Commander archive workflows",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658635"
+    },
+    {
+      "id": 43686658453,
+      "name": "Shared encrypted providers",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658453"
+    },
+    {
+      "id": 43686658446,
+      "name": "File workspace UX",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658446"
+    },
+    {
+      "id": 43686658491,
+      "name": "Shared HTTP transfer bandwidth",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658491"
+    },
+    {
+      "id": 43686658499,
+      "name": "Ebook application integration",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658499"
+    },
+    {
+      "id": 43686658508,
+      "name": "Image editor",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658508"
+    },
+    {
+      "id": 43686658591,
+      "name": "Text and hex editor",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658591"
+    },
+    {
+      "id": 43686658434,
+      "name": "Storage capabilities",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658434"
+    },
+    {
+      "id": 43686658531,
+      "name": "Experimental Rust SMB",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658531"
+    },
+    {
+      "id": 43686658418,
+      "name": "Media editor",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658418"
+    },
+    {
+      "id": 43686658475,
+      "name": "CI",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658475"
+    },
+    {
+      "id": 43686658445,
+      "name": "PDF editor",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-15T06:42:21Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686658445"
+    },
+    {
+      "id": 43686654299,
+      "name": "Dart and Rust provider compatibility",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:18Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686654299"
+    },
+    {
+      "id": 43686654291,
+      "name": "Shared encrypted providers",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:42:18Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686654291"
+    },
+    {
+      "id": 43686654251,
+      "name": "Storage capabilities",
+      "head_sha": "5a62b10fc7f366b0229434667b91baccc0af8b53",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-15T06:42:18Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686654251"
+    },
+    {
+      "id": 43686039150,
+      "name": "Shared encrypted providers",
+      "head_sha": "229c6a8609b9f78ebe1bff1e4f8e7e9e0fea6417",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-15T06:34:10Z",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43686039150"
+    }
+  ],
+  "decisions": [
+    "Integrate main 6fcc4497 (15 new commits) and PR116 fix/odf-final bda0374b (6 commits beyond main ancestor 50bbece2).",
+    "Worksheet d97705da, new-doc ab94bedb, word bb981ec3 and office reconciliation 59b6a509 are ancestors of storage 71c14b98.",
+    "Legacy preview eba6c9dc and goldens 74f97cba are ancestors of main.",
+    "Closed PR113 consistency branch eab538e7 has unique merge history but no unique Quds source content; main later includes the same content.",
+    "Old Excel branch 7bfe1ed6 has Quds package content identical to fix/odf-final; use consolidated PR116 lineage.",
+    "All Quds content blobs at storage 71c14b98 match main 6fcc4497; 41 differences are mode only. Keep corrected 100644 storage modes.",
+    "PR116 test/office_document_service_test.dart contains duplicated odfTests() definitions; integration requires removing the duplicate while preserving ODT and ODP tests.",
+    "Do not await or restart hosted CI. Saved handoff requires [skip ci], source-bound local gates and immediate remote receipts after each gate. Current-head checks empty; historic c68c03ae Storage capabilities succeeded but is not acceptance for combined source."
+  ],
+  "sources": [
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls/111",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls/116",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=all&sort=updated&direction=desc&per_page=100",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/commits?sha=main&per_page=30",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs?branch=integration%2Fstorage-carving-20261115&per_page=20"
+  ]
+}
+
