@@ -429,7 +429,9 @@ class _RecordingSshService extends SshTerminalService {
     String username,
     String password, {
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) => _connect(
     SshTerminalConfig(
       host: host,
@@ -437,6 +439,7 @@ class _RecordingSshService extends SshTerminalService {
       username: username,
       password: password,
       gateway: gateway,
+      jumpHosts: jumpHosts,
     ),
     hostKeyPrompt: hostKeyPrompt,
   );
@@ -448,8 +451,10 @@ class _RecordingSshService extends SshTerminalService {
     String username,
     String privateKey, {
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     String? passphrase,
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) => _connect(
     SshTerminalConfig(
       host: host,
@@ -459,6 +464,7 @@ class _RecordingSshService extends SshTerminalService {
       passphrase: passphrase ?? '',
       authentication: SshTerminalAuthentication.privateKey,
       gateway: gateway,
+      jumpHosts: jumpHosts,
     ),
     hostKeyPrompt: hostKeyPrompt,
   );

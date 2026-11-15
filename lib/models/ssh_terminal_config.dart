@@ -1,7 +1,8 @@
 import 'screen_session_options.dart';
+import 'ssh_jump_host.dart';
 import 'tmux_session_options.dart';
 
-enum SshTerminalAuthentication { password, privateKey }
+export 'ssh_jump_host.dart';
 
 /// Connection details for a single SSH terminal attempt.
 ///
@@ -17,6 +18,7 @@ class SshTerminalConfig {
     this.passphrase = '',
     this.authentication = SshTerminalAuthentication.password,
     this.gateway,
+    this.jumpHosts = const [],
     this.tmux,
     this.screen,
   });
@@ -29,11 +31,20 @@ class SshTerminalConfig {
   final String passphrase;
   final SshTerminalAuthentication authentication;
   final Uri? gateway;
+
+  /// Ordered outermost first; the gateway, if any, reaches the first hop.
+  final List<SshJumpHost> jumpHosts;
   final TmuxSessionOptions? tmux;
   final ScreenSessionOptions? screen;
 
   /// Validate mutually exclusive launch options before replacing a connection.
   void validateSessionOptions() {
+    SshJumpHost.validateRoute(
+      host: host,
+      port: port,
+      username: username,
+      jumpHosts: jumpHosts,
+    );
     if (tmux != null && screen != null) {
       throw ArgumentError('Choose either tmux or screen, not both');
     }
@@ -62,6 +73,9 @@ class SshTerminalConfig {
     username: username,
     authentication: authentication,
     gateway: gateway,
+    jumpHosts: List.unmodifiable(
+      jumpHosts.map((jump) => jump.withoutSecrets()),
+    ),
     tmux: tmux,
     screen: screen,
   );

@@ -7,11 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/terminal_controls_strings.dart';
+import '../l10n/terminal_arrangement_strings.dart';
 import '../l10n/terminal_strings.dart';
+import '../models/terminal_arrangement.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/terminal_session.dart';
 import 'terminal_panel.dart';
+import 'terminal_arrangements_dialog.dart';
 
 class _TerminalTab {
   _TerminalTab(
@@ -19,7 +22,9 @@ class _TerminalTab {
     this.session, {
     required this.owned,
     required this.start,
-  });
+    TerminalPaneState? paneState,
+    this.name,
+  }) : paneState = paneState ?? TerminalPaneState();
 
   final int id;
   final TerminalSession session;
@@ -27,6 +32,7 @@ class _TerminalTab {
   final bool start;
   final key = GlobalKey();
   String? name;
+  TerminalPaneState paneState;
 }
 
 /// Keeps independent sessions and view state alive while tabs or panes change.
@@ -43,7 +49,7 @@ class TerminalTabs extends ConsumerStatefulWidget {
   final bool visible;
   final TerminalSession Function()? sessionFactory;
 
-  static const maxTabs = 8;
+  static const maxTabs = TerminalArrangement.maxTabs;
 
   @override
   ConsumerState<TerminalTabs> createState() => _TerminalTabsState();
@@ -56,7 +62,9 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   int? _second;
   late int _active;
   Axis _axis = Axis.horizontal;
+  double _splitFraction = 0.5;
   bool _closing = false;
+  bool _arranging = false;
   int _focusRequest = 0;
 
   @override
@@ -90,6 +98,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       final tab = _makeTab(widget.session);
       _first = _active = tab.id;
       _second = null;
+      _splitFraction = 0.5;
     }
   }
 
@@ -102,6 +111,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   }
 
   void _activate(int id) {
+    if (_arranging) return;
     if (!_tabs.any((tab) => tab.id == id)) return;
     ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
     setState(() {
@@ -118,12 +128,13 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   }
 
   void _addTab() {
-    if (_tabs.length >= TerminalTabs.maxTabs) return;
+    if (_arranging || _closing || _tabs.length >= TerminalTabs.maxTabs) return;
     final tab = _makeTab();
     _activate(tab.id);
   }
 
   void _split(Axis axis) {
+    if (_arranging || _closing) return;
     if (_second == null && _tabs.length >= TerminalTabs.maxTabs) return;
     setState(() {
       _axis = axis;
@@ -135,18 +146,24 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   }
 
   void _singlePane() {
+    if (_arranging || _closing) return;
     setState(() {
       _first = _active;
       _second = null;
     });
   }
 
-  String _label(_TerminalTab tab) =>
-      tab.name ??
-      tab.session.label ??
-      '${context.terminalTr('Terminal')} ${tab.id}';
+  String _label(_TerminalTab tab) {
+    final destination = tab.paneState.sshConfig;
+    return tab.name ??
+        tab.session.label ??
+        (destination == null
+            ? '${context.terminalTr('Terminal')} ${tab.id}'
+            : '${destination.username}@${destination.host}');
+  }
 
   Future<void> _rename(_TerminalTab tab) async {
+    if (_arranging || _closing) return;
     var edited = _label(tab);
     final name = await showDialog<String>(
       context: context,
@@ -180,7 +197,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   }
 
   Future<void> _closeTab(_TerminalTab tab) async {
-    if (_closing || _tabs.length <= 1) return;
+    if (_closing || _arranging || _tabs.length <= 1) return;
     _closing = true;
     try {
       if (tab.session.canDisconnect) {
@@ -229,7 +246,170 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     }
   }
 
+  void _moveTab(int direction) {
+    if (_arranging || _closing) return;
+    final index = _tabs.indexWhere((tab) => tab.id == _active);
+    final target = index + direction;
+    if (target < 0 || target >= _tabs.length) return;
+    setState(() {
+      final tab = _tabs.removeAt(index);
+      _tabs.insert(target, tab);
+    });
+  }
+
+  TerminalArrangement _captureArrangement(String name) => TerminalArrangement(
+    name: name,
+    tabs: [
+      for (final tab in _tabs)
+        TerminalArrangementTab(name: tab.name, paneState: tab.paneState),
+    ],
+    activeIndex: _tabs.indexWhere((tab) => tab.id == _active),
+    firstIndex: _tabs.indexWhere((tab) => tab.id == _first),
+    secondIndex: _second == null
+        ? null
+        : _tabs.indexWhere((tab) => tab.id == _second),
+    splitAxis: _axis == Axis.horizontal
+        ? TerminalSplitAxis.horizontal
+        : TerminalSplitAxis.vertical,
+    splitFraction: _splitFraction,
+  );
+
+  void _notice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(context.terminalArrangementTr(message))),
+    );
+  }
+
+  Future<void> _saveArrangement() async {
+    if (_arranging || _closing) return;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) =>
+          SaveTerminalArrangementDialog(createArrangement: _captureArrangement),
+    );
+    if (saved == true) _notice('Saved arrangement');
+  }
+
+  Future<void> _chooseArrangement() async {
+    if (_arranging || _closing) return;
+    final arrangement = await showDialog<TerminalArrangement>(
+      context: context,
+      builder: (_) => const TerminalArrangementsDialog(),
+    );
+    if (!mounted || arrangement == null || _arranging || _closing) return;
+    await _restoreArrangement(arrangement);
+  }
+
+  Future<void> _restoreArrangement(TerminalArrangement arrangement) async {
+    final previous = _tabs.toList();
+    setState(() => _arranging = true);
+    try {
+      // Replacing disconnected tabs also discards their scrollback, so every
+      // restoration requires an explicit choice, even without a live shell.
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            context.terminalArrangementTr('Replace current terminals?'),
+          ),
+          content: Text(
+            context.terminalArrangementTr(
+              'Restoring ends the current connections. New tabs open disconnected; reconnect each destination when ready.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(context.terminalTr('Cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(context.terminalArrangementTr('Restore')),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted || !listEquals(previous, _tabs)) {
+        return;
+      }
+      // An opener may still be creating a native process/SSH connection. Keep
+      // its pane until it settles so a delayed cleanup failure stays visible.
+      if (previous.any((tab) => tab.session.isConnecting)) {
+        _notice('Could not restore arrangement. All existing tabs were kept.');
+        return;
+      }
+      for (final tab in previous) {
+        await tab.session.disconnect();
+        if (!mounted || !listEquals(previous, _tabs)) return;
+        if (tab.session.canDisconnect) {
+          _notice(
+            'Could not restore arrangement. All existing tabs were kept.',
+          );
+          return;
+        }
+      }
+      if (previous.any((tab) => tab.session.canDisconnect)) {
+        _notice('Could not restore arrangement. All existing tabs were kept.');
+        return;
+      }
+      final restored = <_TerminalTab>[];
+      try {
+        for (final saved in arrangement.tabs) {
+          restored.add(
+            _TerminalTab(
+              _nextId++,
+              TerminalSession(),
+              owned: true,
+              start: false,
+              name: saved.name,
+              paneState: saved.paneState,
+            ),
+          );
+        }
+      } catch (_) {
+        for (final tab in restored) {
+          tab.session.dispose();
+        }
+        rethrow;
+      }
+      // Dispose nothing until every old connection has confirmed cleanup.
+      // A failed attempt above leaves the complete tab list and screens intact.
+      for (final tab in previous) {
+        tab.session.removeListener(_changed);
+      }
+      for (final tab in restored) {
+        tab.session.addListener(_changed);
+      }
+      setState(() {
+        _tabs
+          ..clear()
+          ..addAll(restored);
+        _first = restored[arrangement.firstIndex].id;
+        _second = arrangement.secondIndex == null
+            ? null
+            : restored[arrangement.secondIndex!].id;
+        _active = restored[arrangement.activeIndex].id;
+        _axis = arrangement.splitAxis == TerminalSplitAxis.horizontal
+            ? Axis.horizontal
+            : Axis.vertical;
+        _splitFraction = arrangement.splitFraction;
+        _focusRequest++;
+      });
+      for (final tab in previous) {
+        if (tab.owned) tab.session.dispose();
+      }
+      ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
+      _notice('Arrangement restored. Connect each terminal when ready.');
+    } catch (_) {
+      _notice('Could not restore arrangement. All existing tabs were kept.');
+    } finally {
+      if (mounted) setState(() => _arranging = false);
+    }
+  }
+
   KeyEventResult _onWorkspaceKey(KeyEvent event) {
+    if (_arranging) return KeyEventResult.handled;
     final keyboard = HardwareKeyboard.instance;
     if (keyboard.isAltPressed) return KeyEventResult.ignored;
     final apple =
@@ -341,7 +521,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                                 'Close terminal',
                               ),
                               icon: const Icon(Icons.close, size: 14),
-                              onPressed: _tabs.length > 1
+                              onPressed: _tabs.length > 1 && !_arranging
                                   ? () => unawaited(_closeTab(tab))
                                   : null,
                               visualDensity: VisualDensity.compact,
@@ -357,12 +537,15 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
           IconButton(
             key: const ValueKey('terminal-new-tab'),
             tooltip: context.terminalControlsTr('New terminal'),
-            onPressed: _tabs.length < TerminalTabs.maxTabs ? _addTab : null,
+            onPressed: _tabs.length < TerminalTabs.maxTabs && !_arranging
+                ? _addTab
+                : null,
             icon: const Icon(Icons.add, size: 20),
           ),
           PopupMenuButton<String>(
             key: const ValueKey('terminal-layout'),
             tooltip: context.terminalControlsTr('Terminal layout'),
+            enabled: !_arranging,
             icon: const Icon(Icons.space_dashboard_outlined, size: 20),
             onSelected: (value) {
               switch (value) {
@@ -376,6 +559,16 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   unawaited(
                     _rename(_tabs.firstWhere((tab) => tab.id == _active)),
                   );
+                case 'save-arrangement':
+                  unawaited(_saveArrangement());
+                case 'arrangements':
+                  unawaited(_chooseArrangement());
+                case 'move-left':
+                  _moveTab(-1);
+                case 'move-right':
+                  _moveTab(1);
+                case 'balance':
+                  setState(() => _splitFraction = 0.5);
               }
             },
             itemBuilder: (_) => [
@@ -397,6 +590,36 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
               PopupMenuItem(
                 value: 'rename',
                 child: Text(context.terminalControlsTr('Rename terminal')),
+              ),
+              PopupMenuItem(
+                value: 'move-left',
+                enabled: _tabs.first.id != _active,
+                child: Text(
+                  context.terminalArrangementTr('Move terminal left'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'move-right',
+                enabled: _tabs.last.id != _active,
+                child: Text(
+                  context.terminalArrangementTr('Move terminal right'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'balance',
+                enabled: _second != null,
+                child: Text(context.terminalArrangementTr('Balance panes')),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'save-arrangement',
+                child: Text(context.terminalArrangementTr('Save arrangement')),
+              ),
+              PopupMenuItem(
+                value: 'arrangements',
+                child: Text(
+                  context.terminalArrangementTr('Saved arrangements'),
+                ),
               ),
             ],
           ),
@@ -462,13 +685,28 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                         (_axis == Axis.horizontal
                             ? area.maxWidth >= 560
                             : area.maxHeight >= 260);
-                    const gap = 4.0;
-                    final width = split && _axis == Axis.horizontal
-                        ? (area.maxWidth - gap) / 2
-                        : area.maxWidth;
-                    final paneHeight = split && _axis == Axis.vertical
-                        ? (area.maxHeight - gap) / 2
+                    const gap = 8.0;
+                    final extent = _axis == Axis.horizontal
+                        ? area.maxWidth
                         : area.maxHeight;
+                    final usable = math.max(1.0, extent - gap);
+                    final minimum = _axis == Axis.horizontal ? 220.0 : 120.0;
+                    final lower = math.max(
+                      0.2,
+                      math.min(0.5, minimum / usable),
+                    );
+                    final fraction = _splitFraction.clamp(lower, 1 - lower);
+                    final firstExtent = usable * fraction;
+                    final secondExtent = usable - firstExtent;
+                    void resize(double delta) {
+                      if (_arranging) return;
+                      setState(() {
+                        _splitFraction = (fraction + delta / usable)
+                            .clamp(lower, 1 - lower)
+                            .toDouble();
+                      });
+                    }
+
                     return ColoredBox(
                       color: Theme.of(context).dividerColor,
                       child: Stack(
@@ -480,42 +718,113 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                                   split &&
                                       tab.id == _second &&
                                       _axis == Axis.horizontal
-                                  ? width + gap
+                                  ? firstExtent + gap
                                   : 0,
                               top:
                                   split &&
                                       tab.id == _second &&
                                       _axis == Axis.vertical
-                                  ? paneHeight + gap
+                                  ? firstExtent + gap
                                   : 0,
-                              width: width,
-                              height: paneHeight,
+                              width: split && _axis == Axis.horizontal
+                                  ? tab.id == _second
+                                        ? secondExtent
+                                        : firstExtent
+                                  : area.maxWidth,
+                              height: split && _axis == Axis.vertical
+                                  ? tab.id == _second
+                                        ? secondExtent
+                                        : firstExtent
+                                  : area.maxHeight,
                               child: Offstage(
                                 offstage: split
                                     ? tab.id != _first && tab.id != _second
                                     : tab.id != _active,
                                 child: ExcludeFocus(
                                   excluding:
-                                      !widget.visible || tab.id != _active,
-                                  child: TerminalPanel(
-                                    key: tab.key,
-                                    session: tab.session,
-                                    autoStart: tab.start,
-                                    embedded: true,
-                                    visible:
-                                        widget.visible &&
-                                        (split
-                                            ? tab.id == _first ||
-                                                  tab.id == _second
-                                            : tab.id == _active),
-                                    active: tab.id == _active,
-                                    focusRequest: _focusRequest,
-                                    isActivePane: () =>
-                                        mounted &&
-                                        widget.visible &&
-                                        _active == tab.id,
-                                    onActivate: () => _activate(tab.id),
-                                    onWorkspaceKey: _onWorkspaceKey,
+                                      !widget.visible ||
+                                      _arranging ||
+                                      tab.id != _active,
+                                  child: IgnorePointer(
+                                    ignoring: _arranging,
+                                    child: TerminalPanel(
+                                      key: tab.key,
+                                      session: tab.session,
+                                      autoStart: tab.start,
+                                      initialPaneState: tab.paneState,
+                                      onPaneStateChanged: (state) {
+                                        if (_tabs.contains(tab)) {
+                                          tab.paneState = state;
+                                        }
+                                      },
+                                      embedded: true,
+                                      visible:
+                                          widget.visible &&
+                                          (split
+                                              ? tab.id == _first ||
+                                                    tab.id == _second
+                                              : tab.id == _active),
+                                      active: tab.id == _active && !_arranging,
+                                      focusRequest: _focusRequest,
+                                      isActivePane: () =>
+                                          mounted &&
+                                          widget.visible &&
+                                          !_arranging &&
+                                          _active == tab.id,
+                                      onActivate: () => _activate(tab.id),
+                                      onWorkspaceKey: _onWorkspaceKey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (split)
+                            Positioned(
+                              left: _axis == Axis.horizontal ? firstExtent : 0,
+                              top: _axis == Axis.vertical ? firstExtent : 0,
+                              width: _axis == Axis.horizontal
+                                  ? gap
+                                  : area.maxWidth,
+                              height: _axis == Axis.vertical
+                                  ? gap
+                                  : area.maxHeight,
+                              child: Semantics(
+                                label: context.terminalArrangementTr(
+                                  'Resize split',
+                                ),
+                                value: '${(fraction * 100).round()}%',
+                                onIncrease: () => resize(usable * 0.05),
+                                onDecrease: () => resize(-usable * 0.05),
+                                child: MouseRegion(
+                                  cursor: _axis == Axis.horizontal
+                                      ? SystemMouseCursors.resizeLeftRight
+                                      : SystemMouseCursors.resizeUpDown,
+                                  child: Tooltip(
+                                    message: context.terminalArrangementTr(
+                                      'Drag to resize. Double-click to balance.',
+                                    ),
+                                    child: GestureDetector(
+                                      key: const ValueKey(
+                                        'terminal-split-divider',
+                                      ),
+                                      behavior: HitTestBehavior.opaque,
+                                      onHorizontalDragUpdate:
+                                          _axis == Axis.horizontal
+                                          ? (details) =>
+                                                resize(details.delta.dx)
+                                          : null,
+                                      onVerticalDragUpdate:
+                                          _axis == Axis.vertical
+                                          ? (details) =>
+                                                resize(details.delta.dy)
+                                          : null,
+                                      onDoubleTap: () {
+                                        if (!_arranging) {
+                                          setState(() => _splitFraction = 0.5);
+                                        }
+                                      },
+                                      child: const SizedBox.expand(),
+                                    ),
                                   ),
                                 ),
                               ),

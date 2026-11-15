@@ -20,6 +20,7 @@ import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
 import '../models/screen_session_options.dart';
+import '../models/ssh_jump_host.dart';
 import '../models/tmux_session_options.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -37,6 +38,22 @@ typedef SshClientConnector = Future<SSHClient> Function(
   String? password,
   List<SSHIdentity>? identities,
   Uri? gateway,
+});
+
+/// Lower-level test seams retain the production route and trust checks.
+typedef SshSocketConnector = Future<SSHSocket> Function(
+  String host,
+  int port, {
+  Uri? gateway,
+});
+
+typedef SshVerifiedClientOpener = Future<SSHClient> Function(
+  SSHSocket socket, {
+  required String username,
+  String? password,
+  List<SSHIdentity>? identities,
+  required FutureOr<bool> Function(String, Uint8List) verify,
+  void Function(SSHClient)? onCreated,
 });
 
 /// Terminal output with the SSH channel's eventual process exit status.
@@ -137,12 +154,101 @@ class SshSession {
 
 class _SessionState {
   SshSession session;
-  final SSHClient client;
+  final _SshClientRoute route;
+  SSHClient get client => route.clients.last;
   SSHSession? shellSession;
   TerminalOutput? shellOutput;
   int shellGeneration = 0;
 
-  _SessionState({required this.session, required this.client});
+  _SessionState({required this.session, required this.route});
+}
+
+/// Owns each transport as soon as it exists, including clients still awaiting
+/// host-key approval or authentication. Late arrivals are closed after cancel.
+class _SshClientRoute {
+  final clients = <SSHClient>[];
+  final _sockets = <SSHClient, SSHSocket>{};
+  SSHSocket? _pendingSocket;
+  bool closed = false;
+  Future<void>? _closing;
+
+  void ownSocket(SSHSocket socket) {
+    if (closed) {
+      unawaited(_closeSocket(socket));
+    } else {
+      _pendingSocket = socket;
+    }
+  }
+
+  void ownClient(SSHClient client) {
+    final socket = _pendingSocket;
+    _pendingSocket = null; // Ownership has transferred to SSHClient.
+    if (closed) {
+      unawaited(_closeClient(client, socket));
+    } else if (!clients.contains(client)) {
+      clients.add(client);
+      if (socket != null) _sockets[client] = socket;
+    }
+  }
+
+  Future<void> close() => _closing ??= _close();
+
+  Future<void> _close() async {
+    closed = true;
+    final pending = _pendingSocket;
+    _pendingSocket = null;
+    if (pending != null) await _closeSocket(pending);
+    for (final client in clients.reversed.toList()) {
+      await _closeClient(client, _sockets[client]);
+    }
+  }
+
+  static Future<void> _closeSocket(SSHSocket socket) async {
+    // Forwarded channel.close waits for the remote peer. Initiate protocol
+    // close, then release the local channel even if that peer never replies.
+    Future<void>? closing;
+    try {
+      closing = socket.close();
+    } catch (_) {}
+    try {
+      socket.destroy();
+    } catch (_) {}
+    try {
+      await closing?.timeout(const Duration(seconds: 2));
+    } catch (_) {}
+  }
+
+  static Future<void> _closeClient(
+    SSHClient client, [
+    SSHSocket? socket,
+  ]) async {
+    Future<void>? closing;
+    try {
+      closing = client.close();
+    } catch (_) {}
+    try {
+      socket?.destroy();
+    } catch (_) {}
+    try {
+      await closing?.timeout(const Duration(seconds: 2));
+    } catch (_) {}
+  }
+}
+
+class _SshRouteTarget {
+  const _SshRouteTarget(
+    this.host,
+    this.port,
+    this.username, {
+    this.password,
+    this.identities,
+  });
+
+  final String host;
+  final int port;
+  final String username;
+  final String? password;
+  final List<SSHIdentity>? identities;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +281,9 @@ class SshTerminalService {
   );
   final SecureStorage _secure;
   final SshClientConnector? _clientConnector;
+  final SshSocketConnector? _socketConnector;
+  final SshVerifiedClientOpener _verifiedClientOpener;
+  final _pendingRoutes = <_SshClientRoute>{};
 
   /// Internal session registry.
   final Map<String, _SessionState> _sessions = {};
@@ -191,7 +300,11 @@ class SshTerminalService {
     SecureStorage? secureStorage,
     this.confirmHostKey,
     @visibleForTesting this._clientConnector,
-  }) : _secure = secureStorage ?? PlatformSecureStorage();
+    @visibleForTesting SshSocketConnector? socketConnector,
+    @visibleForTesting SshVerifiedClientOpener? verifiedClientOpener,
+  }) : _secure = secureStorage ?? PlatformSecureStorage(),
+       _socketConnector = socketConnector,
+       _verifiedClientOpener = verifiedClientOpener ?? openVerifiedSsh;
 
   // -------------------------------------------------------------------------
   // Platform guard
@@ -234,6 +347,8 @@ class SshTerminalService {
   /// used as the SSH host-key identity; [host] and [port] still identify that.
   /// [hostKeyPrompt] applies only to this connection attempt. When omitted,
   /// the current [confirmHostKey] callback is captured before connecting.
+  /// [isCurrent] lets a terminal reject its stale attempt at each route and
+  /// authentication boundary without disconnecting other terminal sessions.
   /// Throws [StateError] when the session pool is full.
   Future<SshSession> connect(
     String host,
@@ -241,14 +356,18 @@ class SshTerminalService {
     String username,
     String password, {
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) => _connect(
     host,
     port,
     username,
     password: password,
     gateway: gateway,
+    jumpHosts: jumpHosts,
     hostKeyPrompt: hostKeyPrompt,
+    isCurrent: isCurrent,
   );
 
   // -------------------------------------------------------------------------
@@ -262,6 +381,7 @@ class SshTerminalService {
   ///
   /// [gateway] is required on web and optional on native platforms.
   /// [hostKeyPrompt] overrides [confirmHostKey] for this connection attempt.
+  /// [isCurrent] is checked before every hop and after asynchronous work.
   /// Throws [StateError] when the session pool is full.
   Future<SshSession> connectWithKey(
     String host,
@@ -269,8 +389,10 @@ class SshTerminalService {
     String username,
     String privateKey, {
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     String? passphrase,
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) async {
     final keyPair = _parseKeyPair(privateKey, passphrase);
     if (keyPair == null) {
@@ -285,7 +407,9 @@ class SshTerminalService {
       username,
       identities: [keyPair],
       gateway: gateway,
+      jumpHosts: jumpHosts,
       hostKeyPrompt: hostKeyPrompt,
+      isCurrent: isCurrent,
     );
   }
 
@@ -296,41 +420,87 @@ class SshTerminalService {
     String? password,
     List<SSHIdentity>? identities,
     Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
     HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
   }) async {
     // A later attempt may have a different UI or prompt owner. Capture the
     // default now so a slow socket/handshake never consults another attempt's
     // mutable callback after an await.
     final effectiveHostKeyPrompt = hostKeyPrompt ?? confirmHostKey;
+    // Snapshot before the first await, so a mutable caller list cannot change
+    // the route or inject a different destination during host-key approval.
+    final jumps = List<SshJumpHost>.unmodifiable(jumpHosts);
+    SshJumpHost.validateRoute(
+      host: host,
+      port: port,
+      username: username,
+      jumpHosts: jumps,
+    );
+    final targets = <_SshRouteTarget>[
+      for (final jump in jumps)
+        _SshRouteTarget(
+          jump.host,
+          jump.port,
+          jump.username,
+          password: jump.authentication == SshTerminalAuthentication.password
+              ? jump.password
+              : null,
+          identities:
+              jump.authentication == SshTerminalAuthentication.privateKey
+              ? [_requireKeyPair(jump.privateKey, jump.passphrase)]
+              : null,
+        ),
+      _SshRouteTarget(
+        host,
+        port,
+        username,
+        password: password,
+        identities: identities,
+      ),
+    ];
     _checkPlatform(gateway);
     if (_disposed) throw StateError('SSH terminal service is disposed');
+    if (isCurrent != null && !isCurrent()) {
+      throw StateError('SSH connection was cancelled');
+    }
     _checkPoolCapacity();
     _pendingConnections++;
     final generation = _connectionGeneration;
-    SSHClient? client;
+    final route = _SshClientRoute();
+    _pendingRoutes.add(route);
+    bool current() =>
+        !_disposed &&
+        generation == _connectionGeneration &&
+        !route.closed &&
+        (isCurrent?.call() ?? true);
     try {
       final connector = _clientConnector;
-      client = connector == null
-          ? await _openClient(
-              host,
-              port,
-              username: username,
-              password: password,
-              identities: identities,
-              gateway: gateway,
-              hostKeyPrompt: effectiveHostKeyPrompt,
-            )
-          : await connector(
-              host,
-              port,
-              username: username,
-              password: password,
-              identities: identities,
-              gateway: gateway,
-            );
+      late final SSHClient client;
+      if (connector != null && jumps.isEmpty) {
+        // Keep the original direct-client seam compatible with existing tests.
+        client = await connector(
+          host,
+          port,
+          username: username,
+          password: password,
+          identities: identities,
+          gateway: gateway,
+        );
+        route.ownClient(client);
+      } else {
+        client = await _openRoute(
+          targets,
+          route,
+          gateway: gateway,
+          hostKeyPrompt: effectiveHostKeyPrompt,
+          current: current,
+        );
+      }
+      if (!current()) throw StateError('SSH connection was cancelled');
       await client.authenticated;
       // A slow connection must not resurrect a session after sign-out/dispose.
-      if (_disposed || generation != _connectionGeneration) {
+      if (!current()) {
         throw StateError('SSH connection was cancelled');
       }
       if (client.isClosed) throw StateError('SSH connection closed');
@@ -345,7 +515,7 @@ class SshTerminalService {
         startedAt: now,
         lastActivityAt: now,
       );
-      final state = _SessionState(session: session, client: client);
+      final state = _SessionState(session: session, route: route);
       _sessions[session.id] = state;
       _idleTimer ??= Timer.periodic(
         const Duration(minutes: 1),
@@ -363,15 +533,15 @@ class SshTerminalService {
       _log.info('Session ${session.id} established to $host:$port');
       return session;
     } catch (error) {
-      if (client != null) {
-        try {
-          await client.close();
-        } catch (_) {}
-      }
+      await route.close();
       _log.error('SSH connect failed', error);
       // Keep cancellation as a StateError for the session lifecycle. Transport
       // failures carry stable codes so the UI can translate them at display time.
-      if (_disposed || generation != _connectionGeneration) rethrow;
+      if (_disposed ||
+          generation != _connectionGeneration ||
+          !(isCurrent?.call() ?? true)) {
+        throw StateError('SSH connection was cancelled');
+      }
       throw TerminalMountException(
         identities == null
             ? TerminalMountCode.sshConnection
@@ -380,37 +550,84 @@ class SshTerminalService {
         {'error': error},
       );
     } finally {
+      _pendingRoutes.remove(route);
       _pendingConnections--;
     }
   }
 
-  Future<SSHClient> _openClient(
-    String host,
-    int port, {
-    required String username,
-    String? password,
-    List<SSHIdentity>? identities,
+  Future<SSHClient> _openRoute(
+    List<_SshRouteTarget> targets,
+    _SshClientRoute route, {
     Uri? gateway,
     HostKeyPrompt? hostKeyPrompt,
+    required bool Function() current,
   }) async {
-    final socket = gateway == null
-        ? await SSHSocket.connect(
-            host,
-            port,
-            timeout: const Duration(seconds: 15),
-          )
-        : await openSshGateway(gateway);
-    return openVerifiedSsh(
-      socket,
-      username: username,
-      password: password,
-      identities: identities,
-      verify: (_, fingerprint) => _knownHosts.verify(
-        SshKnownHosts.endpoint(host, port),
-        utf8.decode(fingerprint),
-        prompt: hostKeyPrompt,
-      ),
-    );
+    void ensureCurrent() {
+      if (!current()) throw StateError('SSH connection was cancelled');
+    }
+
+    SSHClient? previous;
+    for (final target in targets) {
+      ensureCurrent();
+      final SSHSocket socket;
+      if (previous == null) {
+        final connector = _socketConnector;
+        socket = connector != null
+            ? await connector(target.host, target.port, gateway: gateway)
+            : gateway == null
+            ? await SSHSocket.connect(
+                target.host,
+                target.port,
+                timeout: const Duration(seconds: 15),
+              )
+            : await openSshGateway(gateway);
+      } else {
+        final forwarded = previous.forwardLocal(target.host, target.port);
+        try {
+          socket = await forwarded.timeout(const Duration(seconds: 15));
+        } catch (_) {
+          // A channel can arrive after the timeout. It still belongs to this
+          // attempt and must not keep a server-side forwarding channel alive.
+          unawaited(
+            forwarded.then<void>(
+              (late) => _SshClientRoute._closeSocket(late),
+              onError: (Object _, StackTrace __) {},
+            ),
+          );
+          rethrow;
+        }
+      }
+      route.ownSocket(socket);
+      ensureCurrent();
+      final client = await _verifiedClientOpener(
+        socket,
+        username: target.username,
+        password: target.password,
+        identities: target.identities,
+        onCreated: route.ownClient,
+        verify: (_, fingerprint) async {
+          ensureCurrent();
+          final accepted = await _knownHosts.verify(
+            SshKnownHosts.endpoint(target.host, target.port),
+            utf8.decode(fingerprint),
+            prompt: hostKeyPrompt == null
+                ? null
+                : (endpoint, key) async {
+                    if (!current()) return false;
+                    final accepted = await hostKeyPrompt(endpoint, key);
+                    return current() && accepted;
+                  },
+          );
+          ensureCurrent();
+          return accepted;
+        },
+      );
+      route.ownClient(client);
+      ensureCurrent();
+      if (client.isClosed) throw StateError('SSH connection closed');
+      previous = client;
+    }
+    return previous!;
   }
 
   // -------------------------------------------------------------------------
@@ -429,6 +646,9 @@ class SshTerminalService {
   /// Closes all active sessions.
   Future<void> disconnectAll() async {
     _connectionGeneration++;
+    for (final route in _pendingRoutes.toList()) {
+      await route.close();
+    }
     final ids = List<String>.from(_sessions.keys);
     for (final id in ids) {
       await disconnect(id);
@@ -695,9 +915,7 @@ class SshTerminalService {
     try {
       await state.shellOutput?.dispose();
     } catch (_) {}
-    try {
-      await state.client.close();
-    } catch (_) {}
+    await state.route.close();
   }
 
   void _sweepIdle() {
@@ -725,6 +943,17 @@ class SshTerminalService {
       _log.error('Failed to parse or decrypt SSH private key');
       return null;
     }
+  }
+
+  SSHKeyPair _requireKeyPair(String pemKey, String? passphrase) {
+    final key = _parseKeyPair(pemKey, passphrase);
+    if (key == null) {
+      throw const TerminalMountFormatException(
+        TerminalMountCode.sshInvalidKey,
+        'Invalid SSH private key',
+      );
+    }
+    return key;
   }
 
   String _generateId() =>
