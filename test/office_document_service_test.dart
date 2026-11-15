@@ -824,6 +824,27 @@ void imageTests() {
     expect(shape.image!.length, _png.length);
   });
 
+  test('ODT text boxes keep their visible labels', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:text>
+    <text:p>Before <draw:frame draw:name="Label">
+      <draw:text-box><text:p>Code für Sender und Empfänger</text:p></draw:text-box>
+    </draw:frame> after</text:p>
+  </office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({'content.xml': utf8.encode(xml)}),
+      'label.odt',
+    );
+    expect(doc.markdown, contains('Code für Sender und Empfänger'));
+    expect(doc.plainText, contains('Code für Sender und Empfänger'));
+    expect(doc.markdown, contains('Before'));
+    expect(doc.markdown, contains('after'));
+  });
+
   test('ODT embeds a bounded picture as a data image', () async {
     const xml =
         '''

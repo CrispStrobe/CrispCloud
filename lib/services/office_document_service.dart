@@ -1715,6 +1715,14 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
             // Oversized or unsupported media stays a bounded textual marker.
             buffer.write('*[Image: ${name ?? href.split('/').last}]*');
           }
+          final textBox = child.findAllElements('draw:text-box').firstOrNull;
+          if (textBox != null) {
+            final text = inline(textBox).trim();
+            if (text.isNotEmpty) {
+              if (buffer.isNotEmpty) buffer.write(' ');
+              buffer.write(text);
+            }
+          }
         case 'bookmark':
         case 'bookmark-start':
         case 'bookmark-end':
