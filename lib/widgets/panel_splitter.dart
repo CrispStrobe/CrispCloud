@@ -48,8 +48,12 @@ class _PanelSplitterState extends State<PanelSplitter> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isHorizontal = widget.axis == Axis.horizontal;
-        final totalSize = isHorizontal ? constraints.maxWidth : constraints.maxHeight;
-        final thirdSize = widget.third != null ? widget.thirdWidth + 1 : 0; // +1 for divider
+        final totalSize = isHorizontal
+            ? constraints.maxWidth
+            : constraints.maxHeight;
+        final thirdSize = widget.third != null
+            ? widget.thirdWidth + 1
+            : 0; // +1 for divider
         final availableSize = totalSize - thirdSize - _handleWidth;
 
         final firstSize = (availableSize * _ratio).clamp(
@@ -70,11 +74,18 @@ class _PanelSplitterState extends State<PanelSplitter> {
                 ? SystemMouseCursors.resizeColumn
                 : SystemMouseCursors.resizeRow,
             child: GestureDetector(
+              key: const ValueKey('panel-splitter-handle'),
+              behavior: HitTestBehavior.opaque,
               onPanUpdate: (details) {
                 setState(() {
-                  final delta = isHorizontal ? details.delta.dx : details.delta.dy;
+                  final delta = isHorizontal
+                      ? details.delta.dx
+                      : details.delta.dy;
                   final newFirst = firstSize + delta;
-                  _ratio = (newFirst / availableSize).clamp(widget.minRatio, widget.maxRatio);
+                  _ratio = (newFirst / availableSize).clamp(
+                    widget.minRatio,
+                    widget.maxRatio,
+                  );
                   widget.onRatioChanged?.call(_ratio);
                 });
               },
@@ -88,13 +99,13 @@ class _PanelSplitterState extends State<PanelSplitter> {
               child: Container(
                 width: isHorizontal ? _handleWidth : null,
                 height: isHorizontal ? null : _handleWidth,
-                color: Theme.of(context).dividerColor,
+                color: Colors.transparent,
                 child: Center(
                   child: Container(
-                    width: isHorizontal ? 2 : 24,
-                    height: isHorizontal ? 24 : 2,
+                    width: isHorizontal ? 1 : double.infinity,
+                    height: isHorizontal ? double.infinity : 1,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                      color: Theme.of(context).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),

@@ -24,9 +24,9 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byKey(const ValueKey('new-document-kind')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Spreadsheet (.xlsx)').last);
+      await tester.tap(
+        find.byKey(const ValueKey('new-document-kind-spreadsheet')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('new-document-create')));
       await tester.pumpAndSettle();
@@ -53,4 +53,39 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('new-document-convert')));
     expect(converted, isTrue);
   });
+  testWidgets(
+    'format tiles stay reachable on a narrow screen with large text',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: NewDocumentDialog(
+              directory: '/tmp',
+              onCreate: (_, __) async => throw StateError('not creating'),
+            ),
+          ),
+        ),
+      );
+      for (final kind in NewDocumentKind.values) {
+        final tile = find.byKey(ValueKey('new-document-kind-${kind.name}'));
+        await tester.ensureVisible(tile);
+        await tester.tap(tile);
+        await tester.pump();
+        final input = tester.widget<TextField>(
+          find.byKey(const ValueKey('new-document-name')),
+        );
+        expect(input.controller!.text, endsWith('.${kind.extension}'));
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
 }

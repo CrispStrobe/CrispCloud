@@ -214,6 +214,28 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('path editing uses a full-width row below navigation', (
+    tester,
+  ) async {
+    await mount(tester);
+    await pathMenu(tester);
+    await choosePathAction(tester, 'edit');
+    final field = tester.getRect(editor());
+    final marker = tester.getRect(
+      find.byKey(const ValueKey('panel-activity-marker-remote')),
+    );
+    expect(field.top, greaterThan(marker.bottom));
+    expect(
+      field.width,
+      greaterThan(tester.getSize(find.byType(PanelHeader)).width - 65),
+    );
+    expect(crumb('/account/projects/deep'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(editor(), findsNothing);
+    expect(panel.currentPath, '/account/projects/deep');
+  });
+
   testWidgets(
     'path context menus copy the full current path from either pane',
     (tester) async {

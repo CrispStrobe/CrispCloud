@@ -50,9 +50,7 @@ void main() {
         );
         await tester.tap(find.text('File New'));
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('new-document-kind')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Word document (.docx)').last);
+        await tester.tap(find.byKey(const ValueKey('new-document-kind-word')));
         await tester.pumpAndSettle();
         await tester.enterText(
           find.byKey(const ValueKey('new-document-name')),
