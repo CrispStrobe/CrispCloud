@@ -170,6 +170,7 @@ class SmlConditionalRule {
     this.formula = '',
     this.fillRgb = 'FFF2CC',
     this.fontRgb = '',
+    this.dxfId,
   });
 
   /// range API.
@@ -186,6 +187,9 @@ class SmlConditionalRule {
 
   /// fontRgb API.
   String fontRgb;
+
+  /// Generated differential-style id, assigned during serialization.
+  int? dxfId;
 
   /// matches API.
   bool matches(SmlCell cell, SmlWorksheet sheet) {
