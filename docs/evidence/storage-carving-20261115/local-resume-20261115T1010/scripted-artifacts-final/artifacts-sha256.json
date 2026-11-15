@@ -1,0 +1,74 @@
+{
+  "controls.stderr.log": {
+    "sha256": "0928382b62a677ad39efaa0dcdef3da695de7cb88bd38d241d65c75d275dac2b",
+    "size": 2404
+  },
+  "controls.stdout.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "oracle.stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "oracle.stdout.log": {
+    "sha256": "0aabba4868239dff77e796733b9b8d7b6cb40c716400deeb32e7fed42eea4a98",
+    "size": 329
+  },
+  "produced/oracle-report.json": {
+    "sha256": "b4940b34cbe451391e423bcf4b8d3613e868adf7b187e36d299246fcc65d96da",
+    "size": 38
+  },
+  "produced/sheet/edited.xlsx": {
+    "sha256": "a2d5aeaad401befc17c6770442c48034f547f192917f3bdb9179b7d36f5db957",
+    "size": 12102
+  },
+  "produced/sheet/roundtrip-1.xlsx": {
+    "sha256": "e50c1845198255075553fe49221cb50f0783feb57255afab780e9ebe07841d83",
+    "size": 12100
+  },
+  "produced/sheet/roundtrip-2.xlsx": {
+    "sha256": "e7f0b1831af803fc67a6824b20afed277cdc0d043a7a7df13a97380085e3caf0",
+    "size": 12100
+  },
+  "produced/sheet/roundtrip-3.xlsx": {
+    "sha256": "ed2fa940bbc642d877619f86201e0173eac764c306b30e66795177c30bd891ee",
+    "size": 12100
+  },
+  "produced/slide/edited.pptx": {
+    "sha256": "92606616511603b1c6c1b7956516b2d2c667fd9ed3f80c5387ff52a7f61d4ead",
+    "size": 55648
+  },
+  "produced/slide/roundtrip-1.pptx": {
+    "sha256": "531aa1ea409381b1a4832767eb11b369b902c6654ab6ca7d36f35ad70b2a2dca",
+    "size": 55648
+  },
+  "produced/slide/roundtrip-2.pptx": {
+    "sha256": "d6b43fd8280866dc18a73c58f2fbd02f9f1b36da692d44b62b0e49c474c62d4b",
+    "size": 55648
+  },
+  "produced/slide/roundtrip-3.pptx": {
+    "sha256": "d18ffbcd64cbe7acf96b40a3641b8f6a86b9c1a02e1335093274e0a2b02cb232",
+    "size": 55648
+  },
+  "produced/word/edited.docx": {
+    "sha256": "aef39f77e45b59c00030cafa31e348996d69949e6988c94f5495d93cbab73000",
+    "size": 9233
+  },
+  "produced/word/roundtrip-1.docx": {
+    "sha256": "160e80e0a79cc393f9dd931beb2f7d3889d72f83632747537a6c786e90e2b424",
+    "size": 9303
+  },
+  "produced/word/roundtrip-2.docx": {
+    "sha256": "fb08832ba9a4df9368b6bdf9bf4d0d0097d8e6ba4ecf135d0fee5993bfccda77",
+    "size": 9303
+  },
+  "produced/word/roundtrip-3.docx": {
+    "sha256": "f498a99ebe03be3ec2295edf6a823305f8d11c80e3dc48bcb99e495f0053755a",
+    "size": 9303
+  },
+  "summary.json": {
+    "sha256": "2b18a2bc07a1ec4465aa3a2536edaa537de9f98631532984ec6d660a7c504eda",
+    "size": 4533
+  }
+}

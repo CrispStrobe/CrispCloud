@@ -1,0 +1,57 @@
+{
+  "after_entries_sha256": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+  "after_git": {
+    "head": "96323fa3bcfca124b0577fd5632dc297f4fd34ba",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/artifacts-sha256.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/oracle-report.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/sheet/edited.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/sheet/roundtrip-1.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/sheet/roundtrip-2.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/sheet/roundtrip-3.xlsx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/slide/edited.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/slide/roundtrip-1.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/slide/roundtrip-2.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/slide/roundtrip-3.pptx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/word/edited.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/word/roundtrip-1.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/word/roundtrip-2.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/produced/word/roundtrip-3.docx\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final/summary.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-oracle-final/command.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-oracle-final/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-oracle-final/metadata.json\n",
+    "tree": "738f833f7fc77fd23d6ac48d6ef0f83079a2a8f5",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/run_scripted_oracle.py": "1b2f0e185eba8150f01572003d7db77fd6dd15a1d8b26b15be89889590634367",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/aed049b7e8bd/toolchains/env.sh": "550dad0633ac52e9cc4694607a5b5e13aae80719fd9b67f4eca97df6696c45b8"
+  },
+  "before_entries_sha256": "8c757699182b8d8a9a5fbfe152bbf006528949b15063457f59da673b562ea64f",
+  "before_git": {
+    "head": "96323fa3bcfca124b0577fd5632dc297f4fd34ba",
+    "source_changes": [],
+    "status": "",
+    "tree": "738f833f7fc77fd23d6ac48d6ef0f83079a2a8f5",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/run_scripted_oracle.py": "1b2f0e185eba8150f01572003d7db77fd6dd15a1d8b26b15be89889590634367",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7",
+    "/workspace/scratch/aed049b7e8bd/toolchains/env.sh": "550dad0633ac52e9cc4694607a5b5e13aae80719fd9b67f4eca97df6696c45b8"
+  },
+  "command": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/run_scripted_oracle.py",
+    "--repo",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud",
+    "--output",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/scripted-artifacts-final"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "elapsed_seconds": 0.6601770130000659,
+  "finished_at": "2026-11-15T10:06:44.792069+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8492,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T10:06:44.130340+00:00",
+  "suite_count": null
+}

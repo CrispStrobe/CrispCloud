@@ -1,0 +1,138 @@
+{
+  "success": true,
+  "commands": [
+    {
+      "name": "oracle",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "tool/fidelity/scripted_oracle.py"
+      ],
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_engine",
+      "returncode": 0,
+      "tests": null
+    },
+    {
+      "name": "controls",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool/fidelity",
+        "-p",
+        "test_scripted_oracle.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_engine",
+      "returncode": 0,
+      "tests": 17
+    }
+  ],
+  "before": {
+    "sheet/edited.xlsx": {
+      "sha256": "a2d5aeaad401befc17c6770442c48034f547f192917f3bdb9179b7d36f5db957",
+      "size": 12102
+    },
+    "sheet/roundtrip-1.xlsx": {
+      "sha256": "e50c1845198255075553fe49221cb50f0783feb57255afab780e9ebe07841d83",
+      "size": 12100
+    },
+    "sheet/roundtrip-2.xlsx": {
+      "sha256": "e7f0b1831af803fc67a6824b20afed277cdc0d043a7a7df13a97380085e3caf0",
+      "size": 12100
+    },
+    "sheet/roundtrip-3.xlsx": {
+      "sha256": "ed2fa940bbc642d877619f86201e0173eac764c306b30e66795177c30bd891ee",
+      "size": 12100
+    },
+    "slide/edited.pptx": {
+      "sha256": "92606616511603b1c6c1b7956516b2d2c667fd9ed3f80c5387ff52a7f61d4ead",
+      "size": 55648
+    },
+    "slide/roundtrip-1.pptx": {
+      "sha256": "531aa1ea409381b1a4832767eb11b369b902c6654ab6ca7d36f35ad70b2a2dca",
+      "size": 55648
+    },
+    "slide/roundtrip-2.pptx": {
+      "sha256": "d6b43fd8280866dc18a73c58f2fbd02f9f1b36da692d44b62b0e49c474c62d4b",
+      "size": 55648
+    },
+    "slide/roundtrip-3.pptx": {
+      "sha256": "d18ffbcd64cbe7acf96b40a3641b8f6a86b9c1a02e1335093274e0a2b02cb232",
+      "size": 55648
+    },
+    "word/edited.docx": {
+      "sha256": "aef39f77e45b59c00030cafa31e348996d69949e6988c94f5495d93cbab73000",
+      "size": 9233
+    },
+    "word/roundtrip-1.docx": {
+      "sha256": "160e80e0a79cc393f9dd931beb2f7d3889d72f83632747537a6c786e90e2b424",
+      "size": 9303
+    },
+    "word/roundtrip-2.docx": {
+      "sha256": "fb08832ba9a4df9368b6bdf9bf4d0d0097d8e6ba4ecf135d0fee5993bfccda77",
+      "size": 9303
+    },
+    "word/roundtrip-3.docx": {
+      "sha256": "f498a99ebe03be3ec2295edf6a823305f8d11c80e3dc48bcb99e495f0053755a",
+      "size": 9303
+    }
+  },
+  "after": {
+    "sheet/edited.xlsx": {
+      "sha256": "a2d5aeaad401befc17c6770442c48034f547f192917f3bdb9179b7d36f5db957",
+      "size": 12102
+    },
+    "sheet/roundtrip-1.xlsx": {
+      "sha256": "e50c1845198255075553fe49221cb50f0783feb57255afab780e9ebe07841d83",
+      "size": 12100
+    },
+    "sheet/roundtrip-2.xlsx": {
+      "sha256": "e7f0b1831af803fc67a6824b20afed277cdc0d043a7a7df13a97380085e3caf0",
+      "size": 12100
+    },
+    "sheet/roundtrip-3.xlsx": {
+      "sha256": "ed2fa940bbc642d877619f86201e0173eac764c306b30e66795177c30bd891ee",
+      "size": 12100
+    },
+    "slide/edited.pptx": {
+      "sha256": "92606616511603b1c6c1b7956516b2d2c667fd9ed3f80c5387ff52a7f61d4ead",
+      "size": 55648
+    },
+    "slide/roundtrip-1.pptx": {
+      "sha256": "531aa1ea409381b1a4832767eb11b369b902c6654ab6ca7d36f35ad70b2a2dca",
+      "size": 55648
+    },
+    "slide/roundtrip-2.pptx": {
+      "sha256": "d6b43fd8280866dc18a73c58f2fbd02f9f1b36da692d44b62b0e49c474c62d4b",
+      "size": 55648
+    },
+    "slide/roundtrip-3.pptx": {
+      "sha256": "d18ffbcd64cbe7acf96b40a3641b8f6a86b9c1a02e1335093274e0a2b02cb232",
+      "size": 55648
+    },
+    "word/edited.docx": {
+      "sha256": "aef39f77e45b59c00030cafa31e348996d69949e6988c94f5495d93cbab73000",
+      "size": 9233
+    },
+    "word/roundtrip-1.docx": {
+      "sha256": "160e80e0a79cc393f9dd931beb2f7d3889d72f83632747537a6c786e90e2b424",
+      "size": 9303
+    },
+    "word/roundtrip-2.docx": {
+      "sha256": "fb08832ba9a4df9368b6bdf9bf4d0d0097d8e6ba4ecf135d0fee5993bfccda77",
+      "size": 9303
+    },
+    "word/roundtrip-3.docx": {
+      "sha256": "f498a99ebe03be3ec2295edf6a823305f8d11c80e3dc48bcb99e495f0053755a",
+      "size": 9303
+    }
+  },
+  "produced_outputs_unchanged": true,
+  "oracle": {
+    "exports": 12,
+    "failures": []
+  },
+  "scope": "Twelve genuine engine-produced DOCX/XLSX/PPTX edits and roundtrips against authored semantic expectations; 17 positive/negative oracle controls. Not external application rendering or broad schema conformance."
+}
