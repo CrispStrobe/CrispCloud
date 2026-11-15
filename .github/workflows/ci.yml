@@ -127,7 +127,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev liblz4-1
 
       - name: Verify CI SQLite wrapper restoration
-        run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
+        run: |
+          python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
+          python3 -m unittest discover -s tool -p test_with_ci_apple_sqlite.py
 
       - name: Install dependencies
         run: flutter pub get
@@ -308,7 +310,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev liblz4-1
 
       - name: Verify CI SQLite wrapper restoration
-        run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
+        run: |
+          python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
+          python3 -m unittest discover -s tool -p test_with_ci_apple_sqlite.py
 
       - run: flutter pub get
 
