@@ -1,0 +1,65 @@
+{
+  "done_events": [
+    {
+      "success": false,
+      "time": 2835,
+      "type": "done"
+    }
+  ],
+  "done_success": false,
+  "errors": [
+    {
+      "error": "Failed to load \"test/ods_sheet_reader_test.dart\":\ntest/ods_sheet_reader_test.dart:969:8: Error: '_xmlAttribute' is already declared in this scope.\nString _xmlAttribute(String value) => value\n       ^^^^^^^^^^^^^\ntest/ods_sheet_reader_test.dart:46:8: Context: Previous declaration of '_xmlAttribute'.\nString _xmlAttribute(String value) => value\n       ^^^^^^^^^^^^^",
+      "isFailure": false,
+      "stackTrace": "package:test_core/src/runner/vm/platform.dart 605:7   VMPlatform._compileToKernel\n===== asynchronous gap ===========================\npackage:test_core/src/runner/vm/platform.dart 567:9   VMPlatform._spawnIsolate\n===== asynchronous gap ===========================\npackage:test_core/src/runner/vm/platform.dart 173:17  VMPlatform._loadSuite\n===== asynchronous gap ===========================\npackage:test_core/src/runner/vm/platform.dart 81:15   VMPlatform.load\n===== asynchronous gap ===========================\npackage:test_core/src/runner/loader.dart 313:25       Loader.loadFile.<fn>\n===== asynchronous gap ===========================\npackage:test_core/src/runner/load_suite.dart 112:21   new LoadSuite.<fn>.<fn>\n",
+      "testID": 1,
+      "time": 2831,
+      "type": "error"
+    }
+  ],
+  "hidden_test_done": 0,
+  "missing_suites": [
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "non_json_lines": 0,
+  "non_object_json_lines": 0,
+  "nonpassing_requested_suites": [
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "qualification_success": false,
+  "suites": [
+    {
+      "errors": 0,
+      "failed": 0,
+      "observed": false,
+      "other_results": 0,
+      "passed": 0,
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "result": "not_observed",
+      "skipped": 0,
+      "tests": 0
+    },
+    {
+      "errors": 1,
+      "failed": 1,
+      "observed": true,
+      "other_results": 0,
+      "passed": 0,
+      "path": "test/ods_sheet_reader_test.dart",
+      "result": "failed",
+      "skipped": 0,
+      "tests": 1
+    }
+  ],
+  "totals": {
+    "errors": 1,
+    "failed": 1,
+    "other_results": 0,
+    "passed": 0,
+    "skipped": 0,
+    "tests": 1
+  },
+  "unexpected_suites": [
+    "test/ods_sheet_reader_test.dart"
+  ]
+}
