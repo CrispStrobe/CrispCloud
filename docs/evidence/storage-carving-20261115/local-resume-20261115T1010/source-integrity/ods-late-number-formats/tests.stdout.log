@@ -1,0 +1,87 @@
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.1","pid":11,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"test/sheet_time_number_format_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading test/sheet_time_number_format_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"suite":{"id":2,"platform":"vm","path":"test/sheet_formula_test.dart"},"type":"suite","time":6}
+{"test":{"id":3,"name":"loading test/sheet_formula_test.dart","suiteID":2,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":7}
+{"suite":{"id":4,"platform":"vm","path":"test/sheet_authored_number_format_test.dart"},"type":"suite","time":8}
+{"test":{"id":5,"name":"loading test/sheet_authored_number_format_test.dart","suiteID":4,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":9}
+{"count":3,"time":9,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":2195}
+{"group":{"id":6,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":8,"line":null,"column":null,"url":null},"type":"group","time":2197}
+{"test":{"id":7,"name":"date formats accept uppercase tokens and preserve escaped literals","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":8,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2197}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2221}
+{"test":{"id":8,"name":"clock formats retain hours, minutes, seconds and AM/PM","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":17,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2222}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2224}
+{"test":{"id":9,"name":"minutes before seconds do not use the calendar month","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":25,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2225}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2226}
+{"test":{"id":10,"name":"date tokens reset minute context after a time","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":31,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2226}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2227}
+{"test":{"id":11,"name":"quoted time tokens cannot change minute or elapsed context","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":46,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2228}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2230}
+{"test":{"id":12,"name":"elapsed hours, minutes and seconds retain totals beyond one day","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":55,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2231}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2232}
+{"test":{"id":13,"name":"standalone elapsed tokens support zero and padded uppercase units","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":64,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2232}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2234}
+{"test":{"id":14,"name":"negative elapsed sections retain the sign and positive remainders","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":73,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_time_number_format_test.dart"},"type":"testStart","time":2235}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2236}
+{"testID":3,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":2381}
+{"group":{"id":15,"suiteID":2,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":26,"line":null,"column":null,"url":null},"type":"group","time":2382}
+{"test":{"id":16,"name":"evaluates arithmetic, logic, lookup, and text functions","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":5,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2382}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2428}
+{"test":{"id":17,"name":"detects circular references and recalculates a workbook","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":40,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2429}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2438}
+{"test":{"id":18,"name":"merge and center keeps the origin and clears the rest","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":56,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2438}
+{"testID":18,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2442}
+{"test":{"id":19,"name":"parses solid fills and paints them as RGB on the cell","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":73,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2442}
+{"testID":19,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2477}
+{"test":{"id":20,"name":"round-trips merged cells and center alignment","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":90,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2478}
+{"testID":5,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":2485}
+{"group":{"id":21,"suiteID":4,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":null,"column":null,"url":null},"type":"group","time":2486}
+{"test":{"id":22,"name":"an authored custom number format is written and reloads","suiteID":4,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":10,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_authored_number_format_test.dart"},"type":"testStart","time":2489}
+{"testID":20,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2560}
+{"test":{"id":23,"name":"round-trips cell fill and font colors","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":113,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2561}
+{"testID":23,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2581}
+{"test":{"id":24,"name":"insert and delete rows shift merged ranges","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":130,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2583}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2593}
+{"test":{"id":25,"name":"round-trips frozen panes","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":141,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2593}
+{"testID":25,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2607}
+{"test":{"id":26,"name":"round-trips sheetView rightToLeft","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":159,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2608}
+{"testID":22,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2619}
+{"test":{"id":27,"name":"authored formats merge with a native numFmts collection","suiteID":4,"groupIDs":[21],"metadata":{"skip":false,"skipReason":null},"line":46,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_authored_number_format_test.dart"},"type":"testStart","time":2620}
+{"testID":26,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2633}
+{"test":{"id":28,"name":"round-trips a multi-sheet workbook","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":174,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2634}
+{"testID":28,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2650}
+{"test":{"id":29,"name":"parses quoted and unicode sheet names","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":191,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2651}
+{"testID":29,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2654}
+{"test":{"id":30,"name":"applyInput caches the computed value and recalculate updates dependents","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":209,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2654}
+{"testID":30,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2656}
+{"test":{"id":31,"name":"scans formula references with source offsets","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":228,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2656}
+{"testID":31,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2659}
+{"test":{"id":32,"name":"function guide searches names and ignores cell refs","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":261,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2659}
+{"testID":32,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2663}
+{"test":{"id":33,"name":"formats numbers via styles.xml codes","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":271,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2663}
+{"testID":33,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2668}
+{"test":{"id":34,"name":"swaps Excel theme lt/dk indices when resolving colors","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":294,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2668}
+{"testID":34,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2669}
+{"test":{"id":35,"name":"column and row metrics stay inside Excel limits","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":320,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2669}
+{"testID":35,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2671}
+{"test":{"id":36,"name":"reads Gantt-like builder fills, fonts, merges and freeze","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":338,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2671}
+{"testID":36,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2681}
+{"test":{"id":37,"name":"round-trips custom column widths and row heights","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":392,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2681}
+{"testID":37,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2688}
+{"test":{"id":38,"name":"FILTER UNIQUE SORT and LET evaluate","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":411,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2688}
+{"testID":38,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2691}
+{"test":{"id":39,"name":"sorts filters and names a worksheet range","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":431,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2691}
+{"testID":27,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2696}
+{"testID":39,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2699}
+{"test":{"id":40,"name":"resolves names and high-use formulas including SEQUENCE spill","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":460,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2700}
+{"testID":40,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2702}
+{"test":{"id":41,"name":"persists validation comments tables and hides filtered rows","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":489,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2702}
+{"testID":41,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2706}
+{"test":{"id":42,"name":"evaluates a pivot table","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":531,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2707}
+{"testID":42,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2709}
+{"test":{"id":43,"name":"honest formulas structured refs fill and filter hide","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":554,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2709}
+{"testID":43,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2713}
+{"test":{"id":44,"name":"evaluates hyperlink address cell info fixed and dollar","suiteID":2,"groupIDs":[15],"metadata":{"skip":false,"skipReason":null},"line":594,"column":3,"url":"file:///workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine/test/sheet_formula_test.dart"},"type":"testStart","time":2713}
+{"testID":44,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2714}
+{"success":true,"type":"done","time":2717}
