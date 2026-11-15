@@ -7,8 +7,43 @@ import 'package:pdf_document/pdf_document.dart' as pdf;
 import 'package:quds_office_editor/quds_office_editor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/legacy_word_recovery_fixture.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  for (final recovery in {
+    'Word 6/95': (() => word6RecoveryFixture(), 'Legacy body text'),
+    'damaged compound': (damagedWordRecoveryFixture, 'Recovered body text'),
+    'unsupported structure': (
+      unsupportedStructureRecoveryFixture,
+      'Bounded FIB',
+    ),
+  }.entries) {
+    test('${recovery.key} conversion discloses text-only recovery', () async {
+      final source = recovery.value.$1();
+      final original = Uint8List.fromList(source);
+      final result = await convertDocument(
+        source,
+        sourceName: 'recovery.doc',
+        extension: 'docx',
+      );
+      expect(
+        result.notices.join(' '),
+        contains('Only the main body text could be recovered'),
+      );
+      expect(result.notices.join(' '), contains('are omitted from this copy'));
+      final controller = WordEditorController.fromBytes(result.bytes);
+      try {
+        expect(
+          controller.document.paragraphs.map((p) => p.text).join('\n'),
+          contains(recovery.value.$2),
+        );
+      } finally {
+        controller.dispose();
+      }
+      expect(source, orderedEquals(original));
+    });
+  }
   test(
     'PDF conversion is detected by content and scan limitations are retained',
     () async {

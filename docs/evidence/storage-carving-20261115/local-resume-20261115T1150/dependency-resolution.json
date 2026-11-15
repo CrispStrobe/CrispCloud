@@ -1,0 +1,303 @@
+{
+  "archive": "dependency-resolution.tar.gz",
+  "sha256": "b1e66f9e2f8f291b9cfcbf44a666cface2abd4a14a11ce83fdba1f4387b681ad",
+  "bytes": 93800,
+  "files": {
+    "README.md": {
+      "sha256": "5e60f24ed180567a39c3c8d5b9f05e4a27c9be981e67d4cd802c007650d1a034",
+      "bytes": 1577
+    },
+    "archive-cleanup.json": {
+      "sha256": "303afdfe995227a1eed4c02ba724b08f62a9ae3404a50866dc4a30e2c5b3f807",
+      "bytes": 1988
+    },
+    "artifacts-sha256.json": {
+      "sha256": "2bf148c07a145eba14d35a5bc7083e6ec877a73c8090e4a75f3fcc9c9618812f",
+      "bytes": 11188
+    },
+    "cargo-prefetch/after/Cargo.lock.gz": {
+      "sha256": "d33215487220710820ff9a6260fe0ca694cec4d1b522215f61387f1939be344d",
+      "bytes": 3681
+    },
+    "cargo-prefetch/after/Cargo.toml.gz": {
+      "sha256": "9827aafe39f411c3d365e0e11e00a48d6f7d1248af65f0db3ce2b5a8a7729a3e",
+      "bytes": 236
+    },
+    "cargo-prefetch/after/vendor/crispcat-format/Cargo.toml.gz": {
+      "sha256": "9d1b273698f32f6594f7e8b974d73f31c3616f5bbe968f162d9e6c74053f80c6",
+      "bytes": 420
+    },
+    "cargo-prefetch/before/Cargo.lock.gz": {
+      "sha256": "d33215487220710820ff9a6260fe0ca694cec4d1b522215f61387f1939be344d",
+      "bytes": 3681
+    },
+    "cargo-prefetch/before/Cargo.toml.gz": {
+      "sha256": "9827aafe39f411c3d365e0e11e00a48d6f7d1248af65f0db3ce2b5a8a7729a3e",
+      "bytes": 236
+    },
+    "cargo-prefetch/before/vendor/crispcat-format/Cargo.toml.gz": {
+      "sha256": "9d1b273698f32f6594f7e8b974d73f31c3616f5bbe968f162d9e6c74053f80c6",
+      "bytes": 420
+    },
+    "cargo-prefetch/receipt.json": {
+      "sha256": "2f0bb5d25c42f2a642743aa0b00ad2233e93a6f5fedc70ff57682c8535edafcf",
+      "bytes": 1269
+    },
+    "cargo-prefetch/stderr.log": {
+      "sha256": "09dd8c9ad0f590dd9123ac6cf5c8b406dbf0693f34b40cc22f519467ed71a96c",
+      "bytes": 1906
+    },
+    "cargo-prefetch/stdout.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "collect_resolution.py": {
+      "sha256": "3ff260916c82a5295def1c9042be782ec98cd14a925a3d219014a26c84585cce",
+      "bytes": 2991
+    },
+    "ebook-cargo-prefetch/after/Cargo.lock.gz": {
+      "sha256": "4b00261fadcc127d2a71e7459ce279cb1d94d60a723831ee00482f84506f8903",
+      "bytes": 7575
+    },
+    "ebook-cargo-prefetch/after/Cargo.toml.gz": {
+      "sha256": "471878264e16f76e25a70a1ff787db660694e889dca7adb4373106a766e8a858",
+      "bytes": 371
+    },
+    "ebook-cargo-prefetch/after/vendor/kindling/Cargo.toml.gz": {
+      "sha256": "d47a88269be777d986dcbefd437a933570e3e52f699d399f187eb65f36b25b85",
+      "bytes": 933
+    },
+    "ebook-cargo-prefetch/before/Cargo.lock.gz": {
+      "sha256": "4b00261fadcc127d2a71e7459ce279cb1d94d60a723831ee00482f84506f8903",
+      "bytes": 7575
+    },
+    "ebook-cargo-prefetch/before/Cargo.toml.gz": {
+      "sha256": "471878264e16f76e25a70a1ff787db660694e889dca7adb4373106a766e8a858",
+      "bytes": 371
+    },
+    "ebook-cargo-prefetch/before/vendor/kindling/Cargo.toml.gz": {
+      "sha256": "d47a88269be777d986dcbefd437a933570e3e52f699d399f187eb65f36b25b85",
+      "bytes": 933
+    },
+    "ebook-cargo-prefetch/receipt.json": {
+      "sha256": "c59700a83f5b8ddc856f5fbb104e67d99db818c0b3aba124229693e7b18e5e40",
+      "bytes": 1333
+    },
+    "ebook-cargo-prefetch/stderr.log": {
+      "sha256": "1e196bc603ac286cc7e55061455f497e722a705591a3e0607214b49b1df7d3c0",
+      "bytes": 3590
+    },
+    "ebook-cargo-prefetch/stdout.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "prefetch_cargo.py": {
+      "sha256": "54f620a843ca13c7cd4ae414de943c37b49f362ecf97de1f4bccbff2ada8dafb",
+      "bytes": 1306
+    },
+    "prefetch_ebook_cargo.py": {
+      "sha256": "3ce0b3ff0d69d7ce9dd311ce85a21ddb851ab2caf6142c812a49e13be1bf65c9",
+      "bytes": 1379
+    },
+    "resolution/01-app-locked/after/.dart_tool/package_config.json.gz": {
+      "sha256": "278cd2f381b747c182ba03098b2542277b49abbf49baae1a3c8664ba91a57d1a",
+      "bytes": 4240
+    },
+    "resolution/01-app-locked/after/.dart_tool/package_graph.json.gz": {
+      "sha256": "4346e6a137ca74468dfc61c9afd658ba95bcdfcb44d52cbdc9025d87f577b3ca",
+      "bytes": 5441
+    },
+    "resolution/01-app-locked/after/pubspec.lock.gz": {
+      "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b",
+      "bytes": 14385
+    },
+    "resolution/01-app-locked/after/pubspec.yaml.gz": {
+      "sha256": "69c2549fcd84d6c4367adef3053eaba646edc40f7af7d2d5d295643706e08b74",
+      "bytes": 4534
+    },
+    "resolution/01-app-locked/artifacts-sha256.json": {
+      "sha256": "9bd9ed0470d0206572eed7a78d8cdf7b0d99cd153ea4a812423a471d5ebd49e7",
+      "bytes": 1205
+    },
+    "resolution/01-app-locked/before/pubspec.lock.gz": {
+      "sha256": "7d0d5f1f56787d2646136b7b5e9247588c33353eefc702aa03748b050b7c166b",
+      "bytes": 14385
+    },
+    "resolution/01-app-locked/before/pubspec.yaml.gz": {
+      "sha256": "69c2549fcd84d6c4367adef3053eaba646edc40f7af7d2d5d295643706e08b74",
+      "bytes": 4534
+    },
+    "resolution/01-app-locked/receipt.json": {
+      "sha256": "f86a22bb63a485489bef23219e767a39ec364d65956ed0eec2e8bf5564bb0996",
+      "bytes": 3147
+    },
+    "resolution/01-app-locked/stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "resolution/01-app-locked/stdout.log": {
+      "sha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a",
+      "bytes": 6480
+    },
+    "resolution/02-engine-dev/after/.dart_tool/package_config.json.gz": {
+      "sha256": "e6d3f91785f7d233150a4f163856454e0c97ce6680a7d3ff1551e71692e9456d",
+      "bytes": 1103
+    },
+    "resolution/02-engine-dev/after/.dart_tool/package_graph.json.gz": {
+      "sha256": "de2e284daf95d05bc2c45bf6212284e721aa5074bbd7b4035103205ce557141f",
+      "bytes": 1186
+    },
+    "resolution/02-engine-dev/after/pubspec.lock.gz": {
+      "sha256": "5425c6a470bbfd0613d8ea98902e08d35f2ff04a3e644c8bf881ee81cb6198e0",
+      "bytes": 3289
+    },
+    "resolution/02-engine-dev/after/pubspec.yaml.gz": {
+      "sha256": "880611fb040b00197f213101066ad0da5a259bdd0b641cb1888b82e9bed0b50d",
+      "bytes": 997
+    },
+    "resolution/02-engine-dev/artifacts-sha256.json": {
+      "sha256": "c37a8ebf2277127b754327e5a80eba7eb8966d6d58db7dec3dd27c07f811d449",
+      "bytes": 1067
+    },
+    "resolution/02-engine-dev/before/pubspec.yaml.gz": {
+      "sha256": "880611fb040b00197f213101066ad0da5a259bdd0b641cb1888b82e9bed0b50d",
+      "bytes": 997
+    },
+    "resolution/02-engine-dev/receipt.json": {
+      "sha256": "14bb6f761888eff1d63e5a06908ca94b3bc3479b6ac1b2053d70e3199375a765",
+      "bytes": 3009
+    },
+    "resolution/02-engine-dev/stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "resolution/02-engine-dev/stdout.log": {
+      "sha256": "b5ff7bbebb423aefcceb7a64a6746c594499c6acc36cab2b619bddec4c1d110d",
+      "bytes": 1147
+    },
+    "resolution/03-editor-dev/after/.dart_tool/package_config.json.gz": {
+      "sha256": "bdcb8c763e63e5c38e8ebcef9b620d12deb70f879d9c05e78b4219875c7f86d4",
+      "bytes": 971
+    },
+    "resolution/03-editor-dev/after/.dart_tool/package_graph.json.gz": {
+      "sha256": "4edca86c4dec9637b75f8c97a9aaf24e698219dd754e97400214cae63dba8f26",
+      "bytes": 971
+    },
+    "resolution/03-editor-dev/after/pubspec.lock.gz": {
+      "sha256": "6fcd0b4de2be33040efc7082c613f43b2c4a599699d09bb7a104629e35bb9670",
+      "bytes": 2510
+    },
+    "resolution/03-editor-dev/after/pubspec.yaml.gz": {
+      "sha256": "fba5134084e637cdfc28e68e241370684010d4ff553c22fdb1cb7d5e03c6fde1",
+      "bytes": 930
+    },
+    "resolution/03-editor-dev/artifacts-sha256.json": {
+      "sha256": "d6bb7eb6859b57c472f040809e70a805c9c645e280b886101175dab00def6f51",
+      "bytes": 1065
+    },
+    "resolution/03-editor-dev/before/pubspec.yaml.gz": {
+      "sha256": "fba5134084e637cdfc28e68e241370684010d4ff553c22fdb1cb7d5e03c6fde1",
+      "bytes": 930
+    },
+    "resolution/03-editor-dev/receipt.json": {
+      "sha256": "1cd70b56c45cce220f00dc62f5716fdcb0e59d0f4cd737f0b14619dcd197afab",
+      "bytes": 3063
+    },
+    "resolution/03-editor-dev/stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "resolution/03-editor-dev/stdout.log": {
+      "sha256": "3b1327f5145adb28857636d29ebb2c5269e0f9e516102b320e724f1ee5b59ef1",
+      "bytes": 1364
+    },
+    "resolution/04-parser-dev/after/.dart_tool/package_config.json.gz": {
+      "sha256": "04e53627bcc644a8ec1d7bdb26b84d963ec5a041af09a78e07e22f2493ba56fd",
+      "bytes": 1087
+    },
+    "resolution/04-parser-dev/after/.dart_tool/package_graph.json.gz": {
+      "sha256": "cc697cfd8a7e1cc630f3d973ff60d6b455fc4b07953127499f4b717e02454161",
+      "bytes": 1174
+    },
+    "resolution/04-parser-dev/after/pubspec.lock.gz": {
+      "sha256": "bfce188956f6bdf39219d0c31f3dce55649c1c8066f100a7db23f628ce0f2a6c",
+      "bytes": 3290
+    },
+    "resolution/04-parser-dev/after/pubspec.yaml.gz": {
+      "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e",
+      "bytes": 294
+    },
+    "resolution/04-parser-dev/artifacts-sha256.json": {
+      "sha256": "eea604af3edcb7252d3870f9d1b2f50712056be83e6ef7cbf36923395ec7c9d4",
+      "bytes": 1067
+    },
+    "resolution/04-parser-dev/before/pubspec.yaml.gz": {
+      "sha256": "d5ee48cca62b46acf285a7800825dcbf2c2cddda8f6327dff7319b60586fe28e",
+      "bytes": 294
+    },
+    "resolution/04-parser-dev/receipt.json": {
+      "sha256": "cdbe24f126cc4dc637107f63b7130b784694d5cedec22ca91ac158b2175ba04f",
+      "bytes": 3006
+    },
+    "resolution/04-parser-dev/stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "resolution/04-parser-dev/stdout.log": {
+      "sha256": "ab6544db9223e49fab35f5a633989030cb75887b2c97bbc5f966a43e436393db",
+      "bytes": 1252
+    },
+    "resolution/05-cli-locked/after/.dart_tool/package_config.json.gz": {
+      "sha256": "0c0443c5c6646b3407f5d134f341a2aaae33254e7b4401eb834a8a5056c16754",
+      "bytes": 1594
+    },
+    "resolution/05-cli-locked/after/.dart_tool/package_graph.json.gz": {
+      "sha256": "d5e870c5513a3697f062001fb08b581dae3e86461a0b16c7ddffbea0efc4d862",
+      "bytes": 1841
+    },
+    "resolution/05-cli-locked/after/pubspec.lock.gz": {
+      "sha256": "e47fdb656ca5df94ff98e8cd214cdb7a307af50f1bd0f517fc9a2b13b54ae959",
+      "bytes": 5077
+    },
+    "resolution/05-cli-locked/after/pubspec.yaml.gz": {
+      "sha256": "9df71f4195a8bcc0419212366a66d384e482ae78f7850b02b23f67e5eec38ea8",
+      "bytes": 367
+    },
+    "resolution/05-cli-locked/artifacts-sha256.json": {
+      "sha256": "0f0e76bc20b43f61c55ac42349c88802bb1e9a12c915d25e4df8702f9f7c1b2b",
+      "bytes": 1201
+    },
+    "resolution/05-cli-locked/before/pubspec.lock.gz": {
+      "sha256": "e47fdb656ca5df94ff98e8cd214cdb7a307af50f1bd0f517fc9a2b13b54ae959",
+      "bytes": 5077
+    },
+    "resolution/05-cli-locked/before/pubspec.yaml.gz": {
+      "sha256": "9df71f4195a8bcc0419212366a66d384e482ae78f7850b02b23f67e5eec38ea8",
+      "bytes": 367
+    },
+    "resolution/05-cli-locked/receipt.json": {
+      "sha256": "6882bacb4c24ec35c42dda0d419568159e519b1c3be44bfe30f76e84c237db74",
+      "bytes": 3089
+    },
+    "resolution/05-cli-locked/stderr.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "resolution/05-cli-locked/stdout.log": {
+      "sha256": "1a3d1fa485a2df6322b7c2eebaa8e777c29b21f971729f46aaa1e5faa10c03fc",
+      "bytes": 1538
+    },
+    "resolution-runner.py": {
+      "sha256": "5b35932ac83ee6d615a9be20dc77248839364b6df23271a7ffa538787908c95a",
+      "bytes": 3513
+    },
+    "resolution-summary.json": {
+      "sha256": "691e55a9c3a871510d77b2bca46331afe723eeb3a18a736d3e38163bcaa48bed",
+      "bytes": 17895
+    },
+    "resolve_dependencies.py": {
+      "sha256": "be99de52e6a56341c1869a84bc895f9b6d51aad57ce69aa421479e6878aa71c8",
+      "bytes": 1246
+    }
+  }
+}

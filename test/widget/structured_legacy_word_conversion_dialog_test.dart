@@ -13,6 +13,7 @@ import 'package:quds_office_engine/quds_office_engine.dart'
     show CfbfFile, CfbfWriter, DocxPlainReader, OpcPackage;
 
 import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
+import '../support/legacy_word_recovery_fixture.dart';
 
 Finder _key(String name) => find.byKey(ValueKey('word-conversion-$name'));
 
@@ -119,6 +120,148 @@ Future<void> _prepare(WidgetTester tester) async {
 }
 
 void main() {
+  for (final entry in {
+    'Word 6/95': (
+      source: () => word6RecoveryFixture(),
+      text: 'Legacy body text',
+      inspected: false,
+    ),
+    'damaged compound': (
+      source: damagedWordRecoveryFixture,
+      text: 'Recovered body text',
+      inspected: false,
+    ),
+    'unsupported structure': (
+      source: unsupportedStructureRecoveryFixture,
+      text: 'Bounded FIB',
+      inspected: true,
+    ),
+  }.entries) {
+    testWidgets(
+      '${entry.key} recovery is reviewed as a separate text-only copy',
+      (tester) async {
+        final source = entry.value.source();
+        final original = Uint8List.fromList(source);
+        final attempts = <LegacyWordCopy>[];
+        final outcome = await _open(
+          tester,
+          source: source,
+          onSave: (copy) async {
+            attempts.add(copy);
+            if (entry.value.inspected && attempts.length == 1) {
+              throw StateError('collision');
+            }
+          },
+        );
+        if (entry.value.inspected) {
+          await _prepare(tester);
+        } else {
+          await _tap(tester, _key('method'));
+          expect(find.text('Structured Word (built in)'), findsNothing);
+          await _tap(tester, find.text('Text only (built in)').last);
+          expect(_key('output-text'), findsNothing);
+          await _tapUntil(
+            tester,
+            _key('primary'),
+            () => find.text('Review converted copy').evaluate().isNotEmpty,
+          );
+        }
+        expect(find.text('Recovered text only'), findsOneWidget);
+        expect(
+          find.textContaining('only the recovered main body text'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Formatting, page layout, images'),
+          findsOneWidget,
+        );
+        expect(find.text('Built-in structured conversion'), findsNothing);
+        expect(find.textContaining('Support is partial'), findsNothing);
+        expect(
+          find.textContaining('original VBA project bytes may remain'),
+          findsNothing,
+        );
+        expect(find.text('legacy (text).docx'), findsOneWidget);
+        expect(attempts, isEmpty);
+        expect(tester.widget<FilledButton>(_key('primary')).onPressed, isNull);
+        await _tap(tester, _key('accept-loss'));
+        if (entry.value.inspected) {
+          await _tapUntil(
+            tester,
+            _key('primary'),
+            () => find.text('Choose another filename.').evaluate().isNotEmpty,
+          );
+          expect(outcome.completed, isFalse);
+          await tester.ensureVisible(_key('filename'));
+          await tester.enterText(_key('filename'), 'reviewed-text.docx');
+        }
+        await _tapUntil(tester, _key('primary'), () => outcome.completed);
+        final copy = attempts.last;
+        expect(outcome.copy, same(copy));
+        expect(copy.recoveredTextOnly, isTrue);
+        expect(copy.isTextOnly, isTrue);
+        expect(copy.converterName, 'Recovered text only');
+        expect(copy.extension, 'docx');
+        expect(
+          copy.fileName,
+          entry.value.inspected ? 'reviewed-text.docx' : 'legacy (text).docx',
+        );
+        expect(copy.inspection!.sourceInspected, entry.value.inspected);
+        expect(
+          DocxPlainReader.paragraphs(copy.bytes),
+          contains(entry.value.text),
+        );
+        expect(
+          DocxPlainReader.paragraphs(copy.bytes),
+          isNot(contains('UNREFERENCED')),
+        );
+        expect(
+          OpcPackage.openBytes(copy.bytes).getPart('/word/vbaProject.bin'),
+          isNull,
+        );
+        expect(() => copy.bytes[0] = 0, throwsUnsupportedError);
+        if (entry.value.inspected) {
+          expect(attempts, hasLength(2));
+          expect(attempts.last.bytes, same(attempts.first.bytes));
+          expect(attempts.last.inspection, same(attempts.first.inspection));
+          expect(attempts.first.recoveredTextOnly, isTrue);
+        }
+        expect(source, orderedEquals(original));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final entry in {
+    'encrypted Word 6': () => word6RecoveryFixture(encrypted: true),
+    'non-Word input': () =>
+        Uint8List.fromList(utf8.encode('%PDF-1.7\nnot a Word document')),
+  }.entries) {
+    testWidgets('${entry.key} never enables a recovery copy', (tester) async {
+      final source = entry.value();
+      final original = Uint8List.fromList(source);
+      final saves = <LegacyWordCopy>[];
+      final outcome = await _open(
+        tester,
+        source: source,
+        onSave: (copy) async => saves.add(copy),
+      );
+      expect(_key('error'), findsOneWidget);
+      expect(tester.widget<FilledButton>(_key('primary')).onPressed, isNull);
+      expect(
+        tester
+            .widget<DropdownButtonFormField<String>>(_key('method'))
+            .onChanged,
+        isNull,
+      );
+      expect(saves, isEmpty);
+      await _tapUntil(tester, find.text('Cancel'), () => outcome.completed);
+      expect(outcome.copy, isNull);
+      expect(source, orderedEquals(original));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'explicit structured DOCM retains a project and enforces the DOCM filename',
     (tester) async {

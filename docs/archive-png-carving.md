@@ -131,11 +131,11 @@ or future profiles.
 
 ### Current qualification status
 
-The continued integration includes main through `ab7f1536`, the shared storage
-checkpoint `65e462b1`, ODF preview and ODS editing, and the reconciled canonical
-Office corrections. Current source identities, recorded commands, raw results
-and any remaining qualification limits are in the
-[local qualification record](evidence/storage-carving-20261115/local-qualification-20261115/README.md).
+Current source identities, local qualification commands, raw results and remaining
+gates are maintained in the
+[latest continuation record](evidence/storage-carving-20261115/local-resume-20261115T1150/README.md).
+The integration preserves main through `4933ffc2`, the later ODF branch, the
+worksheet and document-workspace work, and all parallel qualification receipts.
 
 Earlier attempts and their failures remain attached to their original source
 revisions. A historical pass is not substituted for a current gate. Native

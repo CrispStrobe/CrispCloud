@@ -1,0 +1,15 @@
+{
+  "at_utc": "2026-11-15T11:03:14.075076+00:00",
+  "main": "4933ffc21f4aadab3e699c65585ae3c2121e26fd",
+  "odf_branch": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+  "parallel_qualification": "dacd3e584abe885058f9dddbde8493976647e5d3",
+  "canonical_office": "307d4d4f178370518b4746c208a16804e939f01b",
+  "managed_count": 2227,
+  "source_policy": "All incoming evidence preserved; prior receipts retain original source identities. Current bounded preview and canonical importer supersede older parallel source. Two incoming app test lint fixes retained.",
+  "pending": [
+    "reproduce new ODS default-column save regression and correct if needed",
+    "merge newly discovered parser PR14-18",
+    "fresh analysis/runtime/oracle/source/portable/navigation gates"
+  ],
+  "local_intermediate_merge": "e41566b8a43bcc890b37c41e461b3119133c2657"
+}

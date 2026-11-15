@@ -174,7 +174,7 @@ includes host inventory controls; the scripted-output oracle follows the real
 engine artifact generator. Fresh combined runtime acceptance is recorded in
 `evidence/storage-carving-20261115/local-resume-20261115T1010/`.
 
-## Reconciled local qualification continuation
+## Earlier parallel local qualification continuation
 
 The saved continuation retains main `ab7f1536`, shared storage `65e462b1`,
 and all their historical receipts. Quds source `07842b7a116e64c75ed7e0945a6f74a9f4bdfccd`
@@ -192,3 +192,13 @@ copy while retaining the source and correctly owning the exported revision.
 [Current source-bound qualification and raw receipts](evidence/storage-carving-20261115/local-qualification-20261115/README.md)
 are separate from all earlier results. The previous 02d2142e runtime passes and
 its six strict-analysis findings remain intact under their original gate paths.
+
+## Latest combined continuation
+
+The latest source and gate record is in
+`evidence/storage-carving-20261115/local-resume-20261115T1150/`. It preserves both
+previous qualification histories and current main, ODF and canonical branches.
+The current ODS compatibility policy accepts omitted horizontal covered tokens,
+retains the vertical collision guard, and refuses data outside bounded extents.
+Incoming parser branches are reviewed explicitly; their default recovery behavior
+and preservation limitations remain part of the source-bound qualification.

@@ -375,8 +375,28 @@ void main() {
   });
 
   group('converted OPC validation', () {
+    test(
+      'unknown source keeps output validation without a preservation claim',
+      () async {
+        final report = await inspectConvertedWord(
+          _zip(_parts()),
+          extension: 'docx',
+          source: null,
+        );
+        expect(report.sourceInspected, isFalse);
+        expect(report.counts['paragraphs'], 1);
+        expect(report.losses, isEmpty);
+        final invalid = _parts()..remove('word/document.xml');
+        await expectLater(
+          inspectConvertedWord(_zip(invalid), extension: 'docx', source: null),
+          _issue(WordConversionInspectionIssue.invalidOutput),
+        );
+      },
+    );
+
     test('accepts genuine transitional and strict main parts', () async {
       final normal = await _inspect(_parts());
+      expect(normal.sourceInspected, isTrue);
       expect(normal.counts['paragraphs'], 1);
       expect(normal.counts['sections'], 1);
       expect(normal.losses, isEmpty);

@@ -1,0 +1,160 @@
+[
+  {
+    "branch": "fix/accept-word98-mac-nfib",
+    "sha": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
+    "status": "ahead",
+    "commits": [
+      {
+        "sha": "3dc1a8578af290096c05fe6d428983eb1f82f19a",
+        "message": "Read Word 98 for Mac files (nFib 0x00C2)\n\nWord 98 for the Macintosh writes the Word 97 binary format with nFib\n0x00C2. Its layout is identical to 0x00C1, but the parser refused these\nfiles as 'older Word binary version'. All three such files in a local\ncorpus now convert; against Word's own .docx of each, paragraph counts\nare equal, bold/italic/size/font/colour agree on every character, and\nword similarity is 1.0, 0.999 and 1.0.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+        "date": "2026-11-15T10:39:43Z"
+      }
+    ],
+    "files": [
+      {
+        "filename": "lib/src/legacy_word_binary_source.dart",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "filename": "lib/src/legacy_word_document.dart",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "filename": "test/word98_mac_nfib_test.dart",
+        "status": "added",
+        "additions": 57,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "branch": "fix/name-the-real-format",
+    "sha": "9f61e030d320c9086556d3368d6233d25574fdab",
+    "status": "ahead",
+    "commits": [
+      {
+        "sha": "9f61e030d320c9086556d3368d6233d25574fdab",
+        "message": "Name the real format of files that are not compound documents\n\nA file named .doc that is RTF, PDF, a renamed .docx, a Word web page\n(HTML/MHTML), Word 2003 XML, a Word for DOS/WordPerfect file, an Office\nowner lock file (~$name.doc) or an empty/zero-filled download used to\nfail with a bare 'Not a compound document'. sniffLegacyWordFile now\nidentifies it, and the parser throws LegacyWordNotCompoundException (a\nFormatException with the same message prefix) carrying the kind so that\ncallers can route the file to the right reader or say what it is.\n\nOn a local corpus of 361 .doc files every one of the 15 non-compound\nfiles is identified (2 RTF, 1 PDF, 10 lock files, 1 empty, 1 zero-filled).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+        "date": "2026-11-15T10:11:26Z"
+      }
+    ],
+    "files": [
+      {
+        "filename": "lib/legacy_doc_parser.dart",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0
+      },
+      {
+        "filename": "lib/src/bounded_cfb_reader.dart",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 1
+      },
+      {
+        "filename": "lib/src/legacy_word_file_kind.dart",
+        "status": "added",
+        "additions": 161,
+        "deletions": 0
+      },
+      {
+        "filename": "lib/src/legacy_word_media_parser.dart",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 6
+      },
+      {
+        "filename": "test/file_kind_test.dart",
+        "status": "added",
+        "additions": 124,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "branch": "fix/recover-comments-bookmarks",
+    "sha": "89555522726432b1449f0d26e701376ec6f59a27",
+    "status": "ahead",
+    "commits": [
+      {
+        "sha": "89555522726432b1449f0d26e701376ec6f59a27",
+        "message": "Recover: omit contradictory comments or bookmarks instead of refusing\n\nWith recover, a comment table whose references miss their markers, or a\nbookmark name table that contradicts its ranges (names over Word's 40\ncharacters, duplicates, wrong counts), now costs only that feature. The\nfailed read is rolled back (stories, references, anchors and markers;\nbookmarks and fields inside the comment story) and the omission is\ndeclared: commentsOmitted (notesComments) or the new bookmarksOmitted\n(fieldsLists). Without recover nothing changes.\n\nLocal corpus: the one document refused over comment markers now\nconverts (964k characters). The one refused over a bookmark name has\nfurther damage (fields crossing stories, revision field boundaries) and\nstays refused.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+        "date": "2026-11-15T10:46:49Z"
+      }
+    ],
+    "files": [
+      {
+        "filename": "lib/src/legacy_word_stories.dart",
+        "status": "modified",
+        "additions": 45,
+        "deletions": 1
+      },
+      {
+        "filename": "lib/src/legacy_word_structured_model.dart",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0
+      },
+      {
+        "filename": "lib/src/legacy_word_structured_parser.dart",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "filename": "lib/src/word_story_writer.dart",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0
+      },
+      {
+        "filename": "test/recover_comments_bookmarks_test.dart",
+        "status": "added",
+        "additions": 77,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "branch": "fix/recover-text-from-damaged-compound",
+    "sha": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
+    "status": "ahead",
+    "commits": [
+      {
+        "sha": "a82595a8dcf6cb66f5b3734f0a550d1462e281f8",
+        "message": "Recover the text of Word files whose compound directory is destroyed\n\nSome .doc files have their FAT, directory and mini FAT sectors\noverwritten (an interrupted save or copy). Word, LibreOffice and the\nstructured parser refuse them, but the WordDocument and table streams\nare usually intact. recoverLegacyWordText finds the FIB, reads the\nWordDocument stream (FAT chain when the FAT is still self-consistent,\nelse contiguously, bounded by cbMac) and locates the table stream as the\nchain or contiguous run (any 64-byte boundary, for mini-stream tables)\nwhose bytes hold a piece table that validates at exactly fcClx and\naccounts for every character. Text is then read through that piece\ntable exactly as extractLegacyWordText does.\n\nconvertLegacyWord(recover: true) falls back to a text-only DOCX when the\nstructured parse fails and the text is recoverable; the result has\nrecoveredTextOnly set and lists every limitation.\n\nOn 314 intact local .doc files the recovery path returns exactly the\nsame text as extractLegacyWordText in 312 (2 not recoverable, none\ndifferent). Of 11 damaged files, 5 are recovered; the other 6 have\nfragmented or overwritten table streams and stay refused. With the\ndirectory, FAT and mini FAT overwritten, 16 of 28 native fixtures are\nrecovered verbatim.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+        "date": "2026-11-15T10:35:30Z"
+      }
+    ],
+    "files": [
+      {
+        "filename": "lib/src/conversion.dart",
+        "status": "modified",
+        "additions": 34,
+        "deletions": 7
+      },
+      {
+        "filename": "lib/src/legacy_word_document.dart",
+        "status": "modified",
+        "additions": 207,
+        "deletions": 1
+      },
+      {
+        "filename": "lib/src/legacy_word_media_parser.dart",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 6
+      },
+      {
+        "filename": "test/damaged_compound_recovery_test.dart",
+        "status": "added",
+        "additions": 132,
+        "deletions": 0
+      }
+    ]
+  }
+]

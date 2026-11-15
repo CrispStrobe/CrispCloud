@@ -62,9 +62,17 @@ class LegacyWordSourceInspection {
 /// an unused package part or relationship cannot establish preservation. These
 /// presence checks do not compare source/output feature counts or contents.
 class WordConversionInspection {
-  const WordConversionInspection({required this.counts, required this.losses});
+  const WordConversionInspection({
+    required this.counts,
+    required this.losses,
+    this.sourceInspected = true,
+  });
   final Map<String, int> counts;
   final List<WordConversionLoss> losses;
+
+  /// False when the source structure was unreadable. Output validation and
+  /// counts still apply, but an empty [losses] list cannot imply preservation.
+  final bool sourceInspected;
 }
 
 const _maxPackage = 64 * 1024 * 1024;
@@ -250,10 +258,12 @@ void _hashStreams(
 
 /// Validates the produced OPC package and inventories its existing parts.
 /// Does not rewrite, normalize, execute or fetch any package content.
+/// A null [source] retains output validation without source-loss assertions;
+/// the result explicitly records that the source could not be inspected.
 Future<WordConversionInspection> inspectConvertedWord(
   Uint8List bytes, {
   required String extension,
-  required LegacyWordSourceInspection source,
+  required LegacyWordSourceInspection? source,
 }) async {
   if (bytes.length > _maxPackage) {
     throw const WordConversionInspectionException(
@@ -708,7 +718,7 @@ Future<WordConversionInspection> inspectConvertedWord(
     }
     final vbaStreams = vbaProjects[documentVba];
     final losses = <WordConversionLoss>[];
-    if (source.hasVba) {
+    if (source != null && source.hasVba) {
       if (vbaStreams == null) {
         losses.add(WordConversionLoss.vbaMissing);
       } else if (vbaStreams.length != source.vbaStreams.length ||
@@ -718,26 +728,30 @@ Future<WordConversionInspection> inspectConvertedWord(
         losses.add(WordConversionLoss.vbaChanged);
       }
     }
-    if (source.hasObjects && !hasReachableObjects) {
+    if (source?.hasObjects == true && !hasReachableObjects) {
       losses.add(WordConversionLoss.objectsMissing);
     }
-    if (source.hasHeaders &&
+    if (source?.hasHeaders == true &&
         !reachableFeatures.contains('header') &&
         !reachableFeatures.contains('footer')) {
       losses.add(WordConversionLoss.headersMissing);
     }
-    if (source.hasFootnotes && !reachableFeatures.contains('footnotes')) {
+    if (source?.hasFootnotes == true &&
+        !reachableFeatures.contains('footnotes')) {
       losses.add(WordConversionLoss.footnotesMissing);
     }
-    if (source.hasEndnotes && !reachableFeatures.contains('endnotes')) {
+    if (source?.hasEndnotes == true &&
+        !reachableFeatures.contains('endnotes')) {
       losses.add(WordConversionLoss.endnotesMissing);
     }
-    if (source.hasComments && !reachableFeatures.contains('comments')) {
+    if (source?.hasComments == true &&
+        !reachableFeatures.contains('comments')) {
       losses.add(WordConversionLoss.commentsMissing);
     }
     return WordConversionInspection(
       counts: Map.unmodifiable(counts),
       losses: List.unmodifiable(losses),
+      sourceInspected: source != null,
     );
   } on WordConversionInspectionException {
     rethrow;

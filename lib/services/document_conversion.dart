@@ -230,6 +230,13 @@ Future<DocumentConversionResult> _convert(
       recover: true,
     );
     bytes = result.bytes;
+    if (result.recoveredTextOnly) {
+      notes.add(
+        'Only the main body text could be recovered. Formatting, images, '
+        'objects, headers, notes, tracked changes, macros and signatures '
+        'are omitted from this copy.',
+      );
+    }
     notes.addAll(
       result.limitations.map((v) => 'Legacy Word limitation: ${v.name}'),
     );

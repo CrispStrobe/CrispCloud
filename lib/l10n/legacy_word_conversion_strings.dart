@@ -9,11 +9,14 @@ class LegacyWordConversionStrings {
   LegacyWordConversionStrings(this.locale)
     : _values = _translations[locale.languageCode] ?? _english,
       _structuredValues =
-          _structuredTranslations[locale.languageCode] ?? _structuredEnglish;
+          _structuredTranslations[locale.languageCode] ?? _structuredEnglish,
+      _recoveryValues =
+          _recoveryTranslations[locale.languageCode] ?? _recoveryEnglish;
 
   final Locale locale;
   final List<String> _values;
   final Map<String, String> _structuredValues;
+  final List<String> _recoveryValues;
 
   String get title => _values[0];
   String get lossNotice => _values[1];
@@ -29,6 +32,9 @@ class LegacyWordConversionStrings {
   String get structuredAcceptLoss => _structuredValues['accept']!;
   String get unavailable => _structuredValues['unavailable']!;
   String get limitationsTitle => _structuredValues['limitations']!;
+  String get recoveredName => _recoveryValues[0];
+  String get recoveredNotice => _recoveryValues[1];
+  String get recoveredAcceptLoss => _recoveryValues[2];
 
   String limitation(LegacyWordConversionLimitation limitation) =>
       _structuredValues[limitation.name]!;
@@ -39,6 +45,56 @@ class LegacyWordConversionStrings {
     }
     return WordFormatStrings(locale).translate(error.toString()) ?? _values[9];
   }
+
+  static const _recoveryEnglish = <String>[
+    'Recovered text only',
+    'The document structure could not be recovered. This copy contains only '
+        'the recovered main body text.',
+    'Save this recovered text-only copy',
+  ];
+
+  static const _recoveryTranslations = <String, List<String>>{
+    'de': [
+      'Nur wiederhergestellter Text',
+      'Die Dokumentstruktur konnte nicht wiederhergestellt werden. Diese '
+          'Kopie enthält nur den wiederhergestellten Haupttext.',
+      'Diese wiederhergestellte reine Textkopie speichern',
+    ],
+    'fr': [
+      'Texte récupéré uniquement',
+      'La structure du document n’a pas pu être récupérée. Cette copie '
+          'contient uniquement le texte principal récupéré.',
+      'Enregistrer cette copie du texte récupéré uniquement',
+    ],
+    'es': [
+      'Solo texto recuperado',
+      'No se pudo recuperar la estructura del documento. Esta copia '
+          'contiene solo el texto principal recuperado.',
+      'Guardar esta copia con solo el texto recuperado',
+    ],
+    'pt': [
+      'Apenas texto recuperado',
+      'Não foi possível recuperar a estrutura do documento. Esta cópia '
+          'contém apenas o texto principal recuperado.',
+      'Guardar esta cópia apenas com o texto recuperado',
+    ],
+    'zh': ['仅恢复的文本', '无法恢复文档结构。此副本仅包含恢复的正文文本。', '保存此恢复的纯文本副本'],
+    'ja': [
+      '復元したテキストのみ',
+      '文書の構造は復元できませんでした。このコピーには復元した本文テキストのみが含まれます。',
+      '復元したテキストのみのコピーを保存',
+    ],
+    'ko': [
+      '복구된 텍스트만',
+      '문서 구조를 복구할 수 없습니다. 이 사본에는 복구된 본문 텍스트만 포함됩니다.',
+      '복구된 텍스트만 포함된 사본 저장',
+    ],
+    'ar': [
+      'النص المسترد فقط',
+      'تعذّر استرداد بنية المستند. تحتوي هذه النسخة على النص الرئيسي المسترد فقط.',
+      'حفظ هذه النسخة التي تحتوي على النص المسترد فقط',
+    ],
+  };
 
   static const _english = <String>[
     'Convert to DOCX',

@@ -1,0 +1,22 @@
+{
+  "review": "independent read-only recovery host integration review",
+  "app_head_at_review": "dca83f902dd92fd6338ded42394a2c37ccdc909a",
+  "app_source_files": {
+    "lib/widgets/legacy_word_conversion_dialog.dart": "5152c02f7ddb25f71a9841e7eba503dbcfd9ff36dc5604fef8c082245de3c8ad",
+    "lib/widgets/legacy_word_conversion_action.dart": "d3eb8b24c1711427bbe790c4d36461f178a85c80ce4d268096bd8fb66ed9e721",
+    "lib/services/legacy_word_copy.dart": "704952997f248daaa0e55b632e21bed9930568c1dd05a094dd4a9f6cdf3090de",
+    "lib/services/legacy_word_copy_target.dart": "bb36e54ece75b5bc89516c2a1ad63680ba7009b0835593905791f39871d7faa7",
+    "lib/services/word_conversion_inspection.dart": "ca1a3507afe9a89b1fafcfe211471f3209e9df5685cc97983ff17c08223c4250",
+    "lib/services/installed_office_converter_io.dart": "fd6f98f77cde6c3c2190903fa2e77de374d4a49b09fe9f0a904199308bdd8538",
+    "lib/services/document_conversion.dart": "1eb80c7cc6b702eda8bea5a38281dcf433b9a2efa4c52d2f4e33b2e0b4349452",
+    "lib/widgets/document_conversion_dialog.dart": "f1d605ecbdfa0aa38de82a11d9b8abda43d5f78f9b2f44eff115023a02a52592",
+    "lib/l10n/legacy_word_conversion_strings.dart": "b7270ccbd95eb841ff0d488b5554202f8be84144d031ed37fd2611056f8093b9",
+    "lib/l10n/installed_office_strings.dart": "e9965407eb180f9c4a29ff9f7aa228a006257905180a7ef9d18be206b92da4b1"
+  },
+  "prepared_parser_fix_files": {
+    "legacy_word_document.dart": "23278c48da73804d1e43720237d5f01bae50fa78ef7ea1be68511e266bef8756",
+    "legacy_word_stories.dart": "8aa792cdc74867f77f352294d5ea2b1921e1ca7d6c5a488bc185c82e2289d555"
+  },
+  "runtime_tests_run_by_reviewer": false,
+  "blocking_findings": []
+}
