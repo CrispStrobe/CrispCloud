@@ -38,7 +38,9 @@ class SshTerminalProfiles {
 
   Future<({int version, List<SshTerminalProfile> profiles})> _load() async {
     final raw = await _read();
-    if (raw == null) return (version: 1, profiles: const []);
+    if (raw == null) {
+      return (version: 1, profiles: const <SshTerminalProfile>[]);
+    }
     if (raw.length > maxStorageLength) {
       throw const FormatException('SSH profile store exceeds the limit');
     }

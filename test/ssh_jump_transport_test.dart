@@ -536,6 +536,7 @@ class _Socket implements SSHForwardChannel {
 class _Client implements SSHClient {
   _Client(this.harness, this.socket);
   final _Harness harness;
+  @override
   final _Socket socket;
   final _done = Completer<void>();
   final runs = <String>[];

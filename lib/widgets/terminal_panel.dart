@@ -313,8 +313,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted ||
             mark == null ||
-            !identical(shell, _session.shellIntegration))
+            !identical(shell, _session.shellIntegration)) {
           return;
+        }
         final status = mark.exitCode == null
             ? context.terminalShellTr('Status unknown')
             : '${context.terminalShellTr('Exit status')}: ${mark.exitCode}';
@@ -560,7 +561,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       context: context,
       builder: (_) => SshTerminalConnectDialog(
         initialConfig:
-            initialConfig ?? (reconnect || browse != null ? _lastSshConfig : null),
+            initialConfig ??
+            (reconnect || browse != null ? _lastSshConfig : null),
         showSessionOptions: browse == null,
       ),
     );
@@ -691,10 +693,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             _lastSshConfig = launchConfig.withoutSecrets();
             _publishPaneState();
             _session.label = connectionLabel(launchConfig);
-            _tmuxTerminal =
-                launchConfig.tmux == null ? null : connectingTerminal;
-            _screenTerminal =
-                launchConfig.screen == null ? null : connectingTerminal;
+            _tmuxTerminal = launchConfig.tmux == null
+                ? null
+                : connectingTerminal;
+            _screenTerminal = launchConfig.screen == null
+                ? null
+                : connectingTerminal;
           }
           final stream = await _ssh.startShell(
             session.id,
@@ -709,7 +713,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           if (browse != null && (!currentAttempt() || !widget.visible)) {
             selectionCancelled = true;
           }
-          if (error is SshMultiplexerDiscoveryException && currentAttempt()) {
+          if (mounted &&
+              error is SshMultiplexerDiscoveryException &&
+              currentAttempt()) {
             throw Exception(context.sshMultiplexerDiscoveryError(error));
           }
           rethrow;
@@ -921,8 +927,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     final terminal = _session.terminal;
     if (terminal.isUsingAltBuffer ||
         line < 0 ||
-        line >= terminal.buffer.lines.length)
+        line >= terminal.buffer.lines.length) {
       return;
+    }
     _clearCommandNavigation();
     _commandNavigationAnchor = terminal.buffer.createAnchor(0, line);
     if (!_scroll.hasClients || !_scroll.position.hasContentDimensions) return;
@@ -972,8 +979,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         !widget.visible ||
         !identical(shell, _session.shellIntegration) ||
         mark == null ||
-        !shell.contains(mark))
+        !shell.contains(mark)) {
       return;
+    }
     _activateInput();
     _revealCommandLine(mark.anchor.y);
   }
@@ -1107,10 +1115,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         final shell = _session.shellIntegration;
         shell.notifyOnCompletion = !shell.notifyOnCompletion;
       case _PanelAction.shellSetup:
-        unawaited(showDialog<void>(
-          context: context,
-          builder: (_) => const TerminalShellSetupDialog(),
-        ));
+        unawaited(
+          showDialog<void>(
+            context: context,
+            builder: (_) => const TerminalShellSetupDialog(),
+          ),
+        );
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:
@@ -1342,7 +1352,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                       ),
                       PopupMenuItem(
                         value: _PanelAction.shellSetup,
-                        child: Text(context.terminalShellTr('Shell integration setup')),
+                        child: Text(
+                          context.terminalShellTr('Shell integration setup'),
+                        ),
                       ),
                       PopupMenuItem(
                         value: _PanelAction.history,
