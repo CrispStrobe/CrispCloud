@@ -98,6 +98,14 @@ String _preferences({
   'prefs': {'fieldType': 'Http', 'noteType': note},
 });
 
+String _xmlPreferences({int? note = 1}) =>
+    '<data data-version="3"><session id="session-test"/>'
+    '<style id="http://www.zotero.org/styles/chicago-note-bibliography" '
+    'locale="de-DE" hasBibliography="1"/>'
+    '<prefs><pref name="fieldType" value="Field"/>'
+    '${note == null ? '' : '<pref name="noteType" value="$note"/>'}'
+    '</prefs></data>';
+
 String _snapshot(WmlDocument document) => jsonEncode({
   'paragraphs': [for (final p in document.paragraphs) p.text],
   'footnotes': [
@@ -774,6 +782,7 @@ void main() {
     () {
       for (final seeded in [false, true]) {
         final document = WmlDocument.empty(text: 'Untouched');
+        if (seeded) document.zoteroDocumentData = _preferences(note: 0);
         final before = _snapshot(document);
         final session = _session(
           document,
@@ -797,6 +806,7 @@ void main() {
     'seeded catalog selection is visible to Zotero and inserts only after it updates',
     () {
       final document = WmlDocument.empty(text: 'Before After');
+      document.zoteroDocumentData = _preferences(note: 0);
       final session = _session(
         document,
         offset: 7,
@@ -816,6 +826,180 @@ void main() {
         WordZotero.fields(document).single.citation!.citationId,
         'selected',
       );
+    },
+  );
+
+  for (final xml in [false, true]) {
+    for (final noteType in [0, 1, 2]) {
+      test(
+        'catalog seed respects ${xml ? 'XML' : 'JSON'} note type $noteType',
+        () {
+          var document = WmlDocument.empty(text: 'Before After');
+          document.zoteroDocumentData = xml
+              ? _xmlPreferences(note: noteType)
+              : _preferences(note: noteType);
+          final before = _snapshot(document);
+          final session = _session(
+            document,
+            offset: 7,
+            seed: _citation('selected', '(Selected)'),
+          );
+          final field = _fields(session).single;
+          expect(field['noteIndex'], noteType == 0 ? 0 : 1);
+          expect(_snapshot(document), before);
+          _set(
+            session,
+            field['id'] as String,
+            _citation('selected', 'Native result', noteType == 0 ? 0 : 1),
+          );
+          _apply(session);
+          expect(document.footnotes.length, noteType == 1 ? 1 : 0);
+          expect(document.endnotes.length, noteType == 2 ? 1 : 0);
+          expect(
+            document.paragraphs.first.text,
+            noteType == 0 ? 'Before Native resultAfter' : 'Before 1After',
+          );
+          document = WordDeserializer().readBytes(
+            WordSerializer().writeBytes(document),
+          );
+          expect(
+            _fields(_session(document)).single['noteIndex'],
+            noteType == 0 ? 0 : 1,
+          );
+          expect(
+            WordZotero.fields(document).single.cachedText,
+            'Native result',
+          );
+          expect(
+            WordZoteroDocumentData.citationNoteType(
+              WordZoteroDocumentData.read(document),
+            ),
+            noteType,
+          );
+        },
+      );
+    }
+  }
+
+  test('native XML with omitted falsey note type seeds an inline citation', () {
+    final document = WmlDocument.empty(text: 'Before After');
+    document.zoteroDocumentData = _xmlPreferences(note: null);
+    final session = _session(document, offset: 7, seed: _citation('seed'));
+    final field = _fields(session).single;
+    expect(field['noteIndex'], 0);
+    _set(session, field['id'] as String, _citation('seed', 'Inline'));
+    _apply(session);
+    expect(document.paragraphs.single.text, 'Before InlineAfter');
+    expect(document.footnotes, isEmpty);
+    expect(document.endnotes, isEmpty);
+  });
+
+  test(
+    'catalog seeds reject missing or invalid native style data without mutation',
+    () {
+      final valid = jsonDecode(_preferences()) as Map<String, dynamic>;
+      final cases = <String, String>{
+        'no preferences': '',
+        'malformed JSON': '{broken',
+        'missing JSON prefs': '{}',
+        'missing JSON style': jsonEncode({'prefs': valid['prefs']}),
+        'empty JSON style ID': jsonEncode({
+          ...valid,
+          'style': {'styleID': ' '},
+        }),
+        'nonstring JSON style ID': jsonEncode({
+          ...valid,
+          'style': {'styleID': 42},
+        }),
+        'missing JSON note type': jsonEncode({
+          ...valid,
+          'prefs': {'fieldType': 'Field'},
+        }),
+        for (final value in [null, '1', -1, 3, 1.0, true])
+          'invalid JSON note type $value': jsonEncode({
+            ...valid,
+            'prefs': {'fieldType': 'Field', 'noteType': value},
+          }),
+        'missing XML style':
+            '<data><prefs><pref name="fieldType" value="Field"/></prefs></data>',
+        'empty XML style ID': _xmlPreferences().replaceFirst(
+          'http://www.zotero.org/styles/chicago-note-bibliography',
+          '',
+        ),
+        'duplicate XML styles': _xmlPreferences().replaceFirst(
+          '<prefs>',
+          '<style id="http://www.zotero.org/styles/apa"/><prefs>',
+        ),
+        'duplicate XML note type': _xmlPreferences().replaceFirst(
+          '</prefs>',
+          '<pref name="noteType" value="2"/></prefs>',
+        ),
+        for (final value in ['-1', '3', '1.0', 'footnote', ''])
+          'invalid XML note type $value': _xmlPreferences().replaceFirst(
+            'name="noteType" value="1"',
+            'name="noteType" value="$value"',
+          ),
+      };
+      for (final entry in cases.entries) {
+        final document = WmlDocument.empty(text: 'Untouched');
+        document.zoteroDocumentData = entry.value;
+        expect(
+          () => _session(document, seed: _citation('seed')),
+          throwsFormatException,
+          reason: entry.key,
+        );
+        expect(document.paragraphs.single.text, 'Untouched', reason: entry.key);
+        expect(document.footnotes, isEmpty, reason: entry.key);
+        expect(document.endnotes, isEmpty, reason: entry.key);
+        expect(WordZotero.fields(document), isEmpty, reason: entry.key);
+        expect(document.zoteroDocumentData, entry.value, reason: entry.key);
+      }
+    },
+  );
+
+  for (final from in [0, 1, 2]) {
+    for (final to in [0, 1, 2].where((type) => type != from)) {
+      test(
+        'seed placement $from refuses silently changed final preference $to',
+        () {
+          final document = WmlDocument.empty(text: 'Untouched');
+          document.zoteroDocumentData = _preferences(note: from);
+          final before = _snapshot(document);
+          final session = _session(document, seed: _citation('seed'));
+          final field = _fields(session).single;
+          _set(
+            session,
+            field['id'] as String,
+            _citation('seed', 'Native result'),
+          );
+          _call(session, 'Document.setDocumentData', [_preferences(note: to)]);
+          expect(() => _call(session, 'Document.complete'), throwsStateError);
+          expect(session.isComplete, isFalse);
+          expect(session.apply, throwsStateError);
+          expect(_snapshot(document), before);
+        },
+      );
+    }
+  }
+
+  test(
+    'Zotero can explicitly convert a seed before returning matching preferences',
+    () {
+      final document = WmlDocument.empty(text: 'Before After');
+      document.zoteroDocumentData = _preferences(note: 0);
+      final session = _session(document, offset: 7, seed: _citation('seed'));
+      final field = _fields(session).single;
+      _call(session, 'Document.convert', [
+        [field['id']],
+        'Http',
+        [1],
+      ]);
+      _set(session, field['id'] as String, _citation('seed', 'In note', 1));
+      _call(session, 'Document.setDocumentData', [_preferences(note: 1)]);
+      _apply(session);
+      expect(document.paragraphs.single.text, 'Before 1After');
+      expect(document.footnotes.single.text, 'In note');
+      expect(_fields(_session(document)).single['noteIndex'], 1);
     },
   );
 

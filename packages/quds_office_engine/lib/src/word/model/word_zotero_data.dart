@@ -41,6 +41,49 @@ abstract final class WordZoteroDocumentData {
   /// Adapts the storage preference back to Word fields before DOCX storage.
   static String toNative(String data) => _convert(data, 'Field');
 
+  /// Note placement for a catalog selection seeded into the native picker.
+  /// Zotero treats that seed as an existing field, so its document style must
+  /// already be chosen before the seed is created.
+  static int citationNoteType(String data) {
+    final native = toNative(data);
+    Object? styleId;
+    Object? noteType;
+    if (native.trim().startsWith('{')) {
+      final json = jsonDecode(native) as Map<String, dynamic>;
+      final style = json['style'];
+      if (style is Map<String, dynamic>) styleId = style['styleID'];
+      noteType = (json['prefs'] as Map<String, dynamic>)['noteType'];
+    } else if (native.isNotEmpty) {
+      final root = _parseXml(native);
+      final styles = root.childrenNamed('style', namespaceUri: '');
+      if (styles.length == 1) styleId = styles.single.getAttribute('id');
+      final prefs = root.childrenNamed('prefs', namespaceUri: '').single;
+      final notes = prefs
+          .childrenNamed('pref', namespaceUri: '')
+          .where((pref) => pref.getAttribute('name') == 'noteType');
+      // Zotero's native XML writer omits falsy preferences; its reader treats
+      // absent noteType as inline (0).
+      if (notes.isEmpty) {
+        noteType = 0;
+      } else if (notes.length == 1) {
+        final value = notes.single.getAttribute('value');
+        if (value == '0' || value == '1' || value == '2') {
+          noteType = int.parse(value!);
+        }
+      }
+    }
+    if (styleId is! String ||
+        styleId.trim().isEmpty ||
+        noteType is! int ||
+        noteType < 0 ||
+        noteType > 2) {
+      throw const FormatException(
+        'Choose Document → Document style… in Zotero before inserting selected catalog sources.',
+      );
+    }
+    return noteType;
+  }
+
   /// Validates and prepares preference changes without mutating the package.
   /// The serializer invokes the returned closure only after its other writes.
   static void Function() prepareWrite(

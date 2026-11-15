@@ -1478,7 +1478,11 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                         ZoteroCitingCommand.addEditCitation,
                         items: _selected.values.toList(),
                       ),
-                child: const Text('Insert with Zotero…'),
+                child: const Tooltip(
+                  message:
+                      'Choose Document → Document style… first, then insert selected sources in that style.',
+                  child: Text('Insert with Zotero…'),
+                ),
               ),
             PopupMenuButton<ZoteroExportFormat>(
               enabled: !_busy && _selected.isNotEmpty,

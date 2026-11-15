@@ -328,6 +328,49 @@ void main() {
     );
   }
 
+  for (final buttons in [0, 2]) {
+    testWidgets(
+      'desktop error alert $buttons discards staged fields even after complete',
+      (tester) async {
+        final script = _insertScript()..removeLast();
+        script.addAll([
+          (d) => d.message('Document.displayAlert', [
+            d.documentId,
+            'Zotero could not finish formatting this document.',
+            0,
+            buttons,
+          ]),
+          (d) => d.message('Document.activate', [d.documentId]),
+          (d) => d.message('Document.complete', [d.documentId]),
+        ]);
+        final desktop = _Desktop(script);
+        final controller = await _open(tester, desktop: desktop);
+        await _tap(tester, 'Citation in Zotero…');
+        expect(
+          find.text('Zotero could not finish formatting this document.'),
+          findsOneWidget,
+        );
+        expect(controller.zoteroFields, isEmpty);
+        await _tap(tester, buttons == 0 ? 'OK' : 'No');
+        expect(desktop.index, script.length);
+        expect(controller.zoteroFields, isEmpty);
+        expect(controller.document.footnotes, isEmpty);
+        expect(controller.document.paragraphs.single.text, 'Before after');
+        expect(WordZoteroDocumentData.read(controller.document), isEmpty);
+        expect(controller.canUndo, isFalse);
+        expect(controller.isDirty, isFalse);
+        expect(
+          find.textContaining('Zotero updated the document'),
+          findsNothing,
+        );
+        expect(
+          find.textContaining('No document changes were applied'),
+          findsOneWidget,
+        );
+      },
+    );
+  }
+
   testWidgets(
     'cancel waits for a native response then drains without live mutation',
     (tester) async {

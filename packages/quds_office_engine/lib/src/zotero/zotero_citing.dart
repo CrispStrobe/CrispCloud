@@ -141,6 +141,7 @@ class ZoteroCitingClient {
     var terminal = false;
     var initial = true;
     var started = false;
+    ZoteroCitingException? desktopFailure;
     final knownFields = <Object>{};
     try {
       _checkGuard(guard, cancellation);
@@ -188,6 +189,27 @@ class ZoteroCitingClient {
         _checkGuard(guard, cancellation);
         _validateResult(name, arguments, result, documentId, knownFields);
         body = _encode(result);
+        if (_isDesktopErrorAlert(name, arguments)) {
+          // Zotero's execCommand calls complete in its finally block even
+          // when _handleCommandError has reported a processing failure. Its
+          // STOP/OK and STOP/YES_NO alerts therefore cannot mean success.
+          // Keep the STOP/OK_CANCEL replacement prompt as an ordinary choice.
+          // Acknowledge the displayed error normally, then drain without
+          // dispatching any more commands to the staged document adapter.
+          const failure = ZoteroCitingException(
+            kind: ZoteroCitingErrorKind.document,
+            message:
+                'Zotero desktop reported an error. No document changes were applied.',
+          );
+          awaitingResponse = false;
+          final completed = await _drain(
+            failure,
+            documentId,
+            firstResponse: body,
+          );
+          desktopFailure = failure._withCleanup(completed);
+          break;
+        }
       }
     } catch (error) {
       final failure = _safeError(error);
@@ -204,6 +226,7 @@ class ZoteroCitingClient {
     } finally {
       _inProgress = false;
     }
+    throw desktopFailure;
   }
 
   Future<Object?> _handle(
@@ -263,12 +286,16 @@ class ZoteroCitingClient {
     return response;
   }
 
-  Future<bool> _drain(ZoteroCitingException failure, String documentId) async {
+  Future<bool> _drain(
+    ZoteroCitingException failure,
+    String documentId, {
+    String? firstResponse,
+  }) async {
     final error = jsonEncode(<String, String>{
       'error': 'Alert',
       'message': failure.message,
     });
-    var body = error;
+    var body = firstResponse ?? error;
     try {
       for (var step = 0; step < 8; step++) {
         final response = await _post(body, initial: false, cleanup: true);
@@ -453,7 +480,7 @@ class ZoteroCitingClient {
         if (!knownFields.add(id)) throw _invalid();
       default:
         if (result != null) throw _invalid();
-        if (name == 'Field.delete' || name == 'Field.removeCode') {
+        if (name == 'Field.delete') {
           knownFields.remove(arguments[1]);
         }
     }
@@ -558,6 +585,10 @@ class ZoteroCitingClient {
 
   static bool _isIntBetween(Object? value, int min, int max) =>
       value is int && value >= min && value <= max;
+  static bool _isDesktopErrorAlert(String name, List<dynamic> arguments) =>
+      name == 'Document.displayAlert' &&
+      arguments[2] == 0 &&
+      (arguments[3] == 0 || arguments[3] == 2);
   static bool _isFinite(Object? value) => value is num && value.isFinite;
   static bool _isNoteType(Object? value) => _isIntBetween(value, 0, 2);
   static bool _isFieldId(Object? value) =>

@@ -159,7 +159,9 @@ final class WordZoteroCitingSession {
           'Move the caret outside the existing citation before inserting selected sources.',
         );
       }
-      final field = _insert(0);
+      final field = _insert(
+        WordZoteroDocumentData.citationNoteType(_nativeData),
+      );
       field.code = _toHttp(seedCitation.fieldInstruction);
       field.text = seedCitation.plainCitation;
       field.seeded = true;
@@ -306,6 +308,15 @@ final class WordZoteroCitingSession {
         for (final field in _fields) {
           if (field.seeded && !field.codeWasSet && !field.textWasSet) {
             field.deleted = true;
+          }
+          if (field.seeded &&
+              !field.deleted &&
+              !field.unlinked &&
+              field.noteType !=
+                  WordZoteroDocumentData.citationNoteType(_nativeData)) {
+            throw StateError(
+              'Zotero changed the note placement while opening this citation. Choose Document style… first, then insert the selected sources again.',
+            );
           }
         }
         for (final field in _fields) {

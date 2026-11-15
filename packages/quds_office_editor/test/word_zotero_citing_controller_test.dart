@@ -10,6 +10,18 @@ const _preferences =
     'locale="de-DE" hasBibliography="1"/>'
     '<prefs><pref name="fieldType" value="Http"/>'
     '<pref name="noteType" value="1"/></prefs></data>';
+const _initialInlinePreferences =
+    '<data data-version="3"><session id="before-session"/>'
+    '<style id="http://www.zotero.org/styles/nature" '
+    'locale="en-US" hasBibliography="1"/>'
+    '<prefs><pref name="fieldType" value="Field"/>'
+    '<pref name="noteType" value="0"/></prefs></data>';
+
+String get _updatedInlinePreferences => WordZoteroDocumentData.toHttp(
+  _initialInlinePreferences
+      .replaceAll('before-session', 'after-session')
+      .replaceAll('locale="en-US"', 'locale="de-DE"'),
+);
 
 ZoteroCitation _citation(String id, String text, {int note = 0}) =>
     ZoteroCitation(
@@ -231,6 +243,7 @@ void main() {
     'new catalog citation, preferences and formatting form one undo step',
     () {
       final controller = _controller();
+      controller.document.zoteroDocumentData = _initialInlinePreferences;
       controller.caret.logicalIndex = 4;
       controller.caret.collapseSelection();
       final transaction = _begin(controller, seed: _citation('new', 'New'));
@@ -241,7 +254,9 @@ void main() {
         _citation('new', '1'),
         html: '<sup>1</sup>',
       );
-      _call(transaction, 'Document.setDocumentData', [_preferences]);
+      _call(transaction, 'Document.setDocumentData', [
+        _updatedInlinePreferences,
+      ]);
       _complete(transaction);
       transaction.apply();
       expect(controller.document.paragraphs.single.text, 'Left1Right');
@@ -262,7 +277,10 @@ void main() {
       expect(controller.document.paragraphs.single.text, 'LeftRight');
       expect(controller.caret.logicalIndex, 4);
       expect(controller.caret.isCollapsed, isTrue);
-      expect(WordZoteroDocumentData.read(controller.document), '');
+      expect(
+        WordZoteroDocumentData.read(controller.document),
+        WordZoteroDocumentData.toNative(_initialInlinePreferences),
+      );
       expect(controller.canUndo, isFalse);
       controller.redo();
       expect(_state(controller.document), after);
@@ -471,6 +489,7 @@ void main() {
     'late insertion refusal rolls back earlier field updates and leaves history clean',
     () {
       final document = WmlDocument.empty(text: 'Page result');
+      document.zoteroDocumentData = _initialInlinePreferences;
       final first = document.paragraphs.single;
       first.properties.pageNumberField = true;
       first.properties.fieldInstruction = ' PAGE ';
@@ -492,7 +511,9 @@ void main() {
         fields.last['id'] as String,
         _citation('existing', 'Earlier applied change'),
       );
-      _call(transaction, 'Document.setDocumentData', [_preferences]);
+      _call(transaction, 'Document.setDocumentData', [
+        _updatedInlinePreferences,
+      ]);
       _complete(transaction);
       expect(() => transaction.apply(), throwsUnsupportedError);
       expect(_state(document), before);
@@ -571,6 +592,7 @@ void main() {
 
   test('processor cancellation, canceled seed and no-op keep clean history', () {
     final controller = _controller();
+    controller.document.zoteroDocumentData = _initialInlinePreferences;
     final before = _state(controller.document);
     final revision = controller.contentRevision;
     final canceled = _begin(
