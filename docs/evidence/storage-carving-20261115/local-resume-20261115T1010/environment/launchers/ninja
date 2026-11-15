@@ -1,0 +1,4 @@
+#!/bin/sh
+export TMPDIR='/workspace/scratch/aed049b7e8bd/toolchains/tmp'
+export LD_LIBRARY_PATH='/workspace/scratch/aed049b7e8bd/toolchains/native/usr/lib/x86_64-linux-gnu'${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+exec '/workspace/scratch/aed049b7e8bd/toolchains/native/usr/bin/ninja' "$@"

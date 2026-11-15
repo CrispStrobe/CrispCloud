@@ -1,0 +1,61 @@
+{
+  "after_entries_sha256": "fa5886ba1f1e953ef06c419f15d2f375f79d7b731f32bb52137dd85a341aed5c",
+  "after_git": {
+    "head": "e0221c2034cf56cac6c9566c8ff7b65ed41518a2",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/canonical-source-audit.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/checks/comparison/full-checkout-sha256.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/checks/comparison/managed-source-comparison.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/checks/comparison/source-verification.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/checks/summary.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/qualification/command.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/qualification/inputs-before.json.gz\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/qualification/metadata.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_controls.py\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py\n",
+    "tree": "eea484e50ac36cd3a0bb9f66c00994422fd4edec",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_controls.py": "99e28bc88a579a50d2b7477d21219cd8276a9a50cc3dafe31cbf5f2154ab494c",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py": "7ff013ed61816c122cd812292708ba134409e4621b04133d7fa9cf258e401347",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7"
+  },
+  "before_entries_sha256": "fa5886ba1f1e953ef06c419f15d2f375f79d7b731f32bb52137dd85a341aed5c",
+  "before_git": {
+    "head": "e0221c2034cf56cac6c9566c8ff7b65ed41518a2",
+    "source_changes": [],
+    "status": "?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/canonical-source-audit.json\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_controls.py\n?? docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py\n",
+    "tree": "eea484e50ac36cd3a0bb9f66c00994422fd4edec",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_controls.py": "99e28bc88a579a50d2b7477d21219cd8276a9a50cc3dafe31cbf5f2154ab494c",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/verify_current_source.py": "7ff013ed61816c122cd812292708ba134409e4621b04133d7fa9cf258e401347",
+    "/workspace/scratch/aed049b7e8bd/CrispCloud/docs/evidence/storage-carving-20261115/record_gate.py": "922df73d2c33dc39f0cb07b77835224de50ecce008ba86062957d317f25362f7"
+  },
+  "command": [
+    "python3",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/run_source_controls.py",
+    "--repo",
+    ".",
+    "--quds",
+    "/workspace/scratch/aed049b7e8bd/canonical/quds_office_suite",
+    "--parser",
+    "/workspace/scratch/aed049b7e8bd/canonical/legacy-doc-parser",
+    "--output",
+    "docs/evidence/storage-carving-20261115/local-resume-20261115T1010/source-integrity/checks"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "elapsed_seconds": 7.900203475000126,
+  "finished_at": "2026-11-15T09:17:27.593361+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8489,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": false,
+  "repo": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "returncode": 1,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T09:17:19.691530+00:00",
+  "suite_count": null
+}

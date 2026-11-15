@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+export CRISP_TOOLCHAIN_ROOT='/workspace/scratch/aed049b7e8bd/toolchains'
+export FLUTTER_ROOT="$CRISP_TOOLCHAIN_ROOT/flutter"
+export TMPDIR="$CRISP_TOOLCHAIN_ROOT/tmp"
+export PUB_CACHE="$CRISP_TOOLCHAIN_ROOT/pub-cache"
+export CARGO_HOME="$CRISP_TOOLCHAIN_ROOT/cargo-home"
+export XDG_CONFIG_HOME="$CRISP_TOOLCHAIN_ROOT/config"
+export XDG_CACHE_HOME="$CRISP_TOOLCHAIN_ROOT/cache"
+export FLUTTER_SUPPRESS_ANALYTICS=true
+export DART_SUPPRESS_ANALYTICS=true
+export CI=true
+export PATH="$CRISP_TOOLCHAIN_ROOT/bin:$FLUTTER_ROOT/bin:$PATH"
+export LD_LIBRARY_PATH="$CRISP_TOOLCHAIN_ROOT/lib:$CRISP_TOOLCHAIN_ROOT/native/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"

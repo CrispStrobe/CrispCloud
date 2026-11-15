@@ -1,0 +1,30 @@
+{
+  "clang --version": {
+    "returncode": 0,
+    "output": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/aed049b7e8bd/toolchains/native/usr/lib/llvm-19/bin\n"
+  },
+  "clang++ --version": {
+    "returncode": 0,
+    "output": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/aed049b7e8bd/toolchains/native/usr/lib/llvm-19/bin\n"
+  },
+  "llvm-ar --version": {
+    "returncode": 0,
+    "output": "Debian LLVM version 19.1.7\n  Optimized build.\n"
+  },
+  "cmake --version": {
+    "returncode": 0,
+    "output": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n"
+  },
+  "ninja --version": {
+    "returncode": 0,
+    "output": "1.12.1\n"
+  },
+  "rustc -Vv": {
+    "returncode": 0,
+    "output": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5\n"
+  },
+  "cargo -Vv": {
+    "returncode": 0,
+    "output": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]\n"
+  }
+}

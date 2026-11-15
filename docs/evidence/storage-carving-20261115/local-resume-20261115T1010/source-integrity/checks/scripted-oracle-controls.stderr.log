@@ -1,0 +1,21 @@
+setUpClass (test_scripted_oracle.ScriptedOracleControls) ... ERROR
+
+======================================================================
+ERROR: setUpClass (test_scripted_oracle.ScriptedOracleControls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_engine/tool/fidelity/test_scripted_oracle.py", line 14, in setUpClass
+    cls.parts = {kind:read_zip(root/kind/f'edited.{extension}') for kind,extension in
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_engine/tool/fidelity/corpus.py", line 92, in read_zip
+    with zipfile.ZipFile(path) as z:
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1353, in __init__
+    self.fp = io.open(file, filemode)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'build/fidelity-scripted/word/edited.docx'
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.008s
+
+FAILED (errors=1)

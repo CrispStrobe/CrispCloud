@@ -1,0 +1,34 @@
+{
+  "normal clang /workspace/scratch/aed049b7e8bd/toolchains/probes/probe.c -o /workspace/scratch/aed049b7e8bd/toolchains/probes/c-normal": {
+    "returncode": 0,
+    "output": ""
+  },
+  "normal /workspace/scratch/aed049b7e8bd/toolchains/probes/c-normal": {
+    "returncode": 0,
+    "output": "C compile/link/run passed\n"
+  },
+  "normal rustc /workspace/scratch/aed049b7e8bd/toolchains/probes/probe.rs -o /workspace/scratch/aed049b7e8bd/toolchains/probes/rust-normal": {
+    "returncode": 0,
+    "output": ""
+  },
+  "normal /workspace/scratch/aed049b7e8bd/toolchains/probes/rust-normal": {
+    "returncode": 0,
+    "output": "Rust compile/link/run passed\n"
+  },
+  "filtered clang /workspace/scratch/aed049b7e8bd/toolchains/probes/probe.c -o /workspace/scratch/aed049b7e8bd/toolchains/probes/c-filtered": {
+    "returncode": 0,
+    "output": ""
+  },
+  "filtered /workspace/scratch/aed049b7e8bd/toolchains/probes/c-filtered": {
+    "returncode": 0,
+    "output": "C compile/link/run passed\n"
+  },
+  "filtered rustc /workspace/scratch/aed049b7e8bd/toolchains/probes/probe.rs -o /workspace/scratch/aed049b7e8bd/toolchains/probes/rust-filtered": {
+    "returncode": 0,
+    "output": ""
+  },
+  "filtered /workspace/scratch/aed049b7e8bd/toolchains/probes/rust-filtered": {
+    "returncode": 0,
+    "output": "Rust compile/link/run passed\n"
+  }
+}

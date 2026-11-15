@@ -1,0 +1,126 @@
+{
+  "README.md": {
+    "size": 2111,
+    "sha256": "9c2da20dbcfb01b8b93bbfd3cdade989bb3b23e3b1cba58b898fa50f8ae6195d"
+  },
+  "dart-version.txt": {
+    "size": 82,
+    "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+  },
+  "env.sh": {
+    "size": 693,
+    "sha256": "550dad0633ac52e9cc4694607a5b5e13aae80719fd9b67f4eca97df6696c45b8"
+  },
+  "flutter-release.json": {
+    "size": 354,
+    "sha256": "0512d2f3e1ecc398936a6dcd0d9b57f89c7cf6221efa5c103b95490c77eab9dd"
+  },
+  "flutter-version.json": {
+    "size": 631,
+    "sha256": "17547b1e6773e2a1e0b640c88db1a65c768be8e6237d7040222601c0d40847ae"
+  },
+  "launcher-hashes.json": {
+    "size": 1013,
+    "sha256": "7d78360234b98bfb6e9ded8caa195643b186d24e64ab85d4b9dbe746e7d26122"
+  },
+  "launchers/cargo": {
+    "size": 291,
+    "sha256": "b38fe458c41cc02b7de0e584906088a92d77c27917cb10df967a444cf0c3df08"
+  },
+  "launchers/clang": {
+    "size": 368,
+    "sha256": "cfac41380e783d1e689489d2c2a3fd03601e8991ec9ffb7d936b6df6f9e267b9"
+  },
+  "launchers/clang++": {
+    "size": 370,
+    "sha256": "08554ff1bc1894bd6a7fc935ae2dd75d7a5ea309c0b6b9205f97b6bbd3fcb7ff"
+  },
+  "launchers/clang-19": {
+    "size": 368,
+    "sha256": "cfac41380e783d1e689489d2c2a3fd03601e8991ec9ffb7d936b6df6f9e267b9"
+  },
+  "launchers/cmake": {
+    "size": 286,
+    "sha256": "2ec17933c8ee7f03bf1a6a35d1aa3307eaa0a00eb2c7f752f770d4064a5a297c"
+  },
+  "launchers/cpack": {
+    "size": 286,
+    "sha256": "f934e8768977144f385366a60df6316bb316ff1d553463f0138099590816d2d4"
+  },
+  "launchers/ctest": {
+    "size": 286,
+    "sha256": "8e4584f568a08c84ed41b8e9cd251791bf6b1994d66663dfec59f048654ce28f"
+  },
+  "launchers/llvm-ar": {
+    "size": 370,
+    "sha256": "c404934e6e3d678be9dd2ec2d72d07dfe0ea6f6256bd4ea2f7430dbcce86e3f2"
+  },
+  "launchers/llvm-strip": {
+    "size": 373,
+    "sha256": "c643f3bdbf56079ae7477ffeecc816a8d1e2c8e9b403dccf71652d16913ed7be"
+  },
+  "launchers/ninja": {
+    "size": 286,
+    "sha256": "2c35da6acdfccfe4d6e9918f6ed3eb857a8e6b99865678f1f93a9c01a7361312"
+  },
+  "launchers/rustc": {
+    "size": 291,
+    "sha256": "354c944aa323df20b2653633d07e82ae6fb0a5d091733aaede40712efa7eaa57"
+  },
+  "launchers/rustdoc": {
+    "size": 293,
+    "sha256": "d8c10fcae3245f6e70f76791072c5e67aaee1d3f7e8130f9f6a9c48ca53ec0bb"
+  },
+  "logs/flutter-precache-linux-final.log.gz": {
+    "size": 398,
+    "sha256": "2c54a753a2e947e15eb2d85d696adf527ab5724843a6658dcd2c8c43a26deb9f"
+  },
+  "logs/flutter-precache-linux.log.gz": {
+    "size": 450,
+    "sha256": "ae5e90c58c0a651ed4d72c032ee2f0c8676ef84c0f23bfea7e6063f997e17d27"
+  },
+  "logs/flutter-precache.log.gz": {
+    "size": 20,
+    "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+  },
+  "logs/sdk-cache-preload.log.gz": {
+    "size": 2859,
+    "sha256": "33f987053eee75e923b58899bcb7609141ab1631606b66ed060113b93b2368a7"
+  },
+  "logs/sdk-pub-offline.log.gz": {
+    "size": 498,
+    "sha256": "edf4eb60c3d784cae2cfc7ce7c9671a1d9ba48db7e84be90dd6fbaa5db81a7e1"
+  },
+  "native-packages.json": {
+    "size": 4175,
+    "sha256": "777ceed11f044f7ac7aa76657deaf42bc1b4e9a79a7597f1b74af70151d7fe2f"
+  },
+  "native-probes.json": {
+    "size": 1343,
+    "sha256": "a34b895e439b232a44df91dc62c8f5f63f93c813865cf4f303ec431a7c3f2a21"
+  },
+  "probes/http.dart": {
+    "size": 528,
+    "sha256": "cd9c0e0bcd69f0112479515bf1898a10a234e8386d2ad12bd7919e097f2781f1"
+  },
+  "probes/probe.c": {
+    "size": 79,
+    "sha256": "f7a128614c3ac104ccfd313acc8ab53848bb9e83c6053154e4c48cff954abeab"
+  },
+  "probes/probe.rs": {
+    "size": 56,
+    "sha256": "133612da3370a70bb229e9ffe4548586af2a3088b59803a61308c1d697882c14"
+  },
+  "rust-packages.json": {
+    "size": 1030,
+    "sha256": "56192cb8b5933d9c1f3f8f5fd4a9d746e2c6adb49c6637f6cc283d225a58b225"
+  },
+  "setup-receipt.json": {
+    "size": 2554,
+    "sha256": "e85d7a74b101e03149b8a6ea42c29db17637af6067656996f443e18c4ee5be15"
+  },
+  "tool-versions.json": {
+    "size": 1501,
+    "sha256": "8e362eb31ca4652e799ec299511df2344f22ad5bd3b9588eaf663931ef1d8841"
+  }
+}
