@@ -605,13 +605,15 @@ class ConnectionDialogExtraStrings {
     'ja': {
       "invalidSmbBackendProfile":
           "このプロファイルは SMB 転送方式が無効なため読み込めません。接続する前に、転送方式または別のプロファイルを選んでください。",
-      "invalidCloudEngineProfile": "ストレージエンジンが無効なため、このプロファイルを読み込めませんでした。接続前にエンジンか別のプロファイルを選択してください。",
+      "invalidCloudEngineProfile":
+          "ストレージエンジンが無効なため、このプロファイルを読み込めませんでした。接続前にエンジンか別のプロファイルを選択してください。",
       "cloudEngine": "ストレージエンジン",
       "cloudEngine_dart": "Dart（既定）",
       "cloudEngine_rust": "Rust（試験的）",
       "cloudEngine_auto": "自動",
       "cloudEngineHelp": "自動は Rust ライブラリが利用できる場合に Rust、それ以外は Dart を使用します。サインイン、ネットワーク、セキュリティのエラーでエンジンが切り替わることはありません。",
-      "rustEngineUnavailable": "このビルドでは Rust ストレージエンジンを利用できません。Dart または自動を選択してください。",
+      "rustEngineUnavailable":
+          "このビルドでは Rust ストレージエンジンを利用できません。Dart または自動を選択してください。",
       "smbBackend": "SMB 転送方式",
       "smbBackend_libsmb2": "libsmb2（互換）",
       "smbBackend_rust": "Rust SMB",
@@ -695,19 +697,21 @@ class ConnectionDialogExtraStrings {
     },
     'ko': {
       "invalidSmbBackendProfile": "이 프로필의 SMB 전송 방식이 잘못되어 불러올 수 없습니다. 연결하기 전에 전송 방식을 선택하거나 다른 프로필을 불러오세요.",
-      "invalidCloudEngineProfile": "스토리지 엔진이 잘못되어 이 프로필을 불러올 수 없습니다. 연결하기 전에 엔진이나 다른 프로필을 선택하세요.",
+      "invalidCloudEngineProfile":
+          "스토리지 엔진이 잘못되어 이 프로필을 불러올 수 없습니다. 연결하기 전에 엔진이나 다른 프로필을 선택하세요.",
       "cloudEngine": "스토리지 엔진",
       "cloudEngine_dart": "Dart (기본값)",
       "cloudEngine_rust": "Rust (실험적)",
       "cloudEngine_auto": "자동",
       "cloudEngineHelp": "자동은 Rust 라이브러리를 사용할 수 있으면 Rust를, 아니면 Dart를 사용합니다. 로그인, 네트워크, 보안 오류로 엔진이 바뀌지 않습니다.",
-      "rustEngineUnavailable": "이 빌드에서는 Rust 스토리지 엔진을 사용할 수 없습니다. Dart 또는 자동을 선택하세요.",
+      "rustEngineUnavailable":
+          "이 빌드에서는 Rust 스토리지 엔진을 사용할 수 없습니다. Dart 또는 자동을 선택하세요.",
       "smbBackend": "SMB 전송 방식",
       "smbBackend_libsmb2": "libsmb2 (호환)",
-      "smbBackend_rust": "Rust (실험적)",
+      "smbBackend_rust": "Rust SMB",
       "smbBackend_auto": "자동",
       "smbBackendHelp":
-          "Rust를 불러올 수 없을 때만 자동 전환합니다. 네트워크, 로그인 또는 보안 오류 시에는 전환하지 않습니다.",
+          "Rust SMB가 내장되어 있습니다. 이전 프로필은 Rust로 전환되며 LGPL 대체 엔진은 포함되지 않습니다.",
       "connectTitle": "클라우드 저장소에 연결",
       "profileName": "프로필 이름",
       "profileHint": "예: 업무용 S3, 개인용 SFTP",
@@ -791,7 +795,8 @@ class ConnectionDialogExtraStrings {
       "cloudEngine_rust": "Rust (تجريبي)",
       "cloudEngine_auto": "تلقائي",
       "cloudEngineHelp": "يستخدم الوضع التلقائي Rust عند توفر مكتبته وإلا Dart. لا تؤدي أخطاء تسجيل الدخول أو الشبكة أو الأمان إلى تبديل المحرك.",
-      "rustEngineUnavailable": "محرك التخزين Rust غير متاح في هذا الإصدار. اختر Dart أو تلقائي.",
+      "rustEngineUnavailable":
+          "محرك التخزين Rust غير متاح في هذا الإصدار. اختر Dart أو تلقائي.",
       "smbBackend": "نقل SMB",
       "smbBackend_libsmb2": "libsmb2 (متوافق)",
       "smbBackend_rust": "Rust SMB",

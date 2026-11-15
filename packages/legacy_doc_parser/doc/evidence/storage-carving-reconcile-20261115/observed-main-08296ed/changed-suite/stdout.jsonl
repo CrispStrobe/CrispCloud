@@ -1,0 +1,43 @@
+{"protocolVersion":"0.1.1","runnerVersion":"1.33.0","pid":19,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"test/recovery_reconciliation_bounds_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading test/recovery_reconciliation_bounds_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":1}
+{"count":1,"time":6,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":731}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":18,"line":null,"column":null,"url":null},"type":"group","time":733}
+{"test":{"id":3,"name":"explicit DOCX recovery handles compound parser errors; strict mode preserves them","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":114,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":734}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":792}
+{"test":{"id":4,"name":"bounded raw recovery still follows a valid referenced piece table","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":141,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":794}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":796}
+{"test":{"id":5,"name":"Word 98 Mac signature is retained in damaged-container recovery","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":145,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":797}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":798}
+{"test":{"id":6,"name":"raw recovery respects the public 64 MiB input admission bound","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":152,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":798}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":800}
+{"test":{"id":7,"name":"raw recovery does not ignore contradictory cbMac 256","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":163,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":800}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":802}
+{"test":{"id":8,"name":"raw recovery does not ignore contradictory cbMac 1048576","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":163,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":802}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":802}
+{"test":{"id":9,"name":"raw recovery does not ignore contradictory cbMac 33554433","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":163,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":803}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":806}
+{"test":{"id":10,"name":"raw recovery bounds candidate validation attempts","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":171,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":806}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":826}
+{"test":{"id":11,"name":"raw recovery bounds cumulative text-decoding work","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":176,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":828}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":932}
+{"test":{"id":12,"name":"raw recovery preserves encrypted/obfuscated refusal 256","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":186,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":932}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":934}
+{"test":{"id":13,"name":"raw recovery preserves encrypted/obfuscated refusal 32768","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":186,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":934}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":935}
+{"test":{"id":14,"name":"Word 6 Unicode body preserves UTF-16 with complex=false","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":197,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":935}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":943}
+{"test":{"id":15,"name":"Word 6 Unicode body preserves UTF-16 with complex=true","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":197,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":943}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":946}
+{"test":{"id":16,"name":"Word 6 Unicode rejects an isolated surrogate before conversion","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":212,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":946}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":948}
+{"test":{"id":17,"name":"Word 6 refuses an unsupported 8-bit charset/locale 204/0","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":226,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":948}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":950}
+{"test":{"id":18,"name":"Word 6 refuses an unsupported 8-bit charset/locale 0/1049","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":226,"column":5,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":950}
+{"testID":18,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":951}
+{"test":{"id":19,"name":"Word 6 explicitly declared en-US ANSI keeps Windows-1252 text","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":244,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":951}
+{"testID":19,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":953}
+{"test":{"id":20,"name":"comment omission keeps a bookmark at the next story boundary","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":253,"column":3,"url":"file:///workspace/scratch/1e19fe1d39ae/ParserCanonical/test/recovery_reconciliation_bounds_test.dart"},"type":"testStart","time":953}
+{"testID":20,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1017}
+{"success":true,"type":"done","time":1024}

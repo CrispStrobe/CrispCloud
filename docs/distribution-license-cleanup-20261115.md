@@ -88,10 +88,17 @@ Sources: [Via LA AVC programme](https://www.via-la.com/licensing-programs/avc-h-
 
 ## Product limits
 
-VeraCrypt remains a limited header/format helper, not finished native container
-browsing/mounting. AES-XTS/PBKDF2 subsets do not establish support for Argon2id,
-custom PIMs, keyfiles or native TrueCrypt headers. Placeholder container listing
-must not be advertised as working support. The existing exFAT exclusion stays.
+The subsequently integrated compatibility branch adds actual bounded, read-only
+VeraCrypt/TrueCrypt container browsing through the existing FAT12/16/32, NTFS
+and ext2/3/4 reader profiles. AES-256-XTS, supported PBKDF2 PRFs, native
+Argon2id, bounded PIM/keyfiles and explicitly selected primary/backup/hidden
+headers are implemented. Browser Argon2id, other ciphers/cascades, writes,
+creation/resizing, system encryption and exFAT remain unsupported. Independent
+format fixtures are not proof of every real upstream-created container or
+physical-device profile. See [the supported profile](veracrypt-support.md).
+No third-party VeraCrypt/TrueCrypt runtime is bundled; primitives use the
+existing MIT PointyCastle dependency and the filesystem readers retain their
+explicit MIT notices.
 
 `tool/check_distribution_components.py` guards the removed dependency and can
 inspect an extracted app/CLI bundle for libsmb2 and accidental default FUSE

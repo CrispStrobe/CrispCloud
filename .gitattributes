@@ -41,3 +41,6 @@ packages/crisp_storage/LICENSE text eol=lf
 packages/crisp_storage/licensing/*.json text eol=lf
 packages/crisp_storage/rust/Cargo.lock text eol=lf
 packages/crisp_storage/rust_cloud/Cargo.lock text eol=lf
+
+# Unified-diff context lines are immutable evidence, including blank contexts.
+packages/legacy_doc_parser/doc/evidence/**/*.patch -whitespace

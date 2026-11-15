@@ -1,0 +1,55 @@
+{
+  "after_entries_sha256": "1ad4f8c1f0a3fa06b36917795a487722e59b363875a9c88f4bcf09fa912252e9",
+  "after_git": {
+    "head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "source_changes": [],
+    "status": "",
+    "tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/parser-reconcile/record_parser_gate.py": "41631c941659fd3972089f2cd944ee09c7a104e8f495a70204b7a0b4592749a0",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/receipts/flutter-version.json": "ea4bc8316415636ee34e83e16bfad26e4fc48cfb7fdaa0b0182264b2c0474eca"
+  },
+  "before_entries_sha256": "1ad4f8c1f0a3fa06b36917795a487722e59b363875a9c88f4bcf09fa912252e9",
+  "before_git": {
+    "head": "08296edbee08da013a8ff718798972552ccd03f7",
+    "source_changes": [],
+    "status": "",
+    "tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/parser-reconcile/record_parser_gate.py": "41631c941659fd3972089f2cd944ee09c7a104e8f495a70204b7a0b4592749a0",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/receipts/flutter-version.json": "ea4bc8316415636ee34e83e16bfad26e4fc48cfb7fdaa0b0182264b2c0474eca"
+  },
+  "command": [
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "analyze",
+    "--fatal-infos",
+    "test/recovery_reconciliation_bounds_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+  "elapsed_seconds": 1.796990201999506,
+  "finished_at": "2026-11-15T12:46:51.358044+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 1844,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T12:46:49.559436+00:00",
+  "suite_count": null
+}
