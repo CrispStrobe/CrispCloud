@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "cutoff_utc": "2026-11-15 20:51:07 UTC",
+  "branch": "codex/terminal-screen-workspace",
+  "integration_merge": "52e7205f3c8b7dacabbce6364ab047eda20bd624",
+  "main": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+  "all_30_refreshed_heads_verified_ancestors": true,
+  "verification": "Independent GitHub compare for every refreshed head: behind_by=0 and merge_base equal to that head. No test execution implied.",
+  "audited_heads": [
+    {
+      "branch": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+    },
+    {
+      "branch": "codex/terminal-screen-workspace",
+      "sha": "4b2439b8700ebebc6b394362ad51c31763e4d317"
+    },
+    {
+      "branch": "codex/zotero-support-20261115",
+      "sha": "7d4d564030d53cbc3a0df8b53950656c0bef9a25"
+    },
+    {
+      "branch": "docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03"
+    },
+    {
+      "branch": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+    },
+    {
+      "branch": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+    },
+    {
+      "branch": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+    },
+    {
+      "branch": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4"
+    },
+    {
+      "branch": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+    },
+    {
+      "branch": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+    },
+    {
+      "branch": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+    },
+    {
+      "branch": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+    },
+    {
+      "branch": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+    },
+    {
+      "branch": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+    },
+    {
+      "branch": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+    },
+    {
+      "branch": "fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+    },
+    {
+      "branch": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6"
+    },
+    {
+      "branch": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01"
+    },
+    {
+      "branch": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+    },
+    {
+      "branch": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+    },
+    {
+      "branch": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+    },
+    {
+      "branch": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d"
+    },
+    {
+      "branch": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+    },
+    {
+      "branch": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+    },
+    {
+      "branch": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12"
+    },
+    {
+      "branch": "integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830"
+    },
+    {
+      "branch": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+    },
+    {
+      "branch": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c"
+    },
+    {
+      "branch": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665"
+    },
+    {
+      "branch": "main",
+      "sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589"
+    }
+  ],
+  "concurrent_zotero": {
+    "head": "dcd8d58d011a4cbaa0b9a48aa91bd6262c7d3611",
+    "relation": "ahead",
+    "ahead_by": 4,
+    "behind_by": 0,
+    "merge_base": "52e7205f3c8b7dacabbce6364ab047eda20bd624",
+    "integrated_by": "Fast-forward with expected-head lease",
+    "files": [
+      "docs/validation/zotero-local-identity-20261115/crispcloud-branch-audit.json",
+      "docs/validation/zotero-local-identity-20261115/feature-checkpoint.json",
+      "docs/validation/zotero-local-identity-20261115/recent-integration.json",
+      "packages/QUDS_FORKS.md",
+      "packages/quds_office_engine/lib/src/word/model/word_zotero.dart",
+      "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "packages/quds_office_engine/test/word_zotero_test.dart",
+      "packages/quds_office_engine/test/zotero_identity_client_test.dart",
+      "tool/office_fidelity_manifest.json"
+    ],
+    "terminal_paths_changed": false,
+    "canonical_quds_commit": "df824e4351b7df7f8b7d6df2deb64f95bfe2ef2d",
+    "managed_files": 2375
+  },
+  "no_github_actions_queried_or_awaited": true,
+  "final_terminal_edits": "Subsequent terminal-only checkpoint(s) follow this integration cutoff."
+}

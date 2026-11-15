@@ -26,7 +26,7 @@
         "percent-encoded Unicode working directory",
         "idempotent setup"
       ],
-      "limits": "Piped interactive shells, not PTYs. Run predates final remote review fixes. The subsequent Zsh precmd return-zero correction has not been executed."
+      "limits": "Piped interactive shells, not PTYs. The run predates final remote review fixes. Subsequent Zsh precmd return-zero and Bash4.4–5.0 scalar fallback changes have not been executed."
     }
   },
   "native_flutter_feature_tests": {
@@ -35,13 +35,33 @@
     "reason": "Filesystem exhausted during first test kernel cache copy; execution environment later became unavailable. See runtime-attempts.md and runtime-attempts.json."
   },
   "final_remote_review": {
-    "status": "source review only",
+    "status": "source/API review only",
     "executed": false,
+    "corrections": [
+      "Preserve literal absolute directory labels",
+      "Keep command completion after prompt eviction",
+      "Consume input provenance once per operation",
+      "Preserve downstream Zsh hooks after failed commands",
+      "Use scalar PROMPT_COMMAND fallback on Bash 4.4–5.0",
+      "Correct recovered input regression tests to use the public marks getter"
+    ],
+    "pinned_emulator": {
+      "repository": "SoFluffyOS/xterm2",
+      "tag": "5.4.0",
+      "commit": "9d9901ee43ace000ef3dcbf0283db72cc0be1f70",
+      "checks": [
+        "InputAwareTerminal constructor and four override signatures",
+        "Public TerminalKeyEventType export",
+        "CellAnchor.dispose idempotence",
+        "OSC metadata parsed before onPrivateOSC callback"
+      ]
+    },
     "needs": [
-      "format/analyze current branch",
+      "format/analyze the current branch",
       "run shell, input, broadcast, arrangement, jump route and multiplexer suites",
-      "repeat shell helper checks including nonzero-command Zsh hook ordering"
-    ]
+      "repeat final helper smoke including nonzero-command Zsh hooks and Bash4.4–5.0 fallback"
+    ],
+    "helper_reproduction": "python3 tool/terminal_shell_setup_smoke.py"
   },
   "github_actions": {
     "awaited": false,

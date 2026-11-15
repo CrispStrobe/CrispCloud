@@ -30,10 +30,15 @@ if [[ -n ${BASH_VERSION-} && $- == *i* ]]; then
         fi
         return "$__crispcloud_status"
       }
-      case "$(declare -p PROMPT_COMMAND 2>/dev/null)" in
-        'declare -a'*) PROMPT_COMMAND=(__crispcloud_report_status "${PROMPT_COMMAND[@]}") ;;
-        *) PROMPT_COMMAND=(__crispcloud_report_status "${PROMPT_COMMAND-}") ;;
-      esac
+      if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 1) )); then
+        case "$(declare -p PROMPT_COMMAND 2>/dev/null)" in
+          'declare -a'*) PROMPT_COMMAND=(__crispcloud_report_status "${PROMPT_COMMAND[@]}") ;;
+          *) PROMPT_COMMAND=(__crispcloud_report_status "${PROMPT_COMMAND-}") ;;
+        esac
+      else
+        # Bash 4.4–5.0 executes only the scalar/first PROMPT_COMMAND element.
+        PROMPT_COMMAND='__crispcloud_report_status'$'\n'"${PROMPT_COMMAND-}"
+      fi
       PS0=$'\033]133;C\007'"${PS0-}"
       PS1='\[\e]133;A\a\]'"${PS1-}"'\[\e]133;B\a\]'
     fi

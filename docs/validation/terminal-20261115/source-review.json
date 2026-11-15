@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "reviewed_code_commit": "7054ab52c03c682e570563cfda16248afa0e3a30",
+  "reviewed_code_tree": "9f03405b85ae3e35bdbe981fa81622628c25acd2",
+  "review_type": "Remote source/API review; not compiler, analyzer or runtime validation",
+  "readback": {
+    "head": "7054ab52c03c682e570563cfda16248afa0e3a30",
+    "files": [
+      {
+        "path": "lib/models/ssh_multiplexer_session.dart",
+        "sha": "6d62966ca67ffb80f013d837702b39546ccc934f"
+      },
+      {
+        "path": "lib/services/ssh_terminal_service.dart",
+        "sha": "a664244c638a9cb3ab74efabb6dcc3238c964c07"
+      },
+      {
+        "path": "lib/l10n/ssh_multiplexer_strings.dart",
+        "sha": "d163f0c2b72e131e2189ad84729b3e3a41ec67e7"
+      },
+      {
+        "path": "lib/widgets/ssh_multiplexer_sessions_dialog.dart",
+        "sha": "afcbe964f186672974f2badbcf9f0d334b13d822"
+      },
+      {
+        "path": "test/ssh_multiplexer_session_test.dart",
+        "sha": "fe3bf022021aeae76ba5c98b8ff51524018fdb75"
+      },
+      {
+        "path": "test/ssh_multiplexer_discovery_test.dart",
+        "sha": "68ac3cac9e7fa6dee5f031bf8df778c16d90d283"
+      },
+      {
+        "path": "test/ssh_multiplexer_sessions_dialog_test.dart",
+        "sha": "a3a1d0ce36680c876af546029342028f4769a7e3"
+      },
+      {
+        "path": "lib/widgets/terminal_panel.dart",
+        "sha": "1ca3c9f2713419a7ae4fdefc0210322fce4c1209"
+      },
+      {
+        "path": "lib/widgets/ssh_terminal_connect_dialog.dart",
+        "sha": "a498b4e09e8b048e5727fa70492bc1e841109ef2"
+      },
+      {
+        "path": "lib/services/terminal_shell_setup.dart",
+        "sha": "8859193dd2c4b8b73a41e65d39dd91c364ad8ee0"
+      },
+      {
+        "path": "test/terminal_user_input_test.dart",
+        "sha": "d6f73b0176a1202c389e273f674712556fcde005"
+      },
+      {
+        "path": "test/ssh_terminal_reconnect_test.dart",
+        "sha": "4a7f6714ea2cc0fa911769dcc7f4a36507853ac1"
+      }
+    ],
+    "failures": []
+  },
+  "lifecycle_findings": [
+    "Cleanup registered before stream cancellation",
+    "Concurrent disconnects share close futures",
+    "Replacement waits known cleanup and blocks on unconfirmed cleanup",
+    "Late opener results remain owned until released",
+    "Replay cancellation lease captured for each queued write",
+    "Input origin consumed once and suppressed during replay"
+  ],
+  "emulation_api": {
+    "repository": "SoFluffyOS/xterm2",
+    "commit": "9d9901ee43ace000ef3dcbf0283db72cc0be1f70",
+    "tag": "5.4.0",
+    "terminal_blob": "489941409801840c381f630bc203b8d39ad4a9ef",
+    "buffer_line_blob": "76bb0f1ae19d8679600cce020313ffa9d011b96b",
+    "verified": [
+      "Constructor arguments and keyInput/charInput/textInput/paste overrides",
+      "TerminalKeyEventType public export",
+      "Idempotent CellAnchor.dispose",
+      "OSC semantic state updated before private OSC callback"
+    ]
+  },
+  "corrections_added_in_final_review": [
+    "Zsh prompt hook returns success after reporting original status",
+    "Bash4.4–5.0 retains scalar PROMPT_COMMAND behavior",
+    "Directory labels preserve raw absolute path punctuation",
+    "Running command completion survives prompt-anchor eviction",
+    "Recovered input tests reference marks, the public controller getter"
+  ],
+  "unexecuted": [
+    "Full current-source formatting",
+    "Dart static analysis",
+    "Native Flutter feature tests",
+    "Browser tests",
+    "Final shell-helper smoke",
+    "Live SSH/tmux/screen persistence",
+    "Device and packaged-platform checks"
+  ],
+  "github_actions_awaited": false,
+  "shell_helper_runner": {
+    "path": "tool/terminal_shell_setup_smoke.py",
+    "blob": "c036b2393f18ce9c71eab5e88224082112de9ac2",
+    "runtime": "POSIX, Python3.8+, Bash4.4+ and/or Zsh5+",
+    "executed": false,
+    "behavior": "Extract actual Dart raw helper literals; bounded fresh interactive shell runs; status/hook/cwd/idempotence checks; explicit skips and source SHA256."
+  }
+}

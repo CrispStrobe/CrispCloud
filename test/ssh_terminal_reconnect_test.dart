@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crisp_cloud/models/screen_session_options.dart';
+import 'package:crisp_cloud/models/ssh_multiplexer_session.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/providers/core_providers.dart';
 import 'package:crisp_cloud/providers/ssh_terminal_provider.dart';
@@ -8,6 +9,7 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/ssh_terminal_service.dart';
 import 'package:crisp_cloud/services/terminal_session.dart';
 import 'package:crisp_cloud/widgets/terminal_panel.dart';
+import 'package:crisp_cloud/widgets/ssh_multiplexer_sessions_dialog.dart';
 import 'package:crisp_storage/crisp_storage.dart' show HostKeyPrompt;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,12 +37,14 @@ void main() {
     await service.dispose();
   });
 
-  Future<void> mount(WidgetTester tester) async {
+  Future<void> mount(WidgetTester tester, {bool visible = true}) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          home: Scaffold(body: TerminalPanel(session: terminal)),
+          home: Scaffold(
+            body: TerminalPanel(session: terminal, visible: visible),
+          ),
         ),
       ),
     );
@@ -377,6 +381,247 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
   });
+
+  testWidgets(
+    'browsing tmux starts no shell before an exact selection and keeps a secret-free reconnect route',
+    (tester) async {
+      service.discoveryResults = parseSshMultiplexerSessions(
+        SshMultiplexer.tmux,
+        'build-01\t3\t1\nother\t1\t0\n',
+      );
+      await mount(tester);
+      await chooseAction(tester, 'Browse tmux sessions');
+      await submit(
+        tester,
+        const SshTerminalConfig(
+          host: 'target.example',
+          port: 2222,
+          username: 'alice',
+          authentication: SshTerminalAuthentication.privateKey,
+          privateKey: 'target-private-key',
+          passphrase: 'target-passphrase',
+          jumpHosts: [
+            SshJumpHost(
+              host: 'bastion.example',
+              username: 'outer',
+              password: 'hop-secret',
+            ),
+          ],
+        ),
+        settle: false,
+      );
+      expect(terminal.isConnecting, isTrue);
+      expect(service.discoveries, [SshMultiplexer.tmux]);
+      expect(service.discoverySessions, ['session-1']);
+      expect(service.shellOptions, isEmpty);
+      expect(service.requests.single.jumpHosts.single.password, 'hop-secret');
+      expect(service.requests.single.privateKey, 'target-private-key');
+      expect(find.byType(SshMultiplexerSessionsDialog), findsOneWidget);
+
+      final tile = find.byKey(
+        const ValueKey('ssh-multiplexer-session-build-01'),
+      );
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(terminal.isConnected, isTrue);
+      expect(service.shellOptions.single?.sessionName, 'build-01');
+      expect(service.shellOptions.single?.mode, TmuxSessionMode.attach);
+      expect(service.screenOptions.single, isNull);
+      expect(terminal.label, 'alice@target.example · tmux: build-01');
+
+      await chooseAction(tester, 'Reconnect SSH');
+      final remembered = tester
+          .widget<SshTerminalConnectDialog>(
+            find.byType(SshTerminalConnectDialog),
+          )
+          .initialConfig!;
+      expect(remembered.tmux?.sessionName, 'build-01');
+      expect(remembered.tmux?.mode, TmuxSessionMode.attach);
+      expect(remembered.port, 2222);
+      expect(remembered.authentication, SshTerminalAuthentication.privateKey);
+      expect(remembered.privateKey, isEmpty);
+      expect(remembered.passphrase, isEmpty);
+      expect(remembered.jumpHosts.single.host, 'bastion.example');
+      expect(remembered.jumpHosts.single.password, isEmpty);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(service.disconnected, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    },
+  );
+
+  testWidgets('screen browsing attaches the selected full ID among duplicate names', (tester) async {
+    service.discoveryResults = parseSshMultiplexerSessions(
+      SshMultiplexer.screen,
+      'There are screens on:\n'
+      '\t123.work\t(Detached)\n'
+      '\t456.work\t(Attached)\n'
+      '2 Sockets in /run/screen/S-alice.\n',
+    );
+    await mount(tester);
+    await chooseAction(tester, 'Browse screen sessions');
+    await submit(
+      tester,
+      const SshTerminalConfig(
+        host: 'screen.example', port: 22, username: 'alice',
+      ),
+      settle: false,
+    );
+    expect(service.shellOptions, isEmpty);
+    final tile = find.byKey(
+      const ValueKey('ssh-multiplexer-session-456.work'),
+    );
+    await tester.ensureVisible(tile);
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
+    expect(service.discoveries, [SshMultiplexer.screen]);
+    expect(service.screenOptions.single?.sessionName, '456.work');
+    expect(service.screenOptions.single?.mode, ScreenSessionMode.attach);
+    expect(service.shellOptions.single, isNull);
+    expect(terminal.label, 'alice@screen.example · screen: 456.work');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
+  testWidgets('cancelling a session picker closes its authenticated connection', (tester) async {
+    service.discoveryResults = parseSshMultiplexerSessions(
+      SshMultiplexer.tmux, 'work\t1\t0\n',
+    );
+    await mount(tester);
+    await chooseAction(tester, 'Browse tmux sessions');
+    await submit(
+      tester,
+      const SshTerminalConfig(
+        host: 'host.example', port: 22, username: 'alice',
+      ),
+      settle: false,
+    );
+    expect(service.getActiveSessions(), hasLength(1));
+    await tester.tap(find.byKey(const ValueKey('ssh-multiplexer-cancel')));
+    await tester.pumpAndSettle();
+    expect(service.disconnected, ['session-1']);
+    expect(service.getActiveSessions(), isEmpty);
+    expect(service.shellOptions, isEmpty);
+    expect(terminal.status, TerminalSessionStatus.disconnected);
+    expect(terminal.error, isNull);
+    expect(find.byType(SshMultiplexerSessionsDialog), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
+  testWidgets('a stale listing never displays a picker or opens a shell', (tester) async {
+    final pending = Completer<List<SshMultiplexerSession>>();
+    service.nextDiscovery = pending;
+    await mount(tester);
+    await chooseAction(tester, 'Browse tmux sessions');
+    await submit(
+      tester,
+      const SshTerminalConfig(
+        host: 'host.example', port: 22, username: 'alice',
+      ),
+      settle: false,
+    );
+    expect(terminal.isConnecting, isTrue);
+    expect(service.discoveryLeases.single!(), isTrue);
+    await terminal.disconnect();
+    await tester.pump();
+    expect(service.discoveryLeases.single!(), isFalse);
+    pending.complete(parseSshMultiplexerSessions(
+      SshMultiplexer.tmux, 'late\t1\t0\n',
+    ));
+    await tester.pumpAndSettle();
+    expect(service.disconnected, ['session-1']);
+    expect(service.shellOptions, isEmpty);
+    expect(find.byType(SshMultiplexerSessionsDialog), findsNothing);
+    expect(terminal.status, TerminalSessionStatus.disconnected);
+    expect(terminal.error, isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
+  testWidgets('hiding a panel dismisses only its owned picker and closes the route', (tester) async {
+    service.discoveryResults = parseSshMultiplexerSessions(
+      SshMultiplexer.tmux, 'work\t1\t0\n',
+    );
+    await mount(tester);
+    await chooseAction(tester, 'Browse tmux sessions');
+    await submit(
+      tester,
+      const SshTerminalConfig(
+        host: 'host.example', port: 22, username: 'alice',
+      ),
+      settle: false,
+    );
+    expect(find.byType(SshMultiplexerSessionsDialog), findsOneWidget);
+    await mount(tester, visible: false);
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pumpAndSettle();
+    expect(find.byType(SshMultiplexerSessionsDialog), findsNothing);
+    expect(service.disconnected, ['session-1']);
+    expect(service.shellOptions, isEmpty);
+    expect(terminal.status, TerminalSessionStatus.disconnected);
+    expect(terminal.error, isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
+  testWidgets('browse credentials hide old session settings but retain the jump editor', (tester) async {
+    await mount(tester);
+    await tester.tap(find.byKey(const ValueKey('terminal-connect-ssh')));
+    await tester.pumpAndSettle();
+    await submit(
+      tester,
+      SshTerminalConfig(
+        host: 'host.example',
+        port: 22,
+        username: 'alice',
+        gateway: Uri.parse('wss://gateway.example/ssh'),
+        tmux: const TmuxSessionOptions(
+          sessionName: 'previous', mode: TmuxSessionMode.attach,
+        ),
+      ),
+    );
+    service.discoveryResults = parseSshMultiplexerSessions(
+      SshMultiplexer.screen,
+      'There is a screen on:\n'
+      '\t123.work\t(Detached)\n'
+      '1 Socket in /run/screen/S-alice.\n',
+    );
+    await chooseAction(tester, 'Browse screen sessions');
+    final dialog = tester.widget<SshTerminalConnectDialog>(
+      find.byType(SshTerminalConnectDialog),
+    );
+    expect(dialog.showSessionOptions, isFalse);
+    expect(dialog.initialConfig?.tmux?.sessionName, 'previous');
+    expect(find.byKey(const ValueKey('terminal-ssh-session-mode')), findsNothing);
+    expect(find.byKey(const ValueKey('terminal-ssh-tmux-name')), findsNothing);
+    expect(find.byKey(const ValueKey('terminal-ssh-screen-name')), findsNothing);
+    expect(find.byKey(const ValueKey('terminal-ssh-add-jump')), findsOneWidget);
+    // Use the real form submission to prove hidden old mode is cleared.
+    await tester.tap(find.text('Connect'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.byType(SshMultiplexerSessionsDialog), findsOneWidget);
+    expect(service.discoveries, [SshMultiplexer.screen]);
+    expect(terminal.label, 'alice@host.example');
+    expect(service.shellOptions, hasLength(1));
+    await tester.tap(find.byKey(const ValueKey('ssh-multiplexer-cancel')));
+    await tester.pumpAndSettle();
+    expect(service.disconnected, ['session-1', 'session-2']);
+    expect(service.shellOptions, hasLength(1));
+    expect(terminal.error, isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
 }
 
 /// The real TerminalSession and panel own this fake transport service. Channel
@@ -393,6 +638,11 @@ class _RecordingSshService extends SshTerminalService {
   final _outputs = <String, StreamController<String>>{};
   bool failNextConnection = false;
   Completer<void>? nextAuthentication;
+  List<SshMultiplexerSession> discoveryResults = const [];
+  Completer<List<SshMultiplexerSession>>? nextDiscovery;
+  final discoveries = <SshMultiplexer>[];
+  final discoverySessions = <String>[];
+  final discoveryLeases = <bool Function()?>[];
 
   Future<SshSession> _connect(
     SshTerminalConfig config, {
@@ -468,6 +718,22 @@ class _RecordingSshService extends SshTerminalService {
     ),
     hostKeyPrompt: hostKeyPrompt,
   );
+
+  @override
+  Future<List<SshMultiplexerSession>> listMultiplexerSessions(
+    String sessionId, {
+    required SshMultiplexer kind,
+    bool Function()? isCurrent,
+  }) async {
+    discoveries.add(kind);
+    discoverySessions.add(sessionId);
+    discoveryLeases.add(isCurrent);
+    final pending = nextDiscovery;
+    nextDiscovery = null;
+    // Deliberately allow stale completion: the panel must guard its own
+    // generation even if an injected transport does not cancel immediately.
+    return pending == null ? discoveryResults : await pending.future;
+  }
 
   @override
   Future<Stream<String>> startShell(

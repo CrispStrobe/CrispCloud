@@ -199,7 +199,8 @@ the active pane is displayed alone and the split reappears when space permits.
 **Rename terminal** to give it a local label; that label does not replace the
 trusted SSH endpoint in the pane header. Closing a running tab asks before
 disconnecting it. The last tab remains available; use Disconnect or Hide for it.
-Tabs and layouts remain in memory for this app session, not across app restarts.
+The current workspace stays in memory. Explicitly saved arrangements survive
+app restarts, as described below; they reopen disconnected.
 
 Choose **Terminal actions → Find in terminal** for literal search over the
 active screen and its scrollback. Case-sensitive and whole-word options, next
@@ -221,11 +222,53 @@ Font controls adjust the current tab from 8 to 32 logical pixels and reset to
 | Find | Ctrl+Shift+F | Command+F |
 | Larger / smaller font | Ctrl+Shift+Plus / Ctrl+Shift+Minus | Command+Plus / Command+Minus |
 | Reset font size | Ctrl+Shift+0 | Command+0 |
+| Previous / next command mark | Ctrl+Shift+Up / Ctrl+Shift+Down | Command+Shift+Up / Command+Shift+Down |
 
 Workspace shortcuts also work from the terminal search field. These shortcuts
 apply while a terminal owns the keyboard; Ctrl+C remains a terminal interrupt.
 Browser-reserved shortcuts can be intercepted by the browser before reaching
 the app; the terminal strip and actions menu provide the corresponding controls.
+
+## Saved arrangements and split sizing
+
+Use **Terminal layout → Save arrangement** to save up to 20 named layouts.
+An arrangement includes tab order and custom names, the selected tab, the two
+visible panes, horizontal/vertical direction, split proportion, each tab's font
+size, and remembered SSH destinations including jump routes and exact
+shell/tmux/screen modes. Drag the split divider to adjust its proportion from
+20% to 80%, or use **Balance panes**. Tab controls can move a tab left or right.
+
+**Saved arrangements → Restore** asks before replacing the current workspace,
+including when disconnected tabs still contain scrollback. It ends existing
+connections before replacing their tabs and refuses to finish replacement if
+cleanup is not confirmed. An in-progress connection must be canceled first.
+The restored tabs open **disconnected**; reconnect an SSH destination or start
+a local shell explicitly.
+
+Arrangements never store scrollback, command history, selection, passwords,
+private keys, passphrases, broadcast membership or live connection objects.
+Local working-directory grants and staged-workspace ownership are not restored.
+Saved data uses the app's local preferences; it is not synchronized, and corrupt
+or newer-format records are preserved instead of silently overwritten.
+
+## Broadcast input
+
+Use **Terminal layout → Broadcast input** and select at least two connected
+tabs. Review the targets and choose **Start broadcasting**. A persistent banner
+shows the active group and provides **Stop**. Newly opened tabs are not added
+automatically.
+
+Only explicit keyboard, IME and paste operations from the active, visible,
+focused terminal are mirrored. Each recipient encodes the operation using its
+own keyboard and bracketed-paste modes. Terminal responses, focus reports and
+mouse reports stay with their own connection. User commands are sent to every
+selected member while the group is active, including members in hidden tabs.
+
+Broadcast stops when the workspace is hidden, a tab closes, a member disconnects
+or reconnects, an arrangement restore is approved, input exceeds the supported
+per-event limit, or forwarding fails. Stopping invalidates queued deliveries
+that have not reached their transport. Group membership is tied to the exact
+connections the user selected and is never saved in arrangements or profiles.
 
 ## SSH authentication, reconnect, tmux and screen
 
@@ -305,6 +348,58 @@ See the upstream [tmux getting started guide](https://github.com/tmux/tmux/wiki/
 for the default bindings and remote session model.
 See also the [GNU screen invocation manual](https://www.gnu.org/software/screen/manual/html_node/Invoking-Screen.html).
 
+### Jump hosts
+
+The connection form's **Jump hosts** section supports up to three ordered SSH
+hops before the destination. Add or edit each hop and enter its own username
+and password or private key/passphrase. The app verifies the host key of every
+hop and the final destination independently, using that endpoint's host and
+port. A rejected key or failed hop ends that attempt and releases its route.
+
+A jump route uses nested SSH direct TCP channels; the first hop receives the
+outer TCP connection. When a WebSocket gateway is configured, it must forward
+to that **first hop**, while later hops and the final host are reached inside
+the verified route. The gateway URL does not configure the relay's destination.
+Without a jump host, the existing direct/gateway behavior is unchanged.
+
+Reconnect, saved profiles and arrangements retain hop addresses, usernames and
+authentication methods, but recursively remove every hop's password, private
+key and passphrase. Reopening a saved route requests credentials for every
+endpoint. Repeated endpoints and routes longer than three hops are rejected.
+One complete route occupies one slot in the existing five-session application
+pool, although it owns multiple SSH clients internally.
+
+Jump hosts do not add SSH-agent authentication, agent forwarding, local/remote/
+dynamic port-forwarding controls, OpenSSH configuration import or persistent
+connection multiplexing.
+
+### Browse existing tmux and screen sessions
+
+Choose **Terminal actions → Browse tmux sessions** or **Browse screen sessions**.
+Enter the destination and route credentials, complete the usual host-key
+verification, and choose an existing session from the filterable picker. The
+connection form hides new-session options for this workflow. The selected
+session becomes the tab's attach-only reconnect destination.
+
+tmux entries show their names, window counts and attached-client counts. Screen
+entries show the full `PID.name` so duplicate human names are distinguishable.
+Unsupported names and unavailable targets remain visible but cannot be chosen.
+The existing exact Screen resolver checks the selected full ID again during
+attachment. Other clients remain attached.
+
+Discovery uses fixed listing commands over a separate execution channel on the
+verified connection, without a PTY. It waits for both output streams and the
+channel status, limits combined output to 256 KiB and results to 512 sessions,
+and applies a ten-second request deadline. It does not type commands into an
+existing shell. No interactive shell starts before selection. Canceling the
+picker closes the newly authenticated connection; stale results after a
+disconnect, replacement or hidden panel cannot start a shell.
+
+The listing is a snapshot and does not eliminate remote session rename/exit
+races. Missing tools and failed or oversized listings are reported. This
+workflow attaches the normal terminal stream; native tmux control-mode window
+and pane mapping is not implemented.
+
 ## Saved SSH profiles
 
 After entering a destination, choose **Terminal actions → Save SSH profile**
@@ -313,18 +408,70 @@ delete. Selecting one opens the regular connection form for credential entry;
 canceling that form leaves the existing connection intact.
 
 Profiles store only their name, host, port, username, authentication method,
-optional gateway and exact shell/tmux/screen settings. Passwords, private keys
-and passphrases are removed before a profile is constructed and are absent from
-the versioned persisted schema. Profiles use the app's local preferences and
+optional gateway, ordered jump hosts and exact shell/tmux/screen settings.
+Passwords, private keys and passphrases are removed recursively before a
+profile is constructed and are absent from the versioned persisted schema. Profiles use the app's local preferences and
 survive ordinary app restarts; they are not exported or synchronized by this
 feature. Reusing a name explicitly replaces that profile. Up to 50 profiles
 are supported. Concurrent saves from different tabs are serialized; unreadable
 or newer-format saved data is left untouched and reported as an error.
 
+Direct-only profile stores retain schema version 1. A store with jump routes
+uses version 2 and does not downgrade again; older app versions reject that
+newer data instead of silently turning a saved jump route into a direct login.
+
 An attach-only profile remains attach-only, including after restarting the
 app. Profile loading does not bypass host-key verification or connect
 automatically. A saved Create new screen profile still creates a new screen
 session on each connection; select Attach existing screen to resume one.
+
+## Shell integration and command navigation
+
+The terminal observes decoded OSC 133/633 prompt/command markers, OSC 7
+working-directory reports and iTerm2 manual marks from the existing emulator.
+A compatible shell can then provide a per-tab command history, command start
+and finish times, exit status and a shell-reported directory in the status bar.
+
+Choose **Terminal actions → Shell integration setup**, select **Bash 4.4+** or
+**Zsh**, review the script and copy it. Paste and run it yourself in the intended
+interactive shell. This enables integration for that shell session. The app
+does not inject the script or edit startup files. Existing prompt hooks are
+retained, and running the setup a second time does not wrap the prompt again.
+The Bash helper uses a scalar prompt-hook fallback on Bash 4.4–5.0 and array
+hooks on Bash 5.1+. The Zsh hook reports the previous command's status and
+returns success so subsequent prompt hooks still run.
+
+The built-in Dart shell and embedded iOS Dash are not Bash or Zsh. The setup
+scripts do not enable automatic command tracking in those backends. Other
+shells can emit compatible markers themselves. Multiplexers and shell themes
+may filter or replace markers; verify the resulting behavior in the intended
+environment instead of assuming it from ordinary PTY attachment.
+
+Available controls:
+
+- **Command history** filters retained commands and directories. Selecting an
+  entry scrolls to it; it does not execute that command.
+- **Previous command / Next command** move between retained prompt/manual marks.
+  The keyboard equivalents are in the shortcut table above.
+- **Add mark** works without shell setup. iTerm2 SetMark sequences are also
+  recognized.
+- **Select last command output** selects the completed command's retained output.
+  Copy remains an explicit separate action.
+- **Notify when command finishes** arms a one-shot in-app notification for the
+  next observed command completion. It is not an operating-system push alert.
+
+Tracking retains at most 500 marks and bounds each command/directory label to
+2,048 UTF-16 code units. Anchors follow wrapped and wide-character reflow and
+expire with scrollback. A running command can still report completion after
+large output evicts its prompt, but navigation and selection require retained
+anchors. Alternate-screen applications cannot create shell marks or overwrite
+the displayed shell directory.
+
+History is in memory for that connection and is cleared on reconnect. Remote
+command and directory metadata remain display-only: they cannot execute a
+local command, authorize file access, navigate the file panel or access the
+clipboard. A prompt without a corresponding completion status is shown with
+unknown status; the app does not invent a successful result.
 
 ## License provenance
 
@@ -410,6 +557,35 @@ flutter analyze --no-fatal-warnings --no-fatal-infos
 flutter build web --release
 ```
 
+Current continuation suites, in addition to the established cohort above:
+
+```sh
+flutter test --concurrency=1 \
+  test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart \
+  test/ssh_jump_dialog_test.dart \
+  test/terminal_arrangements_test.dart \
+  test/terminal_arrangements_dialog_test.dart \
+  test/terminal_arrangements_widget_test.dart \
+  test/terminal_shell_integration_test.dart \
+  test/terminal_shell_directory_labels_test.dart \
+  test/terminal_user_input_test.dart \
+  test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart \
+  test/ssh_multiplexer_session_test.dart \
+  test/ssh_multiplexer_discovery_test.dart \
+  test/ssh_multiplexer_sessions_dialog_test.dart \
+  test/ssh_terminal_profiles_test.dart test/ssh_terminal_reconnect_test.dart
+
+python3 tool/terminal_shell_setup_smoke.py
+```
+
+The new Dart suites are also listed in the existing Chrome, Windows and macOS
+jobs. Linux's normal suite discovers them automatically. These commands are
+reproduction instructions, **not a statement that the current continuation
+passed**: the execution environment ran out of disk during test loading and
+then became unavailable. See [the current validation record](terminal-parity.md)
+and [runtime attempts](validation/terminal-20261115/runtime-attempts.md).
+No GitHub Actions result is awaited or required for this work.
+
 CI runs the terminal tests in the Linux suite, the browser tests in Chromium,
 and a native PTY smoke test in the existing Linux/macOS/Windows matrix so
 platform failures are visible early. Windows and macOS build jobs retain the
@@ -488,6 +664,30 @@ physical-device keyboard/IME or Windows ConPTY validation.
     survive, but every credential field must be empty. Canceling credential
     entry must leave a live connection intact. Replacing a profile by name and
     deleting one profile must leave the others unchanged.
+
+13. **Jump routes.** Use controlled SSH hosts to test direct, one-hop and
+    three-hop routes, mixed authentication, distinct host-key prompts, a
+    rejected intermediate key, denial of direct TCP forwarding, late handshake
+    cancellation and reverse cleanup. Repeat through a gateway that targets the
+    first hop. Saved profiles and restored arrangements must ask for all
+    credentials again.
+14. **Session discovery.** List tmux and Screen sessions with attached and
+    detached clients, choose an exact target, and cancel the picker. Check
+    duplicate Screen names, unsupported names, no sessions, missing tools,
+    delayed status after output EOF, oversized output and cancellation while
+    listing. A stale picker must never start a new shell.
+15. **Arrangements and broadcast.** Save mixed tabs with a custom divider
+    proportion, restart, restore and reconnect explicitly. Check corrupt/newer
+    preferences and cleanup failure. Broadcast harmless text to selected test
+    shells with different bracketed-paste/cursor modes; verify the banner,
+    source focus, Stop, disconnect/reconnect, hidden workspace and queued-input
+    revocation. Never use a production command as a broadcast smoke test.
+16. **Shell markers.** Install setup in controlled Bash/Zsh sessions and run
+    successful and failing commands, Unicode-directory changes and a long-output
+    command. Confirm existing prompt hooks run with the expected status,
+    repeated setup is idempotent, command navigation follows resize/reflow,
+    output selection excludes the next prompt and one-shot notifications fire
+    once. Repeat inside the actual tmux/Screen configuration.
 
 Only claim platform smoke tests that were actually executed. In particular,
 Linux unit/native checks do not certify Windows, signed macOS or physical

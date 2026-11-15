@@ -116,14 +116,14 @@ void main() {
       '\x1b]133;C\x07first\r\n\x1b]133;D;0\x07',
     );
     await _events();
-    expect(session.shellIntegration.commands, hasLength(1));
+    expect(session.shellIntegration.marks, hasLength(1));
     final replacement = _Connection();
     await session.connect(
       (_, __) async => replacement,
       kind: TerminalSessionKind.ssh,
     );
     expect(identical(session.connectionIdentity, original), isFalse);
-    expect(session.shellIntegration.commands, isEmpty);
+    expect(session.shellIntegration.marks, isEmpty);
     expect(connection.closes, 1);
   });
 
