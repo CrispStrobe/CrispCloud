@@ -1,5 +1,3 @@
-import 'package:flutter/services.dart';
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -732,7 +730,9 @@ void main() {
       transfers!.addListener(check);
       try {
         if (enter) {
-          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          // EditableText receives the platform's Done/Enter action; raw
+          // test key events do not simulate the platform text-input channel.
+          await tester.testTextInput.receiveAction(TextInputAction.done);
         } else {
           await tester.tap(start(kind));
         }
@@ -1077,7 +1077,7 @@ void main() {
     );
     expect(
       tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
-      isNull,
+      isNotNull,
     );
     expect(cloud.uploads, isEmpty);
   });
@@ -1201,7 +1201,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
-        isNull,
+        isNotNull,
       );
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();

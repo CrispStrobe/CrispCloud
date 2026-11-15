@@ -39,8 +39,9 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     bool? keepHistory,
     bool? hideFinishedQueue,
   }) async {
-    if (seconds != null && !const [0, 5, 10, 30, 60].contains(seconds))
+    if (seconds != null && !const [0, 5, 10, 30, 60].contains(seconds)) {
       throw ArgumentError.value(seconds);
+    }
     _revision++;
     state = NotificationSettings(
       seconds: seconds ?? state.seconds,

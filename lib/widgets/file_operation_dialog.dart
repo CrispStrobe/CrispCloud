@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:flutter/services.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -1020,906 +1024,933 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             )
             .length ??
         0;
-    return PopScope(
-      canPop: !_busy,
-      child: AlertDialog(
-        title: Text(
-          context.commanderTr("{0} {1} selected item(s)", [
-            _verb,
-            widget.files.length,
-          ]),
-        ),
-        content: SizedBox(
-          width: math.min(920, math.max(280, size.width - 96)),
-          height: math.min(700, math.max(240, size.height - 190)),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.reviewGroup != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      widget.reviewGroup!,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ),
-                if (_sourceOrigin != null)
-                  Text(
-                    context.commanderTr("From {0} · original item paths", [
-                      widget.externalDestinationSide != null
-                          ? ExternalDropStrings(context).text('files')
-                          : sourceBackend?.label ??
-                                _sourceOrigin!.source.displayName,
-                    ]),
-                  ),
-                if (widget.externalDestinationSide != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      ExternalDropStrings(context).text('foreground'),
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<PanelSide>(
-                  isExpanded: true,
-                  initialValue: _destinationSide,
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr("Destination storage"),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  items: _origins.entries
-                      .map(
-                        (entry) => DropdownMenuItem(
-                          value: entry.key,
-                          child: Text(
-                            '${context.commanderTr(entry.key == widget.side ? 'This panel' : 'Opposite panel')} · ${entry.value.source.displayName}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: _busy || widget.lockedDestinationSide != null
-                      ? null
-                      : (side) => _change(() {
-                          _destinationSide = side;
-                          _destination.text =
-                              _origins[side]!.source.currentPath;
-                          _preserveTime = false;
-                          _copyLinks = false;
-                        }),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _destination,
-                  enabled: !_busy && widget.lockedDestinationSide == null,
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr("Destination directory"),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onChanged: (_) => _change(() {}),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('transfer-duplicate-name-template'),
-                  controller: _duplicateNameTemplate,
-                  enabled: !_busy,
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr(
-                      "Keep both filename template",
-                    ),
-                    helperText: context.commanderTr(
-                      "{name} is the filename without extension; {ext} includes the dot. A {counter} or {counter:000} is required.",
-                    ),
-                    helperMaxLines: 4,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onChanged: (_) => _change(() {}),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (_profiles.keys.any(
-                      (name) => !name.startsWith('@default:'),
-                    ))
-                      PopupMenuButton<String>(
-                        tooltip: context.commanderTr("Load transfer profile"),
-                        onSelected: (name) =>
-                            _change(() => _applyProfile(_profiles[name]!)),
-                        itemBuilder: (_) => _profiles.keys
-                            .where((name) => !name.startsWith('@default:'))
-                            .map(
-                              (name) =>
-                                  PopupMenuItem(value: name, child: Text(name)),
-                            )
-                            .toList(),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text(context.commanderTr("Load profile")),
-                        ),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter): () =>
+            unawaited(_start()),
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): () =>
+            unawaited(_start()),
+      },
+      child: PopScope(
+        canPop: !_busy,
+        child: AlertDialog(
+          title: Text(
+            context.commanderTr("{0} {1} selected item(s)", [
+              _verb,
+              widget.files.length,
+            ]),
+          ),
+          content: SizedBox(
+            width: math.min(920, math.max(280, size.width - 96)),
+            height: math.min(700, math.max(240, size.height - 190)),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.reviewGroup != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        widget.reviewGroup!,
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
-                    TextButton(
-                      onPressed: _busy ? null : () => _saveProfile(),
-                      child: Text(context.commanderTr("Save profile")),
                     ),
-                    TextButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _saveProfile(defaults: true),
-                      child: Text(context.commanderTr("Save as defaults")),
+                  if (_sourceOrigin != null)
+                    Text(
+                      context.commanderTr("From {0} · original item paths", [
+                        widget.externalDestinationSide != null
+                            ? ExternalDropStrings(context).text('files')
+                            : sourceBackend?.label ??
+                                  _sourceOrigin!.source.displayName,
+                      ]),
                     ),
-                  ],
-                ),
-                if (widget.files.length == 1)
-                  TextField(
-                    controller: _targetName,
-                    enabled: !_busy,
+                  if (widget.externalDestinationSide != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        ExternalDropStrings(context).text('foreground'),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<PanelSide>(
+                    isExpanded: true,
+                    initialValue: _destinationSide,
                     decoration: InputDecoration(
-                      labelText: context.commanderTr(
-                        "Destination item name (optional)",
-                      ),
-                      helperText: context.commanderTr(
-                        "A new name for the selected file or folder.",
-                      ),
+                      labelText: context.commanderTr("Destination storage"),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: _origins.entries
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(
+                              '${context.commanderTr(entry.key == widget.side ? 'This panel' : 'Opposite panel')} · ${entry.value.source.displayName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _busy || widget.lockedDestinationSide != null
+                        ? null
+                        : (side) => _change(() {
+                            _destinationSide = side;
+                            _destination.text =
+                                _origins[side]!.source.currentPath;
+                            _preserveTime = false;
+                            _copyLinks = false;
+                          }),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _destination,
+                    enabled: !_busy && widget.lockedDestinationSide == null,
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Destination directory"),
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (_) => _change(() {}),
+                    onSubmitted: (_) => _start(),
                   ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _nameMask,
-                  enabled: !_busy,
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr("Destination filename mask"),
-                    helperText: context.commanderTr(
-                      "*.* keeps names · *.bak changes extension · *.*.bak appends · [N]_[C:000].[E]",
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const ValueKey('transfer-duplicate-name-template'),
+                    controller: _duplicateNameTemplate,
+                    enabled: !_busy,
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr(
+                        "Keep both filename template",
+                      ),
+                      helperText: context.commanderTr(
+                        "{name} is the filename without extension; {ext} includes the dot. A {counter} or {counter:000} is required.",
+                      ),
+                      helperMaxLines: 4,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
-                    helperMaxLines: 2,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                    onChanged: (_) => _change(() {}),
+                    onSubmitted: (_) => _start(),
                   ),
-                  onChanged: (_) => _change(() {}),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    SizedBox(
-                      width: 270,
-                      child: DropdownButtonFormField<FileConflictPolicy>(
-                        isExpanded: true,
-                        initialValue: _fileConflict,
-                        decoration: InputDecoration(
-                          labelText: context.commanderTr("Existing files"),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (_profiles.keys.any(
+                        (name) => !name.startsWith('@default:'),
+                      ))
+                        PopupMenuButton<String>(
+                          tooltip: context.commanderTr("Load transfer profile"),
+                          onSelected: (name) =>
+                              _change(() => _applyProfile(_profiles[name]!)),
+                          itemBuilder: (_) => _profiles.keys
+                              .where((name) => !name.startsWith('@default:'))
+                              .map(
+                                (name) => PopupMenuItem(
+                                  value: name,
+                                  child: Text(name),
+                                ),
+                              )
+                              .toList(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(context.commanderTr("Load profile")),
+                          ),
                         ),
-                        items: [
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.ask,
-                            child: Text(
-                              context.commanderTr("Ask for each conflict"),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.skip,
-                            child: Text(
-                              context.commanderTr("Skip existing files"),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.replace,
-                            child: Text(
-                              context.commanderTr("Replace existing files"),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.replaceIfNewer,
-                            child: Text(
-                              context.commanderTr(
-                                "Replace only if source is newer",
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.replaceIfLarger,
-                            child: Text(
-                              context.commanderTr(
-                                "Replace if source is larger",
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.replaceIfSmaller,
-                            child: Text(
-                              context.commanderTr(
-                                "Replace if source is smaller",
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.resumeVerified,
-                            enabled:
-                                _copyMethod != FileCopyMethod.verifiedDelta,
-                            child: Text(
-                              context.commanderTr(
-                                "Resume after prefix verification",
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.append,
-                            enabled:
-                                _copyMethod != FileCopyMethod.verifiedDelta,
-                            child: Text(
-                              context.commanderTr(
-                                "Append source to destination",
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: FileConflictPolicy.keepBoth,
-                            child: Text(
-                              context.commanderTr(
-                                "Keep both (number new copies)",
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                        onChanged: _busy
-                            ? null
-                            : (value) => _change(() => _fileConflict = value!),
+                      TextButton(
+                        onPressed: _busy ? null : () => _saveProfile(),
+                        child: Text(context.commanderTr("Save profile")),
                       ),
-                    ),
-                    SizedBox(
-                      width: 245,
-                      child: DropdownButtonFormField<DirectoryConflictPolicy>(
-                        isExpanded: true,
-                        initialValue: _directoryConflict,
-                        decoration: InputDecoration(
-                          labelText: context.commanderTr("Existing folders"),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: DirectoryConflictPolicy.merge,
-                            child: Text(
-                              context.commanderTr("Merge contents"),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: DirectoryConflictPolicy.skip,
-                            child: Text(
-                              context.commanderTr("Skip whole folder"),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: DirectoryConflictPolicy.ask,
-                            child: Text(
-                              context.commanderTr("Ask for each folder"),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                        onChanged: _busy
-                            ? null
-                            : (value) =>
-                                  _change(() => _directoryConflict = value!),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: _busy ? null : _chooseSearchCriteria,
-                      icon: const Icon(Icons.saved_search),
-                      label: Text(
-                        context.commanderTr("Use saved search criteria"),
-                      ),
-                    ),
-                    if (_searchCriteria != null)
-                      TextButton.icon(
+                      TextButton(
                         onPressed: _busy
                             ? null
-                            : () => _change(() => _searchCriteria = null),
-                        icon: const Icon(Icons.clear),
-                        label: Text(
-                          context.commanderTr("Clear saved criteria"),
+                            : () => _saveProfile(defaults: true),
+                        child: Text(context.commanderTr("Save as defaults")),
+                      ),
+                    ],
+                  ),
+                  if (widget.files.length == 1)
+                    TextField(
+                      controller: _targetName,
+                      enabled: !_busy,
+                      decoration: InputDecoration(
+                        labelText: context.commanderTr(
+                          "Destination item name (optional)",
                         ),
+                        helperText: context.commanderTr(
+                          "A new name for the selected file or folder.",
+                        ),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
                       ),
-                  ],
-                ),
-                if (_searchCriteria != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      context.commanderTr(
-                        "Additional criteria: {0} {1}{2}. Applied together with the filters below. Selected items and Include subfolders define the scope.",
-                        [
-                          _searchCriteria!.nameMode.name,
-                          _searchCriteria!.namePattern,
-                          _searchCriteria!.extensions.isEmpty
-                              ? ""
-                              : " · types: ${_searchCriteria!.extensions.join(", ")}",
-                        ],
-                      ),
+                      onChanged: (_) => _change(() {}),
+                      onSubmitted: (_) => _start(),
                     ),
-                  ),
-                TextField(
-                  controller: _mask,
-                  enabled: !_busy,
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr("File filter"),
-                    hintText: context.commanderTr("*.jpg;*.png|thumb*"),
-                    helperText: context.commanderTr(
-                      "Filters files within selected folders. Excluded files stay in the source.",
-                    ),
-                    helperMaxLines: 2,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onChanged: (_) => _change(() {}),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 10,
-                  children: [
-                    _field(
-                      _minimumSize,
-                      context.commanderTr("Minimum size (bytes)"),
-                      width: 190,
-                    ),
-                    _field(
-                      _maximumSize,
-                      context.commanderTr("Maximum size (bytes)"),
-                      width: 190,
-                    ),
-                    _field(
-                      _modifiedAfter,
-                      context.commanderTr("Modified on/after (ISO date)"),
-                      width: 250,
-                    ),
-                    _field(
-                      _modifiedBefore,
-                      context.commanderTr("Modified on/before (ISO date)"),
-                      width: 250,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                _field(
-                  _excludedDirectories,
-                  context.commanderTr(
-                    "Exclude directories (wildcards; optional)",
-                  ),
-                  width: 800,
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _toggle(
-                      context.commanderTr(
-                        "Exclude empty folders after filtering",
-                      ),
-                      _excludeEmpty,
-                      (v) => _excludeEmpty = v,
-                    ),
-                    _toggle(
-                      context.commanderTr("Include hidden names"),
-                      _includeHidden,
-                      (v) => _includeHidden = v,
-                    ),
-                    _toggle(
-                      context.commanderTr(
-                        "Use native/server operations when supported",
-                      ),
-                      _native,
-                      (v) => _native = v,
-                      enabled: _copyMethod == FileCopyMethod.automatic,
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _toggle(
-                      context.commanderTr("Regular expression"),
-                      _regex,
-                      (value) => _regex = value,
-                    ),
-                    _toggle(
-                      context.commanderTr("Case sensitive"),
-                      _caseSensitive,
-                      (value) => _caseSensitive = value,
-                    ),
-                    _toggle(
-                      context.commanderTr("Match full source path"),
-                      _matchPath,
-                      (value) => _matchPath = value,
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _toggle(
-                      context.commanderTr("Include subfolders"),
-                      _recursive,
-                      (value) => _recursive = value,
-                    ),
-                    _toggle(
-                      context.commanderTr("Preserve relative paths"),
-                      _relative,
-                      (value) => _relative = value,
-                    ),
-                    _toggle(
-                      context.commanderTr("Stop on first error"),
-                      _stopOnError,
-                      (value) => _stopOnError = value,
-                    ),
-                  ],
-                ),
-                if (_relative)
+                  const SizedBox(height: 10),
                   TextField(
-                    controller: _relativeBase,
+                    controller: _nameMask,
                     enabled: !_busy,
                     decoration: InputDecoration(
                       labelText: context.commanderTr(
-                        "Relative to source directory",
+                        "Destination filename mask",
                       ),
                       helperText: context.commanderTr(
-                        "All selected paths must be below this directory.",
+                        "*.* keeps names · *.bak changes extension · *.*.bak appends · [N]_[C:000].[E]",
                       ),
+                      helperMaxLines: 2,
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (_) => _change(() {}),
+                    onSubmitted: (_) => _start(),
                   ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _toggle(
-                      context.commanderTr("Verify contents (SHA-256)"),
-                      _verify,
-                      (value) => _verify = value,
-                    ),
-                    _toggle(
-                      context.commanderTr("Preserve file modification times"),
-                      _preserveTime,
-                      (value) => _preserveTime = value,
-                      enabled: supportsTime,
-                    ),
-                    _toggle(
-                      context.commanderTr("Copy symbolic links as links"),
-                      _copyLinks,
-                      (value) => _copyLinks = value,
-                      enabled: supportsLinks,
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _toggle(
-                      context.commanderTr("Preserve permissions"),
-                      _preservePermissions,
-                      (v) => _preservePermissions = v,
-                      enabled: supportsPermissions,
-                    ),
-                    _toggle(
-                      context.commanderTr("Preserve owner/group"),
-                      _preserveOwnership,
-                      (v) => _preserveOwnership = v,
-                      enabled: supportsOwnership,
-                    ),
-                    _toggle(
-                      context.commanderTr("Preserve extended attributes"),
-                      _preserveXattrs,
-                      (v) => _preserveXattrs = v,
-                      enabled: supportsXattrs,
-                    ),
-                    _toggle(
-                      context.commanderTr("Preserve ACL"),
-                      _preserveAcl,
-                      (v) => _preserveAcl = v,
-                      enabled: supportsAcl,
-                    ),
-                    _toggle(
-                      context.commanderTr("Preserve Windows attributes"),
-                      _preserveWindowsAttributes,
-                      (v) => _preserveWindowsAttributes = v,
-                      enabled: supportsWindowsAttributes,
-                    ),
-                  ],
-                ),
-                if (hasUnsupportedSettings)
-                  const Text(
-                    'Some selected preservation settings are unavailable for these storages. Clear those settings or choose compatible storage before starting.',
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      SizedBox(
+                        width: 270,
+                        child: DropdownButtonFormField<FileConflictPolicy>(
+                          isExpanded: true,
+                          initialValue: _fileConflict,
+                          decoration: InputDecoration(
+                            labelText: context.commanderTr("Existing files"),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.ask,
+                              child: Text(
+                                context.commanderTr("Ask for each conflict"),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.skip,
+                              child: Text(
+                                context.commanderTr("Skip existing files"),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.replace,
+                              child: Text(
+                                context.commanderTr("Replace existing files"),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.replaceIfNewer,
+                              child: Text(
+                                context.commanderTr(
+                                  "Replace only if source is newer",
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.replaceIfLarger,
+                              child: Text(
+                                context.commanderTr(
+                                  "Replace if source is larger",
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.replaceIfSmaller,
+                              child: Text(
+                                context.commanderTr(
+                                  "Replace if source is smaller",
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.resumeVerified,
+                              enabled:
+                                  _copyMethod != FileCopyMethod.verifiedDelta,
+                              child: Text(
+                                context.commanderTr(
+                                  "Resume after prefix verification",
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.append,
+                              enabled:
+                                  _copyMethod != FileCopyMethod.verifiedDelta,
+                              child: Text(
+                                context.commanderTr(
+                                  "Append source to destination",
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: FileConflictPolicy.keepBoth,
+                              child: Text(
+                                context.commanderTr(
+                                  "Keep both (number new copies)",
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                          onChanged: _busy
+                              ? null
+                              : (value) =>
+                                    _change(() => _fileConflict = value!),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 245,
+                        child: DropdownButtonFormField<DirectoryConflictPolicy>(
+                          isExpanded: true,
+                          initialValue: _directoryConflict,
+                          decoration: InputDecoration(
+                            labelText: context.commanderTr("Existing folders"),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: DirectoryConflictPolicy.merge,
+                              child: Text(
+                                context.commanderTr("Merge contents"),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: DirectoryConflictPolicy.skip,
+                              child: Text(
+                                context.commanderTr("Skip whole folder"),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: DirectoryConflictPolicy.ask,
+                              child: Text(
+                                context.commanderTr("Ask for each folder"),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                          onChanged: _busy
+                              ? null
+                              : (value) =>
+                                    _change(() => _directoryConflict = value!),
+                        ),
+                      ),
+                    ],
                   ),
-                DropdownButtonFormField<FileCopyMethod>(
-                  key: const ValueKey('transfer-copy-method'),
-                  initialValue: _copyMethod,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr("Copy method"),
-                    helperText: _copyMethod == FileCopyMethod.verifiedDelta
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _busy ? null : _chooseSearchCriteria,
+                        icon: const Icon(Icons.saved_search),
+                        label: Text(
+                          context.commanderTr("Use saved search criteria"),
+                        ),
+                      ),
+                      if (_searchCriteria != null)
+                        TextButton.icon(
+                          onPressed: _busy
+                              ? null
+                              : () => _change(() => _searchCriteria = null),
+                          icon: const Icon(Icons.clear),
+                          label: Text(
+                            context.commanderTr("Clear saved criteria"),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (_searchCriteria != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        context.commanderTr(
+                          "Additional criteria: {0} {1}{2}. Applied together with the filters below. Selected items and Include subfolders define the scope.",
+                          [
+                            _searchCriteria!.nameMode.name,
+                            _searchCriteria!.namePattern,
+                            _searchCriteria!.extensions.isEmpty
+                                ? ""
+                                : " · types: ${_searchCriteria!.extensions.join(", ")}",
+                          ],
+                        ),
+                      ),
+                    ),
+                  TextField(
+                    controller: _mask,
+                    enabled: !_busy,
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("File filter"),
+                      hintText: context.commanderTr("*.jpg;*.png|thumb*"),
+                      helperText: context.commanderTr(
+                        "Filters files within selected folders. Excluded files stay in the source.",
+                      ),
+                      helperMaxLines: 2,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => _change(() {}),
+                    onSubmitted: (_) => _start(),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 10,
+                    children: [
+                      _field(
+                        _minimumSize,
+                        context.commanderTr("Minimum size (bytes)"),
+                        width: 190,
+                      ),
+                      _field(
+                        _maximumSize,
+                        context.commanderTr("Maximum size (bytes)"),
+                        width: 190,
+                      ),
+                      _field(
+                        _modifiedAfter,
+                        context.commanderTr("Modified on/after (ISO date)"),
+                        width: 250,
+                      ),
+                      _field(
+                        _modifiedBefore,
+                        context.commanderTr("Modified on/before (ISO date)"),
+                        width: 250,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _field(
+                    _excludedDirectories,
+                    context.commanderTr(
+                      "Exclude directories (wildcards; optional)",
+                    ),
+                    width: 800,
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _toggle(
+                        context.commanderTr(
+                          "Exclude empty folders after filtering",
+                        ),
+                        _excludeEmpty,
+                        (v) => _excludeEmpty = v,
+                      ),
+                      _toggle(
+                        context.commanderTr("Include hidden names"),
+                        _includeHidden,
+                        (v) => _includeHidden = v,
+                      ),
+                      _toggle(
+                        context.commanderTr(
+                          "Use native/server operations when supported",
+                        ),
+                        _native,
+                        (v) => _native = v,
+                        enabled: _copyMethod == FileCopyMethod.automatic,
+                      ),
+                    ],
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _toggle(
+                        context.commanderTr("Regular expression"),
+                        _regex,
+                        (value) => _regex = value,
+                      ),
+                      _toggle(
+                        context.commanderTr("Case sensitive"),
+                        _caseSensitive,
+                        (value) => _caseSensitive = value,
+                      ),
+                      _toggle(
+                        context.commanderTr("Match full source path"),
+                        _matchPath,
+                        (value) => _matchPath = value,
+                      ),
+                    ],
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _toggle(
+                        context.commanderTr("Include subfolders"),
+                        _recursive,
+                        (value) => _recursive = value,
+                      ),
+                      _toggle(
+                        context.commanderTr("Preserve relative paths"),
+                        _relative,
+                        (value) => _relative = value,
+                      ),
+                      _toggle(
+                        context.commanderTr("Stop on first error"),
+                        _stopOnError,
+                        (value) => _stopOnError = value,
+                      ),
+                    ],
+                  ),
+                  if (_relative)
+                    TextField(
+                      controller: _relativeBase,
+                      enabled: !_busy,
+                      decoration: InputDecoration(
+                        labelText: context.commanderTr(
+                          "Relative to source directory",
+                        ),
+                        helperText: context.commanderTr(
+                          "All selected paths must be below this directory.",
+                        ),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      onChanged: (_) => _change(() {}),
+                      onSubmitted: (_) => _start(),
+                    ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _toggle(
+                        context.commanderTr("Verify contents (SHA-256)"),
+                        _verify,
+                        (value) => _verify = value,
+                      ),
+                      _toggle(
+                        context.commanderTr("Preserve file modification times"),
+                        _preserveTime,
+                        (value) => _preserveTime = value,
+                        enabled: supportsTime,
+                      ),
+                      _toggle(
+                        context.commanderTr("Copy symbolic links as links"),
+                        _copyLinks,
+                        (value) => _copyLinks = value,
+                        enabled: supportsLinks,
+                      ),
+                    ],
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _toggle(
+                        context.commanderTr("Preserve permissions"),
+                        _preservePermissions,
+                        (v) => _preservePermissions = v,
+                        enabled: supportsPermissions,
+                      ),
+                      _toggle(
+                        context.commanderTr("Preserve owner/group"),
+                        _preserveOwnership,
+                        (v) => _preserveOwnership = v,
+                        enabled: supportsOwnership,
+                      ),
+                      _toggle(
+                        context.commanderTr("Preserve extended attributes"),
+                        _preserveXattrs,
+                        (v) => _preserveXattrs = v,
+                        enabled: supportsXattrs,
+                      ),
+                      _toggle(
+                        context.commanderTr("Preserve ACL"),
+                        _preserveAcl,
+                        (v) => _preserveAcl = v,
+                        enabled: supportsAcl,
+                      ),
+                      _toggle(
+                        context.commanderTr("Preserve Windows attributes"),
+                        _preserveWindowsAttributes,
+                        (v) => _preserveWindowsAttributes = v,
+                        enabled: supportsWindowsAttributes,
+                      ),
+                    ],
+                  ),
+                  if (hasUnsupportedSettings)
+                    const Text(
+                      'Some selected preservation settings are unavailable for these storages. Clear those settings or choose compatible storage before starting.',
+                    ),
+                  DropdownButtonFormField<FileCopyMethod>(
+                    key: const ValueKey('transfer-copy-method'),
+                    initialValue: _copyMethod,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Copy method"),
+                      helperText: _copyMethod == FileCopyMethod.verifiedDelta
+                          ? context.commanderTr(
+                              unavailableVerifiedDelta
+                                  ? 'Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.'
+                                  : 'The first copy downloads the whole file once and builds a verified block map. Later copies can reuse local blocks for the same S3 version during this connection.',
+                            )
+                          : supportsClone
+                          ? context.commanderTr(
+                              "A required clone fails if the filesystem cannot create it; it never falls back to a full copy.",
+                            )
+                          : context.commanderTr(
+                              "Copy-on-write clones require both paths on the same supported native storage.",
+                            ),
+                      helperMaxLines: 4,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: FileCopyMethod.automatic,
+                        child: Text(
+                          context.commanderTr("Automatic"),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: FileCopyMethod.stream,
+                        child: Text(
+                          context.commanderTr("Stream all data"),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: FileCopyMethod.copyOnWrite,
+                        enabled: supportsClone,
+                        child: Text(
+                          context.commanderTr("Require copy-on-write clone"),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: FileCopyMethod.verifiedDelta,
+                        enabled: supportsVerifiedDelta,
+                        child: Text(
+                          context.commanderTr('Reuse verified S3 blocks'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            _change(() {
+                              _copyMethod = value;
+                              if (value == FileCopyMethod.copyOnWrite ||
+                                  value == FileCopyMethod.verifiedDelta) {
+                                _preallocate = false;
+                              }
+                            });
+                          },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const ValueKey('transfer-client-rate'),
+                    controller: _clientRate,
+                    enabled: !_busy,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr(
+                        "Client streaming rate (KiB/s)",
+                      ),
+                      hintText: context.commanderTr("Unlimited"),
+                      helperText: context.commanderTr(
+                        "Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.",
+                      ),
+                      helperMaxLines: 5,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => _change(() {}),
+                    onSubmitted: (_) => _start(),
+                  ),
+                  _toggle(
+                    context.commanderTr(
+                      "Reserve destination disk space before copying",
+                    ),
+                    _preallocate,
+                    (value) => _preallocate = value,
+                    enabled:
+                        supportsAllocation &&
+                        _copyMethod != FileCopyMethod.copyOnWrite &&
+                        _copyMethod != FileCopyMethod.verifiedDelta,
+                  ),
+                  Text(
+                    supportsAllocation
                         ? context.commanderTr(
-                            unavailableVerifiedDelta
-                                ? 'Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.'
-                                : 'The first copy downloads the whole file once and builds a verified block map. Later copies can reuse local blocks for the same S3 version during this connection.',
-                          )
-                        : supportsClone
-                        ? context.commanderTr(
-                            "A required clone fails if the filesystem cannot create it; it never falls back to a full copy.",
+                            "Physical allocation requires known file sizes and cannot be combined with a required clone.",
                           )
                         : context.commanderTr(
-                            "Copy-on-write clones require both paths on the same supported native storage.",
+                            "This destination cannot reserve physical disk space.",
                           ),
-                    helperMaxLines: 4,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  items: [
-                    DropdownMenuItem(
-                      value: FileCopyMethod.automatic,
-                      child: Text(
-                        context.commanderTr("Automatic"),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: FileCopyMethod.stream,
-                      child: Text(
-                        context.commanderTr("Stream all data"),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: FileCopyMethod.copyOnWrite,
-                      enabled: supportsClone,
-                      child: Text(
-                        context.commanderTr("Require copy-on-write clone"),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: FileCopyMethod.verifiedDelta,
-                      enabled: supportsVerifiedDelta,
-                      child: Text(
-                        context.commanderTr('Reuse verified S3 blocks'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (value) {
-                          if (value == null) return;
-                          _change(() {
-                            _copyMethod = value;
-                            if (value == FileCopyMethod.copyOnWrite ||
-                                value == FileCopyMethod.verifiedDelta) {
-                              _preallocate = false;
-                            }
-                          });
-                        },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  key: const ValueKey('transfer-client-rate'),
-                  controller: _clientRate,
-                  enabled: !_busy,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: context.commanderTr(
-                      "Client streaming rate (KiB/s)",
-                    ),
-                    hintText: context.commanderTr("Unlimited"),
-                    helperText: context.commanderTr(
-                      "Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.",
-                    ),
-                    helperMaxLines: 5,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  onChanged: (_) => _change(() {}),
-                ),
-                _toggle(
-                  context.commanderTr(
-                    "Reserve destination disk space before copying",
-                  ),
-                  _preallocate,
-                  (value) => _preallocate = value,
-                  enabled:
-                      supportsAllocation &&
-                      _copyMethod != FileCopyMethod.copyOnWrite &&
-                      _copyMethod != FileCopyMethod.verifiedDelta,
-                ),
-                Text(
-                  supportsAllocation
-                      ? context.commanderTr(
-                          "Physical allocation requires known file sizes and cannot be combined with a required clone.",
-                        )
-                      : context.commanderTr(
-                          "This destination cannot reserve physical disk space.",
-                        ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  context.commanderTr(
-                    "Links are never followed. SHA-256 verification reads both copies and can add cloud traffic.",
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (!supportsTime)
+                  const SizedBox(height: 12),
                   Text(
                     context.commanderTr(
-                      "The destination does not expose modification-time preservation.",
+                      "Links are never followed. SHA-256 verification reads both copies and can add cloud traffic.",
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                if (widget.kind == FileOperationKind.move &&
-                        sourceBackend is! LocalOperationBackend ||
-                    (widget.kind == FileOperationKind.move &&
-                        !(sourceBackend?.supportsSymbolicLinks ?? false)))
-                  Text(
-                    context.commanderTr(
-                      "Empty source folders are retained where storage lacks a safe empty-folder delete.",
-                    ),
-                  ),
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: SelectableText(
-                      _error!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ),
-                if (_preparing) ...[
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: LinearProgressIndicator(),
-                  ),
-                  Semantics(
-                    container: true,
-                    child: Text(
-                      context.commanderTr(
-                        "Preparing preview · {0} items checked",
-                        [_planningScanned],
-                      ),
-                    ),
-                  ),
-                  if (_planningPath != null)
+                  if (!supportsTime)
                     Text(
-                      _planningPath!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textDirection: TextDirection.ltr,
+                      context.commanderTr(
+                        "The destination does not expose modification-time preservation.",
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                ],
-                if (plan != null) ...[
-                  const Divider(height: 24),
-                  Text(
-                    _finished
-                        ? context.commanderTr(
-                            "{0} completed · {1} skipped/filtered · {2} failed",
-                            [completed, skipped, failed],
-                          )
-                        : context.commanderTr(
-                            "{0} files in preview · {1} total rows",
-                            [plan.fileCount, plan.entries.length],
-                          ),
-                  ),
-                  for (final error in plan.errors)
+                  if (widget.kind == FileOperationKind.move &&
+                          sourceBackend is! LocalOperationBackend ||
+                      (widget.kind == FileOperationKind.move &&
+                          !(sourceBackend?.supportsSymbolicLinks ?? false)))
+                    Text(
+                      context.commanderTr(
+                        "Empty source folders are retained where storage lacks a safe empty-folder delete.",
+                      ),
+                    ),
+                  if (_error != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Text(
-                        error,
+                      padding: const EdgeInsets.only(top: 12),
+                      child: SelectableText(
+                        _error!,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                         ),
                       ),
                     ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 230,
-                    child: ListView.builder(
-                      itemCount: plan.entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = plan.entries[index];
-                        return ListTile(
-                          dense: true,
-                          leading: Icon(
-                            entry.failed
-                                ? Icons.error_outline
-                                : entry.source.isFolder
-                                ? Icons.folder_outlined
-                                : Icons.insert_drive_file_outlined,
-                          ),
-                          title: Text(
-                            '${entry.source.path} → ${entry.destination}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          subtitle: Text(
-                            entry.message ??
-                                (entry.outcome != FileOperationOutcome.pending
-                                    ? context.commanderEnum(entry.outcome)
-                                    : entry.existing == null
-                                    ? context.commanderTr("New destination")
-                                    : context.commanderTr(
-                                        "Destination exists",
-                                      )),
-                            style: TextStyle(
-                              color: entry.failed
-                                  ? Theme.of(context).colorScheme.error
-                                  : null,
-                            ),
-                          ),
-                        );
-                      },
+                  if (_preparing) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: LinearProgressIndicator(),
                     ),
-                  ),
+                    Semantics(
+                      container: true,
+                      child: Text(
+                        context.commanderTr(
+                          "Preparing preview · {0} items checked",
+                          [_planningScanned],
+                        ),
+                      ),
+                    ),
+                    if (_planningPath != null)
+                      Text(
+                        _planningPath!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: TextDirection.ltr,
+                      ),
+                  ],
+                  if (plan != null) ...[
+                    const Divider(height: 24),
+                    Text(
+                      _finished
+                          ? context.commanderTr(
+                              "{0} completed · {1} skipped/filtered · {2} failed",
+                              [completed, skipped, failed],
+                            )
+                          : context.commanderTr(
+                              "{0} files in preview · {1} total rows",
+                              [plan.fileCount, plan.entries.length],
+                            ),
+                    ),
+                    for (final error in plan.errors)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Text(
+                          error,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 230,
+                      child: ListView.builder(
+                        itemCount: plan.entries.length,
+                        itemBuilder: (context, index) {
+                          final entry = plan.entries[index];
+                          return ListTile(
+                            dense: true,
+                            leading: Icon(
+                              entry.failed
+                                  ? Icons.error_outline
+                                  : entry.source.isFolder
+                                  ? Icons.folder_outlined
+                                  : Icons.insert_drive_file_outlined,
+                            ),
+                            title: Text(
+                              '${entry.source.path} → ${entry.destination}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            subtitle: Text(
+                              entry.message ??
+                                  (entry.outcome != FileOperationOutcome.pending
+                                      ? context.commanderEnum(entry.outcome)
+                                      : entry.existing == null
+                                      ? context.commanderTr("New destination")
+                                      : context.commanderTr(
+                                          "Destination exists",
+                                        )),
+                              style: TextStyle(
+                                color: entry.failed
+                                    ? Theme.of(context).colorScheme.error
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                  if (_running) ...[
+                    LinearProgressIndicator(
+                      value: _total != null && _total! > 0
+                          ? (_bytes / _total!).clamp(0, 1)
+                          : null,
+                    ),
+                    Text(
+                      _current ??
+                          context.commanderTr(
+                            "Waiting for the transfer queue…",
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
-                if (_running) ...[
-                  LinearProgressIndicator(
-                    value: _total != null && _total! > 0
-                        ? (_bytes / _total!).clamp(0, 1)
-                        : null,
-                  ),
-                  Text(
-                    _current ??
-                        context.commanderTr("Waiting for the transfer queue…"),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
-        ),
-        actions: [
-          if (_busy) ...[
-            TextButton(
-              onPressed: () => setState(() {
-                _control.isPaused ? _control.resume() : _control.pause();
-              }),
-              child: Text(
-                _control.isPaused
-                    ? context.commanderTr("Resume")
-                    : context.commanderTr("Pause"),
-              ),
-            ),
-            TextButton(
-              onPressed: () => setState(_control.cancel),
-              child: Text(context.commanderTr("Cancel operation")),
-            ),
-          ] else ...[
-            TextButton(
-              onPressed: _preparing
-                  ? null
-                  : () => Navigator.pop(
-                      context,
-                      _finished && !_foregroundReportFailed ? _plan : null,
-                    ),
-              child: Text(
-                _finished
-                    ? context.commanderTr("Close")
-                    : context.commanderTr("Cancel"),
-              ),
-            ),
-            OutlinedButton(
-              onPressed:
-                  _preparing ||
-                      _sourceOrigin == null ||
-                      unavailableVerifiedDelta
-                  ? null
-                  : _preview,
-              child: Text(context.commanderTr("Preview")),
-            ),
-            if (widget.allowBackground && widget.sourceBackend == null)
-              Tooltip(
-                message: context.commanderTr(
-                  'Starts while CrispCloud is open. Restored jobs require review.',
+          actions: [
+            if (_busy) ...[
+              TextButton(
+                onPressed: () => setState(() {
+                  _control.isPaused ? _control.resume() : _control.pause();
+                }),
+                child: Text(
+                  _control.isPaused
+                      ? context.commanderTr("Resume")
+                      : context.commanderTr("Pause"),
                 ),
-                child: TextButton.icon(
-                  key: const ValueKey('transfer-schedule-background'),
-                  icon: const Icon(Icons.schedule),
-                  onPressed:
-                      !_finished &&
-                          (plan == null || plan.canExecute) &&
-                          !_preparing &&
-                          !unavailableVerifiedDelta &&
-                          backgroundCanWait
-                      ? () async {
-                          final start = await showTransferStartPicker(context);
-                          if (start != null && mounted && !_busy) {
-                            await _start(background: true, notBefore: start);
+              ),
+              TextButton(
+                onPressed: () => setState(_control.cancel),
+                child: Text(context.commanderTr("Cancel operation")),
+              ),
+            ] else ...[
+              TextButton(
+                onPressed: _preparing
+                    ? null
+                    : () => Navigator.pop(
+                        context,
+                        _finished && !_foregroundReportFailed ? _plan : null,
+                      ),
+                child: Text(
+                  _finished
+                      ? context.commanderTr("Close")
+                      : context.commanderTr("Cancel"),
+                ),
+              ),
+              OutlinedButton(
+                onPressed:
+                    _preparing ||
+                        _sourceOrigin == null ||
+                        unavailableVerifiedDelta
+                    ? null
+                    : _preview,
+                child: Text(context.commanderTr("Preview")),
+              ),
+              if (widget.allowBackground && widget.sourceBackend == null)
+                Tooltip(
+                  message: context.commanderTr(
+                    'Starts while CrispCloud is open. Restored jobs require review.',
+                  ),
+                  child: TextButton.icon(
+                    key: const ValueKey('transfer-schedule-background'),
+                    icon: const Icon(Icons.schedule),
+                    onPressed:
+                        !_finished &&
+                            _error == null &&
+                            (plan == null || plan.canExecute) &&
+                            !_preparing &&
+                            !unavailableVerifiedDelta &&
+                            backgroundCanWait
+                        ? () async {
+                            final start = await showTransferStartPicker(
+                              context,
+                            );
+                            if (start != null && mounted && !_busy) {
+                              await _start(background: true, notBefore: start);
+                            }
                           }
-                        }
-                      : null,
-                  label: Text(context.commanderTr('Schedule…')),
+                        : null,
+                    label: Text(context.commanderTr('Schedule…')),
+                  ),
                 ),
-              ),
-            if (widget.allowBackground && widget.sourceBackend == null)
-              Tooltip(
-                message: !backgroundCanWait
-                    ? context.commanderTr(
-                        "Background conflict review is unavailable for this storage. Choose a conflict policy or keep this dialog open.",
-                      )
-                    : asksConflicts
-                    ? context.commanderTr(
-                        "Background conflicts wait in the queue. Use Resolve conflict in the operations panel to continue.",
-                      )
-                    : '',
-                child: TextButton(
-                  key: const ValueKey('transfer-queue-background'),
-                  onPressed:
-                      !_finished &&
-                          (plan == null || plan.canExecute) &&
-                          !_preparing &&
-                          !unavailableVerifiedDelta &&
-                          backgroundCanWait
-                      ? () => _start(background: true)
-                      : null,
-                  child: Text(context.commanderTr("Queue in background")),
+              if (widget.allowBackground && widget.sourceBackend == null)
+                Tooltip(
+                  message: !backgroundCanWait
+                      ? context.commanderTr(
+                          "Background conflict review is unavailable for this storage. Choose a conflict policy or keep this dialog open.",
+                        )
+                      : asksConflicts
+                      ? context.commanderTr(
+                          "Background conflicts wait in the queue. Use Resolve conflict in the operations panel to continue.",
+                        )
+                      : '',
+                  child: TextButton(
+                    key: const ValueKey('transfer-queue-background'),
+                    onPressed:
+                        !_finished &&
+                            _error == null &&
+                            (plan == null || plan.canExecute) &&
+                            !_preparing &&
+                            !unavailableVerifiedDelta &&
+                            backgroundCanWait
+                        ? () => _start(background: true)
+                        : null,
+                    child: Text(context.commanderTr("Queue in background")),
+                  ),
                 ),
+              FilledButton(
+                key: const ValueKey('transfer-start'),
+                autofocus: true,
+                onPressed:
+                    !_finished &&
+                        _error == null &&
+                        (plan == null || plan.canExecute) &&
+                        !_preparing &&
+                        !unavailableVerifiedDelta
+                    ? _start
+                    : null,
+                child: Text(context.commanderTr("Start {0}", [_verb])),
               ),
-            FilledButton(
-              key: const ValueKey('transfer-start'),
-              autofocus: true,
-              onPressed:
-                  !_finished &&
-                      (plan == null || plan.canExecute) &&
-                      !_preparing &&
-                      !unavailableVerifiedDelta
-                  ? _start
-                  : null,
-              child: Text(context.commanderTr("Start {0}", [_verb])),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

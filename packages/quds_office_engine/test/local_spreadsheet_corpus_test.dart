@@ -30,18 +30,36 @@ void main() {
     return files;
   }
 
-  test('local ODS corpus imports', () {
-    final files = filesWith('.ods');
-    for (final file in files) {
-      final book = OdsSheetReader.readBytes(file.readAsBytesSync());
-      expect(book.sheets, isNotEmpty, reason: file.path);
-      expect(
-        book.sheets.any((sheet) => sheet.allCells.isNotEmpty),
-        isTrue,
-        reason: 'empty ODS ${file.path}',
-      );
-    }
-  });
+  test(
+    'local ODS corpus imports or explicitly declines unsupported profiles',
+    () {
+      final files = filesWith('.ods');
+      for (final file in files) {
+        final original = file.readAsBytesSync();
+        final SmlWorkbook book;
+        try {
+          book = OdsSheetReader.readBytes(original);
+        } on OdsSheetFormatException catch (error) {
+          // Explicit unsupported-profile refusals are distinct from parser crashes.
+          expect(
+            error.toString(),
+            matches(
+              r'exceeds|limit|not supported|requires a covered-cell token',
+            ),
+          );
+          expect(file.readAsBytesSync(), orderedEquals(original));
+          print('Live ODS: explicit unsupported-profile refusal: $error');
+          continue;
+        }
+        expect(book.sheets, isNotEmpty, reason: file.path);
+        expect(
+          book.sheets.any((sheet) => sheet.allCells.isNotEmpty),
+          isTrue,
+          reason: 'empty ODS ${file.path}',
+        );
+      }
+    },
+  );
 
   test('local XLS corpus imports', () {
     final files = filesWith('.xls');

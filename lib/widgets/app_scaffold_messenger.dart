@@ -30,8 +30,9 @@ class _AppScaffoldMessengerState extends ScaffoldMessengerState {
           content.data ?? content.textSpan?.toPlainText() ?? '',
         _ => '',
       };
-      if (text.isNotEmpty)
+      if (text.isNotEmpty) {
         container.read(notificationHistoryProvider.notifier).add(text);
+      }
     }
     Timer? timer;
     late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;

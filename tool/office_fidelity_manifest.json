@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "main",
-  "source_commit": "03ad86dd67147cca60ab08d53b09678ff60ea2de",
+  "source_commit": "ffc44eccf4d06bcc5bd410e7b46bacaf0165f1aa",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -2029,7 +2029,7 @@
     "packages/quds_office_engine/test/legacy_word_conversion_test.dart": "54f30696611bb819b2d4bc7145f4745c546d0ad8138573efb548f6f01e96f89c",
     "packages/quds_office_engine/test/legacy_word_document_test.dart": "0d1ee04744d58b9a735019527cd64ae536acbd1dc1e7c1c225a68e9d213bf801",
     "packages/quds_office_engine/test/list_restart_fidelity_test.dart": "2e0318c0eac36d143d55caaa8f8b2364f0f48d168758f576d114d59ff3e409fa",
-    "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart": "eaa46ad6cec964cd008101abfbeb31ef6b008dbdd60e2beee33a13130ce77882",
+    "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart": "642853df8aceffa8cd535f66b1464799cd99c15a7eb9bfe750a6136d9819f0a7",
     "packages/quds_office_engine/test/native_presentation_test.dart": "af7a29f3aa311531b8901e2a92f6de31cc0f0ce2b2f9f5e9d25e5bbf7785f8f4",
     "packages/quds_office_engine/test/native_spreadsheet_test.dart": "638e4dabbb8a39b8ef08a8c9f8d9603ea98422abc6256d665a05860e8a52bd06",
     "packages/quds_office_engine/test/note_chrome_fidelity_test.dart": "4cb17524af3193000a75e76c641033a78328cabed753632f4f289699d5cdd311",
