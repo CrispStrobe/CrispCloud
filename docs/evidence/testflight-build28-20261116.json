@@ -2,7 +2,7 @@
   "recorded_utc": "2026-11-15T23:27:39.574890+00:00",
   "version": "1.3.4+28",
   "candidate_tag": "testflight-v1.3.4-28",
-  "office_source": "216e5ba38110349d6a002a5a58e0ae27825c8bef",
+  "office_source": "dc5f93b673e6087cccc6d66b33dfbfd099668f77",
   "office_source_tag": "crispcloud-build28-office",
   "managed_office_files": 2391,
   "legacy_doc_parser": "4895712158127b2fc930d796e17035c3ca0dac62",
@@ -62,5 +62,7 @@
     "All three mirrored Apple SQLite assets match the pinned upstream hashes; actual ARM SQLite/Drift transaction and rollback passed",
     "No live Zotero/Word or native Windows acceptance claimed"
   ],
-  "testflight_status": "Candidate prepared; upload, Apple processing and beta review are separate hosted gates. See workflow runs for current status."
+  "testflight_status": "Candidate prepared; upload, Apple processing and beta review are separate hosted gates. See workflow runs for current status.",
+  "tested_office_implementation": "216e5ba38110349d6a002a5a58e0ae27825c8bef",
+  "office_pin_followup": "Only the managed changelog and branch ancestry differ from the tested implementation; engine/editor implementation and test blobs were compared unchanged."
 }
