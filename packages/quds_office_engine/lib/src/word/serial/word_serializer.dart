@@ -51,6 +51,7 @@ class WordSerializer {
   }
 
   var _docPrId = 1;
+  Map<OfficeVisual, String> _inlineImageIds = <OfficeVisual, String>{};
   var _hfPart = 1;
   OpcPackage? _package;
   String _mainPartUri = '/word/document.xml';
@@ -142,6 +143,7 @@ class WordSerializer {
     _headerFooterIds = _syncHeadersFooters(document, package);
     _syncEmbeddings(document, package);
     final Map<OfficeVisual, String> imageIds = _syncImages(document, package);
+    _inlineImageIds = imageIds;
     package.getPart(_mainPartUri)!.writeText(_documentXml(document, imageIds));
     _syncComments(document, package);
     _syncWatermark(document, package);
@@ -427,6 +429,7 @@ class WordSerializer {
               hyperlink: inline.hyperlink?.copy(),
               commentIds: List<int>.from(inline.commentIds),
               noteRefId: inline.noteRefId,
+              inlineVisual: inline.inlineVisual,
               noteRefEndnote: inline.noteRefEndnote,
               fieldInstruction: inline.fieldInstruction,
               fieldLocked: inline.fieldLocked,
@@ -974,7 +977,18 @@ class WordSerializer {
     }
     w.writeStartElement('r', prefix: 'w');
     _writeRPr(w, inline.properties);
-    if (inline.noteRefId != null) {
+    final WmlVisual? picture = inline.inlineVisual;
+    final String? pictureId = picture == null
+        ? null
+        : _inlineImageIds[picture.visual];
+    if (picture != null && pictureId != null) {
+      WordDrawingIo.writeInlineDrawing(
+        w,
+        relationshipId: pictureId,
+        visual: picture.visual,
+        docPrId: _docPrId++,
+      );
+    } else if (inline.noteRefId != null) {
       w.writeEmptyElement(
         inline.noteRefEndnote ? 'endnoteReference' : 'footnoteReference',
         prefix: 'w',
@@ -1652,6 +1666,20 @@ class WordSerializer {
     return map;
   }
 
+  /// Inline pictures carried by runs in a paragraph-only story (header,
+  /// footer), so their media is synced into that part's relationship set.
+  static Iterable<OfficeVisual> _inlineVisualsOf(
+    Iterable<WmlParagraph> story,
+  ) sync* {
+    for (final WmlParagraph paragraph in story) {
+      for (final WmlInline inline in paragraph.inlines) {
+        if (inline is WmlRun && inline.inlineVisual != null) {
+          yield inline.inlineVisual!.visual;
+        }
+      }
+    }
+  }
+
   String? _writeHfPart(
     OpcPackage package,
     List<WmlParagraph> story, {
@@ -1687,12 +1715,17 @@ class WordSerializer {
     final String name = header ? 'header$n.xml' : 'footer$n.xml';
     final String uri = OpcUris.resolve(_mainPartUri, name);
     final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
-      visuals.map((WmlVisual visual) => visual.visual),
+      <OfficeVisual>[
+        ...visuals.map((WmlVisual visual) => visual.visual),
+        ..._inlineVisualsOf(story),
+      ],
       package,
       partUri: uri,
       mediaPrefix: '${header ? 'header' : 'footer'}${n}Image',
     );
     final String previousPart = _activePartUri;
+    final Map<OfficeVisual, String> previousInlineImages = _inlineImageIds;
+    _inlineImageIds = imageIds;
     _activePartUri = uri;
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
@@ -1718,6 +1751,7 @@ class WordSerializer {
     }
     w.writeEndElement();
     _activePartUri = previousPart;
+    _inlineImageIds = previousInlineImages;
     return _putNamedPart(
       package,
       uri,
@@ -2266,6 +2300,8 @@ class WordSerializer {
     w.writeNamespace('a', OfficeNamespaces.a);
     w.writeNamespace('pic', WordDrawingIo.pictureUri);
     final String previousPart = _activePartUri;
+    final Map<OfficeVisual, String> previousInlineImages = _inlineImageIds;
+    _inlineImageIds = imageIds;
     _activePartUri = uri;
     // Separators are not editable note bodies. Preserve their native metadata;
     // only a newly created note part receives the conventional standard pair.
@@ -2305,6 +2341,7 @@ class WordSerializer {
     }
     w.writeEndElement();
     _activePartUri = previousPart;
+    _inlineImageIds = previousInlineImages;
     _putPart(package, uri, contentType, w.toXml(), relType);
   }
 
