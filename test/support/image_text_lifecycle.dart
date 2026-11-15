@@ -1,5 +1,9 @@
+// ignore_for_file: invalid_use_of_protected_member
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' show PointerDeviceKind;
+
+import 'package:pro_image_editor/features/crop_rotate_editor/widgets/outside_gestures/crop_rotate_gesture_detector.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
@@ -180,6 +184,71 @@ void registerImageTextLifecycleTests({bool live = false}) {
       await tester.tap(find.byKey(const ValueKey('image-cancel-tool')));
       await _until(tester, () => !key.currentState!.isSubEditorOpen);
       expect(attempts, 2);
+      expect(store.writes, 0);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    },
+    variant: live
+        ? const TargetPlatformVariant({TargetPlatform.macOS})
+        : TargetPlatformVariant.desktop(),
+  );
+  testWidgets(
+    'visible crop corner target resizes both axes without selecting an edge',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final store = _Store();
+      final key = GlobalKey<ProImageEditorState>();
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: ImageEditorDialog(
+              file: FileItem(name: store.displayName, path: store.path),
+              side: PanelSide.local,
+              storeOverride: store,
+              editorKey: key,
+              enableIsolateGeneration: false,
+            ),
+          ),
+        ),
+      );
+      final cropButton = find.byKey(const ValueKey('image-cropRotate'));
+      await _until(
+        tester,
+        () =>
+            cropButton.evaluate().isNotEmpty &&
+            tester.widget<TextButton>(cropButton).onPressed != null,
+      );
+      await tester.ensureVisible(cropButton);
+      await tester.tap(cropButton);
+      await _until(
+        tester,
+        () => key.currentState!.cropRotateEditor.currentState != null,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      final crop = key.currentState!.cropRotateEditor.currentState!;
+      final before = crop.cropRect;
+      final box = tester.renderObject<RenderBox>(
+        find.byType(CropRotateGestureDetector),
+      );
+      final center = box.size.center(Offset.zero);
+      final target = before.bottomRight - const Offset(12, 12);
+      final local =
+          center + (target - center) / crop.userScaleFactor - crop.translate;
+      final point = box.localToGlobal(local);
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: point);
+      await gesture.moveTo(point);
+      await tester.pump();
+      await gesture.down(point);
+      await gesture.moveBy(const Offset(-48, -19));
+      await tester.pump();
+      expect(crop.cropRect.width, lessThan(before.width));
+      expect(crop.cropRect.height, lessThan(before.height));
+      await gesture.up();
+      await gesture.removePointer();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.byKey(const ValueKey('image-cancel-tool')));
+      await _until(tester, () => !key.currentState!.isSubEditorOpen);
       expect(store.writes, 0);
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
