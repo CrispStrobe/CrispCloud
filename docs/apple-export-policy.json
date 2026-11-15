@@ -18,10 +18,18 @@
   "reviewed_source_sha256": "2e2be41ff6382fec4ba37a0685900f4c566cb0a3f435559c88fa9e821776f1c5",
   "testflight": {
     "distribution_review": "no_france",
-    "reference": "Reviewed external group b044f8c9-394b-47dd-a470-796fd052580a is invitation-only (publicLinkEnabled=false) and contains exactly the project owner (cstr+beta@mailbox.org), who is outside France. The previous public-link group 2649c41c-6c58-4dfd-b07a-03b2f537e73f had its public link disabled on 2026-11-08 and is not used for this release.",
+    "reference": "Reviewed external group b044f8c9-394b-47dd-a470-796fd052580a is invitation-only (publicLinkEnabled=false) and contains exactly the project owner (cstr+beta@mailbox.org), who is outside France. The previous public-link group 2649c41c-6c58-4dfd-b07a-03b2f537e73f had its public link disabled on 2026-11-08 and is not used for this release. On 2026-11-15 the existing internal group 66ef90c0-2fa6-4621-a976-c61f6573e1ca also contained exactly the same reviewed project owner. The internal tester resource ID is pinned below and membership is rechecked before assignment; this adds no recipients or public links.",
     "external_group_ids": [
       "b044f8c9-394b-47dd-a470-796fd052580a"
     ],
-    "allow_public_links": false
+    "allow_public_links": false,
+    "internal_group_ids": [
+      "66ef90c0-2fa6-4621-a976-c61f6573e1ca"
+    ],
+    "internal_group_tester_ids": {
+      "66ef90c0-2fa6-4621-a976-c61f6573e1ca": [
+        "4a993681-ba3c-42ae-b279-27d6e0fca9d0"
+      ]
+    }
   }
 }

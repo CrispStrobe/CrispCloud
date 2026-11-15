@@ -167,6 +167,21 @@ def run_testflight
   group = guard.verify!
   puts "Reviewed external group: #{group.dig('attributes', 'name')} (#{group_id})"
 
+  if ENV.fetch('TESTFLIGHT_INCLUDE_INTERNAL', '0') == '1'
+    ids = policy.fetch('testflight').fetch('internal_group_ids', [])
+    abort 'Internal testing needs exactly one reviewed group ID' unless ids.is_a?(Array) && ids.one?
+    internal = TestFlightExportGuard.new(
+      client: client, policy: policy, app_id: app_id, build_id: build_id,
+      build_number: build_number, marketing_version: marketing_version,
+      platform: platform, group_id: ids.first, internal_group: true
+    )
+    internal.post(
+      "/v1/betaGroups/#{URI.encode_www_form_component(ids.first)}/relationships/builds",
+      data: [linkage('builds', build_id)]
+    )
+    puts "Assigned build #{build_number} to the reviewed internal group"
+  end
+
   localizations = client.get(
     '/v1/betaBuildLocalizations',
     'filter[build]' => build_id,

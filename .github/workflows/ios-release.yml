@@ -29,6 +29,10 @@ on:
         description: 'Build & sign only, do NOT upload'
         type: boolean
         default: true
+      distribute_testflight:
+        description: 'After upload, enable reviewed internal testing and submit external beta review'
+        type: boolean
+        default: false
 
 env:
   BUNDLE_ID: com.CrispStrobe.cloud
@@ -43,7 +47,7 @@ env:
 jobs:
   build-upload:
     runs-on: macos-15-intel
-    timeout-minutes: 75
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -320,6 +324,24 @@ jobs:
             --bundle-short-version-string "$VER" \
             --api-key "${{ secrets.ASC_KEY_ID }}" \
             --api-issuer "${{ secrets.ASC_ISSUER_ID }}"
+
+      - name: Distribute to reviewed internal and external TestFlight groups
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false && inputs.distribute_testflight == true
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
+          ASC_KEY_PATH: .appstoreconnect/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          ASC_BUNDLE_ID: com.CrispStrobe.cloud
+          ASC_PLATFORM: IOS
+          TESTFLIGHT_INCLUDE_INTERNAL: '1'
+          TESTFLIGHT_WHAT_TO_TEST: >-
+            Test browsing, transfers, previews and editing, SSH jump hosts,
+            terminal pane layouts and reconnect, and Zotero references in Word.
+        run: |
+          set -euo pipefail
+          export ASC_BUILD_NUMBER="$(sed -n 's/^version: .*+//p' pubspec.yaml)"
+          ruby tool/testflight_external.rb
 
       - name: Retain live Apple export preflight evidence
         if: always()

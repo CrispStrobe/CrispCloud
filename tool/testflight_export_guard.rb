@@ -111,7 +111,7 @@ class TestFlightExportGuard
     builds.first
   end
 
-  def initialize(client:, policy:, app_id:, build_id:, build_number:, marketing_version:, platform:, group_id:, group_name: '')
+  def initialize(client:, policy:, app_id:, build_id:, build_number:, marketing_version:, platform:, group_id:, group_name: '', internal_group: false)
     self.class.validate_policy!(policy)
     unless [app_id, build_id, group_id].all? { |id| self.class.identifier?(id) }
       raise Error, 'TestFlight app, build and group IDs must be explicit resource IDs'
@@ -122,6 +122,7 @@ class TestFlightExportGuard
     @app_id, @build_id, @build_number, @platform = app_id, build_id, build_number, platform
     @marketing_version = marketing_version
     @group_id, @group_name = group_id, group_name
+    @internal_group = internal_group
   end
 
   def encoded(id)
@@ -130,7 +131,8 @@ class TestFlightExportGuard
 
   def verify!
     review = self.class.validate_policy!(@policy)
-    unless review.fetch('external_group_ids').include?(@group_id)
+    ids = @internal_group ? review.fetch('internal_group_ids', []) : review.fetch('external_group_ids')
+    unless ids.is_a?(Array) && ids.all? { |id| self.class.identifier?(id) } && ids.include?(@group_id)
       raise Error, 'Selected TestFlight group is no longer in the reviewed allowlist'
     end
     group = @client.get(
@@ -141,16 +143,29 @@ class TestFlightExportGuard
     unless group.is_a?(Hash) && group['type'] == 'betaGroups' && group['id'] == @group_id &&
            group.dig('relationships', 'app', 'data', 'type') == 'apps' &&
            group.dig('relationships', 'app', 'data', 'id') == @app_id &&
-           group.dig('attributes', 'isInternalGroup') == false
-      raise Error, 'The selected ID must identify an external TestFlight group of this app'
+           group.dig('attributes', 'isInternalGroup') == @internal_group
+      raise Error, 'The selected ID must identify the reviewed TestFlight group type of this app'
     end
     if !@group_name.empty? && group.dig('attributes', 'name') != @group_name
       raise Error, 'The selected TestFlight group ID does not match TESTFLIGHT_GROUP'
     end
     public_link = group.dig('attributes', 'publicLinkEnabled')
-    unless public_link == false || (public_link == true && review['allow_public_links'] == true &&
+    unless (@internal_group && public_link.nil?) || public_link == false || (!@internal_group && public_link == true && review['allow_public_links'] == true &&
                                     review['distribution_review'] == 'france_covered')
       raise Error, 'Public TestFlight link is enabled or unknown without reviewed French coverage and explicit permission'
+    end
+    if @internal_group
+      expected = review.fetch('internal_group_tester_ids', {})[@group_id]
+      unless expected.is_a?(Array) && !expected.empty? && expected.all? { |id| self.class.identifier?(id) } && expected.uniq == expected
+        raise Error, 'Internal TestFlight recipients need an exact reviewed tester allowlist'
+      end
+      recipients = @client.get("/v1/betaGroups/#{encoded(@group_id)}/betaTesters", 'limit' => 200)
+      data = recipients['data']
+      unless data.is_a?(Array) && recipients.dig('links', 'next').nil? &&
+             data.all? { |item| item.is_a?(Hash) && item['type'] == 'betaTesters' } &&
+             data.map { |item| item['id'] }.sort == expected.sort
+        raise Error, 'Internal TestFlight membership differs from the reviewed recipients'
+      end
     end
 
     build = @client.get(
@@ -198,6 +213,9 @@ class TestFlightExportGuard
   # a link enabled after the initial selection must stop subsequent writes.
   # This is a preflight, not an atomic transaction with App Store Connect.
   def post(path, body)
+    if @internal_group && path != "/v1/betaGroups/#{encoded(@group_id)}/relationships/builds"
+      raise Error, 'Internal TestFlight distribution permits only the reviewed build assignment'
+    end
     data = JSON.parse(JSON.generate(body)).fetch('data')
     build_link = { 'type' => 'builds', 'id' => @build_id }
     case path

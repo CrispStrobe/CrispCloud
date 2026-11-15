@@ -23,6 +23,10 @@ on:
         description: 'Reviewed external group ID (optional only when policy lists exactly one ID)'
         required: false
         type: string
+      include_internal:
+        description: 'Also assign the build to the reviewed internal group'
+        type: boolean
+        default: false
       group:
         description: 'Optional name cross-check for the reviewed external group ID'
         required: false
@@ -54,6 +58,7 @@ jobs:
           ASC_BUILD_ID: ${{ inputs.build_id }}
           TESTFLIGHT_GROUP_ID: ${{ inputs.group_id }}
           TESTFLIGHT_GROUP: ${{ inputs.group }}
+          TESTFLIGHT_INCLUDE_INTERNAL: ${{ inputs.include_internal && '1' || '0' }}
           TESTFLIGHT_WHAT_TO_TEST: >-
             Please verify launch reliability, sign-in, cloud browsing,
             uploads/downloads, previews, text editing, audio editing, ebook

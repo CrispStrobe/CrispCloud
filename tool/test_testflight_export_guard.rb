@@ -7,7 +7,7 @@ require_relative 'testflight_external'
 class TestFlightExportGuardTest < Minitest::Test
   class FakeClient
     attr_reader :posts, :gets
-    attr_accessor :group, :build, :declaration, :prerelease
+    attr_accessor :group, :build, :declaration, :prerelease, :recipients
 
     def initialize
       @posts, @gets = [], []
@@ -28,6 +28,7 @@ class TestFlightExportGuardTest < Minitest::Test
 
     def get(path, _query = {})
       @gets << path
+      return Marshal.load(Marshal.dump(@recipients)) if path == '/v1/betaGroups/group-1/betaTesters'
       data = case path
              when '/v1/betaGroups/group-1' then @group
              when '/v1/builds/build-1' then @build
@@ -56,6 +57,72 @@ class TestFlightExportGuardTest < Minitest::Test
   def guard
     TestFlightExportGuard.new(client: @client, policy: @policy, app_id: 'app-1', build_id: 'build-1',
                              build_number: '10', marketing_version: '1.1.0', platform: 'MAC_OS', group_id: 'group-1')
+  end
+
+  def internal_guard
+    TestFlightExportGuard.new(client: @client, policy: @policy, app_id: 'app-1', build_id: 'build-1',
+                             build_number: '10', marketing_version: '1.1.0', platform: 'MAC_OS',
+                             group_id: 'group-1', internal_group: true)
+  end
+
+  def approve_internal
+    @policy['testflight']['internal_group_ids'] = ['group-1']
+    @policy['testflight']['internal_group_tester_ids'] = { 'group-1' => ['tester-1'] }
+    @client.group['attributes']['isInternalGroup'] = true
+    @client.group['attributes']['publicLinkEnabled'] = nil
+    @client.recipients = { 'data' => [{ 'type' => 'betaTesters', 'id' => 'tester-1' }], 'links' => { 'next' => nil } }
+  end
+
+  def test_internal_assignment_checks_exact_group_build_and_reviewed_members
+    approve_internal
+    internal_guard.post('/v1/betaGroups/group-1/relationships/builds', assignment)
+    assert_equal 1, @client.posts.length
+    assert_includes @client.gets, '/v1/betaGroups/group-1/betaTesters'
+    assert_includes @client.gets, '/v1/builds/build-1/preReleaseVersion'
+  end
+
+  def test_internal_assignment_rejects_changed_or_incomplete_recipients
+    [
+      { 'data' => [], 'links' => {} },
+      { 'data' => [{ 'type' => 'betaTesters', 'id' => 'other' }], 'links' => {} },
+      { 'data' => [{ 'type' => 'betaTesters', 'id' => 'tester-1' }], 'links' => { 'next' => '/more' } }
+    ].each do |response|
+      approve_internal
+      @client.recipients = response
+      assert_raises(TestFlightExportGuard::Error) do
+        internal_guard.post('/v1/betaGroups/group-1/relationships/builds', assignment)
+      end
+      assert_empty @client.posts
+    end
+  end
+
+  def test_internal_membership_is_rechecked_before_assignment
+    approve_internal
+    reviewed = internal_guard
+    reviewed.verify!
+    @client.recipients['data'] << { 'type' => 'betaTesters', 'id' => 'unreviewed' }
+    assert_raises(TestFlightExportGuard::Error) do
+      reviewed.post('/v1/betaGroups/group-1/relationships/builds', assignment)
+    end
+    assert_empty @client.posts
+  end
+
+  def test_internal_guard_never_creates_groups_or_submits_external_review
+    approve_internal
+    ['/v1/betaGroups', '/v1/betaAppReviewSubmissions', '/v1/betaBuildLocalizations'].each do |path|
+      assert_raises(TestFlightExportGuard::Error) { internal_guard.post(path, submission) }
+    end
+    assert_empty @client.posts
+  end
+
+  def test_internal_assignment_requires_an_explicit_internal_allowlist_and_group_type
+    approve_internal
+    @policy['testflight'].delete('internal_group_ids')
+    assert_raises(TestFlightExportGuard::Error) { internal_guard.verify! }
+    approve_internal
+    @client.group['attributes']['isInternalGroup'] = false
+    assert_raises(TestFlightExportGuard::Error) { internal_guard.verify! }
+    assert_empty @client.posts
   end
 
   def localization
