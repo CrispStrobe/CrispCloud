@@ -23,9 +23,9 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `dcefdc051ac8dddcef0f07baaa00bfbc2c35817a` on
+The app mirrors Quds `b23d033620f07cf2659209eff4c4c8e2d71ee89c` on
 `integration/storage-carving-qualification-20261115` and standalone
-legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,217 managed files
+legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,220 managed files
 verify. New work includes supported BIFF8/HTML spreadsheet imports, shared
 formulas and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
@@ -39,6 +39,11 @@ native style, unwrapped cells cannot reuse wrapped styles, and wrap-only edits
 survive new-workbook saves. The scripted Word oracle resolves heading outline
 levels through paragraph styles and their inheritance while retaining explicit
 override and malformed-style negative controls.
+
+Selection screenshot tests retain the original macOS-authored masters and use
+separate Linux-host references. The Linux PNGs are exact captures from the
+unchanged pre-reconciliation source; independent comparison confirms identical
+selection geometry and table borders. No comparison tolerance is relaxed.
 
 The storage continuation retains its earlier combined canonical checkpoint
 `01f167cc` in [the reconciliation record](../docs/office-storage-reconciliation-20261115.md).

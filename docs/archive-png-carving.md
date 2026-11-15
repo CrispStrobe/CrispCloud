@@ -95,7 +95,7 @@ filesystem metadata.
 | Positional capture read | 64 KiB |
 | Compressed input per codec turn | 8 KiB |
 | Codec output callback | At most 64 KiB |
-| Host capture/verification stream | 262,144 chunks; 2 minutes of elapsed work; 30 seconds between chunks |
+| Host capture/verification stream | 262,144 chunks; 2 minutes elapsed including time paused within a read; 30 seconds between chunks |
 
 Limits are independently enforced and cannot be raised through the public
 scanner API. These are not a 64 MiB total resident-memory claim: snapshot,

@@ -105,3 +105,27 @@ Excel manifest's older DOC parser pin is not adopted: the standalone parser
 remains `d422fa99`. The managed inventory now covers 2,217 files. Audit receipts
 are in `evidence/storage-carving-20261115/resume-audit/`; runtime acceptance is
 recorded separately against the saved combined candidate.
+
+## Test-fixture corrections found during the combined run
+
+Saved app `db5e3f75` passed the PNG/storage tests but exposed three pre-existing
+Office expectation failures. The host ribbon scenario assumed that the built-in
+Heading 2 was bold, although the current style deliberately is not. That test
+now authors its own bold Heading 2 input, preserving its explicit-unbold action,
+XML assertions, notes, images and three real save/reopen cycles. The complete
+14-test host-save suite passes with the corrected fixture.
+
+The two selection screenshot failures reproduce byte-for-byte at old app
+`5a62b10f`, in the current standalone editor and in the app context. Selection
+component boxes and table borders are identical to the macOS-authored masters;
+the differences lie at local image edges. Canonical `b23d0336` preserves those
+masters and adds separate Linux-host references copied from the old-source
+captures. All ten selection tests pass, with unchanged pixel tolerance. This
+is Linux renderer qualification of simulated target colour variants, not an
+execution claim for macOS or Windows. The exact upstream rasterizer cause is
+not established by the comparison.
+
+This last canonical change contains only the test harness, two PNG references
+and their provenance. The 2,220-file host mirror retains exactly the engine
+implementation qualified at canonical `dcefdc05`. Failed development receipts
+and the subsequent source-bound qualification remain separately identifiable.

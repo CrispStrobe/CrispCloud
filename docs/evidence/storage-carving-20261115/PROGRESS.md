@@ -105,3 +105,17 @@ Office repository before a new source freeze. The incoming Word branch repairs
 the stale scripted heading oracle that failed hosted Office CI; its check must
 respect an inherited Heading3 outline level as well as direct paragraph values.
 Local qualification and hosted workflow conclusions remain separately recorded.
+
+The combined candidate was saved as `db5e3f7516b1e6c08cc2926f6d5afdceba85792d`.
+Its first app run passed 606 of 607 tests; the standalone editor passed 71 of
+73. The remaining failures were the older heading-fixture assumption and the
+cross-host screenshot references described in the Office reconciliation record.
+Both have concrete test-fixture corrections; no production heading default,
+pixel tolerance, or existing golden master was changed.
+
+At that saved source, the standalone engine passed 95 tests, strict analysis
+passed all 49 changed Dart files, all 61 Office inventory/sync controls passed,
+and VM/JavaScript each passed 248 assertions with independent Python readback
+of eight ZIPs and ten PNGs. These receipts are preserved with their actual
+source pins and unsuccessful attempts. The final combined cohort will run
+after the corrected fixture source is saved.
