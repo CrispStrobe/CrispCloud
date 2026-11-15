@@ -1,0 +1,138 @@
+{
+  "recorded_at": "2026-11-15T13:22:40.167470+00:00",
+  "scope": "Local feature qualification plus narrow fresh regressions for concurrent incoming Office source; no GitHub Actions wait, release or device acceptance.",
+  "tested_code_checkpoint": "b55ce4e1db97be88b5e9df200e9b0c9feaba1e50",
+  "branch": "feature/veracrypt-compatibility-20261115",
+  "baseline": {
+    "main": "686318626e209220011f7da194cfe4e41ca4adeb",
+    "initial_merge": "7c1c925028d66f8109c628b8c17a0d4f1d70cb73",
+    "final_incoming_storage": "3e9560c9b4bd617b5346bacd8b5039493f0f2dc1",
+    "final_incoming_local_evidence": "22c4f42acc575bee8f5119a4803af13b57ef7cbc"
+  },
+  "toolchain": {
+    "flutter": "3.47.8",
+    "flutter_revision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "dart": "3.13.7",
+    "flutter_archive_sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+    "platform": "Linux x64 headless Flutter test runtime and compiled JavaScript in Node"
+  },
+  "checks": [
+    {
+      "name": "Focused feature suite",
+      "command": "tool/check_veracrypt.sh",
+      "exit_code": 0,
+      "flutter_tests_passed": 316,
+      "flutter_tests_failed": 0,
+      "js_probes_completed": 2,
+      "log": "focused-tests.log"
+    },
+    {
+      "name": "Strict feature analyzer",
+      "command": "dart analyze --fatal-infos <27 recorded feature Dart paths>",
+      "exit_code": 0,
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0,
+      "log": "dart-analysis.log",
+      "argv": [
+        "dart",
+        "analyze",
+        "--fatal-infos",
+        "lib/l10n/veracrypt_strings.dart",
+        "lib/providers/panel_source_provider.dart",
+        "lib/services/internal_viewer_service.dart",
+        "lib/services/panel_source_service.dart",
+        "lib/services/veracrypt_container_reader.dart",
+        "lib/services/veracrypt_file_source.dart",
+        "lib/services/veracrypt_file_source_io.dart",
+        "lib/services/veracrypt_file_source_stub.dart",
+        "lib/services/veracrypt_header_worker.dart",
+        "lib/services/veracrypt_header_worker_io.dart",
+        "lib/services/veracrypt_header_worker_stub.dart",
+        "lib/services/veracrypt_service.dart",
+        "lib/widgets/internal_viewer_dialog.dart",
+        "lib/widgets/veracrypt_unlock_dialog.dart",
+        "test/fixtures/veracrypt/web_compatibility_probe.dart",
+        "test/panel_source_restore_test.dart",
+        "test/panel_source_test.dart",
+        "test/support/veracrypt_container_fixture.dart",
+        "test/support/veracrypt_web_smoke.dart",
+        "test/veracrypt_compatibility_test.dart",
+        "test/veracrypt_container_reader_test.dart",
+        "test/veracrypt_header_worker_test.dart",
+        "test/veracrypt_live_test.dart",
+        "test/veracrypt_panel_transfer_test.dart",
+        "test/veracrypt_viewer_routing_test.dart",
+        "test/widget/veracrypt_unlock_dialog_test.dart",
+        "test/widget/veracrypt_viewer_test.dart"
+      ]
+    },
+    {
+      "name": "Panel swap integration analyzer",
+      "exit_code": 0,
+      "errors": 0,
+      "warnings": 0,
+      "preexisting_style_infos_in_panel_provider": 13,
+      "log": "panel-integration-analysis.log"
+    },
+    {
+      "name": "Source inventory gate",
+      "command": "python3 tool/crypto_release_evidence.py --check",
+      "exit_code": 0,
+      "reviewed_paths": 756,
+      "log": "source-evidence-check.log"
+    },
+    {
+      "name": "Incoming Office manifest",
+      "command": "python3 tool/verify_office_fidelity.py --require-tracked",
+      "exit_code": 0,
+      "managed_files_verified": 2336,
+      "log": "office-manifest-check.log"
+    },
+    {
+      "name": "Fresh incoming ODS and comments regressions",
+      "exit_code": 0,
+      "tests_passed": 92,
+      "tests_failed": 0,
+      "log": "office-regressions.log",
+      "details": "office-regression-receipt.json"
+    },
+    {
+      "name": "JavaScript runner completion/error controls",
+      "controls_passed": 8,
+      "controls_failed": 0,
+      "details": "web-probe-controls.json"
+    }
+  ],
+  "source_files_sha256": "source-sha256.json",
+  "pubspec_lock_sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+  "inventory_sha256": "9b1d4e6e6a328ecf8a06dd40b0876ee11d33a97e85c13d6e730d93f9da636181",
+  "reviewed_source_sha256": "abf2ba948b2ccdcef18b9ac314091357552ab06a62482442fd1c5c3ff67d60d3",
+  "dependency_declarations_changed_by_feature": false,
+  "lockfile_changed_by_feature": false,
+  "native_hooks_disabled": false,
+  "sqlite_test_hook": "Existing with_ci_system_sqlite.py wrapper; system SQLite3.46.1, FK/transactions/FTS5 probe, original pubspec restored.",
+  "fixtures": "Independent Python/OpenSSL assembled format fixtures; no upstream executable-generated container was tested.",
+  "not_qualified": [
+    "interactive browser UI",
+    "native Apple/Android packaging or physical devices",
+    "live user/provider containers",
+    "new complete encrypted NTFS/ext corpus",
+    "system mounts or writes",
+    "browser Argon2id"
+  ],
+  "github_actions_polled_or_awaited": false,
+  "evidence_sha256": {
+    "branch-refresh-audit.json": "da9de20366de5a7567f5fcc5b73bd2a8f4734efa854e1e9419d14a9bb9e41e3d",
+    "dart-analysis.log": "a741de0413d6fc0fb72724f6f916f889d857bb86adb065f20eb2fd211b447d81",
+    "focused-tests.log": "8ed2a73fd4364adc790fd35ffcdc40f1b66cda329681e245ef4cd136fd2d0555",
+    "incoming-branches.json": "dde63c54bf7f210f8759921ca16d1bb8e3e558f42fca85bc124be6813043dd6c",
+    "office-manifest-check.log": "dcce25b5552010bfdd08165020dcd8daeaab8e5a766b5d64203a3a0c5be275d4",
+    "office-regression-receipt.json": "0624962932ce8553d57a0f64d32cfda5a47b3c01ea0af7d90c8d6b7cf1e83ef1",
+    "office-regressions.log": "f2462839a68a8338faa80f8be7fe7d5459bcec41b775654d04ac7d665b027a08",
+    "panel-integration-analysis.log": "819e9c262697565b5c60e5292652e572d41a494da1c4b8b528df48c7e4734c4e",
+    "source-evidence-check.log": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177",
+    "source-sha256.json": "213e950c4b6bad7a5e15d32aba1de48dc12fe789c313a16a3f65d8e2e02cea2a",
+    "web-probe-controls.json": "88286ad6a253c92aed077be46355264296fc9c6db5ac5028ff89b847a768a5b2"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "recorded_at": "2026-11-15T13:21:32.705984+00:00",
+  "scope": "Fresh imported Office regressions against current source; source imports and test paths are used directly from repository, fixtures resolved from engine working directory.",
+  "git_head": "b55ce4e1db97be88b5e9df200e9b0c9feaba1e50",
+  "source_status": "",
+  "dart": "3.13.7",
+  "test": "1.33.0",
+  "cwd": "/workspace/scratch/8c751e85cb23/CrispCloud/packages/quds_office_engine",
+  "command": [
+    "dart",
+    "--packages=/workspace/scratch/8c751e85cb23/office-regression-harness/.dart_tool/package_config.json",
+    "/workspace/scratch/8c751e85cb23/toolchains/pub-cache/hosted/pub.dev/test-1.33.0/bin/test.dart",
+    "test/ods_sheet_reader_test.dart",
+    "test/sheet_comments_namespace_test.dart",
+    "--reporter",
+    "expanded"
+  ],
+  "observed_exit_code": 0,
+  "tests_passed": 92,
+  "completion": "00:00 +92: All tests passed!",
+  "log": "/workspace/scratch/8c751e85cb23/office-regression-harness/ods-comments-tests.log",
+  "log_sha256": "f2462839a68a8338faa80f8be7fe7d5459bcec41b775654d04ac7d665b027a08",
+  "dev_pubspec": "/workspace/scratch/8c751e85cb23/office-regression-harness/pubspec.yaml",
+  "dev_pubspec_sha256": "8cd449e3188148cb732a06f7a6909ba6d1d1559cdf371202174e2355f61defc7",
+  "dev_lockfile": "/workspace/scratch/8c751e85cb23/office-regression-harness/pubspec.lock",
+  "dev_lockfile_sha256": "abab0af1f86d3f41a37f7018a9bce5ecce3bcd7906297da237fac26089e630af",
+  "source_manifest": "/workspace/scratch/8c751e85cb23/office-regression-harness/source-sha256.json",
+  "source_manifest_count": 2438,
+  "source_manifest_sha256": "767d12fc31c14df939780e100803713544afa452b61f1ada4c433a107749e802",
+  "repository_edits": "None. Scratch-only dependency graph; no SQLite wrapper or repository manifest changes."
+}

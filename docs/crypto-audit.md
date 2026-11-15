@@ -11,6 +11,22 @@ in [export-compliance.md](export-compliance.md). The machine-readable scope is
 [crypto-inventory.json](crypto-inventory.json); exact dependency provenance is
 in [crypto-dependencies.md](crypto-dependencies.md).
 
+## 15 November 2026: bundled VeraCrypt/TrueCrypt reader
+
+The [container support profile](veracrypt-support.md) extends the existing MIT
+PointyCastle AES-XTS path with native Argon2id, custom PBKDF2 PIMs, keyfiles and
+native TrueCrypt headers. It connects those keys to bounded FAT/NTFS/ext reads
+and the F3 viewer; the generic panel service no longer pretends to unlock an
+empty container. Browser Argon2 is explicitly unavailable because its current
+backend has unsuitable memory overhead. Cipher cascades and container writes
+remain outside the admitted profile.
+
+This adds no dependency or executable. Independent Python/OpenSSL header and
+full filesystem fixtures cover credential compatibility, XTS offset rules,
+invalid geometry, reader lifetime and source identity. The new files are bound
+into the machine-readable inventory. The existing distribution policy decisions
+are not changed by this implementation; no release was submitted or deployed.
+
 ## 12 November 2026: KeePass source and release evidence
 
 The review now includes the KDBX viewer/editor at implementation checkpoint
@@ -239,11 +255,12 @@ The names of service classes overstate what the initial app actually exposed:
   filesystem, chunk content I/O and directory traversal still require work.
   A nested path cannot be derived from cleartext names alone: read the real
   directory metadata. Shortened names need their `name.c9s` reverse mapping.
-- **VeraCrypt:** bundled code detects candidates and parses a limited set of
-  headers. It does not decrypt a mounted volume filesystem on mobile. Full
-  mounting uses the separately installed desktop CLI, which remains unavailable
-  in the App Store sandbox/mobile path. No cascade, keyfile, custom PIM or
-  arbitrary KDF support is claimed by the bundled parser.
+- **VeraCrypt:** the 15 November extension adds bundled read-only AES-XTS
+  filesystem browsing, keyfiles, custom PIMs, native Argon2id and native
+  TrueCrypt headers within the [documented profile](veracrypt-support.md).
+  System-level mounting remains the separate desktop CLI integration and is
+  unavailable in the App Store sandbox/mobile path. Cipher cascades, arbitrary
+  KDFs, exFAT and container writes remain unsupported by the bundled reader.
 - **Backups:** the reviewed backup provider has no application UI/import caller.
   Its callback API is retained; an encrypted plan now requires a configured
   cipher instead of silently treating missing implementation as success.

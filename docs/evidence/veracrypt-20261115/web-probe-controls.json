@@ -1,0 +1,64 @@
+{
+  "recorded_at": "2026-11-15T13:14:02.457966+00:00",
+  "scope": "Actual compiled-JavaScript crypto and full-reader probes executed with required completion receipts; native Dart/Flutter tests are separate.",
+  "dart": "3.13.7",
+  "node": "24.22.1",
+  "runner": "tool/run_dart_web_probe.cjs",
+  "runner_sha256": "45bab331cce48cf9b259f94d5de6dbfec4eda41860e1c49d9215e3d5f56ed149",
+  "probes": [
+    {
+      "name": "reader",
+      "source": "test/support/veracrypt_web_smoke.dart",
+      "source_sha256": "014d6aabfd2c19003fc2ae4fca17d0b1770f8fd8064041ddae2add3bb7037198",
+      "compiled_artifact": "/workspace/scratch/8c751e85cb23/veracrypt-web-reader.js",
+      "compiled_sha256": "c74f329bbdd13bbc79a509c166627d0567269ee2719daafb0b6396799b4dcccf",
+      "compiler_command": [
+        "dart",
+        "compile",
+        "js",
+        "-O2",
+        "test/support/veracrypt_web_smoke.dart",
+        "-o",
+        "/workspace/scratch/8c751e85cb23/veracrypt-web-reader.js"
+      ],
+      "runner_command": [
+        "node",
+        "tool/run_dart_web_probe.cjs",
+        "/workspace/scratch/8c751e85cb23/veracrypt-web-reader.js",
+        "PASS: compiled-JavaScript VeraCrypt PIM and native-header TrueCrypt FAT listing, cross-sector file reads, nested files and closed sessions."
+      ],
+      "observed_returncode": 0,
+      "observed_completion": "PASS: compiled-JavaScript VeraCrypt PIM and native-header TrueCrypt FAT listing, cross-sector file reads, nested files and closed sessions."
+    },
+    {
+      "name": "crypto",
+      "source": "test/fixtures/veracrypt/web_compatibility_probe.dart",
+      "source_sha256": "39124c2e47422970373663f2695314e03c3cbf55164a6c06782e201bd0788177",
+      "compiled_artifact": "/workspace/scratch/8c751e85cb23/veracrypt-web-crypto.js",
+      "compiled_sha256": "e25eecd3c4915adeb5befe7f80a4c656de2b70ad20c2091e4903639c17e4c775",
+      "compiler_command": [
+        "dart",
+        "compile",
+        "js",
+        "-O2",
+        "test/fixtures/veracrypt/web_compatibility_probe.dart",
+        "-o",
+        "/workspace/scratch/8c751e85cb23/veracrypt-web-crypto.js"
+      ],
+      "runner_command": [
+        "node",
+        "tool/run_dart_web_probe.cjs",
+        "/workspace/scratch/8c751e85cb23/veracrypt-web-crypto.js",
+        "PASS: 5 independent JS PBKDF/header/data/keyfile vectors, 3 invalid geometries, browser Argon2 allocation and PBKDF2 work guards."
+      ],
+      "observed_returncode": 0,
+      "observed_completion": "PASS: 5 independent JS PBKDF/header/data/keyfile vectors, 3 invalid geometries, browser Argon2 allocation and PBKDF2 work guards."
+    }
+  ],
+  "harness_controls": {
+    "passed": 8,
+    "total": 8,
+    "results": "/workspace/scratch/8c751e85cb23/web-runner-controls/results.json",
+    "sha256": "9fc5a48e87208797fbbdcbea374d5e55916ca0b5915badddfa1dd132e10a38cd"
+  }
+}
