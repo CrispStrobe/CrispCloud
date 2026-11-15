@@ -81,6 +81,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   PdfEditingController? _controller;
   PdfEditingPreferences? _preferences;
   int _revision = 0;
+  bool _hadPendingInk = false;
   int? _lastCopyRevision;
   bool _loading = true;
   bool _exporting = false;
@@ -94,6 +95,9 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   PdfEditorMenuActions? _menuActions;
   ProviderContainer? _providerContainer;
   String? _menuSignature;
+
+  bool get _isDirty =>
+      (_session?.isDirty ?? false) || (_controller?.hasPendingInk ?? false);
 
   bool get _busy =>
       (_session?.isSaving ?? false) || _exporting || _choosingSave;
@@ -145,7 +149,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     final container = _providerContainer;
     if (container == null) return;
     final controller = _controller;
-    final dirty = _session?.isDirty ?? false;
+    final dirty = _isDirty;
     final operational = !_loading && _error == null && !_busy;
     final canUndo = operational && (controller?.canUndo ?? false);
     final canRedo = operational && (controller?.canRedo ?? false);
@@ -381,13 +385,30 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
 
   void _onRevision() {
     final controller = _controller!;
-    if (controller.revisionId == _revision) return;
-    _revision = controller.revisionId;
-    // Revision IDs also distinguish undo + a new edit with the same byte
-    // length. The editor's onDocumentChanged length check alone does not.
-    _updateRedactionStatus(controller.document);
-    _session!.updateBytes(controller.bytes);
-    _publishMenu();
+    final pendingChanged = _hadPendingInk != controller.hasPendingInk;
+    _hadPendingInk = controller.hasPendingInk;
+    if (controller.revisionId != _revision) {
+      _revision = controller.revisionId;
+      _updateRedactionStatus(controller.document);
+      _session!.updateBytes(controller.bytes);
+      _publishMenu();
+    } else if (pendingChanged) {
+      // Update host chrome only on draft transitions, not every pointer sample.
+      if (mounted) setState(() {});
+      _publishMenu();
+    }
+  }
+
+  bool _flushPendingInk() {
+    try {
+      _controller?.finishInk();
+      if (_controller != null) _onRevision();
+      return true;
+    } catch (error, stack) {
+      _log.warn('Could not commit pending PDF ink', error, stack);
+      if (mounted) _notice('Could not save PDF', detail: '$error');
+      return false;
+    }
   }
 
   void _updateRedactionStatus(PdfDocument document) {
@@ -403,6 +424,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   Future<PdfSaveOutcome?> _save({bool copy = false}) async {
     final session = _session;
     if (session == null || _busy) return null;
+    if (!_flushPendingInk()) return null;
     copy = copy || _copyOnly;
     if (!copy && !session.isDirty) return PdfSaveOutcome.savedOriginal;
     String? fileName;
@@ -541,7 +563,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   /// and the source folder's writability. Export never marks the source clean.
   Future<PdfSaveOutcome?> _exportDevice() async {
     if (_session == null || _busy) return null;
-    _onRevision();
+    if (!_flushPendingInk()) return null;
     final snapshot = Uint8List.fromList(_session!.bytes);
     final revision = _controller!.revisionId;
     setState(() => _exporting = true);
@@ -573,8 +595,8 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     if (_busy || _closing || _allowPop) return;
     _closing = true;
     try {
-      if (_controller != null) _onRevision();
-      if (!(_session?.isDirty ?? false)) {
+      if (!_flushPendingInk()) return;
+      if (!_isDirty) {
         await _leave();
         return;
       }
@@ -613,14 +635,15 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
             : await _save();
         if (!mounted || outcome == null) return;
         if (outcome == PdfSaveOutcome.savedOriginal) {
-          if (!_session!.isDirty) {
+          if (!_isDirty) {
             await _leave();
           } else {
             _notice(
               'New changes were made while saving. Save them before closing.',
             );
           }
-        } else if (_lastCopyRevision == _controller!.revisionId) {
+        } else if (_lastCopyRevision == _controller!.revisionId &&
+            !_controller!.hasPendingInk) {
           final close = await _confirm(
             'Close after saving a copy?',
             'Make sure the saved or downloaded copy is available before closing.',
@@ -628,7 +651,8 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
           );
           if (close &&
               mounted &&
-              _lastCopyRevision == _controller!.revisionId) {
+              _lastCopyRevision == _controller!.revisionId &&
+              !_controller!.hasPendingInk) {
             await _leave();
           }
         } else {
@@ -838,7 +862,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final dirty = _session?.isDirty ?? false;
+    final dirty = _isDirty;
     final controller = _controller;
     return PopScope(
       canPop: _allowPop,

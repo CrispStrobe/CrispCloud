@@ -240,21 +240,17 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       if (!mounted) return;
 
+      // Preserve the actual source even when legacy import itself is refused.
+      _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
+
       // BIFF workbooks are imported into the shared model and opened as XLSX.
       // Saving writes a new .xlsx copy; the original .xls is never rewritten.
       final sourceExt = widget.file.name.split('.').last.toLowerCase();
       if (sourceExt == 'xls' || sourceExt == 'xlt') {
         final workbook = LegacySheetReader.readBytes(bytes);
-        bytes = await OfficeIsolateSave.workbook(
-          workbook,
-          recalculate: false,
-        );
+        bytes = await OfficeIsolateSave.workbook(workbook, recalculate: false);
         _convertedLegacySheet = true;
       }
-
-      // Retain an immutable original even if safe-edit admission rejects it.
-      // Recovery must never run a refused package through a serializer.
-      _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
 
       final kind = _kindFor(widget.saveAsName ?? widget.file.name);
       if (kind == OfficeEditorKind.unsupported) {
@@ -336,8 +332,12 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (controller == null || _saving || _exporting) return;
     if (_convertedLegacySheet) {
       // The source is BIFF; writing OOXML bytes over it would corrupt it.
-      await _saveCopy();
-      if (popAfter && mounted && !_dirty) Navigator.of(context).pop();
+      await _saveCopy(asLegacySave: true);
+      if (popAfter &&
+          mounted &&
+          !_dirty &&
+          ModalRoute.of(context)?.isCurrent == true)
+        Navigator.of(context).pop();
       return;
     }
     setState(() => _saving = true);
@@ -456,7 +456,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
   }
 
-  Future<void> _saveCopy({bool original = false}) async {
+  Future<void> _saveCopy({
+    bool original = false,
+    bool asLegacySave = false,
+  }) async {
     if (_saving || _exporting) return;
     final controller = _controller;
     if ((!original && controller == null) ||
@@ -466,10 +469,12 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     setState(() => _exporting = true);
     try {
       final Uint8List bytes;
+      int? exportedRevision;
       if (original) {
         bytes = _loadedBytes!;
       } else {
         controller!.commitPendingEdits();
+        exportedRevision = controller.contentRevision;
         bytes = await controller.saveBytesAsync();
         await _wordPreservation?.validateSaved(bytes);
       }
@@ -479,10 +484,20 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
       final outcome = await widget.copyExporter(
         Uint8List.fromList(bytes).asUnmodifiableView(),
-        _copyOutputName(),
+        _copyOutputName(original: original),
         context.tr(original ? 'Export original' : 'Save a copy'),
       );
       if (!mounted || outcome == null) return;
+      // Legacy Save has no writable original target. A completed native copy
+      // may clean precisely the exported revision, never a later edit or a
+      // merely initiated browser download. Ordinary Save a copy stays dirty.
+      if (asLegacySave &&
+          outcome == OfficeCopyOutcome.savedCopy &&
+          controller != null &&
+          controller.contentRevision == exportedRevision) {
+        controller.markClean();
+        setState(() => _dirty = controller.isDirty);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -513,9 +528,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
   }
 
-  String _copyOutputName() {
-    final base = widget.saveAsName ?? widget.file.name;
-    if (_convertedLegacySheet) return officeCopyName(base);
+  String _copyOutputName({bool original = false}) {
+    if (original) return officeCopyName(widget.file.name);
+    if (_convertedLegacySheet) {
+      final source = widget.file.name;
+      final converted =
+          '${source.substring(0, source.lastIndexOf('.') + 1)}xlsx';
+      return officeCopyName(widget.saveAsName ?? converted);
+    }
     return officeCopyName(widget.file.name);
   }
 

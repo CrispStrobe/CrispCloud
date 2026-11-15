@@ -109,6 +109,96 @@ Finder get _unsaved => find.byKey(const ValueKey('pdf-unsaved-dialog'));
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  testWidgets(
+    'pending ink enables Save and survives immediate save and reopen',
+    (tester) async {
+      final store = _MemoryPdfStore();
+      await _open(tester, store);
+      final controller = _controller(tester)..inkCommitDelay = null;
+      final revision = controller.revisionId;
+      controller.addInkStroke(0, [(10, 10), (30, 30)]);
+      await tester.pump();
+      expect(controller.revisionId, revision);
+      expect(controller.hasPendingInk, isTrue);
+      expect(tester.widget<IconButton>(_save).onPressed, isNotNull);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(store.writes, hasLength(1));
+      final reopened = PdfEditingController(store.writes.single);
+      expect(
+        reopened.document.page(0).annotations.where((a) => a.subtype == 'Ink'),
+        hasLength(1),
+      );
+      reopened.dispose();
+      expect(controller.hasPendingInk, isFalse);
+      expect(find.text('sample.pdf'), findsOneWidget);
+    },
+  );
+
+  testWidgets('immediate Close warns about pending ink and Cancel keeps it', (
+    tester,
+  ) async {
+    final store = _MemoryPdfStore();
+    await _open(tester, store);
+    final controller = _controller(tester)..inkCommitDelay = null;
+    controller.addInkStroke(0, [(10, 10), (30, 30)]);
+    await tester.pump();
+    await tester.tap(_close);
+    await tester.pumpAndSettle();
+    expect(_unsaved, findsOneWidget);
+    await tester.tap(
+      find.descendant(of: _unsaved, matching: find.text('Cancel')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      controller.document.page(0).annotations.where((a) => a.subtype == 'Ink'),
+      hasLength(1),
+    );
+    expect(find.byType(PdfEditorDialog), findsOneWidget);
+    expect(store.writes, isEmpty);
+  });
+
+  testWidgets(
+    'undoing pending ink clears host dirty state without serializing',
+    (tester) async {
+      await _open(tester, _MemoryPdfStore());
+      final controller = _controller(tester)..inkCommitDelay = null;
+      final revision = controller.revisionId;
+      controller.addInkStroke(0, [(10, 10), (30, 30)]);
+      await tester.pump();
+      expect(find.text('sample.pdf *'), findsOneWidget);
+      controller.undo();
+      await tester.pump();
+      expect(controller.revisionId, revision);
+      expect(controller.hasPendingInk, isFalse);
+      expect(tester.widget<IconButton>(_save).onPressed, isNull);
+    },
+  );
+
+  testWidgets('device export includes pending ink', (tester) async {
+    Uint8List? exported;
+    await _open(
+      tester,
+      _MemoryPdfStore(),
+      exporter: (bytes, name) async {
+        exported = Uint8List.fromList(bytes);
+        return PdfSaveOutcome.savedCopy;
+      },
+    );
+    _controller(tester)
+      ..inkCommitDelay = null
+      ..addInkStroke(0, [(10, 10), (30, 30)]);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('pdf-export-copy')));
+    await tester.pumpAndSettle();
+    final reopened = PdfEditingController(exported!);
+    expect(
+      reopened.document.page(0).annotations.where((a) => a.subtype == 'Ink'),
+      hasLength(1),
+    );
+    reopened.dispose();
+  });
+
   test('only PDF file names use the PDF route', () {
     expect(isPdfFileName('report.PDF'), isTrue);
     expect(isPdfFileName('report.pdf.txt'), isFalse);

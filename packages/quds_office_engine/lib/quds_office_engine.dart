@@ -108,6 +108,7 @@ export 'src/word/model/word_citations.dart';
 export 'src/word/model/word_comment.dart';
 export 'src/word/model/word_compare.dart';
 export 'src/word/model/word_content_controls.dart';
+export 'src/word/model/word_field_spans.dart';
 export 'src/word/model/word_fields.dart';
 export 'src/word/model/word_link.dart';
 export 'src/word/model/word_lists.dart';

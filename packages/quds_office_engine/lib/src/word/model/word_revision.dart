@@ -203,7 +203,15 @@ abstract final class WordRevisions {
     );
     revision._targetCaptured = true;
     for (final other in document.revisions) {
+      // Only a revision on the same paragraph can overlap. Checking the
+      // captured target first avoids resolveParagraph's whole-document
+      // attachment scan for every other revision, which made importing
+      // documents with many tracked changes quadratic (minutes for a few
+      // hundred revisions). The result is unchanged: a different captured
+      // target can never resolve to [target].
       if (target != null &&
+          !(other._targetCaptured &&
+              !identical(other.targetParagraph, target)) &&
           identical(resolveParagraph(document, other), target) &&
           start < other.end &&
           other.start < end) {
@@ -370,14 +378,32 @@ abstract final class WordRevisions {
   /// Hosts may keep editing after an ambiguous edit. They must undo or resolve
   /// its attribution before export; emitting stale bounds would lose text.
   static void validate(WmlDocument document) {
+    // Resolve every revision once against one attachment set: validating
+    // pairwise with resolveParagraph rescanned the whole document per pair
+    // (minutes to save a document with a few hundred tracked changes).
+    final attached = Set<WmlParagraph>.identity()
+      ..addAll(_allParagraphs(document));
+    final resolved = Map<WmlRevision, WmlParagraph?>.identity();
     for (final revision in document.revisions) {
-      validateRevision(document, revision);
+      resolved[revision] = _resolveIn(document, revision, attached);
+    }
+    for (final revision in document.revisions) {
+      validateRevision(document, revision, resolved: resolved);
     }
   }
 
   /// Verifies a change and any overlapping pending ranges before resolution.
-  static void validateRevision(WmlDocument document, WmlRevision revision) {
-    final paragraph = resolveParagraph(document, revision);
+  ///
+  /// [resolved] may carry precomputed targets (see [validate]).
+  static void validateRevision(
+    WmlDocument document,
+    WmlRevision revision, {
+    Map<WmlRevision, WmlParagraph?>? resolved,
+  }) {
+    WmlParagraph? targetOf(WmlRevision r) => resolved != null
+        ? resolved[r]
+        : resolveParagraph(document, r);
+    final paragraph = targetOf(revision);
     final problem = paragraph == null
         ? 'Its target paragraph is no longer in the document.'
         : _textProblem(revision, paragraph.text);
@@ -395,7 +421,7 @@ abstract final class WordRevisions {
     WordContentControls.assertCanEdit(paragraph, range.start, range.end);
     for (final other in document.revisions) {
       if (identical(revision, other) ||
-          !identical(resolveParagraph(document, other), paragraph)) {
+          !identical(targetOf(other), paragraph)) {
         continue;
       }
       if (range.start < other.end && other.start < range.end) {
@@ -428,6 +454,23 @@ abstract final class WordRevisions {
       if (identical(paragraph, target)) return target;
     }
     return null;
+  }
+
+  /// [resolveParagraph] with a precomputed attachment set.
+  static WmlParagraph? _resolveIn(
+    WmlDocument document,
+    WmlRevision revision,
+    Set<WmlParagraph> attached,
+  ) {
+    if (!revision._targetCaptured && revision.targetParagraph == null) {
+      revision.targetParagraph = _bodyParagraph(
+        document,
+        revision.paragraphIndex,
+      );
+    }
+    revision._targetCaptured = true;
+    final WmlParagraph? target = revision.targetParagraph;
+    return target != null && attached.contains(target) ? target : null;
   }
 
   static WmlParagraph? _bodyParagraph(WmlDocument document, int index) {
