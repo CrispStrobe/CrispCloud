@@ -22,6 +22,7 @@ class SshTerminalConnectDialog extends StatefulWidget {
     this.requiresGateway = kIsWeb,
     this.initialConfig,
     this.jumpHostOnly = false,
+    this.showSessionOptions = true,
   });
 
   final bool requiresGateway;
@@ -29,6 +30,9 @@ class SshTerminalConnectDialog extends StatefulWidget {
 
   /// Reuse the credential form for a single hop without nested routes.
   final bool jumpHostOnly;
+
+  /// Discovery selects an existing session after authentication instead.
+  final bool showSessionOptions;
 
   @override
   State<SshTerminalConnectDialog> createState() => _SshConnectDialogState();
@@ -70,14 +74,14 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
     _gateway.text = initial.gateway?.toString() ?? '';
     _authentication = initial.authentication;
     if (!widget.jumpHostOnly) _jumpHosts.addAll(initial.jumpHosts);
-    final tmux = initial.tmux;
+    final tmux = widget.showSessionOptions ? initial.tmux : null;
     if (tmux != null) {
       _tmuxName.text = tmux.sessionName;
       _sessionMode = tmux.mode == TmuxSessionMode.attach
           ? _SessionMode.attach
           : _SessionMode.createOrAttach;
     }
-    final screen = initial.screen;
+    final screen = widget.showSessionOptions ? initial.screen : null;
     if (screen != null && tmux == null) {
       _screenName.text = screen.sessionName;
       _sessionMode = screen.mode == ScreenSessionMode.attach
@@ -534,6 +538,8 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
               if (!widget.jumpHostOnly) ...[
                 const SizedBox(height: 16),
                 _jumpRoute(),
+              ],
+              if (!widget.jumpHostOnly && widget.showSessionOptions) ...[
                 const SizedBox(height: 12),
                 DropdownButtonFormField<_SessionMode>(
                   key: const ValueKey('terminal-ssh-session-mode'),

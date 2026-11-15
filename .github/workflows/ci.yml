@@ -402,6 +402,15 @@ jobs:
           test/terminal_search_test.dart test/terminal_search_bar_test.dart
           test/terminal_tabs_test.dart
           test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
+          test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart
+          test/ssh_jump_dialog_test.dart
+          test/terminal_arrangements_test.dart test/terminal_arrangements_widget_test.dart
+          test/terminal_arrangements_dialog_test.dart
+          test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
+          test/terminal_user_input_test.dart
+          test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart
+          test/ssh_multiplexer_session_test.dart test/ssh_multiplexer_discovery_test.dart
+          test/ssh_multiplexer_sessions_dialog_test.dart
 
       - name: Browser credential vault authentication and compatibility
         run: >-
@@ -639,6 +648,15 @@ jobs:
           test/terminal_search_test.dart test/terminal_search_bar_test.dart
           test/terminal_tabs_test.dart
           test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
+          test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart
+          test/ssh_jump_dialog_test.dart
+          test/terminal_arrangements_test.dart test/terminal_arrangements_widget_test.dart
+          test/terminal_arrangements_dialog_test.dart
+          test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
+          test/terminal_user_input_test.dart
+          test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart
+          test/ssh_multiplexer_session_test.dart test/ssh_multiplexer_discovery_test.dart
+          test/ssh_multiplexer_sessions_dialog_test.dart
 
       - name: Patch pdfx CMake (fix VERSION 2.8.12 rejected by CMake 3.30+)
         shell: bash
@@ -746,6 +764,15 @@ jobs:
           test/terminal_search_test.dart test/terminal_search_bar_test.dart
           test/terminal_tabs_test.dart
           test/ssh_terminal_profiles_test.dart test/ssh_terminal_profiles_dialog_test.dart
+          test/ssh_jump_host_test.dart test/ssh_jump_transport_test.dart
+          test/ssh_jump_dialog_test.dart
+          test/terminal_arrangements_test.dart test/terminal_arrangements_widget_test.dart
+          test/terminal_arrangements_dialog_test.dart
+          test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
+          test/terminal_user_input_test.dart
+          test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart
+          test/ssh_multiplexer_session_test.dart test/ssh_multiplexer_discovery_test.dart
+          test/ssh_multiplexer_sessions_dialog_test.dart
           test/azure_range_read_test.dart
           test/fuse_filesystem_protocol_test.dart
           test/fuse_mount_test.dart

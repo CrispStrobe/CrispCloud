@@ -21,6 +21,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
 import '../models/screen_session_options.dart';
 import '../models/ssh_jump_host.dart';
+import '../models/ssh_multiplexer_session.dart';
 import '../models/tmux_session_options.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
@@ -159,6 +160,7 @@ class _SessionState {
   SSHSession? shellSession;
   TerminalOutput? shellOutput;
   int shellGeneration = 0;
+  bool discoveryRunning = false;
 
   _SessionState({required this.session, required this.route});
 }
@@ -687,6 +689,155 @@ class SshTerminalService {
         'Command execution failed: $e',
         {'error': e},
       );
+    }
+  }
+
+  /// Lists remote sessions on this already verified SSH connection. The
+  /// discovery channel is independent of any interactive shell and has no PTY.
+  /// Both output streams and the eventual exit status must complete.
+  Future<List<SshMultiplexerSession>> listMultiplexerSessions(
+    String sessionId, {
+    required SshMultiplexer kind,
+    bool Function()? isCurrent,
+  }) async {
+    final state = _requireSession(sessionId);
+    bool current() =>
+        !_disposed &&
+        identical(_sessions[sessionId], state) &&
+        state.session.connected &&
+        !state.client.isClosed &&
+        (isCurrent?.call() ?? true);
+    if (!current()) throw StateError('SSH session discovery was cancelled');
+    if (state.discoveryRunning) {
+      throw StateError('SSH session discovery is already running');
+    }
+    state.discoveryRunning = true;
+    _touch(sessionId);
+
+    final completed = Completer<void>();
+    final output = BytesBuilder(copy: false);
+    final errors = BytesBuilder(copy: false);
+    var totalBytes = 0;
+    var finishedParts = 0;
+    int? exitCode;
+    SSHSession? channel;
+    StreamSubscription<Uint8List>? stdoutSubscription;
+    StreamSubscription<Uint8List>? stderrSubscription;
+
+    void closeChannel(SSHSession? session) {
+      try {
+        session?.close();
+      } catch (_) {}
+    }
+
+    void fail(Object error) {
+      if (completed.isCompleted) return;
+      completed.completeError(current()
+          ? error
+          : StateError('SSH session discovery was cancelled'));
+      closeChannel(channel);
+    }
+
+    void partFinished() {
+      if (completed.isCompleted) return;
+      if (!current()) {
+        fail(StateError('SSH session discovery was cancelled'));
+      } else if (++finishedParts == 3) {
+        completed.complete();
+      }
+    }
+
+    void receive(BytesBuilder destination, Uint8List data) {
+      if (completed.isCompleted) return;
+      if (!current()) {
+        fail(StateError('SSH session discovery was cancelled'));
+        return;
+      }
+      totalBytes += data.length;
+      if (totalBytes > sshMultiplexerMaxOutputBytes) {
+        fail(SshMultiplexerDiscoveryException(
+          kind, SshMultiplexerDiscoveryFailure.tooMuchOutput,
+        ));
+        return;
+      }
+      destination.add(data);
+      _touch(sessionId);
+    }
+
+    void ioFailed(Object _, StackTrace __) => fail(
+      SshMultiplexerDiscoveryException(
+        kind, SshMultiplexerDiscoveryFailure.commandFailed,
+      ),
+    );
+
+    final deadline = Timer(const Duration(seconds: 10), () => fail(
+      SshMultiplexerDiscoveryException(
+        kind, SshMultiplexerDiscoveryFailure.timeout,
+      ),
+    ));
+    // A closed/replaced tab must release a quiet listing too, rather than
+    // waiting for another chunk of output to notice its stale generation.
+    final cancellation = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (!current()) fail(StateError('SSH session discovery was cancelled'));
+    });
+
+    try {
+      final request = Future<SSHSession>.sync(
+        () => state.client.execute(sshMultiplexerListCommand(kind)),
+      );
+      unawaited(request.then<void>((opened) {
+        if (completed.isCompleted || !current()) {
+          closeChannel(opened);
+          if (!completed.isCompleted) {
+            fail(StateError('SSH session discovery was cancelled'));
+          }
+          return;
+        }
+        channel = opened;
+        try {
+          stdoutSubscription = opened.stdout.listen(
+            (data) => receive(output, data),
+            onError: ioFailed,
+            onDone: partFinished,
+          );
+          stderrSubscription = opened.stderr.listen(
+            (data) => receive(errors, data),
+            onError: ioFailed,
+            onDone: partFinished,
+          );
+          unawaited(opened.done.then<void>((_) {
+            exitCode = opened.exitCode;
+            partFinished();
+          }, onError: ioFailed));
+        } catch (error) {
+          fail(error);
+        }
+      }, onError: ioFailed));
+      await completed.future;
+      if (!current()) throw StateError('SSH session discovery was cancelled');
+      try {
+        return parseSshMultiplexerSessions(
+          kind,
+          utf8.decode(output.takeBytes()),
+          exitCode: exitCode,
+          stderr: utf8.decode(errors.takeBytes(), allowMalformed: true),
+        );
+      } on FormatException {
+        throw SshMultiplexerDiscoveryException(
+          kind, SshMultiplexerDiscoveryFailure.invalidListing,
+        );
+      }
+    } finally {
+      deadline.cancel();
+      cancellation.cancel();
+      closeChannel(channel);
+      try {
+        await stdoutSubscription?.cancel().timeout(const Duration(seconds: 2));
+      } catch (_) {}
+      try {
+        await stderrSubscription?.cancel().timeout(const Duration(seconds: 2));
+      } catch (_) {}
+      state.discoveryRunning = false;
     }
   }
 
