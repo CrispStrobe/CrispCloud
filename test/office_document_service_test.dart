@@ -236,6 +236,17 @@ void odfTests() {
       'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
       'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
 
+  Future<OfficeDocument> parseTables(String tables, {String ext = 'ods'}) {
+    final body = ext == 'ods' ? 'spreadsheet' : 'text';
+    final xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:$body>$tables</office:$body></office:body>
+</office:document-content>
+''';
+    return parseOfficeDocument(_zip({'content.xml': xml}), 'positions.$ext');
+  }
+
   test('ODS keeps typed values, repeats and the real sheet name', () async {
     const xml =
         '''
@@ -273,6 +284,202 @@ void odfTests() {
     expect(rows, contains('A,2,TRUE'));
     expect(rows.where((row) => row.startsWith('B,3.5')), hasLength(2));
     expect(rows.length, lessThan(10));
+  });
+
+  test('ODS merged and covered cells each retain one grid position', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row>
+        <table:table-cell table:number-columns-spanned="2" table:number-rows-spanned="2"><text:p>Wide</text:p></table:table-cell>
+        <table:covered-table-cell/>
+        <table:table-cell office:value-type="float" office:value="7"/>
+      </table:table-row>
+      <table:table-row>
+        <table:covered-table-cell table:number-columns-repeated="2"/>
+        <table:table-cell office:value-type="float" office:value="9"/>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'merged.ods',
+    );
+    expect(doc.csv, 'Wide,,7\n,,9');
+  });
+
+  test(
+    'ODS keeps leading and interior repeated gaps through row groups',
+    () async {
+      final doc = await parseTables('''
+<table:table table:name="Positions">
+  <table:table-row table:number-rows-repeated="2"/>
+  <table:table-header-rows>
+    <table:table-row>
+      <table:table-cell><text:p>Header</text:p></table:table-cell>
+    </table:table-row>
+  </table:table-header-rows>
+  <table:table-row-group>
+    <table:table-rows>
+      <table:table-row table:number-rows-repeated="2">
+        <table:table-cell table:number-columns-repeated="16384"/>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="2">
+        <table:table-cell table:number-columns-repeated="2"/>
+        <table:table-cell office:value-type="float" office:value="7"/>
+        <table:table-cell table:number-columns-repeated="16381"/>
+      </table:table-row>
+    </table:table-rows>
+  </table:table-row-group>
+  <table:table-row table:number-rows-repeated="1048570"/>
+</table:table>
+''');
+      expect(doc.fallback, isNull);
+      expect(doc.csv!.split('\n'), ['', '', 'Header', '', '', ',,7', ',,7']);
+      expect(doc.markdown, contains('## Positions'));
+    },
+  );
+
+  test('ODF row positions do not depend on namespace prefixes', () async {
+    const xml = '''
+<o:document-content
+ xmlns:o="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+ xmlns:t="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+ xmlns:p="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+ xmlns:foreign="urn:unrelated">
+  <o:body><o:spreadsheet><t:table t:name="Typed">
+    <t:table-header-rows><t:table-row>
+      <t:table-cell o:value-type="string"><p:p>Label</p:p></t:table-cell>
+    </t:table-row></t:table-header-rows>
+    <foreign:table-row><foreign:table-cell>Ignore</foreign:table-cell></foreign:table-row>
+    <t:table-row>
+      <foreign:table-cell>Ignore</foreign:table-cell>
+      <t:table-cell o:value-type="float" o:value="3.5" t:number-columns-repeated="2"/>
+      <t:table-cell o:value-type="boolean" o:boolean-value="1"/>
+    </t:table-row>
+  </t:table></o:spreadsheet></o:body>
+</o:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'typed.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv, 'Label\n3.5,3.5,TRUE');
+    expect(doc.markdown, contains('## Typed'));
+  });
+
+  test('ODT tables retain covered cells and interior blank rows', () async {
+    final doc = await parseTables('''
+<table:table>
+  <table:table-header-rows><table:table-row>
+    <table:table-cell table:number-columns-spanned="2"><text:p>Wide</text:p></table:table-cell>
+    <table:covered-table-cell/>
+    <table:table-cell><text:p>End</text:p></table:table-cell>
+  </table:table-row></table:table-header-rows>
+  <table:table-row-group>
+    <table:table-row table:number-rows-repeated="2"/>
+    <table:table-row>
+      <table:table-cell table:number-columns-repeated="2"/>
+      <table:table-cell><text:p>Tail</text:p></table:table-cell>
+    </table:table-row>
+  </table:table-row-group>
+</table:table>
+''', ext: 'odt');
+    expect(doc.fallback, isNull);
+    expect(doc.markdown.split('\n'), [
+      '| Wide |  | End |',
+      '| --- | --- | --- |',
+      '|  |  |  |',
+      '|  |  |  |',
+      '|  |  | Tail |',
+    ]);
+  });
+
+  final excessiveTables = <String, String>{
+    'data after an oversized row gap': '''
+      <table:table-row table:number-rows-repeated="100001"/>
+      <table:table-row><table:table-cell office:value-type="float" office:value="1"/></table:table-row>
+''',
+    'data after an oversized column gap': '''
+      <table:table-row>
+        <table:table-cell table:number-columns-repeated="4096"/>
+        <table:table-cell office:value-type="float" office:value="1"/>
+      </table:table-row>
+''',
+    'repeated data beyond the row limit': '''
+      <table:table-row table:number-rows-repeated="100001">
+        <table:table-cell office:value-type="float" office:value="1"/>
+      </table:table-row>
+''',
+    'repeated data beyond the column limit': '''
+      <table:table-row>
+        <table:table-cell table:number-columns-repeated="4097" office:value-type="float" office:value="1"/>
+      </table:table-row>
+''',
+    'a small XML Cartesian expansion': '''
+      <table:table-row table:number-rows-repeated="1000">
+        <table:table-cell table:number-columns-repeated="201" office:value-type="float" office:value="1"/>
+      </table:table-row>
+''',
+    'padding earlier rows to a later wide row': '''
+      <table:table-row table:number-rows-repeated="1000">
+        <table:table-cell office:value-type="float" office:value="1"/>
+      </table:table-row>
+      <table:table-row>
+        <table:table-cell table:number-columns-repeated="199"/>
+        <table:table-cell office:value-type="float" office:value="2"/>
+      </table:table-row>
+''',
+  };
+  for (final entry in excessiveTables.entries) {
+    test('ODF preview refuses ${entry.key} without a partial table', () async {
+      final doc = await parseTables(
+        '<table:table>${entry.value}</table:table>',
+      );
+      expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+      expect(doc.note, contains('ODF preview exceeds'));
+      expect(doc.csv, isNull);
+      expect(doc.markdown, isEmpty);
+    });
+  }
+
+  test('ODF preview shares expansion limits across tables', () async {
+    const table = '''
+<table:table><table:table-row table:number-rows-repeated="1000">
+  <table:table-cell table:number-columns-repeated="101" office:value-type="float" office:value="1"/>
+</table:table-row></table:table>
+''';
+    final doc = await parseTables('$table$table');
+    expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+    expect(doc.note, contains('rendered-cell limit'));
+    expect(doc.csv, isNull);
+  });
+
+  test('ODF preview bounds repeated text before rendering', () async {
+    final value = 'x' * 1024;
+    final doc = await parseTables('''
+<table:table><table:table-row table:number-rows-repeated="3">
+  <table:table-cell table:number-columns-repeated="4096"><text:p>$value</text:p></table:table-cell>
+</table:table-row></table:table>
+''');
+    expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+    expect(doc.note, contains('expanded-text limit'));
+    expect(doc.csv, isNull);
+  });
+
+  test('ODF preview rejects invalid repeat counts', () async {
+    final doc = await parseTables('''
+<table:table><table:table-row table:number-rows-repeated="0">
+  <table:table-cell><text:p>Invalid</text:p></table:table-cell>
+</table:table-row></table:table>
+''');
+    expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+    expect(doc.note, contains('Invalid ODF number-rows-repeated'));
   });
 
   test('ODS with a merged cell keeps following columns aligned', () async {
@@ -385,9 +592,11 @@ void odfTests() {
     expect(doc.csv!.split('\n'), ['Wide,,7', 'Wider,,,8']);
   });
 
-  test('ODS empty padding still counts toward the logical row limit', () async {
-    const xml =
-        '''
+  test(
+    'ODS refuses later data when empty padding exceeds the row limit',
+    () async {
+      const xml =
+          '''
 <office:document-content $namespaces>
   <office:body><office:spreadsheet>
     <table:table>
@@ -402,14 +611,16 @@ void odfTests() {
   </office:spreadsheet></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(
-      _zip({'content.xml': xml}),
-      'limit.ods',
-    );
-    expect(doc.fallback, isNull);
-    expect(doc.csv, 'Inside');
-    expect(doc.markdown, isNot(contains('Outside')));
-  });
+      final doc = await parseOfficeDocument(
+        _zip({'content.xml': xml}),
+        'limit.ods',
+      );
+      expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+      expect(doc.note, contains('ODF preview exceeds the row limit'));
+      expect(doc.csv, isNull);
+      expect(doc.markdown, isEmpty);
+    },
+  );
 
   test('ODT renders lists and ODF table cells', () async {
     const xml =

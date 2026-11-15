@@ -46,6 +46,7 @@ test/widget/archive_job_recovery_dialog_test.dart
 test/widget/archive_png_carving_dialog_test.dart
 test/widget/new_document_dialog_test.dart
 test/widget/new_document_workflow_test.dart
+test/widget/ods_editor_workflow_test.dart
 test/widget/office_save_fidelity_test.dart
 test/widget/office_sheet_navigation_workflow_test.dart
 test/widget/panel_header_navigation_test.dart

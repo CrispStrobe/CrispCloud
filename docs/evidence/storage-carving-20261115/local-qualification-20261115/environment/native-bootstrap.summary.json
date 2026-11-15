@@ -1,0 +1,17 @@
+{
+  "classification": "Development/bootstrap only, not final source-bound qualification",
+  "exit_code": 0,
+  "done": [
+    {
+      "success": true,
+      "type": "done",
+      "time": 8829
+    }
+  ],
+  "test_events": 64,
+  "test_done_events": 64,
+  "failed": [],
+  "native_assets": "native-bootstrap.native-assets.json",
+  "default_hooks": true,
+  "production_manifests_changed": false
+}

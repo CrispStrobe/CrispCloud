@@ -854,112 +854,197 @@ List<List<String>> _xlsxRows(String xml, List<String> shared) {
 
 const int _odsMaxRows = 100000;
 const int _odsMaxCols = 4096;
+const String _odfOfficeNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
+const String _odfTableNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
+const String _odfTextNamespace =
+    'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+
+/// Limits the expanded preview across every table, including Markdown padding.
+/// Small XML can otherwise describe hundreds of millions of repeated cells.
+class _OdfTableBudget {
+  static const maxCells = 200000;
+  static const maxText = 8 * 1024 * 1024;
+  int _tables = 0;
+  int _cells = 0;
+  int _text = 0;
+
+  void startTable() {
+    if (++_tables > 128) {
+      throw const FormatException('ODF preview exceeds the 128-table limit');
+    }
+  }
+
+  void reserve({required int cells, required int text}) {
+    if (cells > maxCells - _cells) {
+      throw const FormatException(
+        'ODF preview exceeds the 200000 rendered-cell limit',
+      );
+    }
+    if (text > maxText - _text) {
+      throw const FormatException(
+        'ODF preview exceeds the expanded-text limit',
+      );
+    }
+    _cells += cells;
+    _text += text;
+  }
+}
+
+int _odfRepeat(XmlElement element, String attribute) {
+  final raw = element.getAttribute(attribute, namespace: _odfTableNamespace);
+  if (raw == null) return 1;
+  final value = int.tryParse(raw);
+  if (value == null || value < 1) {
+    throw FormatException('Invalid ODF $attribute');
+  }
+  return value;
+}
+
+Iterable<XmlElement> _odfTableRows(XmlElement parent, [int depth = 0]) sync* {
+  if (depth > 128) {
+    throw const FormatException(
+      'ODF preview exceeds the row-group depth limit',
+    );
+  }
+  for (final child in parent.childElements) {
+    if (child.namespaceUri != _odfTableNamespace) continue;
+    switch (child.localName) {
+      case 'table-row':
+        yield child;
+      case 'table-header-rows':
+      case 'table-rows':
+      case 'table-row-group':
+        yield* _odfTableRows(child, depth + 1);
+    }
+  }
+}
 
 /// Converts an ODF table to rows, honouring typed values, repeats and spans.
 ///
 /// ODF stores one cell with `table:number-columns-repeated` instead of a
 /// single cell per column, and values may live in `office:*` attributes rather
 /// than display text. Ignoring either shifts every following column.
-List<List<String>> _odsRows(XmlElement table) {
+List<List<String>> _odsRows(XmlElement table, _OdfTableBudget budget) {
+  budget.startTable();
   final rows = <List<String>>[];
-  var pendingEmptyRows = 0;
-  for (final row in table.childElements.where(
-    (element) => element.localName == 'table-row',
-  )) {
-    final remainingRows = _odsMaxRows - rows.length - pendingEmptyRows;
-    if (remainingRows == 0) break;
-    final rowRepeat =
-        (int.tryParse(row.getAttribute('table:number-rows-repeated') ?? '') ??
-                1)
-            .clamp(1, remainingRows);
+  var rowIndex = 0;
+  var width = 0;
+  var renderedCells = 0;
+  for (final row in _odfTableRows(table)) {
+    final rowRepeat = _odfRepeat(row, 'number-rows-repeated');
     final cells = <String>[];
+    var column = 0;
     var pendingCoveredColumns = 0;
+    var textLength = 0;
     for (final cell in row.childElements.where(
       (element) =>
-          element.localName == 'table-cell' ||
-          element.localName == 'covered-table-cell',
+          element.namespaceUri == _odfTableNamespace &&
+          (element.localName == 'table-cell' ||
+              element.localName == 'covered-table-cell'),
     )) {
-      final covered = cell.localName == 'covered-table-cell';
-      final span = covered
-          ? 1
-          : (int.tryParse(
-                      cell.getAttribute('table:number-columns-spanned') ?? '',
-                    ) ??
-                    1)
-                .clamp(1, _odsMaxCols);
-      final repeat =
-          (int.tryParse(
-                    cell.getAttribute('table:number-columns-repeated') ?? '',
-                  ) ??
-                  1)
-              .clamp(1, _odsMaxCols);
-      if (covered) {
-        // The merged origin already inserted its empty columns. Explicit
-        // covered-cell placeholders consume those positions only once.
+      final repeat = _odfRepeat(cell, 'number-columns-repeated');
+      if (cell.localName == 'covered-table-cell') {
+        // Merged origins already reserved these coordinates. Explicit covered
+        // placeholders consume that reservation instead of counting it twice.
         final reserved = repeat < pendingCoveredColumns
             ? repeat
             : pendingCoveredColumns;
         pendingCoveredColumns -= reserved;
-        for (var r = reserved; r < repeat && cells.length < _odsMaxCols; r++) {
-          cells.add('');
-        }
+        final uncovered = repeat - reserved;
+        column = uncovered > _odsMaxCols - column
+            ? _odsMaxCols + 1
+            : column + uncovered;
         continue;
       }
-      // Some producers omit covered-cell placeholders. The span padding is
-      // already present, so a new origin still starts after that full span.
+      // Keep compatibility with producers that omit covered placeholders:
+      // the next origin still begins after the previous merged footprint.
       pendingCoveredColumns = 0;
+      final span = _odfRepeat(cell, 'number-columns-spanned');
       final value = _odsCellValue(cell);
-      for (var r = 0; r < repeat && cells.length < _odsMaxCols; r++) {
-        cells.add(value);
-        for (var s = 1; s < span && cells.length < _odsMaxCols; s++) {
-          cells.add('');
-          pendingCoveredColumns++;
+      if (value.isNotEmpty) {
+        if (column >= _odsMaxCols || repeat > (_odsMaxCols - column) ~/ span) {
+          throw const FormatException('ODF preview exceeds the column limit');
+        }
+        if (rowIndex >= _odsMaxRows || rowRepeat > _odsMaxRows - rowIndex) {
+          throw const FormatException('ODF preview exceeds the row limit');
+        }
+        textLength += value.length * repeat;
+        cells.addAll(List<String>.filled(column - cells.length, ''));
+        for (var r = 0; r < repeat; r++) {
+          if (r > 0) cells.addAll(List<String>.filled(span - 1, ''));
+          cells.add(value);
         }
       }
+      // Saturate empty padding before multiplication, without allocating its
+      // expanded span. A later meaningful cell outside the grid is refused.
+      final footprint = repeat > _odsMaxCols ~/ span
+          ? _odsMaxCols + 1
+          : repeat * span;
+      pendingCoveredColumns = span == 1
+          ? 0
+          : footprint > _odsMaxCols
+          ? _odsMaxCols + 1
+          : footprint - repeat;
+      column = footprint > _odsMaxCols - column
+          ? _odsMaxCols + 1
+          : column + footprint;
     }
-    while (cells.isNotEmpty && cells.last.isEmpty) {
-      cells.removeLast();
+    if (cells.isNotEmpty) {
+      final rowCount = rowIndex + rowRepeat;
+      if (cells.length > width) width = cells.length;
+      // _markdownTable pads every row to the widest row and adds a separator.
+      final nextRenderedCells = (rowCount + 1) * width;
+      budget.reserve(
+        cells: nextRenderedCells - renderedCells,
+        text: textLength * rowRepeat,
+      );
+      renderedCells = nextRenderedCells;
+      while (rows.length < rowIndex) {
+        rows.add(const <String>[]);
+      }
+      for (var r = 0; r < rowRepeat; r++) {
+        rows.add(List<String>.from(cells));
+      }
     }
-    // Blank runs may separate data. Count their logical positions now, but
-    // allocate them only when a later nonempty row proves they are internal.
-    if (cells.isEmpty) {
-      pendingEmptyRows += rowRepeat;
-      continue;
-    }
-    for (var r = 0; r < pendingEmptyRows; r++) {
-      rows.add(<String>[]);
-    }
-    pendingEmptyRows = 0;
-    for (var r = 0; r < rowRepeat; r++) {
-      rows.add(List<String>.from(cells));
-    }
+    // Empty rows are only discarded if no later data needs their positions.
+    // Even huge trailing padding costs no allocation; later data is refused
+    // when its actual position exceeds the supported preview extent.
+    rowIndex = rowRepeat > _odsMaxRows - rowIndex
+        ? _odsMaxRows + 1
+        : rowIndex + rowRepeat;
   }
   return rows;
 }
 
 String _odsCellValue(XmlElement cell) {
-  final type = cell.getAttribute('office:value-type');
+  String? valueAttribute(String name) =>
+      cell.getAttribute(name, namespace: _odfOfficeNamespace);
+  final type = valueAttribute('value-type');
   switch (type) {
     case 'float':
     case 'currency':
     case 'percentage':
-      final value = cell.getAttribute('office:value');
+      final value = valueAttribute('value');
       if (value != null) return value;
     case 'date':
-      final value = cell.getAttribute('office:date-value');
+      final value = valueAttribute('date-value');
       if (value != null) return value;
     case 'time':
-      final value = cell.getAttribute('office:time-value');
+      final value = valueAttribute('time-value');
       if (value != null) return value;
     case 'boolean':
-      final value = cell.getAttribute('office:boolean-value');
-      if (value != null) return value == 'true' ? 'TRUE' : 'FALSE';
+      final value = valueAttribute('boolean-value');
+      if (value != null) {
+        return value == 'true' || value == '1' ? 'TRUE' : 'FALSE';
+      }
     case 'string':
-      final value = cell.getAttribute('office:string-value');
+      final value = valueAttribute('string-value');
       if (value != null) return value;
   }
   return cell
-      .findAllElements('text:p')
+      .findAllElements('p', namespace: _odfTextNamespace)
       .map((paragraph) => paragraph.innerText)
       .join(' ')
       .trim();
@@ -976,13 +1061,25 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
     );
   }
   final document = XmlDocument.parse(xml);
+  final spreadsheet = document
+      .findAllElements('body', namespace: _odfOfficeNamespace)
+      .firstOrNull
+      ?.findElements('spreadsheet', namespace: _odfOfficeNamespace)
+      .firstOrNull;
+  if (spreadsheet == null) {
+    throw const FormatException('Missing ODF spreadsheet body');
+  }
+  final tableBudget = _OdfTableBudget();
   final markdown = StringBuffer();
   final csv = StringBuffer();
   final headings = <OfficeGeneratedHeading>[];
   var tableNumber = 0;
-  for (final table in document.findAllElements('table:table')) {
+  for (final table in spreadsheet.findElements(
+    'table',
+    namespace: _odfTableNamespace,
+  )) {
     tableNumber++;
-    final rows = _odsRows(table);
+    final rows = _odsRows(table, tableBudget);
     if (rows.isEmpty) continue;
     _writeHeading(
       markdown,
@@ -990,7 +1087,7 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
       OfficeHeadingKind.sheet,
       tableNumber,
       headings,
-      name: table.getAttribute('table:name'),
+      name: table.getAttribute('name', namespace: _odfTableNamespace),
     );
     markdown.writeln();
     markdown.writeln(_markdownTable(rows));
@@ -1489,6 +1586,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     );
   }
   final document = XmlDocument.parse(xml);
+  final tableBudget = _OdfTableBudget();
 
   // Automatic and named styles are referenced by name from spans, paragraphs
   // and list containers. Only the properties needed for readable Markdown are
@@ -1643,9 +1741,10 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
         visitList(element, 0);
       case 'table':
         {
-          final rows = _odsRows(element)
-              .map((row) => row.map(_escapePipes).toList())
-              .toList();
+          final rows = _odsRows(
+            element,
+            tableBudget,
+          ).map((row) => row.map(_escapePipes).toList()).toList();
           final table = _markdownTable(rows);
           if (table.isNotEmpty) blocks.add(table);
         }

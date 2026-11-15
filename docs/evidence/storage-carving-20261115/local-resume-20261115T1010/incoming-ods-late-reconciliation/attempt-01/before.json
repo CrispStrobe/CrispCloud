@@ -1,0 +1,15 @@
+{
+  "captured_utc": "2026-11-15T09:41:24.188204+00:00",
+  "head": "65e462b12e4524d88b4dd7d7ecfe43cd471b638d",
+  "merge_head": "8a4cc8b62c75461a05f58cc97386191cbca9f05c",
+  "files": {
+    "lib/services/office_document_service.dart": {
+      "sha256": "80c1357f5c1045a734ebccf166933b52d7974bf6f8fe293fe1c7f7d1f83b503a",
+      "size": 62907
+    },
+    "test/office_document_service_test.dart": {
+      "sha256": "d7e483f21c6765cbe3a9e3e02fa2ce5937be8752b66f72f1edf791de2e23f305",
+      "size": 29103
+    }
+  }
+}

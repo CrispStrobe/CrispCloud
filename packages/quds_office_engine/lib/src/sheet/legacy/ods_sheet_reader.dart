@@ -13,6 +13,7 @@ import 'dart:typed_data';
 
 import '../../opc/zip/zip_reader.dart';
 import '../../xml/xml_node.dart';
+import '../../xml/xml_reader.dart';
 import '../model/sml_workbook.dart';
 import '../styles/sml_styles.dart';
 
@@ -32,279 +33,433 @@ class OdsSheetFormatException implements Exception {
 abstract final class OdsSheetReader {
   static const int _maxRows = 100000;
   static const int _maxColumns = 4096;
+  static const _office = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';
+  static const _table = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';
+  static const _textNs = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0';
+  static const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
+  static const _number = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
+  static const _fo =
+      'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
 
-  /// Reads the package. Throws [OdsSheetFormatException] for malformed input.
+  /// Reads a bounded spreadsheet, declining unsupported expansion instead of
+  /// silently clipping cells. Empty padding advances coordinates arithmetically.
   static SmlWorkbook readBytes(Uint8List bytes) {
+    final budget = _OdsBudget();
     final ZipReader zip;
     try {
+      if (bytes.length > 64 * 1024 * 1024) {
+        throw const OdsSheetFormatException('ODS input exceeds 64 MiB');
+      }
       zip = ZipReader.fromBytes(bytes, maxEntries: 10000);
     } on Object catch (error) {
       throw OdsSheetFormatException('Not an ODF package: $error');
     }
-    if (!zip.contains('content.xml')) {
-      throw const OdsSheetFormatException('Missing content.xml');
+    final root = _readXml(zip, 'content.xml', budget);
+    if (!_is(root, 'document-content', _office)) {
+      throw const OdsSheetFormatException('Expected an ODF content document');
     }
-    final Uint8List content;
-    try {
-      content = zip.read('content.xml', maxBytes: 64 * 1024 * 1024);
-    } on Object catch (error) {
-      throw OdsSheetFormatException('Cannot read content.xml: $error');
-    }
-    final XmlDocument document;
-    try {
-      document = XmlDocument.parse(utf8.decode(content, allowMalformed: true));
-    } on Object catch (error) {
-      throw OdsSheetFormatException('Malformed content.xml: $error');
-    }
-    final root = document.root;
-    if (root == null) {
-      throw const OdsSheetFormatException('Empty content.xml');
+    final spreadsheet = root
+        .firstChild('body', namespaceUri: _office)
+        ?.firstChild('spreadsheet', namespaceUri: _office);
+    if (spreadsheet == null) {
+      throw const OdsSheetFormatException('Document is not an ODF spreadsheet');
     }
 
     final styles = <String, XmlElement>{};
-    for (final collection in <String>['automatic-styles', 'styles']) {
-      for (final element in _elements(root, collection)) {
-        for (final style in element.childElements) {
-          final name = style.getAttribute('name');
-          if (name != null && style.localName == 'style') styles[name] = style;
-        }
-      }
-    }
     final numberStyles = <String, XmlElement>{};
-    for (final collection in <String>['automatic-styles', 'styles']) {
-      for (final element in _elements(root, collection)) {
-        for (final style in element.childElements) {
-          final name = style.getAttribute('name');
-          if (name != null &&
-              (style.localName == 'number-style' ||
-                  style.localName == 'currency-style' ||
-                  style.localName == 'percentage-style' ||
-                  style.localName == 'date-style' ||
-                  style.localName == 'time-style')) {
+    void collectStyles(XmlElement styleRoot) {
+      for (final collection in ['styles', 'automatic-styles']) {
+        final parent = styleRoot.firstChild(collection, namespaceUri: _office);
+        if (parent == null) continue;
+        for (final style in parent.childElements) {
+          final name = _attribute(style, 'name', _style);
+          if (name == null) continue;
+          if (_is(style, 'style', _style)) {
+            final family = _attribute(style, 'family', _style);
+            if (family != null) styles['$family:$name'] = style;
+          } else if (style.namespaceUri == _number) {
             numberStyles[name] = style;
           }
+          if (styles.length + numberStyles.length > 4096) {
+            throw const OdsSheetFormatException('ODS style definition limit');
+          }
         }
       }
     }
 
-    final book = SmlWorkbook(sheets: <SmlWorksheet>[], styles: SmlStyleSheet());
-    final engineStyles = book.styles!;
-    final tables = _elements(root, 'table').toList();
-    if (tables.isEmpty) {
-      throw const OdsSheetFormatException('Workbook has no tables');
+    if (zip.contains('styles.xml')) {
+      final named = _readXml(zip, 'styles.xml', budget);
+      if (!_is(named, 'document-styles', _office)) {
+        throw const OdsSheetFormatException('Invalid ODF named styles');
+      }
+      collectStyles(named);
     }
-    var sheetId = 0;
+    collectStyles(root);
+
+    final book = SmlWorkbook(sheets: <SmlWorksheet>[], styles: SmlStyleSheet());
+    final tables = spreadsheet.childrenNamed('table', namespaceUri: _table);
+    if (tables.isEmpty || tables.length > 128) {
+      throw const OdsSheetFormatException('ODS requires 1 to 128 worksheets');
+    }
     for (final table in tables) {
-      sheetId++;
+      final name = _attribute(table, 'name', _table)?.trim();
       final sheet = SmlWorksheet(
-        name: table.getAttribute('name')?.trim().isNotEmpty == true
-            ? table.getAttribute('name')!.trim()
-            : 'Sheet$sheetId',
-        sheetId: sheetId,
+        name: name == null || name.isEmpty
+            ? 'Sheet${book.sheets.length + 1}'
+            : name,
+        sheetId: book.sheets.length + 1,
       );
-      _readColumns(table, sheet, styles);
+      _readColumns(table, sheet, styles, budget);
       var rowIndex = 0;
       final pendingRowHeights = <({int start, int count, double height})>[];
-      for (final row in table.childElements.where(
-        (element) => element.localName == 'table-row',
-      )) {
-        final rowRepeat = _repeat(row, 'number-rows-repeated', _maxRows);
-        final rowStyle = styles[row.getAttribute('style-name')];
-        final rowHeight = _lengthToPoints(
-          _property(rowStyle, 'table-row-properties', 'row-height'),
+      for (final row in _members(table, 'table-row', const {
+        'table-row-group',
+        'table-rows',
+        'table-header-rows',
+      })) {
+        final rowRepeat = _repeat(row, 'number-rows-repeated');
+        final rowStyle = _styleChain(
+          styles,
+          'table-row',
+          _attribute(row, 'style-name', _table),
         );
-
-        final parsed = <({int column, int span, SmlCell cell})>[];
+        final rowHeight = _lengthToPoints(
+          _property(rowStyle, 'table-row-properties', 'row-height', _style),
+        );
+        final entries =
+            <
+              ({
+                int column,
+                int repeat,
+                int colSpan,
+                int rowSpan,
+                SmlCell? cell,
+              })
+            >[];
         var column = 0;
         var pendingCovered = 0;
-        var hasContent = false;
         for (final element in row.childElements) {
-          if (element.localName != 'table-cell' &&
-              element.localName != 'covered-table-cell') {
+          if (element.namespaceUri != _table ||
+              (element.localName != 'table-cell' &&
+                  element.localName != 'covered-table-cell')) {
             continue;
           }
-          final covered = element.localName == 'covered-table-cell';
-          final repeat = _repeat(
-            element,
-            'number-columns-repeated',
-            _maxColumns,
-          );
-          if (covered) {
-            // A spanning origin already reserved these columns. Explicit ODF
-            // placeholders consume that reservation rather than move it twice.
+          final repeat = _repeat(element, 'number-columns-repeated');
+          if (element.localName == 'covered-table-cell') {
+            if (_attribute(element, 'value-type', _office) != null ||
+                _attribute(element, 'formula', _table) != null ||
+                _text(element).isNotEmpty) {
+              throw const OdsSheetFormatException('Covered cell contains data');
+            }
+            // A spanning origin already reserves its covered columns. Consume
+            // explicit placeholders once; additional covered positions still
+            // advance normally, including cells covered by a vertical merge.
             final reserved = repeat < pendingCovered ? repeat : pendingCovered;
             pendingCovered -= reserved;
-            column = (column + repeat - reserved).clamp(0, _maxColumns);
+            column += repeat - reserved;
             continue;
           }
-          // Some producers omit covered placeholders. A new ordinary cell is
-          // still after the preceding span, with no reservation left to consume.
+          // Keep compatibility with producers that omit covered placeholders:
+          // a new ordinary origin begins after the preceding reserved span.
           pendingCovered = 0;
-          final span = _repeat(element, 'number-columns-spanned', _maxColumns);
-          for (var i = 0; i < repeat && column < _maxColumns; i++) {
-            final boundedSpan = span.clamp(1, _maxColumns - column);
-            final cell = _createCell(
-              sheet,
-              SmlCellRef(column, rowIndex),
-              element,
-              engineStyles,
-              styles,
-              numberStyles,
+          final colSpan = _repeat(element, 'number-columns-spanned');
+          final rowSpan = _repeat(element, 'number-rows-spanned');
+          if (_repeat(element, 'number-matrix-columns-spanned') > 1 ||
+              _repeat(element, 'number-matrix-rows-spanned') > 1) {
+            throw const OdsSheetFormatException(
+              'Matrix formulas are not supported',
             );
-            if (cell != null) {
-              hasContent = true;
-              parsed.add((column: column, span: boundedSpan, cell: cell));
-            }
-            column += boundedSpan;
-            pendingCovered += boundedSpan - 1;
           }
-        }
-        if (!hasContent && rowRepeat > 1) {
-          // Empty runs may be internal. Advance their logical row positions
-          // without allocating cells, and only expand heights if data follows.
-          // Large trailing padding therefore remains sparse.
-          if (rowHeight != null && rowHeight > 0) {
-            pendingRowHeights.add((
-              start: rowIndex,
-              count: rowRepeat.clamp(1, _maxRows - rowIndex),
-              height: SmlWorksheet.rowHeightFromExcel(rowHeight),
+          if (element.childrenNamed('table', namespaceUri: _table).isNotEmpty) {
+            throw const OdsSheetFormatException(
+              'Nested ODS tables are not supported',
+            );
+          }
+          final cell = _createCell(
+            element,
+            book.styles!,
+            styles,
+            numberStyles,
+            budget,
+          );
+          if (cell != null || colSpan > 1 || rowSpan > 1) {
+            if (column + repeat + colSpan - 1 > _maxColumns ||
+                rowIndex + rowRepeat + rowSpan - 1 > _maxRows) {
+              throw const OdsSheetFormatException(
+                'ODS data exceeds the supported grid',
+              );
+            }
+            if ((colSpan > 1 || rowSpan > 1) &&
+                (repeat > 1 || (rowSpan > 1 && rowRepeat > 1))) {
+              throw const OdsSheetFormatException(
+                'Repeated merged anchors are not supported',
+              );
+            }
+            if (cell?.formula != null && (repeat > 1 || rowRepeat > 1)) {
+              throw const OdsSheetFormatException(
+                'Repeated formulas are not supported',
+              );
+            }
+            if (cell != null) {
+              final count = repeat * rowRepeat;
+              budget.cells(count);
+              final value = cell.value;
+              budget.cellText(
+                ((value is String ? utf8.encode(value).length : 0) +
+                        (cell.formula == null
+                            ? 0
+                            : utf8.encode(cell.formula!).length)) *
+                    count,
+              );
+            }
+            entries.add((
+              column: column,
+              repeat: repeat,
+              colSpan: colSpan,
+              rowSpan: rowSpan,
+              cell: cell,
             ));
           }
-          rowIndex += rowRepeat;
-          if (rowIndex >= _maxRows) break;
-          continue;
+          column += repeat + colSpan - 1;
+          pendingCovered = colSpan - 1;
         }
-        if (hasContent) {
+        // Empty runs do not allocate cells, but must retain their exact row
+        // count: data after an internal gap must never move or disappear.
+        if (entries.isNotEmpty) {
           for (final pending in pendingRowHeights) {
+            budget.dimensions(pending.count);
             for (var r = 0; r < pending.count; r++) {
               sheet.rowHeights[pending.start + r] = pending.height;
             }
           }
           pendingRowHeights.clear();
         }
-        if (rowHeight != null && rowHeight > 0) {
-          for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
-            sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
-              rowHeight,
-            );
+        if (rowHeight != null &&
+            rowHeight > 0 &&
+            rowIndex + rowRepeat <= _maxRows) {
+          final height = SmlWorksheet.rowHeightFromExcel(rowHeight);
+          if (entries.isEmpty && rowRepeat > 1) {
+            // Defer empty height runs until data follows. Styled trailing
+            // padding remains sparse; internal heights retain the same budget.
+            pendingRowHeights.add((
+              start: rowIndex,
+              count: rowRepeat,
+              height: height,
+            ));
+          } else {
+            budget.dimensions(rowRepeat);
+            for (var r = 0; r < rowRepeat; r++) {
+              sheet.rowHeights[rowIndex + r] = height;
+            }
           }
         }
-        for (final entry in parsed) {
-          if (entry.span > 1) {
-            sheet.merges.add(
-              SmlMerge(
-                c0: entry.column,
-                r0: rowIndex,
-                c1: entry.column + entry.span - 1,
-                r1: rowIndex,
-              ),
-            );
+        if (entries.isNotEmpty) {
+          for (var r = 0; r < rowRepeat; r++) {
+            for (final entry in entries) {
+              for (var c = 0; c < entry.repeat; c++) {
+                final ref = SmlCellRef(entry.column + c, rowIndex + r);
+                if (entry.cell case final source?) {
+                  _copyCell(source, sheet.cell(ref));
+                }
+                if (entry.colSpan > 1 || entry.rowSpan > 1) {
+                  final merge = SmlMerge(
+                    c0: ref.col,
+                    r0: ref.row,
+                    c1: ref.col + entry.colSpan - 1,
+                    r1: ref.row + entry.rowSpan - 1,
+                  );
+                  budget.merge();
+                  if (sheet.merges.any(
+                    (existing) => existing.overlaps(merge),
+                  )) {
+                    throw const OdsSheetFormatException(
+                      'Overlapping ODS merges',
+                    );
+                  }
+                  sheet.merges.add(merge);
+                }
+              }
+            }
           }
         }
-        for (var r = 1; r < rowRepeat && rowIndex + r < _maxRows; r++) {
-          for (final entry in parsed) {
-            final source = entry.cell;
-            final target = sheet.cell(SmlCellRef(entry.column, rowIndex + r));
-            target
-              ..type = source.type
-              ..value = source.value
-              ..formula = source.formula
-              ..styleIndex = source.styleIndex
-              ..hasExplicitStyleIndex = source.hasExplicitStyleIndex
-              ..horizontalAlign = source.horizontalAlign
-              ..wrapText = source.wrapText
-              ..fillRgb = source.fillRgb
-              ..fontRgb = source.fontRgb
-              ..fontBold = source.fontBold
-              ..fontSize = source.fontSize
-              ..fontFamily = source.fontFamily;
-          }
-        }
-        rowIndex += rowRepeat.clamp(1, _maxRows);
-        if (rowIndex >= _maxRows) break;
+        rowIndex += rowRepeat;
       }
       book.sheets.add(sheet);
     }
     return book;
   }
 
+  static XmlElement _readXml(ZipReader zip, String part, _OdsBudget budget) {
+    try {
+      if (!zip.contains(part)) throw OdsSheetFormatException('Missing $part');
+      final bytes = zip.read(part, maxBytes: 64 * 1024 * 1024);
+      budget.xml(bytes.length);
+      final source = utf8.decode(bytes);
+      final reader = XmlPullReader(source);
+      var roots = 0;
+      var open = 0;
+      while (reader.next()) {
+        budget.xmlEvent();
+        if (reader.eventType == XmlEventType.dtd) {
+          throw const OdsSheetFormatException(
+            'DTD declarations are not supported',
+          );
+        }
+        if (reader.eventType == XmlEventType.startElement) {
+          if (open++ == 0) roots++;
+          if (open > 128) {
+            throw const OdsSheetFormatException('XML nesting limit');
+          }
+        } else if (reader.eventType == XmlEventType.endElement) {
+          open--;
+          if (open < 0) throw const OdsSheetFormatException('Unbalanced XML');
+        }
+      }
+      if (roots != 1 || open != 0) {
+        throw const OdsSheetFormatException('Unbalanced XML document');
+      }
+      return XmlDocument.parse(source).root!;
+    } on OdsSheetFormatException {
+      rethrow;
+    } on Object catch (error) {
+      throw OdsSheetFormatException('Cannot read $part: $error');
+    }
+  }
+
+  static void _copyCell(SmlCell source, SmlCell target) {
+    target
+      ..type = source.type
+      ..value = source.value
+      ..formula = source.formula
+      ..styleIndex = source.styleIndex
+      ..hasExplicitStyleIndex = source.hasExplicitStyleIndex
+      ..horizontalAlign = source.horizontalAlign
+      ..wrapText = source.wrapText
+      ..fillRgb = source.fillRgb
+      ..hasExplicitFillColorEdit = source.hasExplicitFillColorEdit
+      ..fontRgb = source.fontRgb
+      ..hasExplicitFontColorEdit = source.hasExplicitFontColorEdit
+      ..fontBold = source.fontBold
+      ..fontSize = source.fontSize
+      ..fontFamily = source.fontFamily;
+  }
+
   static void _readColumns(
     XmlElement table,
     SmlWorksheet sheet,
     Map<String, XmlElement> styles,
+    _OdsBudget budget,
   ) {
     var column = 0;
-    for (final element in table.childElements.where(
-      (child) => child.localName == 'table-column',
-    )) {
-      final repeat = _repeat(element, 'number-columns-repeated', _maxColumns);
-      final style = styles[element.getAttribute('style-name')];
+    for (final element in _members(table, 'table-column', const {
+      'table-column-group',
+      'table-columns',
+      'table-header-columns',
+    })) {
+      final repeat = _repeat(element, 'number-columns-repeated');
+      final style = _styleChain(
+        styles,
+        'table-column',
+        _attribute(element, 'style-name', _table),
+      );
       final width = _lengthToPoints(
-        _property(style, 'table-column-properties', 'column-width'),
+        _property(style, 'table-column-properties', 'column-width', _style),
       );
       if (width != null && width > 0) {
-        final px = width * 96 / 72;
-        for (var i = 0; i < repeat && column < _maxColumns; i++) {
-          sheet.setColumnWidth(column, px);
-          column++;
+        // Column definitions commonly include a full-sheet default-width tail.
+        // It has no cells to preserve outside the admitted grid.
+        final end = (column + repeat).clamp(0, _maxColumns);
+        final count = (end - column).clamp(0, _maxColumns);
+        budget.dimensions(count);
+        for (var i = 0; i < count; i++) {
+          sheet.setColumnWidth(column + i, width * 96 / 72);
         }
-      } else {
-        column += repeat;
       }
+      column += repeat;
     }
   }
 
   static SmlCell? _createCell(
-    SmlWorksheet sheet,
-    SmlCellRef ref,
     XmlElement element,
     SmlStyleSheet engineStyles,
     Map<String, XmlElement> styles,
     Map<String, XmlElement> numberStyles,
+    _OdsBudget budget,
   ) {
     Object? value;
-    switch (element.getAttribute('value-type')) {
+    final valueType = _attribute(element, 'value-type', _office);
+    switch (valueType) {
       case 'float':
       case 'currency':
       case 'percentage':
-        value = double.tryParse(element.getAttribute('value') ?? '');
+        final number = double.tryParse(
+          _attribute(element, 'value', _office) ?? '',
+        );
+        if (number == null || !number.isFinite) {
+          throw const OdsSheetFormatException('Invalid ODS numeric value');
+        }
+        value = number;
       case 'date':
         final parsed = DateTime.tryParse(
-          element.getAttribute('date-value') ?? '',
+          _attribute(element, 'date-value', _office) ?? '',
         );
-        value = parsed == null ? null : _excelSerial(parsed);
+        if (parsed == null) {
+          throw const OdsSheetFormatException('Invalid ODS date');
+        }
+        value = _excelSerial(parsed);
       case 'time':
-        value = _odfDurationDays(element.getAttribute('time-value'));
+        value = _odfDurationDays(_attribute(element, 'time-value', _office));
+        if (value == null) {
+          throw const OdsSheetFormatException('Invalid ODS time');
+        }
       case 'boolean':
-        value = element.getAttribute('boolean-value') == 'true';
+        value = switch (_attribute(element, 'boolean-value', _office)) {
+          'true' || '1' => true,
+          'false' || '0' => false,
+          _ => throw const OdsSheetFormatException('Invalid ODS boolean'),
+        };
       case 'string':
-        value = element.getAttribute('string-value') ?? _text(element);
-      default:
+        value = _attribute(element, 'string-value', _office) ?? _text(element);
+      case null:
         value = _text(element);
+      default:
+        throw OdsSheetFormatException('Unsupported ODS value type: $valueType');
+    }
+    if (value is String && value.length > 1024 * 1024) {
+      throw const OdsSheetFormatException('ODS cell text limit');
     }
     if (value is String && value.isEmpty) value = null;
-    final formula = _translateFormula(element.getAttribute('formula'));
-
-    final style = styles[element.getAttribute('style-name')];
-    final text = style == null ? null : _child(style, 'text-properties');
-    final cellProperties = style == null
-        ? null
-        : _child(style, 'table-cell-properties');
-    final paragraph = style == null
-        ? null
-        : _child(style, 'paragraph-properties');
-
-    final bold = _isBold(text?.getAttribute('font-weight'));
-    final fontSize = _lengthToPoints(text?.getAttribute('font-size'));
-    final color = _hex(text?.getAttribute('color'));
-    final fill = _hex(cellProperties?.getAttribute('background-color'));
-    final align = _align(paragraph?.getAttribute('text-align'));
-    final wrap = paragraph?.getAttribute('wrap-option') == 'wrap';
-    final family = _family(text?.getAttribute('font-family'));
+    final formula = _translateFormula(_attribute(element, 'formula', _table));
+    final styleName = _attribute(element, 'style-name', _table);
+    // The named Default style on empty spreadsheet padding is not cell data.
+    if (value == null &&
+        formula == null &&
+        (styleName == null || styleName == 'Default')) {
+      return null;
+    }
+    final style = _styleChain(styles, 'table-cell', styleName);
+    final bold = _isBold(
+      _property(style, 'text-properties', 'font-weight', _fo),
+    );
+    final fontSize = _lengthToPoints(
+      _property(style, 'text-properties', 'font-size', _fo),
+    );
+    final color = _hex(_property(style, 'text-properties', 'color', _fo));
+    final fill = _hex(
+      _property(style, 'table-cell-properties', 'background-color', _fo),
+    );
+    final align = _align(
+      _property(style, 'paragraph-properties', 'text-align', _fo),
+    );
+    final wrap =
+        _property(style, 'table-cell-properties', 'wrap-option', _fo) == 'wrap';
+    final family = _family(
+      _property(style, 'text-properties', 'font-family', _fo),
+    );
     final numFmt = _numberFormat(
-      style?.getAttribute('data-style-name'),
+      _styleAttribute(style, 'data-style-name'),
       numberStyles,
-      element.getAttribute('value-type'),
+      valueType,
     );
     final styled =
         bold ||
@@ -318,7 +473,7 @@ abstract final class OdsSheetReader {
 
     if (value == null && formula == null && !styled) return null;
 
-    final cell = sheet.cell(ref);
+    final cell = SmlCell(ref: SmlCellRef(0, 0));
     if (value != null) {
       cell.value = value;
       cell.type = value is bool
@@ -339,6 +494,14 @@ abstract final class OdsSheetReader {
     if (color != null) cell.fontRgb = color;
     if (fill != null) cell.fillRgb = fill;
     if (family != null) cell.fontFamily = family;
+    // xfFor searches existing style tables. Count that work before calling it,
+    // as a large set of distinct imported styles otherwise makes this quadratic.
+    budget.styleWork(
+      engineStyles.cellXfsAlign.length +
+          engineStyles.fillRgbs.length +
+          engineStyles.fontFamilies.length +
+          1,
+    );
     cell.styleIndex = engineStyles.xfFor(
       align: align,
       fillRgb: fill ?? '',
@@ -357,63 +520,57 @@ abstract final class OdsSheetReader {
 
   static String? _translateFormula(String? raw) {
     if (raw == null || raw.isEmpty) return null;
-    var formula = raw;
-    final equals = formula.indexOf('=');
-    if (equals >= 0) formula = formula.substring(equals + 1);
-    final result = StringBuffer();
-    var start = 0;
-    var index = 0;
-    while (index < formula.length) {
-      // Quotes in bracketed sheet references are part of the reference token,
-      // not the start of a formula string literal.
-      if (formula.codeUnitAt(index) == 0x5b) {
-        final end = formula.indexOf(']', index + 1);
-        if (end >= 0) {
-          index = end + 1;
-          continue;
-        }
-      }
-      if (formula.codeUnitAt(index) != 0x22) {
-        index++;
-        continue;
-      }
-      result.write(_translateFormulaSyntax(formula.substring(start, index)));
-      final literalStart = index++;
-      while (index < formula.length) {
-        if (formula.codeUnitAt(index++) != 0x22) continue;
-        if (index < formula.length && formula.codeUnitAt(index) == 0x22) {
-          index++; // ODF and OOXML both escape a quote by doubling it.
-        } else {
-          break;
-        }
-      }
-      result.write(formula.substring(literalStart, index));
-      start = index;
+    if (raw.length > 1024 * 1024) {
+      throw const OdsSheetFormatException('ODS formula length limit');
     }
-    result.write(_translateFormulaSyntax(formula.substring(start)));
+    final equals = raw.indexOf('=');
+    if (equals < 0) throw const OdsSheetFormatException('Invalid ODS formula');
+    final formula = raw.substring(equals + 1);
+    final result = StringBuffer();
+    var quoted = false;
+    for (var i = 0; i < formula.length; i++) {
+      final char = formula[i];
+      if (char == '"') {
+        result.write(char);
+        if (quoted && i + 1 < formula.length && formula[i + 1] == '"') {
+          result.write(formula[++i]);
+        } else {
+          quoted = !quoted;
+        }
+      } else if (!quoted && char == '[') {
+        final end = formula.indexOf(']', i + 1);
+        if (end < 0) {
+          throw const OdsSheetFormatException('Invalid ODS reference');
+        }
+        result.write(
+          formula.substring(i + 1, end).split(':').map(_odfReference).join(':'),
+        );
+        i = end;
+      } else if (!quoted && char == ';') {
+        result.write(',');
+      } else if (!quoted &&
+          (i == 0 || !_formulaNameCharacter(formula.codeUnitAt(i - 1))) &&
+          (formula.startsWith('COM.MICROSOFT.', i) ||
+              formula.startsWith('ORG.OPENOFFICE.', i))) {
+        i += formula.startsWith('COM.MICROSOFT.', i)
+            ? 'COM.MICROSOFT.'.length - 1
+            : 'ORG.OPENOFFICE.'.length - 1;
+      } else {
+        result.write(char);
+      }
+    }
+    if (quoted) {
+      throw const OdsSheetFormatException('Unterminated formula string');
+    }
     final translated = result.toString();
     return translated.trim().isEmpty ? null : translated;
   }
 
-  static String _translateFormulaSyntax(String formula) {
-    final result = StringBuffer();
-    var start = 0;
-    for (final reference in RegExp(r'\[([^\]]+)\]').allMatches(formula)) {
-      result.write(
-        _translateFormulaOperators(formula.substring(start, reference.start)),
-      );
-      // Sheet names inside a reference may themselves contain semicolons or
-      // function-like namespace prefixes. Only translate the reference grammar.
-      result.write(reference.group(1)!.split(':').map(_odfReference).join(':'));
-      start = reference.end;
-    }
-    result.write(_translateFormulaOperators(formula.substring(start)));
-    return result.toString();
-  }
-
-  static String _translateFormulaOperators(String formula) => formula
-      .replaceAll(';', ',')
-      .replaceAll(RegExp(r'\b(?:COM\.MICROSOFT|ORG\.OPENOFFICE)\.'), '');
+  static bool _formulaNameCharacter(int value) =>
+      value == 0x5f ||
+      (value >= 0x30 && value <= 0x39) ||
+      (value >= 0x41 && value <= 0x5a) ||
+      (value >= 0x61 && value <= 0x7a);
 
   static String _odfReference(String raw) {
     var reference = raw.trim();
@@ -451,7 +608,8 @@ abstract final class OdsSheetReader {
         final grouping = _descendants(
           style,
           'number',
-        ).any((element) => element.getAttribute('grouping') == 'true');
+          _number,
+        ).any((element) => _attribute(element, 'grouping', _number) == 'true');
         final integer = grouping ? '#,##0' : '0';
         return decimals == 0 ? integer : '$integer.${'0' * decimals}';
     }
@@ -464,14 +622,28 @@ abstract final class OdsSheetReader {
   }
 
   static int _decimals(XmlElement style) {
-    final number = _descendants(style, 'number').firstOrNull;
-    final value = int.tryParse(number?.getAttribute('decimal-places') ?? '');
+    final number = _descendants(style, 'number', _number).firstOrNull;
+    final value = int.tryParse(
+      number?.getAttribute('decimal-places', namespaceUri: _number) ?? '',
+    );
     return (value ?? 0).clamp(0, 10);
   }
 
   static double _excelSerial(DateTime value) {
     final epoch = DateTime.utc(1899, 12, 30);
-    return value.toUtc().difference(epoch).inMilliseconds / 86400000;
+    final civil = value.isUtc
+        ? value
+        : DateTime.utc(
+            value.year,
+            value.month,
+            value.day,
+            value.hour,
+            value.minute,
+            value.second,
+            value.millisecond,
+            value.microsecond,
+          );
+    return civil.difference(epoch).inMilliseconds / 86400000;
   }
 
   static double? _odfDurationDays(String? value) {
@@ -488,44 +660,135 @@ abstract final class OdsSheetReader {
   }
 
   static String _text(XmlElement element) {
-    final paragraphs = _descendants(element, 'p').toList();
-    if (paragraphs.isEmpty) return element.text.trim();
+    final paragraphs = _descendants(element, 'p', _textNs).toList();
     final buffer = StringBuffer();
-    for (final paragraph in paragraphs) {
-      final text = paragraph.text.trim();
-      if (text.isNotEmpty) {
-        if (buffer.isNotEmpty) buffer.write(' ');
-        buffer.write(text);
+    void write(String value) {
+      if (buffer.length + value.length > 1024 * 1024) {
+        throw const OdsSheetFormatException('ODS cell text limit');
       }
+      buffer.write(value);
+    }
+
+    void inline(XmlNode node) {
+      if (node is XmlText) {
+        write(node.text);
+      } else if (node is XmlCdata) {
+        write(node.text);
+      } else if (node is XmlElement) {
+        if (_is(node, 's', _textNs)) {
+          final count = _repeat(node, 'c', namespace: _textNs);
+          if (count > 1024 * 1024) {
+            throw const OdsSheetFormatException('ODS cell text limit');
+          }
+          write(' ' * count);
+        } else if (_is(node, 'tab', _textNs)) {
+          write('\t');
+        } else if (_is(node, 'line-break', _textNs)) {
+          write('\n');
+        } else {
+          for (final child in node.children) {
+            inline(child);
+          }
+        }
+      }
+    }
+
+    for (var i = 0; i < paragraphs.length; i++) {
+      if (i > 0) write('\n');
+      inline(paragraphs[i]);
     }
     return buffer.toString();
   }
 
-  static int _repeat(XmlElement element, String name, int max) {
-    final value = int.tryParse(element.getAttribute(name) ?? '') ?? 1;
-    return value.clamp(1, max);
+  static int _repeat(
+    XmlElement element,
+    String name, {
+    String namespace = _table,
+  }) {
+    final raw = _attribute(element, name, namespace);
+    if (raw == null) return 1;
+    final value = int.tryParse(raw);
+    if (value == null || value < 1 || value > 1 << 30) {
+      throw OdsSheetFormatException('Invalid ODS $name');
+    }
+    return value;
   }
 
-  static XmlElement? _child(XmlElement element, String name) =>
-      element.firstChild(name);
+  static bool _is(XmlElement element, String name, String namespace) =>
+      element.localName == name && element.namespaceUri == namespace;
+
+  static String? _attribute(
+    XmlElement element,
+    String name,
+    String namespace,
+  ) => element.getAttribute(name, namespaceUri: namespace);
+
+  static List<XmlElement> _styleChain(
+    Map<String, XmlElement> styles,
+    String family,
+    String? name,
+  ) {
+    final result = <XmlElement>[];
+    final seen = <String>{};
+    while (name != null) {
+      if (!seen.add(name) || seen.length > 32) {
+        throw const OdsSheetFormatException(
+          'Cyclic or excessive ODS style inheritance',
+        );
+      }
+      final style = styles['$family:$name'];
+      if (style == null) break;
+      result.add(style);
+      name = _attribute(style, 'parent-style-name', _style);
+    }
+    return result;
+  }
+
+  static String? _styleAttribute(List<XmlElement> styles, String name) {
+    for (final style in styles) {
+      final value = _attribute(style, name, _style);
+      if (value != null) return value;
+    }
+    return null;
+  }
 
   static String? _property(
-    XmlElement? style,
+    List<XmlElement> styles,
     String childName,
-    String attribute,
-  ) => style?.firstChild(childName)?.getAttribute(attribute);
+    String name,
+    String namespace,
+  ) {
+    for (final style in styles) {
+      final properties = style.firstChild(childName, namespaceUri: _style);
+      final value = properties?.getAttribute(name, namespaceUri: namespace);
+      if (value != null) return value;
+    }
+    return null;
+  }
 
-  static Iterable<XmlElement> _elements(XmlElement root, String name) sync* {
+  static Iterable<XmlElement> _members(
+    XmlElement root,
+    String name,
+    Set<String> wrappers,
+  ) sync* {
     for (final child in root.childElements) {
-      if (child.localName == name) yield child;
-      yield* _elements(child, name);
+      if (child.namespaceUri != _table) continue;
+      if (child.localName == name) {
+        yield child;
+      } else if (wrappers.contains(child.localName)) {
+        yield* _members(child, name, wrappers);
+      }
     }
   }
 
-  static Iterable<XmlElement> _descendants(XmlElement root, String name) sync* {
+  static Iterable<XmlElement> _descendants(
+    XmlElement root,
+    String name,
+    String namespace,
+  ) sync* {
     for (final child in root.childElements) {
-      if (child.localName == name) yield child;
-      yield* _descendants(child, name);
+      if (_is(child, name, namespace)) yield child;
+      yield* _descendants(child, name, namespace);
     }
   }
 
@@ -577,5 +840,68 @@ abstract final class OdsSheetReader {
       'px' => value * 72 / 96,
       _ => value,
     };
+  }
+}
+
+/// Bounds are shared across sheets, so short repeated markup cannot expand to
+/// hundreds of millions of cells or unbounded merge/dimension bookkeeping.
+class _OdsBudget {
+  int _cells = 0;
+  int _dimensions = 0;
+  int _merges = 0;
+  int _xmlBytes = 0;
+  int _xmlEvents = 0;
+  int _cellText = 0;
+  int _styleWork = 0;
+
+  void cells(int count) {
+    if (count > 200000 - _cells) {
+      throw const OdsSheetFormatException(
+        'ODS materialized cell limit (200000)',
+      );
+    }
+    _cells += count;
+  }
+
+  void dimensions(int count) {
+    if (count > 200000 - _dimensions) {
+      throw const OdsSheetFormatException('ODS dimension limit (200000)');
+    }
+    _dimensions += count;
+  }
+
+  void cellText(int count) {
+    if (count > 8 * 1024 * 1024 - _cellText) {
+      throw const OdsSheetFormatException(
+        'ODS expanded cell text limit (8 MiB)',
+      );
+    }
+    _cellText += count;
+  }
+
+  void styleWork(int count) {
+    if (count > 4000000 - _styleWork) {
+      throw const OdsSheetFormatException('ODS style work limit');
+    }
+    _styleWork += count;
+  }
+
+  void merge() {
+    if (++_merges > 1000) {
+      throw const OdsSheetFormatException('ODS merge limit (1000)');
+    }
+  }
+
+  void xml(int count) {
+    if (count > 64 * 1024 * 1024 - _xmlBytes) {
+      throw const OdsSheetFormatException('ODS XML byte limit (64 MiB)');
+    }
+    _xmlBytes += count;
+  }
+
+  void xmlEvent() {
+    if (++_xmlEvents > 500000) {
+      throw const OdsSheetFormatException('ODS XML event limit (500000)');
+    }
   }
 }

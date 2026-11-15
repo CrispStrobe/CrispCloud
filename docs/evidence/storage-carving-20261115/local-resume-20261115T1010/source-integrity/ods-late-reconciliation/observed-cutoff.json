@@ -1,0 +1,11 @@
+{
+  "incoming_source_cutoff": "fbe879e811b57805583d658523b73320c7149d04",
+  "production_source": "fe500e2bf50aae3098040ee0308221db2ae0d9f6",
+  "saved_parent": "1c1b0af8e20bb02f7d18b4e6cb116328f4342332",
+  "additional_observed_head": {
+    "branch": "fix/odf-legacy-spreadsheets",
+    "sha": "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+    "date": "2026-11-15T09:37:28Z",
+    "status": "Not in this35-test checkpoint. Unique production additions will be reconciled in the next distinct checkpoint."
+  }
+}

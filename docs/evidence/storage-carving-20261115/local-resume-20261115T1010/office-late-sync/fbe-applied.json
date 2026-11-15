@@ -1,0 +1,12 @@
+{
+  "from": "1c1b0af8e20bb02f7d18b4e6cb116328f4342332",
+  "to": "0ca0d31bd757da4db6b6ef45764ff9de33990a2f",
+  "write": [
+    "packages/quds_office_engine/CHANGELOG.md",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2223,
+  "applied": true
+}

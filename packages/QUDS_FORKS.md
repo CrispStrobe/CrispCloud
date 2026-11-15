@@ -23,7 +23,7 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `1c1b0af8e20bb02f7d18b4e6cb116328f4342332` on
+The app mirrors Quds `0ca0d31bd757da4db6b6ef45764ff9de33990a2f` on
 `integration/storage-carving-qualification-20261115` and standalone
 legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,223 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
@@ -35,7 +35,7 @@ reports limitations; converted legacy documents save separately as OOXML.
 
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
-without changing quoted literals or quoted sheet identifiers. Seventeen focused
+without changing quoted literals or quoted sheet identifiers. Thirty-five focused
 ODS development tests pass, including XLSX save/reopen checks. Their retained
 baseline failures and passing runs are development evidence; the combined host
 qualification remains separately source-bound in the storage evidence.
@@ -46,6 +46,15 @@ native style, unwrapped cells cannot reuse wrapped styles, and wrap-only edits
 survive new-workbook saves. The scripted Word oracle resolves heading outline
 levels through paragraph styles and their inheritance while retaining explicit
 override and malformed-style negative controls.
+
+ODS import and table previews preserve merged/covered-cell coordinates and
+repeated interior blank rows. Namespace-aware grouped rows and inherited cell
+styles are retained. Expansion budgets reject out-of-profile data explicitly;
+unsupported repeated/matrix formulas and ambiguous merges are not silently
+converted. The editor exports a new XLSX copy and keeps the ODS source intact.
+Regression tests cover completed copies, cancellation, browser downloads and
+newer edits made while a copy picker is open. The exact supported import profile
+and limits are documented in the engine CHANGELOG.
 
 Selection screenshot tests retain the original macOS-authored masters and use
 separate Linux-host references. The Linux PNGs are exact captures from the

@@ -1,0 +1,17 @@
+{
+  "classification": "Development-only validation of a pending merge; not final source-bound acceptance.",
+  "working_directory": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+  "command": [
+    "flutter",
+    "--no-version-check",
+    "--suppress-analytics",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "json",
+    "test/office_document_service_test.dart"
+  ],
+  "environment_source": "/workspace/scratch/aed049b7e8bd/toolchains/env.sh",
+  "native_hooks": "enabled",
+  "started_utc": "2026-11-15T09:41:24.191513+00:00"
+}

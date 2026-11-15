@@ -478,8 +478,15 @@
     "Run final source-bound qualification on the reconciled source, saving each receipt immediately."
   ],
   "subsequent_local_fetch": {
-    "qualification_branch_head": "8a4cc8b6",
+    "qualification_branch_head": "8a4cc8b62c75461a05f58cc97386191cbca9f05c",
     "production_commit": "02d2142e1b962b0076470f4976742ec48f128e1f",
-    "note": "The fetch after the API snapshot also contains the incoming editor and engine receipts commit. Its new files will be retained as predecessor-source evidence."
+    "note": "The fetch after the API snapshot also contains the incoming editor and engine receipts commit. Its new files will be retained as predecessor-source evidence.",
+    "predecessor_source_results": {
+      "source": "02d2142e1b962b0076470f4976742ec48f128e1f",
+      "editor_passed": 73,
+      "engine_passed": 114,
+      "inputs_and_commit_stable": true,
+      "scope": "Retained predecessor-source receipts; new combined source will be qualified separately."
+    }
   }
 }
