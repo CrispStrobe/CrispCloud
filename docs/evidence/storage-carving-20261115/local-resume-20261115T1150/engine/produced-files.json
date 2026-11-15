@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "gate": "engine",
+  "tested_head": "292b3e23913beabf752b6452fa8c2f1ef0913f9b",
+  "source_resolution_sha256": "8f873269354847a2546537b99eaf5d8bdb8603068b6b86c0e3c71faa0ea2cd77",
+  "files": {
+    "sheet/edited.xlsx": {
+      "sha256": "aa4cbfbd9b453b6ed961c300be7efb33ff1436725009be583f7bc23c878f1446",
+      "size": 12102
+    },
+    "sheet/roundtrip-1.xlsx": {
+      "sha256": "e822fde7040d08231aba7e81247ebbc9bc3e60faf3c3882b533fa16092311780",
+      "size": 12100
+    },
+    "sheet/roundtrip-2.xlsx": {
+      "sha256": "81bb34bd75ba59bd0ed7c77b1be77455cd05be2dc1392e32bb8aa4156280ff2a",
+      "size": 12100
+    },
+    "sheet/roundtrip-3.xlsx": {
+      "sha256": "33af07269bdb80a33c8f8499d4a56f877d947960f14f1da77ce9aa7acfd25e46",
+      "size": 12100
+    },
+    "slide/edited.pptx": {
+      "sha256": "03fb28e765e33e90ab082018aad3cc5e3dd69dec2ddbe13e1f969c3f90ac5e4e",
+      "size": 55648
+    },
+    "slide/roundtrip-1.pptx": {
+      "sha256": "f035b9f91e693e17d8c9ce7b53dffc3140960b1fd74e3775bf023f69389d8bb2",
+      "size": 55648
+    },
+    "slide/roundtrip-2.pptx": {
+      "sha256": "0fe05052a1c3c0b90554df34f6062e399f49b9c7f2a732a5b1d7e07e0f4881d4",
+      "size": 55648
+    },
+    "slide/roundtrip-3.pptx": {
+      "sha256": "47e77ccb0fa4c46a6758b2b1fde9d16ab051931d3d2c480ad0e0716b8b1fe090",
+      "size": 55648
+    },
+    "word/edited.docx": {
+      "sha256": "de4e7d9dd83d4827678e38bdf6dad7227d9b28b3913a4e5349db0f0d993a99b4",
+      "size": 9233
+    },
+    "word/roundtrip-1.docx": {
+      "sha256": "ce09ace66f03b4ed0ebc662fdd11cd2ab323d2928709f022205efc60ec5dd7a6",
+      "size": 9304
+    },
+    "word/roundtrip-2.docx": {
+      "sha256": "b80528f2c28240aeda98de94d291f26e57a200001850084a38c7e1347cfdcaec",
+      "size": 9302
+    },
+    "word/roundtrip-3.docx": {
+      "sha256": "c854e429747c63882e361b6e8c25e2d4f3eb94f74f1c3ab8d89cbfc1a3d7c23f",
+      "size": 9303
+    }
+  },
+  "scope": "Fresh outputs were cleared before this passed generator gate and fingerprinted immediately after it."
+}
