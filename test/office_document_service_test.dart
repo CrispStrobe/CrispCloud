@@ -237,7 +237,8 @@ void odfTests() {
       'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
 
   test('ODS keeps typed values, repeats and the real sheet name', () async {
-    const xml = '''
+    const xml =
+        '''
 <office:document-content $namespaces>
   <office:body><office:spreadsheet>
     <table:table table:name="Data">
@@ -261,7 +262,10 @@ void odfTests() {
   </office:spreadsheet></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'data.ods');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'data.ods',
+    );
     expect(doc.kind, OfficeDocumentKind.spreadsheet);
     expect(doc.markdown, contains('## Data'));
     final rows = doc.csv!.split('\n').where((line) => line.isNotEmpty).toList();
@@ -272,7 +276,8 @@ void odfTests() {
   });
 
   test('ODS with a merged cell keeps following columns aligned', () async {
-    const xml = '''
+    const xml =
+        '''
 <office:document-content $namespaces>
   <office:body><office:spreadsheet>
     <table:table>
@@ -284,12 +289,131 @@ void odfTests() {
   </office:spreadsheet></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'merged.ods');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'merged.ods',
+    );
     expect(doc.csv!.split('\n').first, 'Wide,,7');
   });
 
+  test(
+    'ODS preserves internal blank runs and trims trailing padding',
+    () async {
+      const xml =
+          '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table table:name="Data">
+      <table:table-row>
+        <table:table-cell office:value-type="string"><text:p>Start</text:p></table:table-cell>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="2">
+        <table:table-cell/>
+      </table:table-row>
+      <table:table-row>
+        <table:table-cell office:value-type="float" office:value="42"/>
+        <table:table-cell table:formula="of:=[.A4]" office:value-type="float" office:value="42"/>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="1048570"/>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+      final doc = await parseOfficeDocument(
+        _zip({'content.xml': xml}),
+        'gaps.ods',
+      );
+      expect(doc.fallback, isNull);
+      expect(doc.csv!.split('\n'), ['Start', '', '', '42,42']);
+      expect(
+        doc.markdown,
+        contains(
+          '| Start |  |\n| --- | --- |\n'
+          '|  |  |\n|  |  |\n| 42 | 42 |',
+        ),
+      );
+    },
+  );
+
+  test('ODS CSV preserves leading blank rows and cell whitespace', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row table:number-rows-repeated="2"/>
+      <table:table-row>
+        <table:table-cell office:value-type="string" office:string-value="  First  "/>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'leading.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv, '\n\n  First  ');
+  });
+
+  test('ODS counts explicit and repeated covered cells only once', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row>
+        <table:table-cell table:number-columns-spanned="2"><text:p>Wide</text:p></table:table-cell>
+        <table:covered-table-cell/>
+        <table:table-cell office:value-type="float" office:value="7"/>
+      </table:table-row>
+      <table:table-row>
+        <table:table-cell table:number-columns-spanned="3"><text:p>Wider</text:p></table:table-cell>
+        <table:covered-table-cell table:number-columns-repeated="2"/>
+        <table:table-cell office:value-type="float" office:value="8"/>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'spans.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv!.split('\n'), ['Wide,,7', 'Wider,,,8']);
+  });
+
+  test('ODS empty padding still counts toward the logical row limit', () async {
+    const xml =
+        '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row>
+        <table:table-cell><text:p>Inside</text:p></table:table-cell>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="1000000"/>
+      <table:table-row>
+        <table:table-cell><text:p>Outside</text:p></table:table-cell>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'limit.ods',
+    );
+    expect(doc.fallback, isNull);
+    expect(doc.csv, 'Inside');
+    expect(doc.markdown, isNot(contains('Outside')));
+  });
+
   test('ODT renders lists and ODF table cells', () async {
-    const xml = '''
+    const xml =
+        '''
 <office:document-content $namespaces>
   <office:body><office:text>
     <text:h text:outline-level="1">Title</text:h>
@@ -306,7 +430,10 @@ void odfTests() {
   </office:text></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'notes.odt');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'notes.odt',
+    );
     expect(doc.markdown, contains('# Title'));
     expect(doc.markdown, contains('- One'));
     expect(doc.markdown, contains('- Two'));
@@ -359,7 +486,10 @@ void odtRichTests() {
   </office:text></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'rich.odt');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'rich.odt',
+    );
     expect(doc.markdown, contains('# Title'));
     expect(doc.markdown, contains('**bold**'));
     expect(doc.markdown, contains('*italic*'));
@@ -414,7 +544,10 @@ void odpTests() {
   </office:presentation></office:body>
 </office:document-content>
 ''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'deck.odp');
+    final doc = await parseOfficeDocument(
+      _zip({'content.xml': xml}),
+      'deck.odp',
+    );
     expect(doc.kind, OfficeDocumentKind.presentation);
     expect(doc.deck, isNotNull);
     expect(doc.deck!.widthEmu, 7200000);
