@@ -23,8 +23,8 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `1d9552697d2850cbc3b5a7f73daf44a442c4901b`
-on `codex/zotero-support-20261115`, including canonical main `c210315`,
+The app mirrors Quds `875064341656ad9e74daec64f8f8d7befdb48368`
+on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
 and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
 all 2,374 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
@@ -42,17 +42,24 @@ and [source-bound local validation](../docs/zotero-validation.md). This adds
 targeted Zotero qualification; earlier storage and spreadsheet results retain
 their original source identities.
 
+This checkpoint also brings in the latest Word content-control display imports
+and between/not-between spreadsheet conditions. The complete managed inventory
+was compared by Git blob, size and mode to its pinned canonical sources; the
+six changed managed files were freshly hashed. See the
+[integration receipt](../docs/validation/zotero-local-identity-20261115/recent-integration.json).
+No application test or build result is claimed for this source integration.
+
 The latest canonical checkpoint preserves internal repeated ODS blank rows,
 counts covered merge placeholders only once, and translates formula syntax
 without changing quoted literals or quoted sheet identifiers. Explicit cell, row
 default and column default styles retain their precedence; the document Normal
 style and default column/row geometry are applied when no explicit style exists.
-ODS pictures import as worksheet drawings; conditional formats (numeric, contains-text and duplicate) and list validations
+ODS pictures import as worksheet drawings; conditional formats (numeric, between, contains-text and duplicate) and list validations
 are imported; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
-elapsed time formats survive XLSX saves. The sheet/ODS development cohort is 493
-tests; the combined host qualification remains separately source-bound in the
-storage evidence.
+elapsed time formats survive XLSX saves. The previously recorded sheet/ODS
+development cohort is 494 tests; it was not rerun during this integration.
+The combined host qualification remains separately source-bound in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
 and Excel wrap-text support. Import preserves the correct wrap flag for each

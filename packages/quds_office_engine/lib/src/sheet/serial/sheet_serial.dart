@@ -1403,6 +1403,8 @@ class SheetSerializer {
               SmlConditionalKind.lessOrEqual => 'lessThanOrEqual',
               SmlConditionalKind.equal => 'equal',
               SmlConditionalKind.notEqual => 'notEqual',
+              SmlConditionalKind.between => 'between',
+              SmlConditionalKind.notBetween => 'notBetween',
               SmlConditionalKind.contains ||
               SmlConditionalKind.duplicate => throw StateError('handled above'),
             });
@@ -1411,11 +1413,17 @@ class SheetSerializer {
           w.writeAttribute('dxfId', '$dxfId');
         }
         if (rule.kind != SmlConditionalKind.contains &&
-            rule.kind != SmlConditionalKind.duplicate &&
-            rule.formula.isNotEmpty) {
-          w.writeStartElement('formula');
-          w.writeText(rule.formula);
-          w.writeEndElement();
+            rule.kind != SmlConditionalKind.duplicate) {
+          if (rule.formula.isNotEmpty) {
+            w.writeStartElement('formula');
+            w.writeText(rule.formula);
+            w.writeEndElement();
+          }
+          if (rule.formula2.isNotEmpty) {
+            w.writeStartElement('formula');
+            w.writeText(rule.formula2);
+            w.writeEndElement();
+          }
         }
         w.writeEndElement();
         w.writeEndElement();

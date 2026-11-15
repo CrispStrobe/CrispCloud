@@ -1,0 +1,1030 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "base_head": "0bab4f9aa2ba79d1ed13d2d773315a108c957181",
+  "branches": [
+    {
+      "name": "codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 57,
+        "merge_base": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "codex/terminal-screen-workspace",
+      "sha": "21b97a09fa792508677a827c5c330292ec0a15e2",
+      "comparison_to_start": {
+        "status": "diverged",
+        "ahead_by": 2,
+        "behind_by": 5,
+        "merge_base": "b0b3334b2160ee7d43378d730803f32781a53968"
+      },
+      "resolution": "merged-by-7d4d564030d53cbc3a0df8b53950656c0bef9a25"
+    },
+    {
+      "name": "codex/zotero-support-20261115",
+      "sha": "0bab4f9aa2ba79d1ed13d2d773315a108c957181",
+      "comparison_to_start": {
+        "status": "identical"
+      },
+      "resolution": "starting-head"
+    },
+    {
+      "name": "docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "comparison_to_start": {
+        "status": "diverged",
+        "ahead_by": 2,
+        "behind_by": 34,
+        "merge_base": "50b459323fe798c3638b8b8ce499ea91b89f98c0"
+      },
+      "resolution": "tree-identical-to-main"
+    },
+    {
+      "name": "docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 36,
+        "merge_base": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 39,
+        "merge_base": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 42,
+        "merge_base": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 302,
+        "merge_base": "128f55295107e3ada605b52d160165e03f726cb4"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 34,
+        "merge_base": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 70,
+        "merge_base": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 43,
+        "merge_base": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 63,
+        "merge_base": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 301,
+        "merge_base": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 68,
+        "merge_base": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 300,
+        "merge_base": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "comparison_to_start": {
+        "status": "diverged",
+        "ahead_by": 1,
+        "behind_by": 34,
+        "merge_base": "50b459323fe798c3638b8b8ce499ea91b89f98c0"
+      },
+      "resolution": "tree-identical-to-main-PR150"
+    },
+    {
+      "name": "fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 38,
+        "merge_base": "b9b7932eca6213973803b5bb227464cccd3051d6"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 40,
+        "merge_base": "24ac26de023313dba726f8cdaabd16179c49da01"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 37,
+        "merge_base": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 63,
+        "merge_base": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 41,
+        "merge_base": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 64,
+        "merge_base": "29a2bb5158a316dcde5da776172e09027e04f78d"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 65,
+        "merge_base": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 305,
+        "merge_base": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 35,
+        "merge_base": "ee74601e71441fcac2b6defebff33ca04f538d12"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 41,
+        "merge_base": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 157,
+        "merge_base": "5018aebb709b35f1c4d730c06e0f91187727751c"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "comparison_to_start": {
+        "status": "behind",
+        "ahead_by": 0,
+        "behind_by": 158,
+        "merge_base": "10891b06a6da9f2502960cdbfe34b30eed271665"
+      },
+      "resolution": "already-ancestor"
+    },
+    {
+      "name": "main",
+      "sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+      "comparison_to_start": {
+        "status": "diverged",
+        "ahead_by": 2,
+        "behind_by": 34,
+        "merge_base": "50b459323fe798c3638b8b8ce499ea91b89f98c0"
+      },
+      "resolution": "merged-as-parent"
+    }
+  ],
+  "prs": [
+    {
+      "number": 152,
+      "title": "Vendor the trailing content-control section break fix",
+      "head": "integrate/sdt-section-break-20261115",
+      "head_sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 151,
+      "title": "Record between conditions and current Quds pin",
+      "head": "docs/conditional-between",
+      "head_sha": "073713474ea62525d9f5832da918407de333cd03",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 150,
+      "title": "Vendor between conditional rules",
+      "head": "fix/conditional-between-vendor",
+      "head_sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 149,
+      "title": "Add Zotero online and desktop libraries to the Word editor",
+      "head": "codex/zotero-support-20261115",
+      "head_sha": "0bab4f9aa2ba79d1ed13d2d773315a108c957181",
+      "state": "open",
+      "merged": false
+    },
+    {
+      "number": 148,
+      "title": "Document ODS list validations and current pin",
+      "head": "docs/ods-validations",
+      "head_sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 147,
+      "title": "Vendor ODS list validations",
+      "head": "fix/ods-validations-vendor",
+      "head_sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 146,
+      "title": "Document complete conditional format subset",
+      "head": "docs/conditional-complete",
+      "head_sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 145,
+      "title": "Vendor contains-text and duplicate conditional rules",
+      "head": "fix/conditional-text-vendor",
+      "head_sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 144,
+      "title": "Vendor conditional dxf styles",
+      "head": "fix/conditional-dxf-vendor",
+      "head_sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 143,
+      "title": "Vendor the UTF-16 custom XML bibliography fix",
+      "head": "integrate/utf16-custom-xml-20261115",
+      "head_sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "state": "closed",
+      "merged": false
+    },
+    {
+      "number": 142,
+      "title": "Document numeric ODS conditional formats",
+      "head": "docs/conditional-formats",
+      "head_sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 141,
+      "title": "Vendor numeric conditional comparators",
+      "head": "fix/conditional-operators-vendor",
+      "head_sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 140,
+      "title": "Extend terminal workspace with screen, tabs, split views, search and SSH profiles",
+      "head": "codex/terminal-screen-workspace",
+      "head_sha": "21b97a09fa792508677a827c5c330292ec0a15e2",
+      "state": "open",
+      "merged": false
+    },
+    {
+      "number": 139,
+      "title": "Vendor ODS conditional formats",
+      "head": "fix/ods-conditional-vendor",
+      "head_sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 138,
+      "title": "Record ODS hidden-state and current Quds pin",
+      "head": "docs/ods-hidden-state",
+      "head_sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 137,
+      "title": "Hide hidden worksheets in the worksheet selector",
+      "head": "feat/hidden-sheets-ui",
+      "head_sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 136,
+      "title": "Extend SSH terminals with key authentication, tmux sessions and reconnect",
+      "head": "codex/ssh-terminal-tmux",
+      "head_sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 135,
+      "title": "Show ODT header and footer text",
+      "head": "feat/odt-headers",
+      "head_sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 134,
+      "title": "Vendor ODS hidden row and column state",
+      "head": "fix/hidden-state-vendor",
+      "head_sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 133,
+      "title": "Vendor ODS default style and geometry fixes",
+      "head": "fix/ods-default-geometry-vendor",
+      "head_sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 132,
+      "title": "Vendor ODS default cell styles",
+      "head": "fix/ods-default-style-vendor",
+      "head_sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 131,
+      "title": "Read ODT named styles from styles.xml",
+      "head": "feat/odt-styles",
+      "head_sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 130,
+      "title": "Record the verified current Office source pin",
+      "head": "docs/office-pin-20261115",
+      "head_sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 129,
+      "title": "Keep text-box labels in ODT previews",
+      "head": "feat/odt-textboxes",
+      "head_sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 128,
+      "title": "Render bounded ODT pictures inline",
+      "head": "feat/odt-images",
+      "head_sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 127,
+      "title": "Document ODS pictures and exact host goldens",
+      "head": "docs/ods-pictures",
+      "head_sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 126,
+      "title": "Vendor ODS picture import",
+      "head": "fix/ods-images-vendor",
+      "head_sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 125,
+      "title": "Open ODS files in the Quds grid with a typed fallback",
+      "head": "integrate/ods-grid-20261115",
+      "head_sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 124,
+      "title": "Edit macro-enabled and template spreadsheets",
+      "head": "feat/xlsm-edit",
+      "head_sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 123,
+      "title": "Sync Quds 6d7c696 and cover the new underline styles",
+      "head": "integrate/quds-6d7c696-20261115",
+      "head_sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 122,
+      "title": "Show ODS in the Quds grid with a typed table fallback",
+      "head": "fix/ods-grid-main",
+      "head_sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 121,
+      "title": "Extend bundled VeraCrypt and TrueCrypt browsing with PIM, keyfiles and native Argon2id",
+      "head": "feature/veracrypt-compatibility-20261115",
+      "head_sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 120,
+      "title": "Vendor ODS date styles and comments",
+      "head": "fix/ods-date-styles",
+      "head_sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 119,
+      "title": "Vendor ODS style/date fixes and live ODF corpus coverage",
+      "head": "integrate/ods-style-20261115",
+      "head_sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 118,
+      "title": "Preserve ODS cell positions and cover ODS copy saves",
+      "head": "integrate/ods-fixes-20261115",
+      "head_sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 117,
+      "title": "Add ODF preview, ODS editing and rich ODT/ODP rendering",
+      "head": "integrate/odf-integration-20261115",
+      "head_sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 116,
+      "title": "Preview legacy .xls through Quds, edit ODS, enrich ODT/ODP",
+      "head": "fix/odf-final",
+      "head_sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "state": "closed",
+      "merged": false
+    },
+    {
+      "number": 115,
+      "title": "Vendor host-specific selection golden references",
+      "head": "integrate/office-goldens-20261115",
+      "head_sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 114,
+      "title": "Preview legacy .xls through Quds and enrich ODF extraction",
+      "head": "integrate/legacy-xls-preview-20261115",
+      "head_sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "state": "closed",
+      "merged": true
+    },
+    {
+      "number": 113,
+      "title": "Integrate the new document workspace and spreadsheet wrap-text",
+      "head": "integrate/consistency-20261115",
+      "head_sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "state": "closed",
+      "merged": false
+    },
+    {
+      "number": 112,
+      "title": "Vendor the current Quds Word fixes, including inline pictures",
+      "head": "integrate/word-inline-pictures-20261115",
+      "head_sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "state": "closed",
+      "merged": true
+    }
+  ],
+  "main": {
+    "sha": "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+    "new_prs": [
+      150,
+      151
+    ],
+    "equivalent_trees": [
+      [
+        "7d462198e66aac7f0c8be9d2e6719e1c33a9f98a",
+        "073713474ea62525d9f5832da918407de333cd03",
+        "19aa47714e57658028ce19c336b80da2fa05e967"
+      ],
+      [
+        "41cfd71a8f0bcc07f98dfc43f967cf7136088219",
+        "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+        "149261a6dcddf061726466e1d98e47b8a11f2c30"
+      ]
+    ],
+    "changed_vendor_files_exactly_match_canonical_target": true,
+    "integration_parent": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+    "latest_prs": [
+      150,
+      151,
+      152
+    ],
+    "latest_main_tree": "e08c219029da847ab3322b9bf0ecf7b335968d9d",
+    "additional_branch": {
+      "name": "integrate/sdt-section-break-20261115",
+      "head": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "resolution": "ancestor-of-main-and-tree-identical",
+      "tree": "e08c219029da847ab3322b9bf0ecf7b335968d9d"
+    }
+  },
+  "terminal": {
+    "sha": "21b97a09fa792508677a827c5c330292ec0a15e2",
+    "merge_base": "b0b3334b2160ee7d43378d730803f32781a53968",
+    "paths": [
+      {
+        "path": "docs/validation/terminal-20261115/frontend_without_sources.dart",
+        "sha": "f1fb6d2984c5c291b56933ba4e8b0102d4f194e9",
+        "status": "added"
+      },
+      {
+        "path": "docs/validation/terminal-20261115/runtime-attempts.json",
+        "sha": "ae825c1b4f5023077cdad6f1cf34ffcafa0f3acb",
+        "status": "added"
+      },
+      {
+        "path": "docs/validation/terminal-20261115/runtime-attempts.md",
+        "sha": "3d47d9e27d80c36493859eb8f9e24604598e8eba",
+        "status": "added"
+      },
+      {
+        "path": "lib/l10n/ssh_jump_strings.dart",
+        "sha": "f335effbde38cd2e88dc89e9fd641a4ba0deb603",
+        "status": "added"
+      },
+      {
+        "path": "lib/l10n/terminal_arrangement_strings.dart",
+        "sha": "6ece21663833f87f8c80ea2d7b6b0bb4f6782661",
+        "status": "added"
+      },
+      {
+        "path": "lib/l10n/terminal_broadcast_strings.dart",
+        "sha": "edef7d9331ddb873bf5ae21685406b46a029f15c",
+        "status": "added"
+      },
+      {
+        "path": "lib/l10n/terminal_shell_strings.dart",
+        "sha": "0b163000235a778bc84fd078a809329f62a15ea7",
+        "status": "added"
+      },
+      {
+        "path": "lib/models/ssh_jump_host.dart",
+        "sha": "d264c4631a05db2c981d8d5a5e63c0b53088a235",
+        "status": "added"
+      },
+      {
+        "path": "lib/models/ssh_terminal_authentication.dart",
+        "sha": "0056133672c0be2194f399bdc0cc27b9b6a52252",
+        "status": "added"
+      },
+      {
+        "path": "lib/models/ssh_terminal_config.dart",
+        "sha": "52ec68844ffd186117650982b53050efb9f3d431",
+        "status": "modified"
+      },
+      {
+        "path": "lib/models/ssh_terminal_profile.dart",
+        "sha": "623c37eae8cf8c559710538a9ea3562e44f8554e",
+        "status": "modified"
+      },
+      {
+        "path": "lib/models/terminal_arrangement.dart",
+        "sha": "6568268c40a84d3289497420675f5fc103c2e675",
+        "status": "added"
+      },
+      {
+        "path": "lib/providers/ssh_terminal_provider.dart",
+        "sha": "3e8254bfae7bc9156c44228d4becb0d8e1845a71",
+        "status": "modified"
+      },
+      {
+        "path": "lib/providers/terminal_arrangements_provider.dart",
+        "sha": "7344a1c8775e4f3786494b72cfc2d046213b2300",
+        "status": "added"
+      },
+      {
+        "path": "lib/services/ssh_terminal_profiles.dart",
+        "sha": "76eafafbb5fefaa02c7c1a7015388ab3f9936ffc",
+        "status": "modified"
+      },
+      {
+        "path": "lib/services/ssh_terminal_service.dart",
+        "sha": "9705fa7779cc29d1256be985b48524c5e6f310ac",
+        "status": "modified"
+      },
+      {
+        "path": "lib/services/terminal_arrangements.dart",
+        "sha": "7fac33245d6ab1ef247cb22f049856f0904233a6",
+        "status": "added"
+      },
+      {
+        "path": "lib/services/terminal_broadcast.dart",
+        "sha": "e38a85d37023b9c93f6c8891fec0e424ba9dd499",
+        "status": "added"
+      },
+      {
+        "path": "lib/services/terminal_session.dart",
+        "sha": "d2593aa9c619958991fc7f5beca5fd91d843591b",
+        "status": "modified"
+      },
+      {
+        "path": "lib/services/terminal_shell_integration.dart",
+        "sha": "acf0dd7d70794d4897f5ba546dd1c0730af9e2ea",
+        "status": "modified"
+      },
+      {
+        "path": "lib/services/terminal_user_input.dart",
+        "sha": "839630e69cab39a6583af749cbe3813ddb4fff50",
+        "status": "added"
+      },
+      {
+        "path": "lib/widgets/ssh_terminal_connect_dialog.dart",
+        "sha": "e81738a6beca77e860599b319cd4b034bac79daf",
+        "status": "modified"
+      },
+      {
+        "path": "lib/widgets/terminal_arrangements_dialog.dart",
+        "sha": "780017bc197ad95b6cf359d14b7f2e293339ebf9",
+        "status": "added"
+      },
+      {
+        "path": "lib/widgets/terminal_broadcast_dialog.dart",
+        "sha": "6d61f9a2bf7fe94b4e36c7be9fac0b808eb18335",
+        "status": "added"
+      },
+      {
+        "path": "lib/widgets/terminal_command_history_dialog.dart",
+        "sha": "8f43f0a5056a1d27ece8322eb05ffd8e918fd15a",
+        "status": "added"
+      },
+      {
+        "path": "lib/widgets/terminal_panel.dart",
+        "sha": "4f31435b70b7ea08c0eeda60b11b98dd8d039190",
+        "status": "modified"
+      },
+      {
+        "path": "lib/widgets/terminal_tabs.dart",
+        "sha": "efcd10bff545226564b38f57c3d19c07dccf41ce",
+        "status": "modified"
+      },
+      {
+        "path": "test/ssh_jump_dialog_test.dart",
+        "sha": "b3d1da95f5b503a47fe2c537b5058a03ab4dc26e",
+        "status": "added"
+      },
+      {
+        "path": "test/ssh_jump_host_test.dart",
+        "sha": "40e187f1b846e4c165834244160726ff4b1315ea",
+        "status": "added"
+      },
+      {
+        "path": "test/ssh_jump_transport_test.dart",
+        "sha": "da75d0d32d00478ef69e3d8c0ab69c3f7896b844",
+        "status": "added"
+      },
+      {
+        "path": "test/ssh_terminal_profiles_test.dart",
+        "sha": "ead2f50748c46643c2be78a501dd06639b7d1efd",
+        "status": "modified"
+      },
+      {
+        "path": "test/ssh_terminal_reconnect_test.dart",
+        "sha": "00d6de65e36a2f82b01fd02e0ecbbb6dbd49f0c1",
+        "status": "modified"
+      },
+      {
+        "path": "test/terminal_arrangements_dialog_test.dart",
+        "sha": "127e083cca50a86436e8b74706ff6f314e7d5105",
+        "status": "added"
+      },
+      {
+        "path": "test/terminal_arrangements_test.dart",
+        "sha": "ab7ee8686dbfc65b9d49b7d3eeeab1e202e1d95a",
+        "status": "added"
+      },
+      {
+        "path": "test/terminal_arrangements_widget_test.dart",
+        "sha": "4ab3e9050313b9be553548c40a26774812a32ddf",
+        "status": "added"
+      },
+      {
+        "path": "test/terminal_broadcast_dialog_test.dart",
+        "sha": "267b75b6f57ee5c01c0677d103307d329184b4cb",
+        "status": "added"
+      },
+      {
+        "path": "test/terminal_broadcast_test.dart",
+        "sha": "441378f1178d36840a025528536d7e3bd281e9d8",
+        "status": "added"
+      }
+    ],
+    "disjoint_from_zotero_head": true,
+    "merge_commit": "7d4d564030d53cbc3a0df8b53950656c0bef9a25",
+    "merge_tree": "277930c2b23a7f06396b700d2a65ebfca55a0197",
+    "exact_blob_count": 37,
+    "untouched_roots_verified": [
+      "packages",
+      "tool"
+    ],
+    "followup": {
+      "head": "19eb5369d02520e76bf3026ad881a60a46350cee",
+      "merge_base": "21b97a09fa792508677a827c5c330292ec0a15e2",
+      "integration_commit": "7bb19fb15f51891ce90593f0b8cd65039bfd4abc",
+      "integration_tree": "4ac10bc11910ea34f957425427fcccf8b63f1b89",
+      "exact_paths": 9,
+      "disjoint_from_zotero": true
+    }
+  },
+  "checks": {
+    "actions_waited": false,
+    "tests_run": false
+  },
+  "checked_at_utc": "2026-11-15T20:39:11.396Z",
+  "branch_count": 29,
+  "pagination": {
+    "endpoint": "branches?per_page=100",
+    "count": 29,
+    "complete": true
+  },
+  "quds_pin": "875064341656ad9e74daec64f8f8d7befdb48368",
+  "final_snapshot": {
+    "at_utc": "2026-11-15T20:40:43.125Z",
+    "branches": [
+      {
+        "name": "codex/ssh-terminal-tmux",
+        "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808"
+      },
+      {
+        "name": "codex/terminal-screen-workspace",
+        "sha": "19eb5369d02520e76bf3026ad881a60a46350cee"
+      },
+      {
+        "name": "codex/zotero-support-20261115",
+        "sha": "7bb19fb15f51891ce90593f0b8cd65039bfd4abc"
+      },
+      {
+        "name": "docs/conditional-between",
+        "sha": "073713474ea62525d9f5832da918407de333cd03"
+      },
+      {
+        "name": "docs/conditional-complete",
+        "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+      },
+      {
+        "name": "docs/conditional-formats",
+        "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+      },
+      {
+        "name": "docs/ods-hidden-state",
+        "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+      },
+      {
+        "name": "docs/ods-pictures",
+        "sha": "128f55295107e3ada605b52d160165e03f726cb4"
+      },
+      {
+        "name": "docs/ods-validations",
+        "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+      },
+      {
+        "name": "docs/office-pin-20261115",
+        "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1"
+      },
+      {
+        "name": "feat/hidden-sheets-ui",
+        "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+      },
+      {
+        "name": "feat/odt-headers",
+        "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d"
+      },
+      {
+        "name": "feat/odt-images",
+        "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+      },
+      {
+        "name": "feat/odt-styles",
+        "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+      },
+      {
+        "name": "feat/odt-textboxes",
+        "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+      },
+      {
+        "name": "fix/conditional-between-vendor",
+        "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b"
+      },
+      {
+        "name": "fix/conditional-dxf-vendor",
+        "sha": "b9b7932eca6213973803b5bb227464cccd3051d6"
+      },
+      {
+        "name": "fix/conditional-operators-vendor",
+        "sha": "24ac26de023313dba726f8cdaabd16179c49da01"
+      },
+      {
+        "name": "fix/conditional-text-vendor",
+        "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+      },
+      {
+        "name": "fix/hidden-state-vendor",
+        "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+      },
+      {
+        "name": "fix/ods-conditional-vendor",
+        "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+      },
+      {
+        "name": "fix/ods-default-geometry-vendor",
+        "sha": "29a2bb5158a316dcde5da776172e09027e04f78d"
+      },
+      {
+        "name": "fix/ods-default-style-vendor",
+        "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+      },
+      {
+        "name": "fix/ods-images-vendor",
+        "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+      },
+      {
+        "name": "fix/ods-validations-vendor",
+        "sha": "ee74601e71441fcac2b6defebff33ca04f538d12"
+      },
+      {
+        "name": "integrate/sdt-section-break-20261115",
+        "sha": "012314d440c49bc73b6726796fd9930eee6f1830"
+      },
+      {
+        "name": "integrate/utf16-custom-xml-20261115",
+        "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+      },
+      {
+        "name": "integration/storage-carving-20261115",
+        "sha": "5018aebb709b35f1c4d730c06e0f91187727751c"
+      },
+      {
+        "name": "integration/storage-carving-local-20261115124645",
+        "sha": "10891b06a6da9f2502960cdbfe34b30eed271665"
+      },
+      {
+        "name": "main",
+        "sha": "ecb2198900bbcb48d944bf791b95ea3d5c854589"
+      }
+    ],
+    "count": 30
+  }
+}

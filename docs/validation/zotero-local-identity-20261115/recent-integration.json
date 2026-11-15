@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "kind": "immutable-source-integration",
+  "created_at_utc": "2026-11-15T20:40:43.125Z",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch": "codex/zotero-support-20261115",
+  "parents": {
+    "first": "7bb19fb15f51891ce90593f0b8cd65039bfd4abc",
+    "second": "ecb2198900bbcb48d944bf791b95ea3d5c854589"
+  },
+  "quds": {
+    "prior_commit": "244474c688c3a49a6fbcd98acc501a06794c1370",
+    "commit": "875064341656ad9e74daec64f8f8d7befdb48368",
+    "tree": "675a1cf99a676b145c1dabc08408e8fc7561528b",
+    "canonical_main": "b2d5331f49001af189118d90af208cbc1ee2ae67",
+    "included_prs": [
+      41,
+      42
+    ]
+  },
+  "manifest": {
+    "path": "tool/office_fidelity_manifest.json",
+    "prior_git_blob": "444be06a93c34a465c5310e5b406b2fb491c575f",
+    "git_blob": "becc67cc41e771b3de46e5b7d0b456b6660fbef6",
+    "sha256": "0de2a265f27f3986bba2eb5eb2ccf4734dd4bf469b9fc58394f99353a2d90df0",
+    "managed_file_count": 2374,
+    "inventory_unchanged": true,
+    "legacy_declaration_unchanged": true
+  },
+  "verification": {
+    "method": "Read immutable Git trees for the host, prior and new Quds pins, and the standalone parser pin. Compare all managed Git blob IDs, regular-file types, modes and byte lengths. Reuse the prior completed SHA256 verification only for identical immutable blobs/modes/sizes; freshly fetch, Git-SHA1-check and SHA256-hash the six changed managed source files.",
+    "prior_receipt": {
+      "commit": "0bab4f9aa2ba79d1ed13d2d773315a108c957181",
+      "path": "docs/validation/zotero-desktop-20261115/final-integration.json",
+      "manifest_git_blob": "444be06a93c34a465c5310e5b406b2fb491c575f"
+    },
+    "old_quds_files_matched": 517,
+    "quds_unchanged_files": 511,
+    "legacy_files_matched": 1857,
+    "unchanged_managed_blobs_modes_sizes": 2368,
+    "freshly_hashed_managed_files": 6,
+    "total_managed_files_covered": 2374,
+    "all_trees_nontruncated": true,
+    "source_normalizations": [],
+    "mismatches": [],
+    "hash_implementation": "Plain JavaScript SHA256 and SHA1, checked against empty string, abc, standard 56-byte multiblock vectors, and Git empty blob. Every fetched source was additionally checked against GitHub's canonical SHA1 blob ID.",
+    "official_python_guard_executed": false
+  },
+  "changed_managed_files": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "prior_git_blob": "052c7824284175857e9f5679f65596c753c0cfed",
+      "git_blob": "f2b821cebe3a5bc61f9cb06234d97e669fde11d2",
+      "sha256": "ea6c3c7c26cd6a8fb6805557204878b4e7a285d866ba42ba0fb85be019724213",
+      "size": 55572,
+      "mode": "100644",
+      "type": "blob",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+      "prior_git_blob": "9210d82fdc2da524803053d41ee7268e76746aff",
+      "git_blob": "a22fd8bf2135b0f52c1b65aa6c3f0587fe35a5bb",
+      "sha256": "108e2fda4279f777bf9a45adb2cdc7aca25795fe4349caf5e41106dc7bfec144",
+      "size": 20131,
+      "mode": "100644",
+      "type": "blob",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "prior_git_blob": "20092e140aed5394ceb9daa69532838e8f4bc648",
+      "git_blob": "609dcfdeffea37fd27fc87db37b4bda8274ebdb7",
+      "sha256": "24b16b2e99ec3e35bdb2f7128a3c823cafd96874e5b95f6c4a75f873e1d47967",
+      "size": 57207,
+      "mode": "100644",
+      "type": "blob",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+      "prior_git_blob": "30bf7c92c4d69412128afc62c3f865957f87dee8",
+      "git_blob": "8f88e522f7610b81f0080872b7e96feec268a261",
+      "sha256": "e75961dc61c0a68c90f3692b54e65ceccba871df9eb3f85cae36554a6b33a55c",
+      "size": 132120,
+      "mode": "100644",
+      "type": "blob",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "prior_git_blob": "de3f82eb66047a2b15d35a3b52c823eac14fb72b",
+      "git_blob": "a134b1ea5abcbce12f51b1a5cd0748283e598a1e",
+      "sha256": "622c8ef133a45e50dd30d5bb72f5ff82caab55a3897f2a736c151516c8d75b11",
+      "size": 61514,
+      "mode": "100644",
+      "type": "blob",
+      "matches_canonical_target": true
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_content_control_fidelity_test.dart",
+      "prior_git_blob": "bde2d5bc84c538b6e7e694fae7d01f55c9a8b56d",
+      "git_blob": "313cc026149ba760f360f1ee95408a4e740c4251",
+      "sha256": "79e2e27499a45c4f3b8b70c2ac6c80653233114b9ed42d138e3f40f21df72f5e",
+      "size": 35409,
+      "mode": "100644",
+      "type": "blob",
+      "matches_canonical_target": true
+    }
+  ],
+  "legacy": {
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "mirror_tree": "0ec28cf619259fd0185ed60c45cd7632cae879be",
+    "upstream_metadata_matches": true,
+    "pubspec_matches": true
+  },
+  "main": {
+    "commit": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+    "prs": [
+      150,
+      151,
+      152
+    ],
+    "four_vendor_files_match_target_blobs": true,
+    "documentation_between_conditions_preserved": true,
+    "canonical_main_word_blob": "80f958148965bdd967e1a353e2594c960d8b47d6",
+    "merged_word_blob": "8f88e522f7610b81f0080872b7e96feec268a261",
+    "canonical_merge_preserves_zotero_changes": true,
+    "stray_documentation_conflict_marker_removed": true
+  },
+  "terminal": {
+    "integration_commit": "7d4d564030d53cbc3a0df8b53950656c0bef9a25",
+    "head": "19eb5369d02520e76bf3026ad881a60a46350cee",
+    "paths_merged": 37,
+    "exact_blobs_verified": true,
+    "untouched_by_this_checkpoint": true,
+    "followup_integration_commit": "7bb19fb15f51891ce90593f0b8cd65039bfd4abc",
+    "followup_paths_merged": 9
+  },
+  "validation": {
+    "runtime_tests_run": 0,
+    "flutter_build_run": false,
+    "dart_analysis_run": false,
+    "github_actions_queried_or_awaited": false,
+    "limitation": "No usable command execution environment was available. These are source and hash comparisons, not compiled or runtime validation."
+  },
+  "snapshot": {
+    "at_utc": "2026-11-15T20:40:43.125Z",
+    "branches": 30,
+    "main": "ecb2198900bbcb48d944bf791b95ea3d5c854589",
+    "terminal": "19eb5369d02520e76bf3026ad881a60a46350cee"
+  }
+}
