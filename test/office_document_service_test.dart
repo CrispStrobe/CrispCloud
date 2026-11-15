@@ -19,10 +19,23 @@ Uint8List _zip(Map<String, String> files) {
   return Uint8List.fromList(ZipEncoder().encode(archive));
 }
 
+Uint8List _zipBytes(Map<String, List<int>> files) {
+  final archive = Archive();
+  for (final entry in files.entries) {
+    archive.addFile(ArchiveFile.bytes(entry.key, entry.value));
+  }
+  return Uint8List.fromList(ZipEncoder().encode(archive));
+}
+
+final _png = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+);
+
 void main() {
   odfTests();
   odtRichTests();
   odpTests();
+  imageTests();
   test('DOCX produces Markdown with headings, bold runs and tables', () async {
     const xml = '''
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -315,91 +328,6 @@ void odfTests() {
   });
 }
 
-void odfTests() {
-  const namespaces =
-      'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
-      'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
-      'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
-
-  test('ODS keeps typed values, repeats and the real sheet name', () async {
-    const xml = '''
-<office:document-content $namespaces>
-  <office:body><office:spreadsheet>
-    <table:table table:name="Data">
-      <table:table-row>
-        <table:table-cell office:value-type="string"><text:p>Name</text:p></table:table-cell>
-        <table:table-cell office:value-type="string"><text:p>Qty</text:p></table:table-cell>
-        <table:table-cell office:value-type="string"><text:p>Flag</text:p></table:table-cell>
-      </table:table-row>
-      <table:table-row>
-        <table:table-cell office:value-type="string"><text:p>A</text:p></table:table-cell>
-        <table:table-cell office:value-type="float" office:value="2"><text:p>2</text:p></table:table-cell>
-        <table:table-cell office:value-type="boolean" office:boolean-value="true"/>
-      </table:table-row>
-      <table:table-row table:number-rows-repeated="2">
-        <table:table-cell office:value-type="string"><text:p>B</text:p></table:table-cell>
-        <table:table-cell office:value-type="currency" office:value="3.5"/>
-        <table:table-cell table:number-columns-repeated="2"/>
-      </table:table-row>
-      <table:table-row table:number-rows-repeated="1048570"/>
-    </table:table>
-  </office:spreadsheet></office:body>
-</office:document-content>
-''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'data.ods');
-    expect(doc.kind, OfficeDocumentKind.spreadsheet);
-    expect(doc.markdown, contains('## Data'));
-    final rows = doc.csv!.split('\n').where((line) => line.isNotEmpty).toList();
-    expect(rows.first, 'Name,Qty,Flag');
-    expect(rows, contains('A,2,TRUE'));
-    expect(rows.where((row) => row.startsWith('B,3.5')), hasLength(2));
-    expect(rows.length, lessThan(10));
-  });
-
-  test('ODS with a merged cell keeps following columns aligned', () async {
-    const xml = '''
-<office:document-content $namespaces>
-  <office:body><office:spreadsheet>
-    <table:table>
-      <table:table-row>
-        <table:table-cell table:number-columns-spanned="2"><text:p>Wide</text:p></table:table-cell>
-        <table:table-cell office:value-type="float" office:value="7"/>
-      </table:table-row>
-    </table:table>
-  </office:spreadsheet></office:body>
-</office:document-content>
-''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'merged.ods');
-    expect(doc.csv!.split('\n').first, 'Wide,,7');
-  });
-
-  test('ODT renders lists and ODF table cells', () async {
-    const xml = '''
-<office:document-content $namespaces>
-  <office:body><office:text>
-    <text:h text:outline-level="1">Title</text:h>
-    <text:list>
-      <text:list-item><text:p>One</text:p></text:list-item>
-      <text:list-item><text:p>Two</text:p></text:list-item>
-    </text:list>
-    <table:table>
-      <table:table-row>
-        <table:table-cell><text:p>Alpha</text:p></table:table-cell>
-        <table:table-cell table:number-columns-repeated="2"><text:p>x</text:p></table:table-cell>
-      </table:table-row>
-    </table:table>
-  </office:text></office:body>
-</office:document-content>
-''';
-    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'notes.odt');
-    expect(doc.markdown, contains('# Title'));
-    expect(doc.markdown, contains('- One'));
-    expect(doc.markdown, contains('- Two'));
-    expect(doc.markdown, contains('Alpha'));
-    expect(doc.markdown, contains('| Alpha | x | x |'));
-  });
-}
-
 void odtRichTests() {
   test('ODT renders inline styles, links, notes and ordered lists', () async {
     const xml = '''
@@ -515,5 +443,58 @@ void odpTests() {
     expect(shape.textColorHex, '112233');
     expect(shape.fillColorHex, 'FFEEAA');
     expect(doc.markdown, contains('*Notes: Speaker note*'));
+  });
+}
+
+
+void imageTests() {
+  const namespaces =
+      'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+      'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" '
+      'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" '
+      'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+      'xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" '
+      'xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" '
+      'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" '
+      'xmlns:xlink="http://www.w3.org/1999/xlink"';
+
+  test('ODP loads framed images from the package', () async {
+    const xml = '''
+<office:document-content $namespaces>
+  <office:body><office:presentation>
+    <draw:page draw:name="Slide1">
+      <draw:frame svg:x="1cm" svg:y="1cm" svg:width="3cm" svg:height="3cm">
+        <draw:image xlink:href="Pictures/p.png" xlink:type="simple"/>
+      </draw:frame>
+    </draw:page>
+  </office:presentation></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({'content.xml': utf8.encode(xml), 'Pictures/p.png': _png}),
+      'image.odp',
+    );
+    final shape = doc.deck!.slides.single.shapes.single;
+    expect(shape.image, isNotNull);
+    expect(shape.image!.length, _png.length);
+  });
+
+  test('ODT keeps a bounded image marker', () async {
+    const xml = '''
+<office:document-content $namespaces>
+  <office:body><office:text>
+    <text:p>Before <draw:frame draw:name="Picture 1">
+      <draw:image xlink:href="Pictures/p.png" xlink:type="simple"/>
+    </draw:frame> after</text:p>
+  </office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(
+      _zipBytes({'content.xml': utf8.encode(xml), 'Pictures/p.png': _png}),
+      'image.odt',
+    );
+    expect(doc.markdown, contains('Before'));
+    expect(doc.markdown, contains('*[Image: Picture 1]*'));
+    expect(doc.markdown, contains('after'));
   });
 }
