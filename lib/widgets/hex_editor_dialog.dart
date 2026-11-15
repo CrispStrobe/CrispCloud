@@ -1,3 +1,6 @@
+import '../services/document_workspace_session.dart';
+import '../services/document_activity.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -48,14 +51,17 @@ class HexFileEditorPage extends StatefulWidget {
     super.key,
     required this.file,
     required this.backend,
+    this.activity,
   });
   final FileItem file;
   final FileOperationBackend backend;
+  final DocumentActivity? activity;
   @override
   State<HexFileEditorPage> createState() => _HexFileEditorPageState();
 }
 
 class _HexFileEditorPageState extends State<HexFileEditorPage> {
+  DocumentWorkspaceSession? _workspace;
   HexFileSession? _session;
   HexEditorController? _controller;
   bool _loading = true, _saving = false, _cancelled = false, _disposed = false;
@@ -71,11 +77,12 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
   }
 
   void _progressChanged(int done, int? total) {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _progress = done;
         _total = total;
       });
+    }
   }
 
   Future<void> _open() async {
@@ -90,6 +97,8 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         await session.close();
         return;
       }
+      widget.activity?.opened();
+      _workspace ??= DocumentWorkspaceSession.attach(context, _close);
       _session = session;
       _controller = HexEditorController(
         HexDocument(session.source),
@@ -100,11 +109,12 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         _error = null;
       });
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _error = error.toString();
         });
+      }
     }
   }
 
@@ -149,6 +159,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
           onProgress: (done, total) => _progressChanged(done, total),
         );
         // Only the revision actually written becomes clean. Newer edits stay dirty.
+        widget.activity?.edited();
         controller.markSaved(snapshot);
       } while (_saveAgain && !_cancelled && !_disposed);
       return !controller.isDirty;
@@ -200,7 +211,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
         name,
         cancelled: () => _cancelled,
       );
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -208,6 +219,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
             ),
           ),
         );
+      }
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {
@@ -394,6 +406,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
 
   @override
   void dispose() {
+    _workspace?.dispose();
     _disposed = true;
     _cancelled = true;
     final controller = _controller, session = _session;

@@ -26,6 +26,50 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  test(
+    'old File menus gain workspace commands once without losing custom nodes',
+    () async {
+      final old = BrowserMenuLayout([
+        BrowserMenuNode(
+          id: 'my-file',
+          kind: BrowserMenuNodeKind.submenu,
+          labelKey: 'file',
+          children: [
+            BrowserMenuNode(
+              id: 'custom-copy',
+              kind: BrowserMenuNodeKind.command,
+              commandId: 'action:copy',
+            ),
+          ],
+        ),
+      ]);
+      final storage = MemoryBrowserMenuStorage()
+        ..values[BrowserMenuStore.currentKey] = old.encode();
+      final store = BrowserMenuStore(storage: storage);
+      await store.ready;
+      expect(store.layout.find('custom-copy')?.commandId, 'action:copy');
+      expect(
+        store.layout.nodes.map((n) => n.commandId),
+        containsAll([
+          'workflow:newDocument',
+          'workflow:recentDocuments',
+          'workflow:convertDocument',
+        ]),
+      );
+      expect(
+        BrowserMenuLayout.decode(storage.values[BrowserMenuStore.backupKey]!)
+            .toJson(),
+        old.toJson(),
+      );
+      await store.save(old);
+      store.dispose();
+      final restarted = BrowserMenuStore(storage: storage);
+      await restarted.ready;
+      expect(restarted.layout.toJson(), old.toJson());
+      restarted.dispose();
+    },
+  );
+
   test('saved identity survives a preferences-backed store restart', () async {
     final store = BrowserMenuStore();
     await store.ready;

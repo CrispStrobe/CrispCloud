@@ -1,3 +1,7 @@
+import 'new_document_dialog.dart';
+import 'document_conversion_dialog.dart';
+import 'document_history_dialog.dart';
+import '../l10n/document_workspace_strings.dart';
 // lib/widgets/command_palette.dart
 //
 // Quick-search command palette (Ctrl+Shift+P).
@@ -162,6 +166,24 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     final hasTargets = pdfFiles.any((file) => file.name != '..');
 
     return [
+      _Command(
+        name: documentTr(context, 'Convert existing file…'),
+        icon: Icons.transform,
+        keywords: 'convert pdf docx xlsx pptx image csv',
+        action: () => showDocumentConversionDialog(widget.parentContext, ref),
+      ),
+      _Command(
+        name: documentTr(context, 'New…'),
+        icon: Icons.note_add_outlined,
+        keywords: 'new create document editor word spreadsheet presentation pdf image epub',
+        action: () => showNewDocumentDialog(widget.parentContext, ref),
+      ),
+      _Command(
+        name: documentTr(context, 'Recent files…'),
+        icon: Icons.history,
+        keywords: 'recent edited opened history save load purge',
+        action: () => showDocumentHistoryDialog(widget.parentContext, ref),
+      ),
       // Navigation
       _Command(
         name: SynchronizedBrowsingStrings(context).text(

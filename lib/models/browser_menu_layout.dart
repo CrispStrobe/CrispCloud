@@ -237,6 +237,46 @@ class BrowserMenuLayout {
     return BrowserMenuLayout(update(menus));
   }
 
+  /// One-time upgrade for existing custom menus; keeps every user node and ID.
+  BrowserMenuLayout withDocumentCommands() {
+    final existing = nodes.map((e) => e.commandId).toSet();
+    final used = nodes.map((e) => e.id).toSet();
+    String fresh(String base) {
+      var id = base;
+      var n = 0;
+      while (used.contains(id)) {
+        id = '$base-${++n}';
+      }
+      used.add(id);
+      return id;
+    }
+
+    final additions = <BrowserMenuNode>[
+      for (final command in [
+        'workflow:newDocument',
+        'workflow:recentDocuments',
+        'workflow:convertDocument',
+      ])
+        if (!existing.contains(command))
+          BrowserMenuNode(
+            id: fresh('documents-${command.split(':').last}'),
+            kind: BrowserMenuNodeKind.command,
+            commandId: command,
+          ),
+    ];
+    if (additions.isEmpty) return this;
+    final index = menus.indexWhere((e) => e.labelKey == 'file');
+    if (index >= 0) {
+      final updated = menus.toList();
+      updated[index] = menus[index].withChildren([
+        ...additions,
+        ...menus[index].children,
+      ]);
+      return BrowserMenuLayout(updated);
+    }
+    return this; // Completely custom layouts retain their chosen top-level menus.
+  }
+
   factory BrowserMenuLayout.defaults() {
     var serial = 0;
     BrowserMenuNode command(String id) => BrowserMenuNode(
@@ -261,6 +301,8 @@ class BrowserMenuLayout {
         ids.map((id) => command('workflow:$id')).toList();
     return BrowserMenuLayout([
       group('file', [
+        ...workflows(['newDocument', 'recentDocuments', 'convertDocument']),
+        separator(),
         ...actions(['newTab', 'closeTab', 'reopenClosedTab']),
         separator(),
         ...actions(['preview', 'edit']),

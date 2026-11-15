@@ -126,6 +126,8 @@ qualify their binaries, servers, settings or delta behavior:
 
 ## Key Features
 
+- **Document workspace:** File → New starts the appropriate text/code, Office, PDF, image or EPUB editor. File → Convert offers reviewed, separate conversion copies, including PDF ↔ Office workflows. Persistent recent-file history supports optional opened-file logging, JSON save/load and purge. Active folder panes have a persistent outline and header marker. See [document workspace](docs/document-workspace.md) for controls and limits.
+
 - **Code workspace:** F3, F4 and code previews share syntax colours, with a black canvas in dark mode. Text viewers offer optional wrapping (`Alt+Z`) where supported; long minified lines use bounded rendering windows. Empty directories keep their `..` navigation entry. Image mode is offered for recognized image content rather than every unknown file.
 - **Flexible layout:** independent dual/single panes, an account-aware folder tree, detailed and compact lists, grids, and hierarchical columns with separately scrollable ancestor folders
 - **Recoverable navigation:** source-bound history per tab, history menus, recent locations that retain their storage identity, and reopening closed tabs with their view and history

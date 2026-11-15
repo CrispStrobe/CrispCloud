@@ -1,3 +1,4 @@
+import '../services/document_activity.dart';
 // lib/widgets/internal_viewer_dialog.dart
 //
 // Full-screen internal viewer (F3).
@@ -337,6 +338,7 @@ class InternalViewerDialog extends ConsumerStatefulWidget {
 }
 
 class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
+  DocumentActivity? _activity;
   // ---- Core data -----------------------------------------------------------
   Uint8List? _fullData;
   ViewBytesSource? _source;
@@ -608,6 +610,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _initialLoad({ViewerMode? preferredMode}) async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     final loadToken = ++_loadToken;
     _archiveDiskSectorBytes = null;
     _partitionChoiceSource = null;
@@ -737,6 +740,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _loading = false;
         _autoMode = auto;
       });
+      _activity?.opened();
       _selectMode(preferredMode ?? auto);
     } catch (e, st) {
       _log.warn('viewer initial load failed', e, st);

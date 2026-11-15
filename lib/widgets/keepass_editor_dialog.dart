@@ -1,3 +1,6 @@
+import '../services/document_workspace_session.dart';
+import '../services/document_activity.dart';
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -134,6 +137,8 @@ class _CustomFieldDraft {
 
 class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     with WidgetsBindingObserver {
+  DocumentWorkspaceSession? _workspace;
+  DocumentActivity? _activity;
   final _masterPassword = TextEditingController();
   final _search = TextEditingController();
   final _title = TextEditingController();
@@ -209,6 +214,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         !identical(oldWidget.origin, widget.origin) ||
         !identical(oldWidget.bytesOverride, widget.bytesOverride)) {
       _releaseSecrets();
+      _activity = null;
       _encrypted = null;
       _target = null;
       _encryptedRevision = 0;
@@ -235,6 +241,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   }
 
   Future<void> _load() async {
+    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
     final generation = ++_generation;
     try {
       if ((widget.file.size ?? 0) > kKeePassMaxFileBytes) {
@@ -262,6 +269,8 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       }
       if (!mounted || generation != _generation) return;
       setState(() {
+        _activity?.opened();
+        _workspace ??= DocumentWorkspaceSession.attach(context, _requestClose);
         _encrypted = Uint8List.fromList(bytes);
         _loading = false;
       });
@@ -1192,6 +1201,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         };
         return false;
       }
+      _activity?.edited();
       if (!_locked) _notice('saved');
       return !result.isDirty;
     } on KeePassException catch (error) {
@@ -1396,6 +1406,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
 
   @override
   void dispose() {
+    _workspace?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _releaseSecrets(disposing: true);
     _encrypted = null;
