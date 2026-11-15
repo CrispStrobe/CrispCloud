@@ -1,0 +1,454 @@
+{
+  "result": "source_mirrors_verified_coverage_loss_corrected_separately",
+  "created_at_utc": "2026-11-15T12:57:48.710900+00:00",
+  "scope": "Only observed app41885 and its immutable incoming records; no new remote branch inventory.",
+  "app_parent": "137c95de221a0e30b14b59613b2f23447dcc57da",
+  "app_commit": "41885d7d1d67348f5abe3579b99d9d2951fc909f",
+  "app_tree": "15643a6accf74c021df8fd5a1a3e7c76118c764e",
+  "delta_counts": {
+    "A": 57,
+    "M": 17
+  },
+  "changed_paths": [
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/incoming/crispcloud-audit.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/incoming/office-parser-audit.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/incoming/office-sync-applied.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/incoming/parser-sync-applied.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-app-files.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-cli-files.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-editor-files.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/analysis-engine-files.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/app-suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/audit_recorded_gates.py"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/editor-suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/engine-suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/excluded-corpus-suites.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/gate-plan.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/host-focus-suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/navigation-suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/ods-geometry-suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/provenance-overlay-manifest.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/readiness-review.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_portable_current.py"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_scripted_oracle_current.py"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_selected_gate.py"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/run_source_and_notices.py"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/toolchain_launcher.sh"
+    },
+    {
+      "status": "A",
+      "path": "docs/evidence/storage-carving-20261115/remote-refresh-20261115/plans/verify_navigation_capture.py"
+    },
+    {
+      "status": "M",
+      "path": "packages/QUDS_FORKS.md"
+    },
+    {
+      "status": "M",
+      "path": "packages/legacy_doc_parser/UPSTREAM.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/artifacts-sha256.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/command.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/inputs-after.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/inputs-before.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/metadata.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/stdout.jsonl"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-all-parser-final/summary.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/artifacts-sha256.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/command.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/inputs-after.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/inputs-before.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/metadata.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/stdout.jsonl"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/suites.txt"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-focused-fixed/summary.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/artifacts-sha256.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/command.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/inputs-after.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/inputs-before.json.gz"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/metadata.json"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/stderr.log"
+    },
+    {
+      "status": "A",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/directory-strict-analysis/stdout.log"
+    },
+    {
+      "status": "M",
+      "path": "packages/legacy_doc_parser/doc/evidence/storage-carving-reconcile-20261115/qualification-status.md"
+    },
+    {
+      "status": "M",
+      "path": "packages/legacy_doc_parser/test/recovery_reconciliation_bounds_test.dart"
+    },
+    {
+      "status": "A",
+      "path": "packages/quds_office_editor/test/goldens/linux/office_fidelity_word.png"
+    },
+    {
+      "status": "A",
+      "path": "packages/quds_office_editor/test/goldens/linux/structure_create_1.png"
+    },
+    {
+      "status": "A",
+      "path": "packages/quds_office_editor/test/goldens/linux/structure_edit_1.png"
+    },
+    {
+      "status": "A",
+      "path": "packages/quds_office_editor/test/goldens/linux/structure_edit_2.png"
+    },
+    {
+      "status": "A",
+      "path": "packages/quds_office_editor/test/goldens/linux/structure_remove_1.png"
+    },
+    {
+      "status": "A",
+      "path": "packages/quds_office_editor/test/goldens/linux/word-pages-provenance.json"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/goldens/office_fidelity_word.png"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/goldens/structure_create_1.png"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/goldens/structure_edit_1.png"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/goldens/structure_edit_2.png"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/goldens/structure_remove_1.png"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/office_fidelity_golden_test.dart"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_editor/test/office_structure_goldens_test.dart"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_engine/pubspec.yaml"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart"
+    },
+    {
+      "status": "M",
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+    },
+    {
+      "status": "M",
+      "path": "pubspec.yaml"
+    },
+    {
+      "status": "M",
+      "path": "tool/office_fidelity_manifest.json"
+    }
+  ],
+  "canonical_pins": {
+    "quds": {
+      "commit": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+      "tree": "6fe03ce8e9f73b56c635049028973e218a5f8777",
+      "parents": [
+        "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+        "c17098d65fe5f6e2bdf9999389deb2a6b508d928"
+      ]
+    },
+    "parser": {
+      "commit": "08296edbee08da013a8ff718798972552ccd03f7",
+      "tree": "24c77e06cf1214ea54e3b5935c4329ea8a49d8bb",
+      "parents": [
+        "57442c79239fb4d483e274e0ebb04f34686beb6c",
+        "ea82b13dcb0abbd151995cb7d2881789ed137286"
+      ]
+    }
+  },
+  "prior_qualified_pins": {
+    "app": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+    "quds": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+    "parser": "9bdcc7eba3f1ce80b7d834d7740895774eeca615"
+  },
+  "prior_pins_are_ancestors": {
+    "app": true,
+    "quds": true,
+    "parser": true
+  },
+  "production_declaration_delta": {
+    "app": [
+      "pubspec.yaml"
+    ],
+    "quds": [
+      "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart"
+    ],
+    "parser": []
+  },
+  "managed_source_verification": {
+    "manifest_blob": "b17a223c81867c8e3ba4955cbfaeb0765c9eb57f",
+    "files": 2334,
+    "by_canonical": {
+      "quds": 502,
+      "parser": 1832
+    },
+    "blob_type_mode_mismatches": [],
+    "all_manifest_sha256_verified": true,
+    "parser_upstream": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "08296edbee08da013a8ff718798972552ccd03f7",
+      "patches": []
+    }
+  },
+  "incoming_records": {
+    "crispcloud-audit.json": {
+      "blob": "bb97fbed90da167843b94aac2f1240ed8bf0b468",
+      "sha256": "7d103ac7300748d4947550f032a5dfc0cbdbc3f7438a92fd3f5d230f3b96ad92",
+      "bytes": 10872,
+      "target_head": "cc92423bb98789239380864d5e8343c19c25e815",
+      "last_code_checkpoint": "20ee83ff965d5433aeb528ae84debdb304edcf4a",
+      "scope": "Saved prior-source metadata; its twelve gate claims remain bound to the predecessor source and are not current acceptance for 41885."
+    },
+    "office-parser-audit.json": {
+      "blob": "51f00242fa5df5c494a2efb6afb8c4c4fdd2a19f",
+      "sha256": "191dcb27796c1b420ed8f2666b1ff55cfb37a4bed59ddb257b9094894b7f5c02",
+      "bytes": 27417,
+      "observed_office_main": "6d7c696e2ae9095b395fba9f3bc22ec1c1139ed6",
+      "observed_parser_main": "ea82b13dcb0abbd151995cb7d2881789ed137286",
+      "scope": "Saved inventory only; no new branch refresh performed by this audit. The canonical merge and mirrors are independently checked at the exact pinned commits."
+    },
+    "office-sync-applied.json": {
+      "blob": "1a24176cf167ac43eed437ce955d61dd463b9e53",
+      "sha256": "1b1d7875e1daebb50541da181dd48396cba906e7d88d43b5aa82b6c765c5a8dd",
+      "bytes": 1370,
+      "from": "c17098d65fe5f6e2bdf9999389deb2a6b508d928",
+      "to": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+      "recorded_writes": 16,
+      "recorded_deletes": [],
+      "intermediate_pinned_files": 2309,
+      "scope": "The 2309 count is the intermediate Office sync count; the subsequent parser sync adds 25 managed evidence files for final2334."
+    },
+    "parser-sync-applied.json": {
+      "blob": "24406eb102b6ce2f81402016322266469d45e58e",
+      "sha256": "0bc3d7f4f518691e684dc58e71b5608e1e6685a7a201fd47e1b5576a893c8e3d",
+      "bytes": 3500,
+      "from": "9bdcc7eba3f1ce80b7d834d7740895774eeca615",
+      "to": "08296edbee08da013a8ff718798972552ccd03f7",
+      "recorded_writes": 29,
+      "recorded_deletes": []
+    }
+  },
+  "source_review": {
+    "ods_production_changes": [
+      "Ordinary cells are explicitly refused while horizontal merge covered tokens remain outstanding. This deliberately withdraws the prior omitted-placeholder compatibility extension.",
+      "Expanded annotations are charged once per repeated XML cell against a workbook-wide 10000-comment limit before allocation. Existing cell, text, grid, style-work and merge-work limits remain unchanged."
+    ],
+    "preserved_production": [
+      "Native default/base geometry serialization",
+      "Authored date literal and namespace handling",
+      "Annotation namespace/author fidelity and text separation",
+      "Insertion-ordered linear comment-author serialization",
+      "Typed compound recovery, encryption/refusal and aggregate parser bounds",
+      "All host recovery consent/copy-save and complete underline integration"
+    ],
+    "concrete_new_production_defects_found": [],
+    "test_changes": [
+      "Formula cases are moved, with assertions retained.",
+      "Two omitted-covered-placeholder compatibility cases are removed or replaced by explicit-covered tests to match the tightened admission contract.",
+      "New annotation coordinate/count regression is added.",
+      "Three independent default/time acceptance tests were accidentally deleted; restored exactly in a separately saved canonical correction.",
+      "Two existing inherited-column width assertions are relaxed from1e-10 to1e-5; the restored native-geometry test retains its original1e-10 assertion.",
+      "Live-corpus test now permits declared unsupported-profile refusals; a passing count does not mean all external files imported."
+    ],
+    "dependency_changes": [
+      "Engine adds archive ^4.0.0 as a dev dependency.",
+      "App parser Git ref advances to08296ed; parser production and declarations are byte-identical to9bdcc7eb."
+    ]
+  },
+  "coverage_correction": {
+    "source_commit": "9bb71983a4ae6bc7bb3372fd931e724ddd102fc8",
+    "parent": "6e4c3b16b4310f2c21b6d8b5e412af9850eb17ea",
+    "branch": "integration/ods-regression-restore-20261115T1246",
+    "tree": "b2d390c49919c323b127d89f168d875f09c4ff96",
+    "changed_path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+    "restored_titles": [
+      "currency symbols survive namespaced import and XLSX saves",
+      "inherited styled padding stays sparse while explicit blanks survive",
+      "ODS native column geometry survives a new XLSX copy"
+    ],
+    "exact_predecessor_block_bytes": 3975,
+    "added_lines": 93,
+    "production_changes": 0,
+    "followup_evidence_is_separate_from_source_pin": true
+  },
+  "golden_review": {
+    "owner": "evidence_review",
+    "result": "All five Linux image hashes and800x1120 dimensions match provenance; exact golden comparisons, bundled fonts and DPR1 retained.",
+    "qualification_limit": "Provenance source_commit is prose, and its claimed revalidation lacks an immutable raw receipt link. Fresh exact-image comparison is required; no regeneration recommended."
+  },
+  "qualification_scope": "Prior final receipts qualify the predecessor source. Root owns fresh host gates after adopting the new canonical correction; this audit does not reuse predecessor acceptance as proof of the new ODS behavior.",
+  "git_activity": {
+    "broad_remote_refreshes": 0,
+    "app_index_source_head_mutations": 0,
+    "canonical_alignment": "Authorized exact-pin fetch/detach at6e4c, preserving prior branchc170; then authorized distinct correction branch and incremental remote saves."
+  }
+}
