@@ -4,6 +4,26 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Resolve unsynced local Zotero references through the matching desktop
+  connection for basic refresh, individual previews, reference export and
+  formatted bibliography. Keep local profile identities distinct, validate
+  connected sources before requests, preserve original citation metadata, and
+  deduplicate URI aliases in the offline bibliography.
+
+- Offer explicit online/desktop library selection in native hosts. Browse and
+  cite local Zotero sources without an API key, preserve unsynced CSL links,
+  and label sources without persistent identities as offline embedded records.
+  Studio uses a direct loopback client; hosts opt in via `localTransport`.
+
+- Add a shared Zotero references workspace: personal/group libraries, collection
+  browsing and search, paged results, linked citation clusters, source locators,
+  offline CSL JSON import/export, and complete selected-library bibliographies.
+  Hosts inject their network transport and may use their existing secure key
+  store. Citation editing, refresh and unlink participate in undo/redo and save
+  revisions; asynchronous writes reject a changed document or caret. Basic
+  author-year formatting is explicit, with no claim to a full CSL processor or
+  the native Zotero HTTP citing adapter. Rich/unsupported native fields remain preserved.
+
 - Preserve explicit spreadsheet font-color intent through undo/redo and cell
   snapshots. Setting the currently resolved theme color creates a direct color;
   undoing that edit restores the native theme binding.

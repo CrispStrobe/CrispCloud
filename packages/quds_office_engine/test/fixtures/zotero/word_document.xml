@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r><w:t xml:space="preserve">A study </w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="begin" w:dirty="0"/></w:r>
+      <w:r><w:instrText xml:space="preserve"> ADDIN ZOTERO_ITEM CSL_</w:instrText></w:r>
+      <w:r><w:instrText xml:space="preserve">CITATION {"citationID":"native-α","properties":{"plainCitation":"(Lovelace, 1843)","formattedCitation":"(Lovelace, 1843)","noteIndex":0,"futureProperty":"retain"},"citationItems":[{"id":17,"uris":["http://zotero.org/users/42/items/ABCD1234"],"itemData":{"id":17,"type":"article-journal","title":"A &amp; B","author":[{"family":"Lovelace","given":"Ada"}],"issued":{"date-parts":[[1843]]},"unmodeledCsl":{"edition":"first"}},"locator":"12–14","label":"page","prefix":"see ","suffix":"; discussion","suppress-author":true,"ignoreRetraction":true}],"schema":"https://github.com/citation-style-language/schema/raw/master/csl-citation.json","futureRoot":{"version":9}} </w:instrText></w:r>
+      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+      <w:r><w:rPr><w:b/></w:rPr><w:t>(Lovelace, 1843)</w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="end"/></w:r>
+      <w:r><w:t xml:space="preserve"> confirmed.</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:fldChar w:fldCharType="begin"/></w:r>
+      <w:r><w:instrText xml:space="preserve"> ADDIN ZOTERO_ITEM CSL_CITATION {"citationID":"rich-cache","properties":{"plainCitation":"(Hopper, 1952)","noteIndex":0},"citationItems":[{"id":"group-item","uris":["http://zotero.org/groups/77/items/EFGH5678"],"itemData":{"id":"group-item","type":"book","title":"Compilers","author":[{"family":"Hopper","given":"Grace"}],"issued":{"date-parts":[[1952]]}}}]} </w:instrText></w:r>
+      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+      <w:r><w:rPr><w:i/></w:rPr><w:t>(Hopper,</w:t></w:r>
+      <w:r><w:t xml:space="preserve"> 1952)</w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="end"/></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:fldChar w:fldCharType="begin"/></w:r>
+      <w:r><w:instrText xml:space="preserve"> ADDIN ZOTERO_BIBL {"uncited":[],"omitted":[],"custom":[],"futureBibliography":"retain"} CSL_BIBLIOGRAPHY </w:instrText></w:r>
+      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+      <w:r><w:t>Hopper. Compilers.</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>Lovelace. A &amp; B.</w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="end"/></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:fldChar w:fldCharType="begin"/></w:r>
+      <w:r><w:instrText xml:space="preserve"> ADDIN ZOTERO_ITEM CSL_CITATION {broken JSON </w:instrText></w:r>
+      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+      <w:r><w:t>Keep malformed cache</w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="end"/></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:fldChar w:fldCharType="begin"/></w:r>
+      <w:r><w:instrText xml:space="preserve"> ADDIN ANOTHER_MANAGER {"citationID":"other"} </w:instrText></w:r>
+      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+      <w:r><w:t>Keep other manager</w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="end"/></w:r>
+    </w:p>
+    <w:sectPr/>
+  </w:body>
+</w:document>
