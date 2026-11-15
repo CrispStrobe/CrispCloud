@@ -1,0 +1,204 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "observation_time_utc": "2026-11-15 07:08:34 UTC",
+  "accepted_office_run": {
+    "id": 43685477823,
+    "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685477823",
+    "event": "push",
+    "attempt": 1,
+    "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+    "source_tree": "39389be7f70b786382a133c91d85ecc933c6f0e3",
+    "status": "completed",
+    "conclusion": "success",
+    "all_jobs_checkout_exact_source": true,
+    "jobs": [
+      {
+        "id": 132724956851,
+        "name": "host-roundtrip"
+      },
+      {
+        "id": 132726845129,
+        "name": "external-schema"
+      },
+      {
+        "id": 132724956678,
+        "name": "browser-copy"
+      }
+    ]
+  },
+  "counts_from_logs": {
+    "engine_tests_passed": 1265,
+    "host_tests_passed": 283,
+    "navigation_tests_passed": 12,
+    "inventory_controls_passed": 32,
+    "host_files_verified": 182,
+    "host_files_expected": 182,
+    "schema_packages": 540,
+    "schema_nonzero_error_lines": 0,
+    "sdk_control_valid_packages": 8,
+    "sdk_control_invalid_xml": 4,
+    "sdk_control_mismatched_types": 12,
+    "renderer_controls_passed": 80,
+    "rendered_files": 149,
+    "repeated_save_comparisons": null,
+    "reference_comparisons": null,
+    "comparison_count_note": "36 repeat-save and 3 reference comparisons were stated in the prior handoff; not enumerated in fetched logs. Confirm them from the downloaded render-report.json before claiming current acceptance.",
+    "browser_copy": {
+      "outcome": "downloadedCopy",
+      "bytes": 256,
+      "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+      "remaining_download_anchors": 0,
+      "object_url_revoked": true
+    }
+  },
+  "additional_pr_office_run": {
+    "id": 43685499167,
+    "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43685499167",
+    "conclusion": "success",
+    "reported_head": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+    "actual_checked_out_commit": "3c55da8bf455494d7bf2039300a6cbe815809d69",
+    "base_commit": "8a24763fb4b2c720ff6b617cebbea8971191bdca"
+  },
+  "unresolved_other_checks": [
+    {
+      "workflow": "Text and hex editor",
+      "run": 43685499109,
+      "conclusion": "failure",
+      "job": 132725020036,
+      "reason": "internal_viewer_test.dart:564 expects dot-prefixed extensions; actual stl. At :575 expected 17 ViewerMode values; actual 18. Native binary/LRC regression step fails across Linux/macOS/Windows."
+    },
+    {
+      "workflow": "Commander archive workflows",
+      "run": 43685499165,
+      "conclusion": "failure",
+      "job": 132725020486,
+      "reason": "Same two internal_viewer_test.dart failures: dot prefix and enum count."
+    },
+    {
+      "workflow": "File workspace UX",
+      "run": 43685499151,
+      "conclusion": "failure",
+      "job": 132725020238,
+      "reason": "panel_header_i18n_test.dart:59 German panel control finder expected one widget, found zero. 976 tests passed, 1 failed."
+    },
+    {
+      "workflow": "PDF editor",
+      "run": 43685499133,
+      "conclusion": "failure",
+      "job": 132725020300,
+      "reason": "Enforce clean formatting fails because cli/lib/commands/pdf.dart changes under Dart formatter. Other PDF jobs passed."
+    },
+    {
+      "workflow": "CI",
+      "run": 43685499200,
+      "conclusion": null,
+      "status": "queued",
+      "job": 132725020549,
+      "reason": "Android artifact build completed; Crypto release evidence step fails with stale Apple export review fingerprint. Other CI jobs pending. Do not claim all CI green."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14150845009,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE1MDg0NTAwOQ==",
+      "name": "office-browser-copy-evidence",
+      "size_in_bytes": 98796,
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150845009",
+      "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150845009/zip",
+      "expired": false,
+      "digest": "sha256:f84e997b3909f3af4a4eda3a1295b9c9f1f1a2e8adf2f708b3cd293112fc257a",
+      "created_at": "2026-11-15T06:28:27Z",
+      "updated_at": "2026-11-15T06:28:27Z",
+      "expires_at": "2027-02-13T06:26:56Z",
+      "workflow_run": {
+        "id": 43685477823,
+        "repository_id": 1107206579,
+        "head_repository_id": 1107206579,
+        "head_branch": "codex/office-recovery-20261115",
+        "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+      }
+    },
+    {
+      "id": 14150637045,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE1MDYzNzA0NQ==",
+      "name": "office-host-fidelity-evidence",
+      "size_in_bytes": 4507157,
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150637045",
+      "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150637045/zip",
+      "expired": false,
+      "digest": "sha256:384d52eafd81c8609eaf549115b3d6e56cd5fd352d1537bf4bd31fc0fb8d5114",
+      "created_at": "2026-11-15T06:35:12Z",
+      "updated_at": "2026-11-15T06:35:12Z",
+      "expires_at": "2027-02-13T06:26:56Z",
+      "workflow_run": {
+        "id": 43685477823,
+        "repository_id": 1107206579,
+        "head_repository_id": 1107206579,
+        "head_branch": "codex/office-recovery-20261115",
+        "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+      }
+    },
+    {
+      "id": 14150598848,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE1MDU5ODg0OA==",
+      "name": "office-host-schema-evidence",
+      "size_in_bytes": 4104824,
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150598848",
+      "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150598848/zip",
+      "expired": false,
+      "digest": "sha256:38beb8672841707aadaf4671a879a90c15cbf427da37e29f0c21a42f42b85cdd",
+      "created_at": "2026-11-15T06:48:46Z",
+      "updated_at": "2026-11-15T06:48:46Z",
+      "expires_at": "2027-02-13T06:26:56Z",
+      "workflow_run": {
+        "id": 43685477823,
+        "repository_id": 1107206579,
+        "head_repository_id": 1107206579,
+        "head_branch": "codex/office-recovery-20261115",
+        "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+      }
+    },
+    {
+      "id": 14150152775,
+      "node_id": "MDg6QXJ0aWZhY3QxNDE1MDE1Mjc3NQ==",
+      "name": "office-worksheet-ui-evidence",
+      "size_in_bytes": 53098,
+      "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150152775",
+      "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150152775/zip",
+      "expired": false,
+      "digest": "sha256:a8f2039b6fa96fe4b79090f15ada5b94404e36f93c05818a02b3802225682466",
+      "created_at": "2026-11-15T06:35:12Z",
+      "updated_at": "2026-11-15T06:35:12Z",
+      "expires_at": "2027-02-13T06:26:56Z",
+      "workflow_run": {
+        "id": 43685477823,
+        "repository_id": 1107206579,
+        "head_repository_id": 1107206579,
+        "head_branch": "codex/office-recovery-20261115",
+        "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+      }
+    }
+  ],
+  "saved_remote_boundary": {
+    "head": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+    "inventory_implementation": "cb23bdadffb95532d513cbc3bbc62d8bafa978fd",
+    "inventory_receipts": "ac12975b852ff6b025cf1e5c55f4066f6c94a181",
+    "ui_capture_helper": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+    "resume_directory": "docs/evidence/office-worksheet-navigation-20261115/resume/",
+    "only_inventory_baseline_and_validation_are_saved": true,
+    "original_artifact_bytes_and_recovered_schema_render_receipts_absent_at_this_head": true,
+    "stale_docs": [
+      "docs/office-navigation-resume-20261115.md",
+      "docs/office-worksheet-navigation-20261115.md",
+      "docs/evidence/office-worksheet-navigation-20261115/README.md"
+    ]
+  },
+  "provenance_caveats": [
+    "Logs are the full Unicode strings decoded by GitHub connector; saved UTF-8 is exact relative to those returned strings, not the original pre-decoding HTTP payload.",
+    "Workflow metadata and artifacts are authenticated GitHub responses. Formatted JSON changes whitespace only.",
+    "Artifact digests in workflow-artifacts.json are GitHub's declared ZIP digests; this audit does not independently download or hash the ZIPs.",
+    "Office tests are bound to exact source commit 7e5af83c, not subsequently advanced main fa030137 or its integrated Office pin.",
+    "Raw UI captures have not been visually reviewed by this agent.",
+    "Broader CI status is an observation, not final qualification."
+  ]
+}

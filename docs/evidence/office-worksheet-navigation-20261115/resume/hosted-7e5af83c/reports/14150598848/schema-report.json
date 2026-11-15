@@ -1,0 +1,2706 @@
+{
+  "Files": 540,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "evidence/build/fidelity-custom-tabs/host-tabs-1.docx",
+      "Sha256": "54c52fe6278dd90d70e02b6b84cbb0a319f1fa6b49d25f8282ee6446f5e4571b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-custom-tabs/host-tabs-2.docx",
+      "Sha256": "f464ab89d5cc7fb086ae6e1d281015d591c951e317a8e6b8c1fc648b4a485626",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-custom-tabs/host-tabs-3.docx",
+      "Sha256": "f5fb753cc25a5300b64f2d24858c5804c355d6cb40ed4661927e2a255fbfbf13",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/after-late-edits.docx",
+      "Sha256": "eeb2304ce85029c24ab2ba9214a2bd04ba3451e1166c6142a7a418affd31cd86",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/back-save-later-revision.docx",
+      "Sha256": "7d91245dd1e3ec6a6d07e6ee0b09ba4a28dad988cb1c5716e011012a32a6c487",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/back-save.docx",
+      "Sha256": "d1b9c1260cf97ad915b3ee2bc64cff8e743fa4d770813da0afb6938a0eea6581",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/before-late-edits.docx",
+      "Sha256": "ca3a746887732d8bf028a0290ba3aa2ed4672206ee53c38d6dcee23382f2266a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/close-after-late-edit.docx",
+      "Sha256": "1e48982bdc47f432ee698de582bf310851ff80ad4426b5c3ce8f6991dff01279",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/close-before-late-edit.docx",
+      "Sha256": "594c35191f6346eec149eef30c6ff5bda99544240f6df6f4e89dea6f66617b15",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/comment-action-1.docx",
+      "Sha256": "59cac3d40a5c42e2348db475d1679259aa958ab0738b65fc0150c52e376cc23c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/comment-action-2.docx",
+      "Sha256": "490300c0e54eff88d3cec9fc90c5e7dd34febdaede9653bac099b9587d6aaa3f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/comment-action-3.docx",
+      "Sha256": "7a2167988730a156f7abcf889715b13c1d4152d5bb3d3e64655757442e0becf0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/failed-upload-attempt.docx",
+      "Sha256": "bacc9899f43b42d8e20dae136a12e9452f3204da4c3fd092380c14eeec73726a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-family-1.docx",
+      "Sha256": "6ff6ffdd232003ab6c43bb464f7eb63d72fde51aea9e2717821c214004239595",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-family-2.docx",
+      "Sha256": "34bba9ccd2dbcc9e9ca081af41aefe40d5eb6a2c4baca8f79c44419c69c9b889",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-family-3.docx",
+      "Sha256": "4683ac4ce62ddc88af4aa9400fe60b8fcbe17af2abbf108f8a9bc4823c1626b6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-family-current-1.docx",
+      "Sha256": "984f9b1680fad99f6127cdda159546a7eec454dbdfe82c557fee7dbec5148d32",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-family-current-2.docx",
+      "Sha256": "5d4ac90ad0eb9c76830ec625d1bb61f8f6991115fbb5552ac166db417b450d2a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-family-current-3.docx",
+      "Sha256": "1b01923549eec4ec6e009f8ecae74a2288ea16003261e5b1b48feaf5edf49c86",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-italic-1.docx",
+      "Sha256": "50f1fccfff65a1e819b39492fd510526e033cb1ef5b80d79923ef0773bbc8737",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-italic-2.docx",
+      "Sha256": "7a9bf798ef45b5d709e8324ac6278cade645743b9304b5b944bffb51d949929c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-italic-3.docx",
+      "Sha256": "6328fe091293097a859a7c62b65f0d564105c4e3503673ed5728b5b191df2bf4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-14-1.docx",
+      "Sha256": "54deb0217c287b43486a17397348cfb249752ab6f23469f4f20c232db70ed102",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-14-2.docx",
+      "Sha256": "f180a9b9d653f33d5798d329f557528f895815ef130fef3a2fb9c9032eb37139",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-14-3.docx",
+      "Sha256": "d4463ea9e14d216a011dda48b5a48cd5a40ab690e22acde29f7e6095ec39b7c8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-21-1.docx",
+      "Sha256": "91ec5627928f0acf6c9836c6d50968cb6281582a1cf22f5584209c18829baeda",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-21-2.docx",
+      "Sha256": "d2f32d83dcf6af1ffdd7c5ce566a822ab9c6a6a18feafb80459d4e01990ae4bc",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-21-3.docx",
+      "Sha256": "09f63ed00e527b700229aa8e74ee7edba71c638ad1b5d13ec556a624f5c9aa66",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-288-1.docx",
+      "Sha256": "01f28d70b7660f5ff179fec85304df422c25381ea8c673238daf2a64924f4dc2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-288-2.docx",
+      "Sha256": "c77e27765c0b3a0f1f5046793f558b304f3f93ef4c785588ff10215f9f1f02a0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-noop-288-3.docx",
+      "Sha256": "f14579f8fa1e3c67d169d2a8c0634b141d9e0dd0ecfa59a44ce65ddc42fa310b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-size-1.docx",
+      "Sha256": "d57e7c3f7b281ed8ac380fd1cb912b81a54d5e4a3db1648a9fc413da722472bc",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-size-2.docx",
+      "Sha256": "74d3c9a3237f490a244d9f0cbf3094f8710317907f0002dd0517f2420f1bc92e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-size-3.docx",
+      "Sha256": "fa9f1b75ab1658a1b4a7c98f41f1681414e75df0ebef172c8044cf7d51910711",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-size-current-1.docx",
+      "Sha256": "863740b735420734466d1fcf8a464a249a9a145b6b6817d8df136aba0a4ce674",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-size-current-2.docx",
+      "Sha256": "d16172011f4fd299ab4a3dd4f87dc45467201ae2687e2d80723f50b46a368482",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-size-current-3.docx",
+      "Sha256": "5ab56e7c3810fde4f189abeac5ad7703add6d020c49bb704c2d995b88171a23b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-underline-current-1.docx",
+      "Sha256": "ab8d7533b747f45b9d647a9c9556fc17570aaec0cc8b38c36df3cb0e73474eac",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-underline-current-2.docx",
+      "Sha256": "f1c6cb2632b842e01b9b51d909a7df8140e5e473e3fa6b582e5318374990e83c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/font-underline-current-3.docx",
+      "Sha256": "15c4d88f17aacd7fda696f37ecc913feb39d76a1e6d5bcdcee5c358c7423bb74",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/header-font-1.docx",
+      "Sha256": "815edaf1cf25da3c9c42c4e676dcdcbb27943150fe2a60e9da26931b97a1a792",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/header-font-2.docx",
+      "Sha256": "7c737a2d31521f9cacc71e34382d8aaa7da2c2596b06bfaf7c67a1479ce476e0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/header-font-3.docx",
+      "Sha256": "990845703342c58ddab10b3dd1576e5530fc63cfb04fbea1317ec03727ca6c3a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/header-paragraph-edit-1.docx",
+      "Sha256": "20f4095b68ef2f3fa5488844931085ba72516feb6d34073c0b677fbe86de92d5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/header-paragraph-edit-2.docx",
+      "Sha256": "e3c88be9c42d10d99af8872aaad393b0d8a548b3e5fe3dbdd103b8434ea6bd33",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/header-paragraph-edit-3.docx",
+      "Sha256": "8b3ca1b7d03071dd56081e2c8f825e62d99adc11ada7c94f51a28ea72859e5bf",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/hyperlink-selection-1.docx",
+      "Sha256": "3eb9a6204dacb9a0686a9789184bf91b82c5696911236ba50b1bf1cb378ce413",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/hyperlink-selection-2.docx",
+      "Sha256": "94f985b2b5450d61f507a03da8f8097a66fea63ae14dd675e4dc2c08155a2143",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/hyperlink-selection-3.docx",
+      "Sha256": "593b4d558435b7067d322094905c53b2d2d9a101299f730069bc8b0053a6d870",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/margins-edit-1.docx",
+      "Sha256": "116378c9ef1117bed203ff7861510a265deec31db1a1c6d9141d2e00d7dd3695",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/margins-edit-2.docx",
+      "Sha256": "638a41d94fe13446abaa4810024ee30eb8cc40597b10d7f6cc334406c9aa9744",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/margins-edit-3.docx",
+      "Sha256": "36d249f6adc522672544d392a587722791d3a097163d4c69db7af6f863599d14",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/margins-noop-1.docx",
+      "Sha256": "6c1e957ea83922daf7a11021a67174784b37d34f0cc5f87e8e0de73a94ec5470",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/margins-noop-2.docx",
+      "Sha256": "8be4d1345b20daaf5747da41e11e85f1f4e473f96262c3e0ada491d132e81036",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/margins-noop-3.docx",
+      "Sha256": "73fb5f649530010227790e3f86757419dcd9d75b0800b21d35ba017e611459f8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-sheet-1.xlsx",
+      "Sha256": "b07051c2a97fbb0705cd2b59dabd1ac3e52cc93e5b846314a0befbc7b466c026",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-sheet-2.xlsx",
+      "Sha256": "c5aadc2ca5c2234b62335cc02db70458995b731b310e9c325c153189f24c0a0c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-sheet-3.xlsx",
+      "Sha256": "6f78d501dcb60341b0585ced4dd8280e72c7701418e8d0f66a1a72691d821640",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-slide-1.pptx",
+      "Sha256": "153d0d69d578b124fe7bc6db7ece426d1fc234d440e29f2c3d6b9b8210306b18",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-slide-2.pptx",
+      "Sha256": "a9942398aa6c6876936e567630a775b29b8591a45145015f6b7e9d013e3bc6c6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-slide-3.pptx",
+      "Sha256": "4c4cc72af1b3d62afee40da7a25f27f184adcd1b327b158c4f6666a670328d00",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-word-1.docx",
+      "Sha256": "21f5ada28d81ab9d22297c4b99d14a18bf179b7f4d8e8375dc7268bc43f940ca",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-word-2.docx",
+      "Sha256": "650ede2c8720f83cb01b97cd2095d2c4f5da1093cec540fdca253e4e4597f20a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/native-word-3.docx",
+      "Sha256": "78df171f92f5a0d4be5b4f1f5359eb97088730d7c3b22538357c0d200e7d909f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/paragraph-edit-1.docx",
+      "Sha256": "2a351e1ea4e6ee9ad18e324cdf1d8d844ad8ae095f5a2a0151ed24409286f2c4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/paragraph-edit-2.docx",
+      "Sha256": "c1188492aecc671cc72c0d045f9802efd6f53b547830c0b7b2893b994238d05c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/paragraph-edit-3.docx",
+      "Sha256": "7f9b2f129d5ccd1a847bcf3ab5b77544e518b5cfb10bb5cb5ec83974dd13b539",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/paragraph-noop-1.docx",
+      "Sha256": "b5fab88c2ff0bc229bddea7d0346d726401207f7ac29e55506580046cb83d299",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/paragraph-noop-2.docx",
+      "Sha256": "000200dee2829240b5054d824fd3025a2eb0eef535a2c9c07b12f27745fb25d5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/paragraph-noop-3.docx",
+      "Sha256": "b5ce27f934df6595dd221bd12a5cd0b18b90f84c16c1b43a69e2269a9cc39097",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-cell-after-save.xlsx",
+      "Sha256": "02d2ebffb37919a51fad2fdf0edb9e86dfce5fb82ba498766ba1efe2e6fd895b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-cell-before-save.xlsx",
+      "Sha256": "e26f1094f78dab21ae42c93f4bd2afca69f95ddffbc7dd53488191fa7cf195ec",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-cell-close-after-save.xlsx",
+      "Sha256": "0e0c8e6895e215e9beb3b15f5b6dea1b591e157e8a2c18f2183779e3c954ea01",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-cell-close-before-save.xlsx",
+      "Sha256": "ba6be54eb8c2231be5ede2916c69d3178bdb03f4f3eab44597bb77cdd7521490",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-note-after-save.docx",
+      "Sha256": "96ad8585c7b43d781620d763dbd4bb4b8871ea9e357303a9d302c511ecccfa91",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-note-before-save.docx",
+      "Sha256": "3c44addace48919aed12363a35ebd0020cbf560c7dc76e47918916c8191a6000",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-note-close-after-save.docx",
+      "Sha256": "55b6623c6f7a40640053a582e2e29cd844ceaf7ef89a2002b825b90879d634f2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-note-close-before-save.docx",
+      "Sha256": "4d1dabca1421f28bea309250123d8702f587fcfae74a1d8283e06206497b11bf",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-slide-after-save.pptx",
+      "Sha256": "eddbd7c000e76dc4c859cb2b711afcd57766f3f56a135a61344045305b1420f6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-slide-before-save.pptx",
+      "Sha256": "6ae0e00c1e30c8b4929e3b3141385f3dfff8a137eeabfc795976b110fa538721",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-slide-close-after-save.pptx",
+      "Sha256": "51cf17c38852bdab74c99e8f8d2ffa0d75937cec420a566a1705c759bd7a168a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/pending-slide-close-before-save.pptx",
+      "Sha256": "a28ffc465608c49c16036beaa8972477ef71e4ce0ea9297c24ce9fd77fd0032d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/protection-after-late-change.docx",
+      "Sha256": "7d63e65cb51f1e9bdc6fb2d85e83ca5f8d8104d6abfab46e25ce72ac3587ffc6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/protection-before-late-change.docx",
+      "Sha256": "d2fa814c7b62258954a0a76a4422bdc8367c449ada495dd95dc46d80a339887c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/protection-undo-save.docx",
+      "Sha256": "41dfec5baaae7397b28c46f688b104b6ab1b8866b69b7559d9bfe957d9efa1de",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-cancel-retry.docx",
+      "Sha256": "94833cd77471b1dd17a9c6a6968c40824a21ea701a7149042b18f796d8e105b4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-disconnected-copy.docx",
+      "Sha256": "e18becb2b514668015e59895240bfa90963b3be81a9126bd67851fa0d64e8dae",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-error-retry.docx",
+      "Sha256": "3b1bdd08cdd298ebb8ce592446be2edd36a98a3f86e21cb9fe0fad9c2bfec3bf",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-pending-cell.xlsx",
+      "Sha256": "86022e1d3ebffbb052e2aa6fffbca29ebad68bd91af94afa984ea6bf363d0cd3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-pending-slide.pptx",
+      "Sha256": "10536a15209cd81c08d9528be30ebab18d2bc56204d89f4c4b4084e1d9f018f4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-picker-copy.docx",
+      "Sha256": "100b453cd34549b381e3e761b66d5d6fee67ffa1e1049dfb9c5f51969f9c0919",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/recovery-picker-later-save.docx",
+      "Sha256": "b4d31a75a49a663e13bf0bf7df167a7e6e208393ce5d2245c1ae216d9a00b8d7",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/reference/native-sheet-expected.xlsx",
+      "Sha256": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/reference/native-slide-expected.pptx",
+      "Sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/reference/native-word-expected.docx",
+      "Sha256": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/retry-after-failure.docx",
+      "Sha256": "6a556fde4e63eebd0144e6dc2d075e75e29725ec9823dac0c10ed603fa73af1c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/ribbon-edits-1.docx",
+      "Sha256": "a20e729f07f880120ca49207e5c5e9da26f30d3aaf38ec96c26ecf38fe3fc3c7",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/ribbon-edits-2.docx",
+      "Sha256": "f178a947cbb9eb503e4194dd2014ae55c3499d613e2de39191e84dd447b5d84a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/ribbon-edits-3.docx",
+      "Sha256": "2e1c461633fd6dac4b59db2e58e116e7da2b3bb8923b551236606e93890cd4d5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/sections-1.docx",
+      "Sha256": "936c9a4d69501e675f8c20ab53d8c0296b521975307075f851922b943d47497a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/sections-2.docx",
+      "Sha256": "e86b92d6908b7153b86f57dfbc7730908a4d3a1ad2870accc5cfacdc4af17be3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/sections-3.docx",
+      "Sha256": "37b9f325b764bc37c43393def1a4a8f12ff8f76cb9a1714fb67e8f518f890f5a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/selection-save.docx",
+      "Sha256": "75c992c5aa81c878d68ffb8f0181e41efa5b93c807c7f81bd6a04c161d37ef79",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-bounds-1.pptx",
+      "Sha256": "2211f7eea027f23745f68359533bdfd4be8fd1827087fa5f806ef599e4726529",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-bounds-2.pptx",
+      "Sha256": "e95b4e991690f0bdfbbf99291bb967d8728aef172e79426663c2f645ae58ef8d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-bounds-3.pptx",
+      "Sha256": "ca0b390f0da73a45934081adba32c8795b39a4729778b0f3367cc9a879f653e3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-landscape-1.pptx",
+      "Sha256": "a28fb7acf212395b2e32453f85224bf93fd2c97992debc7c75c0f888977e61a9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-landscape-2.pptx",
+      "Sha256": "e51183c0f32d764e96df3a1e002c8702fa3bdce3811d818c4201a14bc7ad2bc0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-landscape-3.pptx",
+      "Sha256": "edb86672cfb09d36bb47c9a8b0d68fae9dea2f4d0421ebac162ff52e9105cb51",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-portrait-1.pptx",
+      "Sha256": "65f05ead926f23d35bf3b67335beddbd727b7b61e8c704465ebf94877ab575e5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-portrait-2.pptx",
+      "Sha256": "f71907da6e88711ae466ea07aeb67a072c25e6d1cb2d145f954340088e681560",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-portrait-3.pptx",
+      "Sha256": "0894acb64b958b668b91f323f021cb90a6fc12c4b45ed26cdc0ec11931ea7abd",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-square-1.pptx",
+      "Sha256": "c24dcf661186feae110656e44faa80971c2a7e23aaa1757d1ad47b669568fb8a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-square-2.pptx",
+      "Sha256": "0e357c5a2e1e96343cde0ca7f4914a52c5c1c7aa22ed0cd1c8ac4f4ebf0f6255",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/slide-picture-square-3.pptx",
+      "Sha256": "fc3173a75078c76fde52782e9e42c7d9d8a94d2567241d8c567740a5e09542da",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/table-action-1.docx",
+      "Sha256": "d361f1aabf65a07cff35b54544fbb9ab179055552b205b1b2b16288189198b26",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/table-action-2.docx",
+      "Sha256": "e3e9bb1ce21163807b497c9bbecb9415a00f5980a3faf52f1aab9cb2c3ae1345",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/table-action-3.docx",
+      "Sha256": "0340e5142ee461b47d281f35edab2f8ebc6c2438e7ee5d98f497cf7d7a203017",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/text-breaks-1.docx",
+      "Sha256": "c956df7e629cac6ba3081046eb443d008577fc636b0abac44cb404ef97b5db26",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/text-breaks-2.docx",
+      "Sha256": "1f24ac0374de931dca1a4a59df1de70a187e49fa110be4bff999d89b12d3b927",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/text-breaks-3.docx",
+      "Sha256": "4e38e6ff13c71af3d5476619e5def79458a303a2f5c9a2a76ba269f1b4ec79a9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/toc-action-1.docx",
+      "Sha256": "41c0b7df4ced3124152fd633840a9021af4228ea97c272a431de449e8c22919f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/toc-action-2.docx",
+      "Sha256": "f00c88978e4f4bab8b09b064506b1f00916db7b5ee74f3605f9809f19c0c9960",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/toc-action-3.docx",
+      "Sha256": "fdfd024f685638d9d94fa413f0b3eff0b14d6341a2e44d07854e583a92cebd8d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/tracking-enabled-save.docx",
+      "Sha256": "1e29630fb7b41a66a687ed9f7fa27ea26bcde4ba2f452f06ce784ad86bdcb861",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/tracking-redo-save.docx",
+      "Sha256": "ee13f15abcea216c24f765665cdfbf272abf79ffe7da83f85d3ffde50e841764",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/tracking-undo-save.docx",
+      "Sha256": "b76ccaf446ea2d750503c478947e2719f9eadb6676a6fbec316f3f8dc1406ada",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-docm-save.docm",
+      "Sha256": "aae6834af1aaf3b3696548eaf633bb0710ff7df5bfd6a6547ba7935fa8fa834b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-dotm-save.dotm",
+      "Sha256": "8d86e0422b44da9977f237e6bcfe0c539a10a89da65fb4a4a96fa96b0e2ce6d1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-dotx-save.dotx",
+      "Sha256": "f0b86ff15f5e4e9143c016ac97e198b3b59c5cd95ccaa0900b5ecd1330bfc55a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-bounds-1.docx",
+      "Sha256": "62ad122f16557ebf4e3ca4ef6bbffde9b20b7257bc128fbab5bec6541091b272",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-bounds-2.docx",
+      "Sha256": "aa333d3b2cac562e1cbb254ec5958cdb4ce5beb455cc6002b31612166c6682c9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-bounds-3.docx",
+      "Sha256": "887c8b14b0528dfbc3289be3c1c17299f6a5992934c6b70b5fb45959819c3047",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-gif-1.docx",
+      "Sha256": "5905685be19edc05708e277932c99d89c2fe367f63c0d3a90375995d345907ee",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-gif-2.docx",
+      "Sha256": "0198ad93c466472d3effa690922bc6b3606b88047ec1d26144e9d9bc145942e7",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-gif-3.docx",
+      "Sha256": "5ac35d48c0dcc7847685f011d01c5a70422297c07edffab4a0db895e18ee2aca",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-jpeg-1.docx",
+      "Sha256": "08b30999462904869cca74f879b25e9108ff8adb3907d08bf3e2e27ebdeb49fb",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-jpeg-2.docx",
+      "Sha256": "0038a46cea11b1077bfeba58deeaf9740623a895af71649ba5d421e2c25c75d3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-jpeg-3.docx",
+      "Sha256": "a0c15f899c1644cb05d26b622f92e1234cb507342e7c70d768a8d2a10add651a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-landscape-1.docx",
+      "Sha256": "8f1edbdc9ea48e75238bfb2ff0d4d84f9af75c7dcf4cfe17c14b3246faf4a69b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-landscape-2.docx",
+      "Sha256": "6d1d230b44763ca2d45fce6a6b623b7709e7ad75e55b0776eb1b6ac3b1ee6eeb",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-landscape-3.docx",
+      "Sha256": "b9a0b979eb0c54d61a37a689774156eedbd810f884dfe1594ecc050900730c3a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-portrait-1.docx",
+      "Sha256": "c52093690aaf944a7ef8da339e6e512fe8829d4bcaeb999a263fa4238c11b5a2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-portrait-2.docx",
+      "Sha256": "0e9661f8a974e4cca79f7da9e725af1f1bb667f4546fa8bb1d60e56271a5c188",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-portrait-3.docx",
+      "Sha256": "da2520e858f8ce4da5efef59212135d368f49e37168c6e8935d48da51a18e1b7",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-square-1.docx",
+      "Sha256": "8da67d62fb3d45f833670e0922f3c8d0d66f0f0712b995df53ce35c77b1b8883",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-square-2.docx",
+      "Sha256": "7fb39b613c98b09adbcb793747e3c5c7c1b45be39ae25faa312b425c6b35fadf",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity-host/word-picture-square-3.docx",
+      "Sha256": "0ca49e3e503a93970d8285962f94cc6759d66c188c60ca787c3e8a4c77207f94",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/fidelity/unchanged-controller.docx",
+      "Sha256": "f160933a646a3fb47329f7fdf5a088fd4c57520cc464411842fa4ed6b22f78da",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-fill-host-acceptance/saved-1.xlsx",
+      "Sha256": "20fa698ebdf920aff035e2dec50eeef8377216097840979b1196f62a2fff385b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-fill-host-acceptance/saved-2.xlsx",
+      "Sha256": "721824132dbb6cff720fe4823475f1ca6d86000bd0d8ff347027bc331ff424ca",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-fill-host-acceptance/saved-3.xlsx",
+      "Sha256": "6778e2f2b4c7877464d4f6e1628e2fd1d5a15fdb982b3642da369402dcfcc80c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-fill-host-acceptance/source.xlsx",
+      "Sha256": "76d3a2ee7393ffb14d6e13f7c754a02bd3c3cd1703ae804b926c1726523ac961",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-navigation-acceptance/rejected-draft-corrected.xlsx",
+      "Sha256": "fac8cbb3130140b06b61bb7e5c0791e33641c4ad96d44b4e032deed4401472af",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-navigation-acceptance/rename-redo.xlsx",
+      "Sha256": "a9c7f4c8a4c77c42923ae70f0c196514b1c7695d6f0b2ee9d3a96d29d4b1d7ce",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-navigation-acceptance/rename-undo.xlsx",
+      "Sha256": "61c3fcd7a0b42941a911b76c8c6519af7655497687303aa90f56e4213112d328",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-navigation-acceptance/rename.xlsx",
+      "Sha256": "e2371a105857e541ea5024cbaa866fda3715e5a26600b61347c07ec38205defa",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-navigation-acceptance/source.xlsx",
+      "Sha256": "b4406e4f2a236266a51a2d26e758cde98ed1bd5e98400aad35ad09f8f2b7a388",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-navigation-acceptance/switched-draft.xlsx",
+      "Sha256": "f03a8b73774334055fe4b3c94cb25355ae05d60b0466ff6510cdf9a006b0ced9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-cleared.xlsx",
+      "Sha256": "88e9b7b86d529dc7a9e433232ce6da132b41f3a813c8d475233b8a6e7efb32b2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-first-column.xlsx",
+      "Sha256": "1ff3b0a57a889dc40e1fff356b04b1ff2d98a0896645def7a1341be74fb45726",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-redo.xlsx",
+      "Sha256": "b7a493d78ddc4dcb8c479d3767f43cfde958089de9707bcfc8ab204bf3ff330c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-selection.xlsx",
+      "Sha256": "881f20595b4479fccdd83553e1abd8db43b6c83598becc02121aec3aa089cc51",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-top-row.xlsx",
+      "Sha256": "25ae495533f9325230dbf70a70868164fbcaac85dda5602875b7b9542bfec217",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-undo.xlsx",
+      "Sha256": "42584cfd0be414ae34245dea82364f88c7c5af831474d9f4bf7c144a20156689",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-upload-after.xlsx",
+      "Sha256": "6106574e0d5a031219eb7032b117eb5f891daa146fd2a067256f876deb603e02",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/freeze-upload-before.xlsx",
+      "Sha256": "aa0baee76c0600f91e81822b39ede6d6e57f47f7933dfcc034f2d293e59269c3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/grid-delete.xlsx",
+      "Sha256": "a505d9cf0b85318f6bf5b25d9ad24a4df4d8db12180f6700a7d71c38bf1400cd",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/grid-redo-other-sheet.xlsx",
+      "Sha256": "74b18306bd788e1f63478ea4a53ce05ab785bb501ebc24092c85c4dad4df0333",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/grid-undo-other-sheet.xlsx",
+      "Sha256": "be2cfdf202fb789720880355a2ee0af7d652e4569cc26999cd65607bed359244",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/rtl-enabled.xlsx",
+      "Sha256": "272c1bcd5b3c955dc55d9a78dab9d7ac2c225a9a25a8ded8405b20b2de69f205",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/rtl-redo.xlsx",
+      "Sha256": "23a2397be0c4a3785e5dfd471570fccb8175c004fd777ffb92f3534d1cfd6882",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/rtl-undo.xlsx",
+      "Sha256": "6e86812049dad7910dc60c930d8bdb1b0380f90aac5102971b551fbf0d1f0f6d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/rtl-upload-after.xlsx",
+      "Sha256": "5edb02e9f1031a7836d3566a322976e9ac87bccd24f8ef62d41d6d5176a21a45",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/rtl-upload-before.xlsx",
+      "Sha256": "90e7c0895a68b4b18d3f36b3a5bdbf78127044505b1b84e87fef822bf939ee27",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-sheet-state-acceptance/source.xlsx",
+      "Sha256": "bca73053478d9826d01fc6accfc8abdb372f49237a866f94d480359b2d89cae5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-style-history-acceptance/cross-sheet-applied.xlsx",
+      "Sha256": "778593aa11ef4ad0ad77e9ae11bb81ad7efde6425091d4f44d873f15a45a10d6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-style-history-acceptance/cross-sheet-redo.xlsx",
+      "Sha256": "a1a8cf22c0ade1395a44efcdce0051981118d3d629e4a7f5ccf5dc649c1b859c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-style-history-acceptance/cross-sheet-undo.xlsx",
+      "Sha256": "2cc43b07048e111580d9ff4db9b73d67a23af5672c6d93fad08cbc93ec638139",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-style-history-acceptance/native-redo.xlsx",
+      "Sha256": "aebfbc2e564e36bff56df42f9ebf2a498e7da85d6ed09d6b940da0043e472386",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-style-history-acceptance/native-undo.xlsx",
+      "Sha256": "eb9cad69deeda3de891d14e16ef02d18ed1c5e94c8c8cba1e7f2c683938fe73f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/build/office-style-history-acceptance/source.xlsx",
+      "Sha256": "49ae44c2984effbfa1d4af8267547737c5d5dd9181d5d61d09cafdb47579d8d4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-altchunk/altchunk-imported-1.docx",
+      "Sha256": "bb763fa08a05309903dec309a6205472c9350ef56b6f8251d8f2c826ebab5f8d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-altchunk/altchunk-imported-2.docx",
+      "Sha256": "00a9f21ecb1d32fc04b8ccda5669c4a68140ac9015cc6eeb85db0f49876e1c3a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-altchunk/altchunk-imported-3.docx",
+      "Sha256": "5f72fbb206626a00fd0de494cf3813d88b6fe7712aa3c22b7da6f96011775e89",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-altchunk/altchunk-moved-1.docx",
+      "Sha256": "c397446707df6029d05baff5bf0e949b335488ab23bd780c8f2cf96e8f6c3089",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-altchunk/altchunk-moved-2.docx",
+      "Sha256": "668f8a13a87fa884424e441dc6e4d5e893953421c5cf89cdb9fe62830b7fe6ef",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-altchunk/altchunk-moved-3.docx",
+      "Sha256": "20395eaaa54e48a9654c046accf4997c0008ea3b98d178341413f27955651e51",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/edited-1.docx",
+      "Sha256": "00edd13f419ad883e0513438261e784aef07f7dca8a13f0ad212ee87c2942a6a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/edited-2.docx",
+      "Sha256": "7b7f6e13870f2af8d60318a4b5c0bfde1183b9055816b60b776455311af5a9d1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/edited-3.docx",
+      "Sha256": "962ded1acae83dac1543eaa2ad5f46e0f6fce4d4624a1fc838cb32a74945854b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/imported-1.docx",
+      "Sha256": "23624d1557ba6d68c2906f0f7faef04cc1698b3dfe7d5bf852bb1cf6b67be284",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/imported-2.docx",
+      "Sha256": "ab4efc22ec47beedaa707ee023598f09032a9a1829484d556dbad96e39c0c9da",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/imported-3.docx",
+      "Sha256": "6d653df68e1a2c017ffe52e77750e08b70ec256acce3c79c2a50db5ccdf6aa24",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-controls/source.docx",
+      "Sha256": "fba38173b5148646d8cd00d1f18baffaf4a5bed829bc8d02583dacfbf75ddf4e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/edited-1.docx",
+      "Sha256": "d140e81c168126d1e9dd0f0148ddabaeb3e34e33f8ebe2fc498b002779270ff4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/edited-2.docx",
+      "Sha256": "a1209cbc2c1959a2346a6b7d44986fcc04e2e1bed7fdc7b4be60a052c188256d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/edited-3.docx",
+      "Sha256": "da6ee14911aedec2437c3ac2c6efe8b7a6b66c1fc6f996150d0a00792331a279",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/imported-1.docx",
+      "Sha256": "5328cc23132b0420e368eb9ddc59b26cf9195031dcfee0b0d7f4dfaf80653c37",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/imported-2.docx",
+      "Sha256": "cfc0153cbc1e53dca8b3351d636eb9f281496fe47fd8178c28f6c381303729f6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/imported-3.docx",
+      "Sha256": "580f6de076cd1e8828b5ad5492b40361043e1300f5504f106a00e92a659b1935",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-aux-header-footer/source.docx",
+      "Sha256": "2d26c7e85810e0c1ed50483ed16e02e2d03c43f83b182e819571f1e0a66c7036",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bibliography/direct-1.docx",
+      "Sha256": "eb887521bf6ef3116d22cc48b85d351a4befc450f3952bd30e713f655d73b804",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bibliography/direct-2.docx",
+      "Sha256": "b25021ba56d3cd9707a09565dbefeba1551ed339f49272eaf4cd71b59a11df51",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bibliography/direct-3.docx",
+      "Sha256": "e798b06d9010905b7954e9d20d61c0cac7909db2f1d012e2f1ddaa4104a4b639",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bibliography/isolate-1.docx",
+      "Sha256": "c06c6f2376f9136e005a065bbe1d7fd5a6b56026b60fd570d1e46fedb3ec735f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bibliography/isolate-2.docx",
+      "Sha256": "488ce82a9edad2c6a667707539567058b47ce499e961e811462eed3cf2cc3b7b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bibliography/isolate-3.docx",
+      "Sha256": "7d8bded9674f11ca089f274699d59d11fecb7039953e94f554383fc20dbe87fa",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmark-copy/copied-1.docx",
+      "Sha256": "93799207896f1bbc06884e4a59a80e90d37c778ed328e4a8fe4c94b5336596ae",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmark-copy/copied-2.docx",
+      "Sha256": "41796b35e65cb3b2ce7d83f1077fdf39dc736743c07d7eb818aaf6afe492a849",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmark-copy/copied-3.docx",
+      "Sha256": "64728a338e14ba78945e7cafe73882e3fd89c3b5c62d6539d3cdae496617853a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmark-copy/copied-expected.docx",
+      "Sha256": "4813413bbe1ac7b1cd927d0b40b07752c0944dc272d849a4274c627ce4d969b3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmark-copy/source.docx",
+      "Sha256": "7634d9c2fc37a187b134e618a806f787fb8277ae6fd082f937e085662a3fe6ca",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-edited-1.docx",
+      "Sha256": "0a966c20398b118f91715620bd9a7682da9c3e64734eb25e0fc721edf107fd64",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-edited-2.docx",
+      "Sha256": "4a777fe0e138ecb99b686137d223fdc6ed975130cbb08ede0f994ff794ac896a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-edited-3.docx",
+      "Sha256": "ab10c0d874b0baddeab197927ccabfc02e1498a29f4382023cc8b15868506e0a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-imported-1.docx",
+      "Sha256": "6ab4f234ab4fca07f36a19e07d8ec947eb5dfcb8bae08e3eac35fcd66c501838",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-imported-2.docx",
+      "Sha256": "7f1e2d4b856d378f946111a996e915cfcdb19870c654aa1c540723343c89ea40",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-imported-3.docx",
+      "Sha256": "fd87fc9c1376633918086163673f04a77319a4c4b8a3438bc338cfb14e119482",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-source.docx",
+      "Sha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/cloned-1.docx",
+      "Sha256": "d390dc96b17d4988c1b91858cc04e25e2668c6d92273ae62b0f01dfea358b0d5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/cloned-2.docx",
+      "Sha256": "c8c85dd39268090467a884ca798f236faa3e28b8db100b8c916c9f415b535553",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/cloned-3.docx",
+      "Sha256": "f27b0e3cc72814a156b5ea71e3fff3331e7666903051dfe6d6924bfc44f51cf5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/edited-1.docx",
+      "Sha256": "01c047e594affda96cd935b198e3fee2673ce96b9a64fec31850636de0331e9c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/edited-2.docx",
+      "Sha256": "7275adae150bcc51759d37ae08929394fd3e42d0254ca76cd78cdab82724c946",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/edited-3.docx",
+      "Sha256": "959d1cc1ed4856ff102176d639b2beb29bf9658d5d11ca8fc42b8465ed0e35d8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/frame-1.docx",
+      "Sha256": "67d1f6258fb48d5a346a994a690514363e6580a3363c5b9959f692493101a452",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/frame-2.docx",
+      "Sha256": "3effc850912d29c64dfb6dc88c6d03a4cc9a06d6e5dea4630730ddcdacb2e966",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/frame-3.docx",
+      "Sha256": "a3a4d983755e0080e2acb09b553a8a92042e50087228e32a00dbdf3c20d97a0d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/frame-source.docx",
+      "Sha256": "84efbba2da2751e303d812860309a701b71b6424ed13c811474f37081ce3d01a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/imported-1.docx",
+      "Sha256": "0ff21c3630d4f3ee0b70e5fb136c29a0578fc7fac82f5926ff13f066641eac5c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/imported-2.docx",
+      "Sha256": "2b91f58a3df046d000ba92e60ebe45fb6cc72379e9bb77800843875cddbc2202",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/imported-3.docx",
+      "Sha256": "6c45e47d2f6e1a7fefda9dfa375867467bb4a7e5144df2ce6b5f0dc82bf55b62",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-bookmarks/source.docx",
+      "Sha256": "b469fc9d8ffc372e8dd6d84fc506acd19e47074262f9717e1fc0c6995758ea83",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-edited-1.docx",
+      "Sha256": "b7b5767733e4d2badf751ddae582ec903d06ba3667431807dbd38ffddaf11a72",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-edited-2.docx",
+      "Sha256": "aee88c532fa636398ff55e8d6476e24a7d59aab4300d0f4446d47013b4a09f6c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-edited-3.docx",
+      "Sha256": "fc9c7fee4cdcb00ad899467f40b6560213590c11a8a3885d077b58177927efb8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-imported-1.docx",
+      "Sha256": "eade396c71ab6c6228ae6e53aaf5ce69c24a7c5ec4a8431048f1e06360f47ae1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-imported-2.docx",
+      "Sha256": "274a7746484e9f1c1081b0c4e97724cfb2a45fe7e7e222bbf6f366cb047c13df",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-imported-3.docx",
+      "Sha256": "54902229deae688294ce1601be8d90a42323107e1f574e0118943bcc46f69a3a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-comment-threads/threads-source.docx",
+      "Sha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-edited-1.docx",
+      "Sha256": "eaa195699dd33ac4569e82ef49c659d8afb40771d9b8b4b2b560d7971353fa52",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-edited-2.docx",
+      "Sha256": "376277ff7cee75cfdc8ee6bba0ebb167aa5e782f3a3c0f9dbda415b15b918f3b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-edited-3.docx",
+      "Sha256": "1b3541cf182940dded25258732c92f2fcd98b8d2dcee58b00d24080ef01cc4e5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-imported-1.docx",
+      "Sha256": "d4d2240726a281480323c42b9bfb92c5740f1d877ca776b6843f373fd5efe22d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-imported-2.docx",
+      "Sha256": "07c87ee5584ab80c79b0451fffba5c9d33ab9aec4d4facdee9af684de63a1383",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-imported-3.docx",
+      "Sha256": "00745212fb20cad3c6a4ed8bd57dad8fb7386b22794ec7bbd9d38f78d7d396a2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-source.docx",
+      "Sha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/legacy-frame-1.docx",
+      "Sha256": "ad8b64751aa7913313d0af1cee20cac23a9e4bfa42c60d24bc36e693989ae326",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/legacy-frame-2.docx",
+      "Sha256": "24291d9f64954755072f393eab735748b87b295b8ece64712ca3fbf4e81b8d0e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls-legacy/legacy-frame-3.docx",
+      "Sha256": "f8fb1666d825080b9ebffaf0fb60ac031bd7dfa341e2f559fe0cee372d86d80a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/direct-1.docx",
+      "Sha256": "6433f18732b4fdb7c706b5f990523a7bcb9283757b52cd86f5b453aa60b690cc",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/direct-2.docx",
+      "Sha256": "0404a77f57245631ad69f35d2db6229c29c0583dd16507a45061f64d64e978f9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/direct-3.docx",
+      "Sha256": "abd663c4859aa52d8733c6162eabe31fc960bbe2773b380506eb29b8bf84e778",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/imported-1.docx",
+      "Sha256": "47cfa0192d3798f36255c8c4c6bce701a00394e54599425ab94842bb98dfce23",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/imported-2.docx",
+      "Sha256": "087f38e7d571fb431b3085f48cc0912adba68ca888e7707dee59fe57193db5df",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/imported-3.docx",
+      "Sha256": "751fcd9634206f0d551bac848e5ce898f335b2fd6e4d7bb418998c1e66d3de37",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/isolate-1.docx",
+      "Sha256": "e1fad9d54877778b3311992a9bb999a228f7097af9eddbf5f49979ecca13e086",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/isolate-2.docx",
+      "Sha256": "c2643a774d3ee7a830aceee448993e528c30821bce8910493758a095326bb8b4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/isolate-3.docx",
+      "Sha256": "cec685cfda916a9f03697a3227c13b8f7e6e21a5cbb3470b567c2a1d4f82e563",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-content-controls/source.docx",
+      "Sha256": "5af5646742521142abb6295e0962e84a21de75f5959d66aa524f43ab48c11a40",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/none-1.docx",
+      "Sha256": "9d89c05e0c131d00199b5cb6f328629a222dab4fdca9ce5b409194e33b183b1b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/none-2.docx",
+      "Sha256": "dba886734860e3b279e8c55576651bf227048a3fd3f701fe7716ddca0be69b5d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/none-3.docx",
+      "Sha256": "2bd10b45eab0c93a87fe33fc056622c57061c4b0e4724945bb691c1f28ca7eac",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/none-source.docx",
+      "Sha256": "956a75351e281d6fcaea42829e79262c4567eba6113ea67a82fc191a61d35543",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/square-1.docx",
+      "Sha256": "4fc07fadca737db870df7530b9d178c6c07f440e4f16df04228ca8a02dd8606b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/square-2.docx",
+      "Sha256": "0c312039dbe9ebdc5014cdd8baaa1653d3ed12fc867eb2e5fb2e1f65739cacdd",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/square-3.docx",
+      "Sha256": "1e51780cbb012da1409c65c517149e925e4c828d30fa6c49ad14c6eb1512a545",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/square-source.docx",
+      "Sha256": "cc13ec6ed3be7cfe0c37c56c0bcfd5fea15b4d5e0901ca896f18b111690ad567",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-1.docx",
+      "Sha256": "cc4f6854bfa798ac154c3c80208d6e8c4969ed913bb1a03e3027cc0ec737e97d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-2.docx",
+      "Sha256": "fd6f8e7599caceeb75f48e827775724446ab021d7982b82537871de2d9e03d17",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-3.docx",
+      "Sha256": "779be1a4a7734a45ee9abcee231db7be2e63e14a4a8ea57cc5eaa64d9bf1bbf6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-source.docx",
+      "Sha256": "e14aaadf28e887ae68c5492226c9d42d3954485be35511ec539bf27fe9bbf0ba",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-image/replaced-1.docx",
+      "Sha256": "30a0febce309eeeb79835a9e26e421cd01050247c7ff014704e80579d7584df8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-image/replaced-2.docx",
+      "Sha256": "a58204aea244ea41259c579ca4fc21049b7911826dfafe62d01fdc9a7b2a6072",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-image/replaced-3.docx",
+      "Sha256": "e35cd048175ae0a6b5f8129ebc3f20e06287d04d8056d6ad5480e79391aaea91",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-inline-fields/direct-1.docx",
+      "Sha256": "3fc1252d25979b4dae895b18d0f9417bf798c0658476c15cd79397083c97b2d9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-inline-fields/direct-2.docx",
+      "Sha256": "8354c0602bc253fa5b3ed786457a1768b3a79c3eb98cdc420f4b032da7c3fbdf",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-inline-fields/direct-3.docx",
+      "Sha256": "cd0d7959f0cac54e9bc8a849fc7939713690f12e9add85cf3dc522b265557bde",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-inline-fields/isolate-1.docx",
+      "Sha256": "cb2dc9b6913740ce32e006c07600c6c884ded80b592f33ab0b95e8ab3e911f3a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-inline-fields/isolate-2.docx",
+      "Sha256": "9aaa3f9d585001beb28cfb7ae2b26ab69819fcc8462d1da4d12b5f86059ae32f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-inline-fields/isolate-3.docx",
+      "Sha256": "8bb5a42bf359c030e65694e93acc5aedb99f241b70e959afe3e20259b41766a0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-lists/restarted-0.docx",
+      "Sha256": "0f3b7f5a45250b1e6d05a2ed071c45b148ff77380b5a73d5cb3e4556f69190d1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-lists/restarted-1.docx",
+      "Sha256": "31eb48eca5c4815808f477343d36c66be954164789648a8d1412b10b9e1a17a9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-lists/restarted-2.docx",
+      "Sha256": "9d424179f38e9db3112a9adb9363fb7e5d86c499f53ea2984c5aeaf49095a73f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/created-pivot-1.xlsx",
+      "Sha256": "24653715249502291b60b20e00f259582dae39cce184420c5d8c99e32610d55a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/created-pivot-2.xlsx",
+      "Sha256": "e3b1be920262e991452095bac2be11112f8a799832df256bfe588d48ce2bf5b4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/created-pivot-3.xlsx",
+      "Sha256": "0c30f776013d7790fa10982a6fce1c61a4712281d9e086449dafacbe18d1e5ee",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-sheet-edited-1.xlsx",
+      "Sha256": "2ff3940d0ff000f3b423df204fbb72f95993292dc1ebf2a59be1878a093a80e8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-sheet-edited-2.xlsx",
+      "Sha256": "d415d8d5d04a43d60a7f51e0fa4093fa7f2424eb97652a753181579231112b3e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-sheet-edited-3.xlsx",
+      "Sha256": "c0743913a0d0dc01a380bc4389d26eb4fcc9bdbdf93c49819199e87a0825e636",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-sheet-imported-1.xlsx",
+      "Sha256": "d940e563d67961c46bd7886b9d12d537bbb5330f173eb210be41096b5581799d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-sheet-imported-2.xlsx",
+      "Sha256": "ba38a2ce78867ec3872a8d37378e9310c6769810e445b7aefb2abff0d94cfa77",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-sheet-imported-3.xlsx",
+      "Sha256": "db71cbcd624cc563676e00872ca565bec47b1869a65adfc0b782ad15b2fb287e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-slides-1.pptx",
+      "Sha256": "04818a47027b7493e87744a76397eeff1250dfa29c2bec8bef5511b16b316dad",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-slides-2.pptx",
+      "Sha256": "9be152e11db425c52f541c5d94dc3fd42131092b7a955de811720aea4f5a724c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-slides-3.pptx",
+      "Sha256": "e0a227afc66a538bab15de8fc1e2677bf0043081d4fa4e169e95c7d50ac293e4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-slides-edited-1.pptx",
+      "Sha256": "be1c9d9cefd9c144a00c297d7dbf667a1c83f17e1d17b808ca9c2d0c21651620",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-slides-edited-2.pptx",
+      "Sha256": "91456c1e37952876fee6d9a4d7f3e02167777b4a98fc58f04690eea0c773946e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-native/native-slides-edited-3.pptx",
+      "Sha256": "3a11e66782ff14f686e1e1b0ad18d7f00d54357227913fecbb3b597d2f27d6dc",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-edited-1.docx",
+      "Sha256": "7f977c16db79a33897e39b5ab5aa0128191a761161682982a8c4a928de80ab42",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-edited-2.docx",
+      "Sha256": "65706dc1846de3dd2dff7ad8d155a36175c02eadbf3359424730f57889e355d8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-edited-3.docx",
+      "Sha256": "798aa56f39e968ff28df7761dddb7caa307d1a8e808b22c960bc1753e8e646d4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-imported-1.docx",
+      "Sha256": "d343ff36c58eff394807136a9a5735366c280a1f4f2cb4dcdf836982af845220",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-imported-2.docx",
+      "Sha256": "01029c772ce87c3812762354f78d95a658a7e178fd019ecac170b5d903e3caf2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-imported-3.docx",
+      "Sha256": "8c540c978c5674f6f7d8adec72fcde427853cd5b46298845b3a2da035da7bce5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-source.docx",
+      "Sha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/cloned-1.docx",
+      "Sha256": "90fa59e95978bebbac694b9c1f024998ba0a5ffc21f1dd779431f8a32961f7f8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/cloned-2.docx",
+      "Sha256": "3380042310f0e57470ceeb99b78693d6bfaae1b958f5dff816179161673f769c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/cloned-3.docx",
+      "Sha256": "5d372d19547d8b4fa5025428ede5bd57f2169f270603a640d046eac6ad8d6c66",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/edited-1.docx",
+      "Sha256": "373c5ad55770f1ce8e29327c840561490e8d893bb53c989fcfb98b8e28c36774",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/edited-2.docx",
+      "Sha256": "31c0d19c383ff68226e68eb4c2e49081fb92bc97ffa3feb1e9a2ef9538862739",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/edited-3.docx",
+      "Sha256": "33bd8bf86607fa3f512ed20887c4449d1460e7fa487c99a4d6d42857f62ccfa2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/imported-1.docx",
+      "Sha256": "03da6c97346fd2b718910c161d0a187a3e5ac35e339e70e56353f395e094a50e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/imported-2.docx",
+      "Sha256": "1039668eda235b61872de4c58a6289af4e41139723ff719c3fb904b869bc529b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/imported-3.docx",
+      "Sha256": "b3040d20deebb81cb85e0af47b529eebb7162bfd90cc40d36c336990fa013f76",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-note-markers/source.docx",
+      "Sha256": "24d80e959d01435191ccaaa6d31bed1e214becbddef6eef8b87b69d79d357a48",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/edited-1.docx",
+      "Sha256": "91648dbbc215a52c4d201216f4d91dea9747fbc189f0e727ab1c3d56a3089347",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/edited-2.docx",
+      "Sha256": "f6d017072911c81666d0bfe72be144ce24b96880d0bd01587fb95da395379b12",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/edited-3.docx",
+      "Sha256": "1f57019b39854badc4981c7410bd4a4ddd1567ac9bb84ea2f97914637b75c4f7",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/source.docx",
+      "Sha256": "11550ac3f3c06bd4093b61bf16cc879827587a53c1cf0abaf8dcbdffc19da59e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/unchanged-1.docx",
+      "Sha256": "8d4789027968f3a7f1226da2f234b2814d32649d380dbc9e39cc9b7d31f91233",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/unchanged-2.docx",
+      "Sha256": "3857e73aca3d6b6c07f8cb323449cce0560250c1a40d6f9c3ca80f3d38b03f3d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-notes/unchanged-3.docx",
+      "Sha256": "1823553f93d1c0441d9f32fc2f5d6ef943805a609ebe652899716ba240ca2efa",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-opaque/opaque-1.docx",
+      "Sha256": "f78e38d33c0902dec658befbc60795a70b93694a4959d5affba3a8515df36c29",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-opaque/opaque-2.docx",
+      "Sha256": "4af96d79c17fab4a8956c783e7964e7e9055f504934b85f6977cb4db095610ad",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-opaque/opaque-3.docx",
+      "Sha256": "1e9880e2822077064c0e26c2fbd8b49a000c806616276d4a13c72da6e3ab73ff",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-revision-stories/direct-1.docx",
+      "Sha256": "4b3e39698d7bae5ddaabc814e542c3199cff3948402384e7576b1f25b1e3f1e4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-revision-stories/direct-2.docx",
+      "Sha256": "4dba637615157e65f3eea91599e7bd981cf2b7166558549fcf25fa55cc2916ca",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-revision-stories/direct-3.docx",
+      "Sha256": "661143d6662f64c45f2c2604ddbed7f807ebdce0027a043cd18cf577727a831b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-revision-stories/isolate-1.docx",
+      "Sha256": "7a03173b9c6a2e623d0039c1af1f00a189f1e53449f82cb7b5b46ca6e9bad8ef",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-revision-stories/isolate-2.docx",
+      "Sha256": "a1435dd069cfed14b46440a90d2d0d4b9675e7f3a979ce930f5fd74a49979cd6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-revision-stories/isolate-3.docx",
+      "Sha256": "22098a65087116a6a848208dd7faeba855dddd7e04a69d974a65bfc036b367ce",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/column-metadata-1.xlsx",
+      "Sha256": "8435ce27f767219e8640ad5f4bf87972cd5e3a9551155c85d83a68d677816312",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/column-metadata-2.xlsx",
+      "Sha256": "bcc60acf112f83cb30833dbe0fea01552a7807b7f13bf20bfab8839b3a5c5850",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/column-metadata-3.xlsx",
+      "Sha256": "1477d586dd5e69bf4f02193698ebadf5c5250b582c63b2d6f60b7616ac6d55f9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/namespace-style-1.xlsx",
+      "Sha256": "2b5644c01a6f19d721b86f9f1aef998a2476bb0deb9cdfd7d13beb744f294325",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/namespace-style-2.xlsx",
+      "Sha256": "1352a2cb2ae2324da013d53c342b31e322e86f0803c4d3c4bba15fc9f54a3a13",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/namespace-style-3.xlsx",
+      "Sha256": "e0372dc237b689944eed6df137527c30bf311be51351423b4d1b7d898dea3ea6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/namespace-style-reference.xlsx",
+      "Sha256": "0835e5ab3d38883fda506e18d04583cf2f89803b50a4c3bf570e5e6c9330cd73",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/sheet-style-1.xlsx",
+      "Sha256": "0ccb1469dd48670b6ee2a5f767fa9c690aea0201201a1f660c7e952cc9409b8d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/sheet-style-2.xlsx",
+      "Sha256": "f080fe8650159d3c64b7c3fd61182a5c4f1b7f697b6114f26020a1bb46f4b239",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-schema/sheet-style-3.xlsx",
+      "Sha256": "778584bfc931d48122777f271375fb9e3e376d7c85363049f50b4845e97b6fec",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-script.docx",
+      "Sha256": "50cfcf469af621c206a0d6ad121d95a3986d613f4cafa81f5e812feec20d6d2d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/sheet/edited.xlsx",
+      "Sha256": "b2de8454f6d95464aa03cbfdd8e0fe4d24556236cb117c06d3419808f0f2cc4c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/sheet/roundtrip-1.xlsx",
+      "Sha256": "647e923e3c807178de48fd4062c280dc8de5742ac87f5b3954e5f6bc55ff0168",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/sheet/roundtrip-2.xlsx",
+      "Sha256": "b6328bcf7d2aadaaaaecd93868a90eb4e6b4613e01e767c6fdfadedda67ae0fa",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/sheet/roundtrip-3.xlsx",
+      "Sha256": "08318c60b51683899c299c058d8253607e1c593d88da995b20881fc7bfe48694",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/slide/edited.pptx",
+      "Sha256": "72974dfc0454556292c6236befd2ea954e90ad88141bec132d91f48b5fc249eb",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/slide/roundtrip-1.pptx",
+      "Sha256": "759e76c08370970822055f460f0c03c183adada918c9944f19bee004f319020f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/slide/roundtrip-2.pptx",
+      "Sha256": "65ec9a4440e15d8cc4b3c2f1c420782e7d116ad207e036fed9c489b7415bb73a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/slide/roundtrip-3.pptx",
+      "Sha256": "a6d7a7f84c616bc396477bcd90a61918e3afe121d27f293719ad2c68763e7cfc",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/word/edited.docx",
+      "Sha256": "11595e4207a218bef8ae641cfe59b1268dfb129e498114bb2d3726b7a6ec160b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/word/roundtrip-1.docx",
+      "Sha256": "1efaf2789ddac06817c43e02bcda1c7e3667ea1522615bf215e8ed4c7bbbe079",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/word/roundtrip-2.docx",
+      "Sha256": "44125bbbacf14e407c560913241db6786981916645aaf8a706c78bc93b1783d4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-scripted/word/roundtrip-3.docx",
+      "Sha256": "7105cca52603f36b5c15eca4cccdcd255c30c6a485588b363f6bc0198cfd9b78",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-section-clones/section-clone-1.docx",
+      "Sha256": "9db6594c52d6aa5b68b6a4704c0cb055e9adfcb41955a24b5b26a2282c4d0d97",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-section-clones/section-clone-2.docx",
+      "Sha256": "14631a1fc73670778d3366ff51a9be34e678194e2da5d2bb5ca81c45aa34676b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-section-clones/section-clone-3.docx",
+      "Sha256": "d5bc43e71b06934719163b27b51f041154e7e8405c6e623409ec5f82bc93c254",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/explicit-1.xlsx",
+      "Sha256": "e261dac5d562ac94b6311efc43be26eb294b3fd5bf214f9e88236a30e2c71562",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/explicit-2.xlsx",
+      "Sha256": "62627bd1aa6fcb5d0488704c27a4e167e0d31dfa2be05e561ac8361b9220a2f3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/explicit-3.xlsx",
+      "Sha256": "a774b74ec85ba668e8c547e0fc38730e5edd4cb06de978895a09b0e41dbab63f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/explicit-expected.xlsx",
+      "Sha256": "4c732a2dac7c25bf12c8161ba44bd7a76548b01a194db70b0d0b6552e1511888",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/unrelated-1.xlsx",
+      "Sha256": "4a6399a7c3d3b4cea03c73517ccce5ca3ade9551d2a1cfe77627a46180fcb03f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/unrelated-2.xlsx",
+      "Sha256": "97dc534f7949ee027976f4f10ff6e0e7a2f7af75f44f598c6166448e3c282926",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/unrelated-3.xlsx",
+      "Sha256": "fd92cdc1649e7bbf33a01f7c465acf25b0150e441ae07efad8d2071f9891aaff",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-fill/unrelated-expected.xlsx",
+      "Sha256": "974cd8583a07f3d4e60beafe8108e08a17a8a12e23464c282d9925b491c87ed5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/normal-font-1.xlsx",
+      "Sha256": "9769a4dcd8a90e4fd4f6397402f1e6ff2a549482a1a16f3ca7d0f65bed55786d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/normal-font-2.xlsx",
+      "Sha256": "ff18984786141bbce49654717138897ad77d2fcd90e7cdac4093dc56b05fa60e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/normal-font-3.xlsx",
+      "Sha256": "f3ec0bd9a8796318549060f6ee56152fc446cbefde43ce43d7c28f70a58a28bd",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/source.xlsx",
+      "Sha256": "7021b9a131d929d4ae6d4074a69056c997efa5b96f7693d4ba15d6c9a41b737f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/unchanged-1.xlsx",
+      "Sha256": "9a2b21945d11feaf532842f430d29a3c9c37c9c2b071ddd6b774c6b606b04f86",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/unchanged-2.xlsx",
+      "Sha256": "3f5c19644f31819639d5d9494171e50975b81586bc0e55b976fa75fe30e579b0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-normal-font/unchanged-3.xlsx",
+      "Sha256": "88b8bf4fc9e6dd5d6782b89af7e89d555063c9c651b7fbc26e1e72b5fb3e5d3a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/expected-recalculated.xlsx",
+      "Sha256": "ee946f7410d3aa2cdd26ec88005ebe9fdbb5d5fc2c497ca1e4f4575411f9da64",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/expected-renamed.xlsx",
+      "Sha256": "e800d3126a5c031181d7fb0fd2b86ac43a4c6b47d34f6acaf4aa3cb90dfa10d0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/recalculated-1.xlsx",
+      "Sha256": "372f233bba694762283b0bb8a0102f0a88ca7b348003a10045530a169196b362",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/recalculated-2.xlsx",
+      "Sha256": "3ae9662e84f2c9f99399dc836ae305e22439b91a7cd7df02446ca260709c451a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/recalculated-3.xlsx",
+      "Sha256": "468330188d0e312aae750427301a5b5cfe19adcbeaeef8ef64925bd398812d38",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/renamed-1.xlsx",
+      "Sha256": "285250e86430e03266b6129224bd850aa1dae5dc0c97cab43503e5442f35fd42",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/renamed-2.xlsx",
+      "Sha256": "b1f6efd54ff4544c955582c0b9e85bc8b5510f6f3c37944e04ba9502a3df5248",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/renamed-3.xlsx",
+      "Sha256": "eccfb399a06db55d3f2ba032a7b3c3f15d63d8989a6e3dfea6046b93a5dff431",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-qualified-names/source.xlsx",
+      "Sha256": "aeb3b6c808a4d4ad43b61e45e8e04664e9cc3581c65c6d94eac8590030ff0d8f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-rename/qualified-expected.xlsx",
+      "Sha256": "b885842cbd380e906aa58c56e01152115ae4d77e62e018764d9bec9a568f6c3d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-rename/renamed-1.xlsx",
+      "Sha256": "b48bb724e940d03c89189118e28044c299ee6767dff3f81d97cd3520131aef19",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-rename/renamed-2.xlsx",
+      "Sha256": "a615bc513bfeaec85b49574fd9462b2b8a050861e804007043f28e092072f80f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-rename/renamed-3.xlsx",
+      "Sha256": "395abe651af054257e1fb283cfce4212eccc0cd0f6b07b18807192e483a68f1a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-sheet-rename/source.xlsx",
+      "Sha256": "561a2ebf80b6f02e8b1fc00648230b341ff68e1a3ee501ea026b9e69c35fc24b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/direct-1.pptx",
+      "Sha256": "d2114688c23cd3af8befa898211be6b913eeb448640eb84b5ee31b7d2e9c314d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/direct-2.pptx",
+      "Sha256": "863c5903e7d2765ea015e5d38292ab9a548f3d1e3cee39b694a7626602836d10",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/direct-3.pptx",
+      "Sha256": "83545df787d3732b4d2ee5f5dc57128ae5a7b5c9e604e075082f6b6236358c70",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/isolate-1.pptx",
+      "Sha256": "5adc63c9c9ab7d4fe85909478ec3642866e680e64b0b8c008e662916d2c311d4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/isolate-2.pptx",
+      "Sha256": "ec00a41826b40e2c24b927ab8dcfcc6fe478442e22414372156c4dcdd90e8f4a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/isolate-3.pptx",
+      "Sha256": "2372ec1edefb8fbe2c32afca1fb4bdd0e548b426437c032b7d52777d7cbb1133",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-arrange/source.pptx",
+      "Sha256": "6d86b24c22bdaac9d2e57167f7f506626029b4060eb793f523bfe86bfe266b50",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/backward-1.pptx",
+      "Sha256": "9f7117f78d258c2714a43ae7c04eefc8797764c1b2a13b30a38eb236f0a7ea57",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/backward-2.pptx",
+      "Sha256": "4a92c6b2d534c30a643c91a3871f49daf8ebb07a937fbe9345d968cabeaea39e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/backward-3.pptx",
+      "Sha256": "f730951b70b9943862bb74f914fbedd5511f491553394917f258a6b825feb204",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/emptied-1.pptx",
+      "Sha256": "bc7a95f0d48a5a42c61526cb81d374a7d9dcbc29e71c8b0984a824d3c4ec39fc",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/emptied-2.pptx",
+      "Sha256": "6e57ee28b662c28d88bbc06c2ec0df25718b76aec14f611c12827001ae603777",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/emptied-3.pptx",
+      "Sha256": "ee33a38a4b26de61d52e224a3bef6dddc2bfcb47e904da26a9bf64be95ea9ba9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/forward-1.pptx",
+      "Sha256": "f6aa2155c81b583344865d4f80d8240dfd4f3986c26c4b4314cdb8ca5331de13",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/forward-2.pptx",
+      "Sha256": "aad942c5b45c01cff940ee999f2bd65035f9c24d2a897274487c940d56900da2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/forward-3.pptx",
+      "Sha256": "92e3d6dd7b8f7e77f87a47becd960c7a055935ed4e15372724e28417f20ff838",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/source.pptx",
+      "Sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/unchanged-1.pptx",
+      "Sha256": "9dc94fb11740cdbd18449cc5668c81d20bc084925bf14973bb60b3cf13d6cb82",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/unchanged-2.pptx",
+      "Sha256": "5d4b2a914025b03cc34ee725f191f4c796744ca075208ddb010f241ea959147c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/unchanged-3.pptx",
+      "Sha256": "534b11ae4eccc37e717636d8a68d72cd190c39d1a6db32f2b21d899856eddfcf",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/within-1.pptx",
+      "Sha256": "723b3dc613a5c2122eaeba8623bc4272558496be1e5477dc48f7e2ad8e70f1d0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/within-2.pptx",
+      "Sha256": "27c06604c07eb2533c87417631f7913492de32dcc73a23b5e80d680edcc63d4e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/direct/within-3.pptx",
+      "Sha256": "f0daf81c0d1d4caa240a2e8202ad6695c00c73def493ae89a8d2f49d26ef59f8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/backward-1.pptx",
+      "Sha256": "6ce508eede5d50d707cb8b8dbb932730fbdf291de80e280351889426228ca5c1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/backward-2.pptx",
+      "Sha256": "0aff30c8a290cb1f5194ab0e9ca05393c6a0bee409335a1bf0763cfb5baa62d4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/backward-3.pptx",
+      "Sha256": "1fc241d245d142c67fe9efd6f4702711e67637bcb35a71aa4b0e3ebe44ab4413",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/emptied-1.pptx",
+      "Sha256": "da5cbe62026075912b63cdbe2c668fe3bd659baf688ce2aa09d4f76d3b9cd8fd",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/emptied-2.pptx",
+      "Sha256": "c96d5765e665b230d7454202751098c4501696a64e9ba05ac4982f838281c95b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/emptied-3.pptx",
+      "Sha256": "fb2902037f916ad5eceb41424d6934b079508f4eaa0a6a9965cf15bbf78ee91c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/forward-1.pptx",
+      "Sha256": "99e2aa495bfb9ceea86d448be23e15605b6266371a9786f32dd80556b9526e7b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/forward-2.pptx",
+      "Sha256": "5f4040e8d32e1fa7b4e20137d43945d3eb83847c6d784775496a8a4064c4d4a8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/forward-3.pptx",
+      "Sha256": "7cc57abd07921c20df85fac23f586641150f50718307688db0d518e9762dfb76",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/source.pptx",
+      "Sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/unchanged-1.pptx",
+      "Sha256": "b653b3d42b329b71cabf860e3e26592890ceb2cd1dac8e399fc242bde8ca7692",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/unchanged-2.pptx",
+      "Sha256": "b2e9ef86e1569bc6762ca6b81083c153d063a553b9d910852d4c3efa312b1e2f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/unchanged-3.pptx",
+      "Sha256": "c05b92e547c48cc3a40f6688d4ffeb9ba672d17e8ae3e06128724cc7f1ac6554",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/within-1.pptx",
+      "Sha256": "34614486b32703ce5eb2e2feec49b6777de2447ef010a3349c791e11e426922d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/within-2.pptx",
+      "Sha256": "a9bf085c4cedaa98fb70bf0616f58878334e5e060d5f0bc89cd5c0e517edf4c2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-sections/isolate/within-3.pptx",
+      "Sha256": "ba3780266d579bbc989fa235351e350df2a467253d963be61f94e5835fc7e820",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-text/rich-edited-1.pptx",
+      "Sha256": "aea361b4c6de580dbc018fc342e49c6a4af72a00119ba0e52206deec2e85f773",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-text/rich-edited-2.pptx",
+      "Sha256": "d0bd9fb614e15d18f1c8527f0bca7001e389a7ebd046d5320bc4e6d0432765e8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-text/rich-edited-3.pptx",
+      "Sha256": "19a146f1dca465e3bfb81c2acd8c037692f619aa2fc083e102ecb7ca9b7bdde3",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-text/rich-imported-1.pptx",
+      "Sha256": "f6da63703b06b141e997065d8b356457883c5068f61bb96e4faf4b56059873b8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-text/rich-imported-2.pptx",
+      "Sha256": "00f7252a790f7c1fd8dd9e4e099dc13aaff1ef48f4c040ff283f1184a21cb445",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-slide-text/rich-imported-3.pptx",
+      "Sha256": "e3a5c07c5f78b07974db213c0848aa8f0f35eb4fcfb41e1f9495287114cbc6b9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/relocated-edited-1.docx",
+      "Sha256": "c3a048520ecfd1dec678d0bea0d4270623597d31b00477c740fd3c52f27d8799",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/relocated-edited-2.docx",
+      "Sha256": "e81571f0262d66e0a3a5061adb4a6ed165bd0036a92ef18842e16300adfd92a9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/relocated-edited-3.docx",
+      "Sha256": "b77e1a583066b886bb0edf2d5af05a88f3dcbb92664c205a593003a2605d77c2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/story-edited-1.docx",
+      "Sha256": "380e730abeab9a6a6005188e8d5be6e3b1cd60570315ca47d1beb8ebff159dc8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/story-edited-2.docx",
+      "Sha256": "215b2507ad9c69d477d0da68bab08f37f78ad04202b4b3edcb9b5d586ef93e28",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/story-edited-3.docx",
+      "Sha256": "1103acdc9befd2dd26e0798c35d8a980f4902eefa44045bcae6fddee1fefa716",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/story-imported-1.docx",
+      "Sha256": "43f2588a3f11e6423457023ddd07edf7cda4ef5fa0e19dcfe611893ebe9c4985",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/story-imported-2.docx",
+      "Sha256": "47556f5ee206124c322dcda5c2789cdda15cd5875c9d60a498d05f7b0ed49832",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-story-media/story-imported-3.docx",
+      "Sha256": "ee7c567911a74bba4b2e642244cc0c06dcb76921cf42a7b6e71541efcd1f0a4a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/create/edited.docx",
+      "Sha256": "800d9f13bbcc86bdde248264cb91fe73a4fa366749104263f82d0752e0d42d49",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/create/roundtrip-1.docx",
+      "Sha256": "1024159ad22d0dd72c67abd4d464fbc78788413db8340585361287c0161188c0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/create/roundtrip-2.docx",
+      "Sha256": "471a04c002157e33f61d9bbb05db284ad09c338869ee35d30195e10de42d1a8d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/create/roundtrip-3.docx",
+      "Sha256": "759fe093a345596c7cd2da7ce1e7ea45e112640a231ae95ecdf9a936d47a5efa",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/edit/edited.docx",
+      "Sha256": "01c61019284e1770222a8c4c49c7c413af047bf93d8e629f60c9e4a016ca2511",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/edit/roundtrip-1.docx",
+      "Sha256": "4cacc671ec75daf51c211139afae25617855fcb0b8dd84f6580fc5a20a387fd8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/edit/roundtrip-2.docx",
+      "Sha256": "a995b67bf7c3d27f8046d16a646e02fbb70671e10d37af7c61455ab4099e3cb0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/edit/roundtrip-3.docx",
+      "Sha256": "e8ca5e83ec9b638c819207fdb4a80f07a42417ea55b41e0510f347f4a8728a0a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/remove/edited.docx",
+      "Sha256": "63726ad36ca3f119a9e358f7e6bc8fb4173d9edc5d03290c5450fab227de99af",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/remove/roundtrip-1.docx",
+      "Sha256": "7404aed766643d888eee84fb9a0ececbe85d7bbcff6f6471dc12c479d47d7378",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/remove/roundtrip-2.docx",
+      "Sha256": "2ed8632cd5482585377b8eafe35c8e9b05e048fd3e3f1abf31392eda293b7b4d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/remove/roundtrip-3.docx",
+      "Sha256": "0d4382e4ad80a651c5c1a3e20124298f3f4b3c09ad79a6ce8a32b4074d1c9c6b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-structure/source.docx",
+      "Sha256": "19d3d78dd6823d8b2ad7173f0eb82be7b2ccf4224d50fdb889dee758ab64e88f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-style-toggles/toggle-1.docx",
+      "Sha256": "339fa41e69eba1610a4d6e2f883a02c1c7d071b7e0d4cc82b91c9fd30f2e1876",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-style-toggles/toggle-2.docx",
+      "Sha256": "c9d106eb0f5398a065b6a2ef0730e0af7ab09930ee25afb0dcbf4449c7248782",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-style-toggles/toggle-3.docx",
+      "Sha256": "7e260305a039a1e1c4eac704f39e4658cd88d6183edbe4014e5df49e4e49b5e5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-styles/edited-1.docx",
+      "Sha256": "78bbfb1a0d00687cdb511f16a2f93a2b8bfab40569782ce5f191a90b3376b4af",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-styles/edited-2.docx",
+      "Sha256": "86f554b99c1c9c7d3b225084ee8a61d44062d7a6af8cb05221aa18a877541770",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-styles/edited-3.docx",
+      "Sha256": "e6cb57a76fa328533a30ba8d0f3c3e6b02ed1e6cfef15ae58391f0156a7a3654",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-styles/unchanged-1.docx",
+      "Sha256": "04cec7f1050b6b824a3c768410819061de58024655a651afb7ff997b2d5afa42",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-styles/unchanged-2.docx",
+      "Sha256": "168a475786ad6c77dde2b9402986ff9181072c30aeda898caed252581164eb07",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-styles/unchanged-3.docx",
+      "Sha256": "ee4d30e7f5853f53755f36670e8ae3c1a4a9cdcf5be738c43b422e0322b6c67c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-borders/tables-edited-1.docx",
+      "Sha256": "07dae2e5b67642e3a4013dc545a3543bb1ea6b55fef4b401ab37fbc9344ea696",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-borders/tables-edited-2.docx",
+      "Sha256": "961e743b3f8e7259152e635c0d1e47ec2f50f17ef2b36e82e3f2c24055251e17",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-borders/tables-edited-3.docx",
+      "Sha256": "35bccd1a0056ea0b8de062d0acd4ee6a7ef537f5f4e777cfc92b32da3a7cfbcd",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-borders/tables-imported-1.docx",
+      "Sha256": "caff0cbbc76d8025629eef3949272b016ab054b48d1d136c6323d425468ae53d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-borders/tables-imported-2.docx",
+      "Sha256": "57c2558b890a0ef8c65fb5c7f75960755ff82dce1e5c7c21cbdc6a74cdf4193e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-borders/tables-imported-3.docx",
+      "Sha256": "2df91fdd67a17817b7eadd0f3be9ba00f14166c4656f3cc54edd4584fabd91e6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/edited-1.docx",
+      "Sha256": "eecbe8bfe1a895c004386684b7c40b95e85a9959a6c0d20d02ec66ef8b9abd6b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/edited-2.docx",
+      "Sha256": "5547af0057d1008360a8c9f13ef806f8c89fb7567413bf49f3e49dbe668bae72",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/edited-3.docx",
+      "Sha256": "5c13bd361a7ca0132512b8f2ea4090bcc26a34810131f7185236c1339b624f6e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-1.docx",
+      "Sha256": "1d66b8df652c9778729568345d4af58cf9a68fc7e13170d41739d81f0f741a90",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-2.docx",
+      "Sha256": "e196a4d9c828bbc94ef8de36ce3f8422d350ef827e9b87c64d07d032747a3f27",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-3.docx",
+      "Sha256": "393c31543f18c486472fa6001a06c939f5a33001b51f907f48a5f272abc8c02d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-edited-1.docx",
+      "Sha256": "108e3591a2bbed99d8f944a132fc636e8907eb630b5c0ce9d369b3cbf459ec42",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-edited-2.docx",
+      "Sha256": "4b62c733584a56aa746c2610b179257f8ea2c60dfadc78c4f4cf5fcfebb39ba4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-edited-3.docx",
+      "Sha256": "6d5e585cf91e39336ee7ce1fcb8e33806f3bba0f56190470df97032088e04170",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-edited-expected.docx",
+      "Sha256": "f56030b12e3b91fde86de919e9cb9ec38eb2ddadd2c00bc0aea443c1f05b6507",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/omitted-source.docx",
+      "Sha256": "708b3d662d51f21ea30441df04cba4cdcb2fcad89d2da84d5dedb82a08fb0853",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-grid/source.docx",
+      "Sha256": "8f44b7cbf776d0378c5964c45708d745dcb01eed3679a025bf7225bba297f107",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/format-1.docx",
+      "Sha256": "6940cc5fb9553636b1b6535f0f3f1f0e6380daa4725ce3e772d26b30b7c96de9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/format-2.docx",
+      "Sha256": "f5c7580ac0d6a7eb05da87f8a92b3a495552fc14c46df8729141ea7f4b3e5d6f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/format-3.docx",
+      "Sha256": "b36cf2aa762513a1a9f5f71bed3cf409e63e403307df7cd9826cedb5d36a69a9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/replace-1.docx",
+      "Sha256": "e56a929e737bd32bd91b44c7a66455ca9ccae5bc401300d30b51271957cfa1e5",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/replace-2.docx",
+      "Sha256": "04697206308aeb74faa81480e03796afe1100fc7805e097d803fac57b1b0ef2a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/replace-3.docx",
+      "Sha256": "a53fcc3c53a9d55defd6a24dc33c90017ed4232d84f8c10102a16932e2e7808b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/unchanged-1.docx",
+      "Sha256": "e8b3095a40d7f1016c94be3b37ff8958b0ba8d6352dd8291490896469fc07867",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/unchanged-2.docx",
+      "Sha256": "35c3060a48f6dcec952958e079e6d1528a2e7b0038256222e17dc3bc270dde10",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/unchanged-3.docx",
+      "Sha256": "7fec602209ae35a2cb9900cb6fdffdce8ac71335c15142cb0ae51df8b6a48b2f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/unmerge-1.docx",
+      "Sha256": "62f928c428658d1f15f1e4635ddd39a11ea082700c2b9acfd1e1c623097849e9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/unmerge-2.docx",
+      "Sha256": "de42f79583282fd174bd7aaa5264d55564efb41fe63a66a94d59d54d5b94a3e4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/direct/unmerge-3.docx",
+      "Sha256": "3de7ff7c829453bd43b3fd987cd4a58c2ee0728d161487ea60c8822c01087983",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/expected-format.docx",
+      "Sha256": "675e0a606bb5b625a61e63c7b89695b8d372a6b6ccae18060400d215a9632d2e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/expected-replace.docx",
+      "Sha256": "5ddbd51e2d59cf1a9644ff005a838f94a7f607570f4f40029a1d0e4baad74bfb",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/expected-unmerge.docx",
+      "Sha256": "9c89a26640c653e71bdeda0d987afb5259d3fec7f63426d48db98401abef5533",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/format-1.docx",
+      "Sha256": "c4d2b4536ad4c15448d0a02686ed1aa55d3f91047d48a19efc5dbc538e667975",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/format-2.docx",
+      "Sha256": "c17a575ae2ce3fb08ae4aae9b245dfca864d639408ec86970378531336e0fc41",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/format-3.docx",
+      "Sha256": "c4bf3d3fbcd2c04016e05d105775351dce7e986b7883b26031ad28cc9dc14ee1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/replace-1.docx",
+      "Sha256": "28871eb5fa732c27d6d958ffe83164907e4b8a5c856ecdd305902e60f62cdf62",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/replace-2.docx",
+      "Sha256": "d6e72598c7ff512ee27cae8d7add867d2ed62df7266dee384fadc6d50e920ff2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/replace-3.docx",
+      "Sha256": "ad062e9c8ae38843af149b586c6589b54339479ce022015381803dd7304fe1a0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/unchanged-1.docx",
+      "Sha256": "e20ffab67418aa146bc5f94ae65990a983da59739737c6aef144ff9fdce76cd6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/unchanged-2.docx",
+      "Sha256": "fc8aad443e91db8aff140f35f7bad31f2f9708007bad4575d116d3840e40f48f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/unchanged-3.docx",
+      "Sha256": "32a3a1832000ca6479ab8ceb6b53188f335dc80527492b3b94b6230bdaebed4f",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/unmerge-1.docx",
+      "Sha256": "0ddb9cbf9fa14d4c3c5c5f32ce3e62f0f7069da0af466ca40468d034e5455e47",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/unmerge-2.docx",
+      "Sha256": "d5ee63e7c176f24fce4b11e27cbfad4231d578e78c5d6ededeb5dcd1295e9ae4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/isolate/unmerge-3.docx",
+      "Sha256": "a53236852a963f8aaa175bf75061055cd8d45c79f95bb8b16f8175592ecf9884",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-table-widths/source.docx",
+      "Sha256": "51de42cf2c0568dd7ff98717109755ab8a2d3e9bb091986e60e1ef97eb00053a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-edited-1.docx",
+      "Sha256": "1bf00f1823071abe11d5aeca789d6e42a2b2fb53a4a6ddc978a25927993dbc1e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-edited-2.docx",
+      "Sha256": "3b2e417e2ad786e3ebf51918a63f25f316e042f4e9cedfeb4f5ff3a544e10768",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-edited-3.docx",
+      "Sha256": "7259998b971e074c697eb1ff46f342fd8654e78bbec209f3b738873ef53a32c8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-imported-1.docx",
+      "Sha256": "374306c1080de8713424b743eacbab03454f675fc90f7bac4dde793145ed8ba1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-imported-2.docx",
+      "Sha256": "279668bb13cdd965d778d9055ab063c00907ab5a8469824d07a31cd25eddf62c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-imported-3.docx",
+      "Sha256": "c388b8b324ad63381166bf51b83d90a416f02085220095ddff6590721ebeda82",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-edits/breaks-1.docx",
+      "Sha256": "f62a4d27c66254294d575b05ee68a94f0c0c2250995f3229b636a2a4aa41aac1",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-edits/breaks-2.docx",
+      "Sha256": "22bab3f8046b2af32fc0c7d713d65300e0e12282d4dcb30201a39f5705d26070",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-edits/breaks-3.docx",
+      "Sha256": "e1df5d6c08baa49533ad2d70a087d380a766ed5982ff6b95fdaa06957ade1834",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-edits/styles-1.docx",
+      "Sha256": "1ac1e5a108bd1cd9e4cc9de11acf7e57a00bb5c5014caec3ebf3132533e11a75",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-edits/styles-2.docx",
+      "Sha256": "9601c81705b9492e88f06f1c7cfc8549fff69efb9aeb57e69fca3793d178eef0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity-word-edits/styles-3.docx",
+      "Sha256": "cbfe354af1660e70030b213d24af56aeb200f7ef9dfdcbecbb5a39ce49ea66e4",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/edited-1.docx",
+      "Sha256": "ca450d3ed4688b43f6e8cd2fb2cf1cb6d50967eacd6304f5dbc3db1f231b5735",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/edited-2.docx",
+      "Sha256": "6b0a121b0606fd7c4e55261f83480011647f8822b027c32e05d5fcd595ce88af",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/edited-3.docx",
+      "Sha256": "28156b577aaede08cd2c38353640c5f3cd816a0659dc3f642368bf246898dd8e",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/sheet-edited-1.xlsx",
+      "Sha256": "63f2104f86bcb20f5d4be86720aae3621e9271b94edf9ff78b26c7357ac37a5a",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/sheet-edited-2.xlsx",
+      "Sha256": "956521abb4d037ed7397e9e6f31bfe4b086e8b7d6b9da17ed7b63fa14ded4f8c",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/sheet-edited-3.xlsx",
+      "Sha256": "b82d3f3140a92efb4ae99990b7457668b7306861ca8356ac40c85ce278960c1b",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/sheet-imported-1.xlsx",
+      "Sha256": "04a2f065a88367640bca0680e984fc8f4fc3f09b42c730fd1cbe9824a11feef2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/sheet-imported-2.xlsx",
+      "Sha256": "7fe209934a1a5674e492ecd4610c8450cc4a095ac4290f32f24628347451011d",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/sheet-imported-3.xlsx",
+      "Sha256": "7effd2cea1b8af2767004c1bb164eb246739ef322f338a3292f0b4662b008ca2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/slide-edited-1.pptx",
+      "Sha256": "6e032d9e2357b8d41a7c894be7db7fd38c3c89a76d0fed565e59c05c5901bb50",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/slide-edited-2.pptx",
+      "Sha256": "84038ad90f909dc49c99c1388cccaedb077ccdc64a89cc5618d06daf5a3528a2",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/slide-edited-3.pptx",
+      "Sha256": "ff0f515dae79e6461b953cf947522c6d410b4f0eb92441e98630d62096036eb8",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/slide-imported-1.pptx",
+      "Sha256": "41053ff96e7c3043866a505fa6b33c0ffa5a2bcd0989abdef8f2c355164738a9",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/slide-imported-2.pptx",
+      "Sha256": "c8c728b23e8c634bac73da0e3cd86a294491519b5573bb12d90798304a1d67c6",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/slide-imported-3.pptx",
+      "Sha256": "910e978b3031cade432f2ac7176c34d0b370b8047245a96a19b8d1b58fd30822",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/unchanged-1.docx",
+      "Sha256": "100eb909237dd889e75e36dee803823dcb7f2351ff10ccf8ce5a7138363a1e25",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/unchanged-2.docx",
+      "Sha256": "e9d3eddcf8da18de1ae52f96a139610d4874c083e489b8ae5a93076c19d4a5f0",
+      "Errors": []
+    },
+    {
+      "File": "evidence/packages/quds_office_engine/build/fidelity/unchanged-3.docx",
+      "Sha256": "d767d25782d3322ad8841e81acbed2271fe5d046a3d402bcc673e96d1ab96ede",
+      "Errors": []
+    }
+  ]
+}

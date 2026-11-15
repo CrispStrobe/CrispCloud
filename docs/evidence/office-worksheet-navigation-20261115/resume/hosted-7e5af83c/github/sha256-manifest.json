@@ -1,0 +1,52 @@
+[
+  {
+    "file": "job-132724956678-browser-copy.log.gz",
+    "bytes": 14450,
+    "sha256": "93f119f4c3a35b03f9c6b2f092f13681354e6be1a9f2d8a371a40961c793f167"
+  },
+  {
+    "file": "job-132724956851-host-roundtrip.log.gz",
+    "bytes": 67815,
+    "sha256": "902cf22a01a93f44051c50ad1709d930735ee1770369937290794553ac457e7d"
+  },
+  {
+    "file": "job-132726845129-external-schema.log.gz",
+    "bytes": 24174,
+    "sha256": "d67a2abca01f226bbcd6b407d7a4184f6c7e13b7f96afcf1501de9c7fc7b5922"
+  },
+  {
+    "file": "log-preservation.json",
+    "bytes": 1605,
+    "sha256": "c4eef13aaac728f33a04068f4f8eaa90f071df4e651b2f3b58d680d5465ce3eb"
+  },
+  {
+    "file": "pr-general-ci-jobs-observation.json",
+    "bytes": 29330,
+    "sha256": "49f3ffe61c599c434794c37e0cd4a3ae7f34d89a2c993e617f8f09905a73b4e4"
+  },
+  {
+    "file": "pr-general-ci-observation.json",
+    "bytes": 14920,
+    "sha256": "fb99d781c22a52e7535dd525d053fb0e58abb27fb897c74ffe0cb1a2eb853f7c"
+  },
+  {
+    "file": "summary.json",
+    "bytes": 8681,
+    "sha256": "67e971ef1077fde630461673654dfcbcbcafb3410ee444b7faec23bdff25ecaa"
+  },
+  {
+    "file": "workflow-artifacts.json",
+    "bytes": 3604,
+    "sha256": "8396296806c46ba52f81e8a40d1ea592be23615dc15c3d729ae724cfbe20cbe3"
+  },
+  {
+    "file": "workflow-jobs.json",
+    "bytes": 13951,
+    "sha256": "25deaa3e62232148d9bc4718c1902b680cb9e61d99dbc0b105857f24423a6645"
+  },
+  {
+    "file": "workflow-run.json",
+    "bytes": 14963,
+    "sha256": "6c6dce203f194a9f577f6fc862ba2285688e9f489ed57fd969d8009814eb877a"
+  }
+]
