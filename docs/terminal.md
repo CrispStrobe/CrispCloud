@@ -134,10 +134,10 @@ and fixes the case exposed by Flutter's headless test runner.
   detached background process manager. If output closes while the process is
   still alive, the panel shows "Waiting for exit…" and keeps Disconnect enabled.
 - A hidden terminal can retain its in-memory session while the file browser is
-  open. App shutdown, explicit disconnect and connection failure end a session.
-  Reconnecting starts a new shell; it cannot restore an exited process. Use a
-  remote multiplexer such as `tmux` when persistence across network or app
-  restarts is required.
+  open. App shutdown, explicit disconnect and connection failure end the
+  connection. A plain SSH reconnect starts a new shell and cannot restore an
+  exited process. A named tmux session can be reattached after disconnecting,
+  subject to the remote host and tmux server remaining alive (see below).
 - Each native local connection holds its own security-scoped folder grant for
   its lifetime. A transfer or restarted terminal cannot release another
   connection's grant. Normal exit, failed startup and disconnect release it;
@@ -180,6 +180,62 @@ require an informed trust decision; changed keys are rejected. A server may
 permit SFTP while forbidding a shell or PTY; that produces a connection error,
 not a fallback that bypasses server policy. Terminal transcripts and typed
 commands are not persisted as a new history database.
+
+## SSH authentication, reconnect and tmux
+
+Open **Connect via SSH** and select **Password** or **Private key** under
+Authentication. Key mode accepts a PEM/OpenSSH private key and an optional
+passphrase for an encrypted key. Use **Paste private key** to preserve the key's
+line breaks while keeping it masked, or reveal the field to edit it across
+multiple lines. The passphrase decrypts the key locally; it is not used as the
+server login password. Invalid keys or an incorrect passphrase fail before a
+connection is opened. Both authentication modes use the same host-key checks
+and direct TCP or explicit WebSocket gateway transport.
+
+The Session selector offers three modes:
+
+| Mode | Behaviour |
+| --- | --- |
+| **Remote shell** | Opens the server's normal interactive login shell. |
+| **Create or attach tmux** | Creates the named session if absent, or attaches to it if it already exists. |
+| **Attach existing tmux** | Attaches only to the exact named session; a missing session is an error and does not create one. |
+
+The remote server must have `tmux` available on the SSH command path and allow
+PTY execution. Names contain 1–64 ASCII letters, digits, underscores or hyphens
+and cannot start with a hyphen. This deliberately excludes tmux target patterns,
+window/pane separators and shell syntax. The service validates names before
+replacing a running shell. It launches tmux through an SSH PTY exec request,
+never by typing a startup command into the terminal. It does not detach other
+attached clients. Missing tmux, a missing attach-only target, and server errors
+remain visible in terminal output; no fresh-shell fallback hides the failure.
+The terminal also retains the SSH channel's exit status when the server supplies
+one, after both output channels have drained.
+
+The terminal header includes the trusted SSH endpoint and selected tmux session.
+**Detach from tmux** closes CrispCloud's SSH connection without sending `exit`
+or `kill-session`. The server's tmux session normally keeps running. Existing
+server settings such as `destroy-unattached`, host shutdown, or explicitly
+exiting the session's last shell can still end it. Hiding the panel keeps the
+current connection, while the existing SSH inactivity timeout still applies.
+
+Use **Terminal actions → Reconnect SSH** to reopen the form with the last host,
+port, username, authentication method, gateway and tmux selection. Passwords,
+private keys and passphrases are cleared and must be entered again. Canceling
+this dialog leaves a currently connected terminal intact. These reconnect
+settings live only in the current panel's memory and are not saved as profiles
+or restored after restarting the app. After a restart, entering the same server,
+user and tmux name can reattach to the remote session. Selecting
+**Attach existing tmux** avoids creating a fresh session if the old one is gone.
+
+The native mobile extra-key row includes **Ctrl+B**, the default tmux prefix.
+For default tmux bindings, tap Ctrl+B followed by `c` for a new window, `n`/`p`
+for the next/previous window, `%` or `"` to split a pane, or `d` to detach.
+Customized tmux prefixes and bindings remain controlled by the remote server;
+the extra key sends the actual control character. The built-in sandbox shell
+does not run tmux.
+
+See the upstream [tmux getting started guide](https://github.com/tmux/tmux/wiki/Getting-Started)
+for the default bindings and remote session model.
 
 ## License provenance
 
@@ -241,11 +297,16 @@ flutter test --concurrency=2 \
   test/terminal_session_test.dart test/terminal_widget_test.dart \
   test/terminal_process_test.dart test/terminal_native_assets_test.dart \
   test/ssh_terminal_transport_test.dart test/ssh_terminal_test.dart \
-  test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart
+  test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart \
+  test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart \
+  test/ssh_terminal_reconnect_test.dart
 
 flutter test --platform chrome --concurrency=1 \
   test/terminal_session_test.dart test/terminal_widget_test.dart \
-  test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart
+  test/ssh_terminal_transport_test.dart \
+  test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart \
+  test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart \
+  test/ssh_terminal_reconnect_test.dart
 
 flutter analyze --no-fatal-warnings --no-fatal-infos
 flutter build web --release
@@ -293,6 +354,12 @@ physical-device keyboard/IME or Windows ConPTY validation.
 7. **SSH trust and failure.** Verify first-use trust, a known host, rejection of
    a changed key, invalid credentials, network loss and a server denying PTY
    allocation. Do not enable unattended acceptance of unknown hosts for tests.
+   Repeat with an unencrypted key and an encrypted key, including a wrong
+   passphrase. Confirm that reconnect prefills the destination but no secrets.
+   On a test host with tmux, create a named session, start a long-running
+   command, detach, and reattach to the same session. Check exact-name attach,
+   a missing attach-only target and a host without tmux. Existing clients must
+   remain attached, and invalid names must not issue any remote command.
 8. **Mobile and browser transports.** On Android/iOS, connect via SSH and
    exercise the software keyboard, IME, paste and extra keys. On web, supply a
    controlled `wss://` gateway and verify the real SSH endpoint's host-key

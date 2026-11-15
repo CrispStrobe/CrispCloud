@@ -394,7 +394,10 @@ jobs:
           flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
           test/terminal_session_test.dart test/terminal_widget_test.dart
           test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart
+          test/ssh_terminal_transport_test.dart
           test/terminal_workspace_web_test.dart
+          test/tmux_session_options_test.dart test/ssh_terminal_connect_dialog_test.dart
+          test/ssh_terminal_reconnect_test.dart
 
       - name: Browser credential vault authentication and compatibility
         run: >-

@@ -216,7 +216,9 @@ class SshTerminalConnection
       service.getActiveSessions().any((session) => session.id == sessionId);
 
   @override
-  Future<int?> get exitCode async => null;
+  Future<int?> get exitCode => output is SshShellOutput
+      ? (output as SshShellOutput).exitCode
+      : Future<int?>.value();
   @override
   Future<void> write(String data) async {
     if (_active) await service.writeToShell(sessionId, data);

@@ -25,7 +25,11 @@ import '../services/panel_source_service.dart';
 import '../services/terminal_workspace_service.dart';
 import 'terminal_workspace_dialog.dart';
 import 'external_terminal_dialog.dart';
+import 'ssh_terminal_connect_dialog.dart';
 import '../l10n/external_terminal_strings.dart';
+
+export '../models/ssh_terminal_config.dart';
+export 'ssh_terminal_connect_dialog.dart';
 
 final _terminalFocusOwnerProvider = StateProvider<Object?>((ref) => null);
 
@@ -73,6 +77,7 @@ class TerminalPanel extends ConsumerStatefulWidget {
 
 enum _PanelAction {
   local,
+  reconnect,
   external,
   stage,
   workspaces,
@@ -101,6 +106,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   String? _title;
   bool _menuUpdateScheduled = false;
   TerminalWorkspace? _workspace;
+  // Reconnect remembers the destination and session mode, never credentials.
+  SshTerminalConfig? _lastSshConfig;
+  Terminal? _tmuxTerminal;
   int _connectionRequest = 0;
 
   bool get _desktop =>
@@ -120,6 +128,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       };
 
   bool get _canDisconnect => _session.canDisconnect;
+
+  bool get _usingTmux =>
+      _session.kind == TerminalSessionKind.ssh &&
+      identical(_tmuxTerminal, _session.terminal);
 
   bool get _canCopy =>
       _controller.selectionFor(_session.terminal.buffer) != null;
@@ -410,17 +422,19 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     );
   }
 
-  Future<void> _connectSsh() async {
+  Future<void> _connectSsh({bool reconnect = false}) async {
     if (_session.isConnecting) return;
     final config = await showDialog<SshTerminalConfig>(
       context: context,
-      builder: (_) => const SshTerminalConnectDialog(),
+      builder: (_) => SshTerminalConnectDialog(
+        initialConfig: reconnect ? _lastSshConfig : null,
+      ),
     );
     if (!mounted || config == null || !widget.visible) return;
     _connectionRequest++;
     _workspace = null;
+    _lastSshConfig = config.withoutSecrets();
 
-    final previousPrompt = _ssh.confirmHostKey;
     Terminal? connectingTerminal;
     bool currentAttempt() =>
         mounted &&
@@ -453,46 +467,55 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       return accepted == true && currentAttempt();
     }
 
-    _ssh.confirmHostKey = prompt;
-    try {
-      final connecting = _session.connect(
-        (columns, rows) async {
-          final session = await _ssh.connect(
-            config.host,
-            config.port,
-            config.username,
-            config.password,
-            gateway: config.gateway,
-          );
-          try {
-            if (!currentAttempt()) {
-              throw StateError('SSH connection was cancelled');
-            }
-            final stream = await _ssh.startShell(
-              session.id,
-              width: columns,
-              height: rows,
-            );
-            return SshTerminalConnection(_ssh, session.id, stream);
-          } catch (_) {
-            await _ssh.disconnect(session.id);
-            rethrow;
+    final connecting = _session.connect(
+      (columns, rows) async {
+        final session =
+            config.authentication == SshTerminalAuthentication.privateKey
+            ? await _ssh.connectWithKey(
+                config.host,
+                config.port,
+                config.username,
+                config.privateKey,
+                passphrase: config.passphrase.isEmpty
+                    ? null
+                    : config.passphrase,
+                gateway: config.gateway,
+                hostKeyPrompt: prompt,
+              )
+            : await _ssh.connect(
+                config.host,
+                config.port,
+                config.username,
+                config.password,
+                gateway: config.gateway,
+                hostKeyPrompt: prompt,
+              );
+        try {
+          if (!currentAttempt()) {
+            throw StateError('SSH connection was cancelled');
           }
-        },
-        kind: TerminalSessionKind.ssh,
-        label: '${config.username}@${config.host}',
-      );
-      connectingTerminal = _session.terminal;
-      await connecting;
-      if (mounted && identical(_session.terminal, connectingTerminal)) {
-        _focusIfVisible();
-      }
-    } finally {
-      // Do not leave a callback referring to this widget in the shared service,
-      // or overwrite the prompt installed by a newer connection attempt.
-      if (identical(_ssh.confirmHostKey, prompt)) {
-        _ssh.confirmHostKey = previousPrompt;
-      }
+          final stream = await _ssh.startShell(
+            session.id,
+            width: columns,
+            height: rows,
+            tmux: config.tmux,
+          );
+          return SshTerminalConnection(_ssh, session.id, stream);
+        } catch (_) {
+          await _ssh.disconnect(session.id);
+          rethrow;
+        }
+      },
+      kind: TerminalSessionKind.ssh,
+      label:
+          '${config.username}@${config.host}'
+          '${config.tmux == null ? '' : ' · tmux: ${config.tmux!.sessionName}'}',
+    );
+    connectingTerminal = _session.terminal;
+    _tmuxTerminal = config.tmux == null ? null : connectingTerminal;
+    await connecting;
+    if (mounted && identical(_session.terminal, connectingTerminal)) {
+      _focusIfVisible();
     }
   }
 
@@ -625,6 +648,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     switch (action) {
       case _PanelAction.local:
         unawaited(_startLocal());
+      case _PanelAction.reconnect:
+        unawaited(_connectSsh(reconnect: true));
       case _PanelAction.external:
         unawaited(showExternalTerminalDialog(context, ref));
       case _PanelAction.stage:
@@ -722,6 +747,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                     tooltip: context.terminalTr('Terminal actions'),
                     onSelected: _performAction,
                     itemBuilder: (_) => [
+                      if (_lastSshConfig != null)
+                        PopupMenuItem(
+                          value: _PanelAction.reconnect,
+                          enabled: !_session.isConnecting,
+                          child: Text(context.terminalTr('Reconnect SSH')),
+                        ),
                       PopupMenuItem(
                         value: _PanelAction.local,
                         child: Text(
@@ -788,7 +819,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                       PopupMenuItem(
                         value: _PanelAction.disconnect,
                         enabled: _canDisconnect,
-                        child: Text(context.terminalTr('Disconnect')),
+                        child: Text(
+                          context.terminalTr(
+                            _usingTmux ? 'Detach from tmux' : 'Disconnect',
+                          ),
+                        ),
                       ),
                       PopupMenuItem(
                         value: _PanelAction.hide,
@@ -816,6 +851,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     const keys = <(String, TerminalKey, bool)>[
       ('Esc', TerminalKey.escape, false),
       ('Tab', TerminalKey.tab, false),
+      ('Ctrl+B', TerminalKey.keyB, true),
       ('Ctrl+C', TerminalKey.keyC, true),
       ('Ctrl+D', TerminalKey.keyD, true),
       ('Ctrl+Z', TerminalKey.keyZ, true),
@@ -1031,198 +1067,6 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _focus.dispose();
     _controller.dispose();
     _scroll.dispose();
-    super.dispose();
-  }
-}
-
-/// Connection details returned by [SshTerminalConnectDialog].
-class SshTerminalConfig {
-  const SshTerminalConfig({
-    required this.host,
-    required this.port,
-    required this.username,
-    required this.password,
-    this.gateway,
-  });
-
-  final String host;
-  final int port;
-  final String username;
-  final String password;
-  final Uri? gateway;
-}
-
-/// Native apps connect directly; browsers require a user-supplied gateway.
-class SshTerminalConnectDialog extends StatefulWidget {
-  const SshTerminalConnectDialog({super.key, this.requiresGateway = kIsWeb});
-
-  final bool requiresGateway;
-
-  @override
-  State<SshTerminalConnectDialog> createState() => _SshConnectDialogState();
-}
-
-class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
-  final _form = GlobalKey<FormState>();
-  final _host = TextEditingController();
-  final _port = TextEditingController(text: '22');
-  final _username = TextEditingController();
-  final _password = TextEditingController();
-  final _gateway = TextEditingController();
-
-  void _submit() {
-    if (_form.currentState?.validate() != true) return;
-    Navigator.pop(
-      context,
-      SshTerminalConfig(
-        host: _host.text.trim(),
-        port: int.parse(_port.text.trim()),
-        username: _username.text.trim(),
-        password: _password.text,
-        gateway: widget.requiresGateway
-            ? Uri.parse(_gateway.text.trim())
-            : null,
-      ),
-    );
-  }
-
-  String? _required(String? value) =>
-      value?.trim().isNotEmpty == true ? null : context.terminalTr('Required');
-
-  String? _validateGateway(String? value) {
-    final text = value?.trim() ?? '';
-    final gateway = Uri.tryParse(text);
-    final message = text.isNotEmpty && gateway == null
-        ? 'Use a complete wss:// URL with a valid host and port.'
-        : sshGatewayValidationMessage(
-            text.isEmpty ? null : gateway,
-            required: true,
-            rawUrl: text,
-          );
-    return message == null ? null : context.terminalTr(message);
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(context.terminalTr('Connect via SSH')),
-    content: SizedBox(
-      width: 360,
-      child: SingleChildScrollView(
-        child: Form(
-          key: _form,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.requiresGateway) ...[
-                Text(
-                  context.terminalTr(
-                    'Enter a secure WebSocket gateway that forwards to this SSH server. CrispCloud does not provide a gateway.',
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-              ],
-              TextFormField(
-                controller: _host,
-                autofocus: true,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(
-                  labelText: context.terminalTr('Host'),
-                ),
-                validator: _required,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _username,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      decoration: InputDecoration(
-                        labelText: context.terminalTr('Username'),
-                      ),
-                      validator: _required,
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 100,
-                    child: TextFormField(
-                      controller: _port,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: context.terminalTr('Port'),
-                        errorMaxLines: 3,
-                      ),
-                      validator: (value) {
-                        final port = int.tryParse(value?.trim() ?? '');
-                        return port == null || port < 1 || port > 65535
-                            ? context.terminalTr('Enter a port from 1 to 65535')
-                            : null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (widget.requiresGateway) ...[
-                TextFormField(
-                  key: const ValueKey('terminal-ssh-gateway'),
-                  controller: _gateway,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  keyboardType: TextInputType.url,
-                  decoration: InputDecoration(
-                    labelText: context.terminalTr('WebSocket gateway'),
-                    hintText: 'wss://gateway.example/ssh',
-                    errorMaxLines: 4,
-                  ),
-                  validator: _validateGateway,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 8),
-              ],
-              TextFormField(
-                controller: _password,
-                obscureText: true,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(
-                  labelText: context.terminalTr('Password'),
-                ),
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _submit(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(context.terminalTr('Cancel')),
-      ),
-      FilledButton(
-        onPressed: _submit,
-        child: Text(context.terminalTr('Connect')),
-      ),
-    ],
-  );
-
-  @override
-  void dispose() {
-    _host.dispose();
-    _port.dispose();
-    _username.dispose();
-    _password.dispose();
-    _gateway.dispose();
     super.dispose();
   }
 }

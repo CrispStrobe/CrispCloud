@@ -19,6 +19,7 @@ import 'package:crisp_storage/crisp_storage.dart'
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
+import '../models/tmux_session_options.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ssh_gateway.dart';
@@ -36,6 +37,23 @@ typedef SshClientConnector = Future<SSHClient> Function(
   List<SSHIdentity>? identities,
   Uri? gateway,
 });
+
+/// Terminal output with the SSH channel's eventual process exit status.
+///
+/// Keep the public shell API stream-compatible, including services used by
+/// embedders and tests that return a plain stream. Channel completion does not
+/// close this stream early: its original stdout/stderr still drain normally.
+class SshShellOutput extends StreamView<String> {
+  SshShellOutput(super.stream, this.exitCode) {
+    // The channel may finish before a terminal subscribes or requests its exit
+    // status. Observe errors now while preserving them for the eventual reader.
+    unawaited(
+      exitCode.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+    );
+  }
+
+  final Future<int?> exitCode;
+}
 
 // ---------------------------------------------------------------------------
 // Model
@@ -213,6 +231,8 @@ class SshTerminalService {
   ///
   /// [gateway] is required on web and optional on native platforms. It is never
   /// used as the SSH host-key identity; [host] and [port] still identify that.
+  /// [hostKeyPrompt] applies only to this connection attempt. When omitted,
+  /// the current [confirmHostKey] callback is captured before connecting.
   /// Throws [StateError] when the session pool is full.
   Future<SshSession> connect(
     String host,
@@ -220,7 +240,15 @@ class SshTerminalService {
     String username,
     String password, {
     Uri? gateway,
-  }) => _connect(host, port, username, password: password, gateway: gateway);
+    HostKeyPrompt? hostKeyPrompt,
+  }) => _connect(
+    host,
+    port,
+    username,
+    password: password,
+    gateway: gateway,
+    hostKeyPrompt: hostKeyPrompt,
+  );
 
   // -------------------------------------------------------------------------
   // Connect (private key)
@@ -229,8 +257,10 @@ class SshTerminalService {
   /// Establishes an SSH connection using public-key authentication.
   ///
   /// [privateKey] should be a PEM-encoded private key string.
+  /// [passphrase] decrypts a protected key locally; it is not sent as a password.
   ///
   /// [gateway] is required on web and optional on native platforms.
+  /// [hostKeyPrompt] overrides [confirmHostKey] for this connection attempt.
   /// Throws [StateError] when the session pool is full.
   Future<SshSession> connectWithKey(
     String host,
@@ -238,8 +268,10 @@ class SshTerminalService {
     String username,
     String privateKey, {
     Uri? gateway,
+    String? passphrase,
+    HostKeyPrompt? hostKeyPrompt,
   }) async {
-    final keyPair = _parseKeyPair(privateKey);
+    final keyPair = _parseKeyPair(privateKey, passphrase);
     if (keyPair == null) {
       throw const TerminalMountFormatException(
         TerminalMountCode.sshInvalidKey,
@@ -252,6 +284,7 @@ class SshTerminalService {
       username,
       identities: [keyPair],
       gateway: gateway,
+      hostKeyPrompt: hostKeyPrompt,
     );
   }
 
@@ -262,7 +295,12 @@ class SshTerminalService {
     String? password,
     List<SSHIdentity>? identities,
     Uri? gateway,
+    HostKeyPrompt? hostKeyPrompt,
   }) async {
+    // A later attempt may have a different UI or prompt owner. Capture the
+    // default now so a slow socket/handshake never consults another attempt's
+    // mutable callback after an await.
+    final effectiveHostKeyPrompt = hostKeyPrompt ?? confirmHostKey;
     _checkPlatform(gateway);
     if (_disposed) throw StateError('SSH terminal service is disposed');
     _checkPoolCapacity();
@@ -270,14 +308,25 @@ class SshTerminalService {
     final generation = _connectionGeneration;
     SSHClient? client;
     try {
-      client = await (_clientConnector ?? _openClient)(
-        host,
-        port,
-        username: username,
-        password: password,
-        identities: identities,
-        gateway: gateway,
-      );
+      final connector = _clientConnector;
+      client = connector == null
+          ? await _openClient(
+              host,
+              port,
+              username: username,
+              password: password,
+              identities: identities,
+              gateway: gateway,
+              hostKeyPrompt: effectiveHostKeyPrompt,
+            )
+          : await connector(
+              host,
+              port,
+              username: username,
+              password: password,
+              identities: identities,
+              gateway: gateway,
+            );
       await client.authenticated;
       // A slow connection must not resurrect a session after sign-out/dispose.
       if (_disposed || generation != _connectionGeneration) {
@@ -341,6 +390,7 @@ class SshTerminalService {
     String? password,
     List<SSHIdentity>? identities,
     Uri? gateway,
+    HostKeyPrompt? hostKeyPrompt,
   }) async {
     final socket = gateway == null
         ? await SSHSocket.connect(
@@ -357,7 +407,7 @@ class SshTerminalService {
       verify: (_, fingerprint) => _knownHosts.verify(
         SshKnownHosts.endpoint(host, port),
         utf8.decode(fingerprint),
-        prompt: confirmHostKey,
+        prompt: hostKeyPrompt,
       ),
     );
   }
@@ -423,16 +473,21 @@ class SshTerminalService {
   // Interactive shell
   // -------------------------------------------------------------------------
 
-  /// Starts an interactive PTY shell on [sessionId].
+  /// Starts an interactive PTY shell or named remote [tmux] session.
   ///
   /// Returns a single-subscription stream of decoded terminal output, including
   /// ANSI sequences. The initial prompt is buffered until a listener attaches.
+  /// A tmux launch uses an SSH exec request with a PTY, not shell input. Closing
+  /// its connection detaches the client without asking tmux to kill the session.
   Future<Stream<String>> startShell(
     String sessionId, {
     int width = 80,
     int height = 24,
+    TmuxSessionOptions? tmux,
   }) async {
     _validateDimensions(width, height);
+    // Validate before replacing a running shell or sending any remote request.
+    final command = tmux?.command;
     final state = _requireSession(sessionId);
     final client = state.client;
     if (client.isClosed) {
@@ -460,9 +515,14 @@ class SshTerminalService {
 
     SSHSession shell;
     try {
-      shell = await client.shell(
-        pty: SSHPtyConfig(type: 'xterm-256color', width: width, height: height),
+      final pty = SSHPtyConfig(
+        type: 'xterm-256color',
+        width: width,
+        height: height,
       );
+      shell = command == null
+          ? await client.shell(pty: pty)
+          : await client.execute(command, pty: pty);
     } catch (_) {
       if (_isCurrentShell(sessionId, state, generation)) {
         await disconnect(sessionId);
@@ -491,7 +551,10 @@ class SshTerminalService {
       },
     );
     state.shellOutput = output;
-    return output.stream;
+    return SshShellOutput(
+      output.stream,
+      shell.done.then<int?>((_) => shell.exitCode),
+    );
   }
 
   /// Sends [input] to the active interactive shell of [sessionId].
@@ -634,13 +697,15 @@ class SshTerminalService {
   }
 
   /// Parses a PEM private key string into an [SSHKeyPair].
-  /// Returns null when parsing fails (falls back to no identity).
-  SSHKeyPair? _parseKeyPair(String pemKey) {
+  /// Returns null when parsing or decryption fails; no connection is attempted.
+  SSHKeyPair? _parseKeyPair(String pemKey, String? passphrase) {
     try {
-      final pairs = SSHKeyPair.fromPem(pemKey);
+      final pairs = SSHKeyPair.fromPem(pemKey, passphrase);
       return pairs.isNotEmpty ? pairs.first : null;
-    } catch (e) {
-      _log.error('Failed to parse private key', e);
+    } catch (_) {
+      // Parser exceptions can contain source text. Do not log key material or
+      // passphrases; callers receive the stable, localized invalid-key error.
+      _log.error('Failed to parse or decrypt SSH private key');
       return null;
     }
   }

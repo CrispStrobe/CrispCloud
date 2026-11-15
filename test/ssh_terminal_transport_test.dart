@@ -2,10 +2,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/ssh_terminal_service.dart';
+import 'package:crisp_cloud/services/terminal_backends.dart';
+import 'package:crisp_cloud/services/terminal_mount_failure.dart';
 import 'package:dartssh2/dartssh2.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_test/flutter_test.dart';
+
+// Exercise the real platform/gateway validation in both VM and browser tests.
+// The injected client below prevents any actual TCP or WebSocket connection.
+final Uri? _fixtureGateway = kIsWeb
+    ? Uri.parse('wss://gateway.example/ssh')
+    : null;
 
 void main() {
   late _Client client;
@@ -24,7 +34,13 @@ void main() {
     }) async {
       return client;
     });
-    session = await service.connect('test.example', 22, 'alice', 'password');
+    session = await service.connect(
+      'test.example',
+      22,
+      'alice',
+      'password',
+      gateway: _fixtureGateway,
+    );
   });
 
   tearDown(() async {
@@ -35,6 +51,8 @@ void main() {
     'requests the actual terminal geometry and resizes the active PTY',
     () async {
       await service.startShell(session.id, width: 132, height: 43);
+      expect(client.shellRequests, 1);
+      expect(client.commands, isEmpty);
       expect(client.pty!.type, 'xterm-256color');
       expect(client.pty!.width, 132);
       expect(client.pty!.height, 43);
@@ -43,6 +61,249 @@ void main() {
       expect(client.shells.single.resizes, [(95, 31)]);
     },
   );
+
+  test(
+    'starts tmux through an exec PTY and preserves input and resize',
+    () async {
+      await service.startShell(
+        session.id,
+        width: 132,
+        height: 43,
+        tmux: const TmuxSessionOptions(sessionName: 'build_2-linux'),
+      );
+      expect(client.commands, ["exec tmux new-session -A -s 'build_2-linux'"]);
+      expect(client.shellRequests, 0);
+      expect(client.pty!.type, 'xterm-256color');
+      expect(client.pty!.width, 132);
+      expect(client.pty!.height, 43);
+      expect(client.shells.single.received, isEmpty);
+
+      await service.writeToShell(session.id, '\x02%'); // Prefix + split pane.
+      await service.resizeTerminal(session.id, 95, 31);
+      await _flushEvents();
+      expect(client.shells.single.received.single, [2, 37]);
+      expect(client.shells.single.resizes, [(95, 31)]);
+    },
+  );
+
+  test(
+    'attach uses an exact tmux target and never creates a fallback shell',
+    () async {
+      await service.startShell(
+        session.id,
+        tmux: const TmuxSessionOptions(
+          sessionName: 'build',
+          mode: TmuxSessionMode.attach,
+        ),
+      );
+      expect(client.commands, ["exec tmux attach-session -t '=build'"]);
+      expect(client.shellRequests, 0);
+    },
+  );
+
+  test('invalid tmux names leave an existing shell untouched', () async {
+    await service.startShell(session.id);
+    final shell = client.shells.single;
+    await expectLater(
+      service.startShell(
+        session.id,
+        tmux: const TmuxSessionOptions(sessionName: "x'; kill-server; #"),
+      ),
+      throwsArgumentError,
+    );
+    expect(client.commands, isEmpty);
+    expect(shell.closed, isFalse);
+    expect(client.isClosed, isFalse);
+    await service.writeToShell(session.id, 'still here\r');
+    await _flushEvents();
+    expect(shell.received.single, utf8.encode('still here\r'));
+  });
+
+  test('disconnect during tmux startup closes its late exec channel', () async {
+    final pending = Completer<SSHSession>();
+    client.pendingExecution = pending.future;
+    final starting = service.startShell(
+      session.id,
+      tmux: const TmuxSessionOptions(sessionName: 'build'),
+    );
+    final failed = expectLater(starting, throwsStateError);
+    await _flushEvents();
+    expect(client.commands, hasLength(1));
+    await service.disconnect(session.id);
+    final lateShell = _Shell();
+    pending.complete(lateShell);
+    await failed;
+    expect(lateShell.closed, isTrue);
+    expect(service.getActiveSessions(), isEmpty);
+  });
+
+  test(
+    'failed tmux exec releases its pool slot without shell fallback',
+    () async {
+      final pending = Completer<SSHSession>();
+      client.pendingExecution = pending.future;
+      final starting = service.startShell(
+        session.id,
+        tmux: const TmuxSessionOptions(sessionName: 'build'),
+      );
+      final failed = expectLater(starting, throwsStateError);
+      await _flushEvents();
+      pending.completeError(StateError('Exec request rejected'));
+      await failed;
+      expect(client.shellRequests, 0);
+      expect(client.isClosed, isTrue);
+      expect(service.getActiveSessions(), isEmpty);
+    },
+  );
+
+  test(
+    'disconnect closes only the tmux client without sending kill or exit',
+    () async {
+      final output = await service.startShell(
+        session.id,
+        tmux: const TmuxSessionOptions(sessionName: 'build'),
+      );
+      final connection = SshTerminalConnection(service, session.id, output);
+      await connection.close();
+      expect(client.isClosed, isTrue);
+      expect(client.shells.single.closed, isTrue);
+      expect(client.shells.single.received, isEmpty);
+      expect(client.commands, ["exec tmux new-session -A -s 'build'"]);
+      expect(client.runCommands, isEmpty);
+    },
+  );
+
+  test('preserves remote exit status without losing final tmux output', () async {
+    final output = await service.startShell(
+      session.id,
+      tmux: const TmuxSessionOptions(sessionName: 'build'),
+    );
+    final connection = SshTerminalConnection(service, session.id, output);
+    var exited = false;
+    unawaited(connection.exitCode.then((_) => exited = true));
+    await _flushEvents();
+    expect(exited, isFalse);
+
+    final shell = client.shells.single;
+    shell.completeChannel(127);
+    // SSH channel completion can precede delivery of its final buffered output.
+    shell.output.add(Uint8List.fromList(utf8.encode('final screen\r\n')));
+    shell.errors.add(Uint8List.fromList(utf8.encode('tmux: not found\r\n')));
+    final collected = output.join();
+    await shell.finish();
+    expect(await connection.exitCode, 127);
+    expect(
+      await collected,
+      allOf(contains('final screen'), contains('not found')),
+    );
+    expect(client.shellRequests, 0);
+  });
+
+  test(
+    'observes early channel errors and preserves them for the exit reader',
+    () async {
+      final output = await service.startShell(session.id);
+      final connection = SshTerminalConnection(service, session.id, output);
+      final failure = StateError('SSH channel failed');
+      client.shells.single.failChannel(failure);
+      await _flushEvents(); // No status consumer has attached yet.
+      await expectLater(connection.exitCode, throwsA(same(failure)));
+    },
+  );
+
+  test(
+    'plain output streams remain compatible without exit metadata',
+    () async {
+      final connection = SshTerminalConnection(
+        service,
+        session.id,
+        const Stream<String>.empty(),
+      );
+      expect(await connection.exitCode, isNull);
+    },
+  );
+
+  test(
+    'decrypts an encrypted key without sending its passphrase as a password',
+    () async {
+      List<SSHIdentity>? sentIdentities;
+      String? sentPassword;
+      final keyedService = _service((
+        _,
+        __, {
+        required username,
+        password,
+        identities,
+        gateway,
+      }) async {
+        sentIdentities = identities;
+        sentPassword = password;
+        return _Client();
+      });
+      addTearDown(keyedService.dispose);
+      final connected = await keyedService.connectWithKey(
+        'key.example',
+        22,
+        'alice',
+        _encryptedTestKey,
+        passphrase: _testPassphrase,
+        gateway: _fixtureGateway,
+      );
+      expect(connected.connected, isTrue);
+      expect(sentPassword, isNull);
+      expect(sentIdentities, hasLength(1));
+      expect((sentIdentities!.single as SSHKeyPair).name, 'ssh-ed25519');
+    },
+  );
+
+  test(
+    'rejects missing or incorrect key passphrases before connecting',
+    () async {
+      var connections = 0;
+      final keyedService = _service((
+        _,
+        __, {
+        required username,
+        password,
+        identities,
+        gateway,
+      }) async {
+        connections++;
+        return _Client();
+      });
+      addTearDown(keyedService.dispose);
+      for (final passphrase in [null, '', 'incorrect']) {
+        await expectLater(
+          keyedService.connectWithKey(
+            'key.example',
+            22,
+            'alice',
+            _encryptedTestKey,
+            passphrase: passphrase,
+            gateway: _fixtureGateway,
+          ),
+          throwsA(isA<TerminalMountFormatException>()),
+        );
+      }
+      expect(connections, 0);
+      expect(keyedService.getActiveSessions(), isEmpty);
+    },
+  );
+
+  test('continues to accept unencrypted keys without a passphrase', () async {
+    final pem = SSHKeyPair.fromPem(
+      _encryptedTestKey,
+      _testPassphrase,
+    ).first.toPem();
+    final connected = await service.connectWithKey(
+      'key.example',
+      22,
+      'alice',
+      pem,
+      gateway: _fixtureGateway,
+    );
+    expect(connected.connected, isTrue);
+  });
 
   test('writes UTF-8, arrow keys, tab and control characters without line buffering', () async {
     await service.startShell(session.id);
@@ -256,6 +517,7 @@ void main() {
         22,
         'u',
         'p',
+        gateway: _fixtureGateway,
       );
       final failed = expectLater(connecting, throwsStateError);
       await connectingService.dispose();
@@ -284,10 +546,22 @@ void main() {
     addTearDown(connectingService.dispose);
     final connections = [
       for (var i = 0; i < SshTerminalService.maxSessions; i++)
-        connectingService.connect('host$i', 22, 'u', 'p'),
+        connectingService.connect(
+          'host$i',
+          22,
+          'u',
+          'p',
+          gateway: _fixtureGateway,
+        ),
     ];
     await expectLater(
-      connectingService.connect('over-capacity', 22, 'u', 'p'),
+      connectingService.connect(
+        'over-capacity',
+        22,
+        'u',
+        'p',
+        gateway: _fixtureGateway,
+      ),
       throwsStateError,
     );
     expect(attempts, hasLength(SshTerminalService.maxSessions));
@@ -311,9 +585,13 @@ Future<void> _flushEvents() => Future<void>.delayed(Duration.zero);
 /// above executes the production implementation.
 class _Client implements SSHClient {
   final shells = <_Shell>[];
+  final commands = <String>[];
+  final runCommands = <String>[];
+  int shellRequests = 0;
   final _finished = Completer<void>();
   SSHPtyConfig? pty;
   Future<SSHSession>? pendingShell;
+  Future<SSHSession>? pendingExecution;
   Uint8List runOutput = Uint8List(0);
   bool _closed = false;
 
@@ -332,8 +610,24 @@ class _Client implements SSHClient {
     SSHX11Config? x11,
     Map<String, String>? environment,
   }) async {
+    shellRequests++;
     this.pty = pty;
     if (pendingShell != null) return pendingShell!;
+    final shell = _Shell();
+    shells.add(shell);
+    return shell;
+  }
+
+  @override
+  Future<SSHSession> execute(
+    String command, {
+    SSHPtyConfig? pty,
+    SSHX11Config? x11,
+    Map<String, String>? environment,
+  }) async {
+    commands.add(command);
+    this.pty = pty;
+    if (pendingExecution != null) return pendingExecution!;
     final shell = _Shell();
     shells.add(shell);
     return shell;
@@ -346,7 +640,10 @@ class _Client implements SSHClient {
     bool stdout = true,
     bool stderr = true,
     Map<String, String>? environment,
-  }) async => runOutput;
+  }) async {
+    runCommands.add(command);
+    return runOutput;
+  }
 
   void endTransport() {
     _closed = true;
@@ -373,9 +670,25 @@ class _Shell implements SSHSession {
   final output = StreamController<Uint8List>();
   final errors = StreamController<Uint8List>();
   final _input = StreamController<Uint8List>();
+  final _finished = Completer<void>();
   final received = <Uint8List>[];
   final resizes = <(int, int)>[];
   bool closed = false;
+  int? _exitCode;
+
+  @override
+  Future<void> get done => _finished.future;
+
+  @override
+  int? get exitCode => _exitCode;
+
+  void completeChannel([int? code]) {
+    if (_finished.isCompleted) return;
+    _exitCode = code;
+    _finished.complete();
+  }
+
+  void failChannel(Object error) => _finished.completeError(error);
 
   @override
   StreamSink<Uint8List> get stdin => _input.sink;
@@ -397,6 +710,7 @@ class _Shell implements SSHSession {
   }
 
   Future<void> finish() async {
+    completeChannel();
     await Future.wait([output.close(), errors.close()]);
   }
 
@@ -404,6 +718,7 @@ class _Shell implements SSHSession {
   void close() {
     if (closed) return;
     closed = true;
+    completeChannel();
     unawaited(output.close());
     unawaited(errors.close());
     unawaited(_input.close());
@@ -412,3 +727,17 @@ class _Shell implements SSHSession {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+
+// Generated solely for this test; never used for real SSH access. One bcrypt
+// round keeps decryption checks fast while exercising the encrypted PEM path.
+const _testPassphrase = 'crispcloud-test-passphrase';
+const _encryptedTestKey = '''
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABAoYfP/LZ
+tDShpmPjf8G8L7AAAAAQAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAINR9AQwqTdqM7g8v
+19usIcpplj5aGaoM/BCreHqnbpe3AAAAoPvLGz4G2zfyGs8dl2noKWWfBlmmmbn3EUDCH4
+40usQZfpxZQaLbXqPfqqqBcVh7KNeAEaV9iw5W/DEGTW6qA66Uy3666v6ZySWljBZ8TQIQ
+RaLNMkGeO6gAwnZ/8O3NOQnX7EuwplK/m0iDZHd8+F8fZYNkuwrrOpno4YkaXiZo+g91KL
+T8grtMNHPPk2CpjDDrOaMjdL55Ng7I3S1wQkY=
+-----END OPENSSH PRIVATE KEY-----
+''';
