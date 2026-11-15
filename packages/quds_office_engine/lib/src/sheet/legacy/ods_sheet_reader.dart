@@ -125,6 +125,7 @@ abstract final class OdsSheetReader {
         final rowHeight = _lengthToPoints(
           _property(rowStyle, 'table-row-properties', 'row-height', _style),
         );
+        final rowMerges = <SmlMerge>[];
         final entries =
             <
               ({
@@ -190,6 +191,31 @@ abstract final class OdsSheetReader {
             if (cell?.formula != null && (repeat > 1 || rowRepeat > 1)) {
               throw const OdsSheetFormatException(
                 'Repeated formulas are not supported',
+              );
+            }
+            if (sheet.merges.isNotEmpty || rowMerges.isNotEmpty) {
+              budget.mergeCoverage(sheet.merges.length + rowMerges.length);
+              final occupied = SmlMerge(
+                c0: column,
+                r0: rowIndex,
+                c1: column + repeat - 1,
+                r1: rowIndex + rowRepeat - 1,
+              );
+              if (sheet.merges.any((merge) => merge.overlaps(occupied)) ||
+                  rowMerges.any((merge) => merge.overlaps(occupied))) {
+                throw const OdsSheetFormatException(
+                  'Stored cell inside a merge requires a covered-cell token',
+                );
+              }
+            }
+            if (colSpan > 1 || rowSpan > 1) {
+              rowMerges.add(
+                SmlMerge(
+                  c0: column,
+                  r0: rowIndex,
+                  c1: column + colSpan - 1,
+                  r1: rowIndex + rowRepeat + rowSpan - 2,
+                ),
               );
             }
             if (cell != null) {
@@ -446,7 +472,7 @@ abstract final class OdsSheetReader {
 
     if (value == null && formula == null && !styled) return null;
 
-    final cell = SmlCell(ref: SmlCellRef(0, 0));
+    final cell = SmlCell(ref: const SmlCellRef(0, 0));
     if (value != null) {
       cell.value = value;
       cell.type = value is bool
@@ -545,11 +571,12 @@ abstract final class OdsSheetReader {
     if (dot <= 0) return reference;
     var sheet = reference.substring(0, dot).trim();
     final cell = reference.substring(dot + 1);
-    if (sheet.startsWith("'") && sheet.endsWith("'")) {
+    final quoted = sheet.startsWith("'") && sheet.endsWith("'");
+    if (quoted) {
       sheet = sheet.substring(1, sheet.length - 1);
     }
     if (sheet.isEmpty) return cell;
-    return sheet.contains(' ') ? "'$sheet'!$cell" : '$sheet!$cell';
+    return quoted || sheet.contains(' ') ? "'$sheet'!$cell" : '$sheet!$cell';
   }
 
   static String? _numberFormat(
@@ -818,6 +845,7 @@ class _OdsBudget {
   int _xmlEvents = 0;
   int _cellText = 0;
   int _styleWork = 0;
+  int _mergeCoverageWork = 0;
 
   void cells(int count) {
     if (count > 200000 - _cells) {
@@ -849,6 +877,13 @@ class _OdsBudget {
       throw const OdsSheetFormatException('ODS style work limit');
     }
     _styleWork += count;
+  }
+
+  void mergeCoverage(int count) {
+    if (count > 4000000 - _mergeCoverageWork) {
+      throw const OdsSheetFormatException('ODS merge coverage work limit');
+    }
+    _mergeCoverageWork += count;
   }
 
   void merge() {

@@ -173,3 +173,22 @@ and package-local development graphs are retained. The source-only gate now
 includes host inventory controls; the scripted-output oracle follows the real
 engine artifact generator. Fresh combined runtime acceptance is recorded in
 `evidence/storage-carving-20261115/local-resume-20261115T1010/`.
+
+## Reconciled local qualification continuation
+
+The saved continuation retains main `ab7f1536`, shared storage `65e462b1`,
+and all their historical receipts. Quds source `3fd05efadee4eed9a6e64b3f3dcc58755ebd0af2`
+merges the bounded ODS import corrections with the concurrent quoted-reference
+fix; the standalone parser remains `d422fa99`. All 2,223 managed files retain
+canonical blob identities and modes. Four Office const lint fixes and two app
+test lint fixes are included without changing runtime dependencies.
+
+ODS import preserves merged coordinates, blank-row positions and quoted sheet
+identifiers, and explicitly refuses missing covered cells, unsupported formula
+replication and exhausted work budgets. App CSV previews also preserve final
+cell whitespace. The new host workflow checks that ODS editing exports an XLSX
+copy while retaining the source and correctly owning the exported revision.
+
+[Current source-bound qualification and raw receipts](evidence/storage-carving-20261115/local-qualification-20261115/README.md)
+are separate from all earlier results. The previous 02d2142e runtime passes and
+its six strict-analysis findings remain intact under their original gate paths.

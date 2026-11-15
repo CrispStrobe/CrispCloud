@@ -15,7 +15,10 @@ All notable changes to `quds_office_engine` are documented here.
   Input and combined XML each cap at 64 MiB; XML nesting/events and style work
   have separate limits. Repeated formulas, matrix formulas, repeated merged
   anchors, overlapping merges, nested tables and covered cells that contain
-  stored data explicitly decline. This is a bounded ODS-to-XLSX import profile,
+  stored data explicitly decline. Ordinary stored cells inside earlier merged
+  coverage also decline when the required covered-cell token is missing.
+  Preserve quoted sheet identifiers in converted formulas, including names
+  with punctuation, through XLSX saves. This is a bounded ODS-to-XLSX import profile,
   not roundtrip preservation of arbitrary ODF features.
 
 - Preserve imported typed formula caches through unsupported dependencies,

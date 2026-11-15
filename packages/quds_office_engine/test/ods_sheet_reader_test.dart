@@ -41,6 +41,11 @@ Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
 String _value(String value) =>
     '<t:table-cell o:value-type="string"><x:p>$value</x:p></t:table-cell>';
 
+String _xmlAttribute(String value) => value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('"', '&quot;');
+
 Matcher get _invalidOds => throwsA(isA<OdsSheetFormatException>());
 
 /// Synthetic LibreOffice-generated ODS (values, formulas, styles, merge).
@@ -256,7 +261,7 @@ void main() {
   });
 
   test('workbook budget is shared by multiple individually small sheets', () {
-    final table =
+    const table =
         '<t:table><t:table-row t:number-rows-repeated="1000">'
         '<t:table-cell t:number-columns-repeated="100" o:value-type="float" '
         'o:value="1"/></t:table-row></t:table>';
@@ -329,6 +334,67 @@ void main() {
       );
     },
   );
+
+  // Retain the independently added external continuation's formula cases.
+  for (final formula in const {
+    'of:="a;b"': '"a;b"',
+    'of:="literal [.A1];COM.MICROSOFT.SUM"':
+        '"literal [.A1];COM.MICROSOFT.SUM"',
+    'of:=IF([.A1]="a;b";"say ""[.B2];""";COM.MICROSOFT.SUM([.A1:.A2];1))':
+        'IF(A1="a;b","say ""[.B2];""",SUM(A1:A2,1))',
+    'of:=CONCATENATE("";"a;b";"[.A1]")': 'CONCATENATE("","a;b","[.A1]")',
+    "of:=SUM(['Semi;Colon'.A1];1)": "SUM('Semi;Colon'!A1,1)",
+    "of:=SUM(['COM.MICROSOFT.Data'.A1];1)": "SUM('COM.MICROSOFT.Data'!A1,1)",
+  }.entries) {
+    test(
+      'formula roundtrip preserves imported syntax: ${formula.key}',
+      () async {
+        final book = OdsSheetReader.readBytes(
+          _ods(
+            '<t:table><t:table-row><t:table-cell o:value-type="string" '
+            'o:string-value="cached" t:formula="${_xmlAttribute(formula.key)}"/>'
+            '</t:table-row></t:table>',
+          ),
+        );
+        final reopened = SheetDeserializer().readBytes(
+          await OfficeIsolateSave.workbook(book, recalculate: false),
+        );
+        for (final current in [book, reopened]) {
+          expect(current.firstSheet.cellA1('A1').formula, formula.value);
+          expect(current.firstSheet.cellA1('A1').value, 'cached');
+        }
+      },
+    );
+  }
+
+  test(
+    'declines a stored cell where a horizontal covered token is missing',
+    () {
+      expect(
+        () => OdsSheetReader.readBytes(
+          _ods(
+            '<t:table><t:table-row><t:table-cell t:number-columns-spanned="2" '
+            'o:value-type="string"><x:p>Wide</x:p></t:table-cell>'
+            '${_value('hidden value')}</t:table-row></t:table>',
+          ),
+        ),
+        _invalidOds,
+      );
+    },
+  );
+
+  test('declines a stored cell inside an earlier vertical merged region', () {
+    expect(
+      () => OdsSheetReader.readBytes(
+        _ods(
+          '<t:table><t:table-row><t:table-cell t:number-rows-spanned="2" '
+          'o:value-type="string"><x:p>Tall</x:p></t:table-cell></t:table-row>'
+          '<t:table-row>${_value('hidden value')}</t:table-row></t:table>',
+        ),
+      ),
+      _invalidOds,
+    );
+  });
 
   test('preserves ODF explicit spaces, tabs and paragraph boundaries', () {
     final sheet = OdsSheetReader.readBytes(
