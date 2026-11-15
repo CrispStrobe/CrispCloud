@@ -291,6 +291,13 @@ Follow
 - package CHANGELOGs get an `Unreleased` entry for user-visible changes;
 - do not bump versions outside a release.
 
+## Remaining limits
+
+The engine-side backlog is tracked in the Quds
+[office-remaining-gaps.md](https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/office-remaining-gaps.md).
+The host-level backlog is
+[office-remaining-gaps-20261115.md](../docs/office-remaining-gaps-20261115.md).
+
 ## Syncing
 
 The app resolves these packages through local `path` overrides in

@@ -182,6 +182,12 @@ Gate 1 should be tested on macOS and physical iOS hardware. It has not been run
 yet because the runtime is not packaged and no iOS device is available to this
 session. Do not start a migration until the first two gates pass.
 
+## Remaining format work
+
+The current office format backlog, including ODS metadata, conditional-format
+breadth, ODT pictures, ODP fidelity and `.xlsb`, is tracked in
+[office-remaining-gaps-20261115.md](office-remaining-gaps-20261115.md).
+
 ## Next engineering work
 
 1. Fix the Quds RTL PDF layout failure.
