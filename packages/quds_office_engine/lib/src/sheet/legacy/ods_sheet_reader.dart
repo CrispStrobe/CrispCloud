@@ -65,6 +65,8 @@ abstract final class OdsSheetReader {
   static const _svg =
       'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0';
   static const _xlink = 'http://www.w3.org/1999/xlink';
+  static const _calcext =
+      'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0';
 
   /// Reads a bounded spreadsheet, declining unsupported expansion instead of
   /// silently clipping cells. Empty padding advances coordinates arithmetically.
@@ -435,6 +437,9 @@ abstract final class OdsSheetReader {
         }
         rowIndex += rowRepeat;
       }
+      sheet.conditionalFormats.addAll(
+        _readConditionalFormats(table, styles, budget),
+      );
       book.sheets.add(sheet);
     }
     return book;
@@ -569,6 +574,93 @@ abstract final class OdsSheetReader {
       column += repeat;
     }
     return defaults;
+  }
+
+  static List<SmlConditionalRule> _readConditionalFormats(
+    XmlElement table,
+    Map<String, XmlElement> styles,
+    _OdsBudget budget,
+  ) {
+    final rules = <SmlConditionalRule>[];
+    for (final format in _descendants(table, 'conditional-format', _calcext)) {
+      final range = _odsConditionalRange(
+        _attribute(format, 'target-range-address', _calcext),
+      );
+      if (range == null) continue;
+      for (final condition in _descendants(format, 'condition', _calcext)) {
+        final value = _attribute(condition, 'value', _calcext)?.trim();
+        final styleName = _attribute(condition, 'apply-style-name', _calcext);
+        if (value == null || value.isEmpty || styleName == null) continue;
+        final SmlConditionalKind kind;
+        final String formula;
+        if (value.startsWith('<>') || value.startsWith('!=')) {
+          kind = SmlConditionalKind.notEqual;
+          formula = value.substring(2).trim();
+        } else if (value.startsWith('>=')) {
+          kind = SmlConditionalKind.greaterOrEqual;
+          formula = value.substring(2).trim();
+        } else if (value.startsWith('<=')) {
+          kind = SmlConditionalKind.lessOrEqual;
+          formula = value.substring(2).trim();
+        } else if (value.startsWith('>')) {
+          kind = SmlConditionalKind.greaterThan;
+          formula = value.substring(1).trim();
+        } else if (value.startsWith('<')) {
+          kind = SmlConditionalKind.lessThan;
+          formula = value.substring(1).trim();
+        } else if (value.startsWith('=')) {
+          kind = SmlConditionalKind.equal;
+          formula = value.substring(1).trim();
+        } else {
+          continue;
+        }
+        if (formula.isEmpty) continue;
+        final style = _styleChain(styles, 'table-cell', styleName);
+        final fill = _hex(
+          _property(style, 'table-cell-properties', 'background-color', _fo),
+        );
+        final font = _hex(_property(style, 'text-properties', 'color', _fo));
+        budget.conditional();
+        rules.add(
+          SmlConditionalRule(
+            range: range,
+            kind: kind,
+            formula: formula,
+            fillRgb: fill ?? 'FFF2CC',
+            fontRgb: font ?? '',
+          ),
+        );
+      }
+    }
+    return rules;
+  }
+
+  static SmlRange? _odsConditionalRange(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    final parts = raw.split(':');
+    if (parts.length != 2) return null;
+    ({String sheet, String cell})? point(String value) {
+      final text = value.trim();
+      final dot = text.lastIndexOf('.');
+      if (dot <= 0 || dot >= text.length - 1) return null;
+      var sheetName = text.substring(0, dot);
+      final cell = text.substring(dot + 1).replaceAll('\$', '');
+      if (sheetName.startsWith('\$')) sheetName = sheetName.substring(1);
+      if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
+        sheetName = sheetName
+            .substring(1, sheetName.length - 1)
+            .replaceAll("''", "'");
+      }
+      if (!RegExp(r'^[A-Za-z]+[0-9]+$').hasMatch(cell)) return null;
+      return (sheet: sheetName, cell: cell);
+    }
+
+    final start = point(parts[0]);
+    final end = point(parts[1]);
+    if (start == null || end == null || start.sheet != end.sheet) {
+      return null;
+    }
+    return SmlRange.parse('${start.cell}:${end.cell}');
   }
 
   static Iterable<({int column, int repeat, String? styleName})> _cellStyleRuns(
@@ -1282,6 +1374,7 @@ class _OdsBudget {
   int _mergeCoverageWork = 0;
   int _imageBytes = 0;
   int _images = 0;
+  int _conditionalFormats = 0;
 
   void comments(int count) {
     if (count > 10000 - _comments) {
@@ -1320,6 +1413,14 @@ class _OdsBudget {
       throw const OdsSheetFormatException('ODS style work limit');
     }
     _styleWork += count;
+  }
+
+  void conditional() {
+    if (++_conditionalFormats > 1000) {
+      throw const OdsSheetFormatException(
+        'ODS conditional format limit (1000)',
+      );
+    }
   }
 
   void image(int bytes) {
