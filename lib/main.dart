@@ -1,3 +1,6 @@
+import 'providers/notification_provider.dart';
+import 'widgets/app_scaffold_messenger.dart';
+
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:dart_pdf_editor_assets/dart_pdf_editor_assets.dart';
@@ -53,7 +56,10 @@ import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
 import 'services/platform_runtime_licenses.dart';
 import 'services/app_legal_notices.dart';
-import 'package:dart_pdf_printing/dart_pdf_printing.dart' show DartPdfPrintingLocalizations;
+
+import 'package:dart_pdf_printing/dart_pdf_printing.dart'
+    show DartPdfPrintingLocalizations;
+
 import 'services/terminal_licenses.dart';
 import 'services/file_viewer_binary_license.dart';
 import 'services/mesh_preview_license.dart';
@@ -990,12 +996,15 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeService = ref.watch(themeProvider);
+    ref.watch(notificationSettingsProvider);
     ref.listen<Locale?>(localeProvider, (_, locale) {
       unawaited(LocalePreference.write(locale));
     });
 
     return MaterialApp(
       title: 'CrispCloud',
+      builder: (context, child) =>
+          AppScaffoldMessenger(child: child ?? const SizedBox.shrink()),
       theme: themeService.lightTheme,
       darkTheme: themeService.darkTheme,
       themeMode: themeService.themeMode,

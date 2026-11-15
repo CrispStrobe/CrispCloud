@@ -1,3 +1,4 @@
+import 'app_scaffold_messenger.dart';
 import '../services/document_printing.dart';
 import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
@@ -1075,7 +1076,7 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) unawaited(_requestClose());
       },
-      child: ScaffoldMessenger(
+      child: AppScaffoldMessenger(
         key: _messenger,
         child: Scaffold(
           appBar: ref.watch(nativePdfToolbarReadyProvider)

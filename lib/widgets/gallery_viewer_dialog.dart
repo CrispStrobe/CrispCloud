@@ -1,3 +1,5 @@
+import 'app_scaffold_messenger.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -46,9 +48,13 @@ Future<void> showGalleryViewer(
   if (images.isEmpty || (compare && (images.length < 2 || images.length > 4))) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(context.galleryViewerTr(compare
-            ? 'Select two to four images to compare.'
-            : 'No images to display.')),
+        content: Text(
+          context.galleryViewerTr(
+            compare
+                ? 'Select two to four images to compare.'
+                : 'No images to display.',
+          ),
+        ),
       ),
     );
     return;
@@ -80,53 +86,59 @@ Future<void> showGalleryViewer(
     result = await showDialog<GalleryViewerResult>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Consumer(builder: (context, viewerRef, _) {
-        // Keep an already decoded image tied to the account and listing that
-        // supplied it. A read-time guard alone cannot clear idle pixels after
-        // logout, switching storage or replacing a browser folder grant.
-        viewerRef.watch(authProvider);
-        viewerRef.watch(panelSourceProvider(side));
-        viewerRef.watch(panelProvider(side));
-        return Dialog.fullscreen(child: GalleryViewerDialog(
-          files: images,
-          initialIndex: initialIndex,
-          compare: compare,
-          slideshow: slideshow,
-          isSourceCurrent: requests.values.every((request) => request.isCurrent),
-          imageLoader: (file) => service.loadImage(requestFor(file)),
-          thumbnailLoader: (file) =>
-              service.loadThumbnail(requestFor(file), size: 128),
-          canEdit: (file) {
-            final request = requests[file];
-            return request != null &&
-                request.isCurrent &&
-                !request.isArchive &&
-                isEditableImageFileName(file.name) &&
-                ref.read(panelProvider(side)).originForFile(file) != null;
-          },
-          onAnnotate: (file) async {
-            final request = requests[file];
-            if (request == null) return;
-            await showGalleryAnnotations(context, ref, {
-              request.assetId: file.name,
-            });
-          },
-          catalogBuilder: (_, file) {
-            final request = requests[file];
-            return request == null
-                ? const SizedBox.shrink()
-                : _ViewerCatalog(assetId: request.assetId);
-          },
-          originalExporter: (file) async {
-            final bytes = await service.loadOriginal(requestFor(file));
-            return exportGalleryFile(
-              bytes,
-              file.name,
-              dialogTitle: saveCopyTitle,
-            );
-          },
-        ));
-      }),
+      builder: (_) => Consumer(
+        builder: (context, viewerRef, _) {
+          // Keep an already decoded image tied to the account and listing that
+          // supplied it. A read-time guard alone cannot clear idle pixels after
+          // logout, switching storage or replacing a browser folder grant.
+          viewerRef.watch(authProvider);
+          viewerRef.watch(panelSourceProvider(side));
+          viewerRef.watch(panelProvider(side));
+          return Dialog.fullscreen(
+            child: GalleryViewerDialog(
+              files: images,
+              initialIndex: initialIndex,
+              compare: compare,
+              slideshow: slideshow,
+              isSourceCurrent: requests.values.every(
+                (request) => request.isCurrent,
+              ),
+              imageLoader: (file) => service.loadImage(requestFor(file)),
+              thumbnailLoader: (file) =>
+                  service.loadThumbnail(requestFor(file), size: 128),
+              canEdit: (file) {
+                final request = requests[file];
+                return request != null &&
+                    request.isCurrent &&
+                    !request.isArchive &&
+                    isEditableImageFileName(file.name) &&
+                    ref.read(panelProvider(side)).originForFile(file) != null;
+              },
+              onAnnotate: (file) async {
+                final request = requests[file];
+                if (request == null) return;
+                await showGalleryAnnotations(context, ref, {
+                  request.assetId: file.name,
+                });
+              },
+              catalogBuilder: (_, file) {
+                final request = requests[file];
+                return request == null
+                    ? const SizedBox.shrink()
+                    : _ViewerCatalog(assetId: request.assetId);
+              },
+              originalExporter: (file) async {
+                final bytes = await service.loadOriginal(requestFor(file));
+                return exportGalleryFile(
+                  bytes,
+                  file.name,
+                  dialogTitle: saveCopyTitle,
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
     if (!context.mounted) return;
     if (result != null && result.edit) {
@@ -137,9 +149,11 @@ Future<void> showGalleryViewer(
           ref.read(panelProvider(side)).originForFile(file) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.galleryViewerTr(
-              'This image’s source has changed. Refresh the folder before editing.',
-            )),
+            content: Text(
+              context.galleryViewerTr(
+                'This image’s source has changed. Refresh the folder before editing.',
+              ),
+            ),
           ),
         );
         return;
@@ -267,7 +281,11 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
         : widget.initialIndex.clamp(0, widget.files.length - 1);
     _compare = widget.compare && _canCompare;
     _sourceExpired = !widget.isSourceCurrent;
-    _playing = _isSourceCurrent && widget.slideshow && !_compare && widget.files.length > 1;
+    _playing =
+        _isSourceCurrent &&
+        widget.slideshow &&
+        !_compare &&
+        widget.files.length > 1;
     _loadVisible();
   }
 
@@ -315,8 +333,8 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
     final visible = _compare
         ? List<int>.generate(widget.files.length, (index) => index).toSet()
         : widget.files.isEmpty
-            ? <int>{}
-            : {_index};
+        ? <int>{}
+        : {_index};
     // Keep at most the current image or four comparison images. Filmstrip
     // thumbnails use the separately bounded thumbnail service.
     for (final index in _slots.keys.toList()) {
@@ -334,7 +352,8 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
   Future<void> _load(int index, _ImageSlot slot) async {
     try {
       final data = await widget.imageLoader(widget.files[index]);
-      if (!mounted || !_isSourceCurrent || !identical(_slots[index], slot)) return;
+      if (!mounted || !_isSourceCurrent || !identical(_slots[index], slot))
+        return;
       setState(() {
         slot.data = data;
         slot.loading = false;
@@ -342,7 +361,8 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
       });
       if (index == _index) _armSlideshow();
     } catch (error, stack) {
-      if (!mounted || !_isSourceCurrent || !identical(_slots[index], slot)) return;
+      if (!mounted || !_isSourceCurrent || !identical(_slots[index], slot))
+        return;
       setState(() {
         slot.loading = false;
         slot.error = error;
@@ -383,8 +403,10 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_filmstripScroll.hasClients) return;
       final position = _filmstripScroll.position;
-      final target = (_index * 112 + 56 - position.viewportDimension / 2)
-          .clamp(0.0, position.maxScrollExtent);
+      final target = (_index * 112 + 56 - position.viewportDimension / 2).clamp(
+        0.0,
+        position.maxScrollExtent,
+      );
       _filmstripScroll.animateTo(
         target,
         duration: const Duration(milliseconds: 150),
@@ -463,7 +485,11 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
   }
 
   void _togglePlaying() {
-    if (!_isSourceCurrent || _compare || widget.files.length < 2 || _active?.error != null) return;
+    if (!_isSourceCurrent ||
+        _compare ||
+        widget.files.length < 2 ||
+        _active?.error != null)
+      return;
     if (!_playing) {
       _shuffleQueue.clear();
       _shuffleCycleCompleted = false;
@@ -489,7 +515,8 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
       return;
     }
     _slideshowTimer = Timer(Duration(seconds: _slideshow.seconds), () {
-      if (!mounted || !_isSourceCurrent || !_playing || !_routeIsCurrent) return;
+      if (!mounted || !_isSourceCurrent || !_playing || !_routeIsCurrent)
+        return;
       int? next;
       if (_slideshow.shuffle) {
         if (_shuffleQueue.isEmpty) {
@@ -498,8 +525,10 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
             return;
           }
           _shuffleQueue.addAll(
-            List<int>.generate(widget.files.length, (index) => index)
-                .where((index) => index != _index),
+            List<int>.generate(
+              widget.files.length,
+              (index) => index,
+            ).where((index) => index != _index),
           );
           _shuffleQueue.shuffle(_random);
           _shuffleCycleCompleted = true;
@@ -541,23 +570,25 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
   void _close({bool edit = false}) {
     _slideshowTimer?.cancel();
     final file = _file;
-    Navigator.of(context).pop(
-      file == null ? null : GalleryViewerResult(file, edit: edit),
-    );
+    Navigator.of(context)
+        .pop(file == null ? null : GalleryViewerResult(file, edit: edit));
   }
 
   Future<void> _saveOriginal() async {
     final exporter = widget.originalExporter;
     final file = _file;
-    if (!_isSourceCurrent || _saving || exporter == null || file == null) return;
+    if (!_isSourceCurrent || _saving || exporter == null || file == null)
+      return;
     _slideshowTimer?.cancel();
     setState(() => _saving = true);
     try {
       final result = await exporter(file);
       if (!mounted || result == null) return;
-      _showMessage(result == GalleryExportResult.savedCopy
-          ? 'A copy was saved.'
-          : 'Download started.');
+      _showMessage(
+        result == GalleryExportResult.savedCopy
+            ? 'A copy was saved.'
+            : 'Download started.',
+      );
     } catch (error, stack) {
       _log.warn('Gallery original export failed', error, stack);
       if (mounted) _showMessage('The export could not be completed.');
@@ -656,56 +687,82 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) _close();
       },
-      child: ScaffoldMessenger(
-      key: _messenger,
-      child: Scaffold(
-        backgroundColor: scheme.surface,
-        body: SafeArea(
-          child: Focus(
-            focusNode: _focus,
-            autofocus: true,
-            onKeyEvent: _onKeyEvent,
-            child: LayoutBuilder(
-              builder: (context, constraints) => !_isSourceCurrent
-                  ? _buildExpiredSource()
-                  : Column(
-                children: [
-                  _buildHeader(),
-                  _buildControls(),
-                  Expanded(child: _buildWorkspace()),
-                  if (_showFilmstrip && widget.files.isNotEmpty && constraints.maxHeight >= 280)
-                    _buildFilmstrip(height: constraints.maxHeight >= 440 ? 104 : 72),
-                ],
+      child: AppScaffoldMessenger(
+        key: _messenger,
+        child: Scaffold(
+          backgroundColor: scheme.surface,
+          body: SafeArea(
+            child: Focus(
+              focusNode: _focus,
+              autofocus: true,
+              onKeyEvent: _onKeyEvent,
+              child: LayoutBuilder(
+                builder: (context, constraints) => !_isSourceCurrent
+                    ? _buildExpiredSource()
+                    : Column(
+                        children: [
+                          _buildHeader(),
+                          _buildControls(),
+                          Expanded(child: _buildWorkspace()),
+                          if (_showFilmstrip &&
+                              widget.files.isNotEmpty &&
+                              constraints.maxHeight >= 280)
+                            _buildFilmstrip(
+                              height: constraints.maxHeight >= 440 ? 104 : 72,
+                            ),
+                        ],
+                      ),
               ),
             ),
           ),
         ),
       ),
-      ),
     );
   }
 
-  Widget _buildExpiredSource() => Column(children: [
-    SizedBox(
-      height: 58,
-      child: Row(children: [
-        _button(Icons.close, 'Close', () => _close(), shortcut: 'Esc'),
-        Expanded(child: Text(_t('Image gallery'),
-            style: Theme.of(context).textTheme.titleSmall)),
-      ]),
-    ),
-    Expanded(child: Center(child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.link_off, size: 36),
-        const SizedBox(height: 16),
-        Text(_t('This image’s source has changed. Close the viewer and reopen the folder.'),
-            textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        FilledButton(onPressed: () => _close(), child: Text(_t('Close'))),
-      ]),
-    ))),
-  ]);
+  Widget _buildExpiredSource() => Column(
+    children: [
+      SizedBox(
+        height: 58,
+        child: Row(
+          children: [
+            _button(Icons.close, 'Close', () => _close(), shortcut: 'Esc'),
+            Expanded(
+              child: Text(
+                _t('Image gallery'),
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Expanded(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.link_off, size: 36),
+                const SizedBox(height: 16),
+                Text(
+                  _t(
+                    'This image’s source has changed. Close the viewer and reopen the folder.',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => _close(),
+                  child: Text(_t('Close')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 
   Widget _buildHeader() {
     final file = _file;
@@ -721,7 +778,9 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _compare ? _t('Compare images') : file?.name ?? _t('Image gallery'),
+                  _compare
+                      ? _t('Compare images')
+                      : file?.name ?? _t('Image gallery'),
                   key: const ValueKey('gallery-viewer-title'),
                   style: Theme.of(context).textTheme.titleSmall,
                   overflow: TextOverflow.ellipsis,
@@ -739,9 +798,15 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
               ],
             ),
           ),
-          _button(Icons.info_outline, 'Metadata', () {
-            setState(() => _showMetadata = !_showMetadata);
-          }, selected: _showMetadata, shortcut: 'I'),
+          _button(
+            Icons.info_outline,
+            'Metadata',
+            () {
+              setState(() => _showMetadata = !_showMetadata);
+            },
+            selected: _showMetadata,
+            shortcut: 'I',
+          ),
           _buildMoreMenu(),
         ],
       ),
@@ -760,7 +825,11 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
     icon: Icon(icon, size: 21),
     tooltip: '${_t(label)}${shortcut == null ? '' : ' ($shortcut)'}',
     isSelected: selected,
-    selectedIcon: Icon(icon, size: 21, color: Theme.of(context).colorScheme.primary),
+    selectedIcon: Icon(
+      icon,
+      size: 21,
+      color: Theme.of(context).colorScheme.primary,
+    ),
     onPressed: onPressed,
   );
 
@@ -775,15 +844,34 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _button(Icons.chevron_left, 'Previous image',
-                  _index > 0 ? () => _step(-1) : null),
-              _button(Icons.chevron_right, 'Next image',
-                  _index + 1 < widget.files.length ? () => _step(1) : null),
+              _button(
+                Icons.chevron_left,
+                'Previous image',
+                _index > 0 ? () => _step(-1) : null,
+              ),
+              _button(
+                Icons.chevron_right,
+                'Next image',
+                _index + 1 < widget.files.length ? () => _step(1) : null,
+              ),
               const SizedBox(width: 8),
-              _button(Icons.fit_screen, 'Fit image', loaded ? _fit : null, shortcut: '0'),
-              _button(Icons.crop_original, 'Actual size (1:1)',
-                  loaded ? _actualSize : null, shortcut: '1'),
-              _button(Icons.remove, 'Zoom out', loaded ? () => _zoom(1 / 1.25) : null),
+              _button(
+                Icons.fit_screen,
+                'Fit image',
+                loaded ? _fit : null,
+                shortcut: '0',
+              ),
+              _button(
+                Icons.crop_original,
+                'Actual size (1:1)',
+                loaded ? _actualSize : null,
+                shortcut: '1',
+              ),
+              _button(
+                Icons.remove,
+                'Zoom out',
+                loaded ? () => _zoom(1 / 1.25) : null,
+              ),
               SizedBox(
                 width: 56,
                 child: Text(
@@ -795,30 +883,62 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
               ),
               _button(Icons.add, 'Zoom in', loaded ? () => _zoom(1.25) : null),
               const SizedBox(width: 8),
-              _button(Icons.rotate_right, 'Rotate right',
-                  loaded ? () => _rotate(1) : null, shortcut: 'R'),
-              _button(Icons.flip, 'Flip horizontally', loaded ? () => _flip() : null),
+              _button(
+                Icons.rotate_right,
+                'Rotate right',
+                loaded ? () => _rotate(1) : null,
+                shortcut: 'R',
+              ),
+              _button(
+                Icons.flip,
+                'Flip horizontally',
+                loaded ? () => _flip() : null,
+              ),
               const SizedBox(width: 8),
               if (!_compare) ...[
-                _button(_playing ? Icons.pause : Icons.play_arrow,
-                    _playing ? 'Pause slideshow' : 'Start slideshow',
-                    widget.files.length > 1 && _active?.error == null ? _togglePlaying : null,
-                    shortcut: 'Space'),
-                _button(Icons.timer_outlined, 'Slideshow options', _configureSlideshow),
+                _button(
+                  _playing ? Icons.pause : Icons.play_arrow,
+                  _playing ? 'Pause slideshow' : 'Start slideshow',
+                  widget.files.length > 1 && _active?.error == null
+                      ? _togglePlaying
+                      : null,
+                  shortcut: 'Space',
+                ),
+                _button(
+                  Icons.timer_outlined,
+                  'Slideshow options',
+                  _configureSlideshow,
+                ),
               ],
               if (_canCompare)
-                _button(_compare ? Icons.image_outlined : Icons.compare,
-                    _compare ? 'Single image' : 'Compare images', _toggleCompare),
+                _button(
+                  _compare ? Icons.image_outlined : Icons.compare,
+                  _compare ? 'Single image' : 'Compare images',
+                  _toggleCompare,
+                ),
               if (_compare)
-                _button(_linked ? Icons.link : Icons.link_off,
-                    _linked ? 'Unlink zoom and pan' : 'Link zoom and pan',
-                    _toggleLinked, selected: _linked),
-              _button(Icons.view_carousel_outlined, 'Filmstrip', () {
-                setState(() => _showFilmstrip = !_showFilmstrip);
-                if (_showFilmstrip) _scrollFilmstripToCurrent();
-              }, selected: _showFilmstrip, shortcut: 'F'),
-              _button(Icons.edit_outlined, 'Edit image',
-                  _canEdit ? () => _close(edit: true) : null, shortcut: 'F4'),
+                _button(
+                  _linked ? Icons.link : Icons.link_off,
+                  _linked ? 'Unlink zoom and pan' : 'Link zoom and pan',
+                  _toggleLinked,
+                  selected: _linked,
+                ),
+              _button(
+                Icons.view_carousel_outlined,
+                'Filmstrip',
+                () {
+                  setState(() => _showFilmstrip = !_showFilmstrip);
+                  if (_showFilmstrip) _scrollFilmstripToCurrent();
+                },
+                selected: _showFilmstrip,
+                shortcut: 'F',
+              ),
+              _button(
+                Icons.edit_outlined,
+                'Edit image',
+                _canEdit ? () => _close(edit: true) : null,
+                shortcut: 'F4',
+              ),
               if (widget.onAnnotate != null)
                 IconButton(
                   icon: const Icon(Icons.label_outline, size: 21),
@@ -837,8 +957,11 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
                           ),
                         ),
                       )
-                    : _button(Icons.download_outlined, 'Save original copy',
-                        _file == null ? null : _saveOriginal),
+                    : _button(
+                        Icons.download_outlined,
+                        'Save original copy',
+                        _file == null ? null : _saveOriginal,
+                      ),
             ],
           ),
         ),
@@ -883,9 +1006,21 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
       _menuItem(_MoreCommand.flipVertical, 'Flip vertically'),
       _menuItem(_MoreCommand.reset, 'Reset view'),
       const PopupMenuDivider(),
-      _checkedItem(_MoreCommand.backgroundDark, 'Dark background', _background == _Background.dark),
-      _checkedItem(_MoreCommand.backgroundLight, 'Light background', _background == _Background.light),
-      _checkedItem(_MoreCommand.backgroundCheckerboard, 'Checkerboard background', _background == _Background.checkerboard),
+      _checkedItem(
+        _MoreCommand.backgroundDark,
+        'Dark background',
+        _background == _Background.dark,
+      ),
+      _checkedItem(
+        _MoreCommand.backgroundLight,
+        'Light background',
+        _background == _Background.light,
+      ),
+      _checkedItem(
+        _MoreCommand.backgroundCheckerboard,
+        'Checkerboard background',
+        _background == _Background.checkerboard,
+      ),
       _checkedItem(_MoreCommand.smoothPixels, 'Smooth pixels', _smoothPixels),
       const PopupMenuDivider(),
       _menuItem(_MoreCommand.slideshowOptions, 'Slideshow options'),
@@ -897,8 +1032,14 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
       PopupMenuItem(value: value, child: Text(_t(label)));
 
   CheckedPopupMenuItem<_MoreCommand> _checkedItem(
-    _MoreCommand value, String label, bool checked,
-  ) => CheckedPopupMenuItem(value: value, checked: checked, child: Text(_t(label)));
+    _MoreCommand value,
+    String label,
+    bool checked,
+  ) => CheckedPopupMenuItem(
+    value: value,
+    checked: checked,
+    child: Text(_t(label)),
+  );
 
   Future<void> _showShortcuts() async {
     _slideshowTimer?.cancel();
@@ -913,11 +1054,15 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
             children: [
               Text('← / →   ${_t('Previous image')} / ${_t('Next image')}'),
               Text('Home / End   ${_t('First / last image')}'),
-              Text('Space   ${_t('Start slideshow')} / ${_t('Pause slideshow')}'),
+              Text(
+                'Space   ${_t('Start slideshow')} / ${_t('Pause slideshow')}',
+              ),
               Text('+ / −   ${_t('Zoom in')} / ${_t('Zoom out')}'),
               Text('0   ${_t('Fit image')}'),
               Text('1   ${_t('Actual size (1:1)')}'),
-              Text('R / Shift+R   ${_t('Rotate right')} / ${_t('Rotate left')}'),
+              Text(
+                'R / Shift+R   ${_t('Rotate right')} / ${_t('Rotate left')}',
+              ),
               Text('I   ${_t('Metadata')}'),
               Text('F   ${_t('Filmstrip')}'),
               Text('F4   ${_t('Edit image')}'),
@@ -926,10 +1071,12 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
             ],
           ),
         ),
-        actions: [TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(_t('Close')),
-        )],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(_t('Close')),
+          ),
+        ],
       ),
     );
     if (!mounted) return;
@@ -941,43 +1088,54 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
     builder: (context, constraints) {
       final images = widget.files.isEmpty
           ? Center(child: Text(_t('No images to display.')))
-          : _compare ? _buildComparison() : _buildImage(_index);
+          : _compare
+          ? _buildComparison()
+          : _buildImage(_index);
       if (!_showMetadata || _file == null) return images;
       if (constraints.maxWidth >= 900) {
-        return Row(children: [
-          Expanded(child: images),
-          const VerticalDivider(width: 1),
-          SizedBox(width: 300, child: _buildMetadata()),
-        ]);
+        return Row(
+          children: [
+            Expanded(child: images),
+            const VerticalDivider(width: 1),
+            SizedBox(width: 300, child: _buildMetadata()),
+          ],
+        );
       }
-      return Column(children: [
-        Expanded(child: images),
-        const Divider(height: 1),
-        SizedBox(
-          height: math.min(240.0, constraints.maxHeight * 0.45),
-          child: _buildMetadata(),
-        ),
-      ]);
+      return Column(
+        children: [
+          Expanded(child: images),
+          const Divider(height: 1),
+          SizedBox(
+            height: math.min(240.0, constraints.maxHeight * 0.45),
+            child: _buildMetadata(),
+          ),
+        ],
+      );
     },
   );
 
   Widget _buildComparison() => LayoutBuilder(
     builder: (context, constraints) {
-      final columns = widget.files.length > 2 || constraints.maxWidth >= 600 ? 2 : 1;
+      final columns = widget.files.length > 2 || constraints.maxWidth >= 600
+          ? 2
+          : 1;
       final rows = (widget.files.length / columns).ceil();
       return Column(
-        children: List<Widget>.generate(rows, (row) => Expanded(
-          child: Row(
-            children: List<Widget>.generate(columns, (column) {
-              final index = row * columns + column;
-              return Expanded(
-                child: index < widget.files.length
-                    ? _buildImage(index)
-                    : const SizedBox.expand(),
-              );
-            }),
+        children: List<Widget>.generate(
+          rows,
+          (row) => Expanded(
+            child: Row(
+              children: List<Widget>.generate(columns, (column) {
+                final index = row * columns + column;
+                return Expanded(
+                  child: index < widget.files.length
+                      ? _buildImage(index)
+                      : const SizedBox.expand(),
+                );
+              }),
+            ),
           ),
-        )),
+        ),
       );
     },
   );
@@ -998,7 +1156,10 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: _compare
-                ? Border.all(color: selected ? scheme.primary : scheme.outlineVariant, width: 2)
+                ? Border.all(
+                    color: selected ? scheme.primary : scheme.outlineVariant,
+                    width: 2,
+                  )
                 : null,
           ),
           child: Padding(
@@ -1010,7 +1171,9 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
                     height: 36,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: AlignmentDirectional.centerStart,
-                    color: selected ? scheme.primaryContainer : scheme.surfaceContainer,
+                    color: selected
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainer,
                     child: Text(
                       file.name,
                       maxLines: 1,
@@ -1020,31 +1183,35 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
                   ),
                 Expanded(
                   child: slot == null || slot.loading
-                      ? Center(child: SingleChildScrollView(child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 12),
-                            Text(_t('Loading image…')),
-                          ],
-                        )))
-                      : slot.error != null
-                          ? _buildLoadError(index, slot.error!)
-                          : _GalleryCanvas(
-                              key: ValueKey('gallery-canvas-$index'),
-                              data: slot.data!,
-                              controller: slot.controller,
-                              background: _background,
-                              smoothPixels: _smoothPixels,
-                              onDoubleTap: () {
-                                _select(index);
-                                if ((slot.controller.pixelScale - 1).abs() < 0.01) {
-                                  slot.controller.fit();
-                                } else {
-                                  slot.controller.actualSize();
-                                }
-                              },
+                      ? Center(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 12),
+                                Text(_t('Loading image…')),
+                              ],
                             ),
+                          ),
+                        )
+                      : slot.error != null
+                      ? _buildLoadError(index, slot.error!)
+                      : _GalleryCanvas(
+                          key: ValueKey('gallery-canvas-$index'),
+                          data: slot.data!,
+                          controller: slot.controller,
+                          background: _background,
+                          smoothPixels: _smoothPixels,
+                          onDoubleTap: () {
+                            _select(index);
+                            if ((slot.controller.pixelScale - 1).abs() < 0.01) {
+                              slot.controller.fit();
+                            } else {
+                              slot.controller.actualSize();
+                            }
+                          },
+                        ),
                 ),
               ],
             ),
@@ -1065,8 +1232,11 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
           Text(_t('Could not load this image.'), textAlign: TextAlign.center),
           if (error is GalleryMediaException) ...[
             const SizedBox(height: 8),
-            Text(error.message, textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              error.message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -1085,13 +1255,17 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
     final values = <String, String>{
       _t('Name'): file.name,
       if (file.path != null) _t('Path'): file.path!,
-      _t('Format'): file.extension.isEmpty ? _t('Unknown') : file.extension.toUpperCase(),
+      _t('Format'): file.extension.isEmpty
+          ? _t('Unknown')
+          : file.extension.toUpperCase(),
       if (data != null) _t('Dimensions'): '${data.width} × ${data.height}',
       if (file.size != null) _t('File size'): formatBytes(file.size!),
       if (file.updatedAt != null)
-        _t('Modified'): DateFormat.yMd(Localizations.localeOf(context).toString())
-            .add_Hms().format(file.updatedAt!.toLocal()),
-      if (data != null && data.frameCount > 1) _t('Frames'): '${data.frameCount}',
+        _t('Modified'): DateFormat.yMd(
+          Localizations.localeOf(context).toString(),
+        ).add_Hms().format(file.updatedAt!.toLocal()),
+      if (data != null && data.frameCount > 1)
+        _t('Frames'): '${data.frameCount}',
       if (data != null) ...data.metadata,
     };
     final transformed = _active?.controller.hasPreviewTransform ?? false;
@@ -1104,26 +1278,34 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
           widget.catalogBuilder!(context, file),
         ],
         const SizedBox(height: 16),
-        for (final entry in values.entries) Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(entry.key, style: Theme.of(context).textTheme.labelSmall),
-              const SizedBox(height: 3),
-              SelectableText(entry.value, style: Theme.of(context).textTheme.bodySmall),
-            ],
+        for (final entry in values.entries)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(entry.key, style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 3),
+                SelectableText(
+                  entry.value,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
           ),
-        ),
         if (data?.isConverted ?? false)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Text(_t('Converted preview of the first frame.'),
-                style: Theme.of(context).textTheme.bodySmall),
+            child: Text(
+              _t('Converted preview of the first frame.'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
         if (transformed)
-          Text(_t('Preview transforms only. Use Edit image to save changes.'),
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            _t('Preview transforms only. Use Edit image to save changes.'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
       ],
     );
   }
@@ -1193,7 +1375,10 @@ class _ImageViewController extends ChangeNotifier {
   Rect? get imageRect {
     final viewport = _viewport;
     final image = rotatedSize;
-    if (viewport == null || image == null || image.isEmpty || viewport.isEmpty) {
+    if (viewport == null ||
+        image == null ||
+        image.isEmpty ||
+        viewport.isEmpty) {
       return null;
     }
     final fitted = applyBoxFit(BoxFit.contain, image, viewport).destination;
@@ -1214,8 +1399,8 @@ class _ImageViewController extends ChangeNotifier {
         _devicePixelRatio == devicePixelRatio) {
       return;
     }
-    final preservePixels = _viewport != null && _source == source &&
-        (scale - 1).abs() > 0.00001;
+    final preservePixels =
+        _viewport != null && _source == source && (scale - 1).abs() > 0.00001;
     final oldPixelScale = pixelScale;
     final oldCenter = _normalizedCenter();
     final revision = ++_geometryRevision;
@@ -1229,8 +1414,10 @@ class _ImageViewController extends ChangeNotifier {
       final image = rotatedSize;
       final rect = imageRect;
       if (preservePixels && image != null && rect != null) {
-        _setView(oldPixelScale * image.width /
-            (rect.width * _devicePixelRatio), oldCenter);
+        _setView(
+          oldPixelScale * image.width / (rect.width * _devicePixelRatio),
+          oldCenter,
+        );
       } else {
         notifyListeners();
       }
@@ -1259,8 +1446,12 @@ class _ImageViewController extends ChangeNotifier {
     final center = viewport.center(Offset.zero);
     final scene = transformation.toScene(center);
     transformation.value = Matrix4.identity()
-      ..translateByDouble(center.dx - scene.dx * next,
-          center.dy - scene.dy * next, 0, 1)
+      ..translateByDouble(
+        center.dx - scene.dx * next,
+        center.dy - scene.dy * next,
+        0,
+        1,
+      )
       ..scaleByDouble(next, next, next, 1);
   }
 
@@ -1286,8 +1477,10 @@ class _ImageViewController extends ChangeNotifier {
     final rect = imageRect;
     if (viewport == null || rect == null) return const Offset(0.5, 0.5);
     final scene = transformation.toScene(viewport.center(Offset.zero));
-    return Offset((scene.dx - rect.left) / rect.width,
-        (scene.dy - rect.top) / rect.height);
+    return Offset(
+      (scene.dx - rect.left) / rect.width,
+      (scene.dy - rect.top) / rect.height,
+    );
   }
 
   void _setView(double requested, Offset center) {
@@ -1298,8 +1491,12 @@ class _ImageViewController extends ChangeNotifier {
     final sceneY = rect.top + center.dy * rect.height;
     final next = requested.clamp(0.00001, 16384.0);
     transformation.value = Matrix4.identity()
-      ..translateByDouble(viewport.width / 2 - sceneX * next,
-          viewport.height / 2 - sceneY * next, 0, 1)
+      ..translateByDouble(
+        viewport.width / 2 - sceneX * next,
+        viewport.height / 2 - sceneY * next,
+        0,
+        1,
+      )
       ..scaleByDouble(next, next, next, 1);
   }
 
@@ -1332,30 +1529,44 @@ class _GalleryCanvas extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final size = constraints.biggest;
-      controller.setGeometry(size, Size(data.width.toDouble(), data.height.toDouble()),
-          MediaQuery.devicePixelRatioOf(context));
+      controller.setGeometry(
+        size,
+        Size(data.width.toDouble(), data.height.toDouble()),
+        MediaQuery.devicePixelRatioOf(context),
+      );
       final backgroundColor = background == _Background.light
-          ? const Color(0xfff1f1f1) : const Color(0xff17191d);
+          ? const Color(0xfff1f1f1)
+          : const Color(0xff17191d);
       final image = data.isSvg
-          ? SvgPicture.memory(data.bytes,
-              width: data.width.toDouble(), height: data.height.toDouble(),
-              fit: BoxFit.fill)
+          ? SvgPicture.memory(
+              data.bytes,
+              width: data.width.toDouble(),
+              height: data.height.toDouble(),
+              fit: BoxFit.fill,
+            )
           : Image.memory(
               data.bytes,
               width: data.width.toDouble(),
               height: data.height.toDouble(),
               fit: BoxFit.fill,
-              filterQuality: smoothPixels ? FilterQuality.medium : FilterQuality.none,
+              filterQuality: smoothPixels
+                  ? FilterQuality.medium
+                  : FilterQuality.none,
               gaplessPlayback: false,
               errorBuilder: (_, __, ___) => const Center(
-                child: Icon(Icons.broken_image_outlined, color: Colors.grey, size: 40),
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.grey,
+                  size: 40,
+                ),
               ),
             );
       return ColoredBox(
         color: backgroundColor,
         child: CustomPaint(
           painter: background == _Background.checkerboard
-              ? const _CheckerboardPainter() : null,
+              ? const _CheckerboardPainter()
+              : null,
           child: GestureDetector(
             onDoubleTap: onDoubleTap,
             child: InteractiveViewer(
@@ -1371,7 +1582,10 @@ class _GalleryCanvas extends StatelessWidget {
                   child: Transform.flip(
                     flipX: controller.flipX,
                     flipY: controller.flipY,
-                    child: RotatedBox(quarterTurns: controller.turns, child: image),
+                    child: RotatedBox(
+                      quarterTurns: controller.turns,
+                      child: image,
+                    ),
                   ),
                 ),
               ),
@@ -1391,8 +1605,15 @@ class _CheckerboardPainter extends CustomPainter {
     const step = 16.0;
     final paint = Paint()..color = const Color(0xff22252a);
     for (var row = 0; row * step < size.height; row++) {
-      for (var column = row.isEven ? 0 : 1; column * step < size.width; column += 2) {
-        canvas.drawRect(Rect.fromLTWH(column * step, row * step, step, step), paint);
+      for (
+        var column = row.isEven ? 0 : 1;
+        column * step < size.width;
+        column += 2
+      ) {
+        canvas.drawRect(
+          Rect.fromLTWH(column * step, row * step, step, step),
+          paint,
+        );
       }
     }
   }
@@ -1425,14 +1646,18 @@ class _FilmstripTileState extends State<_FilmstripTile> {
   @override
   void initState() {
     super.initState();
-    _thumbnail = Future<Uint8List?>.sync(() => widget.thumbnailLoader(widget.file));
+    _thumbnail = Future<Uint8List?>.sync(
+      () => widget.thumbnailLoader(widget.file),
+    );
   }
 
   @override
   void didUpdateWidget(_FilmstripTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.file, widget.file)) {
-      _thumbnail = Future<Uint8List?>.sync(() => widget.thumbnailLoader(widget.file));
+      _thumbnail = Future<Uint8List?>.sync(
+        () => widget.thumbnailLoader(widget.file),
+      );
     }
   }
 
@@ -1456,29 +1681,50 @@ class _FilmstripTileState extends State<_FilmstripTile> {
                 borderRadius: BorderRadius.circular(6),
                 color: widget.selected ? scheme.primaryContainer : null,
                 border: Border.all(
-                  color: widget.selected ? scheme.primary : scheme.outlineVariant,
+                  color: widget.selected
+                      ? scheme.primary
+                      : scheme.outlineVariant,
                   width: widget.selected ? 2 : 1,
                 ),
               ),
-              child: Column(children: [
-                Expanded(child: FutureBuilder<Uint8List?>(
-                  future: _thumbnail,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      if (GalleryMediaService.bytesAreSvg(snapshot.data!)) {
-                        return SvgPicture.memory(snapshot.data!, fit: BoxFit.contain);
-                      }
-                      return Image.memory(snapshot.data!, fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.image_outlined));
-                    }
-                    return Icon(snapshot.hasError ? Icons.broken_image_outlined : Icons.image_outlined,
-                        color: scheme.onSurfaceVariant);
-                  },
-                )),
-                const SizedBox(height: 4),
-                Text(widget.file.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall),
-              ]),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: FutureBuilder<Uint8List?>(
+                      future: _thumbnail,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          if (GalleryMediaService.bytesAreSvg(snapshot.data!)) {
+                            return SvgPicture.memory(
+                              snapshot.data!,
+                              fit: BoxFit.contain,
+                            );
+                          }
+                          return Image.memory(
+                            snapshot.data!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.image_outlined),
+                          );
+                        }
+                        return Icon(
+                          snapshot.hasError
+                              ? Icons.broken_image_outlined
+                              : Icons.image_outlined,
+                          color: scheme.onSurfaceVariant,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.file.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1501,9 +1747,8 @@ class _ViewerCatalog extends ConsumerWidget {
         await catalog.update([assetId], rating: rating, favorite: favorite);
       } catch (_) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(t('Save failed'))),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(t('Save failed'))));
         }
       }
     }
@@ -1516,10 +1761,13 @@ class _ViewerCatalog extends ConsumerWidget {
             for (var rating = 1; rating <= 5; rating++)
               IconButton(
                 visualDensity: VisualDensity.compact,
-                icon: Icon(rating <= record.rating ? Icons.star : Icons.star_border),
+                icon: Icon(
+                  rating <= record.rating ? Icons.star : Icons.star_border,
+                ),
                 color: Theme.of(context).colorScheme.primary,
                 tooltip: '${t('Rating')}: $rating/5',
-                onPressed: () => update(rating: record.rating == rating ? 0 : rating),
+                onPressed: () =>
+                    update(rating: record.rating == rating ? 0 : rating),
               ),
             IconButton(
               visualDensity: VisualDensity.compact,
@@ -1532,25 +1780,45 @@ class _ViewerCatalog extends ConsumerWidget {
           ],
         ),
         if (record.color != GalleryColor.none || record.tags.isNotEmpty)
-          Wrap(spacing: 6, runSpacing: 4, children: [
-            if (record.color != GalleryColor.none)
-              Chip(
-                avatar: Icon(Icons.circle, size: 14, color: galleryLabelColor(record.color)),
-                label: Text(t(galleryColorName(record.color))),
-              ),
-            for (final tag in record.tags)
-              Chip(label: Text(tag, maxLines: 1, overflow: TextOverflow.ellipsis)),
-          ]),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              if (record.color != GalleryColor.none)
+                Chip(
+                  avatar: Icon(
+                    Icons.circle,
+                    size: 14,
+                    color: galleryLabelColor(record.color),
+                  ),
+                  label: Text(t(galleryColorName(record.color))),
+                ),
+              for (final tag in record.tags)
+                Chip(
+                  label: Text(
+                    tag,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
         const SizedBox(height: 8),
-        Text(t('Catalog saved on this device; image metadata is unchanged.'),
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          t('Catalog saved on this device; image metadata is unchanged.'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
 }
 
 class _SlideshowOptions {
-  const _SlideshowOptions({this.seconds = 3, this.loop = true, this.shuffle = false});
+  const _SlideshowOptions({
+    this.seconds = 3,
+    this.loop = true,
+    this.shuffle = false,
+  });
   final int seconds;
   final bool loop;
   final bool shuffle;
@@ -1561,7 +1829,8 @@ class _SlideshowOptionsDialog extends StatefulWidget {
   final _SlideshowOptions initial;
 
   @override
-  State<_SlideshowOptionsDialog> createState() => _SlideshowOptionsDialogState();
+  State<_SlideshowOptionsDialog> createState() =>
+      _SlideshowOptionsDialogState();
 }
 
 class _SlideshowOptionsDialogState extends State<_SlideshowOptionsDialog> {
@@ -1582,10 +1851,17 @@ class _SlideshowOptionsDialogState extends State<_SlideshowOptionsDialog> {
             DropdownButtonFormField<int>(
               initialValue: _seconds,
               decoration: InputDecoration(labelText: t('Interval')),
-              items: [1, 2, 3, 5, 10, 15, 30].map((seconds) => DropdownMenuItem(
-                value: seconds, child: Text('$seconds ${t('seconds')}'),
-              )).toList(),
-              onChanged: (value) { if (value != null) setState(() => _seconds = value); },
+              items: [1, 2, 3, 5, 10, 15, 30]
+                  .map(
+                    (seconds) => DropdownMenuItem(
+                      value: seconds,
+                      child: Text('$seconds ${t('seconds')}'),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _seconds = value);
+              },
             ),
             const SizedBox(height: 12),
             CheckboxListTile(
@@ -1604,10 +1880,17 @@ class _SlideshowOptionsDialogState extends State<_SlideshowOptionsDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(t('Cancel'))),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(t('Cancel')),
+        ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(
-            _SlideshowOptions(seconds: _seconds, loop: _loop, shuffle: _shuffle),
+            _SlideshowOptions(
+              seconds: _seconds,
+              loop: _loop,
+              shuffle: _shuffle,
+            ),
           ),
           child: Text(t('Apply')),
         ),

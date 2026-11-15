@@ -839,10 +839,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   }
 
   Future<void> _start({bool background = false, DateTime? notBefore}) async {
+    if (_busy || _finished) return;
     if (background &&
         (widget.sourceBackend != null || !widget.allowBackground)) {
       return;
     }
+    // Planning remains mandatory internally; showing its preview is optional.
+    if (_plan == null) await _preview();
+    if (!mounted) return;
     final plan = _plan;
     final sourceOrigin = _sourceOrigin;
     if (plan == null || !plan.canExecute || sourceOrigin == null) return;
@@ -916,6 +920,18 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
           _finished = true;
           _current = null;
         });
+        if (!background &&
+            !plan.entries.any((entry) => entry.failed) &&
+            !_foregroundReportFailed &&
+            !_control.isCancelled) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted &&
+                ModalRoute.of(context)?.isCurrent == true &&
+                Navigator.of(context).canPop()) {
+              Navigator.of(context).pop(plan);
+            }
+          });
+        }
       }
     } catch (error) {
       if (!reported && !background && widget.onForegroundPlan != null) {
@@ -1852,7 +1868,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   icon: const Icon(Icons.schedule),
                   onPressed:
                       !_finished &&
-                          (plan?.canExecute ?? false) &&
+                          (plan == null || plan.canExecute) &&
                           !_preparing &&
                           !unavailableVerifiedDelta &&
                           backgroundCanWait
@@ -1881,7 +1897,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   key: const ValueKey('transfer-queue-background'),
                   onPressed:
                       !_finished &&
-                          (plan?.canExecute ?? false) &&
+                          (plan == null || plan.canExecute) &&
                           !_preparing &&
                           !unavailableVerifiedDelta &&
                           backgroundCanWait
@@ -1891,9 +1907,11 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 ),
               ),
             FilledButton(
+              key: const ValueKey('transfer-start'),
+              autofocus: true,
               onPressed:
                   !_finished &&
-                      (plan?.canExecute ?? false) &&
+                      (plan == null || plan.canExecute) &&
                       !_preparing &&
                       !unavailableVerifiedDelta
                   ? _start
@@ -1914,6 +1932,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     width: width,
     child: TextField(
       controller: controller,
+      onSubmitted: (_) => _start(),
       enabled: !_busy,
       decoration: InputDecoration(
         labelText: label,

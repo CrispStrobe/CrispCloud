@@ -1,3 +1,5 @@
+import '../providers/notification_provider.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -135,7 +137,8 @@ String _phaseText(BuildContext context, String phase) {
 }
 
 class OperationsPanel extends ConsumerStatefulWidget {
-  const OperationsPanel({super.key});
+  const OperationsPanel({super.key, this.autoDismiss = false});
+  final bool autoDismiss;
 
   @override
   ConsumerState<OperationsPanel> createState() => _OperationsPanelState();
@@ -148,6 +151,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
   bool _isPanelExpanded = true;
   _QueueFilter _filter = _QueueFilter.all;
   String _search = '';
+  Set<String>? _dismissedIds;
 
   @override
   void dispose() {
@@ -299,6 +303,28 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
               _matchesSearch(operation, transfers),
         )
         .toList();
+    final settings = ref.watch(notificationSettingsProvider);
+    final ids = operations.map((operation) => operation.id).toSet();
+    if (widget.autoDismiss &&
+        _dismissedIds != null &&
+        ids.difference(_dismissedIds!).isEmpty &&
+        transfers.recoveryError == null) {
+      return const SizedBox.shrink();
+    }
+    if (widget.autoDismiss &&
+        settings.hideFinishedQueue &&
+        transfers.recoveryError == null &&
+        states.values.every(
+          (state) =>
+              state == _JobState.completed || state == _JobState.cancelled,
+        ) &&
+        transfers.savedJobs.every(
+          (job) =>
+              job.status == TransferJobStatus.completed ||
+              job.status == TransferJobStatus.cancelled,
+        )) {
+      return const SizedBox.shrink();
+    }
     final selected = operations
         .where((operation) => _selectedIds.contains(operation.id))
         .toList();
@@ -331,8 +357,23 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
         initiallyExpanded: true,
         onExpansionChanged: (expanded) =>
             setState(() => _isPanelExpanded = expanded),
-        trailing: Icon(
-          _isPanelExpanded ? Icons.expand_less : Icons.expand_more,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_isPanelExpanded ? Icons.expand_less : Icons.expand_more),
+            IconButton(
+              key: const ValueKey('queue-dismiss'),
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              onPressed: () {
+                if (widget.autoDismiss) {
+                  setState(() => _dismissedIds = ids);
+                } else {
+                  Navigator.of(context).maybePop();
+                }
+              },
+              icon: const Icon(Icons.close),
+            ),
+          ],
         ),
         children: [
           ConstrainedBox(

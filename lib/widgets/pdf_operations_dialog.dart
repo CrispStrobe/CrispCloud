@@ -1,3 +1,5 @@
+import 'app_scaffold_messenger.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -1701,7 +1703,7 @@ class _PdfOperationsDialogState extends State<PdfOperationsDialog> {
           if (_result != null) _searchFocus.requestFocus();
         },
       },
-      child: ScaffoldMessenger(
+      child: AppScaffoldMessenger(
         key: _messenger,
         child: Scaffold(
           appBar: AppBar(

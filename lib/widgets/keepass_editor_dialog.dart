@@ -1,3 +1,4 @@
+import 'app_scaffold_messenger.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 
@@ -1458,7 +1459,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
                 unawaited(_requestClose());
               },
             },
-            child: ScaffoldMessenger(
+            child: AppScaffoldMessenger(
               key: _messenger,
               child: Scaffold(
                 appBar: AppBar(

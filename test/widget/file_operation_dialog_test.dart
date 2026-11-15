@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -703,7 +705,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> runOperation(WidgetTester tester, FileOperationKind kind) async {
+  Future<void> runOperation(
+    WidgetTester tester,
+    FileOperationKind kind, {
+    bool enter = false,
+  }) async {
     // Provider startup loads its durable journal. Initialize it in the real
     // async zone used by stream jobs, not the widget's suspended fake clock.
     final transfers = await tester.runAsync(() async {
@@ -725,7 +731,11 @@ void main() {
 
       transfers!.addListener(check);
       try {
-        await tester.tap(start(kind));
+        if (enter) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        } else {
+          await tester.tap(start(kind));
+        }
         check();
         await completed.future.timeout(const Duration(seconds: 5));
       } finally {
@@ -739,6 +749,26 @@ void main() {
       reason:
           'Transfer states: ${transfers.operations.map((op) => '${op.status}/${op.currentBytes}/${op.error}')}; '
           'reads: ${cloud.reads}; uploads: ${cloud.uploads}; renames: ${cloud.renamed}',
+    );
+  }
+
+  for (final kind in FileOperationKind.values) {
+    testWidgets(
+      'Enter executes ${kind.name} without Preview and closes on completion',
+      (tester) async {
+        await open(tester, kind: kind, inRoute: true);
+        await useCloudDestination(tester);
+        expect(tester.widget<FilledButton>(start(kind)).onPressed, isNotNull);
+        await runOperation(tester, kind, enter: true);
+        expect(cloud.files['/target/one.txt'], utf8.encode('one\n'));
+        expect(cloud.files['/target/two.bin'], [0, 1, 2, 3]);
+        expect(
+          cloud.files.containsKey('/one.txt'),
+          kind != FileOperationKind.move,
+        );
+        expect(find.byType(FileOperationDialog), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
     );
   }
 

@@ -1,3 +1,4 @@
+import 'app_scaffold_messenger.dart';
 import '../services/document_printing.dart';
 import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
@@ -1796,7 +1797,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         bindings: shortcuts,
         child: Focus(
           autofocus: true,
-          child: ScaffoldMessenger(
+          child: AppScaffoldMessenger(
             key: _messenger,
             child: Scaffold(
               appBar: AppBar(

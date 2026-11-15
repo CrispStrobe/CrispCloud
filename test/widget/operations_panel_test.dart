@@ -1,3 +1,5 @@
+import 'package:crisp_cloud/providers/notification_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
@@ -199,7 +201,9 @@ void main() {
     TransferBandwidthController? bandwidth,
     String language = 'en',
     double textScale = 1,
+    bool autoDismiss = false,
   }) async {
+    SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -224,7 +228,7 @@ void main() {
                 .copyWith(textScaler: TextScaler.linear(textScale)),
             child: child!,
           ),
-          home: const Scaffold(body: OperationsPanel()),
+          home: Scaffold(body: OperationsPanel(autoDismiss: autoDismiss)),
         ),
       ),
     );
@@ -252,6 +256,38 @@ void main() {
     await tester.tap(finder);
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'browser queue disappears when done; close keeps work and history',
+    (tester) async {
+      final transfers = _Transfers(rows: [_operation('one')], running: {'one'});
+      await show(tester, transfers, autoDismiss: true);
+      expect(find.byKey(const ValueKey('operations-panel')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('queue-dismiss')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('operations-panel')), findsNothing);
+      expect(transfers.rows.length, 1);
+      expect(transfers.cancelledRequests, isEmpty);
+      transfers.rows.add(_operation('two'));
+      transfers.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('operations-panel')), findsOneWidget);
+      transfers.running.clear();
+      transfers.rows.clear();
+      transfers.rows.add(_operation('done', status: OperationStatus.completed));
+      transfers.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('operations-panel')), findsNothing);
+      expect(transfers.rows.single.id, 'done');
+      final context = tester.element(find.byType(Scaffold));
+      final container = ProviderScope.containerOf(context);
+      await container
+          .read(notificationSettingsProvider.notifier)
+          .update(hideFinishedQueue: false);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('operations-panel')), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'filters count distinct states and search source or target paths',

@@ -1,3 +1,4 @@
+import 'app_scaffold_messenger.dart';
 import '../services/document_printing.dart';
 import 'document_print_scope.dart';
 import '../services/document_workspace_session.dart';
@@ -942,7 +943,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         child: Focus(
           autofocus: true,
           focusNode: _focus,
-          child: ScaffoldMessenger(
+          child: AppScaffoldMessenger(
             key: _messenger,
             child: Scaffold(
               body: SafeArea(

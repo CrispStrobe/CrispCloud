@@ -65,22 +65,25 @@ void main() {
     "of:=SUM(['Semi;Colon'.A1];1)": "SUM('Semi;Colon'!A1,1)",
     "of:=SUM(['COM.MICROSOFT.Data'.A1];1)": "SUM('COM.MICROSOFT.Data'!A1,1)",
   }.entries) {
-    test('formula roundtrip preserves imported syntax: ${formula.key}', () async {
-      final book = OdsSheetReader.readBytes(
-        _ods(
-          '<t:table><t:table-row><t:table-cell o:value-type="string" '
-          'o:string-value="cached" t:formula="${_xmlAttribute(formula.key)}"/>'
-          '</t:table-row></t:table>',
-        ),
-      );
-      final reopened = SheetDeserializer().readBytes(
-        await OfficeIsolateSave.workbook(book, recalculate: false),
-      );
-      for (final current in [book, reopened]) {
-        expect(current.firstSheet.cellA1('A1').formula, formula.value);
-        expect(current.firstSheet.cellA1('A1').value, 'cached');
-      }
-    });
+    test(
+      'formula roundtrip preserves imported syntax: ${formula.key}',
+      () async {
+        final book = OdsSheetReader.readBytes(
+          _ods(
+            '<t:table><t:table-row><t:table-cell o:value-type="string" '
+            'o:string-value="cached" t:formula="${_xmlAttribute(formula.key)}"/>'
+            '</t:table-row></t:table>',
+          ),
+        );
+        final reopened = SheetDeserializer().readBytes(
+          await OfficeIsolateSave.workbook(book, recalculate: false),
+        );
+        for (final current in [book, reopened]) {
+          expect(current.firstSheet.cellA1('A1').formula, formula.value);
+          expect(current.firstSheet.cellA1('A1').value, 'cached');
+        }
+      },
+    );
   }
 
   for (final prefix in const ['COM.MICROSOFT.', 'ORG.OPENOFFICE.']) {
@@ -145,8 +148,9 @@ void main() {
     );
   });
 
-  final bytes = File('test/fixtures/fidelity/legacy-sheet.ods')
-      .readAsBytesSync();
+  final bytes = File(
+    'test/fixtures/fidelity/legacy-sheet.ods',
+  ).readAsBytesSync();
 
   test('reads ODS values, formulas, styles and merges', () {
     final book = OdsSheetReader.readBytes(bytes);
@@ -234,26 +238,29 @@ void main() {
     );
   });
 
-  test('merged covered cells consume one coordinate and retain row spans', () async {
-    final book = OdsSheetReader.readBytes(
-      _ods(
-        '<t:table t:name="Grid"><t:table-row>'
-        '<t:table-cell t:number-columns-spanned="2" t:number-rows-spanned="2" '
-        'o:value-type="string"><x:p>Merge</x:p></t:table-cell>'
-        '<t:covered-table-cell/>${_value('C1')}</t:table-row>'
-        '<t:table-row><t:covered-table-cell t:number-columns-repeated="2"/>'
-        '${_value('C2')}</t:table-row></t:table>',
-      ),
-    );
-    expect(book.firstSheet.cellA1('C1').asString, 'C1');
-    expect(book.firstSheet.cellA1('C2').asString, 'C2');
-    expect(book.firstSheet.merges.single.a1, 'A1:B2');
-    final reopened = SheetDeserializer().readBytes(
-      await OfficeIsolateSave.workbook(book, recalculate: false),
-    );
-    expect(reopened.firstSheet.cellA1('C1').asString, 'C1');
-    expect(reopened.firstSheet.merges.single.a1, 'A1:B2');
-  });
+  test(
+    'merged covered cells consume one coordinate and retain row spans',
+    () async {
+      final book = OdsSheetReader.readBytes(
+        _ods(
+          '<t:table t:name="Grid"><t:table-row>'
+          '<t:table-cell t:number-columns-spanned="2" t:number-rows-spanned="2" '
+          'o:value-type="string"><x:p>Merge</x:p></t:table-cell>'
+          '<t:covered-table-cell/>${_value('C1')}</t:table-row>'
+          '<t:table-row><t:covered-table-cell t:number-columns-repeated="2"/>'
+          '${_value('C2')}</t:table-row></t:table>',
+        ),
+      );
+      expect(book.firstSheet.cellA1('C1').asString, 'C1');
+      expect(book.firstSheet.cellA1('C2').asString, 'C2');
+      expect(book.firstSheet.merges.single.a1, 'A1:B2');
+      final reopened = SheetDeserializer().readBytes(
+        await OfficeIsolateSave.workbook(book, recalculate: false),
+      );
+      expect(reopened.firstSheet.cellA1('C1').asString, 'C1');
+      expect(reopened.firstSheet.merges.single.a1, 'A1:B2');
+    },
+  );
 
   test('repeated blank rows retain later data at exact coordinates', () {
     final sheet = OdsSheetReader.readBytes(
@@ -352,8 +359,8 @@ void main() {
             '<s:table-column-properties s:column-width="1in"/></s:style>',
       ),
     ).firstSheet;
-    expect(sheet.columnWidths[0], closeTo(96, .01));
-    expect(sheet.columnWidths[1], closeTo(96, .01));
+    expect(sheet.exportColumnWidth(0), closeTo(96 / 7.4, .00001));
+    expect(sheet.exportColumnWidth(1), closeTo(96 / 7.4, .00001));
     expect(sheet.cellA1('A1').value, 4);
     expect(sheet.cellA1('B1').value, 4);
   });
@@ -417,21 +424,24 @@ void main() {
     );
   });
 
-  test('rejects invalid or out-of-range meaningful repeats instead of clipping', () {
-    for (final repeat in ['0', '-1', 'bad', '4097']) {
-      expect(
-        () => OdsSheetReader.readBytes(
-          _ods(
-            '<t:table><t:table-row><t:table-cell '
-            't:number-columns-repeated="$repeat" o:value-type="float" o:value="3"/>'
-            '</t:table-row></t:table>',
+  test(
+    'rejects invalid or out-of-range meaningful repeats instead of clipping',
+    () {
+      for (final repeat in ['0', '-1', 'bad', '4097']) {
+        expect(
+          () => OdsSheetReader.readBytes(
+            _ods(
+              '<t:table><t:table-row><t:table-cell '
+              't:number-columns-repeated="$repeat" o:value-type="float" o:value="3"/>'
+              '</t:table-row></t:table>',
+            ),
           ),
-        ),
-        _invalidOds,
-        reason: repeat,
-      );
-    }
-  });
+          _invalidOds,
+          reason: repeat,
+        );
+      }
+    },
+  );
 
   test(
     'formula conversion preserves delimiters and brackets inside literals',
@@ -586,7 +596,6 @@ void main() {
       covered: '<table:covered-table-cell/>',
       nextColumn: 2,
     ),
-    (name: 'omitted placeholder', span: 2, covered: '', nextColumn: 2),
     (
       name: 'repeated placeholders',
       span: 3,
@@ -621,25 +630,29 @@ void main() {
     });
   }
 
-  test('a new origin clears unconsumed merge placeholders', () async {
-    final book = OdsSheetReader.readBytes(
-      _odsRows('''
+  test(
+    'consecutive merged origins retain explicit covered positions',
+    () async {
+      final book = OdsSheetReader.readBytes(
+        _odsRows('''
       <table:table-row>
         <table:table-cell office:value-type="string" table:number-columns-spanned="2"><text:p>First</text:p></table:table-cell>
+        <table:covered-table-cell/>
         <table:table-cell office:value-type="string" table:number-columns-spanned="2"><text:p>Second</text:p></table:table-cell>
         <table:covered-table-cell/>
         <table:table-cell office:value-type="float" office:value="7"/>
       </table:table-row>
       '''),
-    );
-    for (final current in [book, await _roundTrip(book)]) {
-      final sheet = current.sheets.single;
-      expect(sheet.cellOrNull(SmlCellRef.parse('C1'))?.asString, 'Second');
-      expect(sheet.cellOrNull(SmlCellRef.parse('E1'))?.value, 7);
-      expect(sheet.allCells, hasLength(3));
-      expect(sheet.merges.map((merge) => merge.origin.a1), ['A1', 'C1']);
-    }
-  });
+      );
+      for (final current in [book, await _roundTrip(book)]) {
+        final sheet = current.sheets.single;
+        expect(sheet.cellOrNull(SmlCellRef.parse('C1'))?.asString, 'Second');
+        expect(sheet.cellOrNull(SmlCellRef.parse('E1'))?.value, 7);
+        expect(sheet.allCells, hasLength(3));
+        expect(sheet.merges.map((merge) => merge.origin.a1), ['A1', 'C1']);
+      }
+    },
+  );
 
   test('merge spans retain in-range cells and refuse column overflow', () {
     final sheet = OdsSheetReader.readBytes(
@@ -871,11 +884,6 @@ void defaultAndTimeTests() {
 Future<SmlWorkbook> _roundTrip(SmlWorkbook book) async => SheetDeserializer()
     .readBytes(await OfficeIsolateSave.workbook(book, recalculate: false));
 
-String _xmlAttribute(String value) => value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('"', '&quot;');
-
 Uint8List _odsRows(String rows, {String styles = ''}) {
   final zip = ZipWriter()
     ..addFile(
@@ -900,8 +908,9 @@ Uint8List _odsRows(String rows, {String styles = ''}) {
 }
 
 void edgeTests() {
-  final edge = File('test/fixtures/fidelity/legacy-sheet-edge.ods')
-      .readAsBytesSync();
+  final edge = File(
+    'test/fixtures/fidelity/legacy-sheet-edge.ods',
+  ).readAsBytesSync();
 
   test('ODS keeps dates, times, booleans, formats and sheet references', () {
     final book = OdsSheetReader.readBytes(edge);

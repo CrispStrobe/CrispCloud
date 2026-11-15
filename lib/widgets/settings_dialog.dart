@@ -1,3 +1,4 @@
+import 'notification_settings.dart';
 // lib/widgets/settings_dialog.dart
 //
 // Unified settings dialog opened from the AppBar gear icon, the macOS app
@@ -75,6 +76,7 @@ class SettingsDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _GeneralSection(),
+            const NotificationSettingsPanel(),
             const Divider(height: 1),
             _LanguageSection(),
             const Divider(height: 1),

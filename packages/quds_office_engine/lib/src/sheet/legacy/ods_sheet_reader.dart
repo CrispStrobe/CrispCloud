@@ -772,7 +772,7 @@ abstract final class OdsSheetReader {
           buffer.write(child.getAttribute('style') == 'short' ? 'YY' : 'YYYY');
         case 'month':
           if (child.getAttribute('textual') == 'true') {
-            buffer.write('MMM');
+            buffer.write(child.getAttribute('style') == 'short' ? 'MMM' : 'MMMM');
           } else {
             buffer.write(child.getAttribute('style') == 'short' ? 'M' : 'MM');
           }

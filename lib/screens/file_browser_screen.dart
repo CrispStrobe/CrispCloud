@@ -337,7 +337,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 },
               ),
             ),
-            const OperationsPanel(),
+            const OperationsPanel(autoDismiss: true),
             // Hiding the viewport must not terminate an interactive process.
             const TerminalPanelHost(),
             FKeyBar(
