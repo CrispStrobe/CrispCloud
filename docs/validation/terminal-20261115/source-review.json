@@ -94,5 +94,12 @@
     "Live SSH/tmux/screen persistence",
     "Device and packaged-platform checks"
   ],
-  "github_actions_awaited": false
+  "github_actions_awaited": false,
+  "shell_helper_runner": {
+    "path": "tool/terminal_shell_setup_smoke.py",
+    "blob": "c036b2393f18ce9c71eab5e88224082112de9ac2",
+    "runtime": "POSIX, Python3.8+, Bash4.4+ and/or Zsh5+",
+    "executed": false,
+    "behavior": "Extract actual Dart raw helper literals; bounded fresh interactive shell runs; status/hook/cwd/idempotence checks; explicit skips and source SHA256."
+  }
 }
