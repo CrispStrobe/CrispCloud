@@ -3,7 +3,11 @@
 // Tests the F4 Office editor host: routing, slide editor loading and the safe
 // rejection of legacy/ODF formats.
 
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:archive/archive.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +53,39 @@ class _OversizedOfficeClient extends WorkflowFakeClient {
     contentReads++;
     throw StateError('An oversized Office file must not be downloaded.');
   }
+}
+
+Uint8List _macroSheet({required bool template}) {
+  final source = ZipDecoder().decodeBytes(
+    File(
+      'test/fixtures/office_native_workflows/native-sheet-source.xlsx',
+    ).readAsBytesSync(),
+  );
+  final files = <String, List<int>>{
+    for (final file in source.files)
+      if (file.isFile) file.name: file.content as List<int>,
+  };
+  var types = utf8.decode(files['[Content_Types].xml']!);
+  types = types.replaceFirst(
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml',
+    template
+        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml'
+        : 'application/vnd.ms-excel.sheet.macroEnabled.main+xml',
+  );
+  if (!template) {
+    types = types.replaceFirst(
+      '</Types>',
+      '<Override PartName="/xl/vbaProject.bin" '
+          'ContentType="application/vnd.ms-office.vbaProject"/></Types>',
+    );
+    files['xl/vbaProject.bin'] = utf8.encode('INERT-VBA-BYTES');
+  }
+  files['[Content_Types].xml'] = utf8.encode(types);
+  final archive = Archive();
+  for (final entry in files.entries) {
+    archive.addFile(ArchiveFile.bytes(entry.key, entry.value));
+  }
+  return Uint8List.fromList(ZipEncoder().encode(archive));
 }
 
 void main() {
@@ -245,5 +282,38 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.textContaining('cannot be edited safely'), findsOneWidget);
+  });
+
+  testWidgets('macro-enabled workbooks open in the sheet editor', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    for (final entry in <(String, Uint8List)>[
+      ('macro.xlsm', _macroSheet(template: false)),
+      ('template.xltx', _macroSheet(template: true)),
+    ]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: OfficeEditorDialog(
+              file: FileItem(
+                name: entry.$1,
+                isFolder: false,
+                size: entry.$2.length,
+              ),
+              side: PanelSide.local,
+              bytesOverride: entry.$2,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(QudsSheetEditor), findsOneWidget, reason: entry.$1);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    }
   });
 }
