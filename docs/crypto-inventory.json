@@ -1244,7 +1244,14 @@
     "test/native/developer_id_keychain_probe.m",
     "tool/macos_public_signing.py",
     "tool/macos_public_signing_live_probe.py",
-    "tool/verify_android_signing.py"
+    "tool/verify_android_signing.py",
+    "lib/models/ssh_terminal_config.dart",
+    "lib/models/tmux_session_options.dart",
+    "lib/services/ssh_terminal_service.dart",
+    "lib/providers/ssh_terminal_provider.dart",
+    "lib/widgets/ssh_terminal_connect_dialog.dart",
+    "lib/widgets/terminal_panel.dart",
+    "lib/services/terminal_backends.dart"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
