@@ -1,0 +1,48 @@
+{
+  "archive": {
+    "file": "artifacts.tar.xz",
+    "sha256": "09bb1cf40cb570494f2bc6a8600d508c69120b36c2d5265e498e93c6f0b54717",
+    "size": 885104
+  },
+  "every_member_reverified": true,
+  "file_count": 7,
+  "label": "analysis-editor-final",
+  "members": {
+    "analysis-editor-final/artifacts-sha256.json": {
+      "mode": 420,
+      "sha256": "df930530b8c76c2606daa02e13d0de3d68605c2c799f4225c5aaebdc1cae6e09",
+      "size": 761
+    },
+    "analysis-editor-final/command.json": {
+      "mode": 420,
+      "sha256": "df6ac0700a785daad28eedd78746b1a7428395127a9316249f5c1153c9d5824c",
+      "size": 1208
+    },
+    "analysis-editor-final/inputs-after.json.gz": {
+      "mode": 420,
+      "sha256": "55cebb2fe2a0f78c18ae60e691aab8df0d331fe0111c1276e3ab78f95868f719",
+      "size": 452459
+    },
+    "analysis-editor-final/inputs-before.json.gz": {
+      "mode": 420,
+      "sha256": "04ddf77e8207210b808dee6fbcaf6614ef43e27a2a8b4e21864fdefd2de482bb",
+      "size": 452462
+    },
+    "analysis-editor-final/metadata.json": {
+      "mode": 420,
+      "sha256": "75ca0d3fa5600799ce52e6d531016c8cc62f73ce9b087ac73eaf6545dae586f0",
+      "size": 6239
+    },
+    "analysis-editor-final/stderr.log": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "analysis-editor-final/stdout.log": {
+      "mode": 420,
+      "sha256": "7178cb5f035285441c93dad5ca0acd63f89063d3ce433df21c783b445abc94d9",
+      "size": 210
+    }
+  },
+  "schema": 1
+}
