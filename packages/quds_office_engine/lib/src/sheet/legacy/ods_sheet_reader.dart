@@ -104,6 +104,7 @@ abstract final class OdsSheetReader {
       );
       _readColumns(table, sheet, styles);
       var rowIndex = 0;
+      final pendingRowHeights = <({int start, int count, double height})>[];
       for (final row in table.childElements.where(
         (element) => element.localName == 'table-row',
       )) {
@@ -115,6 +116,7 @@ abstract final class OdsSheetReader {
 
         final parsed = <({int column, int span, SmlCell cell})>[];
         var column = 0;
+        var pendingCovered = 0;
         var hasContent = false;
         for (final element in row.childElements) {
           if (element.localName != 'table-cell' &&
@@ -122,34 +124,64 @@ abstract final class OdsSheetReader {
             continue;
           }
           final covered = element.localName == 'covered-table-cell';
-          final span = covered
-              ? 1
-              : _repeat(element, 'number-columns-spanned', _maxColumns);
           final repeat = _repeat(
             element,
             'number-columns-repeated',
             _maxColumns,
           );
+          if (covered) {
+            // A spanning origin already reserved these columns. Explicit ODF
+            // placeholders consume that reservation rather than move it twice.
+            final reserved = repeat < pendingCovered ? repeat : pendingCovered;
+            pendingCovered -= reserved;
+            column = (column + repeat - reserved).clamp(0, _maxColumns);
+            continue;
+          }
+          // Some producers omit covered placeholders. A new ordinary cell is
+          // still after the preceding span, with no reservation left to consume.
+          pendingCovered = 0;
+          final span = _repeat(element, 'number-columns-spanned', _maxColumns);
           for (var i = 0; i < repeat && column < _maxColumns; i++) {
-            if (!covered) {
-              final cell = _createCell(
-                sheet,
-                SmlCellRef(column, rowIndex),
-                element,
-                engineStyles,
-                styles,
-                numberStyles,
-              );
-              if (cell != null) {
-                hasContent = true;
-                parsed.add((column: column, span: span, cell: cell));
-              }
+            final boundedSpan = span.clamp(1, _maxColumns - column);
+            final cell = _createCell(
+              sheet,
+              SmlCellRef(column, rowIndex),
+              element,
+              engineStyles,
+              styles,
+              numberStyles,
+            );
+            if (cell != null) {
+              hasContent = true;
+              parsed.add((column: column, span: boundedSpan, cell: cell));
             }
-            column += span;
+            column += boundedSpan;
+            pendingCovered += boundedSpan - 1;
           }
         }
-        // A repeated empty row is trailing padding, not data.
-        if (!hasContent && rowRepeat > 1) break;
+        if (!hasContent && rowRepeat > 1) {
+          // Empty runs may be internal. Advance their logical row positions
+          // without allocating cells, and only expand heights if data follows.
+          // Large trailing padding therefore remains sparse.
+          if (rowHeight != null && rowHeight > 0) {
+            pendingRowHeights.add((
+              start: rowIndex,
+              count: rowRepeat.clamp(1, _maxRows - rowIndex),
+              height: SmlWorksheet.rowHeightFromExcel(rowHeight),
+            ));
+          }
+          rowIndex += rowRepeat;
+          if (rowIndex >= _maxRows) break;
+          continue;
+        }
+        if (hasContent) {
+          for (final pending in pendingRowHeights) {
+            for (var r = 0; r < pending.count; r++) {
+              sheet.rowHeights[pending.start + r] = pending.height;
+            }
+          }
+          pendingRowHeights.clear();
+        }
         if (rowHeight != null && rowHeight > 0) {
           for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
             sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
@@ -328,16 +360,60 @@ abstract final class OdsSheetReader {
     var formula = raw;
     final equals = formula.indexOf('=');
     if (equals >= 0) formula = formula.substring(equals + 1);
-    formula = formula.replaceAllMapped(
-      RegExp(r'\[([^\]]+)\]'),
-      (match) => match.group(1)!.split(':').map(_odfReference).join(':'),
-    );
-    formula = formula
-        .replaceAll(';', ',')
-        .replaceAll(RegExp(r'\b(?:COM\.MICROSOFT|ORG\.OPENOFFICE)\.'), '');
-    if (formula.trim().isEmpty) return null;
-    return formula;
+    final result = StringBuffer();
+    var start = 0;
+    var index = 0;
+    while (index < formula.length) {
+      // Quotes in bracketed sheet references are part of the reference token,
+      // not the start of a formula string literal.
+      if (formula.codeUnitAt(index) == 0x5b) {
+        final end = formula.indexOf(']', index + 1);
+        if (end >= 0) {
+          index = end + 1;
+          continue;
+        }
+      }
+      if (formula.codeUnitAt(index) != 0x22) {
+        index++;
+        continue;
+      }
+      result.write(_translateFormulaSyntax(formula.substring(start, index)));
+      final literalStart = index++;
+      while (index < formula.length) {
+        if (formula.codeUnitAt(index++) != 0x22) continue;
+        if (index < formula.length && formula.codeUnitAt(index) == 0x22) {
+          index++; // ODF and OOXML both escape a quote by doubling it.
+        } else {
+          break;
+        }
+      }
+      result.write(formula.substring(literalStart, index));
+      start = index;
+    }
+    result.write(_translateFormulaSyntax(formula.substring(start)));
+    final translated = result.toString();
+    return translated.trim().isEmpty ? null : translated;
   }
+
+  static String _translateFormulaSyntax(String formula) {
+    final result = StringBuffer();
+    var start = 0;
+    for (final reference in RegExp(r'\[([^\]]+)\]').allMatches(formula)) {
+      result.write(
+        _translateFormulaOperators(formula.substring(start, reference.start)),
+      );
+      // Sheet names inside a reference may themselves contain semicolons or
+      // function-like namespace prefixes. Only translate the reference grammar.
+      result.write(reference.group(1)!.split(':').map(_odfReference).join(':'));
+      start = reference.end;
+    }
+    result.write(_translateFormulaOperators(formula.substring(start)));
+    return result.toString();
+  }
+
+  static String _translateFormulaOperators(String formula) => formula
+      .replaceAll(';', ',')
+      .replaceAll(RegExp(r'\b(?:COM\.MICROSOFT|ORG\.OPENOFFICE)\.'), '');
 
   static String _odfReference(String raw) {
     var reference = raw.trim();
@@ -346,11 +422,12 @@ abstract final class OdsSheetReader {
     if (dot <= 0) return reference;
     var sheet = reference.substring(0, dot).trim();
     final cell = reference.substring(dot + 1);
-    if (sheet.startsWith("'") && sheet.endsWith("'")) {
+    final quoted = sheet.startsWith("'") && sheet.endsWith("'");
+    if (quoted) {
       sheet = sheet.substring(1, sheet.length - 1);
     }
     if (sheet.isEmpty) return cell;
-    return sheet.contains(' ') ? "'$sheet'!$cell" : '$sheet!$cell';
+    return quoted || sheet.contains(' ') ? "'$sheet'!$cell" : '$sheet!$cell';
   }
 
   static String? _numberFormat(

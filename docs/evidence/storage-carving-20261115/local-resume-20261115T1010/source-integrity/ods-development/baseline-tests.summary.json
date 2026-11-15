@@ -1,0 +1,170 @@
+{
+  "command": [
+    "dart",
+    "test",
+    "--reporter=json",
+    "test/ods_sheet_reader_test.dart"
+  ],
+  "cwd": "/workspace/scratch/aed049b7e8bd/canonical/quds_office_suite/packages/quds_office_engine",
+  "started_at": "2026-11-15T09:23:53.776981+00:00",
+  "elapsed_seconds": 8.543986791999941,
+  "returncode": 1,
+  "resolution_inputs": {
+    "pubspec.lock": {
+      "sha256": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130",
+      "bytes": 22686
+    },
+    ".dart_tool/package_config.json": {
+      "sha256": "19965bbf79508f032db244782ebdabeecbf24afb63a08ca7df0fbcc007627968",
+      "bytes": 22899
+    },
+    ".dart_tool/package_graph.json": {
+      "sha256": "958cfa3beb2e234d7ecc1285f779c6c42ac5b57fcc6d7de9d984f00f028c394b",
+      "bytes": 18609
+    }
+  },
+  "test_results": {
+    "1": {
+      "testID": 1,
+      "result": "success",
+      "skipped": false,
+      "hidden": true,
+      "type": "testDone",
+      "time": 3083
+    },
+    "3": {
+      "testID": 3,
+      "result": "success",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3165
+    },
+    "4": {
+      "testID": 4,
+      "result": "success",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3273
+    },
+    "5": {
+      "testID": 5,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3300
+    },
+    "6": {
+      "testID": 6,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3307
+    },
+    "7": {
+      "testID": 7,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3312
+    },
+    "8": {
+      "testID": 8,
+      "result": "success",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3316
+    },
+    "9": {
+      "testID": 9,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3320
+    },
+    "10": {
+      "testID": 10,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3325
+    },
+    "11": {
+      "testID": 11,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3330
+    },
+    "12": {
+      "testID": 12,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3333
+    },
+    "13": {
+      "testID": 13,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3339
+    },
+    "14": {
+      "testID": 14,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3344
+    },
+    "15": {
+      "testID": 15,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3347
+    },
+    "16": {
+      "testID": 16,
+      "result": "failure",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3350
+    },
+    "17": {
+      "testID": 17,
+      "result": "success",
+      "skipped": false,
+      "hidden": false,
+      "type": "testDone",
+      "time": 3352
+    }
+  },
+  "done": [
+    {
+      "success": false,
+      "type": "done",
+      "time": 3358
+    }
+  ],
+  "scope": "Development regression run against unchanged canonical production source and newly added tests; not clean-source acceptance.",
+  "visible_test_totals": {
+    "success": 4,
+    "failure": 11,
+    "error": 0
+  },
+  "skipped": 0
+}

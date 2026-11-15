@@ -1,0 +1,14 @@
+{
+  "base_commit": "793c64ac4fc2e896706aa65c13eaa70bd27f7267",
+  "inputs": {
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": {
+      "sha256": "e2aad672b831a4716fbb666fb3b07f0cc2a893a70823b78b55efef5fbb89d456",
+      "bytes": 17156
+    },
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "sha256": "29047d0a12fcef076812535c01512e2f866dbe4e496837be6dbc599da62a0be3",
+      "bytes": 9762
+    }
+  },
+  "source_changes": "Regression tests added; production reader still unchanged from canonical main."
+}

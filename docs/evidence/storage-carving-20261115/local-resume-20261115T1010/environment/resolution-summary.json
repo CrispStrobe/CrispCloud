@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-11-15T09:28:50.985523+00:00",
+  "scope": "Dependency setup; no runtime gate acceptance implied. Source edits outside dependency declarations proceeded concurrently as authorized.",
+  "all_resolution_succeeded": true,
+  "attempts": [
+    {
+      "attempt": "01-app-locked",
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud",
+      "command": [
+        "flutter",
+        "--no-version-check",
+        "--suppress-analytics",
+        "pub",
+        "get",
+        "--enforce-lockfile"
+      ],
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": true,
+      "elapsed_seconds": 397.4330154449999,
+      "source_head_at_start": "6cd7ec9d24d3951b563c92c4507d6ca9382e9508",
+      "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e"
+    },
+    {
+      "attempt": "02-engine-dev",
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_engine",
+      "command": [
+        "dart",
+        "pub",
+        "get"
+      ],
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": false,
+      "elapsed_seconds": 65.14645183599987,
+      "source_head_at_start": "a706e2e2bfd489b005447af914701f37259d021e",
+      "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e"
+    },
+    {
+      "attempt": "03-editor-dev",
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/quds_office_editor",
+      "command": [
+        "flutter",
+        "--no-version-check",
+        "--suppress-analytics",
+        "pub",
+        "get"
+      ],
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": false,
+      "elapsed_seconds": 62.02822407800022,
+      "source_head_at_start": "a706e2e2bfd489b005447af914701f37259d021e",
+      "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e"
+    },
+    {
+      "attempt": "04-parser-dev",
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/packages/legacy_doc_parser",
+      "command": [
+        "dart",
+        "pub",
+        "get"
+      ],
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": false,
+      "elapsed_seconds": 61.51185726099993,
+      "source_head_at_start": "a706e2e2bfd489b005447af914701f37259d021e",
+      "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e"
+    },
+    {
+      "attempt": "05-cli-locked",
+      "cwd": "/workspace/scratch/aed049b7e8bd/CrispCloud/cli",
+      "command": [
+        "dart",
+        "pub",
+        "get",
+        "--enforce-lockfile"
+      ],
+      "returncode": 0,
+      "resolution_success": true,
+      "pubspec_unchanged": true,
+      "lock_unchanged": true,
+      "elapsed_seconds": 117.75479062800014,
+      "source_head_at_start": "a706e2e2bfd489b005447af914701f37259d021e",
+      "source_head_at_end": "a706e2e2bfd489b005447af914701f37259d021e"
+    }
+  ],
+  "committed_lockfiles": {
+    "pubspec.lock": {
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "matches_current_committed_bytes": true
+    },
+    "cli/pubspec.lock": {
+      "sha256": "b9667782a56baa4610888a73c5decd08bd6e27a9bc32bd46871577e03cc3cd89",
+      "matches_current_committed_bytes": true
+    }
+  },
+  "application_dependencies_changed": false,
+  "native_hooks_disabled": false
+}

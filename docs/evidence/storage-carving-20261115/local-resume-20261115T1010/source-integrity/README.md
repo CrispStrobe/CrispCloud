@@ -28,7 +28,7 @@ missing prerequisite, not a failed source comparison. The oracle requires the
 engine package working directory in addition to genuine current output files.
 
 The original runner `run_source_controls.py` and its logs remain here.
-`run_source_only_controls.py` keeps the seven source/inventory commands and
+`run_source_only_controls.py` keeps the seven source/inventory commands and adds the 34 existing host-evidence controls and
 explicitly records the separate output-dependent gate as pending. Its source
 scope does not claim that the deferred oracle passed.
 
@@ -54,8 +54,10 @@ python3 -m unittest discover -s tool/fidelity -p test_scripted_oracle.py -v
 ```
 
 The current oracle defines 17 test methods, including six heading-inheritance
-controls. If all 17 execute and pass, these four Python control cohorts total
-65 tests (8 + 19 + 21 + 17). The earlier historical total of 61 is not used as
+controls. If all 17 execute and pass, these five Python control cohorts total
+99 tests (8 + 19 + 21 + 34 + 17). The corrected source-only runner includes
+the 34 host-evidence inventory/layout controls, for 82 expected tests before
+the output-dependent oracle. The earlier historical total of 61 is not used as
 acceptance for this source; the original current attempt observed 48 passing
 controls and an oracle setup error.
 

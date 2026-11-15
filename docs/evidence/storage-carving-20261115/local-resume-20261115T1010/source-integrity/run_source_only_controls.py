@@ -28,6 +28,7 @@ def main():
         ('quds-sync-controls', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tool', '-p', 'test_sync_office_fidelity.py', '-v']),
         ('parser-sync-controls', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tool', '-p', 'test_sync_legacy_doc_parser.py', '-v']),
         ('inventory-controls', [sys.executable, '-m', 'unittest', 'discover', '-s', 'packages/quds_office_engine/tool/fidelity', '-p', 'test_inventory.py', '-v']),
+        ('host-evidence-controls', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tool', '-p', 'test_office_host_evidence.py', '-v']),
     ]
     rows = []
     for name, command in commands:

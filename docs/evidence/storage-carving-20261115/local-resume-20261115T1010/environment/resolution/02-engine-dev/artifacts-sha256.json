@@ -1,0 +1,34 @@
+{
+  "after/.dart_tool/package_config.json.gz": {
+    "sha256": "b989d8b27604b30016aff11f3acf9f2625a7c3db1c5012ea840b5ffb08e9344d",
+    "size": 1102
+  },
+  "after/.dart_tool/package_graph.json.gz": {
+    "sha256": "de2e284daf95d05bc2c45bf6212284e721aa5074bbd7b4035103205ce557141f",
+    "size": 1186
+  },
+  "after/pubspec.lock.gz": {
+    "sha256": "5425c6a470bbfd0613d8ea98902e08d35f2ff04a3e644c8bf881ee81cb6198e0",
+    "size": 3289
+  },
+  "after/pubspec.yaml.gz": {
+    "sha256": "880611fb040b00197f213101066ad0da5a259bdd0b641cb1888b82e9bed0b50d",
+    "size": 997
+  },
+  "before/pubspec.yaml.gz": {
+    "sha256": "880611fb040b00197f213101066ad0da5a259bdd0b641cb1888b82e9bed0b50d",
+    "size": 997
+  },
+  "receipt.json": {
+    "sha256": "7d944cd31e5a32daf0f717e71bfe4bc839ca998d3248fae3ca9930c03f89ac2f",
+    "size": 3008
+  },
+  "stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0
+  },
+  "stdout.log": {
+    "sha256": "b5ff7bbebb423aefcceb7a64a6746c594499c6acc36cab2b619bddec4c1d110d",
+    "size": 1147
+  }
+}

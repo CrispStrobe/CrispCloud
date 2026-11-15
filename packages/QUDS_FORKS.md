@@ -23,7 +23,8 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds main `793c64ac4fc2e896706aa65c13eaa70bd27f7267` and standalone
+The app mirrors Quds `1c1b0af8e20bb02f7d18b4e6cb116328f4342332` on
+`integration/storage-carving-qualification-20261115` and standalone
 legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,223 managed files
 verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
@@ -31,6 +32,13 @@ performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and
 reports limitations; converted legacy documents save separately as OOXML.
+
+The latest canonical checkpoint preserves internal repeated ODS blank rows,
+counts covered merge placeholders only once, and translates formula syntax
+without changing quoted literals or quoted sheet identifiers. Seventeen focused
+ODS development tests pass, including XLSX save/reopen checks. Their retained
+baseline failures and passing runs are development evidence; the combined host
+qualification remains separately source-bound in the storage evidence.
 
 The resumed storage qualification also integrates Word inline-picture retention
 and Excel wrap-text support. Import preserves the correct wrap flag for each
