@@ -843,3 +843,88 @@ void imageTests() {
     expect(doc.markdown, contains('after'));
   });
 }
+
+void odfTests() {
+  const namespaces =
+      'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+      'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
+      'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"';
+
+  test('ODS keeps typed values, repeats and the real sheet name', () async {
+    const xml = '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table table:name="Data">
+      <table:table-row>
+        <table:table-cell office:value-type="string"><text:p>Name</text:p></table:table-cell>
+        <table:table-cell office:value-type="string"><text:p>Qty</text:p></table:table-cell>
+        <table:table-cell office:value-type="string"><text:p>Flag</text:p></table:table-cell>
+      </table:table-row>
+      <table:table-row>
+        <table:table-cell office:value-type="string"><text:p>A</text:p></table:table-cell>
+        <table:table-cell office:value-type="float" office:value="2"><text:p>2</text:p></table:table-cell>
+        <table:table-cell office:value-type="boolean" office:boolean-value="true"/>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="2">
+        <table:table-cell office:value-type="string"><text:p>B</text:p></table:table-cell>
+        <table:table-cell office:value-type="currency" office:value="3.5"/>
+        <table:table-cell table:number-columns-repeated="2"/>
+      </table:table-row>
+      <table:table-row table:number-rows-repeated="1048570"/>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'data.ods');
+    expect(doc.kind, OfficeDocumentKind.spreadsheet);
+    expect(doc.markdown, contains('## Data'));
+    final rows = doc.csv!.split('\n').where((line) => line.isNotEmpty).toList();
+    expect(rows.first, 'Name,Qty,Flag');
+    expect(rows, contains('A,2,TRUE'));
+    expect(rows.where((row) => row.startsWith('B,3.5')), hasLength(2));
+    expect(rows.length, lessThan(10));
+  });
+
+  test('ODS with a merged cell keeps following columns aligned', () async {
+    const xml = '''
+<office:document-content $namespaces>
+  <office:body><office:spreadsheet>
+    <table:table>
+      <table:table-row>
+        <table:table-cell table:number-columns-spanned="2"><text:p>Wide</text:p></table:table-cell>
+        <table:table-cell office:value-type="float" office:value="7"/>
+      </table:table-row>
+    </table:table>
+  </office:spreadsheet></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'merged.ods');
+    expect(doc.csv!.split('\n').first, 'Wide,,7');
+  });
+
+  test('ODT renders lists and ODF table cells', () async {
+    const xml = '''
+<office:document-content $namespaces>
+  <office:body><office:text>
+    <text:h text:outline-level="1">Title</text:h>
+    <text:list>
+      <text:list-item><text:p>One</text:p></text:list-item>
+      <text:list-item><text:p>Two</text:p></text:list-item>
+    </text:list>
+    <table:table>
+      <table:table-row>
+        <table:table-cell><text:p>Alpha</text:p></table:table-cell>
+        <table:table-cell table:number-columns-repeated="2"><text:p>x</text:p></table:table-cell>
+      </table:table-row>
+    </table:table>
+  </office:text></office:body>
+</office:document-content>
+''';
+    final doc = await parseOfficeDocument(_zip({'content.xml': xml}), 'notes.odt');
+    expect(doc.markdown, contains('# Title'));
+    expect(doc.markdown, contains('- One'));
+    expect(doc.markdown, contains('- Two'));
+    expect(doc.markdown, contains('Alpha'));
+    expect(doc.markdown, contains('| Alpha | x | x |'));
+  });
+}
