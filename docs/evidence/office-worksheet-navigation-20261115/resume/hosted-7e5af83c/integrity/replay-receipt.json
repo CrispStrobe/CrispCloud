@@ -1,0 +1,204 @@
+{
+  "status": "passed",
+  "completed_at_utc": "2026-11-15T07:16:09.611467+00:00",
+  "qualified_source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+  "qualified_workflow_run": 43685477823,
+  "verification": "Local archive, report, XML semantic, PNG pixel and byte-integrity verification of retained hosted evidence",
+  "hosted_execution": "Flutter, Chromium, OpenXML SDK and LibreOffice executed on GitHub Actions; none were rerun by this verifier",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "pillow": "13.0.0",
+  "script_sha256": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5",
+  "download_receipts_sha256": "93a37b62365bb760bf36e3a0bbbb8f98e64cd0f6eba00ef8cf245628036950fb",
+  "archives": [
+    {
+      "artifact_id": 14150845009,
+      "archive": "office-browser-copy-evidence-14150845009-continuation.zip",
+      "sha256": "f84e997b3909f3af4a4eda3a1295b9c9f1f1a2e8adf2f708b3cd293112fc257a",
+      "bytes": 98796,
+      "run_id": 43685477823,
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "files": 8,
+      "duplicate_paths": 0,
+      "extraction_matches": true
+    },
+    {
+      "artifact_id": 14150637045,
+      "archive": "office-host-fidelity-evidence-14150637045-continuation.zip",
+      "sha256": "384d52eafd81c8609eaf549115b3d6e56cd5fd352d1537bf4bd31fc0fb8d5114",
+      "bytes": 4507157,
+      "run_id": 43685477823,
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "files": 591,
+      "duplicate_paths": 0,
+      "extraction_matches": true
+    },
+    {
+      "artifact_id": 14150598848,
+      "archive": "office-host-schema-evidence-14150598848-continuation.zip",
+      "sha256": "38beb8672841707aadaf4671a879a90c15cbf427da37e29f0c21a42f42b85cdd",
+      "bytes": 4104824,
+      "run_id": 43685477823,
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "files": 651,
+      "duplicate_paths": 0,
+      "extraction_matches": true
+    },
+    {
+      "artifact_id": 14150152775,
+      "archive": "office-worksheet-ui-evidence-14150152775-continuation.zip",
+      "sha256": "a8f2039b6fa96fe4b79090f15ada5b94404e36f93c05818a02b3802225682466",
+      "bytes": 53098,
+      "run_id": 43685477823,
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+      "files": 4,
+      "duplicate_paths": 0,
+      "extraction_matches": true
+    },
+    {
+      "artifact_id": 14149236176,
+      "archive": "original-host-43681914471-14149236176-continuation.zip",
+      "sha256": "3fe8fbf3bca0d941fc67270a9cdb7988e927db6b4b5ddf0237e98aa459354477",
+      "bytes": 4503239,
+      "run_id": 43681914471,
+      "source_commit": "1a86e790080c174c27a283b7ac49913ca1fa91f0",
+      "files": 589,
+      "duplicate_paths": 0,
+      "extraction_matches": true
+    }
+  ],
+  "source_inputs": [
+    {
+      "path": "tool/office_host_evidence.py",
+      "bytes": 16485,
+      "sha256": "fb65f35ea5e0cacd93e49b769d6a6adcd42c7dbb2c9e48298fcbacb830376b5d",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "tool/office_host_evidence.json",
+      "bytes": 12127,
+      "sha256": "104d546db87a13fc6e61f8fae4f9f96c4dde2b698882ccf1446753497cd1a108",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "test/support/office_device_export_web_acceptance.dart",
+      "bytes": 1479,
+      "sha256": "784b99a13019798522af4e100460d8823700ac72bb5da8927bf748a571a7940e",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "lib/services/office_device_export.dart",
+      "bytes": 975,
+      "sha256": "bc7a8bebafa7338393619c4bd56d2d11a3cb113ec98b81364977a6bd4a429eec",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "lib/services/office_device_export_web.dart",
+      "bytes": 707,
+      "sha256": "810613add90c2dbea892e8a8ee49993d11847a7fa47bddb386854024bc859c1f",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "pubspec.lock",
+      "bytes": 63283,
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "test/fixtures/office_native_workflows/native-word-expected.docx",
+      "bytes": 1669,
+      "sha256": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "test/fixtures/office_native_workflows/native-sheet-expected.xlsx",
+      "bytes": 5418,
+      "sha256": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    {
+      "path": "test/fixtures/office_native_workflows/native-slide-expected.pptx",
+      "bytes": 33115,
+      "sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+      "source_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    }
+  ],
+  "host_inventory": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/scratch/110418c5427b/CrispCloud/tool/office_host_evidence.py",
+      "verify",
+      "--layout",
+      "artifact",
+      "--root",
+      "/workspace/scratch/110418c5427b/replay-from-commit/14150637045",
+      "--report",
+      "/workspace/scratch/110418c5427b/replay-receipts/host-inventory.json"
+    ],
+    "exit_code": 0,
+    "verified": 182,
+    "rendered": 149,
+    "schema_only": 33,
+    "declarations_sha256": "104d546db87a13fc6e61f8fae4f9f96c4dde2b698882ccf1446753497cd1a108",
+    "matches_hosted_report_exactly": true,
+    "controls_rerun": false
+  },
+  "schema": {
+    "reports": 540,
+    "failures": 0,
+    "all_source_hashes_verified": true,
+    "all_office_files_discovered": true,
+    "duplicate_internal_zip_paths": 0
+  },
+  "navigation": {
+    "files": 6,
+    "passed": 6,
+    "report": "navigation-semantics.json",
+    "method": "Independent Python ZIP/OPC/XML reads with fixed expectations; no Dart/Quds parser"
+  },
+  "rendering": {
+    "files": 149,
+    "decoded_png_pages": 201,
+    "cycle_groups": 36,
+    "reference_comparisons": 3,
+    "all_input_hashes_match_host_outputs": true,
+    "all_page_pixel_hashes_recomputed": true,
+    "report": "render-integrity.json"
+  },
+  "browser": {
+    "download_bytes": 256,
+    "download_sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+    "source_and_compiled_hashes_verified": true,
+    "hosted_browser": "159.0.8154.6",
+    "generated_package_config_available": false,
+    "package_config_limit": "Generated .dart_tool configuration is absent; its matching digest in both hosted receipts is retained, not locally recomputed"
+  },
+  "ui": {
+    "captures": [
+      {
+        "file": "rename-validation.png",
+        "sha256": "b1801ced651b58d571d6dc5c5c9f6ddac8e440137f9a2e6abaa1d57ab55a959b",
+        "width": 1600,
+        "height": 1000,
+        "geometry_and_integrity_verified": true,
+        "text_visual_acceptance": false
+      },
+      {
+        "file": "worksheet-arabic-narrow.png",
+        "sha256": "51a86236048638f7581d3d26aaf4f9516dafe04df8339d8d149a53c6d05932b5",
+        "width": 390,
+        "height": 1000,
+        "geometry_and_integrity_verified": true,
+        "text_visual_acceptance": false
+      }
+    ],
+    "limit": "Existing captures have known font deficiencies. Hashes and dimensions verify geometry only; no glyph/Arabic visual acceptance is claimed"
+  },
+  "original_run": {
+    "artifact_id": 14149236176,
+    "run_id": 43681914471,
+    "archive_integrity_verified": true,
+    "limit": "Original failed run retained separately. Its package bytes are not relabeled as the fresh accepted run"
+  },
+  "inputs_unchanged": true
+}

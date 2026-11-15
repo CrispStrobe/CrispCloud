@@ -1,0 +1,37 @@
+[
+  {
+    "file": "extracted-files.json",
+    "bytes": 387662,
+    "sha256": "5a4e561f0298503855c6f2e4ff5e94b23a732c2921b49a910e277464dcf7b86b"
+  },
+  {
+    "file": "host-inventory.json",
+    "bytes": 70621,
+    "sha256": "f9f6c73b7d43aa991ffcd74e9beebdc0ab8ffb07d1c50c44312b115cbfafd0c6"
+  },
+  {
+    "file": "host-inventory.log",
+    "bytes": 128,
+    "sha256": "4c0a9f3c7a535564aa3ed91b354e5541678c95bad11d029f196ed4c7a9e35a87"
+  },
+  {
+    "file": "navigation-semantics.json",
+    "bytes": 2575,
+    "sha256": "23c7d38f8bb8e53f5f8fa2e143d200fa00d1077baf6433f78b30b6cefbb0868b"
+  },
+  {
+    "file": "receipt.json",
+    "bytes": 7881,
+    "sha256": "8606cefdc3723d1305d40d2a2f6814dcf9a299679ff481ce65c13d559cd5e4b0"
+  },
+  {
+    "file": "render-integrity.json",
+    "bytes": 54521,
+    "sha256": "293ed5703b2339e6fd3a6a98100dd4b1d264c78e43351d27c7cb38ac46d0d443"
+  },
+  {
+    "file": "verify_hosted_artifacts.py",
+    "bytes": 24562,
+    "sha256": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5"
+  }
+]

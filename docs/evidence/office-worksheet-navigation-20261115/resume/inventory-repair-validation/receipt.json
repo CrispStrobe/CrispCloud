@@ -1,0 +1,79 @@
+{
+  "artifact_gate": {
+    "command": [
+      "python3",
+      "tool/office_host_evidence.py",
+      "verify",
+      "--layout",
+      "artifact",
+      "--root",
+      "/workspace/scratch/107ee5a2b402/host-recovery/host-artifacts",
+      "--report",
+      "/workspace/scratch/107ee5a2b402/inventory-repair-validation/artifact-inventory.json"
+    ],
+    "exit_code": 0,
+    "expected": 182,
+    "rendered": 149,
+    "report": "artifact-inventory.json",
+    "schema_only": 33,
+    "verified": 182
+  },
+  "artifact_provenance": {
+    "archive_sha256": "3fe8fbf3bca0d941fc67270a9cdb7988e927db6b4b5ddf0237e98aa459354477",
+    "artifact_id": 14149236176,
+    "repository": "CrispStrobe/CrispCloud",
+    "run_id": 43681914471,
+    "source_commit": "1a86e790080c174c27a283b7ac49913ca1fa91f0"
+  },
+  "checkout_replay": {
+    "current_output_hashes_equal_downloaded_bundle": true,
+    "fixed_failures": 0,
+    "fixed_verified": 182,
+    "historical_files": 94,
+    "historical_files_list": "historical-files.txt",
+    "original_collisions": 57,
+    "original_failure_list_matches_hosted_receipt_exactly": true,
+    "original_verified": 125,
+    "reproduction_helper": "reproduce_checkout.py",
+    "reproduction_helper_note": "Packaged replay recipe for subsequent runs; recorded replay used equivalent Python import/copy commands retained in this session.",
+    "wrong_artifact_mode_collisions": 57,
+    "wrong_artifact_mode_verified": 125
+  },
+  "completed_at": "2026-11-15T06:24:36.931752+00:00",
+  "concurrent_changes": "Caller workflow gained UI-preview coverage while these scoped inventory gates ran. It is not an executed input; exact checkpoint/current caller hashes are retained in source.json.",
+  "controls": {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_office_host_evidence.py"
+    ],
+    "exit_code": 0,
+    "log": "controls.log",
+    "passed": 32
+  },
+  "files": {
+    "artifact-inventory.json": "c470ead2e5d4beb62aad9ca08d1ebed7dd50d34942273ea06985bfb0692be53c",
+    "artifact-inventory.log": "4a3dd3f3a2950b5a6732b17316b4e1cbc006aac26bf0bdaf5a1f5a8ee926040d",
+    "checkout-original.json": "daeb8c961efbe013999427c27223a427e448d5b35132049db93b7969e3a7b5fa",
+    "checkout-positive.json": "7e6795c740c58e585a91549855af38a18fdc7dbb9a87e3bd6d7cdfe68a4da5ed",
+    "checkout-wrong-artifact-layout.json": "afd0c58e6e5fff53b3b5fa0ae70f89557e442d68fd54bf713296fe7ef4179008",
+    "controls.log": "994ebf331eebd4c4abacc4556949180ea8982936aedfe3773b0eb17320ba9357",
+    "historical-files.txt": "315857749b086591c8968fff75d24057f1ddb7584383408d0b61b9ae91a14e6f",
+    "input-sha256.json": "10d9d2bd94e19ffda152207d4dc1febb4ffc5d0d2d0d2e4a803648e83b555602",
+    "reproduce_checkout.py": "158d938345b766c32efca6be1953af8a3bca1d9751e1fcd07185a6ab20abb48d",
+    "source.json": "05c4aece93dd526a9a004b30fb35042c845e02169f51ca2fb2444908ecbe08f8"
+  },
+  "gate_inputs_unchanged": true,
+  "input_manifest_sha256": "10d9d2bd94e19ffda152207d4dc1febb4ffc5d0d2d0d2e4a803648e83b555602",
+  "limits": "Inventory controls use synthetic packages for mutation tests; the downloaded artifact and checkout replay use original hosted output bytes. This gate does not itself establish OpenXML schema conformance or rendered fidelity.",
+  "manifest_unchanged_from_original_host_run": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "source_commit": "cb23bdadffb95532d513cbc3bbc62d8bafa978fd",
+  "source_tree": "5c22976119fea12880e2b4295a0746f3a4319939"
+}

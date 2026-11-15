@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "description": "Reassembled and extracted only retained archive parts, then reran the unchanged independent verifier against that layout",
+  "reassembly_script_sha256": "c5842bd292e918f0ece1b38483037ab9ab22922d56353ce8968fbada92d3fe3a",
+  "verifier_sha256": "e094c95a16c3a86d597969c4c457e9853231e718a767a5235009dfba4ff7faa5",
+  "replay_receipt_sha256": "a80f44807cef3747b01b4442ba3952908b682cf6c05a6b50526ec2165728e4b3",
+  "archives": 5,
+  "sdk_inputs": 540,
+  "host_files": 182,
+  "navigation_files": 6,
+  "rendered_files": 149,
+  "png_pages": 201,
+  "repeat_groups": 36,
+  "reference_comparisons": 3
+}

@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "checkpointed_at_utc": "2026-11-15T08:04:07Z",
+  "provenance": "Observed command results from this continuation. This report is written through the GitHub API because the full local disk prevents new filesystem commands. It is not a byte-for-byte copy of the local receipt files.",
+  "source_commit": "52f2dec46cdd31c99b7dd0cae8294cbe450056c4",
+  "source_tree": "a5356d7eac9d18b61c8bc328688de436f59d1c36",
+  "preview_implementation_commit": "c3ac5b674c42b9a2d8f1b1631e394c6132cfbeba",
+  "accepted_runtime_commit": "7e5af83c4e6d26247ccf91d2b03c47a816f46231",
+  "toolchain": {
+    "flutter": "3.47.8",
+    "flutter_revision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "engine_revision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engine_content_hash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "dart": "3.13.7",
+    "rust": "1.100.0",
+    "clang": "19.1.7",
+    "sqlite": "3.46.1",
+    "actual_native_compilers": true,
+    "dependency_overrides_added": false,
+    "native_hooks_mocked": false
+  },
+  "gates": [
+    {
+      "name": "locked_dependency_resolution",
+      "command": [
+        "flutter",
+        "--suppress-analytics",
+        "pub",
+        "get",
+        "--enforce-lockfile"
+      ],
+      "started_at": "2026-11-15T07:50:38.317641+00:00",
+      "completed_at": "2026-11-15T07:56:25.431818+00:00",
+      "exit_code": 0,
+      "lockfile_before": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "lockfile_after": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "log_sha256": "3219d4107590afd63171996514a30a55ecc8030fe942740ffce68b6fd3debc8a"
+    },
+    {
+      "name": "format",
+      "command": [
+        "dart",
+        "--suppress-analytics",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "test/support/office_test_harness.dart",
+        "test/widget/office_sheet_navigation_workflow_test.dart"
+      ],
+      "exit_code": 0,
+      "inputs": 7400,
+      "changed_inputs": [],
+      "result": "Formatted 2 files (0 changed) in 0.05 seconds."
+    },
+    {
+      "name": "focused_analysis",
+      "command": [
+        "flutter",
+        "--suppress-analytics",
+        "analyze",
+        "--no-pub",
+        "--fatal-infos",
+        "--fatal-warnings",
+        "test/support/office_test_harness.dart",
+        "test/widget/office_sheet_navigation_workflow_test.dart"
+      ],
+      "exit_code": 0,
+      "inputs": 7400,
+      "changed_inputs": [],
+      "result": "No issues found! (ran in 25.7s)"
+    },
+    {
+      "name": "worksheet_preview",
+      "command": [
+        "env",
+        "OFFICE_NAVIGATION_PREVIEW=1",
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "flutter",
+        "--suppress-analytics",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/widget/office_sheet_navigation_workflow_test.dart"
+      ],
+      "exit_code": 1,
+      "inputs": 7400,
+      "changed_inputs": [],
+      "artifacts": 0,
+      "test_cases_executed": 0,
+      "phase": "Building native assets",
+      "failure": "crisp_ebook_conversion / Kindling Cargo build exhausted filesystem space: No space left on device (os error 28).",
+      "result": "Building native assets failed. See the logs for more details.",
+      "sqlite_probe": "CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True"
+    }
+  ],
+  "ui_acceptance": {
+    "status": "not_completed",
+    "new_captures": 0,
+    "reason": "Native dependency build failed before widget-test execution."
+  },
+  "github_queue": {
+    "monitoring": "stopped_on_user_instruction",
+    "run": 43689052023,
+    "last_observed_at_utc": "2026-11-15T07:39:36Z",
+    "browser": "success",
+    "host": "queued at last observation; no later status claimed",
+    "remote_jobs_cancelled": false
+  },
+  "recovery_blocker": {
+    "normal_commands": "Sandbox setup fails with ENOSPC before the command can execute, including cleanup.",
+    "apply_patch": "Same sandbox setup failure.",
+    "computer_use": "Unavailable.",
+    "elevated_cleanup": "Rejected by the workspace approval policy because sandbox_approval is disabled.",
+    "cleanup_target_attempted": "Only reproducible task-created pub.dev package-index metadata; the rejected command made no deletion."
+  },
+  "retention": {
+    "already_remote": "Implementation, original artifacts, successful hosted evidence, independent integrity/replay receipts and formatting checkpoint.",
+    "local_only": "Full current toolchain receipts, native prerequisite logs, pub-get log/receipt, format/analyze/native-failure gate logs and manifests, browser archive/queue audit, and prepared independent local verifiers remain in the workspace and could not be read/uploaded after the disk filled.",
+    "local_evidence_root": "docs/evidence/office-worksheet-navigation-20261115/resume/local-preview-20261115"
+  },
+  "next_steps": [
+    "Restore enough workspace headroom for commands to start; allow additional space for the remaining real Rust build.",
+    "Preserve the full local receipts before additional execution. Keep the failed attempt separately identified.",
+    "Reclaim only reproducible or completed native build intermediates while retaining actual code assets and successful hook receipts; do not fake or skip native hooks.",
+    "Retry the same 12-case worksheet test command in a fresh receipt directory, inspect both actual PNGs, and run independent six-workbook and preview provenance verification.",
+    "Save new receipts and update the acceptance record without waiting on GitHub Actions."
+  ]
+}

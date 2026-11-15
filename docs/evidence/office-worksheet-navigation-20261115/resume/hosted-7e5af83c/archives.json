@@ -1,0 +1,248 @@
+[
+  {
+    "id": 14150845009,
+    "name": "office-browser-copy-evidence",
+    "size_in_bytes": 98796,
+    "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150845009/zip",
+    "expired": false,
+    "created_at": "2026-11-15T06:28:27Z",
+    "expires_at": "2027-02-13T06:26:56Z",
+    "updated_at": "2026-11-15T06:28:27Z",
+    "digest": "sha256:f84e997b3909f3af4a4eda3a1295b9c9f1f1a2e8adf2f708b3cd293112fc257a",
+    "workflow_run": {
+      "id": 43685477823,
+      "repository_id": 1107206579,
+      "head_repository_id": 1107206579,
+      "head_branch": "codex/office-recovery-20261115",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    "file_name": "office-browser-copy-evidence-14150845009-continuation.zip",
+    "sha256": "f84e997b3909f3af4a4eda3a1295b9c9f1f1a2e8adf2f708b3cd293112fc257a",
+    "bytes": 98796,
+    "parts": [
+      {
+        "path": "archives/14150845009.zip",
+        "bytes": 98796,
+        "sha256": "f84e997b3909f3af4a4eda3a1295b9c9f1f1a2e8adf2f708b3cd293112fc257a"
+      }
+    ]
+  },
+  {
+    "id": 14150637045,
+    "name": "office-host-fidelity-evidence",
+    "size_in_bytes": 4507157,
+    "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150637045/zip",
+    "expired": false,
+    "created_at": "2026-11-15T06:35:12Z",
+    "expires_at": "2027-02-13T06:26:56Z",
+    "updated_at": "2026-11-15T06:35:12Z",
+    "digest": "sha256:384d52eafd81c8609eaf549115b3d6e56cd5fd352d1537bf4bd31fc0fb8d5114",
+    "workflow_run": {
+      "id": 43685477823,
+      "repository_id": 1107206579,
+      "head_repository_id": 1107206579,
+      "head_branch": "codex/office-recovery-20261115",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    "file_name": "office-host-fidelity-evidence-14150637045-continuation.zip",
+    "sha256": "384d52eafd81c8609eaf549115b3d6e56cd5fd352d1537bf4bd31fc0fb8d5114",
+    "bytes": 4507157,
+    "parts": [
+      {
+        "path": "archives/14150637045.zip.part000",
+        "bytes": 524288,
+        "sha256": "15860c1a6c6df27c363844c938a92f22d15315a3d1f6ddfe0c170beb752700f8"
+      },
+      {
+        "path": "archives/14150637045.zip.part001",
+        "bytes": 524288,
+        "sha256": "689fcc19dccd6d87f25e1136b7fd4311d37bf2ffc3234f9c0791079af647213f"
+      },
+      {
+        "path": "archives/14150637045.zip.part002",
+        "bytes": 524288,
+        "sha256": "805fe47b97b2949188a269187b438479f4b74d6943918af06203fcdacb1f384c"
+      },
+      {
+        "path": "archives/14150637045.zip.part003",
+        "bytes": 524288,
+        "sha256": "c1f241931bc072e6a1694aedcf566a8e566b5ca453099b2b65d3e8a8039af6d8"
+      },
+      {
+        "path": "archives/14150637045.zip.part004",
+        "bytes": 524288,
+        "sha256": "3d379bcabd76961faef7787003ddb332766467eefce80ba4ea232623039851bb"
+      },
+      {
+        "path": "archives/14150637045.zip.part005",
+        "bytes": 524288,
+        "sha256": "6e63ea9a83db1ec9854105c6f615ecce96fb25395339c66cc302c38b81e34d4d"
+      },
+      {
+        "path": "archives/14150637045.zip.part006",
+        "bytes": 524288,
+        "sha256": "66397d6f2e702ea1921fa4d374a104dd7d519e2c90a0f7f66f0d6a2135dd198d"
+      },
+      {
+        "path": "archives/14150637045.zip.part007",
+        "bytes": 524288,
+        "sha256": "46598f644ea865467eaac4105cd92cf8c03d8318c30d1cdf048a89f7583dedea"
+      },
+      {
+        "path": "archives/14150637045.zip.part008",
+        "bytes": 312853,
+        "sha256": "5869a873c9d57bd3c7b4fb5ce3a7bcdabdf1a6cfbd18708b695b60ea3f49c177"
+      }
+    ]
+  },
+  {
+    "id": 14150598848,
+    "name": "office-host-schema-evidence",
+    "size_in_bytes": 4104824,
+    "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150598848/zip",
+    "expired": false,
+    "created_at": "2026-11-15T06:48:46Z",
+    "expires_at": "2027-02-13T06:26:56Z",
+    "updated_at": "2026-11-15T06:48:46Z",
+    "digest": "sha256:38beb8672841707aadaf4671a879a90c15cbf427da37e29f0c21a42f42b85cdd",
+    "workflow_run": {
+      "id": 43685477823,
+      "repository_id": 1107206579,
+      "head_repository_id": 1107206579,
+      "head_branch": "codex/office-recovery-20261115",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    "file_name": "office-host-schema-evidence-14150598848-continuation.zip",
+    "sha256": "38beb8672841707aadaf4671a879a90c15cbf427da37e29f0c21a42f42b85cdd",
+    "bytes": 4104824,
+    "parts": [
+      {
+        "path": "archives/14150598848.zip.part000",
+        "bytes": 524288,
+        "sha256": "fdb9b001c9181d9ec02ceea89f6af0bca02764f7eacb8fac0702d03d6378605e"
+      },
+      {
+        "path": "archives/14150598848.zip.part001",
+        "bytes": 524288,
+        "sha256": "4a9ebc562784bb8b8f6aaa434bef1067f8eb8e99a833226f4cfaec1d68060e75"
+      },
+      {
+        "path": "archives/14150598848.zip.part002",
+        "bytes": 524288,
+        "sha256": "d63eadbbe0afb58a7c0733cec54b853313cf8316c9e4904d50636ede182e3dae"
+      },
+      {
+        "path": "archives/14150598848.zip.part003",
+        "bytes": 524288,
+        "sha256": "678b259546cbea9ac1327619c647ee8a65ffdb0c6cc8fca8bd1b38e22960964c"
+      },
+      {
+        "path": "archives/14150598848.zip.part004",
+        "bytes": 524288,
+        "sha256": "a44ebaef66f36fa30bc297a608654a2064f66ab3bf2c85a02f7113d42961933a"
+      },
+      {
+        "path": "archives/14150598848.zip.part005",
+        "bytes": 524288,
+        "sha256": "7319f93d73aba874a875a61185baff37d7405bbc47f7dc5a091be86530b340bd"
+      },
+      {
+        "path": "archives/14150598848.zip.part006",
+        "bytes": 524288,
+        "sha256": "f332f520e6926a1b33bf894886f4b4791a4824cac68598a7c201cdea78e22319"
+      },
+      {
+        "path": "archives/14150598848.zip.part007",
+        "bytes": 434808,
+        "sha256": "d454f562d4ff5921ca0578fb7c8f31346284934c4174f5879599e88df4dfcdd6"
+      }
+    ]
+  },
+  {
+    "id": 14150152775,
+    "name": "office-worksheet-ui-evidence",
+    "size_in_bytes": 53098,
+    "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14150152775/zip",
+    "expired": false,
+    "created_at": "2026-11-15T06:35:12Z",
+    "expires_at": "2027-02-13T06:26:56Z",
+    "updated_at": "2026-11-15T06:35:12Z",
+    "digest": "sha256:a8f2039b6fa96fe4b79090f15ada5b94404e36f93c05818a02b3802225682466",
+    "workflow_run": {
+      "id": 43685477823,
+      "repository_id": 1107206579,
+      "head_repository_id": 1107206579,
+      "head_branch": "codex/office-recovery-20261115",
+      "head_sha": "7e5af83c4e6d26247ccf91d2b03c47a816f46231"
+    },
+    "file_name": "office-worksheet-ui-evidence-14150152775-continuation.zip",
+    "sha256": "a8f2039b6fa96fe4b79090f15ada5b94404e36f93c05818a02b3802225682466",
+    "bytes": 53098,
+    "parts": [
+      {
+        "path": "archives/14150152775.zip",
+        "bytes": 53098,
+        "sha256": "a8f2039b6fa96fe4b79090f15ada5b94404e36f93c05818a02b3802225682466"
+      }
+    ]
+  },
+  {
+    "id": 14149236176,
+    "name": "original-host-43681914471",
+    "digest": "sha256:3fe8fbf3bca0d941fc67270a9cdb7988e927db6b4b5ddf0237e98aa459354477",
+    "workflow_run": {
+      "id": 43681914471,
+      "head_sha": "1a86e790080c174c27a283b7ac49913ca1fa91f0"
+    },
+    "file_name": "original-host-43681914471-14149236176-continuation.zip",
+    "sha256": "3fe8fbf3bca0d941fc67270a9cdb7988e927db6b4b5ddf0237e98aa459354477",
+    "bytes": 4503239,
+    "parts": [
+      {
+        "path": "archives/14149236176.zip.part000",
+        "bytes": 524288,
+        "sha256": "f8337ef94618ad60ed4b0f0dac8df3a395d7dea822f6f1259b72dfae2eb890a4"
+      },
+      {
+        "path": "archives/14149236176.zip.part001",
+        "bytes": 524288,
+        "sha256": "b63cdf9237f662c23d06687417027df9d3006bd6e196c12f8d7309186800a232"
+      },
+      {
+        "path": "archives/14149236176.zip.part002",
+        "bytes": 524288,
+        "sha256": "d8bf692bb8b98ab1d0e236561764ed107bb06508ccf2fd77d20120ca307496be"
+      },
+      {
+        "path": "archives/14149236176.zip.part003",
+        "bytes": 524288,
+        "sha256": "cec6fa389d51a36a0a8addd79be73f470c275a50a56799470a57aa4150c9a8aa"
+      },
+      {
+        "path": "archives/14149236176.zip.part004",
+        "bytes": 524288,
+        "sha256": "43c9586656df2ee721c44f4bd5616a7eb891749e426efed55b94c9232e00294e"
+      },
+      {
+        "path": "archives/14149236176.zip.part005",
+        "bytes": 524288,
+        "sha256": "addb14ad1d11fc4e35388f6b22c019e03b9922125c98e5c7709eca589f41bca4"
+      },
+      {
+        "path": "archives/14149236176.zip.part006",
+        "bytes": 524288,
+        "sha256": "e1b32c15a4ba732e62ef2eae8dfe5874ee6c28a01e95f3d1cd0fa8549a107295"
+      },
+      {
+        "path": "archives/14149236176.zip.part007",
+        "bytes": 524288,
+        "sha256": "05193aeaf467e83259c765f280b80031afb482fd80a6aa69868b1d959db081b1"
+      },
+      {
+        "path": "archives/14149236176.zip.part008",
+        "bytes": 308935,
+        "sha256": "04eca25b5ff62c2854875c96475b911237cf8f038e688e32e2166b78de2d3a63"
+      }
+    ]
+  }
+]

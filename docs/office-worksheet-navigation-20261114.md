@@ -1,5 +1,8 @@
 # Worksheet navigation and rename continuation — 14 November 2026
 
+Historical kickoff. See [15 November acceptance](office-worksheet-navigation-20261115.md)
+for implemented behavior, exact-source results and current completion status.
+
 Branch: `codex/office-recovery-20261114` in CrispCloud and Quds.
 Starting app checkpoint: `f974b9911b1547c806279279a87f2b21a1ac4357`.
 Starting suite checkpoint: `a85a977a8ab95bcf42214eb6dd05c73e2fcb5243`.
