@@ -1504,5 +1504,11 @@ void conditionalFormatTests() {
     );
     expect(sheetXml, contains('conditionalFormatting'));
     expect(sheetXml, contains('greaterThan'));
+    expect(sheetXml, contains('dxfId="0"'));
+    final stylesXml = utf8.decode(
+      archive.findFile('xl/styles.xml')!.content as List<int>,
+    );
+    expect(stylesXml, contains('<dxfs count="1">'));
+    expect(stylesXml, contains('FF00FF00'));
   });
 }

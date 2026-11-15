@@ -1099,6 +1099,18 @@ class SheetSerializer {
       return;
     }
     final SmlStyleSheet styles = book.styles ?? SmlStyleSheet();
+    final generatedDxfs = <({String fillRgb, String fontRgb})>[];
+    final generateDxfs = book.sheets.every(
+      (sheet) => sheet.sourceConditionalFormatState == null,
+    );
+    if (generateDxfs) {
+      for (final sheet in book.sheets) {
+        for (final rule in sheet.conditionalFormats) {
+          rule.dxfId = generatedDxfs.length;
+          generatedDxfs.add((fillRgb: rule.fillRgb, fontRgb: rule.fontRgb));
+        }
+      }
+    }
     for (final SmlWorksheet sheet in book.sheets) {
       for (final SmlCell cell in sheet.allCells) {
         // Defaults can be an intentional edit away from an imported style.
@@ -1123,10 +1135,16 @@ class SheetSerializer {
       package.createPart(
         '/xl/styles.xml',
         OfficeContentTypes.sheetStyles,
-        utf8.encode(styles.toXml()),
+        utf8.encode(
+          styles.toXml(dxfs: generateDxfs ? generatedDxfs : const []),
+        ),
       );
     } else {
-      package.getPart('/xl/styles.xml')!.writeText(styles.toXml());
+      package
+          .getPart('/xl/styles.xml')!
+          .writeText(
+            styles.toXml(dxfs: generateDxfs ? generatedDxfs : const []),
+          );
     }
     final RelationshipCollection rels = package.relationshipsFor(
       '/xl/workbook.xml',
@@ -1377,6 +1395,9 @@ class SheetSerializer {
           SmlConditionalKind.contains => 'containsText',
           SmlConditionalKind.duplicate => 'duplicateValues',
         });
+        if (rule.dxfId case final dxfId?) {
+          w.writeAttribute('dxfId', '$dxfId');
+        }
         if (rule.formula.isNotEmpty) {
           w.writeStartElement('formula');
           w.writeText(rule.formula);

@@ -82,6 +82,9 @@ class SmlStyleSheet {
          themeFontFamilies ?? const <String, String>{},
        );
 
+  /// Whether this stylesheet was parsed from a native styles part.
+  bool get hasNativeSource => _source != null;
+
   /// numFmts API.
   final Map<int, String> numFmts;
 
@@ -772,7 +775,7 @@ class SmlStyleSheet {
   }
 
   /// Minimal `styles.xml` that preserves number formats, fill, and alignment.
-  String toXml() {
+  String toXml({List<({String fillRgb, String fontRgb})> dxfs = const []}) {
     if (fillRgbs.isEmpty) {
       fillRgbs.addAll(<String>['', '']);
     }
@@ -885,7 +888,25 @@ class SmlStyleSheet {
         buf.write('/>');
       }
     }
-    buf.write('</cellXfs></styleSheet>');
+    buf.write('</cellXfs>');
+    if (dxfs.isNotEmpty) {
+      buf.write('<dxfs count="${dxfs.length}">');
+      for (final dxf in dxfs) {
+        buf.write('<dxf>');
+        if (dxf.fontRgb.isNotEmpty) {
+          buf.write('<font><color rgb="FF${dxf.fontRgb}"/></font>');
+        }
+        if (dxf.fillRgb.isNotEmpty) {
+          buf.write(
+            '<fill><patternFill patternType="solid">'
+            '<fgColor rgb="FF${dxf.fillRgb}"/></patternFill></fill>',
+          );
+        }
+        buf.write('</dxf>');
+      }
+      buf.write('</dxfs>');
+    }
+    buf.write('</styleSheet>');
     final generated = XmlDocument.parse(buf.toString());
     if (_source == null) {
       _orderFonts(generated);
