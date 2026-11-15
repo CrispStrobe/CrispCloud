@@ -700,6 +700,18 @@ abstract final class OdsSheetReader {
           if (bounds.length != 2) continue;
           formula = bounds[0].trim();
           formula2 = bounds[1].trim();
+        } else if ((value.startsWith('begins-with(') ||
+                value.startsWith('ends-with(')) &&
+            value.endsWith(')')) {
+          kind = value.startsWith('begins-with(')
+              ? SmlConditionalKind.beginsWith
+              : SmlConditionalKind.endsWith;
+          formula = value
+              .substring(value.indexOf('(') + 1, value.length - 1)
+              .trim();
+          if (formula.startsWith('"') && formula.endsWith('"')) {
+            formula = formula.substring(1, formula.length - 1);
+          }
         } else if (value.startsWith('contains-text(') && value.endsWith(')')) {
           kind = SmlConditionalKind.contains;
           formula = value
