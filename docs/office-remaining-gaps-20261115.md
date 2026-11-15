@@ -1,16 +1,18 @@
 # Office viewer/editor remaining gaps — 15 November 2026
 
+Last updated: 16 November 2026.
+
 This is the current backlog for the Office/ODF work. It records what is
 verified, what is intentionally read-only, and what remains before the viewer
 and editor can claim full format coverage.
 
 ## Verified state
 
-- CrispCloud `main` snapshot: `e52d1bef`
-- Vendored Quds source: `b01455fa415f9411411d06c7c2ab66947630af1a`
-  (`packages/QUDS_FORKS.md`, 2,363 managed files)
-- Quds sheet/ODS cohort: **495 tests**
-- CrispCloud vendored ODS reader: **80 tests**
+- CrispCloud `main` snapshot: `924a2b5d`
+- Vendored Quds source checkpoint: `4fbd1687d3c0ada22d460cf5cadb9586c4f62905`
+  (`packages/QUDS_FORKS.md`, 2,384 managed files)
+- Quds sheet/ODS cohort: **497 tests**; full engine suite: **2,117 tests**
+- CrispCloud vendored ODS reader: **82 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -32,7 +34,10 @@ and editor can claim full format coverage.
   width and row height.
 - ODS conditional formats: numeric comparisons, between/not-between,
   contains-text, begins/ends-with, duplicate, with generated dxf fill/font.
-- ODS literal list validations and correct Excel list formula quoting.
+- ODS literal and range-source list validations with correct Excel list
+  formula quoting.
+- ODS print areas/titles, named ranges and basic database-range autofilters,
+  including XLSX print-area read/write.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
   text, tables, lists and footnotes.
 - Exact host goldens for the reviewed Word pages.
@@ -64,21 +69,22 @@ cfRule + dxf, and reopen in Excel.
 
 **Status:** Partial  
 **Covered:** literal `cell-content-is-in-list(...)` with `allow-empty-cell`.  
-**Remaining:** range-source lists, whole/decimal/date/text-length/custom
-conditions, input prompts, error titles/messages, error styles, and cross-sheet
-ranges.  
-**Next step:** retain validation definitions until all sheets are built so
-range sources can be resolved, then map ODF conditions to
-`SmlDataValidationKind`.  
+**Remaining:** whole/decimal/date/text-length/custom conditions, input prompts,
+error titles/messages, error styles and unmodeled cross-sheet filter cases.
+Range-source lists are now resolved after all sheets are built.  
+**Next step:** map the remaining ODF conditions to
+`SmlDataValidationKind` and carry prompt/error metadata.  
 **Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same
 source ranges, bounds, blank policy and messages.
 
 ### OG-04 — ODS workbook metadata
 
 **Status:** Partial  
-**Remaining:** named expressions/defined names, autofilter/database ranges,
-print areas and repeat titles, sheet tab colors, row/column outline grouping,
-cell hyperlinks, and several page-style properties.  
+**Covered:** print areas, print-title rows/columns, global and sheet-local
+named ranges, and a basic database-range autofilter.
+**Remaining:** unmodeled named expressions, database filter conditions, sheet
+tab colors, row/column outline grouping, cell hyperlinks, and several page-style
+properties.  
 **Next step:** add the corresponding model fields or preserve/rebase native
 ODS metadata.  
 **Acceptance:** an ODS with each feature opens, saves as XLSX, and reopens with
