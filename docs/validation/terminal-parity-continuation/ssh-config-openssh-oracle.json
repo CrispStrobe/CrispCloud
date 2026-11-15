@@ -1,0 +1,145 @@
+{
+  "checked_at_utc": "2026-11-15T22:28:48.200410+00:00",
+  "oracle": "OpenSSH_10.0p2 Debian-7+deb13u4, OpenSSL 3.5.7 9 Jun 2026",
+  "scope": "Production pure Dart importer compared against local ssh -G; no network connections, commands, includes, or Match execution. Hostnames compared case-insensitively after case-sensitive alias evaluation.",
+  "checks": [
+    {
+      "case": "defaults",
+      "status": "passed",
+      "destination": {
+        "host": "one",
+        "user": "alice",
+        "port": 2200
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "first-wins",
+      "status": "passed",
+      "destination": {
+        "host": "one",
+        "user": "alice",
+        "port": 2200
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "global-first",
+      "status": "passed",
+      "destination": {
+        "host": "one",
+        "user": "first",
+        "port": 2022
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "case-upper",
+      "status": "passed",
+      "destination": {
+        "host": "one.example",
+        "user": "upper",
+        "port": 22
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "case-lower",
+      "status": "passed",
+      "destination": {
+        "host": "one.example",
+        "user": "lower",
+        "port": 22
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "glob-include",
+      "status": "passed",
+      "destination": {
+        "host": "dev1",
+        "user": "alice",
+        "port": 2200
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "glob-exclude",
+      "status": "passed",
+      "destination": {
+        "host": "dev2",
+        "user": "alice",
+        "port": 22
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "negative-only",
+      "status": "passed",
+      "destination": {
+        "host": "one",
+        "user": "correct",
+        "port": 22
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "quoted",
+      "status": "passed",
+      "destination": {
+        "host": "host.example",
+        "user": "alice",
+        "port": 22
+      },
+      "identity_hints_checked": 1
+    },
+    {
+      "case": "identity-additive",
+      "status": "passed",
+      "destination": {
+        "host": "one",
+        "user": "alice",
+        "port": 22
+      },
+      "identity_hints_checked": 2
+    },
+    {
+      "case": "no-recursive-hostname",
+      "status": "passed",
+      "destination": {
+        "host": "two",
+        "user": "first",
+        "port": 22
+      },
+      "identity_hints_checked": 0
+    },
+    {
+      "case": "proxyjump-disabled-case",
+      "status": "passed",
+      "source": "Host box\nUser alice\nProxyJump NONE",
+      "native_proxycommand": [],
+      "native_proxyjump": [],
+      "importer_blocked": false
+    },
+    {
+      "case": "proxycommand-disabled-case",
+      "status": "passed",
+      "source": "Host box\nUser alice\nProxyCommand NONE",
+      "native_proxycommand": [],
+      "native_proxyjump": [],
+      "importer_blocked": false
+    },
+    {
+      "case": "proxyjump-none-command-fallback",
+      "status": "passed",
+      "source": "Host box\nUser alice\nProxyJump none\nProxyCommand special",
+      "native_proxycommand": [
+        "proxycommand special"
+      ],
+      "native_proxyjump": [],
+      "importer_blocked": true
+    }
+  ],
+  "passed": 14,
+  "importer_sha256": "29e0dcb51a9cd06909abc4831aad98e81e9f51bc52d3955acfc33636b05a3314"
+}

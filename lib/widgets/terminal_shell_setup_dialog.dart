@@ -26,9 +26,11 @@ class _TerminalShellSetupDialogState extends State<TerminalShellSetupDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.terminalShellTr(
-            'Copy the script, then paste and run it in the chosen shell. It enables integration for that session and preserves existing prompt hooks.',
-          )),
+          Text(
+            context.terminalShellTr(
+              'Copy the script, then paste and run it in the chosen shell. It enables integration for that session and preserves existing prompt hooks.',
+            ),
+          ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TerminalShellSetup>(
             key: const ValueKey('terminal-setup-shell'),

@@ -52,12 +52,12 @@ void main() {
     await Future<void>.delayed(Duration.zero);
   });
 
-  Future<void> pumpUi(WidgetTester tester) async {
+  Future<void> settle(WidgetTester tester) async {
     if (sessions.any((session) => session.isConnecting)) {
-      // This fixture deliberately keeps an opener pending. Its indeterminate
-      // progress indicator cannot settle; finish finite route animations only.
+      // A pending opener intentionally keeps an indeterminate spinner alive.
+      // Advance route transitions without waiting for that spinner to stop.
       await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 350));
       await tester.pump();
     } else {
       await tester.pumpAndSettle();
@@ -86,28 +86,28 @@ void main() {
         ),
       ),
     );
-    await pumpUi(tester);
+    await settle(tester);
   }
 
   Future<void> layout(WidgetTester tester, String label) async {
     await tester.tap(find.byKey(const ValueKey('terminal-layout')));
-    await pumpUi(tester);
+    await settle(tester);
     final item = find.text(label).last;
     await tester.ensureVisible(item);
     await tester.tap(item);
-    await pumpUi(tester);
+    await settle(tester);
   }
 
   Future<void> chooseSaved(WidgetTester tester, String name) async {
     await layout(tester, 'Saved arrangements');
     await tester.tap(find.byKey(ValueKey('terminal-arrangement-$name')));
-    await pumpUi(tester);
+    await settle(tester);
   }
 
   Future<void> restore(WidgetTester tester, String name) async {
     await chooseSaved(tester, name);
     await tester.tap(find.widgetWithText(FilledButton, 'Restore'));
-    await pumpUi(tester);
+    await settle(tester);
   }
 
   Future<void> save(WidgetTester tester, String name) async {
@@ -117,7 +117,7 @@ void main() {
       name,
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
-    await pumpUi(tester);
+    await settle(tester);
   }
 
   Iterable<TerminalPanel> panels(WidgetTester tester) =>
@@ -135,11 +135,11 @@ void main() {
         matching: find.byKey(const ValueKey('terminal-actions')),
       ),
     );
-    await pumpUi(tester);
+    await settle(tester);
     final item = find.text(label).last;
     await tester.ensureVisible(item);
     await tester.tap(item);
-    await pumpUi(tester);
+    await settle(tester);
   }
 
   Future<void> unmount(WidgetTester tester) async {
@@ -180,7 +180,7 @@ void main() {
     (tester) async {
       await mount(tester);
       await tester.tap(find.byKey(const ValueKey('terminal-new-tab')));
-      await pumpUi(tester);
+      await settle(tester);
       await layout(tester, 'Split side by side');
       await layout(tester, 'Rename terminal');
       await tester.enterText(
@@ -188,7 +188,7 @@ void main() {
         'Build pane',
       );
       await tester.tap(find.widgetWithText(FilledButton, 'Rename'));
-      await pumpUi(tester);
+      await settle(tester);
       await paneAction(tester, 'Increase font size');
       await paneAction(tester, 'Increase font size');
       await layout(tester, 'Move terminal left');
@@ -196,7 +196,7 @@ void main() {
         find.byKey(const ValueKey('terminal-split-divider')),
         const Offset(100, 0),
       );
-      await pumpUi(tester);
+      await settle(tester);
       await save(tester, 'Daily');
       final captured = (await store.load()).single;
       expect(captured.tabs, hasLength(3));
@@ -265,7 +265,7 @@ void main() {
     expect(dialog.initialConfig!.password, isEmpty);
     expect(dialog.initialConfig!.screen!.sessionName, '142.work');
     await tester.tap(find.text('Cancel').last);
-    await pumpUi(tester);
+    await settle(tester);
     expect(
       restored.every(
         (panel) => panel.session!.status == TerminalSessionStatus.idle,
@@ -275,6 +275,128 @@ void main() {
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });
+
+  testWidgets(
+    'blocked divider motion preserves saved ratios when the window widens',
+    (tester) async {
+      for (final fraction in [0.2, 0.8]) {
+        await store.save(
+          TerminalArrangement(
+            name: 'Ratio $fraction',
+            tabs: [
+              TerminalArrangementTab(name: 'First'),
+              TerminalArrangementTab(name: 'Second'),
+            ],
+            activeIndex: 0,
+            layout: TerminalPaneSplit(
+              axis: TerminalSplitAxis.horizontal,
+              fraction: fraction,
+              first: TerminalPaneLeaf(0),
+              second: TerminalPaneLeaf(1),
+            ),
+          ),
+        );
+      }
+      await mount(tester);
+
+      for (final fraction in [0.2, 0.8]) {
+        await restore(tester, 'Ratio $fraction');
+        tester.view.physicalSize = const Size(500, 900);
+        await settle(tester);
+        final divider = find.byKey(const ValueKey('terminal-split-divider'));
+        final constrainedBounds = tester.getRect(divider);
+        await tester.drag(divider, Offset(fraction < 0.5 ? -80 : 80, 0));
+        await settle(tester);
+        expect(tester.getRect(divider), constrainedBounds);
+
+        await save(tester, 'Blocked $fraction');
+        final captured = (await store.load()).singleWhere(
+          (item) => item.name == 'Blocked $fraction',
+        );
+        expect(captured.layout.splitAt('')!.fraction, fraction);
+
+        tester.view.physicalSize = const Size(1400, 900);
+        await settle(tester);
+        expect(
+          tester.getSize(find.byType(TerminalPanel).first).width,
+          closeTo((1400 - 8) * fraction, 0.01),
+        );
+      }
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
+  testWidgets(
+    'nested arrangements preserve hidden tabs and independent dividers',
+    (tester) async {
+      final saved = TerminalArrangement(
+        name: 'Nested',
+        tabs: [
+          for (var i = 0; i < 5; i++) TerminalArrangementTab(name: 'Pane $i'),
+        ],
+        activeIndex: 4,
+        layout: TerminalPaneSplit(
+          axis: TerminalSplitAxis.horizontal,
+          fraction: 0.4,
+          first: TerminalPaneLeaf(0),
+          second: TerminalPaneSplit(
+            axis: TerminalSplitAxis.vertical,
+            first: TerminalPaneLeaf(2),
+            second: TerminalPaneSplit(
+              axis: TerminalSplitAxis.horizontal,
+              first: TerminalPaneLeaf(3),
+              second: TerminalPaneLeaf(4),
+            ),
+          ),
+        ),
+      );
+      await store.save(saved);
+      await mount(tester);
+      await restore(tester, 'Nested');
+      expect(panels(tester), hasLength(5));
+      expect(panels(tester).where((panel) => panel.visible), hasLength(4));
+      expect(panels(tester).every((panel) => !panel.autoStart), isTrue);
+      expect(
+        panels(
+          tester,
+        ).every((panel) => panel.session!.status == TerminalSessionStatus.idle),
+        isTrue,
+      );
+      await tester.drag(
+        find.byKey(const ValueKey('terminal-split-divider-11')),
+        const Offset(25, 0),
+      );
+      await settle(tester);
+      await layout(tester, 'Zoom active pane');
+      expect(panels(tester).where((panel) => panel.visible), hasLength(1));
+      await save(tester, 'Nested edited');
+      final captured = (await store.load()).singleWhere(
+        (item) => item.name == 'Nested edited',
+      );
+      expect(
+        captured.tabs.map((tab) => tab.name),
+        saved.tabs.map((tab) => tab.name),
+      );
+      expect(captured.layout.leafIds, [0, 2, 3, 4]);
+      expect(captured.activeIndex, 4);
+      expect(captured.layout.splitAt('')!.fraction, 0.4);
+      expect(captured.layout.splitAt('1')!.fraction, 0.5);
+      expect(captured.layout.splitAt('11')!.fraction, greaterThan(0.5));
+      await restore(tester, 'Nested edited');
+      expect(panels(tester).where((panel) => panel.visible), hasLength(4));
+      await save(tester, 'Round trip');
+      final roundTrip = (await store.load()).singleWhere(
+        (item) => item.name == 'Round trip',
+      );
+      expect(
+        roundTrip.toJson()..remove('name'),
+        captured.toJson()..remove('name'),
+      );
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
 
   testWidgets('cancel keeps live sessions and every existing screen', (
     tester,
@@ -290,7 +412,7 @@ void main() {
     await chooseSaved(tester, 'Remote work');
     expect(find.text('Replace current terminals?'), findsOneWidget);
     await tester.tap(find.text('Cancel').last);
-    await pumpUi(tester);
+    await settle(tester);
     expect(connection.closes, 0);
     expect(first.isConnected, isTrue);
     expect(
@@ -313,7 +435,7 @@ void main() {
     await store.save(remoteArrangement());
     await mount(tester);
     await tester.tap(find.byKey(const ValueKey('terminal-new-tab')));
-    await pumpUi(tester);
+    await settle(tester);
     first.terminal.write('keep first');
     sessions[1].terminal.write('keep second');
     await restore(tester, 'Remote work');
@@ -358,7 +480,7 @@ void main() {
     expect(first.isConnecting, isTrue);
     expect(first.disposals, 0);
     opening.complete(connection);
-    await pumpUi(tester);
+    await settle(tester);
     await pending;
     expect(first.isConnected, isTrue);
     expect(connection.closes, 0);
@@ -380,12 +502,12 @@ void main() {
     );
     expect(raw, '{"version":99,"arrangements":[]}');
     await tester.tap(find.text('Cancel'));
-    await pumpUi(tester);
+    await settle(tester);
     await layout(tester, 'Saved arrangements');
     expect(find.byType(TerminalArrangementsDialog), findsOneWidget);
     expect(find.text('Could not load arrangements.'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await pumpUi(tester);
+    await settle(tester);
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });
@@ -397,19 +519,19 @@ void main() {
     await mount(tester);
     await layout(tester, 'Saved arrangements');
     await tester.tap(find.byTooltip('Delete'));
-    await pumpUi(tester);
+    await settle(tester);
     expect(find.text('Delete arrangement?'), findsOneWidget);
     await tester.tap(find.text('Cancel').last);
-    await pumpUi(tester);
+    await settle(tester);
     expect(await store.load(), hasLength(1));
     await tester.tap(find.byTooltip('Delete'));
-    await pumpUi(tester);
+    await settle(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-    await pumpUi(tester);
+    await settle(tester);
     expect(await store.load(), isEmpty);
     expect(find.text('No saved arrangements'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await pumpUi(tester);
+    await settle(tester);
     expect(panels(tester).single.session, same(first));
     expect(first.status, TerminalSessionStatus.idle);
     expect(tester.takeException(), isNull);

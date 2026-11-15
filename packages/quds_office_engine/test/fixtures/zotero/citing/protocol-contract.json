@@ -1,0 +1,195 @@
+{
+  "source": {
+    "name": "httpIntegrationClient.js",
+    "repository": "zotero/zotero",
+    "commit": "992853536935dce3249a4ecf61d0d129883f85c4",
+    "path": "chrome/content/zotero/xpcom/httpIntegrationClient.js",
+    "gitBlobSha": "611911bbfce0a7656eab8e4a322588863976aa34",
+    "sha256": "979862550b60cccc3b91a5a70debbd3824f4a2319b718f079d4ec7d25538d9ad",
+    "url": "https://raw.githubusercontent.com/zotero/zotero/992853536935dce3249a4ecf61d0d129883f85c4/chrome/content/zotero/xpcom/httpIntegrationClient.js",
+    "license": "AGPL-3.0-or-later"
+  },
+  "cachedReadsIssueNoCommands": true,
+  "completeClearsInProgress": true,
+  "transcript": [
+    {
+      "command": "Application.getActiveDocument",
+      "arguments": [],
+      "result": {
+        "documentID": "fixture-document",
+        "outputFormat": "html",
+        "supportedNotes": [
+          "footnotes",
+          "endnotes"
+        ],
+        "supportsImportExport": false,
+        "supportsTextInsertion": false,
+        "supportsCitationMerging": false,
+        "processorName": "Quds Office"
+      }
+    },
+    {
+      "command": "Document.getDocumentData",
+      "arguments": [
+        "fixture-document"
+      ],
+      "result": "<data><prefs><pref name=\"fieldType\" value=\"Http\"/></prefs></data>"
+    },
+    {
+      "command": "Document.canInsertField",
+      "arguments": [
+        "fixture-document",
+        "Http"
+      ],
+      "result": true
+    },
+    {
+      "command": "Document.cursorInField",
+      "arguments": [
+        "fixture-document",
+        "Http"
+      ],
+      "result": {
+        "id": "f1",
+        "code": "ITEM CSL_CITATION {\"citationID\":\"sample\"}",
+        "text": "(Müller, 2024)",
+        "noteIndex": 0
+      }
+    },
+    {
+      "command": "Document.getFields",
+      "arguments": [
+        "fixture-document",
+        "Http"
+      ],
+      "result": [
+        {
+          "id": "f1",
+          "code": "ITEM CSL_CITATION {\"citationID\":\"sample\"}",
+          "text": "(Müller, 2024)",
+          "noteIndex": 0
+        }
+      ]
+    },
+    {
+      "command": "Document.insertField",
+      "arguments": [
+        "fixture-document",
+        "Http",
+        1
+      ],
+      "result": {
+        "id": "f2",
+        "code": "",
+        "text": "",
+        "noteIndex": 2
+      }
+    },
+    {
+      "command": "Field.setCode",
+      "arguments": [
+        "fixture-document",
+        "f2",
+        "ITEM CSL_CITATION {\"citationID\":\"new\"}"
+      ],
+      "result": null
+    },
+    {
+      "command": "Field.setText",
+      "arguments": [
+        "fixture-document",
+        "f2",
+        "Ebd., 34.",
+        true
+      ],
+      "result": null
+    },
+    {
+      "command": "Document.convert",
+      "arguments": [
+        "fixture-document",
+        [
+          "f1",
+          "f2"
+        ],
+        "Http",
+        [
+          1,
+          1
+        ]
+      ],
+      "result": null
+    },
+    {
+      "command": "Document.setBibliographyStyle",
+      "arguments": [
+        "fixture-document",
+        -720,
+        720,
+        240,
+        0,
+        [
+          720
+        ],
+        1
+      ],
+      "result": null
+    },
+    {
+      "command": "Document.displayAlert",
+      "arguments": [
+        "fixture-document",
+        "Apply changes?",
+        2,
+        3
+      ],
+      "result": 2
+    },
+    {
+      "command": "Field.select",
+      "arguments": [
+        "fixture-document",
+        "f1"
+      ],
+      "result": null
+    },
+    {
+      "command": "Field.removeCode",
+      "arguments": [
+        "fixture-document",
+        "f2"
+      ],
+      "result": null
+    },
+    {
+      "command": "Field.delete",
+      "arguments": [
+        "fixture-document",
+        "f2"
+      ],
+      "result": null
+    },
+    {
+      "command": "Document.setDocumentData",
+      "arguments": [
+        "fixture-document",
+        "<data/>"
+      ],
+      "result": null
+    },
+    {
+      "command": "Document.activate",
+      "arguments": [
+        "fixture-document"
+      ],
+      "result": null
+    },
+    {
+      "command": "Document.complete",
+      "arguments": [
+        "fixture-document"
+      ],
+      "result": null
+    }
+  ]
+}

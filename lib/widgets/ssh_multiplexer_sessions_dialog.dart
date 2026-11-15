@@ -59,18 +59,21 @@ class _SshMultiplexerSessionsDialogState
 
   @override
   Widget build(BuildContext context) {
-    final visible = _sessions.where((session) {
-      return _filter.isEmpty ||
-          session.target.toLowerCase().contains(_filter) ||
-          session.name.toLowerCase().contains(_filter);
-    }).toList(growable: false);
+    final visible = _sessions
+        .where((session) {
+          return _filter.isEmpty ||
+              session.target.toLowerCase().contains(_filter) ||
+              session.name.toLowerCase().contains(_filter);
+        })
+        .toList(growable: false);
     final media = MediaQuery.of(context);
-    final height = (
-      media.size.height -
-      media.viewInsets.bottom -
-      media.padding.vertical -
-      220
-    ).clamp(100.0, 420.0).toDouble();
+    final height =
+        (media.size.height -
+                media.viewInsets.bottom -
+                media.padding.vertical -
+                220)
+            .clamp(100.0, 420.0)
+            .toDouble();
 
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),

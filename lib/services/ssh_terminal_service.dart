@@ -302,10 +302,9 @@ class SshTerminalService {
     SecureStorage? secureStorage,
     this.confirmHostKey,
     @visibleForTesting this._clientConnector,
-    @visibleForTesting SshSocketConnector? socketConnector,
+    @visibleForTesting this._socketConnector,
     @visibleForTesting SshVerifiedClientOpener? verifiedClientOpener,
   }) : _secure = secureStorage ?? PlatformSecureStorage(),
-       _socketConnector = socketConnector,
        _verifiedClientOpener = verifiedClientOpener ?? openVerifiedSsh;
 
   // -------------------------------------------------------------------------
@@ -732,9 +731,9 @@ class SshTerminalService {
 
     void fail(Object error) {
       if (completed.isCompleted) return;
-      completed.completeError(current()
-          ? error
-          : StateError('SSH session discovery was cancelled'));
+      completed.completeError(
+        current() ? error : StateError('SSH session discovery was cancelled'),
+      );
       closeChannel(channel);
     }
 
@@ -755,9 +754,12 @@ class SshTerminalService {
       }
       totalBytes += data.length;
       if (totalBytes > sshMultiplexerMaxOutputBytes) {
-        fail(SshMultiplexerDiscoveryException(
-          kind, SshMultiplexerDiscoveryFailure.tooMuchOutput,
-        ));
+        fail(
+          SshMultiplexerDiscoveryException(
+            kind,
+            SshMultiplexerDiscoveryFailure.tooMuchOutput,
+          ),
+        );
         return;
       }
       destination.add(data);
@@ -766,15 +768,20 @@ class SshTerminalService {
 
     void ioFailed(Object _, StackTrace __) => fail(
       SshMultiplexerDiscoveryException(
-        kind, SshMultiplexerDiscoveryFailure.commandFailed,
+        kind,
+        SshMultiplexerDiscoveryFailure.commandFailed,
       ),
     );
 
-    final deadline = Timer(const Duration(seconds: 10), () => fail(
-      SshMultiplexerDiscoveryException(
-        kind, SshMultiplexerDiscoveryFailure.timeout,
+    final deadline = Timer(
+      const Duration(seconds: 10),
+      () => fail(
+        SshMultiplexerDiscoveryException(
+          kind,
+          SshMultiplexerDiscoveryFailure.timeout,
+        ),
       ),
-    ));
+    );
     // A closed/replaced tab must release a quiet listing too, rather than
     // waiting for another chunk of output to notice its stale generation.
     final cancellation = Timer.periodic(const Duration(milliseconds: 100), (_) {
@@ -785,34 +792,38 @@ class SshTerminalService {
       final request = Future<SSHSession>.sync(
         () => state.client.execute(sshMultiplexerListCommand(kind)),
       );
-      unawaited(request.then<void>((opened) {
-        if (completed.isCompleted || !current()) {
-          closeChannel(opened);
-          if (!completed.isCompleted) {
-            fail(StateError('SSH session discovery was cancelled'));
+      unawaited(
+        request.then<void>((opened) {
+          if (completed.isCompleted || !current()) {
+            closeChannel(opened);
+            if (!completed.isCompleted) {
+              fail(StateError('SSH session discovery was cancelled'));
+            }
+            return;
           }
-          return;
-        }
-        channel = opened;
-        try {
-          stdoutSubscription = opened.stdout.listen(
-            (data) => receive(output, data),
-            onError: ioFailed,
-            onDone: partFinished,
-          );
-          stderrSubscription = opened.stderr.listen(
-            (data) => receive(errors, data),
-            onError: ioFailed,
-            onDone: partFinished,
-          );
-          unawaited(opened.done.then<void>((_) {
-            exitCode = opened.exitCode;
-            partFinished();
-          }, onError: ioFailed));
-        } catch (error) {
-          fail(error);
-        }
-      }, onError: ioFailed));
+          channel = opened;
+          try {
+            stdoutSubscription = opened.stdout.listen(
+              (data) => receive(output, data),
+              onError: ioFailed,
+              onDone: partFinished,
+            );
+            stderrSubscription = opened.stderr.listen(
+              (data) => receive(errors, data),
+              onError: ioFailed,
+              onDone: partFinished,
+            );
+            unawaited(
+              opened.done.then<void>((_) {
+                exitCode = opened.exitCode;
+                partFinished();
+              }, onError: ioFailed),
+            );
+          } catch (error) {
+            fail(error);
+          }
+        }, onError: ioFailed),
+      );
       await completed.future;
       if (!current()) throw StateError('SSH session discovery was cancelled');
       try {
@@ -824,7 +835,8 @@ class SshTerminalService {
         );
       } on FormatException {
         throw SshMultiplexerDiscoveryException(
-          kind, SshMultiplexerDiscoveryFailure.invalidListing,
+          kind,
+          SshMultiplexerDiscoveryFailure.invalidListing,
         );
       }
     } finally {
@@ -1086,7 +1098,13 @@ class SshTerminalService {
   /// Returns null when parsing or decryption fails; no connection is attempted.
   SSHKeyPair? _parseKeyPair(String pemKey, String? passphrase) {
     try {
-      final pairs = SSHKeyPair.fromPem(pemKey, passphrase);
+      // Form fields and jump-host models represent an omitted passphrase as
+      // an empty string. dartssh2 rejects even an empty non-null passphrase for
+      // an unencrypted OpenSSH key. Preserve nonempty values exactly.
+      final pairs = SSHKeyPair.fromPem(
+        pemKey,
+        passphrase == null || passphrase.isEmpty ? null : passphrase,
+      );
       return pairs.isNotEmpty ? pairs.first : null;
     } catch (_) {
       // Parser exceptions can contain source text. Do not log key material or

@@ -623,25 +623,25 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   KeyEventResult _onWorkspaceKey(KeyEvent event) {
     if (_arranging) return KeyEventResult.handled;
     final keyboard = HardwareKeyboard.instance;
-    final direction = {
+    final apple =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final direction = const [
       LogicalKeyboardKey.arrowLeft,
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowUp,
       LogicalKeyboardKey.arrowDown,
-    }.contains(event.logicalKey);
+    ].contains(event.logicalKey);
     if (keyboard.isAltPressed) {
-      if (direction &&
-          keyboard.isControlPressed &&
-          !keyboard.isMetaPressed &&
-          !keyboard.isShiftPressed) {
+      final paneModifier =
+          (keyboard.isControlPressed && !keyboard.isMetaPressed) ||
+          (apple && keyboard.isMetaPressed && !keyboard.isControlPressed);
+      if (direction && paneModifier && !keyboard.isShiftPressed) {
         if (event is KeyDownEvent) _navigatePane(event.logicalKey);
         return KeyEventResult.handled;
       }
       return KeyEventResult.ignored;
     }
-    final apple =
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.iOS;
     final command = apple
         ? keyboard.isMetaPressed && !keyboard.isControlPressed
         : keyboard.isControlPressed &&
@@ -663,11 +663,22 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         command &&
         event.logicalKey == LogicalKeyboardKey.enter &&
         keyboard.isShiftPressed;
+    final cyclePane =
+        command &&
+        (event.logicalKey == LogicalKeyboardKey.bracketLeft ||
+            event.logicalKey == LogicalKeyboardKey.bracketRight) &&
+        (!apple || !keyboard.isShiftPressed);
     final cycle =
         keyboard.isControlPressed &&
         !keyboard.isMetaPressed &&
         event.logicalKey == LogicalKeyboardKey.tab;
-    if (!newTab && !closeTab && !cycle && !splitSide && !splitBelow && !zoom) {
+    if (!newTab &&
+        !closeTab &&
+        !cycle &&
+        !splitSide &&
+        !splitBelow &&
+        !zoom &&
+        !cyclePane) {
       return KeyEventResult.ignored;
     }
     if (event is KeyDownEvent) {
@@ -675,6 +686,9 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       if (splitSide) _split(Axis.horizontal);
       if (splitBelow) _split(Axis.vertical);
       if (zoom) _toggleZoom();
+      if (cyclePane) {
+        _cyclePane(event.logicalKey == LogicalKeyboardKey.bracketLeft ? -1 : 1);
+      }
       if (closeTab) {
         unawaited(_closeTab(_tabs.firstWhere((tab) => tab.id == _active)));
       }
@@ -701,14 +715,20 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       return;
     }
     final effective = current.fraction.clamp(divider.lower, divider.upper);
-    final fraction = balance
-        ? 0.5
-        : (effective + delta / divider.usable)
-              .clamp(
-                TerminalPaneLayout.minimumFraction,
-                TerminalPaneLayout.maximumFraction,
-              )
-              .toDouble();
+    var fraction = 0.5;
+    if (!balance) {
+      fraction = (effective + delta / divider.usable)
+          .clamp(
+            TerminalPaneLayout.minimumFraction,
+            TerminalPaneLayout.maximumFraction,
+          )
+          .clamp(divider.lower, divider.upper)
+          .toDouble();
+      // A window constraint may hide the saved ratio. Keep that ratio when a
+      // drag cannot move the divider, so widening restores the user's layout.
+      if (fraction == effective) return;
+    }
+    if (fraction == current.fraction) return;
     setState(() => _layout = _layout.withSplitFraction(divider.path, fraction));
   }
 
@@ -771,9 +791,9 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                 label: context.terminalArrangementTr('Resize split'),
                 value: '${(divider.fraction * 100).round()}%',
                 increasedValue:
-                    '${((divider.fraction + 0.05).clamp(divider.lower, divider.upper) * 100).round()}%',
+                    '${(divider.adjustedFraction(0.05) * 100).round()}%',
                 decreasedValue:
-                    '${((divider.fraction - 0.05).clamp(divider.lower, divider.upper) * 100).round()}%',
+                    '${(divider.adjustedFraction(-0.05) * 100).round()}%',
                 onIncrease: () =>
                     _resizePaneSplit(divider, divider.usable * 0.05),
                 onDecrease: () =>
@@ -1169,7 +1189,9 @@ class _PaneGeometry {
         1 - (horizontal ? secondMinimum.width : secondMinimum.height) / usable;
     // Minimum pane sizes can temporarily clamp a saved proportion. Keep the
     // saved value so widening the workspace restores the user's original ratio.
-    final fraction = split.fraction.clamp(lower, math.max(lower, upper)).toDouble();
+    final fraction = split.fraction
+        .clamp(lower, math.max(lower, upper))
+        .toDouble();
     final firstExtent = usable * fraction;
     final secondExtent = usable - firstExtent;
     final first = horizontal
@@ -1220,4 +1242,11 @@ class _PaneDivider {
   final double upper;
   final double fraction;
   bool get horizontal => split.axis == TerminalSplitAxis.horizontal;
+  double adjustedFraction(double step) => (fraction + step)
+      .clamp(
+        TerminalPaneLayout.minimumFraction,
+        TerminalPaneLayout.maximumFraction,
+      )
+      .clamp(lower, upper)
+      .toDouble();
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/ssh_config_import_strings.dart';
 import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_strings.dart';
 import '../models/ssh_terminal_config.dart';
 import '../models/ssh_terminal_profile.dart';
 import '../services/ssh_terminal_profiles.dart';
+import 'ssh_config_import_dialog.dart';
 
 class SshTerminalProfilesDialog extends StatefulWidget {
   const SshTerminalProfilesDialog({super.key, required this.store});
@@ -41,6 +43,26 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
     }
   }
 
+  Future<void> _importConfig() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final saved = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => SshConfigImportDialog(store: widget.store),
+      );
+      if (mounted && saved == true) {
+        setState(() {
+          _profiles = widget.store.load();
+          _error = null;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: Text(context.terminalControlsTr('Saved SSH profiles')),
@@ -56,6 +78,15 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
                 'Connection settings are saved without passwords, private keys or passphrases.',
               ),
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const ValueKey('ssh-profiles-import-config'),
+                onPressed: _busy ? null : _importConfig,
+                icon: const Icon(Icons.file_download_outlined),
+                label: Text(context.sshConfigImportTr('Import OpenSSH config')),
+              ),
             ),
             if (_error != null)
               Padding(
@@ -104,7 +135,7 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
     ),
     actions: [
       TextButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: _busy ? null : () => Navigator.pop(context),
         child: Text(context.terminalTr('Cancel')),
       ),
     ],

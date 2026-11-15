@@ -3,6 +3,61 @@
 Open a Word document with F4, then choose **Insert → Zotero…** or the **Zotero**
 button in the Insert ribbon's References group.
 
+## Use Zotero's picker and format the whole document
+
+In a native Linux, Windows or macOS build, open Zotero on the same computer and
+choose **Document → Zotero desktop citation tools**. No online key or catalog
+connection is needed for these controls:
+
+| Control | Use |
+| --- | --- |
+| **Citation in Zotero…** | Insert using Zotero's native source picker and locator controls |
+| **Document style…** | Choose the document's installed CSL style, language and supported note placement in Zotero |
+| **Refresh all with Zotero** | Reprocess the complete supported citation sequence and bibliography together |
+| **Bibliography in Zotero…** | Add or edit the document bibliography through Zotero |
+| Citation menu → **Edit in Zotero…** | Edit that existing citation in the native picker |
+| Library selection → **Insert with Zotero…** | Seed the native picker with linked sources selected in CrispCloud |
+
+Choose **Document style…** before inserting selected catalog sources, so the
+seed uses the correct inline, footnote or endnote placement. For a new document,
+**Citation in Zotero…** can ask for preferences as part of its first insertion.
+If Zotero changes the note placement while opening a catalog seed, the result
+is discarded and you are asked to select the style before retrying.
+
+For German **Ebd.**, choose a German locale and a style that actually uses
+*ibid.*; then use **Refresh all with Zotero**. Zotero controls repeated-source
+logic, locators and punctuation. The checked real-processor example
+`chicago-notes-bibliography-subsequent-ibid` with `de-DE` produces `Ebd.` for
+the same source/page and `Ebd., 34.` for a changed page. The engine also uses
+real-processor fixtures for numeric renumbering and author-year disambiguation.
+Other styles can produce a different short form or avoid *ibid.*.
+
+Document preferences are stored as native `ZOTERO_PREF_*` custom properties and
+survive save/reopen. **Preview / export style ID** and locale belong to the
+older individual-preview workflow; they do not change the native document style.
+
+All changes are staged until the native operation succeeds. A reported desktop
+error discards the staging even if Zotero subsequently sends its completion
+message. The document, revision, caret and selection must still match. Applying
+the result creates one undo step, including preferences, note changes and
+bibliography updates. Undo restores the original selection.
+
+Footnotes and endnotes participate in reading order, with ordinary notes counted
+too. Conversion between inline, footnote and endnote is supported for a note
+containing only its citation and optional whitespace/reference marker.
+Explanation-bearing notes, multiple citations in one note or extra structural
+fields refuse conversion. Supported citations in those notes can still refresh.
+Quds currently displays stored note IDs in its preview, so displayed labels can
+differ from the sequence after insertion/conversion. CSL note indices use body
+order, and DOCX retains automatic note references; verify displayed numbering
+in the target word processor.
+
+Zotero may open its native window behind CrispCloud. Finish or cancel that
+window to let a pending operation return. **Cancel operation** requests
+cooperative cancellation; it does not abandon an unanswered desktop POST and
+start another. A lost connection may require restarting Zotero. Native dialogs
+can wait up to ten minutes. Requests are never automatically retried.
+
 ## Connect an online library and cite
 
 1. Create a dedicated read-only API key at
@@ -19,7 +74,7 @@ button in the Insert ribbon's References group.
    field to text. All document changes participate in undo/redo and save
    revisions.
 
-Set the style ID and locale in Document (defaults: `apa` and `en-US`) before
+Set the preview/export style ID and locale in Document (defaults: `apa` and `en-US`) before
 requesting a bibliography or individual preview. Expand a source's title in the
 citation composer to edit its locator and affixes.
 
@@ -81,8 +136,8 @@ persistent URI, use the basic bibliography or **Document → Copy embedded CSL
 JSON**. A local link cannot be resolved by the online API; connect the matching
 Zotero desktop library instead.
 
-This option is available in native desktop builds. It is not the native Zotero
-citation picker or HTTP citing adapter. See the official
+This catalog connection is available in native desktop builds. Native citation
+commands use the separate HTTP Citing Protocol described above. See the official
 [local API setup](https://www.zotero.org/support/dev/web_api/v3/local_api).
 
 ## Credentials and networking
@@ -95,10 +150,13 @@ The in-memory connection is cleared when the Office editor closes.
 
 Online requests reuse CrispCloud's selected proxy and TLS policy with HTTPS and
 API-key headers. Desktop requests use a separate direct client with strictly
-allowed headers and no credentials. Both refuse redirects, have a 20-second
-timeout and 8 MB response limit, and are closed when the editor closes. Errors do not include API keys,
+allowed headers and no credentials. Catalog requests refuse redirects, have a
+20-second timeout and 8 MB response limit, and are closed when the editor closes.
+Native citing allows POST only to the two fixed localhost connector routes,
+with bounded JSON payloads and a longer native-dialog timeout. Errors do not include API keys,
 response bodies or diagnostic dumps. Keys never enter document metadata or
-reference exports. Zotero library access is read-only.
+reference exports. Catalog access is read-only; native citation commands let
+Zotero process the document through its own integration service.
 
 ## Formatted bibliographies and citation preservation
 
@@ -150,12 +208,25 @@ custom-style caches are left alone. Bibliographies with imported nonempty
 to preserve those choices. Update those choices in Zotero before regenerating
 the bibliography here.
 
-Full CSL numbering/disambiguation/ibid, the native Zotero desktop picker and
-HTTP citing adapter, ODT active-citation transfer, and native Word/Zotero refresh
-acceptance remain outside this increment. The native app talks directly to the
-local API; the desktop option is not exposed through a server-side proxy.
-New inline citations retain their existing atomic plain-result workflow;
-mixed-format inline citation generation is not added by this increment.
+The desktop adapter now delegates complete CSL processing to Zotero, including
+style-dependent numbering, disambiguation and *ibid.*. Native processing marks
+its citations separately so **Refresh basic citations** cannot overwrite them.
+Uniform inline character formatting, including superscript, remains one
+protected field. Mixed inline styling and unsupported bibliography layout are
+simplified only after a review explains the change. Rich bibliography runs
+retain their supported character formatting.
+
+Document-wide native processing refuses active Track changes, any unresolved
+revision, protected documents, uneditable Zotero fields and citations in
+unsupported stories such as headers, footers, comments and text boxes. This
+keeps Zotero from processing a silently incomplete citation sequence.
+
+ODT active-citation transfer, faithful small caps/paragraph layout, general note
+preview numbering, full native builds and live native Word/Zotero refresh
+acceptance remain outside the executed qualification. Protocol, controller and
+UI tests use deterministic transports; real CSL fixtures exercise Zotero's
+pinned processor, but do not constitute a live desktop session. The native app
+talks directly to localhost and never through a server-side proxy.
 
 ## Shared source and local checks
 
@@ -164,14 +235,14 @@ The implementation is maintained in
 `tool/office_fidelity_manifest.json` records the exact immutable Quds source and
 hashes of managed files. Its standalone legacy DOC parser pin is unchanged.
 
-The current local-identity continuation audited all live branches and recent
-PRs, integrated CrispCloud main through #152 and Quds main through #42, and
-included the newer terminal-workspace #140 changes. Work is saved incrementally
+The native-citing continuation audited all 45 live branches and all 42 Quds /
+50 recent CrispCloud PR heads first. Main through Quds #42 and CrispCloud #152,
+plus terminal #140, was already integrated. Five retained Quds heads were exact
+tree equivalents of integrated squash changes. Work is saved incrementally
 to remote branches using `[skip ci]`. No GitHub Actions queue was awaited.
 
-Local execution is available for this continuation. The frozen preceding
-Quds head passed 171 focused engine/editor tests, including all 39 regressions
-previously left unexecuted. This increment adds separate rich-formatting,
-DOCX preservation and UI regression coverage. See
+Local execution uses official Flutter/Dart and genuine locked dependency
+graphs. This increment adds protocol, native preference, document adapter,
+controller, UI and actual host-transport regression coverage. See
 [zotero-validation.md](zotero-validation.md) for exact tested source identities,
 current results, reproducible commands and the remaining native acceptance limits.

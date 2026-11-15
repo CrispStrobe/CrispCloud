@@ -11,7 +11,8 @@ extension SshMultiplexerContextStrings on BuildContext {
 
   String sshMultiplexerDiscoveryError(SshMultiplexerDiscoveryException error) {
     final template = error.message.replaceAll(error.kind.name, '{tool}');
-    final message = sshMultiplexerTr(template).replaceAll('{tool}', error.kind.name);
+    final message = sshMultiplexerTr(template)
+        .replaceAll('{tool}', error.kind.name);
     final detail = error.displayDetail;
     return detail == null || detail.isEmpty ? message : '$message\n$detail';
   }

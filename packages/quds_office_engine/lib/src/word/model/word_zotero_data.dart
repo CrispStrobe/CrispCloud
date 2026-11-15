@@ -31,7 +31,7 @@ abstract final class WordZoteroDocumentData {
     final package = document.package;
     if (package == null) return '';
     final found = _find(package);
-    return found == null ? '' : _readProperties(found.root);
+    return found == null ? '' : toNative(_readProperties(found.root));
   }
 
   /// Adapts the storage preference for Zotero's HTTP integration. Other XML or
@@ -40,6 +40,49 @@ abstract final class WordZoteroDocumentData {
 
   /// Adapts the storage preference back to Word fields before DOCX storage.
   static String toNative(String data) => _convert(data, 'Field');
+
+  /// Note placement for a catalog selection seeded into the native picker.
+  /// Zotero treats that seed as an existing field, so its document style must
+  /// already be chosen before the seed is created.
+  static int citationNoteType(String data) {
+    final native = toNative(data);
+    Object? styleId;
+    Object? noteType;
+    if (native.trim().startsWith('{')) {
+      final json = jsonDecode(native) as Map<String, dynamic>;
+      final style = json['style'];
+      if (style is Map<String, dynamic>) styleId = style['styleID'];
+      noteType = (json['prefs'] as Map<String, dynamic>)['noteType'];
+    } else if (native.isNotEmpty) {
+      final root = _parseXml(native);
+      final styles = root.childrenNamed('style', namespaceUri: '');
+      if (styles.length == 1) styleId = styles.single.getAttribute('id');
+      final prefs = root.childrenNamed('prefs', namespaceUri: '').single;
+      final notes = prefs
+          .childrenNamed('pref', namespaceUri: '')
+          .where((pref) => pref.getAttribute('name') == 'noteType');
+      // Zotero's native XML writer omits falsy preferences; its reader treats
+      // absent noteType as inline (0).
+      if (notes.isEmpty) {
+        noteType = 0;
+      } else if (notes.length == 1) {
+        final value = notes.single.getAttribute('value');
+        if (value == '0' || value == '1' || value == '2') {
+          noteType = int.parse(value!);
+        }
+      }
+    }
+    if (styleId is! String ||
+        styleId.trim().isEmpty ||
+        noteType is! int ||
+        noteType < 0 ||
+        noteType > 2) {
+      throw const FormatException(
+        'Choose Document → Document style… in Zotero before inserting selected catalog sources.',
+      );
+    }
+    return noteType;
+  }
 
   /// Validates and prepares preference changes without mutating the package.
   /// The serializer invokes the returned closure only after its other writes.
@@ -96,19 +139,26 @@ abstract final class WordZoteroDocumentData {
             namespaceUri: _valueNamespace,
           )
           ..setAttribute('vt', _valueNamespace, prefix: 'xmlns')
+          ..setAttribute(
+            'space',
+            'preserve',
+            prefix: 'xml',
+            namespaceUri: OfficeNamespaces.xml,
+          )
           ..text = chunk,
       );
       root.addChild(property);
     }
     final uri = found?.part.uri ?? _allocateUri(package);
     final xml = XmlDocument(root: root).toXmlString();
-    if (xml.length > _maxPartLength) {
+    final payload = utf8.encode(xml);
+    if (payload.length > _maxPartLength) {
       throw const FormatException('Zotero custom properties exceed the limit');
     }
     return () {
       final part = package.getPart(uri);
       if (part == null) {
-        package.createPart(uri, _contentType, utf8.encode(xml));
+        package.createPart(uri, _contentType, payload);
       } else {
         part
           ..contentType = _contentType
@@ -135,6 +185,7 @@ abstract final class WordZoteroDocumentData {
     if (trimmed.startsWith('{')) {
       final Object? decoded;
       try {
+        _ZoteroJsonShape(data).validate();
         decoded = jsonDecode(data);
       } on FormatException {
         throw const FormatException('Malformed Zotero document preferences');
@@ -147,7 +198,7 @@ abstract final class WordZoteroDocumentData {
       _checkFieldType(prefs['fieldType']);
       if (prefs['fieldType'] == fieldType) return data;
       prefs['fieldType'] = fieldType;
-      return jsonEncode(decoded);
+      return _bounded(jsonEncode(decoded));
     }
     final root = _parseXml(data);
     if (root.localName != 'data' || root.namespaceUri.isNotEmpty) {
@@ -157,10 +208,20 @@ abstract final class WordZoteroDocumentData {
     if (preferences.length != 1) {
       throw const FormatException('Missing or duplicate Zotero preferences');
     }
-    final fields = preferences.single
-        .childrenNamed('pref', namespaceUri: '')
-        .where((node) => node.getAttribute('name') == 'fieldType')
-        .toList();
+    final names = <String>{};
+    final fields = <XmlElement>[];
+    for (final pref in preferences.single.childrenNamed(
+      'pref',
+      namespaceUri: '',
+    )) {
+      final name = pref.getAttribute('name');
+      if (name == null || name.isEmpty || !names.add(name)) {
+        throw const FormatException(
+          'Missing or duplicate Zotero preference name',
+        );
+      }
+      if (name == 'fieldType') fields.add(pref);
+    }
     if (fields.length != 1) {
       throw const FormatException('Missing or duplicate Zotero field type');
     }
@@ -168,7 +229,16 @@ abstract final class WordZoteroDocumentData {
     _checkFieldType(value);
     if (value == fieldType) return data;
     fields.single.setAttribute('value', fieldType);
-    return XmlDocument(root: root).toXmlString(declaration: false);
+    return _bounded(XmlDocument(root: root).toXmlString(declaration: false));
+  }
+
+  static String _bounded(String data) {
+    if (data.length > maxDataLength) {
+      throw const FormatException(
+        'Zotero document preferences exceed the limit',
+      );
+    }
+    return data;
   }
 
   static void _checkFieldType(Object? fieldType) {
@@ -261,7 +331,9 @@ abstract final class WordZoteroDocumentData {
       }
       result.write(value);
     }
-    return toNative(result.toString());
+    final data = result.toString();
+    toNative(data);
+    return data;
   }
 
   static Iterable<String> _chunks(String data) sync* {
@@ -286,10 +358,13 @@ abstract final class WordZoteroDocumentData {
   }
 
   static XmlElement _parseXml(String data) {
+    _checkXmlCharacters(data);
     final reader = XmlPullReader(data);
     var depth = 0;
     var roots = 0;
     var nodes = 0;
+    final stack = <XmlElement>[];
+    XmlElement? root;
     try {
       while (reader.next()) {
         switch (reader.eventType) {
@@ -301,15 +376,36 @@ abstract final class WordZoteroDocumentData {
               );
             }
             final attributes = <String>{};
+            final element = XmlElement(
+              localName: reader.localName,
+              prefix: reader.prefix,
+              namespaceUri: reader.namespaceUri,
+            );
             for (var i = 0; i < reader.attributeCount; i++) {
               if (!attributes.add(reader.attributeQualifiedName(i))) {
                 throw const FormatException(
                   'Duplicate preference XML attribute',
                 );
               }
+              _checkXmlCharacters(reader.attributeValue(i));
+              element.attributes.add(
+                XmlAttribute(
+                  localName: reader.attributeLocalName(i),
+                  value: reader.attributeValue(i),
+                  prefix: reader.attributePrefix(i),
+                  namespaceUri: reader.attributeNamespace(i),
+                ),
+              );
             }
+            if (stack.isEmpty) {
+              root = element;
+            } else {
+              stack.last.addChild(element);
+            }
+            stack.add(element);
           case XmlEventType.endElement:
             depth--;
+            if (stack.isNotEmpty) stack.removeLast();
           case XmlEventType.dtd:
           case XmlEventType.processingInstruction:
             throw const FormatException(
@@ -317,11 +413,21 @@ abstract final class WordZoteroDocumentData {
             );
           case XmlEventType.characters:
           case XmlEventType.cdata:
+            _checkXmlCharacters(reader.text);
             if (depth == 0 && reader.text.trim().isNotEmpty) {
               throw const FormatException(
                 'Content outside preference XML root',
               );
             }
+            if (stack.isNotEmpty) {
+              stack.last.addChild(
+                reader.eventType == XmlEventType.cdata
+                    ? XmlCdata(reader.text)
+                    : XmlText(reader.text),
+              );
+            }
+          case XmlEventType.comment:
+            if (stack.isNotEmpty) stack.last.addChild(XmlComment(reader.text));
           default:
             break;
         }
@@ -329,13 +435,37 @@ abstract final class WordZoteroDocumentData {
       if (depth != 0 || roots != 1) {
         throw const FormatException('Incomplete Zotero preference XML');
       }
-      final root = XmlDocument.parse(data).root;
       if (root == null) {
         throw const FormatException('Missing Zotero preference XML root');
       }
       return root;
     } on XmlParseException {
       throw const FormatException('Malformed Zotero preference XML');
+    } on RangeError {
+      throw const FormatException('Invalid Zotero preference XML character');
+    }
+  }
+
+  static void _checkXmlCharacters(String text) {
+    for (var index = 0; index < text.length; index++) {
+      final unit = text.codeUnitAt(index);
+      if (unit == 9 || unit == 10 || unit == 13) continue;
+      if (unit < 0x20 || unit == 0xfffe || unit == 0xffff) {
+        throw const FormatException('Invalid Zotero preference XML character');
+      }
+      if (unit >= 0xd800 && unit <= 0xdbff) {
+        if (++index >= text.length) {
+          throw const FormatException('Incomplete Zotero preference character');
+        }
+        final low = text.codeUnitAt(index);
+        if (low < 0xdc00 || low > 0xdfff) {
+          throw const FormatException(
+            'Invalid Zotero preference character pair',
+          );
+        }
+      } else if (unit >= 0xdc00 && unit <= 0xdfff) {
+        throw const FormatException('Invalid Zotero preference character pair');
+      }
     }
   }
 
@@ -358,5 +488,103 @@ abstract final class WordZoteroDocumentData {
             ? bytes[index] | (bytes[index + 1] << 8)
             : (bytes[index] << 8) | bytes[index + 1],
     ]);
+  }
+}
+
+/// Checks duplicate object keys and nesting before the ordinary JSON decoder
+/// constructs data. Duplicate preferences cannot silently become last-wins.
+final class _ZoteroJsonShape {
+  _ZoteroJsonShape(this.source);
+
+  final String source;
+  var at = 0;
+
+  void validate() {
+    _value(0);
+    _space();
+    if (at != source.length) {
+      throw const FormatException('Trailing Zotero preference JSON');
+    }
+  }
+
+  void _value(int depth) {
+    if (depth > 64) {
+      throw const FormatException('Excessive Zotero preference nesting');
+    }
+    _space();
+    if (at == source.length) {
+      throw const FormatException('Incomplete Zotero preference JSON');
+    }
+    final unit = source.codeUnitAt(at);
+    if (unit == 0x7b || unit == 0x5b) {
+      final object = unit == 0x7b;
+      final end = object ? 0x7d : 0x5d;
+      final names = <String>{};
+      at++;
+      _space();
+      if (_take(end)) return;
+      while (true) {
+        _space();
+        if (object) {
+          final name = _string();
+          if (!names.add(name)) {
+            throw const FormatException('Duplicate Zotero preference JSON key');
+          }
+          _space();
+          if (!_take(0x3a)) {
+            throw const FormatException('Missing Zotero preference JSON colon');
+          }
+        }
+        _value(depth + 1);
+        _space();
+        if (_take(end)) return;
+        if (!_take(0x2c)) {
+          throw const FormatException(
+            'Missing Zotero preference JSON delimiter',
+          );
+        }
+      }
+    }
+    if (unit == 0x22) {
+      _string();
+      return;
+    }
+    final start = at;
+    while (at < source.length &&
+        ![0x20, 9, 10, 13, 0x2c, 0x5d, 0x7d].contains(source.codeUnitAt(at))) {
+      at++;
+    }
+    if (at == start) {
+      throw const FormatException('Invalid Zotero preference JSON value');
+    }
+    jsonDecode(source.substring(start, at));
+  }
+
+  String _string() {
+    final start = at;
+    if (!_take(0x22)) {
+      throw const FormatException('Invalid Zotero preference JSON key');
+    }
+    while (at < source.length) {
+      final unit = source.codeUnitAt(at++);
+      if (unit == 0x22) {
+        return jsonDecode(source.substring(start, at)) as String;
+      }
+      if (unit == 0x5c) at++;
+    }
+    throw const FormatException('Incomplete Zotero preference JSON string');
+  }
+
+  bool _take(int unit) {
+    if (at >= source.length || source.codeUnitAt(at) != unit) return false;
+    at++;
+    return true;
+  }
+
+  void _space() {
+    while (at < source.length &&
+        [0x20, 9, 10, 13].contains(source.codeUnitAt(at))) {
+      at++;
+    }
   }
 }

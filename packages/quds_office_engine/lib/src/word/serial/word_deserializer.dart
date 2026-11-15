@@ -190,7 +190,6 @@ class WordDeserializer {
   WmlDocument readBytes(Uint8List bytes, {String? password}) =>
       read(OpcPackage.openBytes(bytes, password: password));
 
-
   /// Body-level controls may span section boundaries. A trailing break is
   /// lifted after the control; multiple breaks split the control into one
   /// segment per section, keeping its metadata and assigning fresh IDs to the
@@ -225,12 +224,7 @@ class WordDeserializer {
       final segment = segments[i];
       if (i > 0) _retagSdt(segment, _nextSplitControlId++);
       section.blocks.addAll(
-        _readSdtElement(
-          segment,
-          package,
-          docUri,
-          allowSectionBreak: true,
-        ),
+        _readSdtElement(segment, package, docUri, allowSectionBreak: true),
       );
       section = _flushParagraphSectPr(document, section);
     }

@@ -16,7 +16,11 @@ enum SshMultiplexerDiscoveryFailure {
 }
 
 class SshMultiplexerDiscoveryException implements Exception {
-  const SshMultiplexerDiscoveryException(this.kind, this.failure, [this.detail]);
+  const SshMultiplexerDiscoveryException(
+    this.kind,
+    this.failure, [
+    this.detail,
+  ]);
 
   final SshMultiplexer kind;
   final SshMultiplexerDiscoveryFailure failure;
@@ -35,7 +39,8 @@ class SshMultiplexerDiscoveryException implements Exception {
       'The server returned an invalid ${kind.name} session listing.',
   };
 
-  String? get displayDetail => detail == null ? null : _displayText(detail!, 512);
+  String? get displayDetail =>
+      detail == null ? null : _displayText(detail!, 512);
 
   @override
   String toString() => displayDetail == null || displayDetail!.isEmpty
@@ -79,7 +84,10 @@ class SshMultiplexerSession {
 
   ScreenSessionOptions? get screenOptions =>
       kind == SshMultiplexer.screen && selectable
-      ? ScreenSessionOptions(sessionName: target, mode: ScreenSessionMode.attach)
+      ? ScreenSessionOptions(
+          sessionName: target,
+          mode: ScreenSessionMode.attach,
+        )
       : null;
 }
 
@@ -147,9 +155,8 @@ List<SshMultiplexerSession> parseSshMultiplexerSessions(
     if (line.trim().isEmpty) continue;
     late final SshMultiplexerSession entry;
     if (kind == SshMultiplexer.tmux) {
-      final match = RegExp(
-        r'^(.*)\t([0-9]{1,9})\t([0-9]{1,9})$',
-      ).firstMatch(line);
+      final match = RegExp(r'^(.*)\t([0-9]{1,9})\t([0-9]{1,9})$')
+          .firstMatch(line);
       if (match == null || match[1]!.isEmpty) {
         fail(SshMultiplexerDiscoveryFailure.invalidListing);
       }
@@ -206,8 +213,10 @@ List<SshMultiplexerSession> parseSshMultiplexerSessions(
         name: target.substring(dot + 1),
         target: target,
         state: switch (status[1]) {
-          'Attached' || 'Multi, attached' => SshMultiplexerSessionState.attached,
-          'Detached' || 'Multi, detached' => SshMultiplexerSessionState.detached,
+          'Attached' ||
+          'Multi, attached' => SshMultiplexerSessionState.attached,
+          'Detached' ||
+          'Multi, detached' => SshMultiplexerSessionState.detached,
           _ => SshMultiplexerSessionState.unavailable,
         },
       );

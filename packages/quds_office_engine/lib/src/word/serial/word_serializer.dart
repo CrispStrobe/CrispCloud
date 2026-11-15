@@ -255,12 +255,7 @@ class WordSerializer {
             block is WmlContentControlBlock &&
             block.blocks.isNotEmpty &&
             block.blocks.last is WmlParagraph) {
-          _writeBlock(
-            w,
-            block,
-            imageIds,
-            trailingSectionBreak: item.section,
-          );
+          _writeBlock(w, block, imageIds, trailingSectionBreak: item.section);
         } else {
           _writeBlock(w, block, imageIds);
         }
@@ -304,11 +299,7 @@ class WordSerializer {
           if (trailingSectionBreak != null &&
               i == block.blocks.length - 1 &&
               child is WmlParagraph) {
-            _writeParagraph(
-              w,
-              child,
-              sectionBreak: trailingSectionBreak,
-            );
+            _writeParagraph(w, child, sectionBreak: trailingSectionBreak);
           } else {
             _writeBlock(w, child, imageIds);
           }

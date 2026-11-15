@@ -1,4 +1,7 @@
 tags:
+  live-ssh:
+    # The suite itself skips unless the disposable loopback runner supplies it.
+    timeout: 2m
   benchmark:
     skip: "Benchmarks are load-sensitive. Run with: flutter test --tags benchmark --run-skipped"
   live:

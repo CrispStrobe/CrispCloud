@@ -408,6 +408,9 @@ jobs:
           test/terminal_arrangements_dialog_test.dart
           test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
           test/terminal_user_input_test.dart
+          test/terminal_pane_layout_test.dart
+          test/terminal_key_bindings_test.dart test/terminal_key_bindings_widget_test.dart
+          test/ssh_config_import_test.dart test/ssh_config_import_dialog_test.dart
           test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart
           test/ssh_multiplexer_session_test.dart test/ssh_multiplexer_discovery_test.dart
           test/ssh_multiplexer_sessions_dialog_test.dart
@@ -654,6 +657,9 @@ jobs:
           test/terminal_arrangements_dialog_test.dart
           test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
           test/terminal_user_input_test.dart
+          test/terminal_pane_layout_test.dart
+          test/terminal_key_bindings_test.dart test/terminal_key_bindings_widget_test.dart
+          test/ssh_config_import_test.dart test/ssh_config_import_dialog_test.dart
           test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart
           test/ssh_multiplexer_session_test.dart test/ssh_multiplexer_discovery_test.dart
           test/ssh_multiplexer_sessions_dialog_test.dart
@@ -770,6 +776,9 @@ jobs:
           test/terminal_arrangements_dialog_test.dart
           test/terminal_shell_integration_test.dart test/terminal_shell_directory_labels_test.dart
           test/terminal_user_input_test.dart
+          test/terminal_pane_layout_test.dart
+          test/terminal_key_bindings_test.dart test/terminal_key_bindings_widget_test.dart
+          test/ssh_config_import_test.dart test/ssh_config_import_dialog_test.dart
           test/terminal_broadcast_test.dart test/terminal_broadcast_dialog_test.dart
           test/ssh_multiplexer_session_test.dart test/ssh_multiplexer_discovery_test.dart
           test/ssh_multiplexer_sessions_dialog_test.dart

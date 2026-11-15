@@ -47,7 +47,8 @@ void main() {
               onPressed: () async {
                 selected = await showDialog<List<TerminalBroadcastTarget>>(
                   context: context,
-                  builder: (_) => TerminalBroadcastDialog(candidates: candidates),
+                  builder: (_) =>
+                      TerminalBroadcastDialog(candidates: candidates),
                 );
               },
               child: const Text('Choose group'),
@@ -71,47 +72,63 @@ void main() {
     find.byKey(const ValueKey('terminal-start-broadcast')),
   );
 
-  testWidgets('requires explicit selection of two exact connected destinations', (
-    tester,
-  ) async {
-    await mount(tester);
-    expect(start(tester).onPressed, isNull);
-    expect(find.text('Typed keys and pasted text will be sent to every selected terminal.'), findsOneWidget);
-    await select(tester, 0);
-    expect(start(tester).onPressed, isNull);
-    await select(tester, 1);
-    expect(start(tester).onPressed, isNotNull);
-    await tester.tap(find.byKey(const ValueKey('terminal-start-broadcast')));
-    await tester.pumpAndSettle();
-    expect(selected!.map((target) => target.id), [0, 1]);
-    expect(selected!.first.connectionIdentity, same(candidates.first.connectionIdentity));
-    expect(sessions.every((session) => session.onUserInput == null), isTrue);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'requires explicit selection of two exact connected destinations',
+    (tester) async {
+      await mount(tester);
+      expect(start(tester).onPressed, isNull);
+      expect(
+        find.text(
+          'Typed keys and pasted text will be sent to every selected terminal.',
+        ),
+        findsOneWidget,
+      );
+      await select(tester, 0);
+      expect(start(tester).onPressed, isNull);
+      await select(tester, 1);
+      expect(start(tester).onPressed, isNotNull);
+      await tester.tap(find.byKey(const ValueKey('terminal-start-broadcast')));
+      await tester.pumpAndSettle();
+      expect(selected!.map((target) => target.id), [0, 1]);
+      expect(
+        selected!.first.connectionIdentity,
+        same(candidates.first.connectionIdentity),
+      );
+      expect(sessions.every((session) => session.onUserInput == null), isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('a changed connection is deselected and cannot be silently replaced', (
-    tester,
-  ) async {
-    await mount(tester);
-    await select(tester, 0);
-    await select(tester, 1);
-    await sessions[1].disconnect();
-    await tester.pumpAndSettle();
-    expect(start(tester).onPressed, isNull);
-    expect(find.text('Connections changed. Choose the broadcast group again.'), findsOneWidget);
-    await sessions[1].connect((_, __) async => _Connection(), kind: TerminalSessionKind.ssh);
-    await tester.pumpAndSettle();
-    final changed = tester.widget<CheckboxListTile>(
-      find.byKey(const ValueKey('terminal-broadcast-target-1')),
-    );
-    expect(changed.value, isFalse);
-    expect(changed.onChanged, isNull);
-    await select(tester, 2);
-    await tester.tap(find.byKey(const ValueKey('terminal-start-broadcast')));
-    await tester.pumpAndSettle();
-    expect(selected!.map((target) => target.id), [0, 2]);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'a changed connection is deselected and cannot be silently replaced',
+    (tester) async {
+      await mount(tester);
+      await select(tester, 0);
+      await select(tester, 1);
+      await sessions[1].disconnect();
+      await tester.pumpAndSettle();
+      expect(start(tester).onPressed, isNull);
+      expect(
+        find.text('Connections changed. Choose the broadcast group again.'),
+        findsOneWidget,
+      );
+      await sessions[1].connect(
+        (_, __) async => _Connection(),
+        kind: TerminalSessionKind.ssh,
+      );
+      await tester.pumpAndSettle();
+      final changed = tester.widget<CheckboxListTile>(
+        find.byKey(const ValueKey('terminal-broadcast-target-1')),
+      );
+      expect(changed.value, isFalse);
+      expect(changed.onChanged, isNull);
+      await select(tester, 2);
+      await tester.tap(find.byKey(const ValueKey('terminal-start-broadcast')));
+      await tester.pumpAndSettle();
+      expect(selected!.map((target) => target.id), [0, 2]);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('cancel leaves connections and existing observers intact', (
     tester,

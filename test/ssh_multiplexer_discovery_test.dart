@@ -10,29 +10,42 @@ import 'package:flutter_test/flutter_test.dart';
 
 Matcher discoveryFails(SshMultiplexerDiscoveryFailure reason) => throwsA(
   isA<SshMultiplexerDiscoveryException>().having(
-    (error) => error.failure, 'failure', reason,
+    (error) => error.failure,
+    'failure',
+    reason,
   ),
 );
 
 void main() {
-  test('uses only the fixed no-PTY command and closes a successful channel', () async {
-    final fixture = await _fixture();
-    final listing = fixture.list();
-    await fixture.client.channel.finish('work\t2\t1\n');
-    final rows = await listing;
-    expect(rows.single.target, 'work');
-    expect(fixture.client.commands, [sshMultiplexerListCommand(SshMultiplexer.tmux)]);
-    expect(fixture.client.ptys, [null]);
-    expect(fixture.client.channel.closed, isTrue);
-    expect(fixture.client.isClosed, isFalse);
-  });
+  test(
+    'uses only the fixed no-PTY command and closes a successful channel',
+    () async {
+      final fixture = await _fixture();
+      final listing = fixture.list();
+      await fixture.client.channel.finish('work\t2\t1\n');
+      final rows = await listing;
+      expect(rows.single.target, 'work');
+      expect(fixture.client.commands, [
+        sshMultiplexerListCommand(SshMultiplexer.tmux),
+      ]);
+      expect(fixture.client.ptys, [null]);
+      expect(fixture.client.channel.closed, isTrue);
+      expect(fixture.client.isClosed, isFalse);
+    },
+  );
 
   test('waits for a late exit status after both streams reach EOF', () async {
     final fixture = await _fixture();
     var completed = false;
     final listing = fixture.list();
-    unawaited(listing.then<void>((_) { completed = true; }));
-    fixture.client.channel.output.add(Uint8List.fromList(utf8.encode('work\t1\t0\n')));
+    unawaited(
+      listing.then<void>((_) {
+        completed = true;
+      }),
+    );
+    fixture.client.channel.output.add(
+      Uint8List.fromList(utf8.encode('work\t1\t0\n')),
+    );
     await fixture.client.channel.endOutput();
     await _flush();
     expect(completed, isFalse);
@@ -46,7 +59,9 @@ void main() {
     final listing = fixture.list();
     fixture.client.channel.finishStatus(0);
     await _flush();
-    fixture.client.channel.output.add(Uint8List.fromList(utf8.encode('最後\t1\t0\n')));
+    fixture.client.channel.output.add(
+      Uint8List.fromList(utf8.encode('最後\t1\t0\n')),
+    );
     await fixture.client.channel.endOutput();
     final row = (await listing).single;
     expect(row.name, '最後');
@@ -55,73 +70,104 @@ void main() {
 
   test('stdout and stderr share one byte budget', () async {
     final fixture = await _fixture();
-    final failed = expectLater(fixture.list(),
-        discoveryFails(SshMultiplexerDiscoveryFailure.tooMuchOutput));
-    fixture.client.channel.output.add(Uint8List.fromList(utf8.encode('work\t1\t0\n')));
+    final failed = expectLater(
+      fixture.list(),
+      discoveryFails(SshMultiplexerDiscoveryFailure.tooMuchOutput),
+    );
+    fixture.client.channel.output.add(
+      Uint8List.fromList(utf8.encode('work\t1\t0\n')),
+    );
     fixture.client.channel.errors.add(Uint8List(sshMultiplexerMaxOutputBytes));
     await failed;
     expect(fixture.client.channel.closed, isTrue);
     expect(fixture.client.isClosed, isFalse);
   });
 
-  test('missing tool errors remain errors and still close the channel', () async {
-    final fixture = await _fixture();
-    final failed = expectLater(fixture.list(kind: SshMultiplexer.screen),
-        discoveryFails(SshMultiplexerDiscoveryFailure.missingTool));
-    await fixture.client.channel.finish('', code: 127);
-    await failed;
-    expect(fixture.client.channel.closed, isTrue);
-    expect(fixture.client.commands, [sshMultiplexerListCommand(SshMultiplexer.screen)]);
-  });
+  test(
+    'missing tool errors remain errors and still close the channel',
+    () async {
+      final fixture = await _fixture();
+      final failed = expectLater(
+        fixture.list(kind: SshMultiplexer.screen),
+        discoveryFails(SshMultiplexerDiscoveryFailure.missingTool),
+      );
+      await fixture.client.channel.finish('', code: 127);
+      await failed;
+      expect(fixture.client.channel.closed, isTrue);
+      expect(fixture.client.commands, [
+        sshMultiplexerListCommand(SshMultiplexer.screen),
+      ]);
+    },
+  );
 
-  test('screen discovery uses full IDs without opening an interactive shell', () async {
-    final fixture = await _fixture();
-    final listing = fixture.list(kind: SshMultiplexer.screen);
-    await fixture.client.channel.finish(
-      'There is a screen on:\n\t123.work\t(Detached)\n'
-      '1 Socket in /run/screen/S-alice.\n',
-    );
-    expect((await listing).single.screenOptions!.sessionName, '123.work');
-    expect(fixture.client.ptys.single, isNull);
-  });
+  test(
+    'screen discovery uses full IDs without opening an interactive shell',
+    () async {
+      final fixture = await _fixture();
+      final listing = fixture.list(kind: SshMultiplexer.screen);
+      await fixture.client.channel.finish(
+        'There is a screen on:\n\t123.work\t(Detached)\n'
+        '1 Socket in /run/screen/S-alice.\n',
+      );
+      expect((await listing).single.screenOptions!.sessionName, '123.work');
+      expect(fixture.client.ptys.single, isNull);
+    },
+  );
 
-  test('invalid UTF-8 is rejected instead of changing an attach target', () async {
-    final fixture = await _fixture();
-    final failed = expectLater(fixture.list(),
-        discoveryFails(SshMultiplexerDiscoveryFailure.invalidListing));
-    fixture.client.channel.output.add(Uint8List.fromList([0xff]));
-    fixture.client.channel.finishStatus(0);
-    await fixture.client.channel.endOutput();
-    await failed;
-    expect(fixture.client.channel.closed, isTrue);
-  });
+  test(
+    'invalid UTF-8 is rejected instead of changing an attach target',
+    () async {
+      final fixture = await _fixture();
+      final failed = expectLater(
+        fixture.list(),
+        discoveryFails(SshMultiplexerDiscoveryFailure.invalidListing),
+      );
+      fixture.client.channel.output.add(Uint8List.fromList([0xff]));
+      fixture.client.channel.finishStatus(0);
+      await fixture.client.channel.endOutput();
+      await failed;
+      expect(fixture.client.channel.closed, isTrue);
+    },
+  );
 
-  test('a quiet stale tab cancels without killing the verified connection', () async {
-    final fixture = await _fixture();
-    var current = true;
-    final failed = expectLater(fixture.list(isCurrent: () => current), throwsStateError);
-    await _flush();
-    current = false;
-    await failed;
-    expect(fixture.client.channel.closed, isTrue);
-    expect(fixture.client.isClosed, isFalse);
-  });
+  test(
+    'a quiet stale tab cancels without killing the verified connection',
+    () async {
+      final fixture = await _fixture();
+      var current = true;
+      final failed = expectLater(
+        fixture.list(isCurrent: () => current),
+        throwsStateError,
+      );
+      await _flush();
+      current = false;
+      await failed;
+      expect(fixture.client.channel.closed, isTrue);
+      expect(fixture.client.isClosed, isFalse);
+    },
+  );
 
-  test('a request returning after cancellation closes its late channel', () async {
-    final fixture = await _fixture();
-    final request = Completer<SSHSession>();
-    fixture.client.pendingExecution = request.future;
-    var current = true;
-    final failed = expectLater(fixture.list(isCurrent: () => current), throwsStateError);
-    await _flush();
-    current = false;
-    await failed;
-    final late = _Channel();
-    request.complete(late);
-    await _flush();
-    expect(late.closed, isTrue);
-    expect(fixture.client.isClosed, isFalse);
-  });
+  test(
+    'a request returning after cancellation closes its late channel',
+    () async {
+      final fixture = await _fixture();
+      final request = Completer<SSHSession>();
+      fixture.client.pendingExecution = request.future;
+      var current = true;
+      final failed = expectLater(
+        fixture.list(isCurrent: () => current),
+        throwsStateError,
+      );
+      await _flush();
+      current = false;
+      await failed;
+      final late = _Channel();
+      request.complete(late);
+      await _flush();
+      expect(late.closed, isTrue);
+      expect(fixture.client.isClosed, isFalse);
+    },
+  );
 
   test('disconnecting the connection cancels an in-flight listing', () async {
     final fixture = await _fixture();
@@ -147,34 +193,46 @@ void main() {
     expect(fixture.client.commands, hasLength(2));
   });
 
-  test('transport stream errors fail and release the listing channel', () async {
-    final fixture = await _fixture();
-    final failed = expectLater(fixture.list(),
-        discoveryFails(SshMultiplexerDiscoveryFailure.commandFailed));
-    fixture.client.channel.errors.addError(StateError('remote stream failed'));
-    await failed;
-    expect(fixture.client.channel.closed, isTrue);
-  });
+  test(
+    'transport stream errors fail and release the listing channel',
+    () async {
+      final fixture = await _fixture();
+      final failed = expectLater(
+        fixture.list(),
+        discoveryFails(SshMultiplexerDiscoveryFailure.commandFailed),
+      );
+      fixture.client.channel.errors.addError(
+        StateError('remote stream failed'),
+      );
+      await failed;
+      expect(fixture.client.channel.closed, isTrue);
+    },
+  );
 
-  test('request timeout also owns and closes a later returned channel', () async {
-    final fixture = await _fixture();
-    final request = Completer<SSHSession>();
-    fixture.client.pendingExecution = request.future;
-    await expectLater(
-      fixture.list().timeout(const Duration(seconds: 15)),
-      discoveryFails(SshMultiplexerDiscoveryFailure.timeout),
-    );
-    final late = _Channel();
-    request.complete(late);
-    await _flush();
-    expect(late.closed, isTrue);
-  });
+  test(
+    'request timeout also owns and closes a later returned channel',
+    () async {
+      final fixture = await _fixture();
+      final request = Completer<SSHSession>();
+      fixture.client.pendingExecution = request.future;
+      await expectLater(
+        fixture.list().timeout(const Duration(seconds: 15)),
+        discoveryFails(SshMultiplexerDiscoveryFailure.timeout),
+      );
+      final late = _Channel();
+      request.complete(late);
+      await _flush();
+      expect(late.closed, isTrue);
+    },
+  );
 
   test('synchronous exec failures use the same bounded cleanup path', () async {
     final fixture = await _fixture();
     fixture.client.throwOnExecute = true;
-    await expectLater(fixture.list(),
-        discoveryFails(SshMultiplexerDiscoveryFailure.commandFailed));
+    await expectLater(
+      fixture.list(),
+      discoveryFails(SshMultiplexerDiscoveryFailure.commandFailed),
+    );
     fixture.client.throwOnExecute = false;
     final retry = fixture.list();
     await fixture.client.channel.finish('work\t1\t0\n');
@@ -194,7 +252,10 @@ Future<_Fixture> _fixture() async {
   final fixture = _Fixture();
   addTearDown(fixture.service.dispose);
   fixture.id = (await fixture.service.connect(
-    'host.example', 22, 'alice', 'password',
+    'host.example',
+    22,
+    'alice',
+    'password',
     gateway: Uri.parse('wss://gateway.example/ssh'),
   )).id;
   return fixture;
@@ -205,8 +266,13 @@ class _Fixture {
   late String id;
   late final service = SshTerminalService(
     secureStorage: InMemorySecureStorage(),
-    clientConnector: (_, __, {
-      required username, password, identities, gateway,
+    clientConnector: (
+      _,
+      __, {
+      required username,
+      password,
+      identities,
+      gateway,
     }) async => client,
   );
 
@@ -233,8 +299,11 @@ class _Client implements SSHClient {
   Future<void> get done => _done.future;
 
   @override
-  Future<SSHSession> execute(String command, {
-    SSHPtyConfig? pty, SSHX11Config? x11, Map<String, String>? environment,
+  Future<SSHSession> execute(
+    String command, {
+    SSHPtyConfig? pty,
+    SSHX11Config? x11,
+    Map<String, String>? environment,
   }) {
     commands.add(command);
     ptys.add(pty);

@@ -159,9 +159,12 @@ final class WordZoteroCitingSession {
           'Move the caret outside the existing citation before inserting selected sources.',
         );
       }
-      final field = _insert(0);
+      final field = _insert(
+        WordZoteroDocumentData.citationNoteType(_nativeData),
+      );
       field.code = _toHttp(seedCitation.fieldInstruction);
       field.text = seedCitation.plainCitation;
+      field.seeded = true;
       _selected = field;
     }
   }
@@ -182,6 +185,12 @@ final class WordZoteroCitingSession {
   bool _complete = false;
   bool _applied = false;
   bool _bibliographyStyleRequested = false;
+  WmlParagraph? _insertedParagraph;
+  WmlNote? _insertedNote;
+  ({WmlParagraph paragraph, int offset})? _caretAfter;
+
+  /// Resolved after application, including length changes in earlier fields.
+  ({WmlParagraph paragraph, int offset})? get caretAfter => _caretAfter;
 
   bool get isComplete => _complete;
   bool get hasChanges =>
@@ -297,6 +306,20 @@ final class WordZoteroCitingSession {
       case 'Document.complete':
         _arity(args, 1);
         for (final field in _fields) {
+          if (field.seeded && !field.codeWasSet && !field.textWasSet) {
+            field.deleted = true;
+          }
+          if (field.seeded &&
+              !field.deleted &&
+              !field.unlinked &&
+              field.noteType !=
+                  WordZoteroDocumentData.citationNoteType(_nativeData)) {
+            throw StateError(
+              'Zotero changed the note placement while opening this citation. Choose Document style… first, then insert the selected sources again.',
+            );
+          }
+        }
+        for (final field in _fields) {
           if (!field.deleted && !field.unlinked) _validateCode(field.code);
         }
         _complete = true;
@@ -327,6 +350,7 @@ final class WordZoteroCitingSession {
           );
         }
         field.code = code;
+        field.codeWasSet = true;
         return null;
       case 'Field.setText':
         _arity(args, 4);
@@ -381,7 +405,11 @@ final class WordZoteroCitingSession {
   /// Rechecks original field identity and text. The editor additionally checks
   /// its monotonic revision, selection, mutation permissions and lifecycle.
   void assertUnchanged() {
-    if (_applied || WordZoteroDocumentData.read(document) != _originalData) {
+    if (_applied ||
+        document.restrictEditing ||
+        document.trackRevisions ||
+        document.revisions.any((revision) => revision.accepted == null) ||
+        WordZoteroDocumentData.read(document) != _originalData) {
       throw StateError('The Zotero document changed while formatting.');
     }
     final body = _flowParagraphs(
@@ -468,6 +496,37 @@ final class WordZoteroCitingSession {
     if (_nativeData != _originalData || _bibliographyStyleRequested) {
       document.zoteroDocumentData = _nativeData;
     }
+    final inserted = _fields
+        .where(
+          (field) =>
+              field.original == null && !field.deleted && !field.unlinked,
+        )
+        .firstOrNull;
+    if (inserted != null) {
+      if (_insertedNote != null) {
+        var offset = 0;
+        for (final inline in inserted.anchor.inlines) {
+          if (inline is! WmlRun) continue;
+          offset += inline.text.length;
+          if (inline.noteRefId == _insertedNote!.id &&
+              inline.noteRefEndnote == _insertedNote!.endnote) {
+            _caretAfter = (paragraph: inserted.anchor, offset: offset);
+            break;
+          }
+        }
+      } else {
+        final current = WordZotero.fields(document)
+            .where(
+              (field) =>
+                  identical(field.paragraph, _insertedParagraph) &&
+                  field.instruction == _resultInstruction(inserted),
+            )
+            .firstOrNull;
+        if (current != null) {
+          _caretAfter = (paragraph: current.paragraph, offset: current.end);
+        }
+      }
+    }
     _applied = true;
   }
 
@@ -478,7 +537,7 @@ final class WordZoteroCitingSession {
         WordZotero.canReplaceFormattedBibliography(original);
     WordZotero.replaceNativeResult(
       original,
-      instruction: _toNative(field.code),
+      instruction: _resultInstruction(field),
       text: field.text,
       formattedText: rich ? field.formatted : null,
     );
@@ -486,7 +545,7 @@ final class WordZoteroCitingSession {
 
   void _insertResult(_CitingField field, WmlParagraph anchor, int offset) {
     WordContentControls.assertCanEdit(anchor, offset, offset);
-    final instruction = _toNative(field.code);
+    final instruction = _resultInstruction(field);
     if (_kind(field) == ZoteroFieldKind.bibliography) {
       if (field.noteType != 0) {
         throw UnsupportedError('A bibliography must be in the document body.');
@@ -509,6 +568,7 @@ final class WordZoteroCitingSession {
         WordZotero.unlink(WordZotero.fields(temp).single);
       }
       slot.parent.insert(slot.index + 1, paragraph);
+      if (field.original == null) _insertedParagraph = paragraph;
       return;
     }
     var paragraph = anchor;
@@ -519,6 +579,7 @@ final class WordZoteroCitingSession {
         anchor,
         endnote: field.noteType == 2,
       );
+      if (field.original == null) _insertedNote = note;
       final reference = anchor.inlines.removeLast() as WmlRun;
       WmlRunEdit.insertRuns(anchor, offset, [reference]);
       paragraph = note.paragraphs.single;
@@ -531,6 +592,7 @@ final class WordZoteroCitingSession {
       index: at,
       formattedText: field.formatted,
     );
+    if (field.original == null) _insertedParagraph = paragraph;
     if (field.unlinked) {
       final current = WordZotero.fields(
         document,
@@ -611,6 +673,24 @@ final class WordZoteroCitingSession {
       return false;
     }
     final paragraph = original.paragraph;
+    final boundaries = paragraph.inlines.whereType<WmlFieldBoundary>().toList();
+    if (paragraph.inlines.whereType<WmlNoteMarker>().length > 1) return false;
+    if (original.run != null || original.wholeParagraph) {
+      if (boundaries.isNotEmpty) return false;
+    } else if (boundaries
+                .where((b) => b.kind == WmlFieldBoundaryKind.begin)
+                .length !=
+            1 ||
+        boundaries.where((b) => b.kind == WmlFieldBoundaryKind.end).length !=
+            1 ||
+        boundaries
+                .where((b) => b.kind == WmlFieldBoundaryKind.instruction)
+                .map((b) => b.text)
+                .join()
+                .trim() !=
+            original.instruction.trim()) {
+      return false;
+    }
     if ((paragraph.text.substring(0, original.start) +
             paragraph.text.substring(original.end))
         .trim()
@@ -664,12 +744,13 @@ final class WordZoteroCitingSession {
           f.note!,
     };
     final positions =
-        <({int body, int offset, Object identity, int type})>[
+        <({int body, int offset, int priority, Object identity, int type})>[
           for (final n in _notes)
             if (!removed.contains(n.note))
               (
                 body: n.bodyIndex,
                 offset: n.offset,
+                priority: 1,
                 identity: n.note,
                 type: n.note.endnote ? 2 : 1,
               ),
@@ -680,12 +761,17 @@ final class WordZoteroCitingSession {
               (
                 body: f.bodyIndex,
                 offset: f.anchorOffset,
+                priority: 0,
                 identity: f,
                 type: f.noteType,
               ),
         ]..sort((a, b) {
           final body = a.body.compareTo(b.body);
-          return body != 0 ? body : a.offset.compareTo(b.offset);
+          if (body != 0) return body;
+          final offset = a.offset.compareTo(b.offset);
+          if (offset != 0) return offset;
+          // Insertions at an existing note marker go immediately before it.
+          return a.priority.compareTo(b.priority);
         });
     var index = 0;
     final identity =
@@ -746,6 +832,20 @@ final class WordZoteroCitingSession {
       );
     }
     throw const FormatException('Zotero returned an unsupported field code.');
+  }
+
+  static String _resultInstruction(_CitingField field) {
+    final native = _toNative(field.code);
+    if (WordZotero.kindOfInstruction(native) != ZoteroFieldKind.citation) {
+      return native;
+    }
+    final citation = ZoteroCitation.fromJson(WordZotero.metadataOf(native)!);
+    // A former basic citation now belongs to Zotero's document processor.
+    // Keep the basic fallback's refresh action from overwriting CSL output.
+    return ZoteroCitation.fromJson({
+      ...citation.toJson(),
+      'properties': {...citation.properties, 'qudsFormat': 'zotero-desktop'},
+    }).fieldInstruction;
   }
 
   static bool _sameField(WmlZoteroField a, WmlZoteroField b) =>
@@ -847,6 +947,8 @@ final class _CitingField {
   String text;
   ZoteroFormattedText? formatted;
   bool textWasSet = false;
+  bool codeWasSet = false;
+  bool seeded = false;
   bool deleted = false;
   bool unlinked = false;
   bool get changed => original == null
@@ -854,6 +956,9 @@ final class _CitingField {
       : deleted ||
             unlinked ||
             textWasSet ||
+            (codeWasSet &&
+                original!.citation?.properties['qudsFormat'] ==
+                    'basic-author-year') ||
             noteType != originalNoteType ||
             code != WordZoteroCitingSession._toHttp(original!.instruction);
 }
