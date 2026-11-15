@@ -1217,11 +1217,134 @@ Future<OfficeDocument> _parseOdp(ViewerArchive archive) async {
     );
   }
   final document = XmlDocument.parse(xml);
+
+  final styles = <String, XmlElement>{};
+  for (final collection in <String>[
+    'office:automatic-styles',
+    'office:styles',
+  ]) {
+    final root = document.findAllElements(collection).firstOrNull;
+    if (root == null) continue;
+    for (final style in root.childElements) {
+      final name = style.getAttribute('style:name');
+      if (name != null) styles[name] = style;
+    }
+  }
+
+  String? graphicProperty(XmlElement? style, String name) => style
+      ?.findAllElements('style:graphic-properties')
+      .firstOrNull
+      ?.getAttribute(name);
+  String? textProperty(XmlElement? style, String name) => style
+      ?.findAllElements('style:text-properties')
+      .firstOrNull
+      ?.getAttribute(name);
+
+  final layout = document.findAllElements('style:page-layout').firstOrNull;
+  final layoutProperties = layout
+      ?.findAllElements('style:page-layout-properties')
+      .firstOrNull;
+  final widthEmu = _odfLengthToEmu(
+    layoutProperties?.getAttribute('fo:page-width'),
+    fallback: 9144000,
+  );
+  final heightEmu = _odfLengthToEmu(
+    layoutProperties?.getAttribute('fo:page-height'),
+    fallback: 6858000,
+  );
+
+  bool insideNotes(XmlElement element) {
+    XmlElement? current = element.parentElement;
+    while (current != null) {
+      if (current.localName == 'notes') return true;
+      current = current.parentElement;
+    }
+    return false;
+  }
+
   final markdown = StringBuffer();
   final headings = <OfficeGeneratedHeading>[];
+  final pages = <SlidePage>[];
   var pageNumber = 0;
   for (final page in document.findAllElements('draw:page')) {
     pageNumber++;
+    final pageStyle = styles[page.getAttribute('draw:style-name')];
+    final background = _odfColor(
+      pageStyle
+              ?.findAllElements('style:drawing-page-properties')
+              .firstOrNull
+              ?.getAttribute('draw:fill-color') ??
+          graphicProperty(pageStyle, 'draw:fill-color'),
+    );
+    final shapes = <SlideShape>[];
+    final textParagraphs = <String>[];
+
+    final frames = <XmlElement>[
+      ...page.findAllElements('draw:frame'),
+      ...page.findAllElements('draw:custom-shape'),
+    ];
+    for (final frame in frames) {
+      if (shapes.length >= 200) break;
+      if (insideNotes(frame)) continue;
+      final x = _odfLengthToEmu(frame.getAttribute('svg:x'), fallback: 0);
+      final y = _odfLengthToEmu(frame.getAttribute('svg:y'), fallback: 0);
+      final width = _odfLengthToEmu(
+        frame.getAttribute('svg:width'),
+        fallback: widthEmu ~/ 3,
+      );
+      final height = _odfLengthToEmu(
+        frame.getAttribute('svg:height'),
+        fallback: heightEmu ~/ 5,
+      );
+      final paragraphs = frame.findAllElements('text:p').toList();
+      final text = paragraphs
+          .map((paragraph) => paragraph.innerText.trim())
+          .where((line) => line.isNotEmpty)
+          .join('\n');
+      final imageHref = frame
+          .findAllElements('draw:image')
+          .firstOrNull
+          ?.getAttribute('xlink:href');
+      Uint8List? image;
+      if (imageHref != null && imageHref.isNotEmpty) {
+        final imagePath = p.posix.normalize(imageHref);
+        image = await _readPartBytes(archive, imagePath);
+      }
+      if (text.isEmpty && image == null) continue;
+
+      final paragraphStyle = paragraphs.isNotEmpty
+          ? styles[paragraphs.first.getAttribute('text:style-name')]
+          : null;
+      final size = _odfLengthToPoints(
+        textProperty(paragraphStyle, 'fo:font-size'),
+        fallback: 18,
+      );
+      final weight = textProperty(paragraphStyle, 'fo:font-weight');
+      final bold =
+          weight != null &&
+          (weight.toLowerCase() == 'bold' ||
+              (int.tryParse(weight) ?? 0) >= 600);
+      final style = styles[frame.getAttribute('draw:style-name')];
+      shapes.add(
+        SlideShape(
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+          text: text.isEmpty ? null : text,
+          fontSizePt: size.clamp(6, 96),
+          bold: bold,
+          textColorHex: _odfColor(textProperty(paragraphStyle, 'fo:color')),
+          fillColorHex: _odfColor(graphicProperty(style, 'draw:fill-color')),
+          image: image,
+        ),
+      );
+      textParagraphs.addAll(
+        text.split('\n').where((line) => line.trim().isNotEmpty),
+      );
+    }
+
+    pages.add(SlidePage(backgroundHex: background, shapes: shapes));
     _writeHeading(
       markdown,
       '## ',
@@ -1230,12 +1353,26 @@ Future<OfficeDocument> _parseOdp(ViewerArchive archive) async {
       headings,
     );
     markdown.writeln();
-    for (final paragraph in page.findAllElements('text:p')) {
-      final text = paragraph.innerText.trim();
-      if (text.isNotEmpty) markdown.writeln('- $text');
+    if (textParagraphs.isNotEmpty) {
+      markdown.writeln(textParagraphs.first);
+      markdown.writeln();
+      for (final paragraph in textParagraphs.skip(1)) {
+        markdown.writeln('- $paragraph');
+      }
+      markdown.writeln();
     }
-    markdown.writeln();
+    final notes = page
+        .findAllElements('presentation:notes')
+        .expand((note) => note.findAllElements('text:p'))
+        .map((paragraph) => paragraph.innerText.trim())
+        .where((line) => line.isNotEmpty)
+        .join(' ');
+    if (notes.isNotEmpty) {
+      markdown.writeln('*Notes: $notes*');
+      markdown.writeln();
+    }
   }
+
   final md = markdown.toString().trim();
   final (plain, textHeadings) = _plainWithHeadings(md, headings);
   return OfficeDocument(
@@ -1245,7 +1382,58 @@ Future<OfficeDocument> _parseOdp(ViewerArchive archive) async {
     markdownHeadings: headings,
     textHeadings: textHeadings,
     rawXml: _capRaw(xml, 'content.xml'),
+    deck: pages.isEmpty
+        ? null
+        : SlideDeck(widthEmu: widthEmu, heightEmu: heightEmu, slides: pages),
   );
+}
+
+int _odfLengthToEmu(String? raw, {required int fallback}) {
+  final match = RegExp(
+    r'^\s*(-?[0-9]+(?:\.[0-9]+)?)\s*(cm|mm|in|pt|pc|px)?\s*$',
+    caseSensitive: false,
+  ).firstMatch(raw ?? '');
+  if (match == null) return fallback;
+  final value = double.tryParse(match.group(1)!) ?? 0;
+  final unit = (match.group(2) ?? 'px').toLowerCase();
+  final perUnit = switch (unit) {
+    'cm' => 360000.0,
+    'mm' => 36000.0,
+    'in' => 914400.0,
+    'pt' => 12700.0,
+    'pc' => 152400.0,
+    _ => 9525.0,
+  };
+  final emu = (value * perUnit).round();
+  return emu <= 0 ? fallback : emu;
+}
+
+double _odfLengthToPoints(String? raw, {required double fallback}) {
+  final match = RegExp(
+    r'^\s*([0-9]+(?:\.[0-9]+)?)\s*(cm|mm|in|pt|pc|px)?\s*$',
+    caseSensitive: false,
+  ).firstMatch(raw ?? '');
+  if (match == null) return fallback;
+  final value = double.tryParse(match.group(1)!) ?? fallback;
+  return switch ((match.group(2) ?? 'pt').toLowerCase()) {
+    'cm' => value * 72 / 2.54,
+    'mm' => value * 72 / 25.4,
+    'in' => value * 72,
+    'pc' => value * 12,
+    'px' => value * 72 / 96,
+    _ => value,
+  };
+}
+
+String? _odfColor(String? raw) {
+  final value = (raw ?? '').trim();
+  if (value.isEmpty ||
+      value.toLowerCase() == 'none' ||
+      value == 'transparent') {
+    return null;
+  }
+  final hex = value.startsWith('#') ? value.substring(1) : value;
+  return RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(hex) ? hex.toUpperCase() : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1263,36 +1451,173 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     );
   }
   final document = XmlDocument.parse(xml);
+
+  // Automatic and named styles are referenced by name from spans, paragraphs
+  // and list containers. Only the properties needed for readable Markdown are
+  // modelled.
+  final styles = <String, XmlElement>{};
+  final listStyles = <String, XmlElement>{};
+  for (final collection in <String>[
+    'office:automatic-styles',
+    'office:styles',
+  ]) {
+    final root = document.findAllElements(collection).firstOrNull;
+    if (root == null) continue;
+    for (final style in root.childElements) {
+      final name = style.getAttribute('style:name');
+      if (name == null) continue;
+      if (style.localName == 'style') {
+        styles[name] = style;
+      } else if (style.localName == 'list-style') {
+        listStyles[name] = style;
+      }
+    }
+  }
+
+  bool isBold(XmlElement? style) {
+    final weight =
+        style
+            ?.findAllElements('style:text-properties')
+            .firstOrNull
+            ?.getAttribute('fo:font-weight') ??
+        style
+            ?.findAllElements('style:text-properties')
+            .firstOrNull
+            ?.getAttribute('style:font-weight-asian');
+    if (weight == null) return false;
+    if (weight.toLowerCase() == 'bold') return true;
+    final numeric = int.tryParse(weight);
+    return numeric != null && numeric >= 600;
+  }
+
+  bool isItalic(XmlElement? style) {
+    final value = style
+        ?.findAllElements('style:text-properties')
+        .firstOrNull
+        ?.getAttribute('fo:font-style');
+    return value == 'italic' || value == 'oblique';
+  }
+
+  final notes = <String>[];
+  String inline(XmlNode node) {
+    final buffer = StringBuffer();
+    for (final child in node.children) {
+      if (child is XmlText) {
+        buffer.write(child.value);
+        continue;
+      }
+      if (child is! XmlElement) continue;
+      switch (child.localName) {
+        case 's':
+          final count = int.tryParse(child.getAttribute('text:c') ?? '') ?? 1;
+          buffer.write(' ' * count.clamp(1, 256));
+        case 'tab':
+          buffer.write('\t');
+        case 'line-break':
+          buffer.write('\n');
+        case 'span':
+          final style = styles[child.getAttribute('text:style-name')];
+          var text = inline(child);
+          if (isBold(style)) text = '**$text**';
+          if (isItalic(style)) text = '*$text*';
+          buffer.write(text);
+        case 'a':
+          final href = child.getAttribute('xlink:href') ?? '';
+          final text = inline(child);
+          buffer.write(
+            href.isEmpty || href.toLowerCase().startsWith('javascript:')
+                ? text
+                : '[$text]($href)',
+          );
+        case 'note':
+          final number = notes.length + 1;
+          final body = child.findAllElements('text:note-body').firstOrNull;
+          notes.add(
+            (body == null ? '' : inline(body))
+                .replaceAll(RegExp(r'\s+'), ' ')
+                .trim(),
+          );
+          buffer.write('[$number]');
+        case 'frame':
+          // Media is not embedded in Markdown; keep a bounded textual marker.
+          final name = child.getAttribute('draw:name');
+          final href = child
+              .findAllElements('draw:image')
+              .firstOrNull
+              ?.getAttribute('xlink:href');
+          if (href != null && href.isNotEmpty) {
+            buffer.write('*[Image: ${name ?? href.split('/').last}]*');
+          }
+        case 'bookmark':
+        case 'bookmark-start':
+        case 'bookmark-end':
+          break;
+        default:
+          buffer.write(inline(child));
+      }
+    }
+    return buffer.toString();
+  }
+
   final blocks = <String>[];
+  void visitList(XmlElement list, int depth) {
+    final style = listStyles[list.getAttribute('text:style-name')];
+    final ordered =
+        style?.findAllElements('text:list-level-style-number').isNotEmpty ??
+        false;
+    var index = 0;
+    for (final item in list.childElements.where(
+      (element) => element.localName == 'list-item',
+    )) {
+      index++;
+      final parts = <String>[];
+      for (final child in item.childElements) {
+        if (child.localName == 'p' || child.localName == 'h') {
+          final text = inline(child).trim();
+          if (text.isNotEmpty) parts.add(text);
+        }
+      }
+      if (parts.isNotEmpty) {
+        final marker = ordered ? '$index.' : '-';
+        blocks.add('${'  ' * depth}$marker ${parts.join(' ')}');
+      }
+      for (final nested in item.childElements.where(
+        (element) => element.localName == 'list',
+      )) {
+        visitList(nested, depth + 1);
+      }
+    }
+  }
+
   void visit(XmlElement element) {
     switch (element.localName) {
       case 'h':
         final level =
             int.tryParse(element.getAttribute('text:outline-level') ?? '') ?? 1;
-        final text = element.innerText.trim();
+        final text = inline(element).trim();
         if (text.isNotEmpty) {
           blocks.add('${'#' * level.clamp(1, 6)} $text');
         }
       case 'p':
-        final text = element.innerText.trim();
+        final text = inline(element).trim();
         if (text.isNotEmpty) blocks.add(text);
       case 'list':
-        for (final item in element.childElements.where(
-          (child) => child.localName == 'list-item',
-        )) {
-          final text = item
-              .findAllElements('text:p')
-              .map((paragraph) => paragraph.innerText.trim())
-              .where((value) => value.isNotEmpty)
-              .join(' ');
-          if (text.isNotEmpty) blocks.add('- $text');
-        }
+        visitList(element, 0);
       case 'table':
-        final rows = _odsRows(
-          element,
-        ).map((row) => row.map(_escapePipes).toList()).toList();
-        final table = _markdownTable(rows);
-        if (table.isNotEmpty) blocks.add(table);
+        {
+          final rows = _odsRows(
+            element,
+          ).map((row) => row.map(_escapePipes).toList()).toList();
+          final table = _markdownTable(rows);
+          if (table.isNotEmpty) blocks.add(table);
+        }
+      case 'section':
+      case 'body':
+        for (final child in element.childElements) {
+          visit(child);
+        }
+      case 'soft-page-break':
+        break;
       default:
         for (final child in element.childElements) {
           visit(child);
@@ -1304,6 +1629,13 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
   if (body != null) {
     for (final child in body.childElements) {
       visit(child);
+    }
+  }
+  if (notes.isNotEmpty) {
+    blocks.add('---');
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].isEmpty) continue;
+      blocks.add('${i + 1}. ${notes[i]}');
     }
   }
   final markdown = blocks.join('\n\n').trim();
