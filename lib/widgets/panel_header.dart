@@ -364,143 +364,154 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       color: widget.isActive
           ? theme.colorScheme.primaryContainer
           : theme.colorScheme.surfaceContainerHighest,
-      child: SizedBox(
-        height: 36,
-        child: Row(
-          children: <Widget>[
-            Tooltip(
-              message: paneActivityLabel(
-                context,
-                widget.side,
-                active: widget.isActive,
-              ),
-              child: SizedBox(
-                width: 20,
-                child: Icon(
-                  widget.isActive
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  key: ValueKey('panel-activity-marker-${widget.side.name}'),
-                  size: 14,
-                  color: widget.isActive
-                      ? theme.colorScheme.onPrimaryContainer
-                      : theme.colorScheme.onSurfaceVariant,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 36,
+            child: Row(
+              children: <Widget>[
+                Tooltip(
+                  message: paneActivityLabel(
+                    context,
+                    widget.side,
+                    active: widget.isActive,
+                  ),
+                  child: SizedBox(
+                    width: 20,
+                    child: Icon(
+                      widget.isActive
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      key: ValueKey(
+                        'panel-activity-marker-${widget.side.name}',
+                      ),
+                      size: 14,
+                      color: widget.isActive
+                          ? theme.colorScheme.onPrimaryContainer
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            if (widget.showSource) ...<Widget>[
-              const SizedBox(width: 4),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 132),
-                child: PanelSourceSelector(
-                  side: widget.side,
-                  locations: _sourceLocations(panel, location),
-                  currentSource: panel.directorySource,
-                  currentStorage: storage,
-                  currentLabel: storage == null
-                      ? null
-                      : panel.storageDisplayName(storage),
-                  currentAvailable:
-                      storage == null || panel.directorySourceAvailable,
-                  onSelected: (selected) async {
-                    if (!mounted ||
-                        widget.side != side ||
-                        panel.activeTabId != tabId) {
-                      return;
-                    }
-                    if (!selected.isLocal && !selected.isRemote) {
-                      ref
-                          .read(panelSourceProvider(widget.side).notifier)
-                          .setSource(selected);
-                      return;
-                    }
-                    final origin = panel.resolveStorageReference(
-                      storageReferenceForSource(selected),
-                      selected.currentPath,
-                    );
-                    if (origin == null || !origin.isCurrent) return;
-                    try {
-                      // An explicit selection also routes a legacy listing
-                      // whose picker already has this value, and a reconnected
-                      // account whose previous listing is no longer current.
-                      await panel.navigateToPath(
-                        selected.currentPath,
-                        origin: origin,
-                      );
-                    } catch (error) {
-                      if (mounted) {
-                        ref
-                            .read(errorProvider)
-                            .addError(error.toString(), cause: error);
-                      }
-                    }
+                if (widget.showSource) ...<Widget>[
+                  const SizedBox(width: 4),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 132),
+                    child: PanelSourceSelector(
+                      side: widget.side,
+                      locations: _sourceLocations(panel, location),
+                      currentSource: panel.directorySource,
+                      currentStorage: storage,
+                      currentLabel: storage == null
+                          ? null
+                          : panel.storageDisplayName(storage),
+                      currentAvailable:
+                          storage == null || panel.directorySourceAvailable,
+                      onSelected: (selected) async {
+                        if (!mounted ||
+                            widget.side != side ||
+                            panel.activeTabId != tabId) {
+                          return;
+                        }
+                        if (!selected.isLocal && !selected.isRemote) {
+                          ref
+                              .read(panelSourceProvider(widget.side).notifier)
+                              .setSource(selected);
+                          return;
+                        }
+                        final origin = panel.resolveStorageReference(
+                          storageReferenceForSource(selected),
+                          selected.currentPath,
+                        );
+                        if (origin == null || !origin.isCurrent) return;
+                        try {
+                          // An explicit selection also routes a legacy listing
+                          // whose picker already has this value, and a reconnected
+                          // account whose previous listing is no longer current.
+                          await panel.navigateToPath(
+                            selected.currentPath,
+                            origin: origin,
+                          );
+                        } catch (error) {
+                          if (mounted) {
+                            ref
+                                .read(errorProvider)
+                                .addError(error.toString(), cause: error);
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                ],
+                _navButton(
+                  icon: Icons.arrow_back,
+                  tooltip: context.commanderTr("Back"),
+                  onPressed: panel.canNavigateBack ? panel.navigateBack : null,
+                ),
+                _navButton(
+                  icon: Icons.arrow_forward,
+                  tooltip: context.commanderTr("Forward"),
+                  onPressed: panel.canNavigateForward
+                      ? panel.navigateForward
+                      : null,
+                ),
+                PanelHistoryButton(panel: panel, compact: true),
+                _navButton(
+                  icon: Icons.arrow_upward,
+                  tooltip: context.commanderTr("Up"),
+                  onPressed: () {
+                    ref.read(activePanelProvider.notifier).state = widget.side;
+                    panel.navigateUp();
                   },
                 ),
-              ),
-              const SizedBox(width: 2),
-            ],
-            _navButton(
-              icon: Icons.arrow_back,
-              tooltip: context.commanderTr("Back"),
-              onPressed: panel.canNavigateBack ? panel.navigateBack : null,
+                if (panel.isInArchive)
+                  _navButton(
+                    icon: Icons.close,
+                    tooltip: context.commanderTr("Exit archive"),
+                    onPressed: panel.exitArchive,
+                  ),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: GestureDetector(
+                    key: ValueKey('panel-path-context-${widget.side.name}'),
+                    behavior: HitTestBehavior.opaque,
+                    onSecondaryTapDown: (details) =>
+                        _showPathMenu(panel, details.globalPosition),
+                    onLongPressStart: (details) =>
+                        _showPathMenu(panel, details.globalPosition),
+                    child: _breadcrumbs(context, panel, path, location),
+                  ),
+                ),
+                if (isLocal)
+                  _navButton(
+                    icon: Icons.folder_open,
+                    tooltip:
+                        AppLocalizations.of(context)?.browseTooltip ??
+                        context.commanderTr("Browse..."),
+                    onPressed: panel.pickLocalDirectory,
+                  ),
+                if (isLocal)
+                  _navButton(
+                    icon: Icons.layers,
+                    tooltip: panel.isFlatView
+                        ? context.commanderTr("Exit flat view")
+                        : context.commanderTr("Flat view"),
+                    active: panel.isFlatView,
+                    onPressed: panel.toggleFlatView,
+                  ),
+                _moreButton(context, panel, isLocal),
+                const SizedBox(width: 2),
+              ],
             ),
-            _navButton(
-              icon: Icons.arrow_forward,
-              tooltip: context.commanderTr("Forward"),
-              onPressed: panel.canNavigateForward
-                  ? panel.navigateForward
-                  : null,
+          ),
+          if (_pathEditLocation != null)
+            Padding(
+              key: ValueKey('panel-path-editor-row-${widget.side.name}'),
+              padding: const EdgeInsets.fromLTRB(4, 2, 4, 4),
+              child: _pathEditor(panel, _pathEditLocation!),
             ),
-            PanelHistoryButton(panel: panel, compact: true),
-            _navButton(
-              icon: Icons.arrow_upward,
-              tooltip: context.commanderTr("Up"),
-              onPressed: () {
-                ref.read(activePanelProvider.notifier).state = widget.side;
-                panel.navigateUp();
-              },
-            ),
-            if (panel.isInArchive)
-              _navButton(
-                icon: Icons.close,
-                tooltip: context.commanderTr("Exit archive"),
-                onPressed: panel.exitArchive,
-              ),
-            const SizedBox(width: 2),
-            Expanded(
-              child: _pathEditLocation != null
-                  ? _pathEditor(panel, _pathEditLocation!)
-                  : GestureDetector(
-                      key: ValueKey('panel-path-context-${widget.side.name}'),
-                      behavior: HitTestBehavior.opaque,
-                      onSecondaryTapDown: (details) =>
-                          _showPathMenu(panel, details.globalPosition),
-                      onLongPressStart: (details) =>
-                          _showPathMenu(panel, details.globalPosition),
-                      child: _breadcrumbs(context, panel, path, location),
-                    ),
-            ),
-            if (isLocal)
-              _navButton(
-                icon: Icons.folder_open,
-                tooltip:
-                    AppLocalizations.of(context)?.browseTooltip ??
-                    context.commanderTr("Browse..."),
-                onPressed: panel.pickLocalDirectory,
-              ),
-            if (isLocal)
-              _navButton(
-                icon: Icons.layers,
-                tooltip: panel.isFlatView
-                    ? context.commanderTr("Exit flat view")
-                    : context.commanderTr("Flat view"),
-                active: panel.isFlatView,
-                onPressed: panel.toggleFlatView,
-              ),
-            _moreButton(context, panel, isLocal),
-            const SizedBox(width: 2),
-          ],
-        ),
+        ],
       ),
     );
   }

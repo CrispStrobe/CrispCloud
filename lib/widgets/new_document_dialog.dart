@@ -16,10 +16,15 @@ import 'file_editor_dialog.dart';
 import 'document_conversion_dialog.dart';
 
 Future<void> showNewDocumentDialog(BuildContext context, WidgetRef ref) async {
-  if (!await closeDocumentWorkspace(context) || !context.mounted) return;
-  final side = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(side));
   try {
+    if (!await closeDocumentWorkspace(context) || !context.mounted) return;
+    final side = ref.read(activePanelProvider);
+    final panel = ref.read(panelProvider(side));
+    if (!panel.hasVerifiedDirectoryListing) {
+      throw StateError(
+        'Open a normal destination folder before creating a document.',
+      );
+    }
     final origin = panel.captureCurrentOrigin();
     if (origin.source is! LocalPanelSource &&
         origin.source is! RemotePanelSource) {
@@ -133,6 +138,27 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
     super.dispose();
   }
 
+  void _selectKind(NewDocumentKind kind) {
+    setState(() {
+      final old = _name.text;
+      final dot = old.lastIndexOf('.');
+      _kind = kind;
+      _name.text = '${dot > 0 ? old.substring(0, dot) : old}.${kind.extension}';
+    });
+  }
+
+  IconData _kindIcon(NewDocumentKind kind) => switch (kind) {
+    NewDocumentKind.text => Icons.code,
+    NewDocumentKind.markdown => Icons.notes,
+    NewDocumentKind.csv => Icons.table_chart_outlined,
+    NewDocumentKind.word => Icons.description_outlined,
+    NewDocumentKind.spreadsheet => Icons.grid_on,
+    NewDocumentKind.presentation => Icons.slideshow,
+    NewDocumentKind.pdf => Icons.picture_as_pdf_outlined,
+    NewDocumentKind.picture => Icons.image_outlined,
+    NewDocumentKind.ebook => Icons.menu_book_outlined,
+  };
+
   Future<void> _create() async {
     if (_working) return;
     setState(() {
@@ -168,41 +194,76 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
             children: [
               SelectableText(widget.directory),
               const SizedBox(height: 16),
-              DropdownButtonFormField<NewDocumentKind>(
-                key: const ValueKey('new-document-kind'),
-                initialValue: _kind,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: documentTr(context, 'Editor / format'),
-                ),
-                items: [
-                  for (final kind in NewDocumentKind.values)
-                    DropdownMenuItem(
-                      value: kind,
-                      child: Text(
-                        '${documentTr(context, kind.label)} (.${kind.extension})',
-                      ),
-                    ),
-                ],
-                onChanged: _working
-                    ? null
-                    : (kind) {
-                        if (kind == null) return;
-                        setState(() {
-                          final old = _name.text;
-                          final dot = old.lastIndexOf('.');
-                          _kind = kind;
-                          _name.text =
-                              '${dot > 0 ? old.substring(0, dot) : old}.${kind.extension}';
-                        });
-                      },
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth < 350 ? 2 : 3;
+                  final width =
+                      (constraints.maxWidth - (columns - 1) * 8) / columns;
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final kind in NewDocumentKind.values)
+                        SizedBox(
+                          width: width,
+                          child: Semantics(
+                            selected: _kind == kind,
+                            child: OutlinedButton(
+                              key: ValueKey('new-document-kind-${kind.name}'),
+                              autofocus: kind == NewDocumentKind.text,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 12,
+                                ),
+                                backgroundColor: _kind == kind
+                                    ? Theme.of(context)
+                                          .colorScheme
+                                          .secondaryContainer
+                                    : null,
+                                side: BorderSide(
+                                  color: _kind == kind
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .outlineVariant,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: _working
+                                  ? null
+                                  : () => _selectKind(kind),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(_kindIcon(kind), size: 28),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    documentTr(context, kind.label),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    '.${kind.extension}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               TextField(
                 key: const ValueKey('new-document-name'),
                 controller: _name,
                 enabled: !_working,
-                autofocus: true,
                 decoration: InputDecoration(
                   labelText: documentTr(context, 'File name'),
                 ),

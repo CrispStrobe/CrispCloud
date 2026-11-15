@@ -3,7 +3,7 @@ import FlutterMacOS
 import PDFKit
 import Quartz
 
-class MainFlutterWindow: NSWindow, NSToolbarDelegate, NSDraggingSource {
+class MainFlutterWindow: NSWindow, NSDraggingSource {
   private var fileDragMouseDown: NSEvent?
   private var fileDragMonitor: Any?
   private var fileDragResult: FlutterResult?
@@ -50,6 +50,7 @@ class MainFlutterWindow: NSWindow, NSToolbarDelegate, NSDraggingSource {
   }
 
   override func close() {
+    browserToolbarController?.invalidate()
     if let monitor = fileDragMonitor { NSEvent.removeMonitor(monitor) }
     fileDragMonitor = nil
     let completion = fileDragResult
@@ -60,109 +61,10 @@ class MainFlutterWindow: NSWindow, NSToolbarDelegate, NSDraggingSource {
   private var systemPreviewWindow: NSWindow?
   private var systemPreviewView: QLPreviewView?
   private var systemPreviewChannel: FlutterMethodChannel?
-  private var browserToolbarChannel: FlutterMethodChannel?
-  private var browserToolbarSpecifications: [[String: Any]] = []
-  private var browserNativeToolbar: NSToolbar?
+  private var browserToolbarController: BrowserToolbarController?
 
   private func installBrowserToolbar(binaryMessenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(name: "crispcloud/browser_toolbar", binaryMessenger: binaryMessenger)
-    browserToolbarChannel = channel
-    channel.setMethodCallHandler { [weak self] call, result in
-      guard let self = self, call.method == "configure", let args = call.arguments as? [String: Any] else {
-        result(FlutterMethodNotImplemented)
-        return
-      }
-      self.title = args["title"] as? String ?? "CrispCloud"
-      guard args["visible"] as? Bool == true else {
-        self.toolbar = nil
-        self.browserToolbarSpecifications = []
-        result(true)
-        return
-      }
-      self.appearance = NSAppearance(named: args["dark"] as? Bool == true ? .darkAqua : .aqua)
-      self.browserToolbarSpecifications = args["items"] as? [[String: Any]] ?? []
-      if self.browserNativeToolbar == nil {
-        let toolbar = NSToolbar(identifier: "CrispCloudBrowserToolbar")
-        toolbar.delegate = self
-        toolbar.displayMode = .iconOnly
-        toolbar.allowsUserCustomization = false
-        toolbar.autosavesConfiguration = false
-        self.browserNativeToolbar = toolbar
-      }
-      let toolbar = self.browserNativeToolbar!
-      let wanted = self.browserToolbarSpecifications.compactMap { $0["id"] as? String }
-      if toolbar.items.map({ $0.itemIdentifier.rawValue }) != wanted {
-        while !toolbar.items.isEmpty { toolbar.removeItem(at: 0) }
-        for (index, id) in wanted.enumerated() {
-          toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier(id), at: index)
-        }
-      }
-      for item in toolbar.items { self.updateBrowserToolbarItem(item) }
-      self.toolbarStyle = .unifiedCompact
-      self.titlebarAppearsTransparent = true
-      self.titleVisibility = .visible
-      self.toolbar = toolbar
-      result(true)
-    }
-  }
-
-  func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-    browserToolbarSpecifications.compactMap { spec in
-      guard let id = spec["id"] as? String else { return nil }
-      return NSToolbarItem.Identifier(id)
-    }
-  }
-
-  func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-    toolbarAllowedItemIdentifiers(toolbar)
-  }
-
-  func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier identifier: NSToolbarItem.Identifier,
-               willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
-    let item = NSToolbarItem(itemIdentifier: identifier)
-    item.autovalidates = false
-    item.visibilityPriority = ["more", "account", "swap"].contains(identifier.rawValue) ? .high : .standard
-    let button = NSButton(image: NSImage(), target: self, action: #selector(browserToolbarPressed(_:)))
-    button.identifier = NSUserInterfaceItemIdentifier(identifier.rawValue)
-    button.bezelStyle = .texturedRounded
-    button.isBordered = false
-    button.imagePosition = .imageOnly
-    button.setButtonType(.momentaryPushIn)
-    button.setFrameSize(NSSize(width: 32, height: 28))
-    item.view = button
-    updateBrowserToolbarItem(item)
-    return item
-  }
-
-  private func updateBrowserToolbarItem(_ item: NSToolbarItem) {
-    guard let spec = browserToolbarSpecifications.first(where: { ($0["id"] as? String) == item.itemIdentifier.rawValue }),
-          let button = item.view as? NSButton else { return }
-    let label = spec["label"] as? String ?? item.itemIdentifier.rawValue
-    let enabled = spec["enabled"] as? Bool ?? true
-    item.label = label
-    item.paletteLabel = label
-    item.toolTip = label
-    item.isEnabled = enabled
-    button.isEnabled = enabled
-    button.toolTip = label
-    button.setAccessibilityLabel(label)
-    button.image = NSImage(systemSymbolName: spec["symbol"] as? String ?? "circle", accessibilityDescription: label)
-    button.contentTintColor = spec["selected"] as? Bool == true ? .controlAccentColor : .labelColor
-    let menuItem = NSMenuItem(title: label, action: #selector(browserToolbarOverflowPressed(_:)), keyEquivalent: "")
-    menuItem.target = self
-    menuItem.representedObject = item.itemIdentifier.rawValue
-    menuItem.isEnabled = enabled
-    item.menuFormRepresentation = menuItem
-  }
-
-  @objc private func browserToolbarPressed(_ sender: NSButton) {
-    guard sender.isEnabled, let id = sender.identifier?.rawValue else { return }
-    browserToolbarChannel?.invokeMethod("action", arguments: id)
-  }
-
-  @objc private func browserToolbarOverflowPressed(_ sender: NSMenuItem) {
-    guard sender.isEnabled, let id = sender.representedObject as? String else { return }
-    browserToolbarChannel?.invokeMethod("action", arguments: id)
+    browserToolbarController = BrowserToolbarController(window: self, binaryMessenger: binaryMessenger)
   }
 
   override func awakeFromNib() {
@@ -314,5 +216,142 @@ class MainFlutterWindow: NSWindow, NSToolbarDelegate, NSDraggingSource {
     }
 
     super.awakeFromNib()
+  }
+}
+
+// Own toolbar state outside the NSWindow subclass. AppKit's window.toolbar is
+// the sole owner of the installed toolbar; detached toolbars are never cached
+// and reused across browser/editor transitions.
+final class BrowserToolbarController: NSObject, NSToolbarDelegate {
+  private weak var window: NSWindow?
+  private let channel: FlutterMethodChannel
+  private var specifications: [[String: Any]] = []
+  private var closed = false
+
+  init(window: NSWindow, binaryMessenger: FlutterBinaryMessenger) {
+    self.window = window
+    channel = FlutterMethodChannel(name: "crispcloud/browser_toolbar", binaryMessenger: binaryMessenger)
+    super.init()
+    channel.setMethodCallHandler { [weak self] call, result in
+      // AppKit may enter nested event loops while replacing a toolbar. Schedule
+      // each complete update on the main queue, retaining the controller only
+      // for that update and rejecting requests after window teardown.
+      DispatchQueue.main.async { [weak self] in
+        guard let self, !self.closed, let window = self.window else {
+          result(false)
+          return
+        }
+        guard call.method == "configure", let args = call.arguments as? [String: Any] else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        self.configure(window: window, arguments: args)
+        result(true)
+      }
+    }
+  }
+
+  func invalidate() {
+    precondition(Thread.isMainThread)
+    closed = true
+    channel.setMethodCallHandler(nil)
+    window?.toolbar?.delegate = nil
+    window?.toolbar = nil
+    specifications.removeAll()
+    window = nil
+  }
+
+  private func configure(window: NSWindow, arguments args: [String: Any]) {
+    precondition(Thread.isMainThread)
+    window.title = args["title"] as? String ?? "CrispCloud"
+    guard args["visible"] as? Bool == true else {
+      window.toolbar?.delegate = nil
+      window.toolbar = nil
+      specifications.removeAll()
+      return
+    }
+    let appearanceName: NSAppearance.Name = args["dark"] as? Bool == true ? .darkAqua : .aqua
+    if window.appearance?.name != appearanceName { window.appearance = NSAppearance(named: appearanceName) }
+    specifications = args["items"] as? [[String: Any]] ?? []
+    let wanted = specifications.compactMap { $0["id"] as? String }
+    let identifier = NSToolbar.Identifier("CrispCloudBrowserToolbar")
+    let toolbar: NSToolbar
+    if let installed = window.toolbar, installed.identifier == identifier,
+       installed.items.map({ $0.itemIdentifier.rawValue }) == wanted {
+      toolbar = installed
+    } else {
+      window.toolbar?.delegate = nil
+      window.toolbar = nil
+      toolbar = NSToolbar(identifier: identifier)
+      toolbar.delegate = self
+      toolbar.displayMode = .iconOnly
+      toolbar.allowsUserCustomization = false
+      toolbar.autosavesConfiguration = false
+      window.toolbar = toolbar
+    }
+    for item in toolbar.items { update(item) }
+    window.toolbarStyle = .unifiedCompact
+    window.titlebarAppearsTransparent = true
+    window.titleVisibility = .visible
+  }
+
+  func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+    specifications.compactMap { spec in
+      (spec["id"] as? String).map { NSToolbarItem.Identifier($0) }
+    }
+  }
+
+  func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+    toolbarAllowedItemIdentifiers(toolbar)
+  }
+
+  func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier identifier: NSToolbarItem.Identifier,
+               willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+    let item = NSToolbarItem(itemIdentifier: identifier)
+    item.autovalidates = false
+    item.visibilityPriority = ["more", "account", "swap"].contains(identifier.rawValue) ? .high : .standard
+    let button = NSButton(image: NSImage(), target: self, action: #selector(pressed(_:)))
+    button.identifier = NSUserInterfaceItemIdentifier(identifier.rawValue)
+    button.bezelStyle = .texturedRounded
+    button.isBordered = false
+    button.imagePosition = .imageOnly
+    button.setButtonType(.momentaryPushIn)
+    button.setFrameSize(NSSize(width: 32, height: 28))
+    item.view = button
+    update(item)
+    return item
+  }
+
+  private func update(_ item: NSToolbarItem) {
+    guard let spec = specifications.first(where: { ($0["id"] as? String) == item.itemIdentifier.rawValue }),
+          let button = item.view as? NSButton else { return }
+    let label = spec["label"] as? String ?? item.itemIdentifier.rawValue
+    let enabled = spec["enabled"] as? Bool ?? true
+    item.label = label
+    item.paletteLabel = label
+    item.toolTip = label
+    item.isEnabled = enabled
+    button.isEnabled = enabled
+    button.toolTip = label
+    button.setAccessibilityLabel(label)
+    button.image = NSImage(systemSymbolName: spec["symbol"] as? String ?? "circle", accessibilityDescription: label)
+    button.contentTintColor = spec["selected"] as? Bool == true ? .controlAccentColor : .labelColor
+    let menuItem = NSMenuItem(title: label, action: #selector(overflowPressed(_:)), keyEquivalent: "")
+    menuItem.target = self
+    menuItem.representedObject = item.itemIdentifier.rawValue
+    menuItem.isEnabled = enabled
+    item.menuFormRepresentation = menuItem
+  }
+
+  @objc private func pressed(_ sender: NSButton) {
+    guard !closed, sender.isEnabled, let id = sender.identifier?.rawValue,
+          specifications.contains(where: { ($0["id"] as? String) == id && ($0["enabled"] as? Bool != false) }) else { return }
+    channel.invokeMethod("action", arguments: id)
+  }
+
+  @objc private func overflowPressed(_ sender: NSMenuItem) {
+    guard !closed, sender.isEnabled, let id = sender.representedObject as? String,
+          specifications.contains(where: { ($0["id"] as? String) == id && ($0["enabled"] as? Bool != false) }) else { return }
+    channel.invokeMethod("action", arguments: id)
   }
 }

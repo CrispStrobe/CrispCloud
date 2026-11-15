@@ -58,6 +58,15 @@ jobs:
           test/pdf_selection_note_test.dart
           test/mac_browser_toolbar_test.dart
           test/widget/pdf_floating_toolbars_test.dart
+          test/pdf_document_workspace_portability_test.dart
+          test/document_history_test.dart
+          test/new_document_test.dart
+          test/document_conversion_test.dart
+          test/widget/new_document_dialog_test.dart
+          test/widget/document_conversion_dialog_test.dart
+          test/widget/document_history_dialog_test.dart
+          test/widget/document_workspace_session_test.dart
+          test/widget/active_pane_frame_test.dart
           test/pdf_edit_session_test.dart
           test/pdf_file_store_test.dart
           test/pdf_device_export_test.dart
@@ -69,7 +78,7 @@ jobs:
           test/web_file_ops_test.dart
       - name: Browser editor lifecycle
         if: success() || failure()
-        run: flutter test --platform chrome test/widget/pdf_editor_dialog_test.dart test/widget/pdf_operations_dialog_test.dart
+        run: flutter test --platform chrome test/widget/pdf_editor_dialog_test.dart test/widget/pdf_operations_dialog_test.dart test/pdf_document_workspace_portability_test.dart
       - name: Record reviewable formatting and lockfile updates
         if: always()
         run: |

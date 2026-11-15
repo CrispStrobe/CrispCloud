@@ -23,11 +23,10 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `b23d033620f07cf2659209eff4c4c8e2d71ee89c` on
-`integration/storage-carving-qualification-20261115` and standalone
+The app mirrors Quds `59c7c07` and standalone
 legacy parser `d422fa99a3a84830794f0e2dc332d59f923779f7`; all 2,220 managed files
 verify. New work includes supported BIFF8/HTML spreadsheet imports, shared
-formulas and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline field preservation, revision
+formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
 results. Legacy DOC preview/conversion explicitly enables parser recovery and

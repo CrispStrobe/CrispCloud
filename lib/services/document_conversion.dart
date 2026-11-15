@@ -283,11 +283,7 @@ Future<Uint8List> _textWord(String text) async {
   final document = WmlDocument.empty();
   document.sections.first.blocks
     ..clear()
-    ..addAll(
-      const LineSplitter()
-          .convert(text)
-          .map((line) => WmlParagraph(inlines: [WmlRun(text: line)])),
-    );
+    ..addAll(lines.map((line) => WmlParagraph(inlines: [WmlRun(text: line)])));
   if (document.sections.first.blocks.isEmpty) {
     document.sections.first.blocks.add(
       WmlParagraph(inlines: [WmlRun(text: '')]),
