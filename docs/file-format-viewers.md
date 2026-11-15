@@ -18,6 +18,7 @@ platform acceptance remains pending as described under [Verification](#verificat
 | `.ppt`, `.pps`, `.pot` | Positioned slide rendering through the selected browser engine; explicit **Text fallback** uses the native current-slide reader | Existing explicit hex editor; no binary PowerPoint writer |
 | `.wpd`, `.wp`, `.wp5`, `.wp6` | Structured WordPerfect paragraphs, styles, lists, ordered tables, running sections and notes through libwpd | Source/Hex inspection; no WordPerfect writer added |
 | `.chm` | Compiled Help topics, contents/index/search and archive-local resources | Source/Hex inspection; no Help authoring added |
+| `.xlsx`, `.xlsm`, `.xltx` | Native OOXML sheet view, text and PDF | Rich Quds sheet editor; `.xlsm` macro projects and `.xltx` template content types are preserved as package data and never executed; editing a signed package is refused |
 | `.xls`, `.xlt` | Quds BIFF import rendered as a typed, formula-aware read-only grid; **Legacy** toggle falls back to the File Viewer virtual grid | Quds import → sheet editor; Save writes a new `.xlsx` copy, the original `.xls` is never rewritten |
 | `.xlsb` | Worksheet tabs and a virtual grid with supported formatting and saved formula values | Source/Hex inspection; no legacy Excel writer added |
 | `.ps`, `.eps` | Local PostScript page rasterization through the Stet worker/WASM engine | Source/Hex inspection; no PostScript writer added |
