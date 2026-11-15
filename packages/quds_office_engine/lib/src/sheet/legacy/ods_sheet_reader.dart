@@ -178,9 +178,11 @@ abstract final class OdsSheetReader {
             column += repeat - reserved;
             continue;
           }
-          // Keep compatibility with producers that omit covered placeholders:
-          // a new ordinary origin begins after the preceding reserved span.
-          pendingCovered = 0;
+          if (pendingCovered > 0) {
+            throw const OdsSheetFormatException(
+              'Stored cell inside a merge requires a covered-cell token',
+            );
+          }
           final colSpan = _repeat(element, 'number-columns-spanned');
           final rowSpan = _repeat(element, 'number-rows-spanned');
           if (_repeat(element, 'number-matrix-columns-spanned') > 1 ||
@@ -197,6 +199,7 @@ abstract final class OdsSheetReader {
           // Parse values and formulas once, then resolve each column's style.
           // Repetition can cross columns with different default cell styles.
           final content = _readCellContent(element);
+          if (content.annotation != null) budget.comments(repeat * rowRepeat);
           final explicitStyle = _attribute(element, 'style-name', _table);
           final defaultStyle = explicitStyle ?? rowDefault;
           for (final run in _cellStyleRuns(
@@ -1124,6 +1127,7 @@ abstract final class OdsSheetReader {
 /// hundreds of millions of cells or unbounded merge/dimension bookkeeping.
 class _OdsBudget {
   int _cells = 0;
+  int _comments = 0;
   int _dimensions = 0;
   int _merges = 0;
   int _xmlBytes = 0;
@@ -1131,6 +1135,13 @@ class _OdsBudget {
   int _cellText = 0;
   int _styleWork = 0;
   int _mergeCoverageWork = 0;
+
+  void comments(int count) {
+    if (count > 10000 - _comments) {
+      throw const OdsSheetFormatException('ODS comment limit (10000)');
+    }
+    _comments += count;
+  }
 
   void cells(int count) {
     if (count > 200000 - _cells) {

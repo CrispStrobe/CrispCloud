@@ -1,0 +1,72 @@
+{
+  "after_entries_sha256": "4785552882e3e2afcb2dfc09105ce14b0af871b8cc24c97fa9dc711a5b21c0e7",
+  "after_git": {
+    "head": "fde5685965db83e9cfb6807ecba1205438d7e819",
+    "source_changes": [],
+    "status": "",
+    "tree": "4ae4ce56209cc50716b6c954007252dc902cce6c",
+    "untracked_source": []
+  },
+  "after_tools": {
+    "/workspace/scratch/1e19fe1d39ae/parser-reconcile/record_parser_gate.py": "41631c941659fd3972089f2cd944ee09c7a104e8f495a70204b7a0b4592749a0",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/receipts/flutter-version.json": "ea4bc8316415636ee34e83e16bfad26e4fc48cfb7fdaa0b0182264b2c0474eca"
+  },
+  "before_entries_sha256": "4785552882e3e2afcb2dfc09105ce14b0af871b8cc24c97fa9dc711a5b21c0e7",
+  "before_git": {
+    "head": "fde5685965db83e9cfb6807ecba1205438d7e819",
+    "source_changes": [],
+    "status": "",
+    "tree": "4ae4ce56209cc50716b6c954007252dc902cce6c",
+    "untracked_source": []
+  },
+  "before_tools": {
+    "/workspace/scratch/1e19fe1d39ae/parser-reconcile/record_parser_gate.py": "41631c941659fd3972089f2cd944ee09c7a104e8f495a70204b7a0b4592749a0",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/env.sh": "ffa3961403c67e56b5d6fd3bbe17f4ac7519a3cd48f98b9195fbc393763b5245",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "/workspace/scratch/1e19fe1d39ae/toolchains/receipts/flutter-version.json": "ea4bc8316415636ee34e83e16bfad26e4fc48cfb7fdaa0b0182264b2c0474eca"
+  },
+  "command": [
+    "/workspace/scratch/1e19fe1d39ae/toolchains/flutter/bin/cache/dart-sdk/bin/dart",
+    "analyze",
+    "--fatal-infos",
+    "lib/legacy_doc_parser.dart",
+    "lib/src/bounded_cfb_reader.dart",
+    "lib/src/conversion.dart",
+    "lib/src/legacy_word_binary_source.dart",
+    "lib/src/legacy_word_document.dart",
+    "lib/src/legacy_word_file_kind.dart",
+    "lib/src/legacy_word_media_parser.dart",
+    "lib/src/legacy_word_stories.dart",
+    "lib/src/legacy_word_structured_model.dart",
+    "lib/src/legacy_word_structured_parser.dart",
+    "lib/src/word_story_writer.dart",
+    "test/damaged_compound_recovery_test.dart",
+    "test/file_kind_test.dart",
+    "test/recover_comments_bookmarks_test.dart",
+    "test/recovery_reconciliation_bounds_test.dart",
+    "test/word6_text_import_test.dart",
+    "test/word98_mac_nfib_test.dart",
+    "test/compound_directory_recovery_test.dart"
+  ],
+  "cwd": "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+  "elapsed_seconds": 2.138750076999713,
+  "finished_at": "2026-11-15T12:05:41.778090+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 1828,
+  "inputs_and_commit_stable": true,
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "qualification_success": true,
+  "repo": "/workspace/scratch/1e19fe1d39ae/ParserCanonical",
+  "returncode": 0,
+  "schema": 1,
+  "scope_note": "Before/after source and resolution-input equality, not a hermetic cache snapshot or proof against transient writes. Exit success only qualifies the recorded command's scope.",
+  "started_at": "2026-11-15T12:05:39.637098+00:00",
+  "suite_count": null
+}

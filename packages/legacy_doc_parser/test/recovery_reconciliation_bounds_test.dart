@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:legacy_doc_parser/src/compound/cfbf_writer.dart';
+import 'package:legacy_doc_parser/src/compound/cfbf_reader.dart'
+    show CfbfException;
 import 'package:test/test.dart';
 
 import 'support/story_word_fixture.dart';
@@ -109,6 +111,33 @@ List<int> _utf16(String value) => [
 ];
 
 void main() {
+  test(
+    'explicit DOCX recovery handles compound parser errors; strict mode preserves them',
+    () {
+      final bytes = StructuredWordFixture(
+        pieces: const [WordFixturePiece('Recovered body\r')],
+      ).build();
+      final header = ByteData.sublistView(bytes);
+      final sectorSize = 1 << header.getUint16(30, Endian.little);
+      final directoryAt =
+          sectorSize * (header.getUint32(48, Endian.little) + 1);
+      bytes.fillRange(directoryAt, directoryAt + sectorSize, 0);
+      final before = Uint8List.fromList(bytes);
+      expect(() => convertLegacyWord(bytes), throwsA(isA<CfbfException>()));
+      final recovered = convertLegacyWord(bytes, recover: true);
+      expect(recovered.recoveredTextOnly, isTrue);
+      expect(recovered.bytes, isNotEmpty);
+      expect(bytes, orderedEquals(before));
+      expect(
+        () => convertLegacyWord(
+          bytes,
+          recover: true,
+          format: LegacyWordOutputFormat.docm,
+        ),
+        throwsA(isA<CfbfException>()),
+      );
+    },
+  );
   test('bounded raw recovery still follows a valid referenced piece table', () {
     expect(recoverLegacyWordText(_rawRecovery()), 'Recovered body');
   });
