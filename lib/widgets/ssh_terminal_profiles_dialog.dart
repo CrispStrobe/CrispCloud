@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/ssh_config_import_strings.dart';
 import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_strings.dart';
 import '../models/ssh_terminal_config.dart';
 import '../models/ssh_terminal_profile.dart';
 import '../services/ssh_terminal_profiles.dart';
+import 'ssh_config_import_dialog.dart';
 
 class SshTerminalProfilesDialog extends StatefulWidget {
   const SshTerminalProfilesDialog({super.key, required this.store});
@@ -36,6 +38,26 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
       if (mounted) setState(() => _profiles = widget.store.load());
     } catch (_) {
       if (mounted) setState(() => _error = 'Could not delete SSH profile.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _importConfig() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final saved = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => SshConfigImportDialog(store: widget.store),
+      );
+      if (mounted && saved == true) {
+        setState(() {
+          _profiles = widget.store.load();
+          _error = null;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -104,7 +126,12 @@ class _SshTerminalProfilesDialogState extends State<SshTerminalProfilesDialog> {
     ),
     actions: [
       TextButton(
-        onPressed: () => Navigator.pop(context),
+        key: const ValueKey('ssh-profiles-import-config'),
+        onPressed: _busy ? null : _importConfig,
+        child: Text(context.sshConfigImportTr('Import OpenSSH config')),
+      ),
+      TextButton(
+        onPressed: _busy ? null : () => Navigator.pop(context),
         child: Text(context.terminalTr('Cancel')),
       ),
     ],

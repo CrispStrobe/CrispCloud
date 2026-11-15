@@ -38,7 +38,9 @@ class SshTerminalProfiles {
 
   Future<({int version, List<SshTerminalProfile> profiles})> _load() async {
     final raw = await _read();
-    if (raw == null) return (version: 1, profiles: const []);
+    if (raw == null) {
+      return (version: 1, profiles: const <SshTerminalProfile>[]);
+    }
     if (raw.length > maxStorageLength) {
       throw const FormatException('SSH profile store exceeds the limit');
     }
@@ -89,6 +91,29 @@ class SshTerminalProfiles {
     }
     await _persist(profiles, minimumVersion: stored.version);
   });
+
+  /// Import a reviewed batch without replacing any existing destination.
+  /// Collision/capacity checks and the one write share the store mutation lock.
+  Future<void> addAllNew(List<SshTerminalProfile> additions) {
+    final pending = List<SshTerminalProfile>.unmodifiable(additions);
+    return _lock.synchronized(() async {
+      if (pending.isEmpty) return;
+      final stored = await _load();
+      if (stored.profiles.length + pending.length > maxProfiles) {
+        throw StateError('SSH profile limit reached');
+      }
+      final names = stored.profiles.map((profile) => profile.name).toSet();
+      for (final profile in pending) {
+        if (!names.add(profile.name)) {
+          throw StateError('SSH profile name already exists');
+        }
+      }
+      await _persist([
+        ...stored.profiles,
+        ...pending,
+      ], minimumVersion: stored.version);
+    });
+  }
 
   Future<void> delete(String name) => _lock.synchronized(() async {
     final stored = await _load();

@@ -623,25 +623,25 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   KeyEventResult _onWorkspaceKey(KeyEvent event) {
     if (_arranging) return KeyEventResult.handled;
     final keyboard = HardwareKeyboard.instance;
-    final direction = const {
+    final apple =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final direction = const [
       LogicalKeyboardKey.arrowLeft,
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowUp,
       LogicalKeyboardKey.arrowDown,
-    }.contains(event.logicalKey);
+    ].contains(event.logicalKey);
     if (keyboard.isAltPressed) {
-      if (direction &&
-          keyboard.isControlPressed &&
-          !keyboard.isMetaPressed &&
-          !keyboard.isShiftPressed) {
+      final paneModifier =
+          (keyboard.isControlPressed && !keyboard.isMetaPressed) ||
+          (apple && keyboard.isMetaPressed && !keyboard.isControlPressed);
+      if (direction && paneModifier && !keyboard.isShiftPressed) {
         if (event is KeyDownEvent) _navigatePane(event.logicalKey);
         return KeyEventResult.handled;
       }
       return KeyEventResult.ignored;
     }
-    final apple =
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.iOS;
     final command = apple
         ? keyboard.isMetaPressed && !keyboard.isControlPressed
         : keyboard.isControlPressed &&
@@ -663,11 +663,22 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
         command &&
         event.logicalKey == LogicalKeyboardKey.enter &&
         keyboard.isShiftPressed;
+    final cyclePane =
+        command &&
+        (event.logicalKey == LogicalKeyboardKey.bracketLeft ||
+            event.logicalKey == LogicalKeyboardKey.bracketRight) &&
+        (!apple || !keyboard.isShiftPressed);
     final cycle =
         keyboard.isControlPressed &&
         !keyboard.isMetaPressed &&
         event.logicalKey == LogicalKeyboardKey.tab;
-    if (!newTab && !closeTab && !cycle && !splitSide && !splitBelow && !zoom) {
+    if (!newTab &&
+        !closeTab &&
+        !cycle &&
+        !splitSide &&
+        !splitBelow &&
+        !zoom &&
+        !cyclePane) {
       return KeyEventResult.ignored;
     }
     if (event is KeyDownEvent) {
@@ -675,6 +686,9 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       if (splitSide) _split(Axis.horizontal);
       if (splitBelow) _split(Axis.vertical);
       if (zoom) _toggleZoom();
+      if (cyclePane) {
+        _cyclePane(event.logicalKey == LogicalKeyboardKey.bracketLeft ? -1 : 1);
+      }
       if (closeTab) {
         unawaited(_closeTab(_tabs.firstWhere((tab) => tab.id == _active)));
       }
@@ -1165,7 +1179,9 @@ class _PaneGeometry {
         1 - (horizontal ? secondMinimum.width : secondMinimum.height) / usable;
     // Minimum pane sizes can temporarily clamp a saved proportion. Keep the
     // saved value so widening the workspace restores the user's original ratio.
-    final fraction = split.fraction.clamp(lower, math.max(lower, upper));
+    final fraction = split.fraction
+        .clamp(lower, math.max(lower, upper))
+        .toDouble();
     final firstExtent = usable * fraction;
     final secondExtent = usable - firstExtent;
     final first = horizontal

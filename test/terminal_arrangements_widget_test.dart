@@ -264,6 +264,77 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets(
+    'nested arrangements preserve hidden tabs and independent dividers',
+    (tester) async {
+      final saved = TerminalArrangement(
+        name: 'Nested',
+        tabs: [
+          for (var i = 0; i < 5; i++) TerminalArrangementTab(name: 'Pane $i'),
+        ],
+        activeIndex: 4,
+        layout: TerminalPaneSplit(
+          axis: TerminalSplitAxis.horizontal,
+          fraction: 0.4,
+          first: TerminalPaneLeaf(0),
+          second: TerminalPaneSplit(
+            axis: TerminalSplitAxis.vertical,
+            first: TerminalPaneLeaf(2),
+            second: TerminalPaneSplit(
+              axis: TerminalSplitAxis.horizontal,
+              first: TerminalPaneLeaf(3),
+              second: TerminalPaneLeaf(4),
+            ),
+          ),
+        ),
+      );
+      await store.save(saved);
+      await mount(tester);
+      await restore(tester, 'Nested');
+      expect(panels(tester), hasLength(5));
+      expect(panels(tester).where((panel) => panel.visible), hasLength(4));
+      expect(panels(tester).every((panel) => !panel.autoStart), isTrue);
+      expect(
+        panels(
+          tester,
+        ).every((panel) => panel.session!.status == TerminalSessionStatus.idle),
+        isTrue,
+      );
+      await tester.drag(
+        find.byKey(const ValueKey('terminal-split-divider-11')),
+        const Offset(25, 0),
+      );
+      await tester.pumpAndSettle();
+      await layout(tester, 'Zoom active pane');
+      expect(panels(tester).where((panel) => panel.visible), hasLength(1));
+      await save(tester, 'Nested edited');
+      final captured = (await store.load()).singleWhere(
+        (item) => item.name == 'Nested edited',
+      );
+      expect(
+        captured.tabs.map((tab) => tab.name),
+        saved.tabs.map((tab) => tab.name),
+      );
+      expect(captured.layout.leafIds, [0, 2, 3, 4]);
+      expect(captured.activeIndex, 4);
+      expect(captured.layout.splitAt('')!.fraction, 0.4);
+      expect(captured.layout.splitAt('1')!.fraction, 0.5);
+      expect(captured.layout.splitAt('11')!.fraction, greaterThan(0.5));
+      await restore(tester, 'Nested edited');
+      expect(panels(tester).where((panel) => panel.visible), hasLength(4));
+      await save(tester, 'Round trip');
+      final roundTrip = (await store.load()).singleWhere(
+        (item) => item.name == 'Round trip',
+      );
+      expect(
+        roundTrip.toJson()..remove('name'),
+        captured.toJson()..remove('name'),
+      );
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    },
+  );
+
   testWidgets('cancel keeps live sessions and every existing screen', (
     tester,
   ) async {
