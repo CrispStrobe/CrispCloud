@@ -193,8 +193,13 @@ abstract final class OdsSheetReader {
             column += span;
           }
         }
-        // A repeated empty row is trailing padding, not data.
-        if (!hasContent && rowRepeat > 1) break;
+        // Repeated empty rows are often used as spacing, or as trailing
+        // padding. Skip them; never stop reading data that follows.
+        if (!hasContent && rowRepeat > 1) {
+          rowIndex += rowRepeat.clamp(1, _maxRows);
+          if (rowIndex >= _maxRows) break;
+          continue;
+        }
         if (rowHeight != null && rowHeight > 0) {
           for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
             sheet.rowHeights[rowIndex + r] = SmlWorksheet.rowHeightFromExcel(
@@ -323,15 +328,21 @@ abstract final class OdsSheetReader {
       numberStyles,
       element.getAttribute('value-type'),
     );
+    // Inherited column/row defaults apply to real cells, but materializing
+    // every cell of a 16k-column padding run would create millions of empty
+    // cells. Only an explicit, non-default cell style can stand alone.
+    final explicitStyle = element.getAttribute('style-name');
     final styled =
-        bold ||
-        fontSize != null ||
-        color != null ||
-        fill != null ||
-        align != SmlHAlign.general ||
-        wrap ||
-        family != null ||
-        numFmt != null;
+        explicitStyle != null &&
+        explicitStyle != 'Default' &&
+        (bold ||
+            fontSize != null ||
+            color != null ||
+            fill != null ||
+            align != SmlHAlign.general ||
+            wrap ||
+            family != null ||
+            numFmt != null);
 
     if (value == null && formula == null && !styled) return null;
 

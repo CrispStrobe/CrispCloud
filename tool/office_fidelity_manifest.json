@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/odf-legacy-spreadsheets",
-  "source_commit": "ddaca09c88895c56480dae5b506dc4f0b4cf120f",
+  "source_commit": "f6bb43fa67e61807a434544b124b83ca79069b8e",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1859,7 +1859,7 @@
     "packages/quds_office_engine/lib/src/sheet/formula/formula_eval.dart": "c9d13f08e8388c22e12567d50cc57c4f1ed70f340b338bfed39facac59c1d45b",
     "packages/quds_office_engine/lib/src/sheet/formula/formula_functions.dart": "53f4270baaa0aadf5b18da06fb86b81a084a199abdb2e9edb734e24f3a6f5d92",
     "packages/quds_office_engine/lib/src/sheet/legacy/legacy_sheet_reader.dart": "a7bc75d47fae7234699fb8c4c651a35a45fcc5186cb57a7c19efbd050175fc8b",
-    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "575035020e5a53fc431e1194badb1e5d670a0de862fee3427fc69f75171e7005",
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart": "436e83cdcace4ca930923c294869d554be2f8a7520d2d970aa8675905e73798b",
     "packages/quds_office_engine/lib/src/sheet/model/sheet_rename.dart": "93e0c9103222bc05ddbc08929983129f3285da15839695bc3a2384c68a91089f",
     "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart": "043c0989d14381ad83637be63f81ef13034b594e9a6962f9cbc0d9b2bc8fad45",
     "packages/quds_office_engine/lib/src/sheet/model/sml_power_query.dart": "610f105eef406d0b80f0ac9e8c9c22fb7972a5cf82a9e28e618ce0bf4a19aae7",
@@ -2023,6 +2023,7 @@
     "packages/quds_office_engine/test/legacy_word_conversion_test.dart": "54f30696611bb819b2d4bc7145f4745c546d0ad8138573efb548f6f01e96f89c",
     "packages/quds_office_engine/test/legacy_word_document_test.dart": "0d1ee04744d58b9a735019527cd64ae536acbd1dc1e7c1c225a68e9d213bf801",
     "packages/quds_office_engine/test/list_restart_fidelity_test.dart": "2e0318c0eac36d143d55caaa8f8b2364f0f48d168758f576d114d59ff3e409fa",
+    "packages/quds_office_engine/test/local_spreadsheet_corpus_test.dart": "eaa46ad6cec964cd008101abfbeb31ef6b008dbdd60e2beee33a13130ce77882",
     "packages/quds_office_engine/test/native_presentation_test.dart": "af7a29f3aa311531b8901e2a92f6de31cc0f0ce2b2f9f5e9d25e5bbf7785f8f4",
     "packages/quds_office_engine/test/native_spreadsheet_test.dart": "638e4dabbb8a39b8ef08a8c9f8d9603ea98422abc6256d665a05860e8a52bd06",
     "packages/quds_office_engine/test/note_chrome_fidelity_test.dart": "4cb17524af3193000a75e76c641033a78328cabed753632f4f289699d5cdd311",
