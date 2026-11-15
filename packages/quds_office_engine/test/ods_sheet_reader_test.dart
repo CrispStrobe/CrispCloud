@@ -12,12 +12,20 @@ const _style = 'urn:oasis:names:tc:opendocument:xmlns:style:1.0';
 const _fo = 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0';
 const _number = 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0';
 
-Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
+Uint8List _ods(
+  String tables, {
+  String styles = '',
+  String? namedStyles,
+  Map<String, List<int>> parts = const <String, List<int>>{},
+}) {
   final zip = ZipWriter();
   const bindings =
       'xmlns:o="$_office" xmlns:t="$_table" '
       'xmlns:x="$_text" xmlns:s="$_style" xmlns:f="$_fo" xmlns:dc="http://purl.org/dc/elements/1.1/" '
-      'xmlns:e="urn:test:extension"';
+      'xmlns:e="urn:test:extension" '
+      'xmlns:dr="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+      'xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" '
+      'xmlns:xl="http://www.w3.org/1999/xlink"';
   zip.addFile(
     'content.xml',
     utf8.encode(
@@ -27,6 +35,9 @@ Uint8List _ods(String tables, {String styles = '', String? namedStyles}) {
       '</o:document-content>',
     ),
   );
+  for (final entry in parts.entries) {
+    zip.addFile(entry.key, entry.value);
+  }
   if (namedStyles != null) {
     zip.addFile(
       'styles.xml',
@@ -1301,5 +1312,33 @@ void edgeTests() {
       ),
       '02.01.2024',
     );
+  });
+}
+
+void imageTests() {
+  final png = base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+  );
+
+  test('ODS pictures become worksheet drawings and survive save', () async {
+    final source = _ods(
+      '<t:table t:name="Data"><t:table-row><t:table-cell>'
+      '<dr:frame dr:name="Logo" svg:width="2in" svg:height="1in">'
+      '<dr:image xl:href="Pictures/p.png"/></dr:frame>'
+      '</t:table-cell></t:table-row></t:table>',
+      parts: {'Pictures/p.png': png},
+    );
+    final book = OdsSheetReader.readBytes(source);
+    final drawing = book.sheets.first.drawings.single;
+    expect(drawing.visual.title, 'Logo');
+    expect(drawing.visual.imageBytes, png);
+    expect(drawing.visual.width, closeTo(144, 0.01));
+    expect(drawing.visual.height, closeTo(72, 0.01));
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final reopened = SheetDeserializer().readBytes(saved);
+    final restored = reopened.sheets.first.drawings.single;
+    expect(restored.visual.imageBytes, png);
+    expect(restored.visual.width, closeTo(144, 0.01));
   });
 }

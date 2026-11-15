@@ -86,6 +86,8 @@ bool _isEditableOoxml(String name) {
   return ext == 'docx' ||
       WordPackagePreservation.contentTypesByExtension.containsKey(ext) ||
       ext == 'xlsx' ||
+      ext == 'xlsm' ||
+      ext == 'xltx' ||
       ext == 'pptx';
 }
 
@@ -228,6 +230,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       case 'dotm':
         return OfficeEditorKind.word;
       case 'xlsx':
+      case 'xlsm':
+      case 'xltx':
         return OfficeEditorKind.sheet;
       case 'pptx':
         return OfficeEditorKind.slides;
