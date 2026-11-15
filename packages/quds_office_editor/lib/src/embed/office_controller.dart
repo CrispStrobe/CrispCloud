@@ -12009,6 +12009,7 @@ class _SheetGridSnap {
         ..styleIndex = cell.styleIndex
         ..hasExplicitStyleIndex = cell.hasExplicitStyleIndex
         ..horizontalAlign = cell.horizontalAlign
+        ..wrapText = cell.wrapText
         ..fillRgb = cell.fillRgb
         ..hasExplicitFillColorEdit = cell.hasExplicitFillColorEdit
         ..fontRgb = cell.fontRgb

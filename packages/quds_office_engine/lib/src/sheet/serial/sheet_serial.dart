@@ -966,6 +966,7 @@ class SheetSerializer {
           bold: cell.fontBold,
           size: cell.fontSize,
           fontFamily: cell.fontFamily,
+          wrapText: cell.wrapText,
         );
       }
     }

@@ -194,6 +194,7 @@ class SmlCell {
     this.styleIndex = 0,
     this.hasExplicitStyleIndex = false,
     this.horizontalAlign = SmlHAlign.general,
+    this.wrapText,
     this._fillRgb = '',
     this.hasExplicitFillColorEdit = false,
     this._fontRgb = '',
@@ -227,6 +228,9 @@ class SmlCell {
 
   /// horizontalAlign API.
   SmlHAlign horizontalAlign;
+
+  /// Whether the cell wraps text; null means inherit the base xf.
+  bool? wrapText;
 
   String _fillRgb;
 
