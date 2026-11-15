@@ -1,0 +1,154 @@
+{
+  "result": "passed",
+  "remote_metadata_checked_at_utc": "2026-11-15T20:19:07.123Z",
+  "receipt_note": "Reconstructed from retained API comparison records and completed successful hash-verification results after scratch filesystem access failed. No verification outcome or test result is inferred from an unexecuted command.",
+  "crispcloud": {
+    "commit": "e43fc424c5cb58bec93ee33c3f81de15f4f921db",
+    "tree": "cee06128852afd6ff4725b0f8d3faaeeb8dd7108",
+    "observed_branch_head": "e43fc424c5cb58bec93ee33c3f81de15f4f921db"
+  },
+  "quds": {
+    "commit": "244474c688c3a49a6fbcd98acc501a06794c1370",
+    "tree": "ad944b2ad127eb1de2bb130064eb08733b248194",
+    "observed_branch_head": "244474c688c3a49a6fbcd98acc501a06794c1370"
+  },
+  "manifest": {
+    "path": "tool/office_fidelity_manifest.json",
+    "git_blob": "444be06a93c34a465c5310e5b406b2fb491c575f",
+    "source_commit": "244474c688c3a49a6fbcd98acc501a06794c1370",
+    "managed_file_count": 2374,
+    "inventory_paths_unchanged": true,
+    "duplicate_json_keys": false,
+    "downloaded_bytes_match_final_git_blob": true
+  },
+  "coverage": {
+    "prior_stream_verified_commit": "3c4cd0e24ab36f4fd88363cbc8521455bda811c6",
+    "prior_stream_archive_sha256": "d5647bd593a88069c3e5db0a1e4f389ce70e58cc2cc2a7c884323cbe60430a0e",
+    "prior_stream_inventory_sha256": "5a0317579622e40b9cace628cd82b74ee4a6127edbf2b7ef8199cf1891b892c4",
+    "prior_stream_files_verified": 2374,
+    "unchanged_blob_mode_size_count": 2372,
+    "freshly_hashed_changed_files": 2,
+    "fully_covered_managed_files": 2374,
+    "method": "Reuse the previously streamed and hashed bytes for 2372 identical immutable Git blobs with identical modes and sizes; fetch and hash the two changed changelogs; compare every final managed blob/mode/size with its pinned canonical source tree. The archive was not streamed again."
+  },
+  "changed_managed_files": [
+    {
+      "path": "packages/quds_office_editor/CHANGELOG.md",
+      "sha256": "2b3bebfbbd7018f06ef42ff5baadc2d078f91808a32c5b7c9bc74a03b4934008",
+      "git_blob": "27fda2c7bfee634da113d461c0cd3830a26145cb",
+      "git_mode": "100644",
+      "size": 26245,
+      "matches_final_manifest": true,
+      "matches_final_quds_blob_mode_size": true
+    },
+    {
+      "path": "packages/quds_office_engine/CHANGELOG.md",
+      "sha256": "6c51bf955a65e4d02943f1c453491ea2f2590c095a0b29afd329fc6211dc9c4d",
+      "git_blob": "05db50e60b147d405e5b894e30529dbf5d3a104f",
+      "git_mode": "100644",
+      "size": 44483,
+      "matches_final_manifest": true,
+      "matches_final_quds_blob_mode_size": true
+    }
+  ],
+  "canonical_source_verification": {
+    "matched_counts": {
+      "quds": 517,
+      "legacy": 1857
+    },
+    "all_blob_mode_size_type_matches": true,
+    "all_git_trees_nontruncated": true,
+    "legacy_declaration": {
+      "packages/legacy_doc_parser": {
+        "repository": "CrispStrobe/legacy-doc-parser",
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+      }
+    },
+    "legacy_declaration_unchanged": true
+  },
+  "test_provenance": {
+    "previous_actual_results": {
+      "core_client_tests_passed": 34,
+      "host_transport_tests_passed": 16,
+      "focused_static_analysis": "No issues found"
+    },
+    "source_files": [
+      {
+        "canonical_path": "quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+        "sha256": "729b9d431b05d559e831699e761752459ea29c27caf940e9844d026d5ffdf897",
+        "git_blob": "520ceb361c1ce83a93424a332628ae49c17c0498",
+        "git_mode": "100644",
+        "size": 23464,
+        "matches_tested_bytes": true,
+        "vendor_copy_matches": true
+      },
+      {
+        "canonical_path": "quds_office_suite/packages/quds_office_engine/lib/src/zotero/zotero_models.dart",
+        "sha256": "172663c7fef76d0fa5a1f9977c82c7df83500e9a15f1599ee9ca79ab80c3357b",
+        "git_blob": "e7686d0ed50900abceee6cc3a3b4da4648d858a9",
+        "git_mode": "100644",
+        "size": 6444,
+        "matches_tested_bytes": true,
+        "vendor_copy_matches": true
+      },
+      {
+        "canonical_path": "quds_office_suite/packages/quds_office_engine/test/zotero_client_test.dart",
+        "sha256": "8502e4921897cfa3f9c89170f64dd6e60e97e7eecba886935bf6db64fb76ad68",
+        "git_blob": "2d3865b659402ee316092c76e6abc719baaa04ac",
+        "git_mode": "100644",
+        "size": 34065,
+        "matches_tested_bytes": true,
+        "vendor_copy_matches": true
+      },
+      {
+        "canonical_path": "CrispCloud/lib/services/office_zotero_transport.dart",
+        "sha256": "d5916f5524542f15f8efbb9cae9dc8f8eb3c931b01d16422f8cc2b3f8761d394",
+        "git_blob": "5516534131a311aa65ba32abaf981e0a00f9e0e5",
+        "git_mode": "100644",
+        "size": 6441,
+        "matches_tested_bytes": true
+      },
+      {
+        "canonical_path": "CrispCloud/test/office_zotero_test.dart",
+        "sha256": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+        "git_blob": "2d433076fd2e2e50c3a215f385cc0a7b8ad59530",
+        "git_mode": "100644",
+        "size": 19986,
+        "matches_tested_bytes": true
+      }
+    ],
+    "host_harness_sha256": "d05ff0419575312f610c926748e7962f47017573e106fbfc21cca64a1ffc8236",
+    "host_harness_unchanged": true,
+    "verification": "Preserved tested bytes were hashed and their Git blob IDs matched the final remote trees. All three Quds core/test files also matched the final CrispCloud vendor copies. The complete host test source matched its extraction-time SHA256.",
+    "scope_note": "The existing focused 50-test and analyzer results cover these exact final core/transport bytes. This does not expand their scope to Flutter widgets, host credentials or the full native application."
+  },
+  "terminal_integration": {
+    "merge_commit": "a8379652a775956fccec6ffba09cbb1c6b213793",
+    "parents": [
+      "3c4cd0e24ab36f4fd88363cbc8521455bda811c6",
+      "b0b3334b2160ee7d43378d730803f32781a53968"
+    ],
+    "terminal_head": "b0b3334b2160ee7d43378d730803f32781a53968",
+    "comparison_status": "ahead",
+    "ahead_by": 12,
+    "behind_by": 0,
+    "changed_files": [
+      {
+        "path": "docs/validation/terminal-20261115/integration.json",
+        "status": "added"
+      },
+      {
+        "path": "lib/services/terminal_session.dart",
+        "status": "modified"
+      },
+      {
+        "path": "lib/services/terminal_shell_integration.dart",
+        "status": "added"
+      }
+    ],
+    "managed_conflicts": []
+  },
+  "github_actions_queried_or_awaited": false,
+  "remote_writes_performed": false,
+  "failures": []
+}

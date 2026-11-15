@@ -18,6 +18,6 @@ the recorded checkpoint audit; the verifier reads its exact pinned public
 archive. It does not use GitHub Actions.
 
 The final source repin also carries the two updated package changelogs. The
-separate final integration receipt compares that small managed-file delta to
+separate [final integration receipt](final-integration.json) compares that small managed-file delta to
 the already verified checkpoint and validates their new hashes and canonical
 source identities. Implementation and test bytes retain the tested hashes.

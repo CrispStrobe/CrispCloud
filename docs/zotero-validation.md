@@ -41,6 +41,27 @@ results for their recorded sources, not fresh qualification of the new UI.
 
 No GitHub Actions were awaited. Checkpoints carry `[skip ci]`.
 
+## Final managed-source and integration verification
+
+The final integration checkpoint is CrispCloud
+`e43fc424c5cb58bec93ee33c3f81de15f4f921db`, pinned to Quds
+`244474c688c3a49a6fbcd98acc501a06794c1370`. The subsequent receipt/document-only
+commit does not change managed Office files or tested production/test sources.
+
+The [final integration receipt](validation/zotero-desktop-20261115/final-integration.json)
+links the independent full archive audit of **2,374 managed files** and proves
+that 2,372 retain identical Git blobs, modes and sizes. The only two changes,
+the engine/editor changelogs, were freshly hashed and matched against the final
+manifest and canonical Quds source. All **517 Quds files and 1,857 legacy files**
+match their pinned sources; the inventory and standalone parser pin are unchanged.
+
+The same receipt confirms that the source/test bytes behind the fresh **50
+passing tests** match the final remote trees. Terminal draft #140 is integrated
+through `b0b3334b2160ee7d43378d730803f32781a53968`; its last three changed paths
+are disjoint from managed Office content. This integration check does not claim
+a new terminal test run. See [VENDOR.md](validation/zotero-desktop-20261115/VENDOR.md)
+for the full audit method, archive inventory and reproducer.
+
 ## Earlier Web API increment: historical results
 
 The following evidence belongs to the earlier implementation and is retained
