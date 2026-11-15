@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
-import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/veracrypt_service.dart';
@@ -139,7 +138,7 @@ void main() {
 
     test('ContainerPanelSource isContainer', () {
       const parent = LocalPanelSource('/home');
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/home/vault.vc',
         innerPath: '',
         parent: parent,
@@ -178,7 +177,7 @@ void main() {
     });
 
     test('ContainerPanelSource displayName contains container filename', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/data/secure.vc',
         innerPath: '',
         parent: const LocalPanelSource('/data'),
@@ -205,7 +204,7 @@ void main() {
     });
 
     test('ContainerPanelSource currentPath is innerPath', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/a.vc',
         innerPath: 'docs/',
         parent: const LocalPanelSource('/'),
@@ -234,7 +233,7 @@ void main() {
       );
       final next = src.withPath('/documents');
       expect(next, isA<RemotePanelSource>());
-      expect((next as RemotePanelSource).providerName, 'Filen');
+      expect(next.providerName, 'Filen');
       expect(next.currentPath, '/documents');
     });
 
@@ -245,7 +244,7 @@ void main() {
         parent: LocalPanelSource('/'),
       );
       final next = src.withPath('folder/');
-      expect((next as ArchivePanelSource).innerPath, 'folder/');
+      expect(next.innerPath, 'folder/');
       expect(next.archivePath, '/a.zip');
     });
   });
@@ -437,7 +436,7 @@ void main() {
 
     test('exit container returns parent source', () {
       const parent = LocalPanelSource('/data');
-      final container = ContainerPanelSource(
+      const container = ContainerPanelSource(
         containerPath: '/data/vault.vc',
         innerPath: '',
         parent: parent,
@@ -563,7 +562,7 @@ void main() {
     });
 
     test('ContainerPanelSource toJson omits unlockSession', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/vault.vc',
         innerPath: '',
         parent: const LocalPanelSource('/'),
@@ -575,7 +574,7 @@ void main() {
     });
 
     test('ContainerPanelSource fromJson restores correctly', () {
-      final src = ContainerPanelSource(
+      const src = ContainerPanelSource(
         containerPath: '/vault.hc',
         innerPath: 'docs/',
         parent: const LocalPanelSource('/'),

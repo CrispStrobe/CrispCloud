@@ -5,13 +5,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show compute;
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_ext_reader.dart';
 import 'archive_fat_reader.dart';
 import 'archive_ntfs_reader.dart';
 import 'archive_types.dart';
+import 'veracrypt_header_worker.dart';
 import 'veracrypt_service.dart';
 
 /// The user selects one header; backup/hidden headers are never tried silently.
@@ -35,8 +35,8 @@ extension VeraCryptHeaderLocationDetails on VeraCryptHeaderLocation {
 ///
 /// Only AES-XTS file volumes and the existing FAT/NTFS/ext reader profiles are
 /// admitted. No decrypted image is written to disk. On native platforms the
-/// expensive header derivation runs in a worker isolate; web uses Flutter's
-/// compute fallback. Cancellation invalidates a result even during derivation.
+/// expensive header derivation runs in a cancellable worker isolate. Browser
+/// derivation is synchronous and uses the service's stricter resource limits.
 Future<ViewerArchive> openVeraCryptArchive(
   koni.ByteSource source, {
   required String password,
@@ -89,7 +89,13 @@ Future<ViewerArchive> openVeraCryptArchive(
       ),
       source.length,
     );
-    volume = await compute(_unlockHeader, request);
+    volume = await unlockVeraCryptHeaderAsync(
+      request.header,
+      request.password,
+      options: request.options,
+      containerSizeBytes: request.size,
+      isCancelled: isCancelled,
+    );
     await owned.checkpoint();
     if (volume == null) {
       throw const ArchivePasswordRequiredException(
@@ -186,19 +192,6 @@ class _HeaderRequest {
     for (final keyfile in options.keyfiles) {
       keyfile.fillRange(0, keyfile.length, 0);
     }
-  }
-}
-
-VeraCryptUnlockedVolume? _unlockHeader(_HeaderRequest request) {
-  try {
-    return VeraCryptService.unlockHeader(
-      request.header,
-      request.password,
-      options: request.options,
-      containerSizeBytes: request.size,
-    );
-  } finally {
-    request.clearKeyfiles();
   }
 }
 
