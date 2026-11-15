@@ -35,6 +35,10 @@ void main() {
       'Roboto': 'Apache License',
       'Roboto Mono': 'Apache License',
       'Material Icons': 'Attribution 4.0 International',
+      'Liberation Sans': 'SIL OPEN FONT LICENSE',
+      'Liberation Serif': 'SIL OPEN FONT LICENSE',
+      'Liberation Mono': 'SIL OPEN FONT LICENSE',
+      'Noto Naskh Arabic': 'SIL OPEN FONT LICENSE',
     };
     expect(byFamily.keys, unorderedEquals(expectedLicenses.keys));
     for (final expected in expectedLicenses.entries) {

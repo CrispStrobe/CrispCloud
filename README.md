@@ -332,3 +332,6 @@ Cloud connections can remain open simultaneously in both panes. See [provider se
 Tools → Catalogues provides SQLite catalogue browsing, Cathy/Catfish CAF import/export, paged search and size rankings, cancellation and safe refresh. See [catalogue usage and limits](docs/catalogues.md). The primary CLI command is `crispcloud`; `crisp` remains an alias. CrispSorter uses `crispsorter` and its lightweight `crispcat` companion.
 
 The shared CAF codec is the standalone MIT-licensed [`crispcat-format` Rust crate](https://github.com/CrispStrobe/CrispSorter/tree/main/crates/crispcat-format), consumed from an exact reviewed source snapshot. SQLite remains the queryable working index; CAF files are portable interchange/snapshot exports and are optional beside a database. No Python runtime or full CrispSorter application stack is required by the codec.
+
+Third-party attribution and the scope of the current notice audit are recorded in
+[About and bundled notices](docs/legal-notices-audit-20261115.md).

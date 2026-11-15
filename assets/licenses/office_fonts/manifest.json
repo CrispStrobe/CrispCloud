@@ -1,0 +1,79 @@
+{
+  "reviewed_on": "2026-11-15",
+  "families": [
+    {
+      "family": "Liberation",
+      "source": "https://raw.githubusercontent.com/liberationfonts/liberation-fonts/main/LICENSE",
+      "upstream_license_sha256": "93fed46019c38bbe566b479d22148e2e8a1e85ada614accb0211c37b2c61c19b",
+      "notice": "assets/licenses/office_fonts/Liberation-LICENSE.txt",
+      "notice_sha256": "efd93458ee250831c21828d1751983d81a80f835227d52f8938e02827bd5d685",
+      "fonts": [
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationMono-Bold.ttf",
+          "sha256": "50464e64aaadea741fb9516748aee296d570439406be11d63df22294e77ba867"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationMono-BoldItalic.ttf",
+          "sha256": "291872531f0e8013df602c412fc570241860e41b1fa1b7972537c27a19024d4d"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationMono-Italic.ttf",
+          "sha256": "35c3116d4366eb0e58494d8e432d4ee0c60c5735c7f775ffc096008bd2907c74"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationMono-Regular.ttf",
+          "sha256": "d18235f1e874771f4eaec3ddd6ddb4db849d334bdc6930c5c2185d9344834e62"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSans-Bold.ttf",
+          "sha256": "b72c65e551d653b54217ffad0d1454ce0657e4e8d4a28bcc79e0acd2598f4bf3"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSans-BoldItalic.ttf",
+          "sha256": "64263238517af60213cdb469165fc7e9acd0c09c35f4155f924a379f97125a57"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSans-Italic.ttf",
+          "sha256": "4ccb79043bd3a6d131b5a53901abb21261b1417f6052b38a9fa9716a4e5a3d81"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf",
+          "sha256": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSerif-Bold.ttf",
+          "sha256": "bb033fae52dcbf67a55494a08829aaa788324624d72a195af7f93da3061c928f"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSerif-BoldItalic.ttf",
+          "sha256": "10ec0fa22bc6f12a239d600c051752884d155997aafd19ebc24c4f4a8d2b98d0"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSerif-Italic.ttf",
+          "sha256": "c1882fbb05e78537b9c39dad3c07c4f231c987a3747b20c8745737aed50cd488"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/LiberationSerif-Regular.ttf",
+          "sha256": "350f4ffd773cae53560c63dca3d89a5070595614fde12f772bf43feb63d81064"
+        }
+      ]
+    },
+    {
+      "family": "Noto Naskh Arabic",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-fonts/main/LICENSE",
+      "upstream_license_sha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
+      "notice": "assets/licenses/office_fonts/Noto-Naskh-Arabic-LICENSE.txt",
+      "notice_sha256": "bc96e87e17095d5e26011c5804b9af5b2672eddc7239482d0d0f35628fe39721",
+      "fonts": [
+        {
+          "path": "packages/quds_office_editor/fonts/NotoNaskhArabic-Bold.ttf",
+          "sha256": "b5cbcb561b4b540ff11d7b6934577dbbbbb9e1d152d47f6f31f19176d58ff39c"
+        },
+        {
+          "path": "packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf",
+          "sha256": "8c67eaa2f0086872628fc3f7f760386f83c8be5c5e9a1ba3a38891237b2ac7cb"
+        }
+      ]
+    }
+  ]
+}
