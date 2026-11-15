@@ -184,7 +184,7 @@ class InternalViewerService {
   /// Returns a map from [ViewerMode] to the list of file extensions handled by
   /// that mode (lower-case, including the leading dot).
   Map<ViewerMode, List<String>> getSupportedExtensions() => {
-    ViewerMode.model3d: ['stl', '3mf'],
+    ViewerMode.model3d: ['.stl', '.3mf'],
     ..._standardExtensions,
     ViewerMode.archive: [
       for (final format in archiveFormatCapabilities) ...format.suffixes,

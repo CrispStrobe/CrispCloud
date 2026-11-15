@@ -9,8 +9,8 @@ import '../services/document_activity.dart';
 //
 // Legacy .xls workbooks are imported into the shared spreadsheet model and
 // opened as XLSX; Save writes a new .xlsx copy so the original BIFF file is
-// never overwritten. .doc/.ppt and ODF still get a clear message because they
-// cannot be converted in-process yet.
+// never overwritten. .doc/.ppt and ODT/ODP still get a clear message because
+// they cannot be converted in-process yet.
 
 import 'dart:async';
 import 'dart:io';
@@ -24,7 +24,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:quds_office_editor/quds_office_editor.dart'
     hide WordPackagePreservation;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show LegacySheetReader, OfficeIsolateSave, WordPackagePreservation;
+    show LegacySheetReader, OdsSheetReader, OfficeIsolateSave, WordPackagePreservation;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -210,8 +210,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   OfficeEditorKind _kindFor(String name) {
     final ext = name.split('.').last.toLowerCase();
-    // Legacy Excel is converted to XLSX in memory before the controller loads.
-    if (ext == 'xls' || ext == 'xlt') return OfficeEditorKind.sheet;
+    // Legacy Excel and ODS are converted to XLSX in memory before loading.
+    if (ext == 'xls' || ext == 'xlt' || ext == 'ods') {
+      return OfficeEditorKind.sheet;
+    }
     if (!_isEditableOoxml(name)) return OfficeEditorKind.unsupported;
     switch (ext) {
       case 'docx':
@@ -253,9 +255,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       // BIFF workbooks are imported into the shared model and opened as XLSX.
       // Saving writes a new .xlsx copy; the original .xls is never rewritten.
       final sourceExt = widget.file.name.split('.').last.toLowerCase();
-      if (sourceExt == 'xls' || sourceExt == 'xlt') {
-        final workbook = LegacySheetReader.readBytes(bytes);
-        bytes = await OfficeIsolateSave.workbook(workbook, recalculate: false);
+      if (sourceExt == 'xls' || sourceExt == 'xlt' || sourceExt == 'ods') {
+        final workbook = sourceExt == 'ods'
+            ? OdsSheetReader.readBytes(bytes)
+            : LegacySheetReader.readBytes(bytes);
+        bytes = await OfficeIsolateSave.workbook(
+          workbook,
+          recalculate: false,
+        );
         _convertedLegacySheet = true;
       }
 
