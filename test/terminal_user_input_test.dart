@@ -24,46 +24,98 @@ void main() {
     await _events();
   });
 
-  test('only explicit input produces user events; terminal replies stay local', () async {
-    final inputs = <TerminalUserInput>[];
-    session.onUserInput = inputs.add;
-    connection.outputController.add('\x1b[c\x1b[0c\x1b[4;7H\x1b[6n');
-    await _events();
-    // Focus and mouse reports also go directly to onOutput.
-    session.terminal.onOutput?.call('\x1b[I');
-    session.terminal.onOutput?.call('\x1b[<0;3;4M');
-    expect(inputs, isEmpty);
+  test(
+    'a compound key tap has one input origin and complete protocol edges',
+    () async {
+      final inputs = <TerminalUserInput>[];
+      session.onUserInput = inputs.add;
+      session.terminal.write('\x1b[>3u');
+      (session.terminal as InputAwareTerminal).submitUserInput(
+        TerminalUserInput.keyTap(TerminalKey.arrowUp),
+      );
+      await _events();
+      expect(inputs, hasLength(1));
+      expect(connection.writes, ['\x1b[A', '\x1b[1;1:3A']);
+      final legacyOutput = <String>[];
+      final legacy = Terminal(onOutput: legacyOutput.add);
+      addTearDown(legacy.dispose);
+      inputs.single.applyTo(legacy);
+      expect(legacyOutput, ['\x1b[A']);
+    },
+  );
 
-    session.terminal.textInput('中🙂');
-    session.terminal.keyInput(TerminalKey.enter);
-    session.terminal.charInput(99, ctrl: true);
-    session.terminal.paste('one\ntwo');
-    await _events();
+  test(
+    'compound taps preserve explicit text fallback and ignored-input isolation',
+    () async {
+      final inputs = <TerminalUserInput>[];
+      session.onUserInput = inputs.add;
+      final terminal = session.terminal as InputAwareTerminal;
+      terminal.submitUserInput(
+        TerminalUserInput.keyTap(TerminalKey.keyA, text: 'a'),
+      );
+      terminal.submitUserInput(TerminalUserInput.keyTap(TerminalKey.none));
+      await _events();
+      expect(connection.writes, ['a']);
+      expect(inputs, hasLength(1));
+      terminal.write('\x1b[2h');
+      terminal.submitUserInput(
+        TerminalUserInput.keyTap(TerminalKey.keyA, text: 'a'),
+      );
+      await _events();
+      expect(connection.writes, ['a']);
+      expect(inputs, hasLength(1));
+    },
+  );
 
-    expect(inputs, hasLength(4));
-    expect(connection.writes, containsAllInOrder([
-      '\x1b[?6c',
-      '\x1b[?6c',
-      '\x1b[4;7R',
-      '\x1b[I',
-      '\x1b[<0;3;4M',
-      '中🙂',
-      '\r',
-      '\x03',
-      'one\rtwo',
-    ]));
-  });
+  test(
+    'only explicit input produces user events; terminal replies stay local',
+    () async {
+      final inputs = <TerminalUserInput>[];
+      session.onUserInput = inputs.add;
+      connection.outputController.add('\x1b[c\x1b[0c\x1b[4;7H\x1b[6n');
+      await _events();
+      // Focus and mouse reports also go directly to onOutput.
+      session.terminal.onOutput?.call('\x1b[I');
+      session.terminal.onOutput?.call('\x1b[<0;3;4M');
+      expect(inputs, isEmpty);
 
-  test('replayed paste uses recipient bracketed-paste mode without recursion', () async {
-    final inputs = <TerminalUserInput>[];
-    session.onUserInput = inputs.add;
-    connection.outputController.add('\x1b[?2004h');
-    await _events();
-    session.sendUserInput(TerminalUserInput.paste('one\ntwo'));
-    await _events();
-    expect(connection.writes, ['\x1b[200~one\ntwo\x1b[201~']);
-    expect(inputs, isEmpty);
-  });
+      session.terminal.textInput('中🙂');
+      session.terminal.keyInput(TerminalKey.enter);
+      session.terminal.charInput(99, ctrl: true);
+      session.terminal.paste('one\ntwo');
+      await _events();
+
+      expect(inputs, hasLength(4));
+      expect(
+        connection.writes,
+        containsAllInOrder([
+          '\x1b[?6c',
+          '\x1b[?6c',
+          '\x1b[4;7R',
+          '\x1b[I',
+          '\x1b[<0;3;4M',
+          '中🙂',
+          '\r',
+          '\x03',
+          'one\rtwo',
+        ]),
+      );
+    },
+  );
+
+  test(
+    'replayed paste uses recipient bracketed-paste mode without recursion',
+    () async {
+      final inputs = <TerminalUserInput>[];
+      session.onUserInput = inputs.add;
+      connection.outputController.add('\x1b[?2004h');
+      await _events();
+      session.sendUserInput(TerminalUserInput.paste('one\ntwo'));
+      await _events();
+      expect(connection.writes, ['\x1b[200~one\ntwo\x1b[201~']);
+      expect(inputs, isEmpty);
+    },
+  );
 
   test('replayed key uses recipient application cursor mode', () async {
     connection.outputController.add('\x1b[?1h');
@@ -73,20 +125,23 @@ void main() {
     expect(connection.writes, ['\x1bOA']);
   });
 
-  test('revoked broadcast lease drops input already waiting in the write queue', () async {
-    connection.writeGate = Completer<void>();
-    session.terminal.textInput('first');
-    await _events();
-    var current = true;
-    session.sendUserInput(
-      TerminalUserInput.text('stale'),
-      isCurrent: () => current,
-    );
-    current = false;
-    connection.writeGate!.complete();
-    await _events();
-    expect(connection.writes, ['first']);
-  });
+  test(
+    'revoked broadcast lease drops input already waiting in the write queue',
+    () async {
+      connection.writeGate = Completer<void>();
+      session.terminal.textInput('first');
+      await _events();
+      var current = true;
+      session.sendUserInput(
+        TerminalUserInput.text('stale'),
+        isCurrent: () => current,
+      );
+      current = false;
+      connection.writeGate!.complete();
+      await _events();
+      expect(connection.writes, ['first']);
+    },
+  );
 
   test('locked or disconnected input is not broadcast', () async {
     final inputs = <TerminalUserInput>[];
@@ -127,17 +182,20 @@ void main() {
     expect(connection.closes, 1);
   });
 
-  test('failed transport stays owned until asynchronous cleanup settles', () async {
-    connection.closeGate = Completer<void>();
-    connection.outputController.addError(StateError('transport failed'));
-    await _events();
-    expect(session.status, TerminalSessionStatus.failed);
-    expect(session.canDisconnect, isTrue);
-    expect(connection.closes, 1);
-    connection.closeGate!.complete();
-    await _events();
-    expect(session.canDisconnect, isFalse);
-  });
+  test(
+    'failed transport stays owned until asynchronous cleanup settles',
+    () async {
+      connection.closeGate = Completer<void>();
+      connection.outputController.addError(StateError('transport failed'));
+      await _events();
+      expect(session.status, TerminalSessionStatus.failed);
+      expect(session.canDisconnect, isTrue);
+      expect(connection.closes, 1);
+      connection.closeGate!.complete();
+      await _events();
+      expect(session.canDisconnect, isFalse);
+    },
+  );
 
   test('replacement waits for pending failed-transport cleanup', () async {
     connection.closeGate = Completer<void>();
@@ -159,26 +217,29 @@ void main() {
     expect(connection.closes, 1);
   });
 
-  test('cancelled late opener stays owned while its close is pending', () async {
-    await session.disconnect();
-    final pending = Completer<TerminalConnection>();
-    final lateConnection = _Connection()..closeGate = Completer<void>();
-    final opening = session.connect(
-      (_, __) => pending.future,
-      kind: TerminalSessionKind.ssh,
-    );
-    await _events();
-    await session.disconnect();
-    expect(session.canDisconnect, isTrue);
-    pending.complete(lateConnection);
-    await _events();
-    expect(lateConnection.closes, 1);
-    expect(session.canDisconnect, isTrue);
-    lateConnection.closeGate!.complete();
-    await opening;
-    expect(session.canDisconnect, isFalse);
-    expect(session.status, TerminalSessionStatus.disconnected);
-  });
+  test(
+    'cancelled late opener stays owned while its close is pending',
+    () async {
+      await session.disconnect();
+      final pending = Completer<TerminalConnection>();
+      final lateConnection = _Connection()..closeGate = Completer<void>();
+      final opening = session.connect(
+        (_, __) => pending.future,
+        kind: TerminalSessionKind.ssh,
+      );
+      await _events();
+      await session.disconnect();
+      expect(session.canDisconnect, isTrue);
+      pending.complete(lateConnection);
+      await _events();
+      expect(lateConnection.closes, 1);
+      expect(session.canDisconnect, isTrue);
+      lateConnection.closeGate!.complete();
+      await opening;
+      expect(session.canDisconnect, isFalse);
+      expect(session.status, TerminalSessionStatus.disconnected);
+    },
+  );
 
   test('input origin can be consumed only once per explicit operation', () {
     final terminal = InputAwareTerminal();
@@ -222,6 +283,7 @@ class _Connection implements TerminalConnection {
     writes.add(data);
     await writeGate?.future;
   }
+
   @override
   Future<void> close() async {
     closes++;

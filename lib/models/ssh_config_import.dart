@@ -315,7 +315,18 @@ class _Parser {
       for (final option in block.options) {
         final keyword = option.keyword;
         if (keyword == 'proxyjump' || keyword == 'proxycommand') {
-          if (settings.proxy != null) continue;
+          final previous = settings.proxy;
+          // OpenSSH's disabled ProxyJump still wins over another ProxyJump,
+          // but leaves ProxyCommand available. ProxyCommand none, in contrast,
+          // suppresses both later directives. Treat none case-insensitively.
+          final disabledJump =
+              previous?.keyword == 'proxyjump' &&
+              previous!.arguments.length == 1 &&
+              previous.arguments.single.toLowerCase() == 'none';
+          if (previous != null &&
+              !(keyword == 'proxycommand' && disabledJump)) {
+            continue;
+          }
           settings.proxy = option;
         } else if (keyword == 'identityfile') {
           if (option.arguments.length != 1 ||
@@ -488,7 +499,7 @@ class _Parser {
     final jumpHosts = <SshJumpHost>[];
     final proxy = settings.proxy;
     final route = _one(proxy, errors);
-    if (route != null && route != 'none') {
+    if (route != null && route.toLowerCase() != 'none') {
       if (proxy!.keyword == 'proxycommand') {
         errors.add(
           SshConfigImportDiagnostic(
@@ -512,7 +523,7 @@ class _Parser {
             final options = _settings(jump.alias);
             errors.addAll(options.diagnostics);
             final nested = _one(options.proxy, errors);
-            if (nested != null && nested != 'none') {
+            if (nested != null && nested.toLowerCase() != 'none') {
               errors.add(
                 SshConfigImportDiagnostic(
                   code: 'nested-proxy',

@@ -181,6 +181,22 @@ Host inner
     expect(e.config!.jumpHosts, isEmpty);
   });
 
+  test(
+    'proxy none is case-insensitive and preserves ProxyCommand competition',
+    () {
+      for (final option in ['ProxyJump NONE', 'ProxyCommand NONE']) {
+        final e = entry('Host box\n$option');
+        expect(e.canImport, isTrue, reason: option);
+        expect(e.config!.jumpHosts, isEmpty);
+      }
+      final disabled = entry('Host box\nProxyCommand none\nProxyJump relay');
+      expect(disabled.config!.jumpHosts, isEmpty);
+      final command = entry('Host box\nProxyJump none\nProxyCommand special');
+      expect(command.canImport, isFalse);
+      expect(command.diagnostics.any((d) => d.code == 'proxycommand'), isTrue);
+    },
+  );
+
   test('ProxyJump and ProxyCommand compete in source order', () {
     final safe = entry(
       'Host box\nProxyJump relay\nProxyCommand nc secret %h %p',
