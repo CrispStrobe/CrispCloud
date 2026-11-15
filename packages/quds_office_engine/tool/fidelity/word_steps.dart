@@ -123,7 +123,7 @@ void applyStep(
       );
       _noteHint(p);
     case 'heading':
-      WordToc.applyHeading(paragraph(), s.integer('level', max: 9));
+      WordHeadingIo.apply(doc, paragraph(), s.integer('level', max: 9));
       WordLink.ensureHeadingBookmarks(doc);
     case 'applyStyle':
       final style = s.string('style');

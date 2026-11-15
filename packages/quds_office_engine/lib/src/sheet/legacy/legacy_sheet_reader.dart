@@ -298,6 +298,7 @@ class _BiffWorkbookParser {
   final List<String> _strings = <String>[];
   final List<_BoundSheet> _sheets = <_BoundSheet>[];
   final List<List<String>> _supBooks = <List<String>>[];
+  final Map<int, String> _paletteOverride = <int, String>{};
   final List<({int supBook, int first, int last})> _externSheets =
       <({int supBook, int first, int last})>[];
   bool _sawGlobals = false;
@@ -342,6 +343,23 @@ class _BiffWorkbookParser {
           _formats[id] = _unicodeString(reader);
         case 0x00E0: // XF
           _xfs.add(_BiffXf.parse(record.data));
+        case 0x0092: // PALETTE
+          final reader = _Reader(record.data);
+          if (reader.remaining >= 2) {
+            final count = reader.u16();
+            for (var i = 0; i < count && reader.remaining >= 4; i++) {
+              final r = reader.u8();
+              final g = reader.u8();
+              final b = reader.u8();
+              reader.u8(); // reserved
+              // Palette entries start at colour index 8.
+              _paletteOverride[8 + i] =
+                  '${r.toRadixString(16).padLeft(2, '0')}'
+                  '${g.toRadixString(16).padLeft(2, '0')}'
+                  '${b.toRadixString(16).padLeft(2, '0')}'
+                      .toUpperCase();
+            }
+          }
         case 0x01AE: // SUPBOOK
           final reader = _Reader(record.data);
           if (reader.remaining >= 2) {
@@ -372,7 +390,9 @@ class _BiffWorkbookParser {
             }
           }
         case 0x0031: // FONT
-          _fonts.add(_BiffFont.parse(record.data));
+          _fonts.add(
+            _BiffFont.parse(record.data, _paletteColor),
+          );
         case 0x000A: // EOF
           break;
       }
@@ -750,6 +770,12 @@ class _BiffWorkbookParser {
     cell.horizontalAlign = _align(xf);
   }
 
+  String? _paletteColor(int index) {
+    final override = _paletteOverride[index];
+    if (override != null) return override;
+    return index >= 0 && index < _palette.length ? _palette[index] : null;
+  }
+
   String _formatCode(int index) {
     if (_formats.containsKey(index)) return _formats[index]!;
     return _builtInFormats[index] ?? 'General';
@@ -757,9 +783,7 @@ class _BiffWorkbookParser {
 
   String _fillRgb(_BiffXf xf) {
     if (xf.fillPattern == 0) return '';
-    final index = xf.fillForeground & 0x7F;
-    if (index < 0 || index >= _palette.length) return '';
-    return _palette[index] ?? '';
+    return _paletteColor(xf.fillForeground & 0x7F) ?? '';
   }
 
   SmlHAlign _align(_BiffXf xf) => switch (xf.horizontal) {
@@ -994,7 +1018,10 @@ class _BiffFont {
   final String color;
   final String family;
 
-  static _BiffFont parse(Uint8List data) {
+  static _BiffFont parse(
+    Uint8List data,
+    String? Function(int) paletteColor,
+  ) {
     final reader = _Reader(data);
     final height = reader.u16();
     final attributes = reader.u16();
@@ -1012,9 +1039,7 @@ class _BiffFont {
       nameLength,
       (flags & 0x01) != 0,
     );
-    final rgb = colorIndex >= 0 && colorIndex < _palette.length
-        ? _palette[colorIndex]
-        : null;
+    final rgb = paletteColor(colorIndex);
     return _BiffFont(
       size: height / 20,
       bold: (weight >= 700) || (attributes & 0x01) != 0,

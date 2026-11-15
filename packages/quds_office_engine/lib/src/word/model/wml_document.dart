@@ -604,8 +604,14 @@ class WmlFrame extends WmlBlock {
     this.sourceLinePropertiesXml,
     this.importedStrokeColor,
     this.anchorParagraphProperties,
+    this.hasTextBox = true,
     List<WmlBlock>? blocks,
   }) : blocks = blocks ?? <WmlBlock>[];
+
+  /// False for an imported shape that had no text box (a plain rectangle,
+  /// line or callout without text). Such a shape is written back without an
+  /// empty text-box body as long as it still has no content.
+  bool hasTextBox;
 
   /// x API.
   double x;

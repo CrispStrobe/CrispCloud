@@ -204,18 +204,11 @@ class _StyleCascade {
         color.getAttribute('themeTint') ?? '',
         radix: 16,
       );
-      int channel(int c) =>
-          (shade != null
-                  ? c * shade / 255
-                  : tint != null
-                  ? 255 - (255 - c) * tint / 255
-                  : c)
-              .round()
-              .clamp(0, 255);
-      rgb =
-          (channel((rgb >> 16) & 255) << 16) |
-          (channel((rgb >> 8) & 255) << 8) |
-          channel(rgb & 255);
+      // Word applies themeShade/themeTint to the HSL luminance (accent
+      // #4F81BD with shade BF gives Word's #365F91), not per RGB channel.
+      if (shade != null || tint != null) {
+        rgb = adjustThemeLuminance(rgb, shade: shade, tint: tint);
+      }
       color.setAttribute(
         'val',
         rgb.toRadixString(16).padLeft(6, '0').toUpperCase(),
@@ -400,4 +393,46 @@ class _StyleCascade {
       }
     }
   }
+}
+
+/// Word's themeShade / themeTint: scales the HSL luminance (shade) or moves
+/// it toward white (tint); 255 = unchanged.
+int adjustThemeLuminance(int rgb, {int? shade, int? tint}) {
+  final r = ((rgb >> 16) & 255) / 255;
+  final g = ((rgb >> 8) & 255) / 255;
+  final b = (rgb & 255) / 255;
+  final max = [r, g, b].reduce((x, y) => x > y ? x : y);
+  final min = [r, g, b].reduce((x, y) => x < y ? x : y);
+  var l = (max + min) / 2;
+  final d = max - min;
+  final s = d == 0 ? 0.0 : d / (1 - (2 * l - 1).abs());
+  double h;
+  if (d == 0) {
+    h = 0;
+  } else if (max == r) {
+    h = 60 * (((g - b) / d) % 6);
+  } else if (max == g) {
+    h = 60 * ((b - r) / d + 2);
+  } else {
+    h = 60 * ((r - g) / d + 4);
+  }
+  if (shade != null) l = l * shade / 255;
+  if (tint != null) l = l * tint / 255 + (1 - tint / 255);
+  final c = (1 - (2 * l - 1).abs()) * s;
+  final x = c * (1 - ((h / 60) % 2 - 1).abs());
+  final m = l - c / 2;
+  final (double, double, double) rgb1 = h < 60
+      ? (c, x, 0)
+      : h < 120
+      ? (x, c, 0)
+      : h < 180
+      ? (0, c, x)
+      : h < 240
+      ? (0, x, c)
+      : h < 300
+      ? (x, 0, c)
+      : (c, 0, x);
+  // Word truncates when converting back to 0-255 (4F81BD shade BF → 365F91).
+  int ch(double v) => ((v + m) * 255 + 1e-6).floor().clamp(0, 255);
+  return (ch(rgb1.$1) << 16) | (ch(rgb1.$2) << 8) | ch(rgb1.$3);
 }

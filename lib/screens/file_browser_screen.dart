@@ -12,6 +12,8 @@ import '../l10n/terminal_strings.dart';
 import 'dart:io' show Platform;
 import 'dart:async';
 
+import '../l10n/pdf_workspace_strings.dart';
+
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
@@ -2002,7 +2004,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             for (final spec in specs)
               {
                 'id': 'pdf:${pdf.sessionId}:${spec.$1.name}',
-                'label': context.commanderTr(spec.$2),
+                'label': context.commanderTr(pdfWorkspaceTr(context, spec.$2)),
                 'symbol': spec.$3,
                 'enabled': pdf.isEnabled(spec.$1),
               },
