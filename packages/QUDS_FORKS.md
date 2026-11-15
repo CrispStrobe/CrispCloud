@@ -23,11 +23,11 @@ content.
 
 ## Current integrated state (15 November 2026)
 
-The app mirrors Quds `0d9b008720b01371bc9db498efd063e3077be279`
-on `codex/zotero-support-20261115`, including canonical main `b2d5331`, through PR #42,
-and standalone legacy parser `4895712158127b2fc930d796e17035c3ca0dac62`;
-all 2,375 managed files
-verify. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
+The app mirrors the canonical Quds source and the standalone legacy parser.
+Exact revisions, source boundaries and the complete managed-file inventory are
+recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
+Managed files must match those sources; the guarded sync and verifier enforce
+that requirement. New work includes supported BIFF8/HTML/ODS spreadsheet imports, shared
 formulas, explicit and inherited wrap-text styles, and cell font families, guarded worksheet navigation and HTML table captions/headers; Word-like selection, inline picture placement inside its line, inline field preservation, revision
 performance fixes and opaque unsupported headers. Integration regressions cover
 header revision ownership, field isolation across stories and non-text field
@@ -325,6 +325,13 @@ Follow
 - tests live next to the behavior they cover;
 - package CHANGELOGs get an `Unreleased` entry for user-visible changes;
 - do not bump versions outside a release.
+
+## Remaining limits
+
+The engine-side backlog is tracked in the Quds
+[office-remaining-gaps.md](https://github.com/CrispStrobe/quds_office_suite/blob/main/docs/office-remaining-gaps.md).
+The host-level backlog is
+[office-remaining-gaps-20261115.md](../docs/office-remaining-gaps-20261115.md).
 
 ## Syncing
 
