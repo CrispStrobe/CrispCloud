@@ -172,9 +172,7 @@ abstract final class OdsSheetReader {
         for (var r = 1; r < rowRepeat && rowIndex + r < _maxRows; r++) {
           for (final entry in parsed) {
             final source = entry.cell;
-            final target = sheet.cell(
-              SmlCellRef(entry.column, rowIndex + r),
-            );
+            final target = sheet.cell(SmlCellRef(entry.column, rowIndex + r));
             target
               ..type = source.type
               ..value = source.value
@@ -239,7 +237,9 @@ abstract final class OdsSheetReader {
       case 'percentage':
         value = double.tryParse(element.getAttribute('value') ?? '');
       case 'date':
-        final parsed = DateTime.tryParse(element.getAttribute('date-value') ?? '');
+        final parsed = DateTime.tryParse(
+          element.getAttribute('date-value') ?? '',
+        );
         value = parsed == null ? null : _excelSerial(parsed);
       case 'time':
         value = _odfDurationDays(element.getAttribute('time-value'));
@@ -330,11 +330,7 @@ abstract final class OdsSheetReader {
     if (equals >= 0) formula = formula.substring(equals + 1);
     formula = formula.replaceAllMapped(
       RegExp(r'\[([^\]]+)\]'),
-      (match) => match
-          .group(1)!
-          .split(':')
-          .map(_odfReference)
-          .join(':'),
+      (match) => match.group(1)!.split(':').map(_odfReference).join(':'),
     );
     formula = formula
         .replaceAll(';', ',')
@@ -375,9 +371,10 @@ abstract final class OdsSheetReader {
         return 'h:mm:ss';
       case 'number-style':
         final decimals = _decimals(style);
-        final grouping = _descendants(style, 'number').any(
-          (element) => element.getAttribute('grouping') == 'true',
-        );
+        final grouping = _descendants(
+          style,
+          'number',
+        ).any((element) => element.getAttribute('grouping') == 'true');
         final integer = grouping ? '#,##0' : '0';
         return decimals == 0 ? integer : '$integer.${'0' * decimals}';
     }
