@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
+import '../../zotero/zotero_formatted_text.dart';
 import '../properties/wml_properties.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
@@ -385,22 +386,30 @@ abstract final class WordZotero {
   static WmlParagraph bibliography({
     required String text,
     Map<String, dynamic>? metadata,
-  }) => WmlParagraph(
-    properties: WmlParagraphProps(styleId: 'Bibliography'),
-    inlines: <WmlInline>[
-      WmlRun(
-        text: text,
-        fieldInstruction: _bibliographyInstruction(
-          metadata ??
-              <String, dynamic>{
-                'uncited': <dynamic>[],
-                'omitted': <dynamic>[],
-                'custom': <dynamic>[],
-              },
-        ),
+    ZoteroFormattedText? formattedText,
+  }) {
+    _assertFormattedText(text, formattedText);
+    final instruction = _bibliographyInstruction(
+      metadata ??
+          <String, dynamic>{
+            'uncited': <dynamic>[],
+            'omitted': <dynamic>[],
+            'custom': <dynamic>[],
+          },
+    );
+    return WmlParagraph(
+      properties: WmlParagraphProps(
+        styleId: 'Bibliography',
+        fieldInstruction: formattedText == null ? null : instruction,
       ),
-    ],
-  );
+      inlines: <WmlInline>[
+        if (formattedText != null)
+          ...formattedText.toRuns()
+        else
+          WmlRun(text: text, fieldInstruction: instruction),
+      ],
+    );
+  }
 
   static String _bibliographyInstruction(Map<String, dynamic> metadata) =>
       ' ADDIN ZOTERO_BIBL ${jsonEncode(_freezeObject(metadata))} CSL_BIBLIOGRAPHY ';
@@ -443,13 +452,19 @@ abstract final class WordZotero {
     if (field.kind != ZoteroFieldKind.citation) {
       throw ArgumentError('The selected field is not a citation.');
     }
-    _replace(field, citation.fieldInstruction, citation.plainCitation);
+    _replace(
+      field,
+      citation.fieldInstruction,
+      citation.plainCitation,
+      preserveSameText: true,
+    );
   }
 
   static void updateBibliography(
     WmlZoteroField field, {
     required String text,
     Map<String, dynamic>? metadata,
+    ZoteroFormattedText? formattedText,
   }) {
     if (field.kind != ZoteroFieldKind.bibliography) {
       throw ArgumentError('The selected field is not a bibliography.');
@@ -460,10 +475,29 @@ abstract final class WordZotero {
         metadata ?? field.metadata ?? <String, dynamic>{},
       ),
       text,
+      formattedText: formattedText,
     );
   }
 
-  static void _replace(WmlZoteroField field, String instruction, String text) {
+  static void _assertFormattedText(
+    String text,
+    ZoteroFormattedText? formattedText,
+  ) {
+    if (formattedText != null && formattedText.plainText != text) {
+      throw ArgumentError(
+        'The formatted Zotero result must match its visible text.',
+      );
+    }
+  }
+
+  static void _replace(
+    WmlZoteroField field,
+    String instruction,
+    String text, {
+    ZoteroFormattedText? formattedText,
+    bool preserveSameText = false,
+  }) {
+    _assertFormattedText(text, formattedText);
     if (!field.canEdit) {
       throw UnsupportedError(
         'This Zotero field has locked, nested, malformed, or cross-paragraph content.',
@@ -471,6 +505,36 @@ abstract final class WordZotero {
     }
     _assertCurrent(field);
     WordContentControls.assertCanEdit(field.paragraph, field.start, field.end);
+    if (preserveSameText && text == field.cachedText) {
+      _replaceInstruction(field, instruction);
+      return;
+    }
+    if (formattedText != null) {
+      final paragraph = field.paragraph;
+      final soleRun =
+          field.run != null &&
+          paragraph.inlines.length == 1 &&
+          identical(paragraph.inlines.single, field.run) &&
+          field.run!.commentIds.isEmpty &&
+          paragraph.contentControlWrappers.isEmpty &&
+          paragraph.properties.fieldInstruction == null &&
+          !paragraph.properties.pageNumberField;
+      if (!field.wholeParagraph &&
+          !soleRun &&
+          !_standaloneComplexField(field)) {
+        throw UnsupportedError(
+          'This bibliography uses an inline field. Use plain text for this update, or insert a new formatted bibliography in its own paragraph.',
+        );
+      }
+      final runs = formattedText.toRuns(
+        baseProperties: WmlRunEdit.propsAt(paragraph, field.start),
+      );
+      paragraph.properties.fieldInstruction = instruction;
+      paragraph.inlines
+        ..clear()
+        ..addAll(runs);
+      return;
+    }
     if (field.run != null) {
       field.run!
         ..fieldInstruction = instruction
@@ -496,6 +560,84 @@ abstract final class WordZotero {
       final last = paragraph.inlines.indexOf(boundaries.last);
       paragraph.inlines.replaceRange(first, last + 1, <WmlInline>[replacement]);
     }
+  }
+
+  // A saved rich bibliography can reopen as a complex boundary packet. Its
+  // offsets alone are insufficient: bookmarks and other zero-width markup
+  // may sit outside the field while sharing those same offsets.
+  static bool _standaloneComplexField(WmlZoteroField field) {
+    final paragraph = field.paragraph;
+    final boundaries = field._boundaries[paragraph];
+    if (field.paragraphs.length != 1 ||
+        field.start != 0 ||
+        field.end != paragraph.text.length ||
+        paragraph.contentControlWrappers.isNotEmpty ||
+        paragraph.properties.fieldInstruction != null ||
+        paragraph.properties.pageNumberField ||
+        boundaries == null ||
+        boundaries.isEmpty ||
+        !identical(paragraph.inlines.first, boundaries.first) ||
+        !identical(paragraph.inlines.last, boundaries.last)) {
+      return false;
+    }
+    final owned = Set<WmlInline>.identity()
+      ..addAll(boundaries)
+      ..addAll(field._contents);
+    return owned.length == paragraph.inlines.length &&
+        paragraph.inlines.every(owned.contains);
+  }
+
+  // An unchanged display cache is not an instruction to flatten its runs.
+  // Imported formattedCitation strings may contain RTF or another dialect;
+  // only the explicitly supplied field code is changed here.
+  static void _replaceInstruction(WmlZoteroField field, String instruction) {
+    if (field.run != null) {
+      field.run!
+        ..fieldInstruction = instruction
+        ..fieldDirty = null;
+      return;
+    }
+    if (field.wholeParagraph) {
+      field.paragraph.properties.fieldInstruction = instruction;
+      return;
+    }
+    final boundaries = field._boundaries[field.paragraph]!;
+    final firstInstruction = boundaries.firstWhere(
+      (boundary) => boundary.kind == WmlFieldBoundaryKind.instruction,
+    );
+    final replacements = <WmlFieldBoundary, WmlFieldBoundary?>{};
+    for (final boundary in boundaries) {
+      if (boundary.kind == WmlFieldBoundaryKind.instruction) {
+        replacements[boundary] = identical(boundary, firstInstruction)
+            ? WmlFieldBoundary(
+                kind: WmlFieldBoundaryKind.instruction,
+                text: instruction,
+                sourceXml: boundary.sourceXml,
+                runPropertiesXml: boundary.runPropertiesXml,
+              )
+            : null;
+      } else if (boundary.kind == WmlFieldBoundaryKind.begin &&
+          boundary.sourceXml != null) {
+        final source = XmlDocument.parse(boundary.sourceXml!);
+        source.root!.removeAttribute('dirty', namespaceUri: OfficeNamespaces.w);
+        replacements[boundary] = WmlFieldBoundary(
+          kind: boundary.kind,
+          text: boundary.text,
+          sourceXml: source.toXmlString(declaration: false),
+          runPropertiesXml: boundary.runPropertiesXml,
+        );
+      }
+    }
+    final inlines = <WmlInline>[
+      for (final inline in field.paragraph.inlines)
+        if (inline is! WmlFieldBoundary || !replacements.containsKey(inline))
+          inline
+        else if (replacements[inline] != null)
+          replacements[inline]!,
+    ];
+    field.paragraph.inlines
+      ..clear()
+      ..addAll(inlines);
   }
 
   /// Removes only this field's instructions while preserving its visible runs.

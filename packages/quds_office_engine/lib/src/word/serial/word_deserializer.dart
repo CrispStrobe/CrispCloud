@@ -15,6 +15,7 @@ import '../math/omml_io.dart';
 import '../model/wml_document.dart';
 import '../model/word_bookmarks.dart';
 import '../model/word_content_controls.dart';
+import '../model/word_fields.dart';
 import '../model/word_link.dart';
 import '../model/word_notes.dart';
 import '../model/word_revision.dart';
@@ -271,10 +272,7 @@ class WordDeserializer {
         'pPr',
         namespaceUri: OfficeNamespaces.w,
       );
-      if (properties?.firstChild(
-            'sectPr',
-            namespaceUri: OfficeNamespaces.w,
-          ) ==
+      if (properties?.firstChild('sectPr', namespaceUri: OfficeNamespaces.w) ==
           null) {
         return _SdtBreakLayout.opaque;
       }
@@ -757,7 +755,21 @@ class WordDeserializer {
       XmlDocument(root: source).toXmlString(declaration: false),
     )..next();
     final int revisionCount = _document?.revisions.length ?? 0;
-    final WmlParagraph result = _readParagraph(inner, package, docUri);
+    // A rich fldSimple is still a field: its instruction belongs to the whole
+    // cache, not to any one styled run. Keep Zotero containers (and simple
+    // ancestors of them) as complex boundary packets. The containing paragraph
+    // can still collapse an ordinary one-run packet after all nesting is known.
+    final bool preserveZotero = _containsSimpleZoteroField(source);
+    final WmlParagraph result;
+    if (preserveZotero) {
+      result = WmlParagraph()..properties.sourcePropertiesXml = '';
+      // Do not settle the temporary cache paragraph: that would hide a nested
+      // complex field in paragraph properties or move a sole picture outside
+      // its enclosing citation. The real paragraph settles the complete packet.
+      _readParagraphContent(inner, package, docUri, result);
+    } else {
+      result = _readParagraph(inner, package, docUri);
+    }
     // A simple-field cache is parsed in a temporary paragraph. Its tracked
     // run still belongs to the containing paragraph and uses that offset.
     for (final WmlRevision revision
@@ -768,6 +780,46 @@ class WordDeserializer {
           ..start += paragraph.text.length
           ..end += paragraph.text.length;
       }
+    }
+    if (preserveZotero && instruction != null) {
+      final cache = <WmlInline>[];
+      for (final inline in result.inlines) {
+        if (inline is WmlRun && inline.fieldInstruction != null) {
+          // A nested single-run field may have its own atomic representation.
+          // Expand it inside the outer packet so inspection retains nesting and
+          // cannot treat either citation as an independently editable cache.
+          final code = inline.fieldInstruction!;
+          final nestedSource = XmlElement(
+            localName: 'fldSimple',
+            prefix: 'w',
+            namespaceUri: OfficeNamespaces.w,
+          );
+          if (inline.fieldLocked) {
+            nestedSource.setAttribute(
+              'fldLock',
+              '1',
+              prefix: 'w',
+              namespaceUri: OfficeNamespaces.w,
+            );
+          }
+          if (inline.fieldDirty != null) {
+            nestedSource.setAttribute(
+              'dirty',
+              inline.fieldDirty! ? '1' : '0',
+              prefix: 'w',
+              namespaceUri: OfficeNamespaces.w,
+            );
+          }
+          inline
+            ..fieldInstruction = null
+            ..fieldLocked = false
+            ..fieldDirty = null;
+          cache.addAll(_simpleFieldPacket(nestedSource, code, [inline]));
+        } else {
+          cache.add(inline);
+        }
+      }
+      return _simpleFieldPacket(source, instruction, cache);
     }
     final List<XmlElement> children = source.childElements.toList();
     bool isRun(XmlElement child) =>
@@ -813,6 +865,66 @@ class WordDeserializer {
     return result.inlines;
   }
 
+  static bool _containsSimpleZoteroField(XmlElement element) =>
+      (element.localName == 'fldSimple' &&
+          element.namespaceUri == OfficeNamespaces.w &&
+          WordZotero.kindOfInstruction(
+                element.getAttribute('instr', namespaceUri: OfficeNamespaces.w),
+              ) !=
+              null) ||
+      element.childElements.any(_containsSimpleZoteroField);
+
+  static List<WmlInline> _simpleFieldPacket(
+    XmlElement source,
+    String instruction,
+    List<WmlInline> cache,
+  ) {
+    final begin =
+        XmlElement(
+          localName: 'fldChar',
+          prefix: 'w',
+          namespaceUri: OfficeNamespaces.w,
+          // Both field forms share dirty/lock flags. Retain extension attributes
+          // and their namespace declarations on the begin marker as opaque source
+          // metadata; WordZotero refuses replacement when such attributes exist.
+          attributes: [
+            for (final attribute in source.attributes)
+              if (!(attribute.localName == 'instr' &&
+                  attribute.namespaceUri == OfficeNamespaces.w))
+                attribute.copy(),
+          ],
+        )..setAttribute(
+          'fldCharType',
+          'begin',
+          prefix: 'w',
+          namespaceUri: OfficeNamespaces.w,
+        );
+    if (!begin.attributes.any(
+      (attribute) => attribute.qualifiedName == 'xmlns:w',
+    )) {
+      begin.attributes.add(
+        XmlAttribute(
+          localName: 'w',
+          prefix: 'xmlns',
+          value: OfficeNamespaces.w,
+        ),
+      );
+    }
+    return <WmlInline>[
+      WmlFieldBoundary(
+        kind: WmlFieldBoundaryKind.begin,
+        sourceXml: XmlDocument(root: begin).toXmlString(declaration: false),
+      ),
+      WmlFieldBoundary(
+        kind: WmlFieldBoundaryKind.instruction,
+        text: instruction,
+      ),
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+      ...cache,
+      WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+    ];
+  }
+
   void _readBookmark(XmlPullReader reader, WmlParagraph paragraph) {
     final marker = WordBookmarkIo.read(reader);
     final isStart = marker.isStart;
@@ -845,10 +957,9 @@ class WordDeserializer {
         _readRPr(reader, run.properties);
       } else if (reader.localName == 't' || reader.localName == 'delText') {
         final String text = _elementText(reader);
-        if (paragraph.properties.pageNumberField &&
-            _cachedPageResult.hasMatch(text)) {
-          continue;
-        }
+        // A PAGE instruction elsewhere in this paragraph must not consume a
+        // numeric citation cache or ordinary text. Suppress a cached page
+        // number only after the complete paragraph is proven to be that field.
         run.text += text;
       } else if (reader.localName == 'footnoteReference' ||
           reader.localName == 'endnoteReference') {
@@ -1669,6 +1780,25 @@ class WordDeserializer {
     if (simple &&
         WordZotero.kindOfInstruction(paragraph.properties.fieldInstruction) ==
             null) {
+      final page = _isPageField(paragraph.properties.fieldInstruction!);
+      paragraph.properties.pageNumberField = page;
+      if (page) {
+        if (_document?.revisions.any(
+              (revision) =>
+                  revision.accepted == null &&
+                  identical(revision.targetParagraph, paragraph),
+            ) ==
+            true) {
+          // A tracked cached result owns real text offsets. Keep its complete
+          // field span until that revision is resolved instead of deleting the
+          // text underneath its revision range.
+          _clearParagraphField(paragraph);
+          return;
+        }
+        for (final run in paragraph.inlines.whereType<WmlRun>()) {
+          if (_cachedPageResult.hasMatch(run.text)) run.text = '';
+        }
+      }
       strip();
       return;
     }
@@ -3283,10 +3413,8 @@ class WordDeserializer {
     }
   }
 
-  static bool _isPageField(String instr) {
-    final String upper = instr.toUpperCase();
-    return RegExp(r'(^|[^A-Z])PAGE([^A-Z]|$)').hasMatch(upper);
-  }
+  static bool _isPageField(String instr) =>
+      WordFields.kindOf(instr) == WmlFieldKind.page;
 
   /// RegExp API.
   static final RegExp _cachedPageResult = RegExp(r'^\s*\d+\s*$');

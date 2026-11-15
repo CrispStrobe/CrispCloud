@@ -138,9 +138,7 @@ void _expectNoSavedSecret(WordEditorController controller, String secret) {
   }
 }
 
-
-const _localItemUri =
-    'http://zotero.org/users/local/LOCALKEY/items/ABCD1234';
+const _localItemUri = 'http://zotero.org/users/local/LOCALKEY/items/ABCD1234';
 
 Map<String, Object?> _localRecord({
   String uri = _localItemUri,
@@ -206,6 +204,7 @@ class _DesktopLibrary {
 
   final String? serverId;
   List<Map<String, Object?>> records;
+  String bibliographyHtml = '<div>Updated (2025). Desktop source.</div>';
   final requests = <ZoteroHttpRequest>[];
 
   Future<ZoteroHttpResponse> transport(ZoteroHttpRequest request) async {
@@ -213,7 +212,7 @@ class _DesktopLibrary {
     expect(request.uri.host, 'localhost');
     expect(request.headers.containsKey('Zotero-API-Key'), isFalse);
     final headers = <String, String>{
-      if (serverId != null) 'Zotero-Server-ID': serverId!,
+      'Zotero-Server-ID': ?serverId,
       'Last-Modified-Version': '9',
     };
     if (request.uri.path == '/api/') {
@@ -246,7 +245,7 @@ class _DesktopLibrary {
           statusCode: 200,
           headers: headers,
           body: request.uri.queryParameters['format'] == 'bib'
-              ? '<div>Updated (2025). Desktop source.</div>'
+              ? bibliographyHtml
               : 'TY  - JOUR\nTI  - Desktop source\nER  - \n',
         );
       default:
@@ -288,7 +287,6 @@ Future<void> _documentAction(
 }
 
 void main() {
-
   testWidgets('unsynced refresh keeps URI aliases and unknown citation data', (
     tester,
   ) async {
@@ -323,13 +321,18 @@ void main() {
       desktop.requests.last.uri.queryParameters['include'],
       'data,csljson',
     );
-    expect(desktop.requests.last.uri.queryParameters.containsKey('style'), isFalse);
-    expect(desktop.requests.last.uri.queryParameters.containsKey('locale'), isFalse);
-    final reopened = WordDeserializer().readBytes(controller.saveBytes());
     expect(
-      WordZotero.fields(reopened).single.citation!.items.single.uris,
-      [original],
+      desktop.requests.last.uri.queryParameters.containsKey('style'),
+      isFalse,
     );
+    expect(
+      desktop.requests.last.uri.queryParameters.containsKey('locale'),
+      isFalse,
+    );
+    final reopened = WordDeserializer().readBytes(controller.saveBytes());
+    expect(WordZotero.fields(reopened).single.citation!.items.single.uris, [
+      original,
+    ]);
     _expectNoSavedSecret(controller, '/users/0');
     await tester.tap(find.byTooltip('Close Zotero'));
     await tester.pumpAndSettle();
@@ -368,92 +371,174 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('online operations reject local-only references before a request', (
-    tester,
-  ) async {
-    final requests = <ZoteroHttpRequest>[];
-    final controller = await _openDialog(
-      tester,
-      transport: (request) async {
-        requests.add(request);
-        return _json(_apiItem('ABCD1234', 'Must not be used'));
-      },
-      document: _linkedDocument([
-        [_localItemUri],
-      ]),
-    );
-    final revision = controller.contentRevision;
-    for (final action in ['Refresh basic citations', 'Zotero bibliography']) {
-      await _documentAction(tester, action);
-      expect(find.textContaining('unsynced desktop library'), findsOneWidget);
-      expect(requests, isEmpty);
-      expect(controller.contentRevision, revision);
-      expect(controller.zoteroFields.single.cachedText, '(Original)');
-    }
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'online operations reject local-only references before a request',
+    (tester) async {
+      final requests = <ZoteroHttpRequest>[];
+      final controller = await _openDialog(
+        tester,
+        transport: (request) async {
+          requests.add(request);
+          return _json(_apiItem('ABCD1234', 'Must not be used'));
+        },
+        document: _linkedDocument([
+          [_localItemUri],
+        ]),
+      );
+      final revision = controller.contentRevision;
+      for (final action in ['Refresh basic citations', 'Zotero bibliography']) {
+        await _documentAction(tester, action);
+        expect(find.textContaining('unsynced desktop library'), findsOneWidget);
+        expect(requests, isEmpty);
+        expect(controller.contentRevision, revision);
+        expect(controller.zoteroFields.single.cachedText, '(Original)');
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('online refresh can use a numeric alias while retaining old local URI', (
-    tester,
-  ) async {
-    const remote = 'https://www.zotero.org/users/42/items/ABCD1234';
-    final requests = <ZoteroHttpRequest>[];
-    final controller = await _openDialog(
-      tester,
-      transport: (request) async {
-        requests.add(request);
-        return _json(_apiItem('ABCD1234', 'Account source'));
-      },
-      document: _linkedDocument([
-        [_localItemUri, remote],
-      ]),
-    );
-    await _documentAction(tester, 'Refresh basic citations');
-    expect(requests, hasLength(1));
-    expect(requests.single.uri.path, '/users/42/items/ABCD1234');
-    expect(
-      controller.zoteroFields.single.citation!.items.single.uris,
-      [_localItemUri, remote],
-    );
-    expect(
-      controller.zoteroFields.single.citation!.items.single.itemData!['title'],
-      'Account source',
-    );
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'online refresh can use a numeric alias while retaining old local URI',
+    (tester) async {
+      const remote = 'https://www.zotero.org/users/42/items/ABCD1234';
+      final requests = <ZoteroHttpRequest>[];
+      final controller = await _openDialog(
+        tester,
+        transport: (request) async {
+          requests.add(request);
+          return _json(_apiItem('ABCD1234', 'Account source'));
+        },
+        document: _linkedDocument([
+          [_localItemUri, remote],
+        ]),
+      );
+      await _documentAction(tester, 'Refresh basic citations');
+      expect(requests, hasLength(1));
+      expect(requests.single.uri.path, '/users/42/items/ABCD1234');
+      expect(controller.zoteroFields.single.citation!.items.single.uris, [
+        _localItemUri,
+        remote,
+      ]);
+      expect(
+        controller
+            .zoteroFields
+            .single
+            .citation!
+            .items
+            .single
+            .itemData!['title'],
+        'Account source',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('different local profiles are not combined through the same route', (
-    tester,
-  ) async {
-    final desktop = _DesktopLibrary();
-    final controller = await _openDialog(
-      tester,
-      session: ZoteroSession()..useLocal = true,
-      localTransport: desktop.transport,
-      document: _linkedDocument([
-        [_localItemUri],
-        ['http://zotero.org/users/local/OTHERKEY/items/ABCD1234'],
-      ]),
-    );
-    await _connectDesktop(tester);
-    final requestCount = desktop.requests.length;
-    final revision = controller.contentRevision;
-    for (final action in ['Refresh basic citations', 'Zotero bibliography']) {
-      await _documentAction(tester, action);
-      expect(desktop.requests, hasLength(requestCount));
-      expect(controller.contentRevision, revision);
-      expect(controller.zoteroFields, hasLength(2));
-      expect(controller.canUndo, isFalse);
-      expect(find.byType(AlertDialog), findsNothing);
-    }
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'different local profiles are not combined through the same route',
+    (tester) async {
+      final desktop = _DesktopLibrary();
+      final controller = await _openDialog(
+        tester,
+        session: ZoteroSession()..useLocal = true,
+        localTransport: desktop.transport,
+        document: _linkedDocument([
+          [_localItemUri],
+          ['http://zotero.org/users/local/OTHERKEY/items/ABCD1234'],
+        ]),
+      );
+      await _connectDesktop(tester);
+      final requestCount = desktop.requests.length;
+      final revision = controller.contentRevision;
+      for (final action in ['Refresh basic citations', 'Zotero bibliography']) {
+        await _documentAction(tester, action);
+        expect(desktop.requests, hasLength(requestCount));
+        expect(controller.contentRevision, revision);
+        expect(controller.zoteroFields, hasLength(2));
+        expect(controller.canUndo, isFalse);
+        expect(find.byType(AlertDialog), findsNothing);
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final mismatch in [false, true]) {
-    testWidgets('unsynced single-source preview verifies identity: mismatch $mismatch', (
-      tester,
-    ) async {
-      final desktop = _DesktopLibrary(serverId: null);
+    testWidgets(
+      'unsynced single-source preview verifies identity: mismatch $mismatch',
+      (tester) async {
+        final desktop = _DesktopLibrary(serverId: null);
+        final controller = await _openDialog(
+          tester,
+          session: ZoteroSession()..useLocal = true,
+          localTransport: desktop.transport,
+        );
+        await _connectDesktop(tester);
+        await _selectDesktopItem(tester);
+        if (mismatch) {
+          desktop.records = [
+            _localRecord(
+              uri: 'http://zotero.org/users/local/OTHERKEY/items/ABCD1234',
+              family: 'Wrong profile',
+            ),
+          ];
+        }
+        final insert = find.widgetWithText(FilledButton, 'Insert citation');
+        await tester.ensureVisible(insert);
+        await tester.tap(insert);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        final preview = tester.widget<TextField>(
+          find.byKey(const ValueKey('zotero-citation-preview')),
+        );
+        final before = preview.controller!.text;
+        final style = find.text('Use apa single-source preview');
+        await tester.ensureVisible(style);
+        await tester.tap(style);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(
+          preview.controller!.text,
+          mismatch ? before : 'Styled Updated citation',
+        );
+        expect(desktop.requests.last.uri.path, '/api/users/0/items/ABCD1234');
+        expect(
+          desktop.requests.last.uri.queryParameters['include'],
+          'data,csljson,citation,bib',
+        );
+        expect(controller.zoteroFields, isEmpty);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.widgetWithText(TextButton, 'Cancel'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'unsynced selected export verifies sources before copying reference data',
+    (tester) async {
+      final copied = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add(
+              (call.arguments as Map<Object?, Object?>)['text']! as String,
+            );
+          }
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+      final desktop = _DesktopLibrary();
       final controller = await _openDialog(
         tester,
         session: ZoteroSession()..useLocal = true,
@@ -461,145 +546,127 @@ void main() {
       );
       await _connectDesktop(tester);
       await _selectDesktopItem(tester);
-      if (mismatch) {
-        desktop.records = [
-          _localRecord(
-            uri: 'http://zotero.org/users/local/OTHERKEY/items/ABCD1234',
-            family: 'Wrong profile',
-          ),
-        ];
-      }
-      final insert = find.widgetWithText(FilledButton, 'Insert citation');
-      await tester.ensureVisible(insert);
-      await tester.tap(insert);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
-      final preview = tester.widget<TextField>(
-        find.byKey(const ValueKey('zotero-citation-preview')),
-      );
-      final before = preview.controller!.text;
-      final style = find.text('Use apa single-source preview');
-      await tester.ensureVisible(style);
-      await tester.tap(style);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
-      expect(
-        preview.controller!.text,
-        mismatch ? before : 'Styled Updated citation',
-      );
-      expect(desktop.requests.last.uri.path, '/api/users/0/items/ABCD1234');
-      expect(
-        desktop.requests.last.uri.queryParameters['include'],
-        'data,csljson,citation,bib',
-      );
-      expect(controller.zoteroFields, isEmpty);
-      await tester.tap(
-        find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.widgetWithText(TextButton, 'Cancel'),
-        ),
-      );
+      final revision = controller.contentRevision;
+      final export = find.text('Export selected ▾');
+      await tester.ensureVisible(export);
+      await tester.tap(export);
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy ris'));
+      await tester.pumpAndSettle();
+      expect(copied, ['TY  - JOUR\nTI  - Desktop source\nER  - \n']);
+      final operation = desktop.requests.skip(4).toList();
+      expect(operation, hasLength(2));
+      expect(operation.first.uri.queryParameters['format'], 'json');
+      expect(operation.first.uri.queryParameters['include'], 'data,csljson');
+      expect(operation.last.uri.queryParameters['format'], 'ris');
+      expect(
+        operation.every(
+          (request) => request.headers['Zotero-Server-ID'] == 'desktop-library',
+        ),
+        isTrue,
+      );
+      expect(controller.contentRevision, revision);
+      expect(controller.zoteroFields, isEmpty);
       expect(tester.takeException(), isNull);
-    });
-  }
+    },
+  );
 
-  testWidgets('unsynced selected export verifies sources before copying reference data', (
-    tester,
-  ) async {
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map<Object?, Object?>)['text']! as String);
-        }
-        return null;
-      },
-    );
-    addTearDown(() {
+  testWidgets(
+    'changed profile cannot copy another source under a selected item key',
+    (tester) async {
+      final copied = <String>[];
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
-        null,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add(
+              (call.arguments as Map<Object?, Object?>)['text']! as String,
+            );
+          }
+          return null;
+        },
       );
-    });
-    final desktop = _DesktopLibrary();
-    final controller = await _openDialog(
-      tester,
-      session: ZoteroSession()..useLocal = true,
-      localTransport: desktop.transport,
-    );
-    await _connectDesktop(tester);
-    await _selectDesktopItem(tester);
-    final revision = controller.contentRevision;
-    final export = find.text('Export selected ▾');
-    await tester.ensureVisible(export);
-    await tester.tap(export);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Copy ris'));
-    await tester.pumpAndSettle();
-    expect(copied, ['TY  - JOUR\nTI  - Desktop source\nER  - \n']);
-    final operation = desktop.requests.skip(4).toList();
-    expect(operation, hasLength(2));
-    expect(operation.first.uri.queryParameters['format'], 'json');
-    expect(operation.first.uri.queryParameters['include'], 'data,csljson');
-    expect(operation.last.uri.queryParameters['format'], 'ris');
-    expect(operation.every((request) =>
-        request.headers['Zotero-Server-ID'] == 'desktop-library'), isTrue);
-    expect(controller.contentRevision, revision);
-    expect(controller.zoteroFields, isEmpty);
-    expect(tester.takeException(), isNull);
-  });
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+      final desktop = _DesktopLibrary();
+      final controller = await _openDialog(
+        tester,
+        session: ZoteroSession()..useLocal = true,
+        localTransport: desktop.transport,
+      );
+      await _connectDesktop(tester);
+      await _selectDesktopItem(tester);
+      desktop.records = [
+        _localRecord(
+          uri: 'http://zotero.org/users/local/OTHERKEY/items/ABCD1234',
+        ),
+      ];
+      final export = find.text('Export selected ▾');
+      await tester.ensureVisible(export);
+      await tester.tap(export);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy ris'));
+      await tester.pumpAndSettle();
+      expect(copied, isEmpty);
+      final operation = desktop.requests.skip(4).toList();
+      expect(operation, hasLength(1));
+      expect(operation.single.uri.queryParameters['format'], 'json');
+      expect(controller.zoteroFields, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
+  testWidgets(
+    'unsynced bibliography verifies selection and requires review before insertion',
+    (tester) async {
+      final desktop = _DesktopLibrary();
+      final controller = await _openDialog(
+        tester,
+        session: ZoteroSession()..useLocal = true,
+        localTransport: desktop.transport,
+        document: _linkedDocument([
+          [_localItemUri],
+        ]),
+      );
+      await _connectDesktop(tester);
+      final revision = controller.contentRevision;
+      await _documentAction(tester, 'Zotero bibliography', opensReview: true);
+      expect(find.text('Review Zotero bibliography'), findsOneWidget);
+      expect(controller.zoteroFields, hasLength(1));
+      expect(controller.contentRevision, revision);
+      final operation = desktop.requests.skip(4).toList();
+      expect(operation, hasLength(2));
+      expect(operation.first.uri.queryParameters['format'], 'json');
+      expect(operation.last.uri.queryParameters['format'], 'bib');
+      await tester.tap(find.widgetWithText(FilledButton, 'Use bibliography'));
+      await tester.pumpAndSettle();
+      expect(controller.zoteroFields, hasLength(2));
+      expect(
+        controller.zoteroFields
+            .singleWhere((field) => field.kind == ZoteroFieldKind.bibliography)
+            .cachedText,
+        'Updated (2025). Desktop source.',
+      );
+      expect(controller.contentRevision, greaterThan(revision));
+      expect(controller.canUndo, isTrue);
+      _expectNoSavedSecret(controller, '/users/0');
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('changed profile cannot copy another source under a selected item key', (
+  testWidgets('reviewed bibliography keeps rich runs through save and undo', (
     tester,
   ) async {
-    final copied = <String>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copied.add((call.arguments as Map<Object?, Object?>)['text']! as String);
-        }
-        return null;
-      },
-    );
-    addTearDown(() {
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        null,
-      );
-    });
-    final desktop = _DesktopLibrary();
-    final controller = await _openDialog(
-      tester,
-      session: ZoteroSession()..useLocal = true,
-      localTransport: desktop.transport,
-    );
-    await _connectDesktop(tester);
-    await _selectDesktopItem(tester);
-    desktop.records = [
-      _localRecord(uri: 'http://zotero.org/users/local/OTHERKEY/items/ABCD1234'),
-    ];
-    final export = find.text('Export selected ▾');
-    await tester.ensureVisible(export);
-    await tester.tap(export);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Copy ris'));
-    await tester.pumpAndSettle();
-    expect(copied, isEmpty);
-    final operation = desktop.requests.skip(4).toList();
-    expect(operation, hasLength(1));
-    expect(operation.single.uri.queryParameters['format'], 'json');
-    expect(controller.zoteroFields, isEmpty);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('unsynced bibliography verifies selection and requires review before insertion', (
-    tester,
-  ) async {
-    final desktop = _DesktopLibrary();
+    final desktop = _DesktopLibrary()
+      ..bibliographyHtml =
+          '<div class="csl-bib-body">'
+          '<div class="csl-entry"><div class="csl-left-margin">1.</div>'
+          '<div class="csl-right-inline"><i>Book title</i>. '
+          '<b>Journal</b> H<sub>2</sub>O<sup>3</sup></div></div></div>';
     final controller = await _openDialog(
       tester,
       session: ZoteroSession()..useLocal = true,
@@ -611,32 +678,94 @@ void main() {
     await _connectDesktop(tester);
     final revision = controller.contentRevision;
     await _documentAction(tester, 'Zotero bibliography', opensReview: true);
-    expect(find.text('Zotero bibliography — plain text'), findsOneWidget);
-    expect(controller.zoteroFields, hasLength(1));
+    expect(
+      find.byKey(const ValueKey('zotero-formatted-preview')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('zotero-bibliography-text')),
+      findsNothing,
+    );
     expect(controller.contentRevision, revision);
-    final operation = desktop.requests.skip(4).toList();
-    expect(operation, hasLength(2));
-    expect(operation.first.uri.queryParameters['format'], 'json');
-    expect(operation.last.uri.queryParameters['format'], 'bib');
     await tester.tap(find.widgetWithText(FilledButton, 'Use bibliography'));
     await tester.pumpAndSettle();
-    expect(controller.zoteroFields, hasLength(2));
-    expect(
-      controller.zoteroFields
-          .singleWhere((field) => field.kind == ZoteroFieldKind.bibliography)
-          .cachedText,
-      'Updated (2025). Desktop source.',
-    );
-    expect(controller.contentRevision, greaterThan(revision));
-    expect(controller.canUndo, isTrue);
-    _expectNoSavedSecret(controller, '/users/0');
+    final field = controller.zoteroFields.last;
+    expect(field.cachedText, '1. Book title. Journal H2O3');
+    expect(field.canEdit, isTrue);
+    void expectStyles(WmlZoteroField field) {
+      final runs = field.paragraph.inlines.whereType<WmlRun>().toList();
+      expect(
+        runs.any(
+          (run) => run.text.trim() == 'Book title' && run.properties.italic,
+        ),
+        isTrue,
+      );
+      expect(
+        runs.any((run) => run.text.trim() == 'Journal' && run.properties.bold),
+        isTrue,
+      );
+      expect(
+        runs.any(
+          (run) =>
+              run.text == '2' &&
+              run.properties.vertAlign == WmlVertAlign.subscript,
+        ),
+        isTrue,
+      );
+      expect(
+        runs.any(
+          (run) =>
+              run.text == '3' &&
+              run.properties.vertAlign == WmlVertAlign.superscript,
+        ),
+        isTrue,
+      );
+    }
+
+    expectStyles(field);
+    final reopened = WordDeserializer().readBytes(controller.saveBytes());
+    expectStyles(WordZotero.fields(reopened).last);
+    controller.undo();
+    expect(controller.zoteroFields, hasLength(1));
+    controller.redo();
+    expectStyles(controller.zoteroFields.last);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('older desktop cannot render an unverified aggregate bibliography', (
+  testWidgets('bibliography review offers an explicit editable plain result', (
     tester,
   ) async {
-    final desktop = _DesktopLibrary(serverId: null);
+    final desktop = _DesktopLibrary()
+      ..bibliographyHtml = '<div><i>Original title</i>.</div>';
+    final controller = await _openDialog(
+      tester,
+      session: ZoteroSession()..useLocal = true,
+      localTransport: desktop.transport,
+      document: _linkedDocument([
+        [_localItemUri],
+      ]),
+    );
+    await _connectDesktop(tester);
+    await _documentAction(tester, 'Zotero bibliography', opensReview: true);
+    await tester.tap(find.byKey(const ValueKey('zotero-keep-formatting')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('zotero-bibliography-text')),
+      'My reviewed bibliography',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Use bibliography'));
+    await tester.pumpAndSettle();
+    final field = controller.zoteroFields.last;
+    expect(field.cachedText, 'My reviewed bibliography');
+    expect(field.run!.properties.italic, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('cancelling rich bibliography review keeps history unchanged', (
+    tester,
+  ) async {
+    final desktop = _DesktopLibrary()
+      ..bibliographyHtml = '<div><b>Reviewed only</b></div>';
     final controller = await _openDialog(
       tester,
       session: ZoteroSession()..useLocal = true,
@@ -647,38 +776,181 @@ void main() {
     );
     await _connectDesktop(tester);
     final revision = controller.contentRevision;
-    await _documentAction(tester, 'Zotero bibliography');
-    expect(
-      desktop.requests.any((request) => request.uri.queryParameters['format'] == 'bib'),
-      isFalse,
-    );
-    expect(find.byType(AlertDialog), findsNothing);
-    expect(controller.contentRevision, revision);
+    await _documentAction(tester, 'Zotero bibliography', opensReview: true);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
     expect(controller.zoteroFields, hasLength(1));
-    expect(controller.zoteroFields.single.cachedText, '(Original)');
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('local source without CSL or identity is not refetched by a bare key', (
+  for (final change in ['caret', 'revision']) {
+    testWidgets('a changed $change rejects a reviewed rich bibliography', (
+      tester,
+    ) async {
+      final desktop = _DesktopLibrary()
+        ..bibliographyHtml = '<div><i>Stale result</i></div>';
+      final controller = await _openDialog(
+        tester,
+        session: ZoteroSession()..useLocal = true,
+        localTransport: desktop.transport,
+        document: _linkedDocument([
+          [_localItemUri],
+        ]),
+      );
+      await _connectDesktop(tester);
+      await _documentAction(tester, 'Zotero bibliography', opensReview: true);
+      if (change == 'caret') {
+        controller.caret.logicalIndex = 0;
+        controller.caret.collapseSelection();
+      } else {
+        controller.insertText('Changed ');
+        controller.commitPendingEdits();
+      }
+      final revision = controller.contentRevision;
+      await tester.tap(find.widgetWithText(FilledButton, 'Use bibliography'));
+      await tester.pumpAndSettle();
+      expect(controller.zoteroFields, hasLength(1));
+      expect(controller.contentRevision, revision);
+      expect(
+        find.textContaining('document or insertion point changed'),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('rich review and format limitation fit a narrow viewport', (
     tester,
   ) async {
     final desktop = _DesktopLibrary()
-      ..records = [
-        {..._localRecord(), 'csljson': null},
-      ];
+      ..bibliographyHtml =
+          '<div><span style="font-variant: small-caps">Author</span>. '
+          '<i>A title</i>.</div>';
     final controller = await _openDialog(
       tester,
+      size: const Size(320, 640),
       session: ZoteroSession()..useLocal = true,
       localTransport: desktop.transport,
+      document: _linkedDocument([
+        [_localItemUri],
+      ]),
     );
     await _connectDesktop(tester);
-    await _selectDesktopItem(tester);
-    expect(find.textContaining('did not provide enough source data'), findsOneWidget);
-    expect(desktop.requests, hasLength(4));
-    expect(controller.zoteroFields, isEmpty);
+    await _documentAction(tester, 'Zotero bibliography', opensReview: true);
+    expect(find.textContaining('small caps'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    final use = find.widgetWithText(FilledButton, 'Use bibliography');
+    await tester.ensureVisible(use);
+    await tester.tap(use);
+    await tester.pumpAndSettle();
+    expect(controller.zoteroFields.last.cachedText, 'Author. A title.');
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'unchanged imported citation keeps its rich cache and native formatting metadata',
+    (tester) async {
+      const formatted = r'{\i native processor formatting}';
+      final citation = ZoteroCitation.fromJson({
+        'citationID': 'rich-import',
+        'citationItems': [
+          {'id': 'offline', 'itemData': _offlineSource},
+        ],
+        'properties': {
+          'plainCitation': 'outdated metadata',
+          'formattedCitation': formatted,
+          'extension': {'keep': true},
+        },
+      });
+      final document = WmlDocument.empty();
+      final paragraph = document.paragraphs.single;
+      paragraph.properties.fieldInstruction = citation.fieldInstruction;
+      paragraph.inlines
+        ..clear()
+        ..addAll([
+          WmlRun(text: 'A ', properties: WmlRunProps(bold: true)),
+          WmlRun(text: 'title', properties: WmlRunProps(italic: true)),
+        ]);
+      final controller = await _openDialog(tester, document: document);
+      await tester.tap(find.text('Document'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Reference actions'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit citation'));
+      await tester.pumpAndSettle();
+      final preview = tester.widget<TextField>(
+        find.byKey(const ValueKey('zotero-citation-preview')),
+      );
+      expect(preview.controller!.text, 'A title');
+      await tester.tap(_composerButton('Update citation'));
+      await tester.pumpAndSettle();
+      final updated = controller.zoteroFields.single;
+      expect(updated.cachedText, 'A title');
+      expect(updated.citation!.plainCitation, 'A title');
+      expect(updated.citation!.formattedCitation, formatted);
+      expect(updated.citation!.properties['extension'], {'keep': true});
+      final runs = updated.paragraph.inlines.whereType<WmlRun>().toList();
+      expect(runs, hasLength(2));
+      expect(runs.first.properties.bold, isTrue);
+      expect(runs.last.properties.italic, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'older desktop cannot render an unverified aggregate bibliography',
+    (tester) async {
+      final desktop = _DesktopLibrary(serverId: null);
+      final controller = await _openDialog(
+        tester,
+        session: ZoteroSession()..useLocal = true,
+        localTransport: desktop.transport,
+        document: _linkedDocument([
+          [_localItemUri],
+        ]),
+      );
+      await _connectDesktop(tester);
+      final revision = controller.contentRevision;
+      await _documentAction(tester, 'Zotero bibliography');
+      expect(
+        desktop.requests.any(
+          (request) => request.uri.queryParameters['format'] == 'bib',
+        ),
+        isFalse,
+      );
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(controller.contentRevision, revision);
+      expect(controller.zoteroFields, hasLength(1));
+      expect(controller.zoteroFields.single.cachedText, '(Original)');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'local source without CSL or identity is not refetched by a bare key',
+    (tester) async {
+      final desktop = _DesktopLibrary()
+        ..records = [
+          {..._localRecord(), 'csljson': null},
+        ];
+      final controller = await _openDialog(
+        tester,
+        session: ZoteroSession()..useLocal = true,
+        localTransport: desktop.transport,
+      );
+      await _connectDesktop(tester);
+      await _selectDesktopItem(tester);
+      expect(
+        find.textContaining('did not provide enough source data'),
+        findsOneWidget,
+      );
+      expect(desktop.requests, hasLength(4));
+      expect(controller.zoteroFields, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final identity in ['account', 'unsynced', 'citation-key']) {
     testWidgets(

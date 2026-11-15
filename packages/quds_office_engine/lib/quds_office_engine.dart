@@ -132,3 +132,4 @@ export 'src/xml/xml_node.dart';
 export 'src/xml/xml_reader.dart';
 export 'src/xml/xml_writer.dart';
 export 'src/zotero/zotero_client.dart';
+export 'src/zotero/zotero_formatted_text.dart';
