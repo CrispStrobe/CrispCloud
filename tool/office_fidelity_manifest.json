@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/zotero-support-20261115",
-  "source_commit": "9da9c638bfe3bf932a70b2268dc16ef783fc009a",
+  "source_commit": "1d9552697d2850cbc3b5a7f73daf44a442c4901b",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
