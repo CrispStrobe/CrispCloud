@@ -200,6 +200,60 @@ void main() {
   });
 
   test(
+    'output EOF waits for the later SSH exit status before cleanup',
+    () async {
+      final output = await service.startShell(
+        session.id,
+        tmux: const TmuxSessionOptions(sessionName: 'build'),
+      );
+      final connection = SshTerminalConnection(service, session.id, output);
+      var exited = false;
+      unawaited(connection.exitCode.then((_) => exited = true));
+      final shell = client.shells.single;
+      final collected = output.join();
+      shell.output.add(Uint8List.fromList(utf8.encode('final screen\r\n')));
+      shell.errors.add(Uint8List.fromList(utf8.encode('final diagnostic\r\n')));
+      // SSH EOF and exit-status/channel-close are separate protocol messages.
+      // Do not use finish(), which deliberately completes the channel first.
+      await Future.wait([shell.output.close(), shell.errors.close()]);
+      expect(
+        await collected,
+        allOf(contains('final screen'), contains('final diagnostic')),
+      );
+      await _flushEvents();
+      expect(exited, isFalse);
+      expect(client.isClosed, isFalse);
+      expect(shell.closed, isFalse);
+      expect(service.getActiveSessions(), hasLength(1));
+
+      shell.completeChannel(23);
+      expect(await connection.exitCode, 23);
+      await _flushEvents();
+      expect(client.isClosed, isTrue);
+      expect(service.getActiveSessions(), isEmpty);
+    },
+  );
+
+  test(
+    'explicit disconnect still closes SSH while waiting after output EOF',
+    () async {
+      final output = await service.startShell(session.id);
+      final connection = SshTerminalConnection(service, session.id, output);
+      final collected = output.drain<void>();
+      final shell = client.shells.single;
+      await Future.wait([shell.output.close(), shell.errors.close()]);
+      await collected;
+      expect(client.isClosed, isFalse);
+
+      await connection.close().timeout(const Duration(seconds: 2));
+      expect(client.isClosed, isTrue);
+      expect(shell.closed, isTrue);
+      expect(service.getActiveSessions(), isEmpty);
+      expect(await connection.exitCode, isNull);
+    },
+  );
+
+  test(
     'observes early channel errors and preserves them for the exit reader',
     () async {
       final output = await service.startShell(session.id);

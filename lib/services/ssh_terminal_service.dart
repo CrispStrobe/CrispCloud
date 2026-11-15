@@ -534,15 +534,30 @@ class SshTerminalService {
       throw StateError('SSH shell start was cancelled');
     }
     state.shellSession = shell;
+    final exitCode = shell.done.then<int?>((_) => shell.exitCode);
+
+    Future<void> disconnectAfterExit() async {
+      try {
+        // SSH EOF closes the output streams, but the remote process may still
+        // run or report its exit status later. Keep the channel alive until it
+        // finishes as well. Explicit cancellation still disconnects below.
+        await exitCode;
+      } catch (_) {
+        // SshShellOutput preserves this error for the terminal's exit reader.
+        // A failed channel still needs cleanup after its output has drained.
+      }
+      if (_isCurrentShell(sessionId, state, generation)) {
+        await disconnect(sessionId);
+      }
+    }
+
     final output = TerminalOutput(
       [shell.stdout, shell.stderr],
       onActivity: () => _touch(sessionId),
       onDone: () {
-        if (_isCurrentShell(sessionId, state, generation)) {
-          // Both streams have drained. SSHSession.done alone can complete while
-          // final output is still pending in either channel.
-          unawaited(disconnect(sessionId));
-        }
+        // Neither stream EOF nor channel completion is sufficient on its own:
+        // retain both final output and a later exit-status request.
+        unawaited(disconnectAfterExit());
       },
       onCancel: () async {
         if (_isCurrentShell(sessionId, state, generation)) {
@@ -551,10 +566,7 @@ class SshTerminalService {
       },
     );
     state.shellOutput = output;
-    return SshShellOutput(
-      output.stream,
-      shell.done.then<int?>((_) => shell.exitCode),
-    );
+    return SshShellOutput(output.stream, exitCode);
   }
 
   /// Sends [input] to the active interactive shell of [sessionId].

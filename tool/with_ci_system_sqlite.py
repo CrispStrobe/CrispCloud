@@ -13,7 +13,100 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-HOOK = b'\nhooks:\n  user_defines:\n    sqlite3:\n      source: system\n      name_windows: winsqlite3\n'
+SQLITE_HOOK = b'    sqlite3:\n      source: system\n      name_windows: winsqlite3\n'
+HOOK = b'hooks:\n  user_defines:\n' + SQLITE_HOOK
+
+
+def _require_simple_values(text):
+    # Even nested quoted/flow values can continue at a container's indentation,
+    # making text that looks like a hooks key part of a different scalar.
+    while re.match(rb'-[ \t]+', text):
+        text = text[1:].lstrip(b' \t')
+    special = (b"'", b'"', b'[', b'{', b'&', b'*', b'!', b'?')
+    if not text.startswith(special):
+        separator = re.search(rb':[ \t]+', text)
+        if separator:
+            text = text[separator.end():]
+    if text.startswith((b"'", b'"')):
+        if re.fullmatch(rb'''(?:'(?:[^']|'')*'|"(?:[^"\\]|\\.)*")(?:[ \t]+#.*)?[ \t]*''', text):
+            return
+    elif not text.startswith(special):
+        return
+    raise RuntimeError('Unsupported YAML value; refusing to merge SQLite hook')
+
+
+def _block_mapping(tokens, indent, end_line):
+    """Read only plain block-map keys; keep nested values opaque and unchanged."""
+    entries = []
+    seen = set()
+    for line, depth, text in tokens:
+        if depth > indent and entries:
+            entries[-1][3].append((line, depth, text))
+            continue
+        match = re.fullmatch(rb'([A-Za-z_][A-Za-z0-9_-]*):(?:[ \t]+(.*))?', text)
+        if depth != indent or match is None or match[1] in seen:
+            raise RuntimeError('Unsupported or ambiguous YAML mapping; refusing to merge SQLite hook')
+        seen.add(match[1])
+        entries.append((match[1], line, match[2] or b'', []))
+    return {
+        key: (line, value, children, entries[index + 1][1] if index + 1 < len(entries) else end_line)
+        for index, (key, line, value, children) in enumerate(entries)
+    }
+
+
+def _require_block_value(value):
+    if value and not value.startswith(b'#'):
+        raise RuntimeError('Only plain block mappings are supported when merging SQLite hooks')
+
+
+def with_system_sqlite_hook(original):
+    """Insert the test override without rewriting existing configuration.
+
+    Containers use plain keys and two-space block indentation. Quoted values
+    must fit on one line; aliases, anchors, tags and flow collections are not
+    supported. Reject ambiguous shapes instead of guessing without a YAML parser.
+    """
+    if original and not original.endswith(b'\n'):
+        # Adding a separator could change the value of a final block scalar.
+        raise RuntimeError('A final newline is required to safely merge SQLite hooks')
+    lines = original.splitlines(keepends=True)
+    tokens = []
+    for index, raw in enumerate(lines):
+        line = raw.rstrip(b'\r\n')
+        text = line.lstrip(b' ')
+        if not text or text.startswith(b'#'):
+            continue
+        if text.startswith(b'\t'):
+            raise RuntimeError('Unsupported YAML indentation; refusing to merge SQLite hook')
+        _require_simple_values(text)
+        tokens.append((index, len(line) - len(text), text))
+
+    root = _block_mapping(tokens, 0, len(lines))
+    hook = root.get(b'hooks')
+    if hook is None:
+        insert_at, addition = len(lines), HOOK
+    else:
+        _, value, children, hook_end = hook
+        _require_block_value(value)
+        defines = _block_mapping(children, 2, hook_end).get(b'user_defines')
+        if defines is None:
+            insert_at, addition = hook_end, b'  user_defines:\n' + SQLITE_HOOK
+        else:
+            _, value, children, defines_end = defines
+            _require_block_value(value)
+            packages = _block_mapping(children, 4, defines_end)
+            if b'sqlite3' in packages:
+                raise RuntimeError('Existing sqlite3 hook configuration; refusing to override it')
+            for _, value, _, _ in packages.values():
+                _require_block_value(value)
+            insert_at, addition = defines_end, SQLITE_HOOK
+
+    # Keep every original byte, including comments, other hook definitions and
+    # scalar trailing newlines. Insertion occurs at the next sibling boundary.
+    first_newline = re.search(rb'\r?\n', original)
+    newline = first_newline[0] if first_newline else b'\n'
+    before = b''.join(lines[:insert_at])
+    return before + addition.replace(b'\n', newline) + b''.join(lines[insert_at:])
 
 
 def probe_system_sqlite():
@@ -60,10 +153,9 @@ def probe_system_sqlite():
 
 def run_with_system_sqlite(command, pubspec=ROOT / 'pubspec.yaml'):
     original = pubspec.read_bytes()
-    if re.search(rb'^hooks\s*:', original, flags=re.MULTILINE):
-        raise RuntimeError('Existing hooks configuration needs explicit merging; refusing to overwrite it')
+    modified = with_system_sqlite_hook(original)
     try:
-        pubspec.write_bytes(original.rstrip(b'\r\n') + b'\n' + HOOK)
+        pubspec.write_bytes(modified)
         # On Windows Flutter is a .bat entrypoint. Commands here are trusted CI
         # arguments, never filenames or data supplied by an external user.
         return subprocess.run(command, cwd=pubspec.parent, shell=os.name == 'nt', check=False).returncode
