@@ -117,7 +117,7 @@ abstract final class OfficePdfExport {
           title: title,
         );
       case OpcPackageKind.unknown:
-        throw FormatException('Unsupported Office package for PDF export');
+        throw const FormatException('Unsupported Office package for PDF export');
     }
   }
 
@@ -1009,46 +1009,47 @@ abstract final class OfficePdfExport {
       return;
     }
     sink.canvas.setStrokeColor(g.color);
-    sink.canvas.setLineWidth(g.underline == WmlUnderline.double ? 1.1 : 0.7);
-    switch (g.underline) {
-      case WmlUnderline.dotted:
-        sink.canvas.setDash(<double>[1.1, 1.1]);
-        sink.canvas.moveTo(g.x, g.y + 1.2);
-        sink.canvas.lineTo(g.x + g.advance, g.y + 1.2);
-        sink.canvas.stroke();
-        sink.canvas.resetDash();
-      case WmlUnderline.wavy:
-        var wx = g.x;
-        final double base = g.y + 1.4;
-        sink.canvas.moveTo(wx, base);
-        while (wx < g.x + g.advance) {
-          final double nx = math.min(wx + 2.4, g.x + g.advance);
-          sink.canvas.curveTo(
-            wx + 0.8,
-            base - 1.1,
-            wx + 1.6,
-            base + 1.1,
-            nx,
-            base,
-          );
-          wx = nx;
-        }
-        sink.canvas.stroke();
-      case WmlUnderline.double:
-        sink.canvas.setLineWidth(0.7);
-        sink.canvas.moveTo(g.x, g.y + 1.1);
-        sink.canvas.lineTo(g.x + g.advance, g.y + 1.1);
-        sink.canvas.stroke();
-        sink.canvas.moveTo(g.x, g.y + 3.4);
-        sink.canvas.lineTo(g.x + g.advance, g.y + 3.4);
-        sink.canvas.stroke();
-      case WmlUnderline.single:
-        sink.canvas.moveTo(g.x, g.y + 1.2);
-        sink.canvas.lineTo(g.x + g.advance, g.y + 1.2);
-        sink.canvas.stroke();
-      case WmlUnderline.none:
-        break;
+    final WmlUnderline u = g.underline;
+    final double width = u.isHeavy ? 1.4 : 0.7;
+    sink.canvas.setLineWidth(width);
+    if (u.isWavy) {
+      var wx = g.x;
+      final double base = g.y + 1.4;
+      sink.canvas.moveTo(wx, base);
+      while (wx < g.x + g.advance) {
+        final double nx = math.min(wx + 2.4, g.x + g.advance);
+        sink.canvas.curveTo(
+          wx + 0.8,
+          base - 1.1,
+          wx + 1.6,
+          base + 1.1,
+          nx,
+          base,
+        );
+        wx = nx;
+      }
+      sink.canvas.stroke();
+      return;
     }
+    if (u == WmlUnderline.double) {
+      sink.canvas.moveTo(g.x, g.y + 1.1);
+      sink.canvas.lineTo(g.x + g.advance, g.y + 1.1);
+      sink.canvas.stroke();
+      sink.canvas.moveTo(g.x, g.y + 3.4);
+      sink.canvas.lineTo(g.x + g.advance, g.y + 3.4);
+      sink.canvas.stroke();
+      return;
+    }
+    // Word underlines spaces only for continuous styles, not for "words".
+    if (u == WmlUnderline.words && g.glyph.codePoint == 0x20) return;
+    final List<num> dash = u.dashPattern;
+    if (dash.isNotEmpty) {
+      sink.canvas.setDash(<double>[for (final num d in dash) d * width * 1.6]);
+    }
+    sink.canvas.moveTo(g.x, g.y + 1.2);
+    sink.canvas.lineTo(g.x + g.advance, g.y + 1.2);
+    sink.canvas.stroke();
+    if (dash.isNotEmpty) sink.canvas.resetDash();
   }
 
   /// Sheet CSS-pixel sizes → PDF points (96 CSS dpi).
@@ -1066,7 +1067,7 @@ abstract final class OfficePdfExport {
     final double pageH = options.pageHeight;
     final double margin = options.margin;
     final double gutter = options.showHeadings ? 28 : 0;
-    final double band = 18;
+    const double band = 18;
 
     var minCol = 0;
     var maxCol = 0;

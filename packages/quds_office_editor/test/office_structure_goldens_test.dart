@@ -21,6 +21,13 @@ WmlDocument _authoredSource() {
   return WordDeserializer().read(package);
 }
 
+String _structureGolden(String phase, int page) {
+  // Host rasterization differs even with the bundled faces; keep reviewed
+  // references per host like the word-selection golden.
+  final directory = Platform.isLinux ? 'linux/' : '';
+  return 'goldens/${directory}structure_${phase}_${page + 1}.png';
+}
+
 void _applyPhase(WmlDocument document, String phase) {
   final script = File('$_fixtures/scripts/word-structure-$phase.json');
   final values = jsonDecode(script.readAsStringSync()) as List;
@@ -120,7 +127,7 @@ void main() {
           if (phase == 'create') await _waitForPicture(tester);
           await expectLater(
             find.byKey(const ValueKey('structure-page')),
-            matchesGoldenFile('goldens/structure_${phase}_${page + 1}.png'),
+            matchesGoldenFile(_structureGolden(phase, page)),
             reason: '$phase cycle $cycle page ${page + 1}',
           );
         }

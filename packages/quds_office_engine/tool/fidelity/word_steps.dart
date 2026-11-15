@@ -173,7 +173,7 @@ void applyStep(
         if (s.has(entry.key)) p.importedValues?.remove(entry.value);
       }
       if (s.has('alignment')) {
-        p.justification = WmlJustification.values.byName(s.string('alignment'));
+        p.justification = WmlJustification.parse(s.string('alignment'));
         p.explicitJustification = true;
       }
       if (s.has('before')) {
@@ -265,7 +265,7 @@ void applyStep(
       final italic = s.has('italic') ? s.boolean('italic') : null;
       final strike = s.has('strike') ? s.boolean('strike') : null;
       final underline = s.has('underline')
-          ? WmlUnderline.values.byName(s.string('underline'))
+          ? WmlUnderline.parse(s.string('underline'))
           : null;
       final color = s.has('color') ? s.color('color') : null;
       final highlight = s.has('highlight') && values['highlight'] != null
@@ -391,6 +391,17 @@ void applyStep(
       _boundary(p, at);
       final container = _container(doc, p);
       final split = WmlClone.splitInlines(p, at);
+      // Like Return in Word: a paragraph split off at the end continues the
+      // character formatting in force there (not the document defaults).
+      if (!split.tail.any((inline) => inline is WmlRun)) {
+        final props = WmlRunEdit.propsAt(p, at).copy();
+        // A link's character style does not continue past the link.
+        if (props.styleId == 'Hyperlink' ||
+            props.styleId == 'FollowedHyperlink') {
+          props.styleId = null;
+        }
+        split.tail.insert(0, WmlRun(properties: props));
+      }
       final tail = WmlParagraph(
         properties: p.properties.copy()
           ..bookmarkName = null

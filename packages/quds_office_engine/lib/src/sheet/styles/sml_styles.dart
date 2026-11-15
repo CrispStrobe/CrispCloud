@@ -1306,7 +1306,7 @@ String applyNumberFormat(Object? value, String code) {
     return value.toString();
   }
 
-  final List<String> sections = code.split(';');
+  final List<String> sections = _numberFormatSections(code);
   // Sections: positive; negative; zero. A negative section prints its own
   // sign (e.g. parentheses), so the value is formatted without one.
   var section = sections.first;
@@ -1332,11 +1332,28 @@ String applyNumberFormat(Object? value, String code) {
   return out;
 }
 
+// A literal semicolon must not turn one authored format into extra sections.
+List<String> _numberFormatSections(String code) {
+  final sections = <String>[];
+  var start = 0;
+  var quoted = false;
+  for (var i = 0; i < code.length; i++) {
+    if (code[i] == r'\') {
+      i++;
+    } else if (code[i] == '"') {
+      quoted = !quoted;
+    } else if (code[i] == ';' && !quoted) {
+      sections.add(code.substring(start, i));
+      start = i + 1;
+    }
+  }
+  sections.add(code.substring(start));
+  return sections;
+}
+
 /// [code] without quoted literals, escapes, and `[…]` blocks.
-String _literalFree(String code) => code
-    .replaceAll(RegExp(r'"[^"]*"'), '')
-    .replaceAll(RegExp(r'\\.'), '')
-    .replaceAll(RegExp(r'\[[^\]]*\]'), '');
+String _literalFree(String code) =>
+    code.replaceAll(RegExp(r'\\.|"[^"]*"|\[[^\]]*\]'), '');
 
 /// Formats one numeric section: `0` / `#` / `?` digits, `,` grouping and
 /// thousands scaling, `.` decimals, `%`, and literal prefix / suffix text.
@@ -1454,7 +1471,12 @@ String _plainNumber(double n) =>
 
 bool _isDateFormat(String code) {
   final String c = _literalFree(code).toLowerCase();
-  return c.contains('yy') ||
+  final String unquoted = code.replaceAll(RegExp(r'\\.|"[^"]*"'), '');
+  return RegExp(
+        r'\[(?:hh?|mm?|ss?)\]',
+        caseSensitive: false,
+      ).hasMatch(unquoted) ||
+      c.contains('yy') ||
       c.contains('mmm') ||
       c.contains('dd') ||
       c.contains('d-m') ||
@@ -1531,23 +1553,66 @@ String formatExcelDate(DateTime dt, String code) {
   });
   final String upper = protected.toUpperCase();
   final bool twelveHour = upper.contains('AM/PM');
+  final elapsedToken = RegExp(r'^\[(HH?|MM?|SS?)\]$');
+  final tokens = RegExp(r'AM/PM|\[[^\]]*\]|Y+|D+|H+|M+|S+')
+      .allMatches(upper)
+      .where(
+        (match) =>
+            !match[0]!.startsWith('[') || elapsedToken.hasMatch(match[0]!),
+      )
+      .toList();
+  final minutePositions = <int>{};
+  for (var token = 0; token < tokens.length; token++) {
+    final text = tokens[token][0]!;
+    if (text != 'M' && text != 'MM') continue;
+    final previous = token == 0 ? '' : tokens[token - 1][0]!;
+    final next = token + 1 == tokens.length ? '' : tokens[token + 1][0]!;
+    // Excel m/mm denotes minutes after hours or before seconds. Other date
+    // tokens reset that context, including when a date follows a time.
+    if (RegExp(r'^\[?HH?\]?$').hasMatch(previous) ||
+        RegExp(r'^\[?SS?\]?$').hasMatch(next)) {
+      minutePositions.add(tokens[token].start);
+    }
+  }
+  final hasElapsed = tokens.any((token) => elapsedToken.hasMatch(token[0]!));
+  final elapsedMilliseconds = DateTime.utc(
+    dt.year,
+    dt.month,
+    dt.day,
+    dt.hour,
+    dt.minute,
+    dt.second,
+    dt.millisecond,
+  ).difference(DateTime.utc(1899, 12, 30)).inMilliseconds;
+  final clock = hasElapsed && elapsedMilliseconds < 0
+      ? excelSerialToDate(-elapsedMilliseconds / 86400000)
+      : dt;
   final StringBuffer out = StringBuffer();
-  var timeMode = false;
+  var elapsedSignWritten = false;
   var i = 0;
   while (i < protected.length) {
-    // Elapsed-time tokens ([h], [m], [s]) keep their bracketed meaning.
+    // Elapsed units retain their totals instead of wrapping at a day/hour.
     if (protected[i] == '[') {
       final close = protected.indexOf(']', i + 1);
       if (close > i) {
         final inner = upper.substring(i + 1, close);
-        if (inner == 'H' || inner == 'HH') timeMode = true;
+        if (elapsedToken.hasMatch(upper.substring(i, close + 1))) {
+          final unit = switch (inner[0]) {
+            'H' => 3600000,
+            'M' => 60000,
+            _ => 1000,
+          };
+          if (elapsedMilliseconds < 0 && !elapsedSignWritten) out.write('-');
+          elapsedSignWritten = true;
+          out.write(pad(elapsedMilliseconds.abs() ~/ unit, inner.length));
+        }
         i = close + 1;
         continue;
       }
     }
     final int ampm = upper.startsWith('AM/PM', i) ? 5 : 0;
     if (ampm > 0) {
-      out.write(dt.hour < 12 ? 'AM' : 'PM');
+      out.write(clock.hour < 12 ? 'AM' : 'PM');
       i += ampm;
       continue;
     }
@@ -1572,12 +1637,16 @@ String formatExcelDate(DateTime dt, String code) {
       continue;
     }
     if (upper.startsWith('MM', i)) {
-      out.write(timeMode ? pad(dt.minute, 2) : pad(dt.month, 2));
+      out.write(
+        minutePositions.contains(i) ? pad(clock.minute, 2) : pad(dt.month, 2),
+      );
       i += 2;
       continue;
     }
     if (upper[i] == 'M') {
-      out.write(timeMode ? '${dt.minute}' : '${dt.month}');
+      out.write(
+        minutePositions.contains(i) ? '${clock.minute}' : '${dt.month}',
+      );
       i += 1;
       continue;
     }
@@ -1602,30 +1671,28 @@ String formatExcelDate(DateTime dt, String code) {
       continue;
     }
     if (upper.startsWith('HH', i)) {
-      timeMode = true;
       final hour = twelveHour
-          ? (dt.hour % 12 == 0 ? 12 : dt.hour % 12)
-          : dt.hour;
+          ? (clock.hour % 12 == 0 ? 12 : clock.hour % 12)
+          : clock.hour;
       out.write(pad(hour, 2));
       i += 2;
       continue;
     }
     if (upper[i] == 'H') {
-      timeMode = true;
       final hour = twelveHour
-          ? (dt.hour % 12 == 0 ? 12 : dt.hour % 12)
-          : dt.hour;
+          ? (clock.hour % 12 == 0 ? 12 : clock.hour % 12)
+          : clock.hour;
       out.write('$hour');
       i += 1;
       continue;
     }
     if (upper.startsWith('SS', i)) {
-      out.write(pad(dt.second, 2));
+      out.write(pad(clock.second, 2));
       i += 2;
       continue;
     }
     if (upper[i] == 'S') {
-      out.write('${dt.second}');
+      out.write('${clock.second}');
       i += 1;
       continue;
     }
