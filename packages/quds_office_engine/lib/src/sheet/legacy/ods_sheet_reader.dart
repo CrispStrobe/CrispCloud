@@ -179,6 +179,8 @@ abstract final class OdsSheetReader {
         budget,
         defaultColumnWidthPoints,
       );
+      final validationDefinitions = _readValidationDefinitions(table);
+      final validationRefs = <String, List<SmlCellRef>>{};
       var rowIndex = 0;
       final pendingRowHeights = <({int start, int count, double height})>[];
       for (final row in _members(table, 'table-row', const {
@@ -217,6 +219,7 @@ abstract final class OdsSheetReader {
                 SmlCell? cell,
                 _OdsAnnotation? annotation,
                 List<_OdsImage> images,
+                String? validationName,
               })
             >[];
         var column = 0;
@@ -332,6 +335,11 @@ abstract final class OdsSheetReader {
                 cell: cell,
                 annotation: content.annotation,
                 images: content.images,
+                validationName: _attribute(
+                  element,
+                  'content-validation-name',
+                  _table,
+                ),
               ));
             }
           }
@@ -374,6 +382,11 @@ abstract final class OdsSheetReader {
             for (final entry in entries) {
               for (var c = 0; c < entry.repeat; c++) {
                 final ref = SmlCellRef(entry.column + c, rowIndex + r);
+                if (entry.validationName case final name?) {
+                  validationRefs
+                      .putIfAbsent(name, () => <SmlCellRef>[])
+                      .add(ref);
+                }
                 if (sheet.merges.isNotEmpty) {
                   budget.mergeCoverage(sheet.merges.length);
                   if (sheet.merges.any((merge) => merge.containsRef(ref))) {
@@ -440,6 +453,33 @@ abstract final class OdsSheetReader {
       sheet.conditionalFormats.addAll(
         _readConditionalFormats(table, styles, budget),
       );
+      for (final definition in validationDefinitions.entries) {
+        final refs = validationRefs[definition.key];
+        if (refs == null || refs.isEmpty) continue;
+        refs.sort(
+          (a, b) =>
+              a.row == b.row ? a.col.compareTo(b.col) : a.row.compareTo(b.row),
+        );
+        var index = 0;
+        while (index < refs.length) {
+          var end = index;
+          while (end + 1 < refs.length &&
+              refs[end + 1].row == refs[index].row &&
+              refs[end + 1].col == refs[end].col + 1) {
+            end++;
+          }
+          budget.validation();
+          sheet.validations.add(
+            SmlDataValidation(
+              range: SmlRange.parse('${refs[index].a1}:${refs[end].a1}'),
+              kind: SmlValidationKind.list,
+              formula1: definition.value.items.join(','),
+              allowBlank: definition.value.allowBlank,
+            ),
+          );
+          index = end + 1;
+        }
+      }
       book.sheets.add(sheet);
     }
     return book;
@@ -574,6 +614,40 @@ abstract final class OdsSheetReader {
       column += repeat;
     }
     return defaults;
+  }
+
+  static Map<String, ({List<String> items, bool allowBlank})>
+  _readValidationDefinitions(XmlElement table) {
+    final definitions = <String, ({List<String> items, bool allowBlank})>{};
+    for (final validation in _descendants(
+      table,
+      'content-validation',
+      _table,
+    )) {
+      final name = _attribute(validation, 'name', _table);
+      final condition = _attribute(validation, 'condition', _table);
+      if (name == null || condition == null) continue;
+      final match = RegExp(
+        r'cell-content-is-in-list\((.*)\)\s*$',
+        dotAll: true,
+      ).firstMatch(condition);
+      if (match == null) continue;
+      final items = <String>[];
+      for (final raw in match.group(1)!.split(';')) {
+        var item = raw.trim();
+        if (item.length >= 2 && item.startsWith('"') && item.endsWith('"')) {
+          item = item.substring(1, item.length - 1).replaceAll('""', '"');
+        }
+        if (item.isNotEmpty) items.add(item);
+      }
+      if (items.isEmpty) continue;
+      definitions[name] = (
+        items: items,
+        allowBlank:
+            _attribute(validation, 'allow-empty-cell', _table) != 'false',
+      );
+    }
+    return definitions;
   }
 
   static List<SmlConditionalRule> _readConditionalFormats(
@@ -1386,6 +1460,7 @@ class _OdsBudget {
   int _imageBytes = 0;
   int _images = 0;
   int _conditionalFormats = 0;
+  int _validations = 0;
 
   void comments(int count) {
     if (count > 10000 - _comments) {
@@ -1424,6 +1499,12 @@ class _OdsBudget {
       throw const OdsSheetFormatException('ODS style work limit');
     }
     _styleWork += count;
+  }
+
+  void validation() {
+    if (++_validations > 1000) {
+      throw const OdsSheetFormatException('ODS validation limit (1000)');
+    }
   }
 
   void conditional() {

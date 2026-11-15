@@ -267,6 +267,7 @@ void main() {
   defaultGeometryTests();
   hiddenStateTests();
   conditionalFormatTests();
+  validationTests();
   // Retain the independently added external continuation's formula cases.
   for (final formula in const {
     'of:="a;b"': '"a;b"',
@@ -1551,5 +1552,42 @@ void conditionalFormatTests() {
     );
     expect(stylesXml, contains('<dxfs count="1">'));
     expect(stylesXml, contains('FF00FF00'));
+  });
+}
+
+void validationTests() {
+  test('ODS list validations become typed XLSX validations', () async {
+    final book = OdsSheetReader.readBytes(
+      _ods(
+        '<t:table t:name="Data">'
+        '<t:table-row><t:table-cell t:content-validation-name="v">'
+        '<x:p>Red</x:p></t:table-cell></t:table-row>'
+        '<t:table-row><t:table-cell t:content-validation-name="v">'
+        '<x:p>Green</x:p></t:table-cell></t:table-row>'
+        '<t:content-validations><t:content-validation t:name="v" '
+        't:condition="of:cell-content-is-in-list(&quot;Red&quot;;&quot;Green&quot;)" '
+        't:allow-empty-cell="false"/></t:content-validations></t:table>',
+      ),
+    );
+    final sheet = book.sheets.first;
+    expect(sheet.validations.length, 2);
+    expect(sheet.validations.first.kind, SmlValidationKind.list);
+    expect(sheet.validations.first.listItems, ['Red', 'Green']);
+    expect(sheet.validations.first.allowBlank, isFalse);
+    expect(sheet.validations.first.range.start.a1, 'A1');
+    expect(sheet.validations.last.range.start.a1, 'A2');
+    expect(sheet.validations.first.accepts('Green'), isTrue);
+    expect(sheet.validations.first.accepts('Blue'), isFalse);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final archive = ZipDecoder().decodeBytes(saved);
+    final sheetXml = utf8.decode(
+      archive.findFile('xl/worksheets/sheet1.xml')!.content as List<int>,
+    );
+    expect(sheetXml, contains('type="list"'));
+    expect(sheetXml, contains('"Red,Green"'));
+
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.validations.first.listItems, ['Red', 'Green']);
   });
 }
