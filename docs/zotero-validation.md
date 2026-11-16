@@ -4,7 +4,9 @@
 
 CrispCloud incorporates the Quds implementation qualified at
 `72691877bd9bafab761e655c13d0c9a0936b55bb`. Later documentation-only Quds pins
-retain those measured production/test bytes. The host source qualified from
+retain those measured production/test bytes. The final manifest pins
+`b24718cc1468c34f494805eb7fb433a87f565503`; the delivery proof verifies that
+no managed implementation file changed. The host source qualified from
 tree `e56518372313b5d9c9698a26d25488bf331c1915`, saved remotely at
 `e5dc3dc5b0919fd79f913e1ad7aee427bafef09e` (the receipt records the identical
 local commit `a81f686f0e96958da42b055f4264b6f87b9c7b95`).
@@ -41,9 +43,15 @@ Real native acceptance against official **Zotero 10.0.8** also passed for the
 actual Quds catalog/Studio transport and document driver/Word adapter. Native
 style selection and refresh produced a full first citation, `Ebd.`, and
 `Ebd., 34.` after DOCX save/reopen; mixed italics and bibliography survive. Live
-scenarios are reported separately from unit/widget totals. They use synthetic
-sources and do not establish a full compiled application or Word/LibreOffice
-interoperability qualification.
+scenarios are reported separately from unit/widget totals. A third native
+scenario also passed the new first-use sequence: fresh document → native
+preferences → same-session seeded picker acceptance with page 12 → one staged
+apply → DOCX roundtrip with the linked footnote/style/locator retained. It
+captures 455 production input hashes and the exact executed kernel hash.
+The three scenarios use synthetic sources and do not establish a full compiled
+application or Word/LibreOffice interoperability qualification. Native locator
+popup editing remains unverified; its bounded automation attempt is retained
+separately from successful seeded-locator acceptance.
 
 See [current host evidence](validation/zotero-continuation-20261116/README.md),
 [host receipt](validation/zotero-continuation-20261116/final/host-validation-receipt.json),

@@ -6,6 +6,12 @@ The canonical implementation qualified at
 **`72691877bd9bafab761e655c13d0c9a0936b55bb`**; documentation-only source-pin
 updates retain those measured production and test bytes.
 
+The final manifest pins **`b24718cc1468c34f494805eb7fb433a87f565503`**. The
+[delivery source proof](delivery-source-proof.json) verifies every recorded Quds,
+host and terminal input, unchanged managed inventory, and a documentation-only
+Quds advance. The final sync wrote or deleted **zero managed files**; both vendor
+guards were rerun against the final pin.
+
 ## Executed host qualification
 
 The [actual host receipt](final/host-validation-receipt.json) records **37
@@ -63,12 +69,21 @@ a full first citation, `Ebd.`, `Ebd., 34.`, mixed italics and the regenerated
 bibliography. The expected bibliography paragraph-layout review was accepted
 by the synthetic fixture.
 
-These scenarios are reported separately from the local unit/widget counts.
-They verify the shared native integration path, not a full compiled CrispCloud
+A third native scenario passed the new first-use sequence: a document without
+a style opens preferences, then the seeded picker on the same staged session,
+and accepts the selected source/page 12. Both commands leave the original
+document unchanged until one apply. DOCX roundtrip preserves the exact caret
+placement, linked footnote, locator and native style. This scenario records
+455 production input hashes and the exact executed kernel hash.
+
+These three scenarios are reported separately from the local unit/widget counts.
+Native locator-popup editing remains unverified; the bounded initial input
+attempt is retained and excluded from pass counts. The scenarios verify the
+shared native integration path, not a full compiled CrispCloud
 application, private accounts or OS-keychain behavior. Microsoft Word/LibreOffice
 interoperability remains unverified. Exact scripts, output DOCX files, protocol
 logs and source/runtime scope are in the
-[live acceptance evidence](https://github.com/CrispStrobe/quds_office_suite/tree/codex/zotero-support-20261116/docs/validation/zotero-continuation-20261116/live-zotero).
+[live acceptance evidence](https://github.com/CrispStrobe/quds_office_suite/blob/codex/zotero-support-20261116/docs/validation/zotero-continuation-20261116/live-zotero/INDEX.md).
 
 Small caps and bibliography paragraph layout still require reviewed
 simplification. Page-based note restarts and unsupported numbering formats

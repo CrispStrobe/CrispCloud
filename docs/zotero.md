@@ -236,8 +236,10 @@ keeps Zotero from processing a silently incomplete citation sequence.
 ODT active-citation transfer, faithful small caps/bibliography layout and
 page-based note restarts remain implementation boundaries. The actual Quds
 catalog/Studio transport and citing driver/Word adapter passed live desktop
-Zotero style-selection, refresh and DOCX save/reopen checks with synthetic
-sources, including German `Ebd.` and page locators. Protocol, controller and UI
+Zotero style-selection, refresh, first-use seeded picker acceptance and DOCX
+save/reopen checks with synthetic sources, including German `Ebd.` and page
+locators. Native locator-popup editing remains outside the successful live
+acceptance scope; the seeded locator was accepted and preserved. Protocol, controller and UI
 regressions also use deterministic transports and pinned real CSL fixtures.
 Full compiled application builds, private-account/keychain acceptance and
 opening the exported DOCX in Microsoft Word or LibreOffice remain separate
