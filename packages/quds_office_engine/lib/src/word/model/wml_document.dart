@@ -197,6 +197,7 @@ class WmlRun extends WmlInline {
     List<int>? commentIds,
     this.noteRefId,
     this.noteRefEndnote = false,
+    this.noteRefCustomMark = false,
     this.fieldInstruction,
     this.fieldLocked = false,
     this.fieldDirty,
@@ -221,6 +222,10 @@ class WmlRun extends WmlInline {
 
   /// True when [noteRefId] points at an endnote.
   bool noteRefEndnote;
+
+  /// Native customMarkFollows suppresses this automatic marker and does not
+  /// advance the note sequence. The authored custom text follows separately.
+  bool noteRefCustomMark;
 
   /// Instruction for a single-run native inline field (w:fldSimple).
   ///
@@ -352,6 +357,7 @@ class WmlComment {
                   noteRefId: inline.noteRefId,
                   inlineVisual: inline.inlineVisual,
                   noteRefEndnote: inline.noteRefEndnote,
+                  noteRefCustomMark: inline.noteRefCustomMark,
                   fieldInstruction: inline.fieldInstruction,
                   fieldLocked: inline.fieldLocked,
                   fieldDirty: inline.fieldDirty,

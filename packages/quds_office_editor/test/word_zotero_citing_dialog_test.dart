@@ -239,15 +239,18 @@ void main() {
   });
 
   testWidgets(
-    'mixed formatting is reviewed before mutation and can be discarded',
+    'unsupported small caps are reviewed before mutation and can be discarded',
     (tester) async {
       final desktop = _Desktop(
-        _insertScript(html: '<i>Title</i>, 34.', noteType: 0),
+        _insertScript(
+          html: '<span style="font-variant: small-caps">Title</span>, 34.',
+          noteType: 0,
+        ),
       );
       final controller = await _open(tester, desktop: desktop);
       await _tap(tester, 'Citation in Zotero…');
       expect(find.text('Review Zotero formatting'), findsOneWidget);
-      expect(find.textContaining('Mixed character formatting'), findsOneWidget);
+      expect(find.textContaining('small caps'), findsOneWidget);
       expect(controller.zoteroFields, isEmpty);
       expect(WordZoteroDocumentData.read(controller.document), isEmpty);
       await _tap(tester, 'Cancel');
@@ -258,17 +261,26 @@ void main() {
   );
 
   testWidgets(
-    'explicit review applies atomic text while retaining native field metadata',
+    'mixed formatting applies styled runs while retaining one protected field',
     (tester) async {
       final desktop = _Desktop(
         _insertScript(html: '<i>Title</i>, 34.', noteType: 0),
       );
       final controller = await _open(tester, desktop: desktop);
       await _tap(tester, 'Citation in Zotero…');
-      await _tap(tester, 'Apply Zotero result');
+      expect(find.text('Review Zotero formatting'), findsNothing);
       final field = controller.zoteroFields.single;
       expect(field.cachedText, 'Title, 34.');
-      expect(field.run!.isAtomic, isTrue);
+      expect(field.run, isNull);
+      expect(field.canEdit, isTrue);
+      expect(
+        field.paragraph.inlines
+            .whereType<WmlRun>()
+            .singleWhere((run) => run.text == 'Title')
+            .properties
+            .italic,
+        isTrue,
+      );
       expect(field.citation!.citationId, 'native-citation');
       final reopened = WordDeserializer().read(
         OpcPackage.open(
@@ -285,7 +297,10 @@ void main() {
     tester,
   ) async {
     final desktop = _Desktop(
-      _insertScript(html: '<i>Title</i>, 34.', noteType: 0),
+      _insertScript(
+        html: '<span style="font-variant: small-caps">Title</span>, 34.',
+        noteType: 0,
+      ),
     );
     final controller = await _open(tester, desktop: desktop);
     await _tap(tester, 'Citation in Zotero…');

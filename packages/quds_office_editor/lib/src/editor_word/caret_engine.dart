@@ -304,8 +304,8 @@ class CaretEngine {
     var right = double.negativeInfinity;
     var size = 0.0;
     for (final LaidOutGlyph g in line.glyphs) {
-      if (g.glyph.logicalIndex + 1 > lineEnd) {
-        lineEnd = g.glyph.logicalIndex + 1;
+      if (g.logicalEnd > lineEnd) {
+        lineEnd = g.logicalEnd;
         size = g.fontSize;
       }
       final double pen = g.x - g.paintDx;
@@ -427,8 +427,7 @@ class CaretEngine {
     double? runStart;
     var runEnd = 0.0;
     for (final LaidOutGlyph g in line.glyphs) {
-      final bool inside =
-          g.glyph.logicalIndex >= from && g.glyph.logicalIndex < to;
+      final bool inside = g.glyph.logicalIndex < to && g.logicalEnd > from;
       // Measure on the pen position: [LaidOutGlyph.x] includes the glyph's
       // paint offset (kerning, mark attachment), which would open gaps and
       // overlaps between neighbouring boxes.
@@ -471,6 +470,21 @@ class CaretEngine {
         return right > line.x ? right : line.x;
       }
       return line.x;
+    }
+    for (final glyph in line.glyphs) {
+      if (glyph.displayText == null ||
+          logicalIndex < glyph.glyph.logicalIndex ||
+          logicalIndex > glyph.logicalEnd) {
+        continue;
+      }
+      final group = line.glyphs.where(
+        (g) =>
+            g.displayText != null &&
+            g.glyph.logicalIndex == glyph.glyph.logicalIndex,
+      );
+      final left = group.map((g) => g.x).reduce(math.min);
+      final right = group.map((g) => g.x + g.advance).reduce(math.max);
+      return logicalIndex <= glyph.glyph.logicalIndex ? left : right;
     }
     for (final LaidOutGlyph glyph in line.glyphs) {
       if (glyph.glyph.logicalIndex != logicalIndex) {
@@ -561,7 +575,7 @@ class CaretEngine {
     }
     var end = 0;
     for (final LaidOutGlyph glyph in line.glyphs) {
-      final int after = glyph.glyph.logicalIndex + 1;
+      final int after = glyph.logicalEnd;
       if (after > end) {
         end = after;
       }
@@ -579,28 +593,39 @@ class CaretEngine {
     if (line.glyphs.isEmpty) {
       return 0;
     }
+    for (final glyph in line.glyphs) {
+      if (glyph.displayText == null) continue;
+      final group = line.glyphs.where(
+        (g) =>
+            g.displayText != null &&
+            g.glyph.logicalIndex == glyph.glyph.logicalIndex,
+      );
+      final left = group.map((g) => g.x).reduce(math.min);
+      final right = group.map((g) => g.x + g.advance).reduce(math.max);
+      if (x >= left && x <= right) {
+        return x <= (left + right) / 2
+            ? glyph.glyph.logicalIndex
+            : glyph.logicalEnd;
+      }
+    }
     for (final LaidOutGlyph glyph in line.glyphs) {
       if (x < glyph.x || x > glyph.x + glyph.advance) {
         continue;
       }
       final bool leftHalf = x <= glyph.x + glyph.advance / 2;
       if (glyph.glyph.level.isOdd) {
-        return leftHalf
-            ? glyph.glyph.logicalIndex + 1
-            : glyph.glyph.logicalIndex;
+        return leftHalf ? glyph.logicalEnd : glyph.glyph.logicalIndex;
       }
-      return leftHalf ? glyph.glyph.logicalIndex : glyph.glyph.logicalIndex + 1;
+      return leftHalf ? glyph.glyph.logicalIndex : glyph.logicalEnd;
     }
     if (x < line.glyphs.first.x) {
       final LaidOutGlyph first = line.glyphs.first;
       return first.glyph.level.isOdd
-          ? first.glyph.logicalIndex + 1
+          ? first.logicalEnd
           : first.glyph.logicalIndex;
     }
     final LaidOutGlyph last = line.glyphs.last;
-    return last.glyph.level.isOdd
-        ? last.glyph.logicalIndex
-        : last.glyph.logicalIndex + 1;
+    return last.glyph.level.isOdd ? last.glyph.logicalIndex : last.logicalEnd;
   }
 
   /// Inclusive logical range covered by [line] (min index … end after last).
@@ -614,7 +639,7 @@ class CaretEngine {
       if (glyph.glyph.logicalIndex < min) {
         min = glyph.glyph.logicalIndex;
       }
-      final int end = glyph.glyph.logicalIndex + 1;
+      final int end = glyph.logicalEnd;
       if (end > max) {
         max = end;
       }

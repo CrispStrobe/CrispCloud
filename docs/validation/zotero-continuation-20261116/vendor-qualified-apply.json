@@ -1,0 +1,13 @@
+{
+  "from": "35829317dc6d946244c96b2bf179f349853f1939",
+  "to": "72691877bd9bafab761e655c13d0c9a0936b55bb",
+  "write": [
+    "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_field_spans.dart",
+    "packages/quds_office_engine/test/word_zotero_preference_flow_test.dart",
+    "packages/quds_office_engine/test/word_zotero_rich_edit_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2399,
+  "applied": true
+}

@@ -309,6 +309,7 @@ abstract final class LineBreaker {
       0,
       for (var i = 1; i < logical.length; i++)
         if (clusterStarts.contains(logical[i].logicalIndex) &&
+            logical[i].logicalIndex != logical[i - 1].logicalIndex &&
             // A lam-alef ghost belongs to the preceding painted ligature.
             logical[i].codePoint != 0)
           i,
@@ -388,9 +389,15 @@ abstract final class LineBreaker {
   ) {
     final List<List<ShapedGlyph>> clusters = <List<ShapedGlyph>>[];
     for (final ShapedGlyph glyph in glyphs) {
-      final continues = clusterStarts == null
-          ? isCombiningMark(glyph.codePoint)
-          : !clusterStarts.contains(glyph.logicalIndex) || glyph.codePoint == 0;
+      final sameSource =
+          clusters.isNotEmpty &&
+          clusters.last.last.logicalIndex == glyph.logicalIndex;
+      final continues =
+          sameSource ||
+          (clusterStarts == null
+              ? isCombiningMark(glyph.codePoint)
+              : !clusterStarts.contains(glyph.logicalIndex) ||
+                    glyph.codePoint == 0);
       if (clusters.isNotEmpty && continues) {
         clusters.last.add(glyph);
       } else {

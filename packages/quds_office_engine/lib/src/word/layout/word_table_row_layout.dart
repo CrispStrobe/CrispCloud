@@ -52,6 +52,7 @@ part of 'word_layout.dart';
         )
         .._deferredContainedFrames = deferredFrames
         .._deferredContainedVisuals = deferredVisuals
+        .._inheritedNoteNumbering = owner._noteNumbering
         .._containedPhysicalSection = owner._containedPhysicalSection ?? section
         .._containedTableDepth = math.max(0, owner._containedTableDepth - 1);
   final laid = rowEngine.layout(storyDocument, updateFields: false);

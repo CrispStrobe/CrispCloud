@@ -458,6 +458,7 @@ class WordSerializer {
               noteRefId: inline.noteRefId,
               inlineVisual: inline.inlineVisual,
               noteRefEndnote: inline.noteRefEndnote,
+              noteRefCustomMark: inline.noteRefCustomMark,
               fieldInstruction: inline.fieldInstruction,
               fieldLocked: inline.fieldLocked,
               fieldDirty: inline.fieldDirty,
@@ -1040,7 +1041,10 @@ class WordSerializer {
       w.writeEmptyElement(
         inline.noteRefEndnote ? 'endnoteReference' : 'footnoteReference',
         prefix: 'w',
-        attributes: <String, String>{'w:id': '${inline.noteRefId}'},
+        attributes: <String, String>{
+          'w:id': '${inline.noteRefId}',
+          if (inline.noteRefCustomMark) 'w:customMarkFollows': '1',
+        },
       );
     } else {
       _writeRunContent(w, inline.text, deleted: deleted);

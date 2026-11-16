@@ -307,7 +307,15 @@ void main() {
         'layout preserves note marker location/absence: endnote=$endnote id=$id',
         () {
           final lines = _noteLines(_singleNote(endnote, id));
-          expect(lines.map((line) => line.sourceText), rendered[id]);
+          // The test contains one reference, whatever its stored native ID.
+          // Imported marker placement stays unchanged while its label follows
+          // body order (and Word's default Roman endnotes).
+          expect(
+            lines.map((line) => line.sourceText),
+            rendered[id]!.map(
+              (text) => text.replaceAll('$id', endnote ? 'i' : '1'),
+            ),
+          );
           if (id == 1) {
             final number = lines.last.glyphs.first;
             expect(number.color, '123456');
@@ -329,7 +337,10 @@ void main() {
         );
         for (var cycle = 0; cycle < 4; cycle++) {
           final lines = _noteLines(doc);
-          expect(lines.single.sourceText, '1 New note');
+          expect(
+            lines.single.sourceText,
+            endnote ? 'i New note' : '1 New note',
+          );
           expect(lines.single.glyphs.first.vertAlign, WmlVertAlign.superscript);
           final bytes = await OfficeIsolateSave.word(doc);
           final kind = endnote ? 'endnote' : 'footnote';

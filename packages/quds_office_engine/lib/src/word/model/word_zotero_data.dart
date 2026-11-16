@@ -45,18 +45,46 @@ abstract final class WordZoteroDocumentData {
   /// Zotero treats that seed as an existing field, so its document style must
   /// already be chosen before the seed is created.
   static int citationNoteType(String data) {
+    final preferences = stylePreferences(data);
+    if (preferences == null) {
+      throw const FormatException(
+        'Choose Document → Document style… in Zotero before inserting selected catalog sources.',
+      );
+    }
+    return preferences.noteType;
+  }
+
+  /// The saved native style, language and placement, without changing data.
+  /// Returns null until Zotero has supplied a complete document style.
+  /// Malformed or ambiguous data still throws instead of being replaced.
+  static ({String id, String? locale, int noteType})? stylePreferences(
+    String data,
+  ) {
     final native = toNative(data);
     Object? styleId;
+    Object? locale;
     Object? noteType;
     if (native.trim().startsWith('{')) {
       final json = jsonDecode(native) as Map<String, dynamic>;
       final style = json['style'];
-      if (style is Map<String, dynamic>) styleId = style['styleID'];
+      if (style != null && style is! Map<String, dynamic>) {
+        throw const FormatException('Malformed Zotero document style');
+      }
+      if (style is Map<String, dynamic>) {
+        styleId = style['styleID'];
+        locale = style['locale'];
+      }
       noteType = (json['prefs'] as Map<String, dynamic>)['noteType'];
     } else if (native.isNotEmpty) {
       final root = _parseXml(native);
       final styles = root.childrenNamed('style', namespaceUri: '');
-      if (styles.length == 1) styleId = styles.single.getAttribute('id');
+      if (styles.length > 1) {
+        throw const FormatException('Duplicate Zotero document styles');
+      }
+      if (styles.length == 1) {
+        styleId = styles.single.getAttribute('id');
+        locale = styles.single.getAttribute('locale');
+      }
       final prefs = root.childrenNamed('prefs', namespaceUri: '').single;
       final notes = prefs
           .childrenNamed('pref', namespaceUri: '')
@@ -69,19 +97,31 @@ abstract final class WordZoteroDocumentData {
         final value = notes.single.getAttribute('value');
         if (value == '0' || value == '1' || value == '2') {
           noteType = int.parse(value!);
+        } else {
+          throw const FormatException('Invalid Zotero citation placement');
         }
       }
+    }
+    if ((styleId != null && styleId is! String) ||
+        (locale != null && locale is! String)) {
+      throw const FormatException('Malformed Zotero document style');
+    }
+    if (noteType != null &&
+        (noteType is! int || noteType < 0 || noteType > 2)) {
+      throw const FormatException('Invalid Zotero citation placement');
     }
     if (styleId is! String ||
         styleId.trim().isEmpty ||
         noteType is! int ||
         noteType < 0 ||
         noteType > 2) {
-      throw const FormatException(
-        'Choose Document → Document style… in Zotero before inserting selected catalog sources.',
-      );
+      return null;
     }
-    return noteType;
+    return (
+      id: styleId,
+      locale: locale is String && locale.trim().isNotEmpty ? locale : null,
+      noteType: noteType,
+    );
   }
 
   /// Validates and prepares preference changes without mutating the package.

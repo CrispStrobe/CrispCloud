@@ -44,6 +44,9 @@ class LaidOutGlyph {
     this.vertAlign = WmlVertAlign.baseline,
     this.hyperlink,
     List<int>? commentIds,
+    this.displayText,
+    this.displayOffset = 0,
+    this.sourceEnd,
     double? advance,
     double? paintDx,
     double? paintDy,
@@ -93,6 +96,16 @@ class LaidOutGlyph {
 
   /// commentIds API.
   final List<int> commentIds;
+
+  /// Automatic field text painted in place of a cached source range.
+  /// All glyphs in one label share the source start/end; [displayOffset]
+  /// identifies this glyph within [displayText] for shaping and hit testing.
+  final String? displayText;
+  final int displayOffset;
+  final int? sourceEnd;
+
+  int get logicalEnd =>
+      sourceEnd ?? glyph.logicalIndex + (glyph.codePoint > 0xffff ? 2 : 1);
 
   /// advance API.
   double advance;
@@ -172,6 +185,32 @@ class LaidOutLine {
             a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex),
       );
     final String? source = sourceText;
+    if (logical.any((glyph) => glyph.displayText != null)) {
+      logical.sort((a, b) {
+        final bySource = a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex);
+        return bySource != 0
+            ? bySource
+            : a.displayOffset.compareTo(b.displayOffset);
+      });
+      final out = StringBuffer();
+      var lastDisplayStart = -1;
+      for (final glyph in logical) {
+        if (glyph.displayText case final String display) {
+          if (glyph.glyph.logicalIndex != lastDisplayStart) out.write(display);
+          lastDisplayStart = glyph.glyph.logicalIndex;
+        } else if (source != null && glyph.glyph.logicalIndex < source.length) {
+          out.write(
+            source.substring(
+              glyph.glyph.logicalIndex,
+              glyph.logicalEnd.clamp(glyph.glyph.logicalIndex, source.length),
+            ),
+          );
+        } else if (glyph.glyph.codePoint != 0) {
+          out.writeCharCode(glyph.glyph.codePoint);
+        }
+      }
+      return out.toString();
+    }
     if (source != null) {
       final int start = logical.first.glyph.logicalIndex.clamp(
         0,
@@ -707,6 +746,9 @@ class WordLayoutEngine {
   final Map<(SfntFont, double), FontMetrics> _metricsCache = {};
 
   WmlDocument? _layoutDoc;
+  WordNoteNumbering? _noteNumbering;
+  // Tall-row layout shares its owner's body sequence, not a temporary subset.
+  WordNoteNumbering? _inheritedNoteNumbering;
   // Temporary tall-row shaping records absolute frame anchors without moving
   // their page coordinates into the row's local coordinate system.
   Map<WmlFrame, ({double y, int paragraphIndex})>? _deferredContainedFrames;
@@ -848,10 +890,10 @@ class WordLayoutEngine {
           ? hostMeasure(cp, sizePoints, props)
           : sizePoints * emFallback;
     }
-    final FontMetrics metrics = _metricsCache.putIfAbsent(
-      (face, sizePoints),
-      () => FontMetrics(font: face, fontSizePoints: sizePoints),
-    );
+    final FontMetrics metrics = _metricsCache.putIfAbsent((
+      face,
+      sizePoints,
+    ), () => FontMetrics(font: face, fontSizePoints: sizePoints));
     return metrics.characterWidth(cp);
   }
 
@@ -893,10 +935,13 @@ class WordLayoutEngine {
     LaidOutDocument? reuse,
   }) {
     _layoutDoc = document;
+    _noteNumbering = _inheritedNoteNumbering ?? WordNoteNumbering(document);
     _noteStories.clear();
     _noteSlices.clear();
     _placedNotes.clear();
-    if (document.footnotes.isNotEmpty) fromSectionIndex = 0;
+    if (document.footnotes.isNotEmpty || document.endnotes.isNotEmpty) {
+      fromSectionIndex = 0;
+    }
     // Materialize every nested TOC before paragraph indices are counted. A
     // normal engine layout also binds imported cached entries to live headings;
     // temporary row shaping keeps their original document-wide targets.
@@ -1241,7 +1286,8 @@ class WordLayoutEngine {
         : math.max(fallbackWidthFactor, 0.72);
     final propsByOffset = <int, WmlRunProps>{};
     WmlRunProps propsAt(int offset) => propsByOffset.putIfAbsent(
-      offset, () => WmlRunEdit.propsAt(paragraph, offset),
+      offset,
+      () => WmlRunEdit.propsAt(paragraph, offset),
     );
     // Inline pictures: one U+FFFC per picture (WmlRun.inlineVisual). It
     // advances by the picture's width and is shaped as a space glyph, so no
@@ -1262,12 +1308,62 @@ class WordLayoutEngine {
       if (picture != null) return math.min(picture.width, maxWidth);
       final props = propsAt(offset);
       return _advanceOf(
-        cp, props.fontSizePoints * props.vertAlign.fontScale, em, props,
+        cp,
+        props.fontSizePoints * props.vertAlign.fontScale,
+        em,
+        props,
       );
     }
+
     int glyphIdAt(int cp, int offset) => inlinePictures.containsKey(offset)
         ? _faceFor(0x20, propsAt(offset))?.glyphIdFor(0x20) ?? 0
         : _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
+
+    final noteLabels = <int, ({String text, int end})>{};
+    var sourceOffset = 0;
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlRun) {
+        final label = _noteNumbering?.referenceLabel(inline);
+        if (label != null) {
+          noteLabels[sourceOffset] = (
+            text: label,
+            end: sourceOffset + inline.text.length,
+          );
+        }
+        sourceOffset += inline.text.length;
+      } else if (inline is WmlBreak) {
+        sourceOffset++;
+      }
+    }
+    final displayOffsets = <ShapedGlyph, int>{};
+    List<ShapedGlyph> displayNoteLabels(List<ShapedGlyph> source) {
+      final result = <ShapedGlyph>[];
+      var skipUntil = -1;
+      for (final glyph in source) {
+        if (glyph.logicalIndex < skipUntil) continue;
+        final label = noteLabels[glyph.logicalIndex];
+        if (label == null) {
+          result.add(glyph);
+          continue;
+        }
+        skipUntil = label.end;
+        var displayOffset = 0;
+        for (final cp in label.text.isEmpty ? const [0] : label.text.runes) {
+          final replacement = ShapedGlyph(
+            codePoint: cp,
+            glyphId: glyphIdAt(cp, glyph.logicalIndex),
+            advance: cp == 0 ? 0 : widthAt(cp, glyph.logicalIndex),
+            logicalIndex: glyph.logicalIndex,
+            // Numeric and Roman note labels form one left-to-right unit.
+            level: glyph.level.isOdd ? glyph.level + 1 : glyph.level,
+          );
+          displayOffsets[replacement] = displayOffset;
+          result.add(replacement);
+          displayOffset += cp > 0xffff ? 2 : 1;
+        }
+      }
+      return result;
+    }
 
     // Widths and glyph IDs are resolved before wrapping, using each run's
     // actual family, style and size. Scaling only after wrapping lets bold or
@@ -1279,12 +1375,14 @@ class WordLayoutEngine {
       final markFace = _faceFor(mark.codePoint, markProps);
       final baseSize = baseProps.fontSizePoints * baseProps.vertAlign.fontScale;
       final markSize = markProps.fontSizePoints * markProps.vertAlign.fontScale;
-      if (baseFace == null || !identical(baseFace, markFace) ||
+      if (baseFace == null ||
+          !identical(baseFace, markFace) ||
           baseSize != markSize) {
         return (dx: -base.advance / 2, dy: 0);
       }
       return GposMarkToBase.fnFor(baseFace, baseSize)(base, mark);
     }
+
     final bool wrapsFrames =
         allowBreak &&
         flow != null &&
@@ -1299,6 +1397,7 @@ class WordLayoutEngine {
             glyphIdAt: glyphIdAt,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
+            ligate: noteLabels.isEmpty ? null : displayNoteLabels,
           )
         : null;
     final List<BrokenLine> broken = wrapsFrames
@@ -1312,6 +1411,7 @@ class WordLayoutEngine {
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
             breakLongWords: !allowBreak,
+            ligate: noteLabels.isEmpty ? null : displayNoteLabels,
           );
     var cursorY = y + paragraph.properties.spacingBefore;
     var idx = pageIndex;
@@ -1542,6 +1642,9 @@ class WordLayoutEngine {
         glyphs.add(
           LaidOutGlyph(
             glyph: g,
+            displayText: noteLabels[g.logicalIndex]?.text,
+            displayOffset: displayOffsets[g] ?? 0,
+            sourceEnd: noteLabels[g.logicalIndex]?.end,
             x: gx + g.paintDx,
             y:
                 cursorY +
@@ -2758,9 +2861,13 @@ class WordLayoutEngine {
   }
 
   void _appendEndnotes(WmlDocument document, List<LaidOutPage> pages) {
+    // Temporary table-row documents inherit labels, but never own the outer
+    // document's note stories. Only append definitions belonging to this story.
+    final owned = document.endnotes.toSet();
+    if (owned.isEmpty) return;
     final List<WmlNote> notes = <WmlNote>[
-      for (final WmlNote note in document.endnotes)
-        if (note.id > 0 &&
+      for (final WmlNote note in _noteNumbering!.notes)
+        if (owned.contains(note) &&
             (note.text.trim().isNotEmpty ||
                 note.addReference ||
                 note.hasReferenceMarkers))

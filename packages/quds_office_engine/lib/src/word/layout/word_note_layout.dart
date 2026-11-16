@@ -14,6 +14,7 @@ class _NoteStory {
     WordLayoutEngine owner,
   ) {
     final List<WmlBlock> blocks = note.blocks.map(WmlClone.block).toList();
+    final label = owner._noteNumbering?.labelFor(note) ?? '${note.id}';
     var hasMarker = false;
     for (final paragraph in blocks.expand(WmlClone.paragraphsOf)) {
       for (var i = 0; i < paragraph.inlines.length; i++) {
@@ -21,7 +22,7 @@ class _NoteStory {
         if (inline is WmlNoteMarker) {
           hasMarker = true;
           paragraph.inlines[i] = WmlRun(
-            text: '${note.id}',
+            text: label,
             properties: inline.properties.copy(),
           );
         }
@@ -33,11 +34,12 @@ class _NoteStory {
       }
       final WmlParagraph first = blocks.first as WmlParagraph;
       final bool separator =
+          label.isNotEmpty &&
           note.addReferenceSpace &&
           (first.text.isEmpty || !RegExp(r'^\s').hasMatch(first.text));
       first.inlines.insertAll(0, [
         WmlRun(
-          text: '${note.id}',
+          text: label,
           properties: WmlRunProps(
             styleId: note.endnote ? 'EndnoteReference' : 'FootnoteReference',
             vertAlign: WmlVertAlign.superscript,
@@ -176,6 +178,9 @@ LaidOutLine _noteLine(
     for (final LaidOutGlyph g in line.glyphs)
       LaidOutGlyph(
         glyph: g.glyph,
+        displayText: g.displayText,
+        displayOffset: g.displayOffset,
+        sourceEnd: g.sourceEnd,
         x: g.x + dx,
         y: g.y + dy,
         color: g.color,

@@ -483,7 +483,10 @@ void main() {
             ),
           ];
         }
-        final insert = find.widgetWithText(FilledButton, 'Insert citation');
+        final insert = find.widgetWithText(
+          OutlinedButton,
+          'Insert basic citation',
+        );
         await tester.ensureVisible(insert);
         await tester.tap(insert);
         await tester.pump();
@@ -1044,7 +1047,10 @@ void main() {
             findsOneWidget,
           );
         }
-        final insert = find.widgetWithText(FilledButton, 'Insert citation');
+        final insert = find.widgetWithText(
+          OutlinedButton,
+          'Insert basic citation',
+        );
         await tester.ensureVisible(insert);
         await tester.tap(insert);
         await tester.pump();
