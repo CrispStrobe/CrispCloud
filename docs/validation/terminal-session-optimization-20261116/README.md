@@ -69,9 +69,9 @@ parser pin and application dependency declarations remain unchanged.
 Implementation and evidence are saved in separate incremental remote
 checkpoints. The final focused tmux suite passes **64 tests with no skips or
 failures**, including hard per-pane deadlines, queued input behind a progressing
-capture and resize reversals. Complete final qualification will be recorded
-below as each command finishes; historical acceptance from earlier commits is
-not counted as new validation.
+capture and resize reversals. The complete final terminal cohort also passes,
+as recorded below. Historical acceptance from earlier commits is not counted
+as new validation.
 
 The [Screen resolver before/after proof](screen-resolver-regression.json) runs the
 extracted production shell through actual `/bin/sh` and `awk` with controlled
@@ -85,6 +85,28 @@ actual shell cases** in [the additional before/after proof](screen-tab-regressio
 pass; 12 reproduce the defect in checkpoint `bb300164`. The
 [runnable harness](screen-tab-regression.py) records the producer source used
 to confirm the format. Formatting both changed Dart files requires no changes.
+
+## Final local qualification
+
+Frozen application source is commit `047adfb944ad9f46acc65e0c8c38376b3949f3da`.
+The independent [source audit](final-source-audit.json) verifies that all **5,556
+watched files** match that commit's blobs and modes, all 205 fixed-cutoff refs
+are ancestors, and root `pubspec.yaml`, `pubspec.lock` and `.fvmrc` are identical
+to the initial baseline. It also verifies all 554 canonical Quds files and all
+1,857 unchanged standalone parser files. The [vendor guards](vendor-verification.json)
+pass against the final pin and SSH dependency.
+
+| Completed check | Result | Evidence |
+| --- | --- | --- |
+| Full terminal/SSH/tmux native cohort | **1,075 passed, 2 skipped, 0 failed**, 85 files; 294.615 seconds | [Native receipt](native.json), [log](native.log.gz) |
+| Final vendored Office/Zotero engine cohort | **209 passed, 0 skipped, 0 failed**, 5 files; 6.472 seconds | [Engine receipt](engine-final.json), [log](engine-final.log.gz) |
+| Exact Screen resolver | 15 initial shell cases and 32 additional tab-boundary cases pass | [Initial proof](screen-resolver-regression.json), [tab proof](screen-tab-regression.json) |
+
+The native skips are the macOS-only shell case and Windows ConPTY on this Linux
+host. Actual Linux PTY allocation, resizing, Unicode input/output, Ctrl+C and
+disposal run in the complete cohort. Native and engine source fingerprints match
+exactly, and neither run changed a watched file. Live SSH, static checks, widget
+captures and the full optimized web build are still being qualified.
 
 ## Development findings retained
 
