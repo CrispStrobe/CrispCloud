@@ -6,9 +6,16 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
-The latest continuation starts at `4cd8065a` in draft PR #140. It adds **up to
+The current continuation adds **local, remote and SOCKS5 SSH forwarding** and
+**persistent output triggers with marks and in-app alerts**, in draft PR #160.
+The implementation and exact behavior are described in the
+[terminal guide](terminal.md#output-triggers). Current local validation and
+integration evidence are recorded in
+[the forwarding/trigger evidence directory](validation/terminal-forwarding-triggers/README.md).
+
+The preceding continuation started at `4cd8065a` in PR #140, now merged. It added **up to
 eight nested panes, OpenSSH destination import and custom terminal key bindings**,
-and validates the previously unexecuted jump-route, arrangement, broadcast,
+and validated the previously unexecuted jump-route, arrangement, broadcast,
 shell-integration and session-discovery work on the normal application graph.
 The recovered environment has pinned Flutter 3.47.8 and Dart 3.13.7, working
 native dependencies and actual Linux PTYs. The earlier out-of-disk attempt is
@@ -20,6 +27,17 @@ GitHub Actions results are neither queried nor awaited; checkpoints carry
 and in [the evidence directory](validation/terminal-parity-continuation/README.md).
 
 ## Integration baseline and refresh
+
+The 16 November continuation first advanced the branch from `01b3f609` to main
+`45ed126a`, bringing in the newer terminal fixes, canonical Office/Zotero work
+and build-28 release changes. All **37 live branch heads** and **149 available
+PR heads** were checked. Only the original heads of #158 and #159 were absent
+from main's ancestry; both had exact tree identity with their already-merged
+squash commits. Checkpoint `5c2dbea9` retains those heads as additional parents
+and contains every audited head. No newer source was reverted to an old branch
+snapshot. The [integration record](validation/terminal-forwarding-triggers/integration.json)
+contains the exact refs and tree comparisons. The previous snapshots below are
+retained as historical evidence.
 
 At **15 November 2026, 22:12:24 UTC**, all **32 live branch heads** and the
 **100 recent PR heads** were audited before new implementation. The branch
@@ -63,11 +81,13 @@ Earlier feature evidence retains its original source cutoff. Records:
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
 | Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy schema v1 and writes v2 |
 | SSH authentication | Password and encrypted/unencrypted key login, verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
+| SSH forwarding | Native local, remote and SOCKS5 TCP CONNECT listeners on existing verified routes; actual assigned ports; per-listener clients and errors; bounded ownership and cleanup |
 | Saved destinations | Up to 50 secret-free profiles; shell/tmux/Screen modes and jump-route persistence; atomic import from a bounded OpenSSH configuration subset |
 | Key bindings | Capture, add, edit, enable/disable and delete exact shortcuts; explicit text or complete terminal-key taps; recipient-specific keyboard protocols and broadcast integration |
 | tmux and GNU screen | Create/attach, exact targets, non-evicting detach, manual reconnect and authenticated bounded session discovery |
 | Navigation | Unicode/wrap-aware literal scrollback search, per-tab font size, OSC 133/633 command history, previous/next marks, manual/iTerm2 marks and completed-command output selection |
 | Shell status and setup | Shell-reported directory/status/duration, one-shot in-app completion notification, review-and-copy Bash 4.4+/Zsh helpers preserving prompt hooks |
+| Output triggers | Up to 50 persistent literal/limited-pattern rules; line-specific marks and in-app alerts; preview, cooldowns, per-connection one-shot state and bounded matching work |
 | Multiple-session input | Explicit 2–8-tab broadcast groups, visible banner/Stop, per-recipient encoding and queued-input cancellation |
 | Lifecycle | Generation-bound transport ownership, pending-opener/cleanup tracking, shared close futures and input provenance excluding terminal replies |
 | Localization | New controls translated into all eight existing non-English locales |
@@ -139,8 +159,9 @@ selection.
 
 A complete route uses one of the five SSH session slots and retains the existing
 30-minute activity timeout. Up to three jump hosts precede the final destination;
-a configured gateway reaches the first hop. Intermediate direct-TCP channels do
-not expose SSH-agent authentication/forwarding or general port-forwarding controls.
+a configured gateway reaches the first hop. The final verified client now also
+supports native local/remote/SOCKS5 forwarding controls. Intermediate direct-TCP
+channels and forwarding do not provide SSH-agent authentication or agent forwarding.
 Empty key passphrases normalize to absent passphrases so unencrypted jump keys
 behave like direct connections; nonempty passphrases remain exact.
 
@@ -179,7 +200,7 @@ forwarding failure or an oversized input operation. The per-event bound is
 262,144 UTF-16 code units, not a byte count. Stop also revokes pending deliveries
 that have not reached their transports. Groups are never persisted.
 
-## Current continuation verification
+## Previous continuation verification
 
 The final normal-application run passed **585 tests with two platform skips and
 zero failures across 54 files**, using Flutter 3.47.8 / Dart 3.13.7 and unchanged
@@ -221,13 +242,13 @@ Reproduction commands and manual checks are in
 ## Remaining larger parity areas
 
 - Native tmux control-mode mapping of remote windows and panes.
-- SSH-agent authentication/forwarding, local/remote/dynamic forwarding controls
-  and persistent connection multiplexing.
+- SSH-agent authentication/forwarding, reusable forwarding profiles and
+  persistent connection multiplexing.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
 - Automatic process/session restoration and secure reusable credential/identity
   integration beyond secret-free destination stores.
-- Output triggers, command automation, richer key-binding actions and broader
-  shell integration beyond the current Bash/Zsh helpers.
+- Script/coprocess trigger actions, command automation, richer key-binding
+  actions and broader shell integration beyond the current Bash/Zsh helpers.
 - Qualification of graphics/file-transfer protocols and their app-level controls.
 - Browser runtime, packaged Windows/macOS, physical mobile and external
   SSH/jump/tmux/Screen acceptance.

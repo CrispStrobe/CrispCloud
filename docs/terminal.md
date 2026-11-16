@@ -292,8 +292,96 @@ keyboard focus. Shell output cannot trigger it.
 Mapping text is stored in local preferences as plain text, as stated in the
 editor. It is not a credential store. Unknown or corrupt schema versions are
 preserved and cannot be overwritten by an unsuccessful load. These bindings
-cover explicit text and terminal-key actions; they do not add output triggers,
-coprocesses, scripts, arbitrary raw-byte macros or iTerm2's complete action set.
+cover explicit text and terminal-key actions. Output observation is configured
+separately under **Output triggers**; coprocesses, scripts, arbitrary raw-byte
+macros and iTerm2's complete action set remain separate capabilities.
+
+## Output triggers
+
+Choose **Terminal actions → Output triggers** to create, preview, edit, disable
+or delete up to 50 rules. Rules apply to all mounted terminal panes, including
+hidden tabs, and are stored locally as plain text. Each rule has a name, a
+literal string or limited pattern, case sensitivity, a **Mark** or **Notify**
+action, and either a cooldown or a once-per-connection limit.
+
+**Mark** creates a normal navigable terminal mark at the completed matching
+line. Several matching lines in one network chunk receive separate marks;
+splitting the same output across packets does not change their locations.
+**Notify** shows an in-app message with the rule name and a bounded excerpt.
+Notifications in the same frame are coalesced to the latest match for that pane.
+These actions never send input, run scripts, change the clipboard, or join a
+broadcast group. Reconnecting clears one-shot and cooldown state; rule settings
+remain saved. The final unterminated line is evaluated once on natural output
+EOF, while an explicit disconnect discards unfinished output.
+
+Literal matching is the default. **Limited pattern** uses a finite-state
+matcher with literals, `.`, character classes and ranges, `^`/`$`, `?`, `*`,
+`+`, and ASCII `\d`, `\s`, `\w` plus their inverse forms outside character classes.
+Groups, alternation, counted repetitions, lookaround, backreferences, and
+patterns that can match empty input are rejected. This is not the full
+iTerm2/ICU regular-expression language. The editor previews matching against
+sample text before saving.
+
+The observer consumes incoming decoded output and completed logical lines,
+not arbitrary snapshots of the emulated screen. It strips styling and OSC/DCS
+payloads, handles carriage-return/backspace/erase-line progress updates, and
+ignores alternate-screen content and lines containing unsupported cursor edits.
+It does not scan old scrollback when a rule is enabled. Names are limited to
+80 UTF-16 code units, patterns to 256, and observed lines to 4,096 Unicode
+code points. Each session admits at most ten actions and two million estimated
+matching operations per second. Whole lines exceeding the matching budget are
+skipped rather than queued; high-volume output is not a guaranteed event log.
+The matcher never uses a backtracking regular-expression engine for user rules.
+
+Unknown, oversized, duplicate-ID or corrupt preference records are retained and
+reject writes until the problem is resolved. Captured output, connection
+credentials, runtime cooldowns and notification history are never persisted.
+
+## SSH port forwarding
+
+On an active native SSH terminal, choose **Terminal actions → Port forwarding**.
+The manager uses that terminal's existing authenticated, host-key-verified SSH
+route, including its jump hosts. Add a listener, choose its mode and address,
+and enter a listening port. Port **0** requests an available port; the manager
+shows the actual assigned port after startup.
+
+| Mode | Listener | Destination reached from |
+| --- | --- | --- |
+| Local | This device | Final SSH server |
+| Remote | Final SSH server | This device |
+| SOCKS5 | This device | Final SSH server, with a destination selected per SOCKS request |
+
+Local and remote modes require a destination host and port. SOCKS5 supports
+TCP CONNECT with IPv4, IPv6 and DNS-name targets, and no-authentication
+negotiation. DNS names are sent through SSH to resolve at the final server.
+SOCKS BIND, UDP association and proxy username/password authentication are not
+implemented. Bind choices are the literal loopback addresses `127.0.0.1` and
+`::1`; remote binding policy is ultimately enforced by the SSH server, whose
+[`GatewayPorts` configuration](https://man.openbsd.org/sshd_config#GatewayPorts)
+can alter the requested scope.
+
+Each connection allows at most 16 forwarding records and 32 clients per
+listener, counting pending requests and SOCKS handshakes. The manager shows
+listener status, allocated port, active connections and a bounded error. A
+failed start stays visible and can be removed with **Stop**. A refused
+destination closes that client while leaving the listener available for later
+attempts. Traffic refreshes the SSH activity clock.
+
+Closing the dialog leaves listeners running. **Stop** ends a listener and all
+its clients. Disconnect, natural SSH closure, session replacement and service
+disposal also close owned listeners. Nothing is persisted or restarted on
+reconnect. Late socket/channel results are closed after cancellation; a pending
+or active remote forwarding operation whose cancellation cannot be confirmed
+closes the SSH transport so a remote listener cannot outlive its ownership.
+The manager reports the closure rather than silently claiming a successful stop.
+
+The forwarding bridge preserves backpressure and both half-close directions,
+allowing a server to send its final response after the requesting client closes
+its write side. Dial operations have a 15-second deadline and SOCKS negotiation
+has a 10-second deadline. Browser builds cannot listen on native TCP sockets;
+the forwarding action remains unavailable there. SSH-agent integration,
+forwarding-profile persistence, shared connections across terminal tabs and
+native tmux control mode remain separate work.
 
 ## Broadcast input
 
@@ -413,8 +501,9 @@ endpoint. Repeated endpoints and routes longer than three hops are rejected.
 One complete route occupies one slot in the existing five-session application
 pool, although it owns multiple SSH clients internally.
 
-Jump hosts do not add SSH-agent authentication, agent forwarding, local/remote/
-dynamic port-forwarding controls or persistent connection multiplexing.
+Jump hosts do not add SSH-agent authentication, agent forwarding or persistent
+connection multiplexing. Native forwarding controls now use the final verified
+connection, as described in [SSH port forwarding](#ssh-port-forwarding).
 OpenSSH destination import is available separately from saved profiles below.
 
 ### Browse existing tmux and screen sessions

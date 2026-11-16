@@ -288,10 +288,10 @@ void main() {
     },
   );
 
-  testWidgets('a refusal remains reviewable and permits a corrected retry', (
+  testWidgets('an unexpected start failure permits a corrected retry', (
     tester,
   ) async {
-    forwarding.startError = const SshPortForwardException('Refused');
+    forwarding.startError = StateError('Unexpected listener failure');
     await mount(tester);
     await add(tester);
     await enter(tester, _targetPort, '80');
@@ -346,7 +346,7 @@ void main() {
   ) async {
     forwarding.seed(SshPortForwardKind.local);
     final pending = forwarding.pendingStop = Completer<void>();
-    forwarding.stopError = const SshPortForwardException('Not confirmed');
+    forwarding.stopError = StateError('Unexpected listener failure');
     await mount(tester);
     await tester.tap(find.text('Stop'));
     await tester.pumpAndSettle();

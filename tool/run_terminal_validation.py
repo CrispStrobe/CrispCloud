@@ -11,6 +11,7 @@ import json
 import pathlib
 import re
 import subprocess
+import sys
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -47,7 +48,7 @@ def source_hashes():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=['native', 'analysis', 'format', 'web'])
+    parser.add_argument('phase', choices=['native', 'live', 'analysis', 'format', 'web'])
     parser.add_argument('--flutter', default='flutter')
     parser.add_argument('--dart', default='dart')
     parser.add_argument('--evidence', type=pathlib.Path,
@@ -64,9 +65,13 @@ def main():
                           if path.startswith(('lib/', 'test/')) and path.endswith('.dart'))
     analysis_files = sorted(analysis_files)
     head = git('rev-parse', 'HEAD')
+    if args.phase == 'live':
+        suites = ['test/ssh_terminal_live_test.dart', 'test/ssh_port_forwarding_live_test.dart']
     if args.phase == 'native':
         command = [args.flutter, 'test', '--no-pub', '--concurrency=2',
                    '--reporter=expanded', *suites]
+    elif args.phase == 'live':
+        command = [sys.executable, 'tool/run_terminal_live_smoke.py', '--flutter', args.flutter]
     elif args.phase == 'analysis':
         command = [args.dart, 'analyze', *analysis_files]
     elif args.phase == 'format':
@@ -79,7 +84,7 @@ def main():
     record = {'phase': args.phase, 'command': command, 'head_at_start': head,
               'started_utc': stamp(), 'watched_source_count': len(before),
               'github_actions_queried_or_awaited': False}
-    if args.phase == 'native':
+    if args.phase in {'native', 'live'}:
         record.update(suite_count=len(suites), suite_files=suites)
     if args.phase in {'analysis', 'format'}:
         record.update(file_count=len(analysis_files), files=analysis_files)
@@ -93,8 +98,8 @@ def main():
                   exit_code=result.returncode,
                   changed_sources=[path for path in sorted(before.keys() | after.keys())
                                    if before.get(path) != after.get(path)])
-    if args.phase == 'native':
-        lines = (evidence / 'native.log').read_text().splitlines()
+    if args.phase in {'native', 'live'}:
+        lines = (evidence / f'{args.phase}.log').read_text().splitlines()
         final = next((line for line in reversed(lines) if 'All tests passed!' in line or 'Some tests failed.' in line), '')
         counts = re.search(r'\+(\d+)(?: ~(\d+))?(?: -(\d+))?:', final)
         if counts:
