@@ -35,9 +35,9 @@ void main() {
 
   test('a sibling gets its own emulator, input and lifecycle', () async {
     final identity = source.connectionIdentity;
-    final open = source.siblingConnectionFactory!;
+    final opening = source.siblingConnectionOpening!;
     target.terminal.resize(112, 34);
-    await target.connect(open, kind: TerminalSessionKind.ssh);
+    await target.connectOpening(opening, kind: TerminalSessionKind.ssh);
     final sibling = route.connections.last;
     expect(original.openSizes, [(112, 34)]);
     expect(source.sharedConnectionSessionCount, 2);
@@ -67,32 +67,32 @@ void main() {
   test(
     'a captured factory rejects a replaced source before acquiring',
     () async {
-      final open = source.siblingConnectionFactory!;
+      final opening = source.siblingConnectionOpening!;
       final replacement = _Connection(route);
       await source.connect(
         (_, _) async => replacement,
         kind: TerminalSessionKind.ssh,
       );
-      await expectLater(open(80, 24), throwsStateError);
+      await expectLater(opening.open(80, 24), throwsStateError);
       expect(original.openSizes, isEmpty);
       expect(replacement.openSizes, isEmpty);
     },
   );
 
   test('a captured factory rejects a disconnected source', () async {
-    final open = source.siblingConnectionFactory!;
+    final opening = source.siblingConnectionOpening!;
     await source.disconnect();
-    expect(source.siblingConnectionFactory, isNull);
+    expect(source.siblingConnectionOpening, isNull);
     expect(source.sharedConnectionSessionCount, 0);
-    await expectLater(open(80, 24), throwsStateError);
+    await expectLater(opening.open(80, 24), throwsStateError);
     expect(original.openSizes, isEmpty);
   });
 
   test('a captured factory rechecks route availability at use time', () async {
-    final open = source.siblingConnectionFactory!;
+    final opening = source.siblingConnectionOpening!;
     route.available = false;
-    expect(source.siblingConnectionFactory, isNull);
-    await expectLater(open(80, 24), throwsStateError);
+    expect(source.siblingConnectionOpening, isNull);
+    await expectLater(opening.open(80, 24), throwsStateError);
     expect(original.openSizes, isEmpty);
   });
 
@@ -100,8 +100,8 @@ void main() {
     'source disposal after acquisition preserves the pending sibling',
     () async {
       original.openGate = Completer<void>();
-      final pending = target.connect(
-        source.siblingConnectionFactory!,
+      final pending = target.connectOpening(
+        source.siblingConnectionOpening!,
         kind: TerminalSessionKind.ssh,
       );
       await _events();
@@ -118,23 +118,68 @@ void main() {
     },
   );
 
-  test('destination cancellation releases its late sibling only', () async {
+  test(
+    'destination cancellation releases the pending lease before a remote reply',
+    () async {
+      original.openGate = Completer<void>();
+      final pending = target.connectOpening(
+        source.siblingConnectionOpening!,
+        kind: TerminalSessionKind.ssh,
+      );
+      await _events();
+      final sibling = route.connections.last;
+      await target.disconnect();
+      await pending.timeout(const Duration(seconds: 1));
+      expect(original.openGate!.isCompleted, isFalse);
+      expect(sibling.closed, isTrue);
+      expect(original.closed, isFalse);
+      expect(source.isConnected, isTrue);
+      expect(target.status, TerminalSessionStatus.disconnected);
+      expect(source.sharedConnectionSessionCount, 1);
+      original.openGate!.complete();
+    },
+  );
+
+  test('replacing a pending opening cancels only its reserved lease', () async {
     original.openGate = Completer<void>();
-    final pending = target.connect(
-      source.siblingConnectionFactory!,
+    final pending = target.connectOpening(
+      source.siblingConnectionOpening!,
       kind: TerminalSessionKind.ssh,
     );
     await _events();
     final sibling = route.connections.last;
-    await target.disconnect();
-    original.openGate!.complete();
-    await pending;
+    final replacement = _BasicConnection();
+    await target.connect(
+      (_, _) async => replacement,
+      kind: TerminalSessionKind.local,
+    );
+    await pending.timeout(const Duration(seconds: 1));
     expect(sibling.closed, isTrue);
     expect(original.closed, isFalse);
-    expect(source.isConnected, isTrue);
-    expect(target.status, TerminalSessionStatus.disconnected);
-    expect(source.sharedConnectionSessionCount, 1);
+    expect(target.isConnected, isTrue);
+    expect(target.kind, TerminalSessionKind.local);
+    expect(original.openGate!.isCompleted, isFalse);
+    original.openGate!.complete();
   });
+
+  test(
+    'disposal cancels a reserved lease while the remote opener is silent',
+    () async {
+      original.openGate = Completer<void>();
+      final pending = target.connectOpening(
+        source.siblingConnectionOpening!,
+        kind: TerminalSessionKind.ssh,
+      );
+      await _events();
+      final sibling = route.connections.last;
+      target.dispose();
+      await pending.timeout(const Duration(seconds: 1));
+      expect(sibling.closed, isTrue);
+      expect(original.closed, isFalse);
+      expect(original.openGate!.isCompleted, isFalse);
+      original.openGate!.complete();
+    },
+  );
 
   test('ordinary transports keep the capability absent', () async {
     final basic = _BasicConnection();
@@ -142,7 +187,7 @@ void main() {
       (_, _) async => basic,
       kind: TerminalSessionKind.local,
     );
-    expect(target.siblingConnectionFactory, isNull);
+    expect(target.siblingConnectionOpening, isNull);
     expect(target.sharedConnectionSessionCount, 0);
   });
 
@@ -251,10 +296,31 @@ class _Connection extends _BasicConnection
   int get sharedSessionCount =>
       route.connections.where((connection) => !connection.closed).length;
   @override
-  Future<TerminalConnection> openSibling(int columns, int rows) async {
+  Future<TerminalConnection> openSibling(
+    int columns,
+    int rows, {
+    TerminalConnectionCancellation? cancellation,
+  }) async {
     openSizes.add((columns, rows));
     final sibling = _Connection(route);
-    await openGate?.future;
-    return sibling;
+    final cancelled = Completer<void>();
+    Future<void> release() async {
+      await sibling.close();
+      if (!cancelled.isCompleted) cancelled.complete();
+    }
+
+    await cancellation?.register(release);
+    try {
+      if (openGate != null) {
+        await Future.any([
+          openGate!.future,
+          cancelled.future.then<void>((_) => throw StateError('cancelled')),
+        ]);
+      }
+      if (cancellation?.isCancelled == true) throw StateError('cancelled');
+      return sibling;
+    } finally {
+      cancellation?.unregister(release);
+    }
   }
 }

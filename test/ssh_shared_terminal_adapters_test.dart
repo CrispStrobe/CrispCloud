@@ -114,6 +114,44 @@ void main() {
       await sibling.close();
     },
   );
+
+  test(
+    'cancellation closes the acquired child before a remote channel reply',
+    () async {
+      service.openGate = Completer<void>();
+      final cancellation = TerminalConnectionCancellation();
+      final source = SshTerminalConnection(
+        service,
+        'source',
+        const Stream.empty(),
+      );
+      final opening = source.openSibling(80, 24, cancellation: cancellation);
+      final rejected = expectLater(opening, throwsStateError);
+      await Future<void>.delayed(Duration.zero);
+      expect(service.active.keys, ['source', 'sibling-1']);
+      await cancellation.cancel();
+      await rejected.timeout(const Duration(seconds: 1));
+      expect(service.active.keys, ['source']);
+      expect(service.openGate!.isCompleted, isFalse);
+      service.openGate!.complete();
+    },
+  );
+
+  test('cancellation between reservation and handler registration releases the child', () async {
+    final cancellation = TerminalConnectionCancellation();
+    final source = SshTerminalConnection(
+      service,
+      'source',
+      const Stream.empty(),
+    );
+    final opening = source.openSibling(80, 24, cancellation: cancellation);
+    final rejected = expectLater(opening, throwsStateError);
+    expect(service.active.keys, ['source', 'sibling-1']);
+    await cancellation.cancel();
+    await rejected;
+    expect(service.active.keys, ['source']);
+    expect(service.opened, isEmpty);
+  });
 }
 
 class _Service extends SshTerminalService {
@@ -128,6 +166,7 @@ class _Service extends SshTerminalService {
   final resizes = <(String, int, int)>[];
   final disconnected = <String>[];
   final streams = <String, StreamController<String>>{};
+  final pendingOpens = <String, Completer<void>>{};
   int serial = 0;
   Object? openError;
   Completer<void>? openGate;
@@ -172,7 +211,18 @@ class _Service extends SshTerminalService {
     ScreenSessionOptions? screen,
   }) async {
     opened.add((sessionId, width, height, tmux, screen));
-    await openGate?.future;
+    if (openGate != null) {
+      final cancelled = Completer<void>();
+      pendingOpens[sessionId] = cancelled;
+      try {
+        await Future.any([
+          openGate!.future,
+          cancelled.future.then<void>((_) => throw StateError('cancelled')),
+        ]);
+      } finally {
+        pendingOpens.remove(sessionId);
+      }
+    }
     if (openError case final error?) throw error;
     final output = StreamController<String>();
     streams[sessionId] = output;
@@ -188,6 +238,8 @@ class _Service extends SshTerminalService {
   @override
   Future<void> disconnect(String sessionId) async {
     if (active.remove(sessionId) == null) return;
+    final cancelled = pendingOpens[sessionId];
+    if (cancelled != null && !cancelled.isCompleted) cancelled.complete();
     disconnected.add(sessionId);
     final stream = streams.remove(sessionId);
     if (stream != null) unawaited(stream.close());

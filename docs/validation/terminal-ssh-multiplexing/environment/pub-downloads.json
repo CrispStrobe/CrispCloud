@@ -1,0 +1,2256 @@
+[
+  {
+    "name": "_discoveryapis_commons",
+    "version": "1.0.7",
+    "key": "_discoveryapis_commons-1.0.7",
+    "sha256": "113c4100b90a5b70a983541782431b82168b3cae166ab130649c36eb3559d498",
+    "bytes": 18228
+  },
+  {
+    "name": "_fe_analyzer_shared",
+    "version": "95.0.0",
+    "key": "_fe_analyzer_shared-95.0.0",
+    "sha256": "0e4db51a88671b676adc09e923ffebd765a1f0c2b04dc19b08b35a335de2972c",
+    "bytes": 702312
+  },
+  {
+    "name": "adaptive_breakpoints",
+    "version": "0.1.7",
+    "key": "adaptive_breakpoints-0.1.7",
+    "sha256": "56dd5f1016f4d5732b80628d1b63a29d8c9cabe4d66a8a5fe63fdbec7b3af5cd",
+    "bytes": 495553
+  },
+  {
+    "name": "analyzer",
+    "version": "10.1.0",
+    "key": "analyzer-10.1.0",
+    "sha256": "3d577a36cde804a46bd1d89e673c3d87c3538c49a39c35d4d336f7760b48c319",
+    "bytes": 10775116
+  },
+  {
+    "name": "animations",
+    "version": "2.2.0",
+    "key": "animations-2.2.0",
+    "sha256": "9cb469212ea51be27097f23b519d594c01171721347b55df9334fff653659e7f",
+    "bytes": 37463010
+  },
+  {
+    "name": "archive",
+    "version": "3.6.1",
+    "key": "archive-3.6.1",
+    "sha256": "cb6a278ef2dbb298455e1a713bda08524a175630ec643a242c399c932a0a1f7d",
+    "bytes": 1933889
+  },
+  {
+    "name": "args",
+    "version": "2.7.0",
+    "key": "args-2.7.0",
+    "sha256": "d0481093c50b1da8910eb0bb301626d4d8eb7284aa739614d2b394ee09e3ea04",
+    "bytes": 46690
+  },
+  {
+    "name": "async",
+    "version": "2.13.1",
+    "key": "async-2.13.1",
+    "sha256": "e2eb0491ba5ddb6177742d2da23904574082139b07c1e33b8503b9f46f3e1a37",
+    "bytes": 85402
+  },
+  {
+    "name": "boolean_selector",
+    "version": "2.1.2",
+    "key": "boolean_selector-2.1.2",
+    "sha256": "8aab1771e1243a5063b8b0ff68042d67334e3feab9e95b9490f9a6ebf73b42ea",
+    "bytes": 12958
+  },
+  {
+    "name": "browser_launcher",
+    "version": "1.1.3",
+    "key": "browser_launcher-1.1.3",
+    "sha256": "ca2557663d3033845f2ef2b60f94fc249528324fd1affddccb7c63ac0ccd6c67",
+    "bytes": 7357
+  },
+  {
+    "name": "built_collection",
+    "version": "5.1.1",
+    "key": "built_collection-5.1.1",
+    "sha256": "376e3dd27b51ea877c28d525560790aee2e6fbb5f20e2f85d5081027d94e2100",
+    "bytes": 42062
+  },
+  {
+    "name": "built_value",
+    "version": "8.12.6",
+    "key": "built_value-8.12.6",
+    "sha256": "34e4067d30ce212937df995f03b69992eea683539ceeac7f679a1f1eba055b56",
+    "bytes": 41194
+  },
+  {
+    "name": "characters",
+    "version": "1.4.1",
+    "key": "characters-1.4.1",
+    "sha256": "faf38497bda5ead2a8c7615f4f7939df04333478bf32e4173fcb06d428b5716b",
+    "bytes": 528692
+  },
+  {
+    "name": "checked_yaml",
+    "version": "2.0.4",
+    "key": "checked_yaml-2.0.4",
+    "sha256": "959525d3162f249993882720d52b7e0c833978df229be20702b33d48d91de70f",
+    "bytes": 6270
+  },
+  {
+    "name": "cli_config",
+    "version": "0.2.0",
+    "key": "cli_config-0.2.0",
+    "sha256": "ac20a183a07002b700f0c25e61b7ee46b23c309d76ab7b7640a028f18e4d99ec",
+    "bytes": 12466
+  },
+  {
+    "name": "cli_util",
+    "version": "0.4.2",
+    "key": "cli_util-0.4.2",
+    "sha256": "ff6785f7e9e3c38ac98b2fb035701789de90154024a75b6cb926445e83197d1c",
+    "bytes": 7245
+  },
+  {
+    "name": "clock",
+    "version": "1.1.2",
+    "key": "clock-1.1.2",
+    "sha256": "fddb70d9b5277016c77a80201021d40a2247104d9f4aa7bab7157b7e3f05b84b",
+    "bytes": 11740
+  },
+  {
+    "name": "code_assets",
+    "version": "1.2.1",
+    "key": "code_assets-1.2.1",
+    "sha256": "bf394f466ba9205f1812a0433b392d6af280f155f56651eda7c18cc32ed493b8",
+    "bytes": 24190
+  },
+  {
+    "name": "code_builder",
+    "version": "4.11.1",
+    "key": "code_builder-4.11.1",
+    "sha256": "6a6cab2ba4680d6423f34a9b972a4c9a94ebe1b62ecec4e1a1f2cba91fd1319d",
+    "bytes": 63363
+  },
+  {
+    "name": "collection",
+    "version": "1.19.1",
+    "key": "collection-1.19.1",
+    "sha256": "2f5709ae4d3d59dd8f7cd309b4e023046b57d8a6c82130785d2b0e5868084e76",
+    "bytes": 77897
+  },
+  {
+    "name": "completion",
+    "version": "1.0.2",
+    "key": "completion-1.0.2",
+    "sha256": "82fa09800c0b71a2e8396bf3ca6b36b43cd35fe7ba2aeab53b6349ac671d0f5b",
+    "bytes": 12584
+  },
+  {
+    "name": "convert",
+    "version": "3.1.2",
+    "key": "convert-3.1.2",
+    "sha256": "b30acd5944035672bc15c6b7a8b47d773e41e2f17de064350988c5d02adb1c68",
+    "bytes": 23145
+  },
+  {
+    "name": "coverage",
+    "version": "1.15.1",
+    "key": "coverage-1.15.1",
+    "sha256": "956a3de0725ca232ad353565a8290d3357592bf4250f6f298a185e2d949c5d3d",
+    "bytes": 495383
+  },
+  {
+    "name": "crypto",
+    "version": "3.0.7",
+    "key": "crypto-3.0.7",
+    "sha256": "c8ea0233063ba03258fbcf2ca4d6dadfefe14f02fab57702265467a19f27fadf",
+    "bytes": 615595
+  },
+  {
+    "name": "csslib",
+    "version": "1.0.2",
+    "key": "csslib-1.0.2",
+    "sha256": "09bad715f418841f976c77db72d5398dc1253c21fb9c0c7f0b0b985860b2d58e",
+    "bytes": 333776
+  },
+  {
+    "name": "cupertino_icons",
+    "version": "1.0.9",
+    "key": "cupertino_icons-1.0.9",
+    "sha256": "41e005c33bd814be4d3096aff55b1908d419fde52ca656c8c47719ec745873cd",
+    "bytes": 2601144
+  },
+  {
+    "name": "dap",
+    "version": "1.4.0",
+    "key": "dap-1.4.0",
+    "sha256": "42b0b083a09c59a118741769e218fc3738980ab591114f09d1026241d2b9c290",
+    "bytes": 87432
+  },
+  {
+    "name": "dart_service_protocol_shared",
+    "version": "0.0.3",
+    "key": "dart_service_protocol_shared-0.0.3",
+    "sha256": "1737875c176d7e3d87bb3a359182828b542fe20a0b34198b8d31a81af5c7a76d",
+    "bytes": 7688
+  },
+  {
+    "name": "dart_style",
+    "version": "3.1.7",
+    "key": "dart_style-3.1.7",
+    "sha256": "29f7ecc274a86d32920b1d9cfc7502fa87220da41ec60b55f329559d5732e2b2",
+    "bytes": 637948
+  },
+  {
+    "name": "data_assets",
+    "version": "0.20.0",
+    "key": "data_assets-0.20.0",
+    "sha256": "8bfdbf25ec8a0f4b5a3c993042c4ab9996ba354f0b03d40f4e360f3730d71cae",
+    "bytes": 9919
+  },
+  {
+    "name": "dds",
+    "version": "5.4.0",
+    "key": "dds-5.4.0",
+    "sha256": "f8e875dcd7b5e5073a7bfe54095144c70487f18e2f8e47fa51c09dd67eccfb0c",
+    "bytes": 347018
+  },
+  {
+    "name": "dds_service_extensions",
+    "version": "2.1.0",
+    "key": "dds_service_extensions-2.1.0",
+    "sha256": "afe0fce921953ac0c5bb276bccd7e36fa5035d7769567d122523fdd09beb4d03",
+    "bytes": 7385
+  },
+  {
+    "name": "devtools_shared",
+    "version": "13.1.0",
+    "key": "devtools_shared-13.1.0",
+    "sha256": "13df2c17d5f21dd7c92d08145386d45e1153364c04e531e994afb0ee7b67554b",
+    "bytes": 67418
+  },
+  {
+    "name": "dtd",
+    "version": "4.0.0",
+    "key": "dtd-4.0.0",
+    "sha256": "09ddb228b3d1478a093556357692a4c203ff4f9d5f8cda05dfdca0ff3fb7c5d3",
+    "bytes": 26803
+  },
+  {
+    "name": "dwds",
+    "version": "27.1.2",
+    "key": "dwds-27.1.2",
+    "sha256": "280ca49e939f3f8a96f3a77bb17dfc284fd92b5004bd144ccafb2ab3ddb3b7f9",
+    "bytes": 464914
+  },
+  {
+    "name": "extension_discovery",
+    "version": "2.1.0",
+    "key": "extension_discovery-2.1.0",
+    "sha256": "de1fce715ab013cdfb00befc3bdf0914bea5e409c3a567b7f8f144bc061611a7",
+    "bytes": 17379
+  },
+  {
+    "name": "fake_async",
+    "version": "1.3.3",
+    "key": "fake_async-1.3.3",
+    "sha256": "5368f224a74523e8d2e7399ea1638b37aecfca824a3cc4dfdf77bf1fa905ac44",
+    "bytes": 15216
+  },
+  {
+    "name": "ffi",
+    "version": "2.2.0",
+    "key": "ffi-2.2.0",
+    "sha256": "6d7fd89431262d8f3125e81b50d3847a091d846eafcd4fdb88dd06f36d705a45",
+    "bytes": 11014
+  },
+  {
+    "name": "ffigen",
+    "version": "20.1.1",
+    "key": "ffigen-20.1.1",
+    "sha256": "b7803707faeec4ce3c1b0c2274906504b796e3b70ad573577e72333bd1c9b3ba",
+    "bytes": 936077
+  },
+  {
+    "name": "file",
+    "version": "7.0.1",
+    "key": "file-7.0.1",
+    "sha256": "a3b4f84adafef897088c160faf7dfffb7696046cb13ae90b508c2cbc95d3b8d4",
+    "bytes": 56783
+  },
+  {
+    "name": "file_testing",
+    "version": "3.0.2",
+    "key": "file_testing-3.0.2",
+    "sha256": "eb0c85fd118ddc0d41c295c09f64e0924c256b071087cdc9828d5372c80d554d",
+    "bytes": 3436
+  },
+  {
+    "name": "fixnum",
+    "version": "1.1.1",
+    "key": "fixnum-1.1.1",
+    "sha256": "b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be",
+    "bytes": 24416
+  },
+  {
+    "name": "flutter_gallery_assets",
+    "version": "1.0.2",
+    "key": "flutter_gallery_assets-1.0.2",
+    "sha256": "f8fecfeebcfbe80a2fabc00c0834046890abe681f59d3e2c5b1028faf887d94b",
+    "bytes": 86558720
+  },
+  {
+    "name": "flutter_lints",
+    "version": "6.0.0",
+    "key": "flutter_lints-6.0.0",
+    "sha256": "3105dc8492f6183fb076ccf1f351ac3d60564bff92e20bfc4af9cc1651f4e7e1",
+    "bytes": 4980
+  },
+  {
+    "name": "flutter_localized_locales",
+    "version": "2.0.5",
+    "key": "flutter_localized_locales-2.0.5",
+    "sha256": "478d10535edf07292e34cb4c757882edeeaf96d5e3dbb04b42733038bd41dd3f",
+    "bytes": 2893256
+  },
+  {
+    "name": "flutter_staggered_grid_view",
+    "version": "0.7.0",
+    "key": "flutter_staggered_grid_view-0.7.0",
+    "sha256": "19e7abb550c96fbfeb546b23f3ff356ee7c59a019a651f8f102a4ba9b7349395",
+    "bytes": 32145
+  },
+  {
+    "name": "flutter_template_images",
+    "version": "5.0.0",
+    "key": "flutter_template_images-5.0.0",
+    "sha256": "0120589a786dbae4e86af1f61748baccd8530abd56a60e7a13479647a75222fe",
+    "bytes": 485296
+  },
+  {
+    "name": "frontend_server_client",
+    "version": "4.0.0",
+    "key": "frontend_server_client-4.0.0",
+    "sha256": "f64a0333a82f30b0cca061bc3d143813a486dc086b574bfb233b7c1372427694",
+    "bytes": 14419
+  },
+  {
+    "name": "gcloud",
+    "version": "0.8.19",
+    "key": "gcloud-0.8.19",
+    "sha256": "caa415a0145ec8afac457322872c3e8b38379a88800d2944c53798ea8fbce386",
+    "bytes": 86589
+  },
+  {
+    "name": "glob",
+    "version": "2.1.3",
+    "key": "glob-2.1.3",
+    "sha256": "c3f1ee72c96f8f78935e18aa8cecced9ab132419e8625dc187e1c2408efc20de",
+    "bytes": 22395
+  },
+  {
+    "name": "google_cloud",
+    "version": "0.4.1",
+    "key": "google_cloud-0.4.1",
+    "sha256": "fbcde933b2d8600c3cdb2328f8f4c47628ec29a39e9cef85dee535c7868993c4",
+    "bytes": 24787
+  },
+  {
+    "name": "google_fonts",
+    "version": "6.3.3",
+    "key": "google_fonts-6.3.3",
+    "sha256": "ba03d03bcaa2f6cb7bd920e3b5027181db75ab524f8891c8bc3aa603885b8055",
+    "bytes": 1762418
+  },
+  {
+    "name": "google_identity_services_web",
+    "version": "0.3.3+1",
+    "key": "google_identity_services_web-0.3.3+1",
+    "sha256": "5d187c46dc59e02646e10fe82665fc3884a9b71bc1c90c2b8b749316d33ee454",
+    "bytes": 65659
+  },
+  {
+    "name": "google_mobile_ads",
+    "version": "8.0.0",
+    "key": "google_mobile_ads-8.0.0",
+    "sha256": "50549f6c945d7a445d53c04f34d025b1a1723fbd02719de9e67de432e2597f40",
+    "bytes": 255275
+  },
+  {
+    "name": "googleapis",
+    "version": "14.0.0",
+    "key": "googleapis-14.0.0",
+    "sha256": "5c9e0f25be1dec13d8d2158263141104c51b5ba83487537c17a2330581e505ee",
+    "bytes": 8216665
+  },
+  {
+    "name": "googleapis_auth",
+    "version": "2.3.2",
+    "key": "googleapis_auth-2.3.2",
+    "sha256": "1417d8846663df5e7b77ca56591c5edd442c66ffc9c01ab036e138a21a148e86",
+    "bytes": 58491
+  },
+  {
+    "name": "graphs",
+    "version": "2.3.2",
+    "key": "graphs-2.3.2",
+    "sha256": "741bbf84165310a68ff28fe9e727332eef1407342fca52759cb21ad8177bb8d0",
+    "bytes": 16263
+  },
+  {
+    "name": "hooks",
+    "version": "2.0.2",
+    "key": "hooks-2.0.2",
+    "sha256": "9a62a50b50b769a737bc0a8ff381f333529df3ab746b2f6b02e83760231455ba",
+    "bytes": 36651
+  },
+  {
+    "name": "hooks_runner",
+    "version": "1.5.0",
+    "key": "hooks_runner-1.5.0",
+    "sha256": "a67ab8106545fcffcf5c43edf84b4be222fc95a9fbec8baef1bcaf4534540cfc",
+    "bytes": 34171
+  },
+  {
+    "name": "html",
+    "version": "0.15.6",
+    "key": "html-0.15.6",
+    "sha256": "6d1264f2dffa1b1101c25a91dff0dc2daee4c18e87cd8538729773c073dbf602",
+    "bytes": 232248
+  },
+  {
+    "name": "http",
+    "version": "1.6.0",
+    "key": "http-1.6.0",
+    "sha256": "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412",
+    "bytes": 46315
+  },
+  {
+    "name": "http_multi_server",
+    "version": "3.2.2",
+    "key": "http_multi_server-3.2.2",
+    "sha256": "aa6199f908078bb1c5efb8d8638d4ae191aac11b311132c3ef48ce352fb52ef8",
+    "bytes": 11690
+  },
+  {
+    "name": "http_parser",
+    "version": "4.1.2",
+    "key": "http_parser-4.1.2",
+    "sha256": "178d74305e7866013777bab2c3d8726205dc5a4dd935297175b19a23a2e66571",
+    "bytes": 17424
+  },
+  {
+    "name": "image",
+    "version": "4.3.0",
+    "key": "image-4.3.0",
+    "sha256": "f31d52537dc417fdcde36088fdf11d191026fd5e4fae742491ebd40e5a8bea7d",
+    "bytes": 12366733
+  },
+  {
+    "name": "intl",
+    "version": "0.20.3",
+    "key": "intl-0.20.3",
+    "sha256": "1ca20c894b1717686a2319b8548763d812bc0aabdac580420a44c5178c57a867",
+    "bytes": 302642
+  },
+  {
+    "name": "io",
+    "version": "1.0.5",
+    "key": "io-1.0.5",
+    "sha256": "dfd5a80599cf0165756e3181807ed3e77daf6dd4137caaad72d0b7931597650b",
+    "bytes": 17975
+  },
+  {
+    "name": "isolate",
+    "version": "2.1.1",
+    "key": "isolate-2.1.1",
+    "sha256": "3554ab10fdeec965d27e0074c913ccb2229887633da080d2b35a6322da14938b",
+    "bytes": 29195
+  },
+  {
+    "name": "jni",
+    "version": "1.0.0",
+    "key": "jni-1.0.0",
+    "sha256": "c2230682d5bc2362c1c9e8d3c7f406d9cbba23ab3f2e203a025dd47e0fb2e68f",
+    "bytes": 405863
+  },
+  {
+    "name": "jni_flutter",
+    "version": "1.0.1",
+    "key": "jni_flutter-1.0.1",
+    "sha256": "8b59e590786050b1cd866677dddaf76b1ade5e7bc751abe04b86e84d379d3ba6",
+    "bytes": 23336
+  },
+  {
+    "name": "js",
+    "version": "0.7.2",
+    "key": "js-0.7.2",
+    "sha256": "53385261521cc4a0c4658fd0ad07a7d14591cf8fc33abbceae306ddb974888dc",
+    "bytes": 9994
+  },
+  {
+    "name": "json_annotation",
+    "version": "4.12.0",
+    "key": "json_annotation-4.12.0",
+    "sha256": "2a743920d81b7910627f68ee2c9ac1fc0bfee32b9fc3403587d7c6791ca12f80",
+    "bytes": 13940
+  },
+  {
+    "name": "json_rpc_2",
+    "version": "4.1.0",
+    "key": "json_rpc_2-4.1.0",
+    "sha256": "82dfd37d3b2e5030ae4729e1d7f5538cbc45eb1c73d618b9272931facac3bec1",
+    "bytes": 23684
+  },
+  {
+    "name": "leak_tracker",
+    "version": "11.0.2",
+    "key": "leak_tracker-11.0.2",
+    "sha256": "33e2e26bdd85a0112ec15400c8cbffea70d0f9c3407491f672a2fad47915e2de",
+    "bytes": 34448
+  },
+  {
+    "name": "leak_tracker_flutter_testing",
+    "version": "3.0.10",
+    "key": "leak_tracker_flutter_testing-3.0.10",
+    "sha256": "1dbc140bb5a23c75ea9c4811222756104fbcd1a27173f0c34ca01e16bea473c1",
+    "bytes": 10363
+  },
+  {
+    "name": "leak_tracker_testing",
+    "version": "3.0.2",
+    "key": "leak_tracker_testing-3.0.2",
+    "sha256": "8d5a2d49f4a66b49744b23b018848400d23e54caf9463f4eb20df3eb8acb2eb1",
+    "bytes": 7535
+  },
+  {
+    "name": "lints",
+    "version": "6.1.0",
+    "key": "lints-6.1.0",
+    "sha256": "12f842a479589fea194fe5c5a3095abc7be0c1f2ddfa9a0e76aed1dbd26a87df",
+    "bytes": 18120
+  },
+  {
+    "name": "logging",
+    "version": "1.3.0",
+    "key": "logging-1.3.0",
+    "sha256": "c8245ada5f1717ed44271ed1c26b8ce85ca3228fd2ffdb75468ab01979309d61",
+    "bytes": 12198
+  },
+  {
+    "name": "matcher",
+    "version": "0.12.20",
+    "key": "matcher-0.12.20",
+    "sha256": "31bd099b47c10cd1aeb55146a2d46ce0277630ecef3f7dae54ad7873f36696cd",
+    "bytes": 59725
+  },
+  {
+    "name": "material_color_utilities",
+    "version": "0.13.0",
+    "key": "material_color_utilities-0.13.0",
+    "sha256": "9c337007e82b1889149c82ed242ed1cb24a66044e30979c44912381e9be4c48b",
+    "bytes": 2115434
+  },
+  {
+    "name": "meta",
+    "version": "1.18.3",
+    "key": "meta-1.18.3",
+    "sha256": "c82594181e3312f3d0695fc95aaaf7758d75b8d4ae2bbecf223b9fd5109a059d",
+    "bytes": 16874
+  },
+  {
+    "name": "metrics_center",
+    "version": "1.0.15",
+    "key": "metrics_center-1.0.15",
+    "sha256": "534f58479561db7cd54a09c135621ee4c1a2feadb62fb57370ee931fcc0d8675",
+    "bytes": 24436
+  },
+  {
+    "name": "mime",
+    "version": "2.0.0",
+    "key": "mime-2.0.0",
+    "sha256": "41a20518f0cb1256669420fdba0cd90d21561e560ac240f26ef8322e45bb7ed6",
+    "bytes": 24379
+  },
+  {
+    "name": "multicast_dns",
+    "version": "0.3.3+1",
+    "key": "multicast_dns-0.3.3+1",
+    "sha256": "134668a9605c747322d8c3eb0e89a4c0cbdedb29f8d2d5ae29d14daef724987b",
+    "bytes": 18783
+  },
+  {
+    "name": "mustache_template",
+    "version": "2.0.5",
+    "key": "mustache_template-2.0.5",
+    "sha256": "c689b4d59176f8c7a2860aab765d205916aa5b06cfafff7613bfcc42fa996143",
+    "bytes": 38811
+  },
+  {
+    "name": "native_stack_traces",
+    "version": "0.6.1",
+    "key": "native_stack_traces-0.6.1",
+    "sha256": "d34cf916db87b14d39465b3e3b4b4a8ee1f304bde6ed7605571e34802e3d6a11",
+    "bytes": 46469
+  },
+  {
+    "name": "native_toolchain_c",
+    "version": "0.19.2",
+    "key": "native_toolchain_c-0.19.2",
+    "sha256": "f9c168717100ae6d9fee9ffb0be379bf1f8b26b0f6bcbd4fdddcd931993a6a72",
+    "bytes": 58516
+  },
+  {
+    "name": "nested",
+    "version": "1.0.0",
+    "key": "nested-1.0.0",
+    "sha256": "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20",
+    "bytes": 10240
+  },
+  {
+    "name": "node_preamble",
+    "version": "2.0.2",
+    "key": "node_preamble-2.0.2",
+    "sha256": "6e7eac89047ab8a8d26cf16127b5ed26de65209847630400f9aefd7cd5c730db",
+    "bytes": 6563
+  },
+  {
+    "name": "objective_c",
+    "version": "9.4.1",
+    "key": "objective_c-9.4.1",
+    "sha256": "6cb691c686fa2838c6deb34980d426145c2a5d537491cb83d463c33cdbc726ed",
+    "bytes": 417658
+  },
+  {
+    "name": "package_config",
+    "version": "2.2.0",
+    "key": "package_config-2.2.0",
+    "sha256": "f096c55ebb7deb7e384101542bfba8c52696c1b56fca2eb62827989ef2353bbc",
+    "bytes": 33690
+  },
+  {
+    "name": "path",
+    "version": "1.9.1",
+    "key": "path-1.9.1",
+    "sha256": "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5",
+    "bytes": 45282
+  },
+  {
+    "name": "path_provider",
+    "version": "2.1.6",
+    "key": "path_provider-2.1.6",
+    "sha256": "a7f4874f987173da295a61c181b8ee71dab59b332a486b391babf26a1b884825",
+    "bytes": 163311
+  },
+  {
+    "name": "path_provider_android",
+    "version": "2.3.1",
+    "key": "path_provider_android-2.3.1",
+    "sha256": "69cbd515a62b94d32a7944f086b2f82b4ac40a1d45bebfc00813a430ab2dabcd",
+    "bytes": 36516
+  },
+  {
+    "name": "path_provider_foundation",
+    "version": "2.6.0",
+    "key": "path_provider_foundation-2.6.0",
+    "sha256": "2a376b7d6392d80cd3705782d2caa734ca4727776db0b6ec36ef3f1855197699",
+    "bytes": 141864
+  },
+  {
+    "name": "path_provider_linux",
+    "version": "2.2.2",
+    "key": "path_provider_linux-2.2.2",
+    "sha256": "58c2005f147315b11e9b4a7bc889cd5203e250cba8e3f012dae259b4972b5c16",
+    "bytes": 12225
+  },
+  {
+    "name": "path_provider_platform_interface",
+    "version": "2.1.3",
+    "key": "path_provider_platform_interface-2.1.3",
+    "sha256": "484838772624c3a4b94f1e44a3e19897fee738f2d5c4ce448443b0417f7c9dda",
+    "bytes": 7191
+  },
+  {
+    "name": "path_provider_windows",
+    "version": "2.3.0",
+    "key": "path_provider_windows-2.3.0",
+    "sha256": "bd6f00dbd873bfb70d0761682da2b3a2c2fccc2b9e84c495821639601d81afe7",
+    "bytes": 41061
+  },
+  {
+    "name": "petitparser",
+    "version": "7.0.2",
+    "key": "petitparser-7.0.2",
+    "sha256": "91bd59303e9f769f108f8df05e371341b15d59e995e6806aefab827b58336675",
+    "bytes": 125648
+  },
+  {
+    "name": "platform",
+    "version": "3.1.6",
+    "key": "platform-3.1.6",
+    "sha256": "5d6b1b0036a5f331ebc77c850ebc8506cbc1e9416c27e59b439f917a902a4984",
+    "bytes": 8453
+  },
+  {
+    "name": "plugin_platform_interface",
+    "version": "2.1.8",
+    "key": "plugin_platform_interface-2.1.8",
+    "sha256": "4820fbfdb9478b1ebae27888254d445073732dae3d6ea81f0b7e06d5dedc3f02",
+    "bytes": 7084
+  },
+  {
+    "name": "pool",
+    "version": "1.5.2",
+    "key": "pool-1.5.2",
+    "sha256": "978783255c543aa3586a1b3c21f6e9d720eb315376a915872c61ef8b5c20177d",
+    "bytes": 11161
+  },
+  {
+    "name": "process",
+    "version": "5.0.5",
+    "key": "process-5.0.5",
+    "sha256": "c6248e4526673988586e8c00bb22a49210c258dc91df5227d5da9748ecf79744",
+    "bytes": 13251
+  },
+  {
+    "name": "process_runner",
+    "version": "4.2.4",
+    "key": "process_runner-4.2.4",
+    "sha256": "edb4a3764852cce0cdcb4db7a5c3c4adbad36e3cffeec9766edef5aeb9986db6",
+    "bytes": 4033524
+  },
+  {
+    "name": "provider",
+    "version": "6.1.5+1",
+    "key": "provider-6.1.5+1",
+    "sha256": "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272",
+    "bytes": 9236844
+  },
+  {
+    "name": "pub_semver",
+    "version": "2.2.0",
+    "key": "pub_semver-2.2.0",
+    "sha256": "5bfcf68ca79ef689f8990d1160781b4bad40a3bd5e5218ad4076ddb7f4081585",
+    "bytes": 25661
+  },
+  {
+    "name": "pubspec_parse",
+    "version": "1.5.0",
+    "key": "pubspec_parse-1.5.0",
+    "sha256": "0560ba233314abbed0a48a2956f7f022cce7c3e1e73df540277da7544cad4082",
+    "bytes": 15686
+  },
+  {
+    "name": "quiver",
+    "version": "3.2.2",
+    "key": "quiver-3.2.2",
+    "sha256": "ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2",
+    "bytes": 89936
+  },
+  {
+    "name": "rally_assets",
+    "version": "3.0.1",
+    "key": "rally_assets-3.0.1",
+    "sha256": "cdd331819d51e58f9d8766c98af99bc0955d1c4b6b306eee4d332d30e9deaa81",
+    "bytes": 20480
+  },
+  {
+    "name": "record_use",
+    "version": "0.6.0",
+    "key": "record_use-0.6.0",
+    "sha256": "2551bd8eecfe95d14ae75f6021ad0248be5c27f138c2ec12fcb52b500b3ba1ed",
+    "bytes": 61704
+  },
+  {
+    "name": "retry",
+    "version": "3.1.2",
+    "key": "retry-3.1.2",
+    "sha256": "822e118d5b3aafed083109c72d5f484c6dc66707885e07c0fbcb8b986bba7efc",
+    "bytes": 8072
+  },
+  {
+    "name": "scoped_model",
+    "version": "2.0.0",
+    "key": "scoped_model-2.0.0",
+    "sha256": "8dacc77cb5de78d5e159d54cab883847491a73dfaa3d28c52f4ec8b0be32645b",
+    "bytes": 131122
+  },
+  {
+    "name": "shelf",
+    "version": "1.4.2",
+    "key": "shelf-1.4.2",
+    "sha256": "e7dd780a7ffb623c57850b33f43309312fc863fb6aa3d276a754bb299839ef12",
+    "bytes": 47492
+  },
+  {
+    "name": "shelf_packages_handler",
+    "version": "3.0.2",
+    "key": "shelf_packages_handler-3.0.2",
+    "sha256": "89f967eca29607c933ba9571d838be31d67f53f6e4ee15147d5dc2934fee1b1e",
+    "bytes": 4243
+  },
+  {
+    "name": "shelf_proxy",
+    "version": "1.0.5",
+    "key": "shelf_proxy-1.0.5",
+    "sha256": "0c3a7b2b4c111cae8a6d9077701e0622c6013d38a780373ac359d6d45b3aa10b",
+    "bytes": 5842
+  },
+  {
+    "name": "shelf_static",
+    "version": "1.1.3",
+    "key": "shelf_static-1.1.3",
+    "sha256": "c87c3875f91262785dade62d135760c2c69cb217ac759485334c5857ad89f6e3",
+    "bytes": 18155
+  },
+  {
+    "name": "shelf_web_socket",
+    "version": "3.0.0",
+    "key": "shelf_web_socket-3.0.0",
+    "sha256": "3632775c8e90d6c9712f883e633716432a27758216dfb61bd86a8321c0580925",
+    "bytes": 7182
+  },
+  {
+    "name": "shrine_images",
+    "version": "2.0.2",
+    "key": "shrine_images-2.0.2",
+    "sha256": "7417da1e83c22f483e222a9d947ffea04b66078c70090072eb0821b89872c26a",
+    "bytes": 4696101
+  },
+  {
+    "name": "source_map_stack_trace",
+    "version": "2.1.2",
+    "key": "source_map_stack_trace-2.1.2",
+    "sha256": "c0713a43e323c3302c2abe2a1cc89aa057a387101ebd280371d6a6c9fa68516b",
+    "bytes": 6237
+  },
+  {
+    "name": "source_maps",
+    "version": "0.10.13",
+    "key": "source_maps-0.10.13",
+    "sha256": "190222579a448b03896e0ca6eca5998fa810fda630c1d65e2f78b3f638f54812",
+    "bytes": 23051
+  },
+  {
+    "name": "source_span",
+    "version": "1.10.2",
+    "key": "source_span-1.10.2",
+    "sha256": "56a02f1f4cd1a2d96303c0144c93bd6d909eea6bee6bf5a0e0b685edbd4c47ab",
+    "bytes": 29648
+  },
+  {
+    "name": "sprintf",
+    "version": "7.0.0",
+    "key": "sprintf-7.0.0",
+    "sha256": "1fc9ffe69d4df602376b52949af107d8f5703b77cda567c4d7d86a0693120f23",
+    "bytes": 6916
+  },
+  {
+    "name": "sse",
+    "version": "4.2.0",
+    "key": "sse-4.2.0",
+    "sha256": "a9a804dbde8bfd369da3b4aa241d44d63a6486a97388c54ec166073d88c52302",
+    "bytes": 75579
+  },
+  {
+    "name": "stack_trace",
+    "version": "1.12.1",
+    "key": "stack_trace-1.12.1",
+    "sha256": "8b27215b45d22309b5cddda1aa2b19bdfec9df0e765f2de506401c071d38d1b1",
+    "bytes": 35098
+  },
+  {
+    "name": "standard_message_codec",
+    "version": "0.0.1+5",
+    "key": "standard_message_codec-0.0.1+5",
+    "sha256": "f10b3fbdb4d56c6bc4d160ef5b3d6346df7a998a84876d05886a75d17eb290e6",
+    "bytes": 9649
+  },
+  {
+    "name": "stream_channel",
+    "version": "2.1.4",
+    "key": "stream_channel-2.1.4",
+    "sha256": "969e04c80b8bcdf826f8f16579c7b14d780458bd97f56d107d3950fdbeef059d",
+    "bytes": 22854
+  },
+  {
+    "name": "string_scanner",
+    "version": "1.4.1",
+    "key": "string_scanner-1.4.1",
+    "sha256": "921cd31725b72fe181906c6a94d987c78e3b98c2e205b397ea399d4054872b43",
+    "bytes": 16495
+  },
+  {
+    "name": "sync_http",
+    "version": "0.3.1",
+    "key": "sync_http-0.3.1",
+    "sha256": "7f0cd72eca000d2e026bcd6f990b81d0ca06022ef4e32fb257b30d3d1014a961",
+    "bytes": 8426
+  },
+  {
+    "name": "term_glyph",
+    "version": "1.2.2",
+    "key": "term_glyph-1.2.2",
+    "sha256": "7f554798625ea768a7518313e58f83891c7f5024f88e46e7182a4558850a4b8e",
+    "bytes": 9024
+  },
+  {
+    "name": "test",
+    "version": "1.31.1",
+    "key": "test-1.31.1",
+    "sha256": "ca578dc12bb8b2f40b67b7d3bd2fac4f31c01a6ff7130a14e2597b919934507f",
+    "bytes": 366146
+  },
+  {
+    "name": "test_api",
+    "version": "0.7.12",
+    "key": "test_api-0.7.12",
+    "sha256": "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11",
+    "bytes": 60812
+  },
+  {
+    "name": "test_core",
+    "version": "0.6.18",
+    "key": "test_core-0.6.18",
+    "sha256": "d2e98ec12998368dc59ddd47ab709f2cd55acd6b66dc7db764455a44082f4bc5",
+    "bytes": 110779
+  },
+  {
+    "name": "typed_data",
+    "version": "1.4.0",
+    "key": "typed_data-1.4.0",
+    "sha256": "f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006",
+    "bytes": 15910
+  },
+  {
+    "name": "unified_analytics",
+    "version": "8.0.15",
+    "key": "unified_analytics-8.0.15",
+    "sha256": "0988c50d794f3cd96f6df92b4b35b7c333bbf869df304fc6062a45ebc7eb0776",
+    "bytes": 83094
+  },
+  {
+    "name": "url_launcher",
+    "version": "6.3.2",
+    "key": "url_launcher-6.3.2",
+    "sha256": "f6a7e5c4835bb4e3026a04793a4199ca2d14c739ec378fdfe23fc8075d0439f8",
+    "bytes": 194701
+  },
+  {
+    "name": "url_launcher_android",
+    "version": "6.3.32",
+    "key": "url_launcher_android-6.3.32",
+    "sha256": "b413d49b73867ac08dd2f9890efd3cc11f2a0e577618d50843440a1fb3776c32",
+    "bytes": 30996
+  },
+  {
+    "name": "url_launcher_ios",
+    "version": "6.4.1",
+    "key": "url_launcher_ios-6.4.1",
+    "sha256": "580fe5dfb51671ae38191d316e027f6b76272b026370708c2d898799750a02b0",
+    "bytes": 45560
+  },
+  {
+    "name": "url_launcher_linux",
+    "version": "3.2.2",
+    "key": "url_launcher_linux-3.2.2",
+    "sha256": "d5e14138b3bc193a0f63c10a53c94b91d399df0512b1f29b94a043db7482384a",
+    "bytes": 16991
+  },
+  {
+    "name": "url_launcher_macos",
+    "version": "3.2.5",
+    "key": "url_launcher_macos-3.2.5",
+    "sha256": "368adf46f71ad3c21b8f06614adb38346f193f3a59ba8fe9a2fd74133070ba18",
+    "bytes": 98787
+  },
+  {
+    "name": "url_launcher_platform_interface",
+    "version": "2.3.2",
+    "key": "url_launcher_platform_interface-2.3.2",
+    "sha256": "552f8a1e663569be95a8190206a38187b531910283c3e982193e4f2733f01029",
+    "bytes": 10662
+  },
+  {
+    "name": "url_launcher_web",
+    "version": "2.4.3",
+    "key": "url_launcher_web-2.4.3",
+    "sha256": "85c81589622fbc87c1c683aaea164d3604a7777495a79d91e39ffcdec39ddb34",
+    "bytes": 21799
+  },
+  {
+    "name": "url_launcher_windows",
+    "version": "3.1.5",
+    "key": "url_launcher_windows-3.1.5",
+    "sha256": "712c70ab1b99744ff066053cbe3e80c73332b38d46e5e945c98689b2e66fc15f",
+    "bytes": 39678
+  },
+  {
+    "name": "uuid",
+    "version": "4.5.3",
+    "key": "uuid-4.5.3",
+    "sha256": "1fef9e8e11e2991bb773070d4656b7bd5d850967a2456cfc83cf47925ba79489",
+    "bytes": 237574
+  },
+  {
+    "name": "vector_math",
+    "version": "2.4.0",
+    "key": "vector_math-2.4.0",
+    "sha256": "1d774bbdf6b72a0b12122fc1560c9c2d2a67db5a4a4cc2bd8a5c990ab20e3188",
+    "bytes": 177124
+  },
+  {
+    "name": "video_player",
+    "version": "2.11.1",
+    "key": "video_player-2.11.1",
+    "sha256": "48a7bdaa38a3d50ec10c78627abdbfad863fdf6f0d6e08c7c3c040cfd80ae36f",
+    "bytes": 10866556
+  },
+  {
+    "name": "video_player_android",
+    "version": "2.10.0",
+    "key": "video_player_android-2.10.0",
+    "sha256": "15bfd0598f8d8946bf0e2d50e2ca1a0db9491589a8bb7f6f9a388c0b48aef764",
+    "bytes": 2502880
+  },
+  {
+    "name": "video_player_avfoundation",
+    "version": "2.10.0",
+    "key": "video_player_avfoundation-2.10.0",
+    "sha256": "76097729ef0c976937945afa53f1ca3afa9b50c9a95909ba347bcf93270466fd",
+    "bytes": 2686311
+  },
+  {
+    "name": "video_player_platform_interface",
+    "version": "6.9.0",
+    "key": "video_player_platform_interface-6.9.0",
+    "sha256": "92c0fbabe20c788e71fd10d26cea998d0d253282e65d145aed0818731cf593ce",
+    "bytes": 12411
+  },
+  {
+    "name": "video_player_web",
+    "version": "2.4.0",
+    "key": "video_player_web-2.4.0",
+    "sha256": "9f3c00be2ef9b76a95d94ac5119fb843dca6f2c69e6c9968f6f2b6c9e7afbdeb",
+    "bytes": 19031
+  },
+  {
+    "name": "vm_service",
+    "version": "15.2.0",
+    "key": "vm_service-15.2.0",
+    "sha256": "0016aef94fc66495ac78af5859181e3f3bf2026bd8eecc72b9565601e19ab360",
+    "bytes": 1000087
+  },
+  {
+    "name": "vm_service_interface",
+    "version": "2.0.1",
+    "key": "vm_service_interface-2.0.1",
+    "sha256": "503c92c26cf9f77d688bf8fca27fa9ec40450adbf02ec1ec5f12828ded508ac0",
+    "bytes": 20915
+  },
+  {
+    "name": "vm_snapshot_analysis",
+    "version": "0.7.6",
+    "key": "vm_snapshot_analysis-0.7.6",
+    "sha256": "5a79b9fbb6be2555090f55b03b23907e75d44c3fd7bdd88da09848aa5a1914c8",
+    "bytes": 129193
+  },
+  {
+    "name": "watcher",
+    "version": "1.2.1",
+    "key": "watcher-1.2.1",
+    "sha256": "1398c9f081a753f9226febe8900fce8f7d0a67163334e1c94a2438339d79d635",
+    "bytes": 57442
+  },
+  {
+    "name": "web",
+    "version": "1.1.1",
+    "key": "web-1.1.1",
+    "sha256": "868d88a33d8a87b18ffc05f9f030ba328ffefba92d6c127917a2ba740f9cfe4a",
+    "bytes": 539843
+  },
+  {
+    "name": "web_socket",
+    "version": "1.0.1",
+    "key": "web_socket-1.0.1",
+    "sha256": "34d64019aa8e36bf9842ac014bb5d2f5586ca73df5e4d9bf5c936975cae6982c",
+    "bytes": 9038
+  },
+  {
+    "name": "web_socket_channel",
+    "version": "3.0.3",
+    "key": "web_socket_channel-3.0.3",
+    "sha256": "d645757fb0f4773d602444000a8131ff5d48c9e47adfe9772652dd1a4f2d45c8",
+    "bytes": 14525
+  },
+  {
+    "name": "webdriver",
+    "version": "3.1.0",
+    "key": "webdriver-3.1.0",
+    "sha256": "2f3a14ca026957870cfd9c635b83507e0e51d8091568e90129fbf805aba7cade",
+    "bytes": 78450
+  },
+  {
+    "name": "webkit_inspection_protocol",
+    "version": "1.2.1",
+    "key": "webkit_inspection_protocol-1.2.1",
+    "sha256": "87d3f2333bb240704cd3f1c6b5b7acd8a10e7f0bc28c28dcf14e782014f4a572",
+    "bytes": 24985
+  },
+  {
+    "name": "webview_flutter",
+    "version": "4.14.1",
+    "key": "webview_flutter-4.14.1",
+    "sha256": "d53e1ccf5516f25017e3c9d44c39034db352d20fa34fe200674270242c2c5111",
+    "bytes": 1356663
+  },
+  {
+    "name": "webview_flutter_android",
+    "version": "4.13.0",
+    "key": "webview_flutter_android-4.13.0",
+    "sha256": "a97db7a44f8e71af2f3971c45550a08cce1fb60059c1b8e534251e6cfb753490",
+    "bytes": 1272074
+  },
+  {
+    "name": "webview_flutter_platform_interface",
+    "version": "2.15.1",
+    "key": "webview_flutter_platform_interface-2.15.1",
+    "sha256": "1221c1b12f5278791042f2ec2841743784cf25c5a644e23d6680e5d718824f04",
+    "bytes": 32608
+  },
+  {
+    "name": "webview_flutter_wkwebview",
+    "version": "3.26.0",
+    "key": "webview_flutter_wkwebview-3.26.0",
+    "sha256": "c879dd64b87c452aa84381b244d5469da57ba7e8cca6884c7b1e0d406372c12d",
+    "bytes": 1487823
+  },
+  {
+    "name": "xdg_directories",
+    "version": "1.1.0",
+    "key": "xdg_directories-1.1.0",
+    "sha256": "7a3f37b05d989967cdddcbb571f1ea834867ae2faa29725fd085180e0883aa15",
+    "bytes": 11600
+  },
+  {
+    "name": "xml",
+    "version": "6.6.1",
+    "key": "xml-6.6.1",
+    "sha256": "971043b3a0d3da28727e40ed3e0b5d18b742fa5a68665cca88e74b7876d5e025",
+    "bytes": 199307
+  },
+  {
+    "name": "yaml",
+    "version": "3.1.3",
+    "key": "yaml-3.1.3",
+    "sha256": "b9da305ac7c39faa3f030eccd175340f968459dae4af175130b3fc47e40d76ce",
+    "bytes": 46513
+  },
+  {
+    "name": "yaml_edit",
+    "version": "2.2.4",
+    "key": "yaml_edit-2.2.4",
+    "sha256": "07c9e63ba42519745182b88ca12264a7ba2484d8239958778dfe4d44fe760488",
+    "bytes": 53911
+  },
+  {
+    "name": "_fe_analyzer_shared",
+    "version": "93.0.0",
+    "key": "_fe_analyzer_shared-93.0.0",
+    "sha256": "8d7ff3948166b8ec5da0fbb5962000926b8e02f2ed9b3e51d1738905fbd4c98d",
+    "bytes": 700965
+  },
+  {
+    "name": "analyzer",
+    "version": "10.0.1",
+    "key": "analyzer-10.0.1",
+    "sha256": "de7148ed2fcec579b19f122c1800933dfa028f6d9fd38a152b04b1516cec120b",
+    "bytes": 3557115
+  },
+  {
+    "name": "archive",
+    "version": "4.6.0",
+    "key": "archive-4.6.0",
+    "sha256": "de5ac590b8155e4e676088d714bd41ea620449a6adc0f7950c5073874b287ddb",
+    "bytes": 393257
+  },
+  {
+    "name": "asn1lib",
+    "version": "1.6.5",
+    "key": "asn1lib-1.6.5",
+    "sha256": "9a8f69025044eb466b9b60ef3bc3ac99b4dc6c158ae9c56d25eeccf5bc56d024",
+    "bytes": 46596
+  },
+  {
+    "name": "bidi",
+    "version": "2.0.13",
+    "key": "bidi-2.0.13",
+    "sha256": "77f475165e94b261745cf1032c751e2032b8ed92ccb2bf5716036db79320637d",
+    "bytes": 205518
+  },
+  {
+    "name": "bip39",
+    "version": "1.0.6",
+    "key": "bip39-1.0.6",
+    "sha256": "de1ee27ebe7d96b84bb3a04a4132a0a3007dcdd5ad27dd14aa87a29d97c45edc",
+    "bytes": 20480
+  },
+  {
+    "name": "build",
+    "version": "4.0.6",
+    "key": "build-4.0.6",
+    "sha256": "a156715e7cd728130c592f30552575908aae5b100005fbc1f0fb16b3c03a3d10",
+    "bytes": 27839
+  },
+  {
+    "name": "build_cli_annotations",
+    "version": "2.1.1",
+    "key": "build_cli_annotations-2.1.1",
+    "sha256": "e563c2e01de8974566a1998410d3f6f03521788160a02503b0b1f1a46c7b3d95",
+    "bytes": 2220
+  },
+  {
+    "name": "build_config",
+    "version": "1.3.0",
+    "key": "build_config-1.3.0",
+    "sha256": "4070d2a59f8eec34c97c86ceb44403834899075f66e8a9d59706f8e7834f6f71",
+    "bytes": 20795
+  },
+  {
+    "name": "build_daemon",
+    "version": "4.1.1",
+    "key": "build_daemon-4.1.1",
+    "sha256": "bf05f6e12cfea92d3c09308d7bcdab1906cd8a179b023269eed00c071004b957",
+    "bytes": 25611
+  },
+  {
+    "name": "build_runner",
+    "version": "2.15.0",
+    "key": "build_runner-2.15.0",
+    "sha256": "1523ce62448ebac2c15a8ba5fbad8acac169788658a7dd2a1c2d9c2a9318b9a6",
+    "bytes": 285967
+  },
+  {
+    "name": "charcode",
+    "version": "1.4.0",
+    "key": "charcode-1.4.0",
+    "sha256": "fb0f1107cac15a5ea6ef0a6ef71a807b9e4267c713bb93e00e92d737cc8dbd8a",
+    "bytes": 28417
+  },
+  {
+    "name": "code_assets",
+    "version": "2.2.0",
+    "key": "code_assets-2.2.0",
+    "sha256": "1ef22a0be3af9370bd9481ac76db114db92bfe75d5ca2b2d7bc911764478a4d9",
+    "bytes": 32762
+  },
+  {
+    "name": "covfuzz",
+    "version": "0.1.1",
+    "key": "covfuzz-0.1.1",
+    "sha256": "fdd664943c6efa21d676c0f145b106d17afebcd3ae3da6415474f46417c86205",
+    "bytes": 13042
+  },
+  {
+    "name": "cross_file",
+    "version": "0.3.5+2",
+    "key": "cross_file-0.3.5+2",
+    "sha256": "28bb3ae56f117b5aec029d702a90f57d285cd975c3c5c281eaca38dbc47c5937",
+    "bytes": 11283
+  },
+  {
+    "name": "cryptography",
+    "version": "2.9.0",
+    "key": "cryptography-2.9.0",
+    "sha256": "3eda3029d34ec9095a27a198ac9785630fe525c0eb6a49f3d575272f8e792ef0",
+    "bytes": 171403
+  },
+  {
+    "name": "cryptography_flutter",
+    "version": "2.3.4",
+    "key": "cryptography_flutter-2.3.4",
+    "sha256": "d1c7e7a31a072d63b27ce0537b89868f9bda9188f2b1651ae728a295762921d4",
+    "bytes": 265300
+  },
+  {
+    "name": "cupertino_icons",
+    "version": "2.0.0",
+    "key": "cupertino_icons-2.0.0",
+    "sha256": "b7cc2390aac296c083bea762859413eb1cf5b630c70e0c7e4d831018f762a8b2",
+    "bytes": 2602507
+  },
+  {
+    "name": "cupertino_ui",
+    "version": "1.1.6",
+    "key": "cupertino_ui-1.1.6",
+    "sha256": "369e39a1c5c030a6212589c3da1809920b1c2cfade7b02aade7695bfa4b88c3a",
+    "bytes": 989089
+  },
+  {
+    "name": "dart_pdf_editor_assets",
+    "version": "14.0.0",
+    "key": "dart_pdf_editor_assets-14.0.0",
+    "sha256": "5af6adc27615d1b2f19559b04ba110a07e91b973839c2dd8e66e8a4904745af9",
+    "bytes": 4198869
+  },
+  {
+    "name": "dart_pdf_printing",
+    "version": "0.11.0",
+    "key": "dart_pdf_printing-0.11.0",
+    "sha256": "b401c3f7651ff3d5315dc8f64556fb5550e0a75b65bbf4ffe6a29aabcb8309f4",
+    "bytes": 165468
+  },
+  {
+    "name": "dart_pg",
+    "version": "2.1.0",
+    "key": "dart_pg-2.1.0",
+    "sha256": "9f4f5a41c8282ac5f6a32e816a1fe4a5f2d54ec6527b57ce11d1f328140eda0c",
+    "bytes": 198392
+  },
+  {
+    "name": "dbus",
+    "version": "0.7.14",
+    "key": "dbus-0.7.14",
+    "sha256": "0ce9b0a839e6dee59a37a623d2fc26a35bbbe6404213e419b0d6411023d62645",
+    "bytes": 97365
+  },
+  {
+    "name": "desktop_drop",
+    "version": "0.7.1",
+    "key": "desktop_drop-0.7.1",
+    "sha256": "aa1e797255bfbc76f9eb5aa4f61e5b68dbf69962ab1be6495816d2f251bc0d1f",
+    "bytes": 182774
+  },
+  {
+    "name": "dio",
+    "version": "5.10.0",
+    "key": "dio-5.10.0",
+    "sha256": "ea2bad3c89a27635ce2d85cce4d6b199da49a5a48ec77b03e45b65a3b90922b0",
+    "bytes": 126166
+  },
+  {
+    "name": "dio_web_adapter",
+    "version": "2.2.0",
+    "key": "dio_web_adapter-2.2.0",
+    "sha256": "dd58dc3861eb36edb13b217efc006a1c21e5bbc341de8c229b85634fa5e362e4",
+    "bytes": 11320
+  },
+  {
+    "name": "drift",
+    "version": "2.34.0",
+    "key": "drift-2.34.0",
+    "sha256": "6cc0b623c0e83f7080524d8396e9301b1d78b9c66a4fdceeb0f798211303254c",
+    "bytes": 16888374
+  },
+  {
+    "name": "drift_dev",
+    "version": "2.34.0",
+    "key": "drift_dev-2.34.0",
+    "sha256": "9cfff1576b49725da0d32c040651a41ae195e8c4af8d8da301593e41d7abc2f7",
+    "bytes": 310439
+  },
+  {
+    "name": "dynamic_color",
+    "version": "1.8.1",
+    "key": "dynamic_color-1.8.1",
+    "sha256": "43a5a6679649a7731ab860334a5812f2067c2d9ce6452cf069c5e0c25336c17c",
+    "bytes": 1009678
+  },
+  {
+    "name": "equatable",
+    "version": "2.1.0",
+    "key": "equatable-2.1.0",
+    "sha256": "3bce007a596ff8b3119c45d68aaef631272537c03d30e5d4534dd24bf4c5eaa2",
+    "bytes": 288921
+  },
+  {
+    "name": "extension",
+    "version": "0.6.0",
+    "key": "extension-0.6.0",
+    "sha256": "be3a6b7f8adad2f6e2e8c63c895d19811fcf203e23466c6296267941d0ff4f24",
+    "bytes": 865476
+  },
+  {
+    "name": "file_picker",
+    "version": "10.3.10",
+    "key": "file_picker-10.3.10",
+    "sha256": "57d9a1dd5063f85fa3107fb42d1faffda52fdc948cefd5fe5ea85267a5fc7343",
+    "bytes": 20261718
+  },
+  {
+    "name": "file_selector",
+    "version": "1.1.0",
+    "key": "file_selector-1.1.0",
+    "sha256": "bd15e43e9268db636b53eeaca9f56324d1622af30e5c34d6e267649758c84d9a",
+    "bytes": 170769
+  },
+  {
+    "name": "file_selector_android",
+    "version": "0.5.2+6",
+    "key": "file_selector_android-0.5.2+6",
+    "sha256": "89243030ea4b3463fb402b44d5eeacc4ccb1c46a88870cb2a5080d693200c1ed",
+    "bytes": 41539
+  },
+  {
+    "name": "file_selector_ios",
+    "version": "0.5.3+5",
+    "key": "file_selector_ios-0.5.3+5",
+    "sha256": "e2ecf2885c121691ce13b60db3508f53c01f869fb6e8dc5c1cfa771e4c46aeca",
+    "bytes": 57425
+  },
+  {
+    "name": "file_selector_linux",
+    "version": "0.9.4",
+    "key": "file_selector_linux-0.9.4",
+    "sha256": "2567f398e06ac72dcf2e98a0c95df2a9edd03c2c2e0cacd4780f20cdf56263a0",
+    "bytes": 24740
+  },
+  {
+    "name": "file_selector_macos",
+    "version": "0.9.5",
+    "key": "file_selector_macos-0.9.5",
+    "sha256": "5e0bbe9c312416f1787a68259ea1505b52f258c587f12920422671807c4d618a",
+    "bytes": 104308
+  },
+  {
+    "name": "file_selector_platform_interface",
+    "version": "2.7.0",
+    "key": "file_selector_platform_interface-2.7.0",
+    "sha256": "35e0bd61ebcdb91a3505813b055b09b79dfdc7d0aee9c09a7ba59ae4bb13dc85",
+    "bytes": 9642
+  },
+  {
+    "name": "file_selector_web",
+    "version": "0.9.5",
+    "key": "file_selector_web-0.9.5",
+    "sha256": "73181fbc5257776d8ecaa6a94ab3c8e920ad143b9132a6d984a9271dfc6928d3",
+    "bytes": 9424
+  },
+  {
+    "name": "file_selector_windows",
+    "version": "0.9.3+5",
+    "key": "file_selector_windows-0.9.3+5",
+    "sha256": "62197474ae75893a62df75939c777763d39c2bc5f73ce5b88497208bc269abfd",
+    "bytes": 48835
+  },
+  {
+    "name": "flutter_highlight",
+    "version": "0.7.0",
+    "key": "flutter_highlight-0.7.0",
+    "sha256": "7b96333867aa07e122e245c033b8ad622e4e3a42a1a2372cbb098a2541d8782c",
+    "bytes": 143360
+  },
+  {
+    "name": "flutter_inappwebview",
+    "version": "6.1.5",
+    "key": "flutter_inappwebview-6.1.5",
+    "sha256": "80092d13d3e29b6227e25b67973c67c7210bd5e35c4b747ca908e31eb71a46d5",
+    "bytes": 2767434
+  },
+  {
+    "name": "flutter_inappwebview_android",
+    "version": "1.1.3",
+    "key": "flutter_inappwebview_android-1.1.3",
+    "sha256": "62557c15a5c2db5d195cb3892aab74fcaec266d7b86d59a6f0027abd672cddba",
+    "bytes": 201567
+  },
+  {
+    "name": "flutter_inappwebview_internal_annotations",
+    "version": "1.3.0",
+    "key": "flutter_inappwebview_internal_annotations-1.3.0",
+    "sha256": "e30fba942e3debea7b7e6cdd4f0f59ce89dd403a9865193e3221293b6d1544c6",
+    "bytes": 6186
+  },
+  {
+    "name": "flutter_inappwebview_ios",
+    "version": "1.1.2",
+    "key": "flutter_inappwebview_ios-1.1.2",
+    "sha256": "5818cf9b26cf0cbb0f62ff50772217d41ea8d3d9cc00279c45f8aabaa1b4025d",
+    "bytes": 170795
+  },
+  {
+    "name": "flutter_inappwebview_macos",
+    "version": "1.1.2",
+    "key": "flutter_inappwebview_macos-1.1.2",
+    "sha256": "c1fbb86af1a3738e3541364d7d1866315ffb0468a1a77e34198c9be571287da1",
+    "bytes": 293423
+  },
+  {
+    "name": "flutter_inappwebview_platform_interface",
+    "version": "1.3.0+1",
+    "key": "flutter_inappwebview_platform_interface-1.3.0+1",
+    "sha256": "cf5323e194096b6ede7a1ca808c3e0a078e4b33cc3f6338977d75b4024ba2500",
+    "bytes": 394275
+  },
+  {
+    "name": "flutter_inappwebview_web",
+    "version": "1.1.2",
+    "key": "flutter_inappwebview_web-1.1.2",
+    "sha256": "55f89c83b0a0d3b7893306b3bb545ba4770a4df018204917148ebb42dc14a598",
+    "bytes": 70447
+  },
+  {
+    "name": "flutter_inappwebview_windows",
+    "version": "0.6.0",
+    "key": "flutter_inappwebview_windows-0.6.0",
+    "sha256": "8b4d3a46078a2cdc636c4a3d10d10f2a16882f6be607962dbfff8874d1642055",
+    "bytes": 144094
+  },
+  {
+    "name": "flutter_launcher_icons",
+    "version": "0.14.4",
+    "key": "flutter_launcher_icons-0.14.4",
+    "sha256": "10f13781741a2e3972126fae08393d3c4e01fa4cd7473326b94b72cf594195e7",
+    "bytes": 1276191
+  },
+  {
+    "name": "flutter_lints",
+    "version": "3.0.2",
+    "key": "flutter_lints-3.0.2",
+    "sha256": "9e8c3858111da373efc5aa341de011d9bd23e2c5c5e0c62bccf32438e192d7b1",
+    "bytes": 4714
+  },
+  {
+    "name": "flutter_local_notifications",
+    "version": "17.2.4",
+    "key": "flutter_local_notifications-17.2.4",
+    "sha256": "674173fd3c9eda9d4c8528da2ce0ea69f161577495a9cc835a2a4ecd7eadeb35",
+    "bytes": 687293
+  },
+  {
+    "name": "flutter_local_notifications_linux",
+    "version": "4.0.1",
+    "key": "flutter_local_notifications_linux-4.0.1",
+    "sha256": "c49bd06165cad9beeb79090b18cd1eb0296f4bf4b23b84426e37dd7c027fc3af",
+    "bytes": 29175
+  },
+  {
+    "name": "flutter_local_notifications_platform_interface",
+    "version": "7.2.0",
+    "key": "flutter_local_notifications_platform_interface-7.2.0",
+    "sha256": "85f8d07fe708c1bdcf45037f2c0109753b26ae077e9d9e899d55971711a4ea66",
+    "bytes": 5147
+  },
+  {
+    "name": "flutter_markdown",
+    "version": "0.7.7+1",
+    "key": "flutter_markdown-0.7.7+1",
+    "sha256": "08fb8315236099ff8e90cb87bb2b935e0a724a3af1623000a9cec930468e0f27",
+    "bytes": 360982
+  },
+  {
+    "name": "flutter_plugin_android_lifecycle",
+    "version": "2.0.35",
+    "key": "flutter_plugin_android_lifecycle-2.0.35",
+    "sha256": "3854fe5e3bff0b113c658f260b90c95dea17c92db0f2addeac2e343dd9969785",
+    "bytes": 15746
+  },
+  {
+    "name": "flutter_riverpod",
+    "version": "2.6.1",
+    "key": "flutter_riverpod-2.6.1",
+    "sha256": "9532ee6db4a943a1ed8383072a2e3eeda041db5657cdf6d2acecf3c21ecbe7e1",
+    "bytes": 44487
+  },
+  {
+    "name": "flutter_rust_bridge",
+    "version": "2.11.1",
+    "key": "flutter_rust_bridge-2.11.1",
+    "sha256": "37ef40bc6f863652e865f0b2563ea07f0d3c58d8efad803cc01933a4b2ee067e",
+    "bytes": 435491
+  },
+  {
+    "name": "flutter_secure_storage",
+    "version": "9.2.4",
+    "key": "flutter_secure_storage-9.2.4",
+    "sha256": "9cad52d75ebc511adfae3d447d5d13da15a55a92c9410e50f67335b6d21d16ea",
+    "bytes": 313960
+  },
+  {
+    "name": "flutter_secure_storage_linux",
+    "version": "1.2.3",
+    "key": "flutter_secure_storage_linux-1.2.3",
+    "sha256": "be76c1d24a97d0b98f8b54bce6b481a380a6590df992d0098f868ad54dc8f688",
+    "bytes": 141756
+  },
+  {
+    "name": "flutter_secure_storage_macos",
+    "version": "3.1.3",
+    "key": "flutter_secure_storage_macos-3.1.3",
+    "sha256": "6c0a2795a2d1de26ae202a0d78527d163f4acbb11cde4c75c670f3a0fc064247",
+    "bytes": 5346
+  },
+  {
+    "name": "flutter_secure_storage_platform_interface",
+    "version": "1.1.2",
+    "key": "flutter_secure_storage_platform_interface-1.1.2",
+    "sha256": "cf91ad32ce5adef6fba4d736a542baca9daf3beac4db2d04be350b87f69ac4a8",
+    "bytes": 3971
+  },
+  {
+    "name": "flutter_secure_storage_web",
+    "version": "1.2.1",
+    "key": "flutter_secure_storage_web-1.2.1",
+    "sha256": "f4ebff989b4f07b2656fb16b47852c0aab9fed9b4ec1c70103368337bc1886a9",
+    "bytes": 6608
+  },
+  {
+    "name": "flutter_secure_storage_windows",
+    "version": "3.1.2",
+    "key": "flutter_secure_storage_windows-3.1.2",
+    "sha256": "b20b07cb5ed4ed74fc567b78a72936203f587eba460af1df11281c9326cd3709",
+    "bytes": 46636
+  },
+  {
+    "name": "flutter_svg",
+    "version": "2.3.0",
+    "key": "flutter_svg-2.3.0",
+    "sha256": "35882981abcbfb8c15b286f0cd690ff25bac12d95eff3e25ee207f37d4c42e7f",
+    "bytes": 505319
+  },
+  {
+    "name": "flutter_widget_from_html_core",
+    "version": "0.17.4",
+    "key": "flutter_widget_from_html_core-0.17.4",
+    "sha256": "530f2e3cc57be1a00f8bfae1b0000064e8a6df0cf1fb4d48a80f85afde9b39b7",
+    "bytes": 2286861
+  },
+  {
+    "name": "hex",
+    "version": "0.2.0",
+    "key": "hex-0.2.0",
+    "sha256": "4e7cd54e4b59ba026432a6be2dd9d96e4c5205725194997193bf871703b82c4a",
+    "bytes": 5937973
+  },
+  {
+    "name": "highlight",
+    "version": "0.7.0",
+    "key": "highlight-0.7.0",
+    "sha256": "5353a83ffe3e3eca7df0abfb72dcf3fa66cc56b953728e7113ad4ad88497cf21",
+    "bytes": 378880
+  },
+  {
+    "name": "hooks",
+    "version": "2.2.0",
+    "key": "hooks-2.2.0",
+    "sha256": "eaac480a35ec0814146c2c48d96aaa829e0e44a7662c88ae84c9edf4bc35651f",
+    "bytes": 38174
+  },
+  {
+    "name": "http_methods",
+    "version": "1.1.1",
+    "key": "http_methods-1.1.1",
+    "sha256": "6bccce8f1ec7b5d701e7921dca35e202d425b57e317ba1a37f2638590e29e566",
+    "bytes": 6054
+  },
+  {
+    "name": "image",
+    "version": "4.12.0",
+    "key": "image-4.12.0",
+    "sha256": "89ed75b2f8231fe676808c5564f9590d728024ded7ac782a7ed8474f1c95b72a",
+    "bytes": 527636
+  },
+  {
+    "name": "internxt_client",
+    "version": "0.2.3",
+    "key": "internxt_client-0.2.3",
+    "sha256": "c730aeb1779104bd42b27c6215bcf1b62b73c2979e9d570a5e61ed187b760469",
+    "bytes": 193418
+  },
+  {
+    "name": "isolate_contactor",
+    "version": "4.1.0",
+    "key": "isolate_contactor-4.1.0",
+    "sha256": "6ba8434ceb58238a1389d6365111a3efe7baa1c68a66f4db6d63d351cf6c3a0f",
+    "bytes": 526608
+  },
+  {
+    "name": "isolate_manager",
+    "version": "4.1.5+1",
+    "key": "isolate_manager-4.1.5+1",
+    "sha256": "22ed0c25f80ec3b5f21e3a55d060f4650afff33f27c2dff34c0f9409d5759ae5",
+    "bytes": 387905
+  },
+  {
+    "name": "js",
+    "version": "0.6.7",
+    "key": "js-0.6.7",
+    "sha256": "f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3",
+    "bytes": 10582
+  },
+  {
+    "name": "koni_archive",
+    "version": "0.9.0",
+    "key": "koni_archive-0.9.0",
+    "sha256": "fc63ef9271f6d5ab5f6e866b8fb41e63ffa35786f0c9cf201537f04cb8091335",
+    "bytes": 87667
+  },
+  {
+    "name": "koni_archive_core",
+    "version": "0.9.0",
+    "key": "koni_archive_core-0.9.0",
+    "sha256": "f323296866d6224725839e2b8ef25dfeba5e0c2476877fa7726f4b966a4c7a84",
+    "bytes": 34601
+  },
+  {
+    "name": "koni_codecs",
+    "version": "0.9.0",
+    "key": "koni_codecs-0.9.0",
+    "sha256": "0a0ffa23f62f627bc50db6de79e88a6a41e019d3a21c6a455ac5ae7c1677a8bd",
+    "bytes": 87555
+  },
+  {
+    "name": "koni_gzip",
+    "version": "0.9.0",
+    "key": "koni_gzip-0.9.0",
+    "sha256": "d54df658949a1209891c1c8d6716edc2e7650c40ad419d39a793e8b91b3f7f91",
+    "bytes": 14129
+  },
+  {
+    "name": "koni_rar",
+    "version": "0.9.0",
+    "key": "koni_rar-0.9.0",
+    "sha256": "c8f1a5b2f1b9d8f6cfd981c67e8c34298f722806f7288f06faabb40004362f56",
+    "bytes": 215086
+  },
+  {
+    "name": "koni_sevenz",
+    "version": "0.9.0",
+    "key": "koni_sevenz-0.9.0",
+    "sha256": "058428e9328361849aea9f4b1f75803473248b33dbdc434ffbcc205c83c82d4b",
+    "bytes": 108252
+  },
+  {
+    "name": "koni_tar",
+    "version": "0.9.0",
+    "key": "koni_tar-0.9.0",
+    "sha256": "79120cb336e21a8f8ba5348a07811c37a38881b9d2be5c9e56d190057c6873e9",
+    "bytes": 31904
+  },
+  {
+    "name": "koni_zip",
+    "version": "0.9.0",
+    "key": "koni_zip-0.9.0",
+    "sha256": "a0b234fd56678a2a277e0fc52987396a1ded52a04224de49bf5257ffca29700f",
+    "bytes": 46860
+  },
+  {
+    "name": "lints",
+    "version": "3.0.0",
+    "key": "lints-3.0.0",
+    "sha256": "cbf8d4b858bb0134ef3ef87841abdf8d63bfc255c266b7bf6b39daa1085c4290",
+    "bytes": 14830
+  },
+  {
+    "name": "local_auth",
+    "version": "2.3.0",
+    "key": "local_auth-2.3.0",
+    "sha256": "434d854cf478f17f12ab29a76a02b3067f86a63a6d6c4eb8fbfdcfe4879c1b7b",
+    "bytes": 245831
+  },
+  {
+    "name": "local_auth_android",
+    "version": "1.0.56",
+    "key": "local_auth_android-1.0.56",
+    "sha256": "a0bdfcc0607050a26ef5b31d6b4b254581c3d3ce3c1816ab4d4f4a9173e84467",
+    "bytes": 34962
+  },
+  {
+    "name": "local_auth_darwin",
+    "version": "1.6.1",
+    "key": "local_auth_darwin-1.6.1",
+    "sha256": "699873970067a40ef2f2c09b4c72eb1cfef64224ef041b3df9fdc5c4c1f91f49",
+    "bytes": 229432
+  },
+  {
+    "name": "local_auth_platform_interface",
+    "version": "1.1.0",
+    "key": "local_auth_platform_interface-1.1.0",
+    "sha256": "f98b8e388588583d3f781f6806e4f4c9f9e189d898d27f0c249b93a1973dd122",
+    "bytes": 9181
+  },
+  {
+    "name": "local_auth_windows",
+    "version": "1.0.11",
+    "key": "local_auth_windows-1.0.11",
+    "sha256": "bc4e66a29b0fdf751aafbec923b5bed7ad6ed3614875d8151afe2578520b2ab5",
+    "bytes": 37334
+  },
+  {
+    "name": "logging_appenders",
+    "version": "1.4.0+1",
+    "key": "logging_appenders-1.4.0+1",
+    "sha256": "7fefa09636824f312432721c0bf77967ab19003116650729bd202bdf98142d70",
+    "bytes": 648872
+  },
+  {
+    "name": "macos_secure_bookmarks",
+    "version": "0.2.1",
+    "key": "macos_secure_bookmarks-0.2.1",
+    "sha256": "c3163875f8fd530a1654a7cf8aa426e6e208d28bf05724a1d4960e4b7d2ca1c6",
+    "bytes": 641355
+  },
+  {
+    "name": "markdown",
+    "version": "7.3.1",
+    "key": "markdown-7.3.1",
+    "sha256": "ee85086ad7698b42522c6ad42fe195f1b9898e4d974a1af4576c1a3a176cada9",
+    "bytes": 270642
+  },
+  {
+    "name": "material_ui",
+    "version": "1.10.0",
+    "key": "material_ui-1.10.0",
+    "sha256": "a30f5d0625b6b83770f53ca3f7aafd6fd9d147cb3853f54a70668541046fe5d6",
+    "bytes": 3460258
+  },
+  {
+    "name": "meta",
+    "version": "1.19.0",
+    "key": "meta-1.19.0",
+    "sha256": "307249ce4ff29d58a18e97f6345f539382eb9c9c29ecda628900f31de0443dd9",
+    "bytes": 17258
+  },
+  {
+    "name": "mime",
+    "version": "2.1.0",
+    "key": "mime-2.1.0",
+    "sha256": "bd47de35f07e27267e69c8c8b22edf9473bfee170a60d60fcc93730c5144b7f6",
+    "bytes": 70272
+  },
+  {
+    "name": "mime_type",
+    "version": "1.0.1",
+    "key": "mime_type-1.0.1",
+    "sha256": "d652b613e84dac1af28030a9fba82c0999be05b98163f9e18a0849c6e63838bb",
+    "bytes": 14877
+  },
+  {
+    "name": "native_toolchain_c",
+    "version": "0.19.5",
+    "key": "native_toolchain_c-0.19.5",
+    "sha256": "90eaad8059ebc2004a63810a4696ea9acdb02473e47ed3b6b3bafb100ac77e31",
+    "bytes": 70684
+  },
+  {
+    "name": "objective_c",
+    "version": "9.6.2",
+    "key": "objective_c-9.6.2",
+    "sha256": "5c80c2ad6e2c0397de5db38c6d653e69616a3397e13aa7633bf39eb668f2041b",
+    "bytes": 420932
+  },
+  {
+    "name": "package_info_plus",
+    "version": "9.0.1",
+    "key": "package_info_plus-9.0.1",
+    "sha256": "468c26b4254ab01979fa5e4a98cb343ea3631b9acee6f21028997419a80e1a20",
+    "bytes": 296405
+  },
+  {
+    "name": "package_info_plus_platform_interface",
+    "version": "3.2.1",
+    "key": "package_info_plus_platform_interface-3.2.1",
+    "sha256": "202a487f08836a592a6bd4f901ac69b3a8f146af552bbd14407b6b41e1c3f086",
+    "bytes": 4710
+  },
+  {
+    "name": "path_parsing",
+    "version": "1.1.0",
+    "key": "path_parsing-1.1.0",
+    "sha256": "883402936929eac138ee0a45da5b0f2c80f89913e6dc3bf77eb65b84b409c6ca",
+    "bytes": 13693
+  },
+  {
+    "name": "pdf_cos",
+    "version": "14.0.0",
+    "key": "pdf_cos-14.0.0",
+    "sha256": "1c096ac5ba46f504c772bf5927faf581211391ab73962baec32ed1dddd2165a7",
+    "bytes": 282863
+  },
+  {
+    "name": "pdf_graphics",
+    "version": "14.0.0",
+    "key": "pdf_graphics-14.0.0",
+    "sha256": "2d89b774b08a38d9fb614c9bc3ef2d5398264fad2b3c040142c3d297555c425a",
+    "bytes": 896475
+  },
+  {
+    "name": "pdfx",
+    "version": "2.9.2",
+    "key": "pdfx-2.9.2",
+    "sha256": "29db9b71d46bf2335e001f91693f2c3fbbf0760e4c2eb596bf4bafab211471c1",
+    "bytes": 24134143
+  },
+  {
+    "name": "photo_view",
+    "version": "0.15.0",
+    "key": "photo_view-0.15.0",
+    "sha256": "1fc3d970a91295fbd1364296575f854c9863f225505c28c46e0a03e48960c75e",
+    "bytes": 16605447
+  },
+  {
+    "name": "pinenacl",
+    "version": "0.6.0",
+    "key": "pinenacl-0.6.0",
+    "sha256": "57e907beaacbc3c024a098910b6240758e899674de07d6949a67b52fd984cbdf",
+    "bytes": 2044776
+  },
+  {
+    "name": "pointycastle",
+    "version": "4.0.0",
+    "key": "pointycastle-4.0.0",
+    "sha256": "92aa3841d083cc4b0f4709b5c74fd6409a3e6ba833ffc7dc6a8fee096366acf5",
+    "bytes": 2069489
+  },
+  {
+    "name": "posix",
+    "version": "6.5.4",
+    "key": "posix-6.5.4",
+    "sha256": "613646d076944f3acc125830af935b48d4b8a57a388691547bbfd25b434f4d63",
+    "bytes": 186722
+  },
+  {
+    "name": "recase",
+    "version": "4.1.0",
+    "key": "recase-4.1.0",
+    "sha256": "e4eb4ec2dcdee52dcf99cb4ceabaffc631d7424ee55e56f280bc039737f89213",
+    "bytes": 3250
+  },
+  {
+    "name": "receive_sharing_intent",
+    "version": "1.7.0",
+    "key": "receive_sharing_intent-1.7.0",
+    "sha256": "fe02f858ac9f8d44d62e1964dadded000bb48dea424085ed280d542a61c4e8ba",
+    "bytes": 4033245
+  },
+  {
+    "name": "record_use",
+    "version": "1.1.1",
+    "key": "record_use-1.1.1",
+    "sha256": "1cb8564af8d43b464294411db9217f5ec04891c6f22ee2c32d73ae05e88a6bd2",
+    "bytes": 66364
+  },
+  {
+    "name": "riverpod",
+    "version": "2.6.1",
+    "key": "riverpod-2.6.1",
+    "sha256": "59062512288d3056b2321804332a13ffdd1bf16df70dcc8e506e411280a72959",
+    "bytes": 166116
+  },
+  {
+    "name": "sha3",
+    "version": "0.2.0",
+    "key": "sha3-0.2.0",
+    "sha256": "efa0ad944b950965e7014ab02f407f0a62a64626259983af0e2f98cd39a73a8a",
+    "bytes": 6021
+  },
+  {
+    "name": "share_plus",
+    "version": "10.1.4",
+    "key": "share_plus-10.1.4",
+    "sha256": "fce43200aa03ea87b91ce4c3ac79f0cecd52e2a7a56c7a4185023c271fbfa6da",
+    "bytes": 288693
+  },
+  {
+    "name": "share_plus_platform_interface",
+    "version": "5.0.2",
+    "key": "share_plus_platform_interface-5.0.2",
+    "sha256": "cc012a23fc2d479854e6c80150696c4a5f5bb62cb89af4de1c505cf78d0a5d0b",
+    "bytes": 7084
+  },
+  {
+    "name": "shared_preferences",
+    "version": "2.5.6",
+    "key": "shared_preferences-2.5.6",
+    "sha256": "1e85e0dccf5b4a016077fea7dfbb4a7cb39c759ac1596fcf60c06deadb7da91f",
+    "bytes": 15755181
+  },
+  {
+    "name": "shared_preferences_android",
+    "version": "2.4.23",
+    "key": "shared_preferences_android-2.4.23",
+    "sha256": "e8d4762b1e2e8578fc4d0fd548cebf24afd24f49719c08974df92834565e2c53",
+    "bytes": 43964
+  },
+  {
+    "name": "shared_preferences_foundation",
+    "version": "2.5.6",
+    "key": "shared_preferences_foundation-2.5.6",
+    "sha256": "4e7eaffc2b17ba398759f1151415869a34771ba11ebbccd1b0145472a619a64f",
+    "bytes": 132867
+  },
+  {
+    "name": "shared_preferences_linux",
+    "version": "2.4.1",
+    "key": "shared_preferences_linux-2.4.1",
+    "sha256": "580abfd40f415611503cae30adf626e6656dfb2f0cee8f465ece7b6defb40f2f",
+    "bytes": 14666
+  },
+  {
+    "name": "shared_preferences_platform_interface",
+    "version": "2.4.2",
+    "key": "shared_preferences_platform_interface-2.4.2",
+    "sha256": "649dc798a33931919ea356c4305c2d1f81619ea6e92244070b520187b5140ef9",
+    "bytes": 9201
+  },
+  {
+    "name": "shared_preferences_web",
+    "version": "2.4.3",
+    "key": "shared_preferences_web-2.4.3",
+    "sha256": "c49bd060261c9a3f0ff445892695d6212ff603ef3115edbb448509d407600019",
+    "bytes": 9449
+  },
+  {
+    "name": "shared_preferences_windows",
+    "version": "2.4.1",
+    "key": "shared_preferences_windows-2.4.1",
+    "sha256": "94ef0f72b2d71bc3e700e025db3710911bd51a71cefb65cc609dd0d9a982e3c1",
+    "bytes": 37821
+  },
+  {
+    "name": "shelf_dav",
+    "version": "1.0.0",
+    "key": "shelf_dav-1.0.0",
+    "sha256": "3864921fe8b17e5c66385a4cd3f55902c5107eac352af6650fc9e0f9d04f19bb",
+    "bytes": 478091
+  },
+  {
+    "name": "shelf_router",
+    "version": "1.1.4",
+    "key": "shelf_router-1.1.4",
+    "sha256": "f5e5d492440a7fb165fe1e2e1a623f31f734d3370900070b2b1e0d0428d59864",
+    "bytes": 13781
+  },
+  {
+    "name": "sign_dart",
+    "version": "1.0.0",
+    "key": "sign_dart-1.0.0",
+    "sha256": "ac9303a03c7cca834568f6502b11031e2a5b92141d764c9314d7b4b455780721",
+    "bytes": 19151
+  },
+  {
+    "name": "source_gen",
+    "version": "4.2.3",
+    "key": "source_gen-4.2.3",
+    "sha256": "ec37cc0e6694374cbef59ed79685572c870a54ede6fa30a3e420feb3adffea02",
+    "bytes": 52152
+  },
+  {
+    "name": "sqlite3",
+    "version": "3.3.3",
+    "key": "sqlite3-3.3.3",
+    "sha256": "37356bcb56ce0d9404d602c41e4bdb7765e7e9732a3e47adb3d98c556a6abdad",
+    "bytes": 157875
+  },
+  {
+    "name": "sqlite3_flutter_libs",
+    "version": "0.5.42",
+    "key": "sqlite3_flutter_libs-0.5.42",
+    "sha256": "eeb9e3a45207649076b808f8a5a74d68770d0b7f26ccef6d5f43106eee5375ad",
+    "bytes": 10226
+  },
+  {
+    "name": "sqlparser",
+    "version": "0.44.5",
+    "key": "sqlparser-0.44.5",
+    "sha256": "40bdddb306a727be9ce510bd2d2b9a6c9db6c586d846ef7b22e3990a2b24f02d",
+    "bytes": 200029
+  },
+  {
+    "name": "state_notifier",
+    "version": "1.0.0",
+    "key": "state_notifier-1.0.0",
+    "sha256": "b8677376aa54f2d7c58280d5a007f9e8774f1968d1fb1c096adcb4792fba29bb",
+    "bytes": 18144
+  },
+  {
+    "name": "stream_transform",
+    "version": "2.1.1",
+    "key": "stream_transform-2.1.1",
+    "sha256": "ad47125e588cfd37a9a7f86c7d6356dde8dfe89d071d293f80ca9e9273a33871",
+    "bytes": 31612
+  },
+  {
+    "name": "synchronized",
+    "version": "3.4.0",
+    "key": "synchronized-3.4.0",
+    "sha256": "c254ade258ec8282947a0acbbc90b9575b4f19673533ee46f2f6e9b3aeefd7c0",
+    "bytes": 14526
+  },
+  {
+    "name": "system_tray",
+    "version": "2.0.3",
+    "key": "system_tray-2.0.3",
+    "sha256": "40444e5de8ed907822a98694fd031b8accc3cb3c0baa547634ce76189cf3d9cf",
+    "bytes": 712738
+  },
+  {
+    "name": "timezone",
+    "version": "0.9.4",
+    "key": "timezone-0.9.4",
+    "sha256": "2236ec079a174ce07434e89fcd3fcda430025eb7692244139a9cf54fdcf1fc7d",
+    "bytes": 715635
+  },
+  {
+    "name": "universal_html",
+    "version": "2.3.0",
+    "key": "universal_html-2.3.0",
+    "sha256": "c0bcae5c733c60f26c7dfc88b10b0fd27cbcc45cb7492311cdaa6067e21c9cd4",
+    "bytes": 209235
+  },
+  {
+    "name": "universal_io",
+    "version": "2.3.1",
+    "key": "universal_io-2.3.1",
+    "sha256": "f63cbc48103236abf48e345e07a03ce5757ea86285ed313a6a032596ed9301e2",
+    "bytes": 37780
+  },
+  {
+    "name": "universal_platform",
+    "version": "1.1.0",
+    "key": "universal_platform-1.1.0",
+    "sha256": "64e16458a0ea9b99260ceb5467a214c1f298d647c659af1bff6d3bf82536b1ec",
+    "bytes": 3420
+  },
+  {
+    "name": "unorm_dart",
+    "version": "0.3.3",
+    "key": "unorm_dart-0.3.3",
+    "sha256": "b4f4d2aff27d65a5fc37f400d4c09e55d7535359315acbe3b895a9add4de3a23",
+    "bytes": 33150
+  },
+  {
+    "name": "url_launcher",
+    "version": "6.3.3",
+    "key": "url_launcher-6.3.3",
+    "sha256": "e8cc955c97e06df9879140a1fe301f3d493f01b7c62dec7f46834be31d7e9fda",
+    "bytes": 190094
+  },
+  {
+    "name": "url_launcher_android",
+    "version": "6.3.30",
+    "key": "url_launcher_android-6.3.30",
+    "sha256": "17bc677f0b301615530dd1d67e0a9828cafa2d0b6b6eae4cd3679b7eac4a273c",
+    "bytes": 30447
+  },
+  {
+    "name": "uuid",
+    "version": "4.5.1",
+    "key": "uuid-4.5.1",
+    "sha256": "a5be9ef6618a7ac1e964353ef476418026db906c4facdedaa299b7a2e71690ff",
+    "bytes": 237000
+  },
+  {
+    "name": "vector_graphics",
+    "version": "1.2.2",
+    "key": "vector_graphics-1.2.2",
+    "sha256": "2306c03da2ba81724afeb589c351ebbc0aa7d86005925be8f8735856dbe5e42d",
+    "bytes": 72946
+  },
+  {
+    "name": "vector_graphics_codec",
+    "version": "1.1.13",
+    "key": "vector_graphics_codec-1.1.13",
+    "sha256": "99fd9fbd34d9f9a32efd7b6a6aae14125d8237b10403b422a6a6dfeac2806146",
+    "bytes": 19506
+  },
+  {
+    "name": "vector_graphics_compiler",
+    "version": "1.2.6",
+    "key": "vector_graphics_compiler-1.2.6",
+    "sha256": "142a9146f447d15b10bdc00e21d5f4d83e5b32bb5f8f8f5a04c75311344923a3",
+    "bytes": 247654
+  },
+  {
+    "name": "vector_math",
+    "version": "2.4.4",
+    "key": "vector_math-2.4.4",
+    "sha256": "fa49e1674cb84acb900141714e6c6e1f9ae099827c24d141430ff6819db4e1bc",
+    "bytes": 182469
+  },
+  {
+    "name": "video_player_android",
+    "version": "2.9.5",
+    "key": "video_player_android-2.9.5",
+    "sha256": "877a6c7ba772456077d7bfd71314629b3fe2b73733ce503fc77c3314d43a0ca0",
+    "bytes": 2492652
+  },
+  {
+    "name": "video_player_platform_interface",
+    "version": "6.8.0",
+    "key": "video_player_platform_interface-6.8.0",
+    "sha256": "e4ae5bc934b528e5b95c5e47be2812860186260cd3eed3ac62f5ed380fdd1613",
+    "bytes": 12202
+  },
+  {
+    "name": "web",
+    "version": "1.1.2",
+    "key": "web-1.1.2",
+    "sha256": "e119e82ac4795c7925103b7cf3768191f33941b99e7ccffbd6c645201d9f606b",
+    "bytes": 540771
+  },
+  {
+    "name": "webdav_client",
+    "version": "1.2.2",
+    "key": "webdav_client-1.2.2",
+    "sha256": "682fffc50b61dc0e8f46717171db03bf9caaa17347be41c0c91e297553bf86b2",
+    "bytes": 218010
+  },
+  {
+    "name": "win32",
+    "version": "5.15.0",
+    "key": "win32-5.15.0",
+    "sha256": "d7cb55e04cd34096cd3a79b3330245f54cb96a370a1c27adb3c84b917de8b08e",
+    "bytes": 1464489
+  },
+  {
+    "name": "workmanager",
+    "version": "0.9.0+3",
+    "key": "workmanager-0.9.0+3",
+    "sha256": "065673b2a465865183093806925419d311a9a5e0995aa74ccf8920fd695e2d10",
+    "bytes": 13544
+  },
+  {
+    "name": "workmanager_android",
+    "version": "0.9.0+2",
+    "key": "workmanager_android-0.9.0+2",
+    "sha256": "9ae744db4ef891f5fcd2fb8671fccc712f4f96489a487a1411e0c8675e5e8cb7",
+    "bytes": 20631
+  },
+  {
+    "name": "workmanager_apple",
+    "version": "0.9.1+2",
+    "key": "workmanager_apple-0.9.1+2",
+    "sha256": "1cc12ae3cbf5535e72f7ba4fde0c12dd11b757caf493a28e22d684052701f2ca",
+    "bytes": 22165
+  },
+  {
+    "name": "workmanager_platform_interface",
+    "version": "0.9.1+1",
+    "key": "workmanager_platform_interface-0.9.1+1",
+    "sha256": "f40422f10b970c67abb84230b44da22b075147637532ac501729256fcea10a47",
+    "bytes": 10905
+  },
+  {
+    "name": "xterm2",
+    "version": "5.4.0",
+    "key": "xterm2-5.4.0",
+    "sha256": "da8f15c6ecd0a0e06ca11f8d9fe55d6f1e686823ff084ad82fccf9a5fd1f8c00",
+    "bytes": 6194253
+  },
+  {
+    "name": "xterm2_core",
+    "version": "1.0.0",
+    "key": "xterm2_core-1.0.0",
+    "sha256": "500ac551e448d8fa9766671aba26303dd5979d9d1af93df77af80afae16c75de",
+    "bytes": 155360
+  },
+  {
+    "name": "zmodem",
+    "version": "0.0.6",
+    "key": "zmodem-0.0.6",
+    "sha256": "3b7e5b29f3a7d8aee472029b05165a68438eff2f3f7766edf13daba1e297adbf",
+    "bytes": 16040
+  }
+]

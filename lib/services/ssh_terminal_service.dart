@@ -169,6 +169,7 @@ class _SessionState {
   final discoveryChannels = <SSHSession>{};
   final commands = <SSHSession, TerminalOutput>{};
   final closeCallbacks = <void Function()>{};
+  void Function()? cancelShellOpen;
 
   _SessionState({required this.session, required this.route});
 }
@@ -1108,6 +1109,44 @@ class SshTerminalService {
   // Interactive shell
   // -------------------------------------------------------------------------
 
+  /// Cancellation releases the local opener even when a shared transport must
+  /// stay alive and the peer has not answered its channel request. A channel
+  /// that arrives later is still ours to close, never a replacement shell's.
+  Future<SSHSession> _openShellChannel(
+    String id,
+    _SessionState state,
+    int generation,
+    Future<SSHSession> Function() open,
+  ) async {
+    final cancelled = Completer<SSHSession>();
+    var revoked = false;
+    void cancel() {
+      revoked = true;
+      if (!cancelled.isCompleted) {
+        cancelled.completeError(StateError('SSH shell start was cancelled'));
+      }
+    }
+
+    state.cancelShellOpen = cancel;
+    state.closeCallbacks.add(cancel);
+    try {
+      final opening = Future<SSHSession>.sync(open);
+      unawaited(
+        opening.then<void>((channel) {
+          if (revoked || !_isCurrentShell(id, state, generation)) {
+            channel.close();
+          }
+        }, onError: (Object _, StackTrace __) {}),
+      );
+      return await Future.any([opening, cancelled.future]);
+    } finally {
+      state.closeCallbacks.remove(cancel);
+      if (identical(state.cancelShellOpen, cancel)) {
+        state.cancelShellOpen = null;
+      }
+    }
+  }
+
   /// Starts an interactive PTY shell or a remote [tmux] / [screen] session.
   ///
   /// Returns a single-subscription stream of decoded terminal output, including
@@ -1145,6 +1184,7 @@ class SshTerminalService {
 
     // Invalidates callbacks from the previous shell before closing its stream.
     final generation = ++state.shellGeneration;
+    state.cancelShellOpen?.call();
     final previousOutput = state.shellOutput;
     final previousControl = state.tmuxControlOutput;
     final previousShell = state.shellSession;
@@ -1165,9 +1205,14 @@ class SshTerminalService {
         width: width,
         height: height,
       );
-      shell = command == null
-          ? await client.shell(pty: pty)
-          : await client.execute(command, pty: pty);
+      shell = await _openShellChannel(
+        sessionId,
+        state,
+        generation,
+        () => command == null
+            ? client.shell(pty: pty)
+            : client.execute(command, pty: pty),
+      );
     } catch (_) {
       if (_isCurrentShell(sessionId, state, generation)) {
         await disconnect(sessionId);
@@ -1230,6 +1275,7 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     if (!_isActive(state)) throw StateError('SSH connection is closed');
     final generation = ++state.shellGeneration;
+    state.cancelShellOpen?.call();
     final previousShell = state.shellSession;
     final previousOutput = state.shellOutput;
     final previousControl = state.tmuxControlOutput;
@@ -1246,7 +1292,12 @@ class SshTerminalService {
     _touch(sessionId);
     SSHSession shell;
     try {
-      shell = await state.client.execute(command, pty: null);
+      shell = await _openShellChannel(
+        sessionId,
+        state,
+        generation,
+        () => state.client.execute(command, pty: null),
+      );
     } catch (_) {
       if (current()) await disconnect(sessionId);
       rethrow;
@@ -1292,6 +1343,7 @@ class SshTerminalService {
   /// Sends [input] to the active interactive shell of [sessionId].
   Future<void> writeToShell(String sessionId, String input) async {
     final state = _requireSession(sessionId);
+    _requireActive(state);
     final shell = state.shellSession;
     if (shell == null) {
       throw TerminalMountStateError(
@@ -1312,6 +1364,7 @@ class SshTerminalService {
     _validateDimensions(width, height);
 
     final state = _requireSession(sessionId);
+    _requireActive(state);
     final shell = state.shellSession;
     if (shell == null) {
       throw TerminalMountStateError(
@@ -1333,8 +1386,8 @@ class SshTerminalService {
   /// Returns a snapshot of all currently active sessions.
   List<SshSession> getActiveSessions() {
     return _sessions.values
+        .where(_isActive)
         .map((s) => s.session)
-        .where((s) => s.connected)
         .toList(growable: false);
   }
 
@@ -1419,6 +1472,15 @@ class SshTerminalService {
       state.session.connected &&
       state.route.generation == _connectionGeneration &&
       state.route.usable;
+
+  void _requireActive(_SessionState state) {
+    if (_isActive(state)) return;
+    throw TerminalMountStateError(
+      TerminalMountCode.sshDisconnected,
+      'Session ${state.session.id} is not connected',
+      {'session': state.session.id},
+    );
+  }
 
   bool _isCurrentShell(String id, _SessionState state, int generation) =>
       identical(_sessions[id], state) && state.shellGeneration == generation;

@@ -1,0 +1,196 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_test.dart
+00:00 +0: explicit SSH connection sharing copies endpoint metadata into a fresh ID without another login
+ℹ️ [SshTerminalService] Session ho7jqqcr720 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqcr720
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqcxml1
+00:00 +1: explicit SSH connection sharing sharing reserves its lease before yielding to source disconnect
+ℹ️ [SshTerminalService] Session ho7jqqdh7y0 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqdh7y0
+ℹ️ [SshTerminalService] execute(ho7jqqdhgu1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqdhgu1
+00:00 +2: explicit SSH connection sharing identical destinations remain independent unless explicitly shared
+ℹ️ [SshTerminalService] Session ho7jqqdu8j0 established to shared.example:2222
+ℹ️ [SshTerminalService] Session ho7jqqduxz1 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqdu8j0
+ℹ️ [SshTerminalService] execute(ho7jqqduxz1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqduxz1
+00:00 +3: explicit SSH connection sharing sibling shells isolate Unicode output, input, geometry, and exits
+ℹ️ [SshTerminalService] Session ho7jqqe02i0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqe02i0)
+ℹ️ [SshTerminalService] startShell(ho7jqqe0aa1)
+ℹ️ [SshTerminalService] resizeTerminal(ho7jqqe02i0): 77x23
+ℹ️ [SshTerminalService] resizeTerminal(ho7jqqe0aa1): 109x33
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqe02i0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqe0aa1
+00:00 +4: explicit SSH connection sharing canceling one output subscription releases only that shell lease
+ℹ️ [SshTerminalService] Session ho7jqqeexn0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqeexn0)
+ℹ️ [SshTerminalService] startShell(ho7jqqef4u1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqeexn0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqef4u1
+00:00 +5: explicit SSH connection sharing EOF and late exit status release one shell without disturbing a peer
+ℹ️ [SshTerminalService] Session ho7jqqek0q0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqek0q0)
+ℹ️ [SshTerminalService] execute(ho7jqqek801)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqek0q0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqek801
+00:00 +6: explicit SSH connection sharing failed sibling channel setup preserves the source and route capacity
+ℹ️ [SshTerminalService] Session ho7jqqepzx0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqeq871)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqeq871
+ℹ️ [SshTerminalService] execute(ho7jqqepzx0)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqepzx0
+00:00 +7: explicit SSH connection sharing source can close while the independently leased sibling channel opens
+ℹ️ [SshTerminalService] Session ho7jqqezqj0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqezz81)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqezqj0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqezz81
+00:00 +8: explicit SSH connection sharing canceling a pending sibling closes its late channel but keeps the source
+ℹ️ [SshTerminalService] Session ho7jqqf3jt0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqf3qr1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqf3qr1
+ℹ️ [SshTerminalService] execute(ho7jqqf3jt0)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqf3jt0
+00:00 +9: explicit SSH connection sharing replacing one shell cannot close its peer or its own replacement
+ℹ️ [SshTerminalService] Session ho7jqqfa3h0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqfa3h0)
+ℹ️ [SshTerminalService] startShell(ho7jqqfacp1)
+ℹ️ [SshTerminalService] startShell(ho7jqqfa3h0)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfa3h0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfacp1
+00:00 +10: explicit SSH connection sharing native tmux lease and ordinary shell have independent teardown
+ℹ️ [SshTerminalService] Session ho7jqqfgk90 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqfid91)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfgk90
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfid91
+00:00 +11: explicit SSH connection sharing forwarding manager belongs to the route until its final lease closes
+ℹ️ [SshTerminalService] Session ho7jqqfn3f0 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfn3f0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfo7f1
+00:00 +12: explicit SSH connection sharing unknown, disconnected and canceled sources cannot grant a lease
+ℹ️ [SshTerminalService] Session ho7jqqfrlw0 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfrlw0
+00:00 +13: explicit SSH connection sharing eight logical sessions per route still allow five distinct connections
+ℹ️ [SshTerminalService] Session ho7jqqfvb20 established to route-0.example:2222
+ℹ️ [SshTerminalService] Session ho7jqqfxcz8 established to route-1.example:2222
+ℹ️ [SshTerminalService] Session ho7jqqfxuwg established to route-2.example:2222
+ℹ️ [SshTerminalService] Session ho7jqqfycuo established to route-3.example:2222
+ℹ️ [SshTerminalService] Session ho7jqqfzikw established to route-4.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvb20
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvhy1
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvj02
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvjd3
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvjp4
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvkb5
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvkn6
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfvkx7
+ℹ️ [SshTerminalService] Session ho7jqqg3fj14 established to replacement.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxcz8
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxkp9
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxloa
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxm2b
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxmfc
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxmtd
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxn4e
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxngf
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfxuwg
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy15h
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy4ni
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy56j
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy5jk
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy5wl
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy68m
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfy6in
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfycuo
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfz36p
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfz52q
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfz5jr
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfz5xs
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfz6ct
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfz6nu
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzajv
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzikw
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfztnx
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzuny
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzv2z
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzve10
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzvs11
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzw412
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqfzwg13
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqg3fj14
+00:00 +14: explicit SSH connection sharing parallel share calls reserve capacity before awaiting their results
+ℹ️ [SshTerminalService] Session ho7jqqge010 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqge010
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqge891
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqge9w2
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgea53
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgeaa4
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgeak5
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgeap6
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgeau7
+00:00 +15: explicit SSH connection sharing closing a logical session cancels its active execute channel only
+ℹ️ [SshTerminalService] Session ho7jqqgll10 established to shared.example:2222
+ℹ️ [SshTerminalService] execute(ho7jqqgll10)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgll10
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7jqqglty1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqglty1
+00:00 +16: explicit SSH connection sharing a late execute channel is released when only its session was closed
+ℹ️ [SshTerminalService] Session ho7jqqgspu0 established to shared.example:2222
+ℹ️ [SshTerminalService] execute(ho7jqqgspu0)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgspu0
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7jqqgszt1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqgszt1
+00:00 +17: explicit SSH connection sharing activity on one sibling keeps every lease until the route idles
+ℹ️ [SshTerminalService] Session ho75uuuio00 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho75uuuio01)
+ℹ️ [SshTerminalService] Auto-disconnecting idle SSH route
+ℹ️ [SshTerminalService] Disconnecting session ho75uuuio00
+ℹ️ [SshTerminalService] Disconnecting session ho75uuuio01
+00:00 +18: explicit SSH connection sharing forwarding activity refreshes the route after its creator closes
+ℹ️ [SshTerminalService] Session ho75uuuio00 established to shared.example:2222
+ℹ️ [SshTerminalService] Disconnecting session ho75uuuio00
+ℹ️ [SshTerminalService] Auto-disconnecting idle SSH route
+ℹ️ [SshTerminalService] Disconnecting session ho75uuuio01
+00:00 +18 -1: explicit SSH connection sharing forwarding activity refreshes the route after its creator closes [E]
+  Expected: <1>
+    Actual: <0>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/ssh_connection_sharing_test.dart 565:11        main.<fn>.<fn>.<fn>
+  
+00:00 +18 -1: explicit SSH connection sharing disconnectAll releases every shared route exactly once
+ℹ️ [SshTerminalService] Session ho7jqqibl80 established to one.example:2222
+ℹ️ [SshTerminalService] Session ho7jqqibxp2 established to two.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqibl80)
+ℹ️ [SshTerminalService] startShell(ho7jqqibu21)
+ℹ️ [SshTerminalService] startShell(ho7jqqibxp2)
+ℹ️ [SshTerminalService] startShell(ho7jqqic323)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqibl80
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqibu21
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqibxp2
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqic323
+00:00 +19 -1: explicit SSH connection sharing transport failure revokes all leases while each output drains
+ℹ️ [SshTerminalService] Session ho7jqqiiji0 established to shared.example:2222
+ℹ️ [SshTerminalService] startShell(ho7jqqiiji0)
+ℹ️ [SshTerminalService] startShell(ho7jqqiiso1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqiiji0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqiiso1
+00:00 +20 -1: shared SSH agent authority sharing never reauthenticates and retains final-host permission to last lease
+ℹ️ [SshTerminalService] Session ho7jqqlq500 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqlq500
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqlqnc1
+00:00 +21 -1: shared SSH agent authority sharing an unforwarded route cannot grant agent forwarding
+ℹ️ [SshTerminalService] Session ho7jqqm33h0 established to final.example:22
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqm33h0
+ℹ️ [SshTerminalService] Disconnecting session ho7jqqm3g31
+00:00 +22 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_test.dart: explicit SSH connection sharing forwarding activity refreshes the route after its creator closes

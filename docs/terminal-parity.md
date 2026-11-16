@@ -6,6 +6,37 @@ toward desktop terminal workflows. It does not claim complete iTerm2 compatibili
 
 ## Current status
 
+This continuation adds **explicit SSH connection sharing across tabs and panes**.
+On a connected SSH terminal, **Terminal layout** offers **New SSH shell**,
+**Split SSH side by side**, and **Split SSH top and bottom**. Each opens a plain
+shell with its own channel, emulator, input, geometry, exit status and connection
+identity over the selected verified route. The existing ordinary new-tab and
+split actions retain their local-shell behavior.
+
+A route supports up to eight logical sessions; the application still allows
+five distinct SSH routes including pending handshakes. Sharing never selects a
+connection by matching host names or stored profiles, repeats authentication,
+or changes the existing jump-host trust and agent permissions. Closing one
+session releases its shell and owned commands. Siblings retain the shared
+agent and forwarding manager until the final owner closes. Route failure,
+global disconnect and route-wide inactivity revoke all owners. Pending opens
+and stale menu capabilities cannot authorize replacement connections.
+
+The [sharing guide](terminal.md#share-an-existing-ssh-connection) describes the
+workflow and limits. The [local acceptance record](validation/terminal-ssh-multiplexing/README.md)
+tracks this continuation independently of the historical results below.
+The initial fresh fetch at **08:10:33 UTC on 16 November 2026** contained all
+**38 branch heads and 151 PR heads** as actual ancestors of `042a24e7`.
+Checkpoint `743801e2` preserves the complete inventory; `688c4011` saves the
+first implementation. Incremental remote saves continue with `[skip ci]`,
+without querying or waiting for GitHub Actions.
+
+This is live authenticated transport reuse. Routes are not retained after every
+owner closes, reconnected automatically, or restored across application restarts.
+Saved arrangements retain only independent credential-free destinations.
+
+### Previous native tmux continuation
+
 This continuation adds **native tmux control-mode windows and panes** to draft
 PR #160. The SSH form has an explicit default-off **Native tmux panes** option;
 tmux 3.2+ windows and pane geometry become separate native terminal views inside
@@ -165,6 +196,7 @@ Earlier feature evidence retains its original source cutoff. Records:
 | Terminal workspace | Up to eight independent tabs and eight nested visible panes; per-divider sizing and balancing; directional/cyclic pane selection; temporary zoom; compact active-pane fallback; retained hidden sessions |
 | Saved arrangements | Up to 20 named arrangements with full split topology, ratios, tab order/names, active pane, font sizes and sanitized SSH routes; reads legacy records, uses v3 for agent choices and v4 for native tmux |
 | SSH authentication | Password, encrypted/unencrypted key and native Linux/macOS SSH-agent login; verified host keys, explicit gateway, up to three independently authenticated and verified jump hosts |
+| SSH connection sharing | Explicit new shell or split on the exact verified route; up to eight logical owners, isolated channels, shared forwarding/agent lifetime, route-wide idle expiry and prompt pending-open cancellation |
 | SSH-agent forwarding | Separate default-off permission for the final host only; frozen supported keys, list/sign-only protocol, bounded requests/channels and immediate revocation on disconnect |
 | SSH forwarding | Native local, remote and SOCKS5 TCP CONNECT listeners on existing verified routes; actual assigned ports; per-listener clients and errors; bounded ownership and cleanup |
 | Saved forwarding | Up to 50 credential-free recipes, 16 per exact route; explicit Auto-start after verified shell connection/reconnect, duplicate suppression, offline editing and delete-and-stop |
@@ -244,8 +276,10 @@ selection.
 
 ### SSH and session discovery
 
-A complete route uses one of the five SSH session slots and retains the existing
-30-minute activity timeout. Up to three jump hosts precede the final destination;
+A complete route uses one of the five SSH connection slots. Explicitly shared
+shells use independent logical sessions on that route without another connection
+slot. The 30-minute activity timeout applies to the complete route: input, output
+or forwarding activity from any owner keeps it alive. Up to three jump hosts precede the final destination;
 a configured gateway reaches the first hop. The final verified client now also
 supports native local/remote/SOCKS5 forwarding controls. Agent authentication is
 chosen separately for each server; every host key is verified before signing.
@@ -439,8 +473,9 @@ Reproduction commands and manual checks are in
 
 - Complete native tmux state fidelity, mouse/focus forwarding, broader pane
   actions and real tmux-server/platform qualification beyond the first workspace.
-- Persistent connection multiplexing and broader agent support, including
-  Windows named pipes, certificates/security-key algorithms and session binding.
+- Idle connection retention after every shell closes, automatic reconnection,
+  cross-process SSH sharing and broader agent support, including Windows named
+  pipes, certificates/security-key algorithms and session binding.
 - Independent terminal windows and layouts beyond the current eight-tab limit.
 - Automatic process/session restoration and secure reusable credential/identity
   integration beyond secret-free destination stores.

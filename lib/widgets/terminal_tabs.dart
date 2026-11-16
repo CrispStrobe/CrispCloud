@@ -43,10 +43,10 @@ class _TerminalTab {
 }
 
 class _SharedShellRequest {
-  const _SharedShellRequest(this.source, this.open, this.paneState);
+  const _SharedShellRequest(this.source, this.opening, this.paneState);
 
   final _TerminalTab source;
-  final TerminalConnectionFactory open;
+  final TerminalConnectionOpening opening;
   final TerminalPaneState paneState;
 }
 
@@ -222,11 +222,11 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     _sharedShellRequest = null;
     if (!widget.visible || _arranging || _closing) return;
     final source = _tabs.firstWhere((tab) => tab.id == _active);
-    final open = source.session.siblingConnectionFactory;
-    if (open == null) return;
+    final opening = source.session.siblingConnectionOpening;
+    if (opening == null) return;
     _sharedShellRequest = _SharedShellRequest(
       source,
-      open,
+      opening,
       TerminalPaneState(
         fontSize: source.paneState.fontSize,
         sshConfig: source.paneState.sshConfig?.forSharedShell(),
@@ -271,8 +271,8 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     final config = request.paneState.sshConfig;
     // This factory is bound to the source connection captured when the menu
     // opened. The destination session owns any late result after cancellation.
-    await tab.session.connect(
-      request.open,
+    await tab.session.connectOpening(
+      request.opening,
       kind: TerminalSessionKind.ssh,
       label: config == null
           ? request.source.session.label

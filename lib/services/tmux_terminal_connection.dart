@@ -88,8 +88,17 @@ class TmuxTerminalConnection
   @override
   int get sharedSessionCount => service.connectionSessionCount(sessionId);
   @override
-  Future<TerminalConnection> openSibling(int columns, int rows) =>
-      openSharedSshShell(service, sessionId, columns, rows);
+  Future<TerminalConnection> openSibling(
+    int columns,
+    int rows, {
+    TerminalConnectionCancellation? cancellation,
+  }) => openSharedSshShell(
+    service,
+    sessionId,
+    columns,
+    rows,
+    cancellation: cancellation,
+  );
   @override
   bool get acceptsDirectInput => false;
   @override

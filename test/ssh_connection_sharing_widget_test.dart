@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/ssh_connection_sharing_strings.dart';
-import 'package:crisp_cloud/models/ssh_terminal_config.dart';
 import 'package:crisp_cloud/models/terminal_arrangement.dart';
 import 'package:crisp_cloud/models/tmux_session_options.dart';
 import 'package:crisp_cloud/providers/core_providers.dart';
@@ -236,10 +235,12 @@ void main() {
   ) async {
     await mount(tester);
     await openMenu(tester);
-    await sessions.first.connect(
-      (_, _) async => _Connection(route),
-      kind: TerminalSessionKind.ssh,
-      label: 'replacement@example.test',
+    await tester.runAsync(
+      () => sessions.first.connect(
+        (_, _) async => _Connection(route),
+        kind: TerminalSessionKind.ssh,
+        label: 'replacement@example.test',
+      ),
     );
     await tester.pump();
     await tester.tap(find.text('New SSH shell'));
@@ -264,12 +265,14 @@ void main() {
     expect(sessions.last.isConnecting, isTrue);
     expect(route.connections, hasLength(2));
     await sessions.last.disconnect();
-    route.openGate!.complete();
     await tester.pumpAndSettle();
+    expect(route.openGate!.isCompleted, isFalse);
     expect(route.connections.first.closed, isFalse);
     expect(route.connections.last.closed, isTrue);
     expect(sessions.first.isConnected, isTrue);
     expect(sessions.last.status, TerminalSessionStatus.disconnected);
+    expect(sessions.last.canDisconnect, isFalse);
+    route.openGate!.complete();
     await unmount(tester);
   });
 
@@ -302,8 +305,9 @@ void main() {
       for (final message in messages) {
         final translated = context.sshSharingTr(message);
         if (locale.languageCode != 'en') expect(translated, isNot(message));
-        if (message.contains('{count}'))
+        if (message.contains('{count}')) {
           expect(translated, contains('{count}'));
+        }
       }
     }
   });
@@ -337,10 +341,31 @@ class _Connection implements TerminalConnection, TerminalConnectionSharing {
   int get sharedSessionCount =>
       route.connections.where((connection) => !connection.closed).length;
   @override
-  Future<TerminalConnection> openSibling(int columns, int rows) async {
+  Future<TerminalConnection> openSibling(
+    int columns,
+    int rows, {
+    TerminalConnectionCancellation? cancellation,
+  }) async {
     final sibling = _Connection(route);
-    await route.openGate?.future;
-    return sibling;
+    final cancelled = Completer<void>();
+    Future<void> release() async {
+      await sibling.close();
+      if (!cancelled.isCompleted) cancelled.complete();
+    }
+
+    await cancellation?.register(release);
+    try {
+      if (route.openGate != null) {
+        await Future.any([
+          route.openGate!.future,
+          cancelled.future.then<void>((_) => throw StateError('cancelled')),
+        ]);
+      }
+      if (cancellation?.isCancelled == true) throw StateError('cancelled');
+      return sibling;
+    } finally {
+      cancellation?.unregister(release);
+    }
   }
 
   @override

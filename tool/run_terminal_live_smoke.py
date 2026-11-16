@@ -27,7 +27,9 @@ def main():
     parser.add_argument("--flutter", default="flutter")
     parser.add_argument("--with-pty", action="store_true", help="Also exercise interactive PTY; sshd must have login-record permissions.")
     parser.add_argument("--with-unix-agent", action="store_true", help="Also use a disposable real ssh-agent and remote ssh-add when Unix sockets are permitted.")
-    parser.add_argument("--agent-only", action="store_true", help="Run only agent authentication and rekey acceptance.")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--agent-only", action="store_true", help="Run only agent authentication and rekey acceptance.")
+    selection.add_argument("--sharing-only", action="store_true", help="Run only shared-connection ownership and forwarding acceptance.")
     parser.add_argument("--project", type=Path, default=Path(__file__).resolve().parents[1])
     args = parser.parse_args()
     sshd = shutil.which("sshd")
@@ -138,10 +140,11 @@ LogLevel VERBOSE
                 "CRISPCLOUD_LIVE_UNIX_AGENT": "1" if unix_agent else "0",
                 "CRISPCLOUD_LIVE_UNIX_AGENT_REASON": unix_agent_reason,
             })
-            suites = ["test/ssh_agent_live_test.dart"] if args.agent_only else [
+            suites = ["test/ssh_connection_sharing_live_test.dart"] if args.sharing_only else ["test/ssh_agent_live_test.dart"] if args.agent_only else [
                 "test/ssh_terminal_live_test.dart",
                 "test/ssh_port_forwarding_live_test.dart",
                 "test/ssh_agent_live_test.dart",
+                "test/ssh_connection_sharing_live_test.dart",
             ]
             result = subprocess.run([
                 args.flutter, "test", "--no-pub", "--concurrency=1", "--reporter=expanded",

@@ -1,5 +1,12 @@
+import 'dart:async';
+
+/// A terminal-owned resource whose release can be retried after failure.
+abstract interface class TerminalCloseable {
+  Future<void> close();
+}
+
 /// A single interactive terminal transport. The emulator owns no process.
-abstract interface class TerminalConnection {
+abstract interface class TerminalConnection implements TerminalCloseable {
   /// True when this is the pure-Dart, sandbox-safe shell rather than a host
   /// process. The UI uses it to label the session honestly.
   bool get isSandbox;
@@ -16,7 +23,6 @@ abstract interface class TerminalConnection {
 
   Future<void> write(String data);
   Future<void> resize(int columns, int rows);
-  Future<void> close();
 }
 
 /// The engine behind a connection, independent of the terminal viewport.
@@ -41,7 +47,53 @@ abstract interface class TerminalConnectionSharing {
 
   /// Reserves a new transport lease before awaiting the remote shell channel.
   /// The returned connection owns that lease independently of its source.
-  Future<TerminalConnection> openSibling(int columns, int rows);
+  Future<TerminalConnection> openSibling(
+    int columns,
+    int rows, {
+    TerminalConnectionCancellation? cancellation,
+  });
+}
+
+/// Cancellation belongs to a destination opening, independently of the source
+/// connection that authorized it. Late ownership registration is canceled too.
+class TerminalConnectionCancellation {
+  bool _cancelled = false;
+  final _callbacks = <Future<void> Function()>{};
+  Future<void>? _cancelling;
+
+  bool get isCancelled => _cancelled;
+
+  Future<void> register(Future<void> Function() release) {
+    _callbacks.add(release);
+    return _cancelled ? _release(release) : Future<void>.value();
+  }
+
+  void unregister(Future<void> Function() release) =>
+      _callbacks.remove(release);
+
+  Future<void> _release(Future<void> Function() release) async {
+    await release();
+    _callbacks.remove(release);
+  }
+
+  Future<void> cancel() {
+    _cancelled = true;
+    return _cancelling ??= Future.wait([
+      for (final release in _callbacks.toList()) _release(release),
+    ]).then<void>((_) {}).whenComplete(() => _cancelling = null);
+  }
+}
+
+/// A factory and its cancellation authority travel together. Existing plain
+/// factories remain supported for transports without cancelable startup.
+class TerminalConnectionOpening implements TerminalCloseable {
+  TerminalConnectionOpening(this.open, this.cancellation);
+
+  final TerminalConnectionFactory open;
+  final TerminalConnectionCancellation cancellation;
+
+  @override
+  Future<void> close() => cancellation.cancel();
 }
 
 /// A transport may own a workspace whose individual panes receive input.

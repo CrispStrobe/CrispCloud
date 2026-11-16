@@ -1,0 +1,37 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_live_test.dart
+00:00 +0: real OpenSSH shared connection parallel commands share one verified transport and survive source closure
+ℹ️ [SshTerminalService] Session ho7jsgm7xy0 established to 127.0.0.1:33695
+ℹ️ [SshTerminalService] execute(ho7jsgm7xy0)
+ℹ️ [SshTerminalService] execute(ho7jsgmd6b1)
+ℹ️ [SshTerminalService] execute(ho7jsgmd6b1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jsgm7xy0
+ℹ️ [SshTerminalService] Disconnecting session ho7jsgmd6b1
+00:00 +1: real OpenSSH shared connection canceling a command session preserves a concurrently running sibling
+ℹ️ [SshTerminalService] Session ho7jsguca30 established to 127.0.0.1:33695
+ℹ️ [SshTerminalService] execute(ho7jsguca30)
+ℹ️ [SshTerminalService] execute(ho7jsgud3u1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jsguca30
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+ℹ️ [SshTerminalService] execute(ho7jsgud3u1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jsgud3u1
+00:00 +2: real OpenSSH shared connection local forwards remain live through source closure and stop at last lease
+ℹ️ [SshTerminalService] Session ho7jsh0uyv0 established to 127.0.0.1:33695
+ℹ️ [SshTerminalService] Disconnecting session ho7jsh0uyv0
+ℹ️ [SshTerminalService] execute(ho7jsh0wof1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jsh0wof1
+00:15 +3: real OpenSSH shared connection remote forwards remain live through source closure and stop at last lease
+ℹ️ [SshTerminalService] Session ho7jspw62x0 established to 127.0.0.1:33695
+ℹ️ [SshTerminalService] Disconnecting session ho7jspw62x0
+ℹ️ [SshTerminalService] execute(ho7jspw6ob1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jspw6ob1
+00:30 +4: real OpenSSH shared connection dynamic forwards remain live through source closure and stop at last lease
+ℹ️ [SshTerminalService] Session ho7jsymwl50 established to 127.0.0.1:33695
+ℹ️ [SshTerminalService] Disconnecting session ho7jsymwl50
+ℹ️ [SshTerminalService] execute(ho7jsymx1k1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jsymx1k1
+00:44 +5: real OpenSSH shared connection independent PTYs preserve sizes, output and peer input after exit
+  Skip: Use --with-pty with an sshd allowed to write login records.
+00:44 +5 ~1: All tests passed!

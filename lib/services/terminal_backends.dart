@@ -222,8 +222,17 @@ class SshTerminalConnection
   int get sharedSessionCount => service.connectionSessionCount(sessionId);
 
   @override
-  Future<TerminalConnection> openSibling(int columns, int rows) =>
-      openSharedSshShell(service, sessionId, columns, rows);
+  Future<TerminalConnection> openSibling(
+    int columns,
+    int rows, {
+    TerminalConnectionCancellation? cancellation,
+  }) => openSharedSshShell(
+    service,
+    sessionId,
+    columns,
+    rows,
+    cancellation: cancellation,
+  );
 
   @override
   SshPortForwarding? get portForwarding {
@@ -264,18 +273,32 @@ Future<TerminalConnection> openSharedSshShell(
   SshTerminalService service,
   String sourceSessionId,
   int columns,
-  int rows,
-) async {
-  final session = await service.shareSession(sourceSessionId);
+  int rows, {
+  TerminalConnectionCancellation? cancellation,
+}) async {
+  final session = await service.shareSession(
+    sourceSessionId,
+    isCurrent: () => cancellation?.isCancelled != true,
+  );
+  Future<void> release() => service.disconnect(session.id);
   try {
+    await cancellation?.register(release);
+    if (cancellation?.isCancelled == true) {
+      throw StateError('SSH shell opening was cancelled');
+    }
     final output = await service.startShell(
       session.id,
       width: columns,
       height: rows,
     );
+    if (cancellation?.isCancelled == true) {
+      throw StateError('SSH shell opening was cancelled');
+    }
+    cancellation?.unregister(release);
     return SshTerminalConnection(service, session.id, output);
   } catch (_) {
-    await service.disconnect(session.id);
+    await release();
+    cancellation?.unregister(release);
     rethrow;
   }
 }
