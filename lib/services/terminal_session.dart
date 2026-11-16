@@ -85,7 +85,8 @@ class TerminalSession extends ChangeNotifier {
 
   void _bindTerminal() {
     terminal.onOutput = _write;
-    terminal.onResize = (_, __, ___, ____) => _resize();
+    // xterm emits this callback before updating its own view dimensions.
+    terminal.onResize = (columns, rows, _, __) => _resize(columns, rows);
     shellIntegration = TerminalShellIntegration(terminal)
       ..addListener(_shellChanged);
   }
@@ -442,11 +443,11 @@ class TerminalSession extends ChangeNotifier {
     }
   }
 
-  void _resize() {
+  void _resize([int? nextColumns, int? nextRows]) {
     final connection = _connection;
     final generation = _generation;
     if (!isConnected || connection == null) return;
-    _pendingResize = (columns, rows);
+    _pendingResize = (nextColumns ?? columns, nextRows ?? rows);
     if (_resizingGeneration == generation) return;
     _resizingGeneration = generation;
     // Layout can notify synchronously; keep transport effects out of layout
