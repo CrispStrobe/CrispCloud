@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+TOOLCHAIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export FLUTTER_ROOT="$TOOLCHAIN_ROOT/flutter"
+exec "$TOOLCHAIN_ROOT/flutter/bin/cache/dart-sdk/bin/dart" --packages="$TOOLCHAIN_ROOT/flutter/packages/flutter_tools/.dart_tool/package_config.json" "$TOOLCHAIN_ROOT/flutter/bin/cache/flutter_tools.snapshot" "$@"

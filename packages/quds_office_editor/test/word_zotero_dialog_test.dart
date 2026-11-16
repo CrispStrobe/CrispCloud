@@ -169,11 +169,19 @@ Map<String, Object?> _localRecord({
 WmlDocument _linkedDocument(
   List<List<String>> sourceUris, {
   String cachedText = '(Original)',
+  bool separateParagraphs = false,
 }) {
   final document = WmlDocument.empty(text: 'Before after');
+  final firstParagraph = document.paragraphs.single;
   for (var index = 0; index < sourceUris.length; index++) {
+    final paragraph = separateParagraphs && index > 0
+        ? WmlParagraph()
+        : firstParagraph;
+    if (!identical(paragraph, firstParagraph)) {
+      document.sections.single.blocks.add(paragraph);
+    }
     WordZotero.insertCitation(
-      document.paragraphs.single,
+      paragraph,
       ZoteroCitation.fromJson({
         'citationID': 'linked-$index',
         'citationItems': [
@@ -290,57 +298,75 @@ Future<void> _documentAction(
 }
 
 void main() {
-  testWidgets(
-    'refresh batches 50 sources and duplicate citations into one undo',
-    (tester) async {
-      final keys = [
-        for (var i = 0; i < 50; i++) 'K${i.toString().padLeft(7, '0')}',
-      ];
-      final requests = <ZoteroHttpRequest>[];
-      final controller = await _openDialog(
-        tester,
-        transport: (request) async {
-          requests.add(request);
-          return _json([
-            for (final key in keys.reversed) _apiItem(key, 'Updated $key'),
-          ]);
-        },
-        document: _linkedDocument([
-          for (final key in [...keys, keys.first])
-            ['http://zotero.org/users/42/items/$key'],
-        ]),
-      );
-      await _documentAction(tester, 'Refresh basic citations');
-      expect(requests, hasLength(1));
-      expect(requests.single.uri.path, '/users/42/items');
-      expect(
-        requests.single.uri.queryParameters['itemKey']!.split(','),
-        unorderedEquals(keys),
-      );
-      expect(controller.zoteroFields, hasLength(51));
-      for (final field in controller.zoteroFields) {
-        final item = field.citation!.items.single;
-        final key = Uri.parse(item.uris.single).pathSegments.last;
-        expect(item.itemData!['title'], 'Updated $key');
-        expect(item.locator, '12');
-        expect(item.toJson()['extraItemSetting'], {'keep': true});
-      }
-      await tester.tap(find.byTooltip('Close Zotero'));
-      await tester.pumpAndSettle();
-      controller.undo();
-      expect(controller.canUndo, isFalse);
-      expect(
-        controller.zoteroFields.map((field) => field.cachedText),
-        everyElement('(Original)'),
-      );
-      controller.redo();
-      expect(
-        controller.zoteroFields.map((field) => field.cachedText),
-        everyElement('(see Hassan, 2024, p. 12)'),
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+  for (final count in [50, 51, 101, 1000]) {
+    testWidgets(
+      'refresh batches $count sources and duplicate citations into one undo',
+      (tester) async {
+        final keys = [
+          for (var i = 0; i < count; i++) 'K${i.toString().padLeft(7, '0')}',
+        ];
+        final requests = <ZoteroHttpRequest>[];
+        late WordEditorController controller;
+        controller = await _openDialog(
+          tester,
+          transport: (request) async {
+            requests.add(request);
+            expect(
+              controller.zoteroFields.map((field) => field.cachedText),
+              everyElement('(Original)'),
+              reason: 'Earlier batches must stay staged.',
+            );
+            final batch = request.uri.queryParameters['itemKey']!.split(',');
+            expect(batch.length, inInclusiveRange(1, 50));
+            expect(request.uri.queryParameters['limit'], '${batch.length}');
+            expect(request.uri.queryParameters['include'], 'data,csljson');
+            expect(request.uri.queryParameters.containsKey('style'), isFalse);
+            return _json([
+              for (final key in batch.reversed) _apiItem(key, 'Updated $key'),
+            ]);
+          },
+          document: _linkedDocument([
+            for (final key in [...keys, keys.first])
+              ['http://zotero.org/users/42/items/$key'],
+          ], separateParagraphs: count == 1000),
+        );
+        await _documentAction(tester, 'Refresh basic citations');
+        expect(requests, hasLength((count + 49) ~/ 50));
+        expect(
+          requests.map((request) => request.uri.path),
+          everyElement('/users/42/items'),
+        );
+        expect(
+          requests.expand(
+            (request) => request.uri.queryParameters['itemKey']!.split(','),
+          ),
+          unorderedEquals(keys),
+        );
+        expect(controller.zoteroFields, hasLength(count + 1));
+        for (final field in controller.zoteroFields) {
+          final item = field.citation!.items.single;
+          final key = Uri.parse(item.uris.single).pathSegments.last;
+          expect(item.itemData!['title'], 'Updated $key');
+          expect(item.locator, '12');
+          expect(item.toJson()['extraItemSetting'], {'keep': true});
+        }
+        await tester.tap(find.byTooltip('Close Zotero'));
+        await tester.pumpAndSettle();
+        controller.undo();
+        expect(controller.canUndo, isFalse);
+        expect(
+          controller.zoteroFields.map((field) => field.cachedText),
+          everyElement('(Original)'),
+        );
+        controller.redo();
+        expect(
+          controller.zoteroFields.map((field) => field.cachedText),
+          everyElement('(see Hassan, 2024, p. 12)'),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   for (final incomplete in [false, true]) {
     testWidgets(
@@ -398,7 +424,130 @@ void main() {
     );
   }
 
-  testWidgets('refresh refuses 51 distinct sources before any request', (
+  testWidgets('refresh chunks each library without combining matching keys', (
+    tester,
+  ) async {
+    final keys = [
+      for (var index = 0; index < 51; index++)
+        'K${index.toString().padLeft(7, '0')}',
+    ];
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) async {
+        requests.add(request);
+        final group = request.uri.path.startsWith('/groups/');
+        final batch = request.uri.queryParameters['itemKey']!.split(',');
+        expect(batch.length, inInclusiveRange(1, 50));
+        return _json([
+          for (final key in batch.reversed)
+            {
+              ..._apiItem(key, '${group ? 'Group' : 'User'} $key'),
+              'library': {'type': group ? 'group' : 'user', 'id': 42},
+            },
+        ]);
+      },
+      document: _linkedDocument([
+        for (final key in [...keys, keys.first]) ...[
+          ['http://zotero.org/users/42/items/$key'],
+          ['http://zotero.org/groups/42/items/$key'],
+        ],
+      ]),
+    );
+
+    await _documentAction(tester, 'Refresh basic citations');
+
+    expect(requests, hasLength(4));
+    for (final type in ['users', 'groups']) {
+      final libraryRequests = requests.where(
+        (request) => request.uri.path == '/$type/42/items',
+      );
+      expect(libraryRequests, hasLength(2));
+      expect(
+        libraryRequests.expand(
+          (request) => request.uri.queryParameters['itemKey']!.split(','),
+        ),
+        unorderedEquals(keys),
+      );
+    }
+    expect(controller.zoteroFields, hasLength(104));
+    for (final field in controller.zoteroFields) {
+      final item = field.citation!.items.single;
+      final key = Uri.parse(item.uris.single).pathSegments.last;
+      final scope = item.uris.single.contains('/groups/') ? 'Group' : 'User';
+      expect(item.itemData!['title'], '$scope $key');
+    }
+    await tester.tap(find.byTooltip('Close Zotero'));
+    await tester.pumpAndSettle();
+    controller.undo();
+    expect(controller.canUndo, isFalse);
+    expect(
+      controller.zoteroFields.map((field) => field.cachedText),
+      everyElement('(Original)'),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final failure in ['missing CSL', 'server error']) {
+    testWidgets('later same-library batch $failure keeps all citations', (
+      tester,
+    ) async {
+      final requests = <ZoteroHttpRequest>[];
+      final controller = await _openDialog(
+        tester,
+        transport: (request) async {
+          requests.add(request);
+          final batch = request.uri.queryParameters['itemKey']!.split(',');
+          if (requests.length == 2 && failure == 'server error') {
+            return ZoteroHttpResponse(statusCode: 503, body: 'Unavailable');
+          }
+          return _json([
+            for (final key in batch)
+              {
+                ..._apiItem(key, 'Must stay staged'),
+                if (requests.length == 2 && key == batch.first) 'csljson': null,
+              },
+          ]);
+        },
+        document: _linkedDocument([
+          for (var index = 0; index < 101; index++)
+            [
+              'http://zotero.org/users/42/items/K${index.toString().padLeft(7, '0')}',
+            ],
+        ]),
+      );
+      final before = controller.zoteroFields
+          .map((field) => field.instruction)
+          .toList();
+      final revision = controller.contentRevision;
+
+      await _documentAction(tester, 'Refresh basic citations');
+
+      expect(requests, hasLength(2));
+      expect(
+        requests.map((request) => request.uri.path),
+        everyElement('/users/42/items'),
+      );
+      expect(controller.zoteroFields.map((field) => field.instruction), before);
+      expect(
+        controller.zoteroFields.map((field) => field.cachedText),
+        everyElement('(Original)'),
+      );
+      expect(controller.contentRevision, revision);
+      expect(controller.canUndo, isFalse);
+      expect(
+        find.textContaining(
+          failure == 'missing CSL'
+              ? 'source has no CSL data'
+              : 'temporarily unavailable',
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('successful batch backoff stops refresh without partial changes', (
     tester,
   ) async {
     final requests = <ZoteroHttpRequest>[];
@@ -406,10 +555,18 @@ void main() {
       tester,
       transport: (request) async {
         requests.add(request);
-        return _json(<Object>[]);
+        return _json(
+          [
+            for (final key in request.uri.queryParameters['itemKey']!.split(
+              ',',
+            ))
+              _apiItem(key, 'Must stay staged'),
+          ],
+          headers: {'Backoff': '3600'},
+        );
       },
       document: _linkedDocument([
-        for (var index = 0; index < 51; index++)
+        for (var index = 0; index < 101; index++)
           ['http://zotero.org/users/42/items/K${index.toString().padLeft(7, '0')}'],
       ]),
     );
@@ -420,12 +577,157 @@ void main() {
 
     await _documentAction(tester, 'Refresh basic citations');
 
-    expect(requests, isEmpty);
-    expect(controller.zoteroFields, hasLength(51));
+    expect(requests, hasLength(1));
+    expect(
+      requests.single.uri.queryParameters['itemKey']!.split(','),
+      hasLength(50),
+    );
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    expect(
+      controller.zoteroFields.map((field) => field.cachedText),
+      everyElement('(Original)'),
+    );
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
+    expect(find.textContaining('Zotero requested a pause'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('closing during the second batch stops further refresh requests', (
+    tester,
+  ) async {
+    final pending = Completer<ZoteroHttpResponse>();
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) async {
+        requests.add(request);
+        if (requests.length == 2) return pending.future;
+        return _json([
+          for (final key in request.uri.queryParameters['itemKey']!.split(','))
+            _apiItem(key, 'Must stay staged'),
+        ]);
+      },
+      document: _linkedDocument([
+        for (var index = 0; index < 101; index++)
+          ['http://zotero.org/users/42/items/K${index.toString().padLeft(7, '0')}'],
+      ]),
+    );
+    final before = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    final revision = controller.contentRevision;
+
+    await _documentAction(tester, 'Refresh basic citations', opensReview: true);
+    expect(requests, hasLength(2));
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    await tester.tap(find.byTooltip('Close Zotero'));
+    await tester.pumpAndSettle();
+    pending.complete(
+      _json([
+        for (final key in requests.last.uri.queryParameters['itemKey']!.split(
+          ',',
+        ))
+          _apiItem(key, 'Must stay staged'),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zotero references'), findsNothing);
+    expect(requests, hasLength(2));
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    expect(
+      controller.zoteroFields.map((field) => field.cachedText),
+      everyElement('(Original)'),
+    );
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('stale target after the second batch stops the third request', (
+    tester,
+  ) async {
+    final pending = Completer<ZoteroHttpResponse>();
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) async {
+        requests.add(request);
+        if (requests.length == 2) return pending.future;
+        return _json([
+          for (final key in request.uri.queryParameters['itemKey']!.split(','))
+            _apiItem(key, 'Must stay staged'),
+        ]);
+      },
+      document: _linkedDocument([
+        for (var index = 0; index < 101; index++)
+          ['http://zotero.org/users/42/items/K${index.toString().padLeft(7, '0')}'],
+      ]),
+    );
+    final before = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    final revision = controller.contentRevision;
+
+    await _documentAction(tester, 'Refresh basic citations', opensReview: true);
+    expect(requests, hasLength(2));
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    expect(controller.contentRevision, revision);
+    controller.caret.logicalIndex = 0;
+    controller.caret.collapseSelection();
+    pending.complete(
+      _json([
+        for (final key in requests.last.uri.queryParameters['itemKey']!.split(
+          ',',
+        ))
+          _apiItem(key, 'Must stay staged'),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    expect(requests, hasLength(2));
     expect(controller.zoteroFields.map((field) => field.instruction), before);
     expect(controller.contentRevision, revision);
     expect(controller.canUndo, isFalse);
-    expect(find.textContaining('at most 50 linked sources'), findsOneWidget);
+    expect(
+      find.textContaining('document or insertion point changed'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('refresh refuses 1001 distinct sources before any request', (
+    tester,
+  ) async {
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) async {
+        requests.add(request);
+        return _json(<Object>[]);
+      },
+      document: _linkedDocument([
+        for (var index = 0; index < 1001; index++)
+          ['http://zotero.org/users/42/items/K${index.toString().padLeft(7, '0')}'],
+      ], separateParagraphs: true),
+    );
+    final before = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    final revision = controller.contentRevision;
+
+    await _documentAction(tester, 'Refresh basic citations');
+
+    expect(requests, isEmpty);
+    expect(controller.zoteroFields, hasLength(1001));
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
+    expect(
+      find.textContaining('at most 1,000 distinct linked sources'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

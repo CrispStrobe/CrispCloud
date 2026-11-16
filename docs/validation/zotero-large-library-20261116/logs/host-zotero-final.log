@@ -1,0 +1,41 @@
+00:00 +0: loading /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart
+00:00 +0: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: credential loading target rejects changed documents and selections
+00:00 +1: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary desktop reads use only the explicitly supplied direct client
+00:00 +2: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary cloud requests retain the selected proxy factory with local enabled
+00:00 +3: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary desktop access requires host opt-in before creating any client
+00:00 +4: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary desktop rejects secrets and unexpected headers before client creation
+00:00 +5: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary desktop rejects other hosts, ports, paths and URL credentials
+00:00 +6: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +7: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +8: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +9: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +10: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +11: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +12: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +13: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary bounds declared and streamed response sizes
+00:00 +14: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: saved-search writes and encoded route injection are refused before sending
+00:00 +15: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary total request timeout closes the owned client
+00:00 +16: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing execCommand sends only local UTF-8 JSON without redirects
+00:00 +17: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary HTTP exceptions cannot expose the API key
+00:00 +18: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary timeout cancels a stalled response body subscription
+00:00 +19: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary timeout cancels a stalled response body subscription
+00:00 +20: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing rejects other origins and protocol routes before sending
+00:00 +21: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero transport boundary disposal closes active requests and rejects new requests
+00:00 +22: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing requires POST and rejects cloud or catalog request bodies
+00:00 +23: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_test.dart: Zotero credential persistence writes, reads back and forgets only the Zotero entry
+00:00 +24: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:00 +25: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:00 +26: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:00 +27: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:00 +28: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing request bodies are valid JSON with a UTF-8 byte bound
+00:00 +29: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing redirects return once without forwarding document data
+00:00 +30: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing responses reject declared and streamed excess bytes
+00:00 +31: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: native dialog uses its own longer timeout
+00:00 +32: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: request timeout can shorten but cannot extend host limit
+00:00 +33: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: dispose settles pending citing immediately and ignores late response
+00:00 +34: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: dispose cancels a response body already being read
+00:00 +35: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing network failures never expose document or credential data
+00:00 +36: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_citing_transport_test.dart: citing and catalog limits must be positive before client creation
+00:01 +37: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:02 +38: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-host-harness/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:03 +39: All tests passed!

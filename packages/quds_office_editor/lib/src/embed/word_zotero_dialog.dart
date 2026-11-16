@@ -330,9 +330,37 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     _page = null;
     final collections = await client.collections(library, limit: 100);
     if (!_catalogIsCurrent(client, library, generation)) return;
-    _collections.addAll(collections.items);
+    _mergeCollections(collections.items);
     _moreCollections = collections.nextStart;
     await _loadItems();
+  }
+
+  void _mergeCollections(Iterable<ZoteroCollection> incoming) {
+    // Collections can move between pages while the library changes. Replace
+    // their metadata by key, retaining the original order and selection.
+    final byKey = <String, ZoteroCollection>{
+      for (final collection in _collections) collection.key: collection,
+      for (final collection in incoming) collection.key: collection,
+    };
+    _collections
+      ..clear()
+      ..addAll(byKey.values);
+  }
+
+  Future<void> _loadMoreCollections() async {
+    final library = _session.library;
+    final client = _client;
+    final start = _moreCollections;
+    if (library == null || client == null || start == null) return;
+    final generation = ++_catalogGeneration;
+    final page = await client.collections(library, start: start, limit: 100);
+    if (!_catalogIsCurrent(client, library, generation) || _savedSearchMode) {
+      return;
+    }
+    setState(() {
+      _mergeCollections(page.items);
+      _moreCollections = page.nextStart;
+    });
   }
 
   Future<void> _loadItems({int start = 0}) async {
@@ -998,8 +1026,10 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
         addresses[address.canonicalUri.toString()] = address;
       }
     }
-    if (addresses.length > 50) {
-      throw const FormatException('Refresh at most 50 linked sources at once.');
+    if (addresses.length > 1000) {
+      throw const FormatException(
+        'Refresh at most 1,000 distinct linked sources at once.',
+      );
     }
     if (addresses.values
             .where((address) => address.isLocal)
@@ -1016,27 +1046,33 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
     for (final address in addresses.values) {
       (libraries[address.scope] ??= []).add(address);
     }
-    // One exact-set metadata response per durable library scope. Item keys
-    // alone are not identities: different libraries can reuse the same key.
-    // Keep every result staged until all batches and the edit target verify.
+    // Bound the whole operation to 1,000 distinct sources, but apply Zotero's
+    // 50-key request limit separately within each durable library scope.
+    // Item keys alone are not identities: different libraries can reuse them.
+    // Sequential requests respect backoff, and every result stays staged until
+    // all batches and the edit target verify. Never combine formatted
+    // bibliography batches; this path fetches source metadata only.
     for (final sources in libraries.values) {
-      _checkTarget();
       final first = sources.first;
-      final items = await _connectedClient(first).metadataItems(
-        first.library,
-        expectedItemUris: {
-          for (final address in sources) address.key: address.canonicalUri,
-        },
-      );
-      if (!mounted) return;
-      _checkTarget();
-      for (final remote in items) {
-        if (remote.cslJson == null) {
-          throw const FormatException(
-            'A source has no CSL data. Existing citations were kept.',
-          );
+      for (var start = 0; start < sources.length; start += 50) {
+        _checkTarget();
+        final batch = sources.sublist(start, min(start + 50, sources.length));
+        final items = await _connectedClient(first).metadataItems(
+          first.library,
+          expectedItemUris: {
+            for (final address in batch) address.key: address.canonicalUri,
+          },
+        );
+        if (!mounted) return;
+        _checkTarget();
+        for (final remote in items) {
+          if (remote.cslJson == null) {
+            throw const FormatException(
+              'A source has no CSL data. Existing citations were kept.',
+            );
+          }
+          fetched[remote.canonicalUri.toString()] = remote.cslJson!;
         }
-        fetched[remote.canonicalUri.toString()] = remote.cslJson!;
       }
     }
     final updates = <String, ZoteroCitation>{};
@@ -1579,21 +1615,7 @@ class _WordZoteroDialogState extends State<_WordZoteroDialog> {
                 ),
                 if (_moreCollections != null)
                   TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () => _run(() async {
-                            final page = await _client!.collections(
-                              _session.library!,
-                              start: _moreCollections!,
-                              limit: 100,
-                            );
-                            if (mounted) {
-                              setState(() {
-                                _collections.addAll(page.items);
-                                _moreCollections = page.nextStart;
-                              });
-                            }
-                          }),
+                    onPressed: _busy ? null : () => _run(_loadMoreCollections),
                     child: const Text('More collections'),
                   ),
               ],

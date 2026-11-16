@@ -1,0 +1,1049 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "captured_at_utc": "2026-11-16T10:43:24.541318+00:00",
+  "integration_tree_at_capture": "71cbd8c286a5339b6677969f6386abab508bf7f4",
+  "branch_count": 46,
+  "pr_head_count": 158,
+  "commands": [
+    "git fetch origin '+refs/heads/*:refs/remotes/origin/*' '+refs/pull/*/head:refs/remotes/pull/*'",
+    "git for-each-ref refs/remotes",
+    "git merge-base --is-ancestor REF HEAD",
+    "git cherry HEAD REF"
+  ],
+  "github_actions_queried_or_awaited": false,
+  "refs": [
+    {
+      "ref": "origin",
+      "sha": "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/codex/ssh-terminal-tmux",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/codex/terminal-screen-workspace",
+      "sha": "4a16096eb66f68b230c1f7f0cafb5f7ca90be721",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/codex/terminal-session-optimization-20261116",
+      "sha": "71256dbfc446612c5e4f1ea775dae991ca0924a8",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/codex/zotero-optimization-20261116",
+      "sha": "9cce54118756b599da199006e1d7aaab1fb4b181",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/codex/zotero-support-20261115",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/codex/zotero-support-20261116",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/conditional-affix",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/conditional-between",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/conditional-complete",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/conditional-formats",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/metadata-closed",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/ods-hidden-state",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/ods-pictures",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/ods-validations",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/office-pin-20261115",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/remaining-gaps",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/remaining-gaps-link",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/validation-complete",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/docs/validation-operators",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/feat/hidden-sheets-ui",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/feat/odt-headers",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/feat/odt-images",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/feat/odt-styles",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/feat/odt-textboxes",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/conditional-affix-vendor",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/conditional-between-vendor",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/conditional-dxf-vendor",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/conditional-operators-vendor",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/conditional-text-vendor",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/hidden-state-vendor",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-conditional-vendor",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-custom-validation-vendor",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-default-geometry-vendor",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-default-style-vendor",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-images-vendor",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-metadata-vendor",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-tab-color-vendor",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "status": "patch_equivalent",
+      "git_cherry": [
+        "- 9c2047da22110db1518a6226ee7a35e421fb9d51"
+      ]
+    },
+    {
+      "ref": "origin/fix/ods-validation-messages-vendor",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-validation-vendor2",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/fix/ods-validations-vendor",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/integrate/final-corpus-20261115",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/integrate/sdt-section-break-20261115",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/integrate/utf16-custom-xml-20261115",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/integration/storage-carving-20261115",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/integration/storage-carving-local-20261115124645",
+      "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+      "status": "ancestor"
+    },
+    {
+      "ref": "origin/main",
+      "sha": "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/10",
+      "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/100",
+      "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/101",
+      "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/102",
+      "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/103",
+      "sha": "d504409acc779b670de482247f3231a7247dcd92",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/104",
+      "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/105",
+      "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/106",
+      "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/107",
+      "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/108",
+      "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/109",
+      "sha": "1b7680583ac69649b17287ab68738288fec10f51",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/11",
+      "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/110",
+      "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/111",
+      "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/112",
+      "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/113",
+      "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/114",
+      "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/115",
+      "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/116",
+      "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/117",
+      "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/118",
+      "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/119",
+      "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/12",
+      "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/120",
+      "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/121",
+      "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/122",
+      "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/123",
+      "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/124",
+      "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/125",
+      "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/126",
+      "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/127",
+      "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/128",
+      "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/129",
+      "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/13",
+      "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/130",
+      "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/131",
+      "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/132",
+      "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/133",
+      "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/134",
+      "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/135",
+      "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/136",
+      "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/137",
+      "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/138",
+      "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/139",
+      "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/14",
+      "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/140",
+      "sha": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/141",
+      "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/142",
+      "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/143",
+      "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/144",
+      "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/145",
+      "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/146",
+      "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/147",
+      "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/148",
+      "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/149",
+      "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/15",
+      "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/150",
+      "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/151",
+      "sha": "073713474ea62525d9f5832da918407de333cd03",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/152",
+      "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/153",
+      "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/154",
+      "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/155",
+      "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/156",
+      "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/157",
+      "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/158",
+      "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/159",
+      "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/16",
+      "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/160",
+      "sha": "4a16096eb66f68b230c1f7f0cafb5f7ca90be721",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/161",
+      "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/162",
+      "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/163",
+      "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/164",
+      "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/165",
+      "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/166",
+      "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/167",
+      "sha": "9cce54118756b599da199006e1d7aaab1fb4b181",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/168",
+      "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
+      "status": "patch_equivalent",
+      "git_cherry": [
+        "- 9c2047da22110db1518a6226ee7a35e421fb9d51"
+      ]
+    },
+    {
+      "ref": "pull/17",
+      "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/18",
+      "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/19",
+      "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/20",
+      "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/21",
+      "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/22",
+      "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/23",
+      "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/24",
+      "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/25",
+      "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/26",
+      "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/27",
+      "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/28",
+      "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/29",
+      "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/30",
+      "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/31",
+      "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/32",
+      "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/33",
+      "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/34",
+      "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/35",
+      "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/36",
+      "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/37",
+      "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/38",
+      "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/39",
+      "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/40",
+      "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/41",
+      "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/42",
+      "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/43",
+      "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/45",
+      "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/47",
+      "sha": "be318f380fc47f94975a35c0924c89190d46f990",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/49",
+      "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/5",
+      "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/50",
+      "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/51",
+      "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/52",
+      "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/53",
+      "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/54",
+      "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/55",
+      "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/56",
+      "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/57",
+      "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/58",
+      "sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/59",
+      "sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/6",
+      "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/60",
+      "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/61",
+      "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/62",
+      "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/63",
+      "sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/64",
+      "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/65",
+      "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/66",
+      "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/67",
+      "sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/68",
+      "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/69",
+      "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/7",
+      "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/70",
+      "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/71",
+      "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/72",
+      "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/73",
+      "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/74",
+      "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/75",
+      "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/76",
+      "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/77",
+      "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/78",
+      "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/79",
+      "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/8",
+      "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/80",
+      "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/81",
+      "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/82",
+      "sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/83",
+      "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/84",
+      "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/85",
+      "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/86",
+      "sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/87",
+      "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/88",
+      "sha": "b100cd751688f13609a8829180b487b381588d14",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/89",
+      "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/9",
+      "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/90",
+      "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/91",
+      "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/92",
+      "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/93",
+      "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/94",
+      "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/95",
+      "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "status": "ancestor"
+    },
+    {
+      "ref": "pull/97",
+      "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "status": "ancestor"
+    }
+  ],
+  "local_integration_head_at_capture": "a50baf14d2119ca5ef4b6e2a99ba87a5f418a767",
+  "qualified_remote_source_commit": "07c54fe650d5dbcba664cedd8e5324176f5c7ada"
+}

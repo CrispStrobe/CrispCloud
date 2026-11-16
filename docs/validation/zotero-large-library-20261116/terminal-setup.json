@@ -1,0 +1,80 @@
+{
+  "harness": "/workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness",
+  "command": [
+    "dart",
+    "/workspace/scratch/1e8827a47266/zotero-toolchain/flutter-sdk/bin/cache/flutter_tools.snapshot",
+    "pub",
+    "get",
+    "--enforce-lockfile"
+  ],
+  "exit_code": 0,
+  "log": "/workspace/scratch/1e8827a47266/runtime-setup/terminal-pub-get.log",
+  "log_sha256": "55508b2eae720a55d770c81c6de4e99d3b14a0f617cbcbb678ebd75c5b016144",
+  "manifest_and_lock_unchanged_after_enforced_resolution": true,
+  "resolved_package_count": 130,
+  "inputs": {
+    "pubspec.yaml": {
+      "path": "/workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/pubspec.yaml",
+      "sha256": "8ec90f1f447571f68ed392ea74f3a2c0d8eb935157f0f6b08eb9d23c3d2bc721"
+    },
+    "pubspec.lock": {
+      "path": "/workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/pubspec.lock",
+      "sha256": "2cdb4ef03201a9b391560bd9b76e787de76259ad1708138e0184ad86c835b025"
+    },
+    ".dart_tool/package_config.json": {
+      "path": "/workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/.dart_tool/package_config.json",
+      "sha256": "beef9cccf96a281e9e51c818e34aa4fdb87833595bc32f4aa2da895de694cee4"
+    },
+    ".dart_tool/package_graph.json": {
+      "path": "/workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/.dart_tool/package_graph.json",
+      "sha256": "dd921e69f5b7bdd44e74969329a571f60db393f7ecf1590d4df94dee983ab526"
+    }
+  },
+  "source_links": {
+    "lib": "/workspace/scratch/1e8827a47266/CrispCloud/lib",
+    "test": "/workspace/scratch/1e8827a47266/CrispCloud/test",
+    "packages": "/workspace/scratch/1e8827a47266/CrispCloud/packages"
+  },
+  "dartssh2_source": "/workspace/scratch/1e8827a47266/CrispCloud/packages/dartssh2",
+  "reconstruction": {
+    "harness": "/workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness",
+    "change": "Rebased workspace absolute paths only; canonical source and vendored dartssh2 symlinked. Production manifests untouched.",
+    "inputs": {
+      "pubspec.yaml": {
+        "source": "/workspace/scratch/1e8827a47266/CrispCloud/docs/validation/zotero-fidelity-20261116/terminal-integration/pubspec.yaml",
+        "source_sha256": "6110708b4beeecb60b9af33ee58043e3a01e21751bdac96731f44e5fe36807c2",
+        "rebased_sha256": "8ec90f1f447571f68ed392ea74f3a2c0d8eb935157f0f6b08eb9d23c3d2bc721"
+      },
+      "pubspec.lock": {
+        "source": "/workspace/scratch/1e8827a47266/CrispCloud/docs/validation/zotero-fidelity-20261116/terminal-integration/pubspec.lock",
+        "source_sha256": "ce658663b975752675a262eb6b128da2aacc5a09935644fe86eac2b1e452b741",
+        "rebased_sha256": "2cdb4ef03201a9b391560bd9b76e787de76259ad1708138e0184ad86c835b025"
+      }
+    }
+  },
+  "production_manifests_unchanged": true,
+  "no_tests_executed_in_this_terminal_setup": true,
+  "covered_test_imports": [
+    "terminal_session_test.dart",
+    "tmux_control_client_test.dart",
+    "tmux_control_protocol_test.dart"
+  ],
+  "production_manifest_inputs": {
+    "pubspec.yaml": {
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "matches_head": true
+    },
+    "pubspec.lock": {
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "matches_head": true
+    },
+    "packages/dartssh2/pubspec.yaml": {
+      "sha256": "0697bd3a1182365cc971878538e805e5a2ce4f7aa5a92c819fc9ff3f5b97c6c1",
+      "matches_head": true
+    },
+    "packages/crisp_storage/pubspec.yaml": {
+      "sha256": "1c20b19f3e84e2b8b66879d36445e66288597f376034b8d0308e61896032974e",
+      "matches_head": true
+    }
+  }
+}

@@ -1,0 +1,2 @@
+# Raw tool output is evidence; preserve bytes and omit it from textual diffs.
+*.log -text -diff

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+TOOLCHAIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PATH="$TOOLCHAIN_ROOT/bin:$TOOLCHAIN_ROOT/flutter/bin:$TOOLCHAIN_ROOT/rust/bin:$TOOLCHAIN_ROOT/native/usr/bin:$PATH"
+export PUB_CACHE="$TOOLCHAIN_ROOT/pub-cache"
+export CARGO_HOME="$TOOLCHAIN_ROOT/cargo-home"
+export TMPDIR="$TOOLCHAIN_ROOT/tmp"
+export XDG_CACHE_HOME="$TOOLCHAIN_ROOT/xdg-cache"
+export XDG_CONFIG_HOME="$TOOLCHAIN_ROOT/xdg-config"
+export LD_LIBRARY_PATH="$TOOLCHAIN_ROOT/native/usr/lib/x86_64-linux-gnu:$TOOLCHAIN_ROOT/native/usr/lib/llvm-19/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export FLUTTER_SUPPRESS_ANALYTICS=true
+export DART_SUPPRESS_ANALYTICS=true
+export CI=true
+exec "$@"

@@ -1,0 +1,51 @@
+{
+  "started_utc": "2026-11-16T10:20:18.741253+00:00",
+  "command": [
+    "../toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=2",
+    "--reporter=expanded",
+    "test/tmux_control_client_test.dart",
+    "test/tmux_control_protocol_test.dart",
+    "test/tmux_control_workspace_test.dart"
+  ],
+  "head": "5010751403ea9b037f218e5558c2de2d3d49569d",
+  "sources_before": {
+    "lib/services/tmux_control_client.dart": "bbfc3822a61cf4dbfe04e36133f6c5fdebb3ee84add4a14fb716e0133d29899f",
+    "lib/widgets/tmux_control_workspace.dart": "0f77547eb18f0d656b4a33ac3dccd34c6deb187299343d5328127da5a0b68cf6",
+    "test/tmux_control_client_test.dart": "c8612c5d40488f51f6bf5ae883bbfd94d0292a5443deaa1ed5526b1ec2242914",
+    "test/tmux_control_protocol_test.dart": "8b7c772a3d84e42a71f11251297a51f32f57b475436cf5c2e91e44915695847d",
+    "test/tmux_control_workspace_test.dart": "7e9af292bfe19d250413d1bf65cbea7265c925b97787c647ab534ebfd91f2274",
+    "lib/services/terminal_session.dart": "81fc152d65c39dfcd619886fd9728f41e57c1891787b40f33183313c70842a2c",
+    "lib/services/terminal_user_input.dart": "ed1ea49c53ce910c9355317f8f3d4edca5d88c03a3d87383e1915d1c97b8a040",
+    "test/support/tmux_control_workspace_fixture.dart": "71c49bb77b0e3dd6ecb508603fb1ddb2bb7f96ebc17f93ae77db2d1576577853",
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326"
+  },
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T10:21:17.642220+00:00",
+  "seconds": 58.899,
+  "exit_code": 0,
+  "sources_after": {
+    "lib/services/tmux_control_client.dart": "bbfc3822a61cf4dbfe04e36133f6c5fdebb3ee84add4a14fb716e0133d29899f",
+    "lib/widgets/tmux_control_workspace.dart": "0f77547eb18f0d656b4a33ac3dccd34c6deb187299343d5328127da5a0b68cf6",
+    "test/tmux_control_client_test.dart": "c8612c5d40488f51f6bf5ae883bbfd94d0292a5443deaa1ed5526b1ec2242914",
+    "test/tmux_control_protocol_test.dart": "8b7c772a3d84e42a71f11251297a51f32f57b475436cf5c2e91e44915695847d",
+    "test/tmux_control_workspace_test.dart": "7e9af292bfe19d250413d1bf65cbea7265c925b97787c647ab534ebfd91f2274",
+    "lib/services/terminal_session.dart": "81fc152d65c39dfcd619886fd9728f41e57c1891787b40f33183313c70842a2c",
+    "lib/services/terminal_user_input.dart": "ed1ea49c53ce910c9355317f8f3d4edca5d88c03a3d87383e1915d1c97b8a040",
+    "test/support/tmux_control_workspace_fixture.dart": "71c49bb77b0e3dd6ecb508603fb1ddb2bb7f96ebc17f93ae77db2d1576577853",
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326"
+  },
+  "source_changed": false,
+  "suite_count": 3,
+  "counts": {
+    "passed": 62,
+    "skipped": 0,
+    "failed": 0
+  },
+  "final_test_line": "00:06 +62: All tests passed!"
+}

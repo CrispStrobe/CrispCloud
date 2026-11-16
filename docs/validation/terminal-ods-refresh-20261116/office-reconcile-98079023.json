@@ -1,0 +1,17 @@
+{
+  "parents": [
+    "a979e4ef9ea8afedaaac6b00e6ed923e86a95b40",
+    "98079023680a549cb126752c1d4f539749f46938"
+  ],
+  "target": "315f4ec2c5263b76b17e9f982bf31157f3918f73",
+  "managed_files": 2413,
+  "writes": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "before_sha256": "a419fda8c408b98f10822475c05a5866bfd96c7d2540e847e72f72ef55000e45",
+      "after_sha256": "079b9786e91baacf2a6a83f5721588a52c79ea1382a99cefccc1f4830c73d8ff"
+    }
+  ],
+  "deleted": [],
+  "validation": "Every current file matched a merge-parent manifest or the exact combined canonical source before replacement; standalone parser remained unchanged."
+}
