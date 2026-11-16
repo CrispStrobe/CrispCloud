@@ -39,6 +39,10 @@ class _TerminalWorkspaceRecoveryDialogState
   bool _enabled = false;
   bool _relaunch = false;
   bool _busy = false;
+  bool _showProgress = false;
+  bool _dismissed = false;
+
+  bool get _canUpdate => mounted && !_dismissed;
 
   @override
   void initState() {
@@ -58,37 +62,53 @@ class _TerminalWorkspaceRecoveryDialogState
 
   Future<void> _save() async {
     if (_busy || _record == null) return;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _showProgress = true;
+    });
     try {
       await widget.onSave(_enabled, _enabled && _relaunch);
-      if (mounted) Navigator.pop(context, true);
+      if (mounted && !_dismissed) Navigator.pop(context, true);
     } catch (_) {
-      if (mounted) {
+      if (_canUpdate) {
         setState(() => _error = 'Could not save session recovery.');
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (_canUpdate) {
+        setState(() {
+          _busy = false;
+          _showProgress = false;
+        });
+      }
     }
   }
 
   Future<void> _retry() async {
     if (_busy) return;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _showProgress = true;
+    });
     try {
       final record = await widget.onRetry();
-      if (!mounted) return;
+      if (!_canUpdate) return;
       setState(() {
         _setRecord(record);
         _error = null;
       });
     } catch (_) {
-      if (mounted) {
+      if (_canUpdate) {
         setState(() {
           _error = 'Could not load session recovery. Saved data was kept.';
         });
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (_canUpdate) {
+        setState(() {
+          _busy = false;
+          _showProgress = false;
+        });
+      }
     }
   }
 
@@ -119,25 +139,33 @@ class _TerminalWorkspaceRecoveryDialogState
           ],
         ),
       );
-      if (!mounted || confirmed != true) return;
+      if (!_canUpdate || confirmed != true) return;
+      setState(() => _showProgress = true);
       final record = await widget.onForget();
-      if (!mounted) return;
+      if (!_canUpdate) return;
       setState(() {
         _setRecord(record);
         _error = null;
       });
     } catch (_) {
-      if (mounted) {
+      if (_canUpdate) {
         setState(() => _error = 'Could not forget saved workspace.');
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (_canUpdate) {
+        setState(() {
+          _busy = false;
+          _showProgress = false;
+        });
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: !_busy,
+  Widget build(BuildContext context) => PopScope<bool>(
+    onPopInvokedWithResult: (didPop, _) {
+      if (didPop) _dismissed = true;
+    },
     child: AlertDialog(
       key: const ValueKey('terminal-recovery-dialog'),
       scrollable: true,
@@ -217,14 +245,22 @@ class _TerminalWorkspaceRecoveryDialogState
                 ),
               ),
             ),
-            if (_busy) const LinearProgressIndicator(),
+            if (_showProgress) const LinearProgressIndicator(),
           ],
         ),
       ),
       actions: [
         TextButton(
-          onPressed: _busy ? null : () => Navigator.pop(context),
-          child: Text(context.terminalTr('Cancel')),
+          key: const ValueKey('terminal-recovery-close'),
+          onPressed: () {
+            _dismissed = true;
+            Navigator.pop(context);
+          },
+          child: Text(
+            _busy
+                ? context.terminalRecoveryTr('Close')
+                : context.terminalTr('Cancel'),
+          ),
         ),
         FilledButton(
           key: const ValueKey('terminal-recovery-save'),

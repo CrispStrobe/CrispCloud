@@ -14,7 +14,6 @@ import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_recovery_strings.dart';
 import '../l10n/ssh_connection_sharing_strings.dart';
 import '../models/terminal_arrangement.dart';
-import '../models/terminal_workspace_recovery.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/terminal_workspace_recovery_provider.dart';
 import '../providers/focus_area_provider.dart';
@@ -141,6 +140,23 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
       lease.isCurrent &&
       epoch == _recoveryEpoch;
 
+  void _finishSupersededRecoveryLoad(
+    TerminalWorkspaceRecoveryLease lease,
+    int epoch,
+  ) {
+    if (mounted &&
+        _ownsWorkspace &&
+        identical(lease, _recoveryLease) &&
+        epoch == _recoveryEpoch &&
+        !lease.isCurrent) {
+      setState(() {
+        _recoveryLoading = false;
+        _recoveryRecord = null;
+        _recoveryError = 'Another terminal workspace is managing recovery.';
+      });
+    }
+  }
+
   Future<void> _loadRecovery(
     TerminalWorkspaceRecovery recovery,
     TerminalWorkspaceRecoveryLease lease,
@@ -151,7 +167,10 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
       // A stalled settings backend must not prevent opening a terminal. A late
       // read cannot publish a workspace after this timeout or ownership change.
       final record = await recovery.load().timeout(const Duration(seconds: 3));
-      if (!_currentRecovery(lease, epoch)) return;
+      if (!_currentRecovery(lease, epoch)) {
+        _finishSupersededRecoveryLoad(lease, epoch);
+        return;
+      }
       _recoveryRecord = record;
       final snapshot = record.snapshot;
       if (record.enabled && snapshot != null) {
@@ -191,11 +210,17 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
       }
       _recoveryError = null;
     } catch (_) {
-      if (!_currentRecovery(lease, epoch)) return;
+      if (!_currentRecovery(lease, epoch)) {
+        _finishSupersededRecoveryLoad(lease, epoch);
+        return;
+      }
       _recoveryRecord = null;
       _recoveryError = 'Could not load session recovery. Saved data was kept.';
     }
-    if (!_currentRecovery(lease, epoch)) return;
+    if (!_currentRecovery(lease, epoch)) {
+      _finishSupersededRecoveryLoad(lease, epoch);
+      return;
+    }
     setState(() => _recoveryLoading = false);
     _queueRecoverySave();
     if (restored) {
@@ -387,14 +412,34 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
         _recoveryLease?.isCurrent != true) {
       return;
     }
+    final recovery = _recovery;
+    final lease = _recoveryLease!;
+    void requireOriginalWorkspace() {
+      if (!mounted ||
+          !identical(recovery, _recovery) ||
+          !identical(lease, _recoveryLease) ||
+          !lease.isCurrent) {
+        throw const TerminalWorkspaceRecoveryLeaseExpired();
+      }
+    }
+
     await showDialog<bool>(
       context: context,
       builder: (_) => TerminalWorkspaceRecoveryDialog(
         initialRecord: _recoveryRecord,
         initialError: _recoveryError,
-        onSave: _configureRecovery,
-        onForget: _forgetRecovery,
-        onRetry: _retryRecovery,
+        onSave: (enabled, relaunch) {
+          requireOriginalWorkspace();
+          return _configureRecovery(enabled, relaunch);
+        },
+        onForget: () {
+          requireOriginalWorkspace();
+          return _forgetRecovery();
+        },
+        onRetry: () {
+          requireOriginalWorkspace();
+          return _retryRecovery();
+        },
       ),
     );
   }
@@ -426,13 +471,12 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
       lease.close();
       return;
     }
-    // Capture before tab disposal. The service rejects this final write if a
-    // newer mount acquires ownership before it reaches the storage boundary.
+    // Seal the final checkpoint before relinquishing ownership. A new mount's
+    // queued load observes it; this mount cannot write after the handoff.
     unawaited(
       recovery
-          .save(snapshot, lease: lease)
-          .then<void>((_) {}, onError: (Object _) {})
-          .whenComplete(lease.close),
+          .finish(snapshot, lease: lease)
+          .then<void>((_) {}, onError: (Object _) {}),
     );
   }
 
@@ -1386,9 +1430,11 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs>
           ),
           if (_recoveryError != null)
             IconButton(
-              key: const ValueKey('terminal-recovery-error'),
+              key: const ValueKey('terminal-recovery-status'),
               tooltip: context.terminalRecoveryTr(_recoveryError!),
-              onPressed: () => unawaited(_showRecoverySettings()),
+              onPressed: _recoveryLease?.isCurrent == true
+                  ? () => unawaited(_showRecoverySettings())
+                  : null,
               icon: Icon(
                 Icons.save_outlined,
                 size: 20,

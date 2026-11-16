@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,7 +25,6 @@ class TerminalWorkspaceRecoveryLease {
     _closed = true;
     if (identical(_authority.activeLease, this)) {
       _authority.activeLease = null;
-      _authority.configurationRevision++;
     }
   }
 }
@@ -46,6 +46,7 @@ class TerminalWorkspaceRecovery {
     Future<String?> Function()? read,
     Future<void> Function(String value)? write,
     DateTime Function()? clock,
+    this.readTimeout = const Duration(seconds: 3),
   }) : _read = read ?? _readPreferences,
        _write = write ?? _writePreferences,
        _clock = clock ?? DateTime.now,
@@ -54,6 +55,9 @@ class TerminalWorkspaceRecovery {
            : _RecoveryAuthority() {
     if ((read == null) != (write == null)) {
       throw ArgumentError('Supply both terminal recovery storage callbacks');
+    }
+    if (readTimeout <= Duration.zero) {
+      throw ArgumentError('Terminal recovery read timeout must be positive');
     }
   }
 
@@ -65,6 +69,11 @@ class TerminalWorkspaceRecovery {
   final Future<void> Function(String value) _write;
   final DateTime Function() _clock;
   final _RecoveryAuthority _authority;
+
+  /// A stalled read must not indefinitely block retries or an explicit reset.
+  /// Writes remain serialized until they settle: timing them out would allow
+  /// a late backend write to overwrite a newer owner's checkpoint.
+  final Duration readTimeout;
 
   static Future<String?> _readPreferences() async {
     final preferences = await SharedPreferences.getInstance();
@@ -82,14 +91,13 @@ class TerminalWorkspaceRecovery {
   TerminalWorkspaceRecoveryLease acquireLease() {
     final lease = TerminalWorkspaceRecoveryLease._(_authority);
     _authority.activeLease = lease;
-    _authority.configurationRevision++;
     return lease;
   }
 
   Future<TerminalWorkspaceRecoveryRecord> load() => _authority.enqueue(_load);
 
   Future<TerminalWorkspaceRecoveryRecord> _load() async {
-    final raw = await _read();
+    final raw = await _read().timeout(readTimeout);
     if (raw == null) {
       return const TerminalWorkspaceRecoveryRecord.disabled();
     }
@@ -150,20 +158,41 @@ class TerminalWorkspaceRecovery {
       if (!previous.enabled || revision != _authority.configurationRevision) {
         return previous;
       }
-      if (previous.snapshot != null &&
-          jsonEncode(previous.snapshot!.toJson()) ==
-              jsonEncode(snapshot.toJson())) {
-        return previous;
-      }
-      final next = TerminalWorkspaceRecoveryRecord(
-        enabled: true,
-        relaunchLocalShells: previous.relaunchLocalShells,
-        snapshot: snapshot,
-        savedAt: _clock(),
-      );
+      final next = _withSnapshot(previous, snapshot);
+      if (identical(next, previous)) return previous;
       await _persist(next, lease);
       return next;
     });
+  }
+
+  /// Seal the final checkpoint before relinquishing an app-owned workspace.
+  ///
+  /// Authority is verified and the lease closed synchronously. This one write
+  /// is queued before a subsequent owner's load or mutation, so a rapid remount
+  /// sees the final layout rather than only the previous debounced checkpoint.
+  /// A later setting change or explicit forget still invalidates the snapshot.
+  /// No further operation can be authorized with the finished lease.
+  Future<TerminalWorkspaceRecoveryRecord> finish(
+    TerminalArrangement snapshot, {
+    required TerminalWorkspaceRecoveryLease lease,
+  }) {
+    if (!_owns(lease)) return _expired();
+    final revision = _authority.configurationRevision;
+    final result = _authority.enqueue(() async {
+      // This operation has sealed authority. It must not use _requireOwner:
+      // the next mount may already own the service, but its operations remain
+      // behind this one in the same strict invocation-order queue.
+      final previous = await _load();
+      if (!previous.enabled || revision != _authority.configurationRevision) {
+        return previous;
+      }
+      final next = _withSnapshot(previous, snapshot);
+      if (identical(next, previous)) return previous;
+      await _write(_encode(next));
+      return next;
+    });
+    lease.close();
+    return result;
   }
 
   /// Explicit destructive reset, including corrupt or unknown-version data.
@@ -185,12 +214,34 @@ class TerminalWorkspaceRecovery {
     TerminalWorkspaceRecoveryRecord record,
     TerminalWorkspaceRecoveryLease lease,
   ) async {
+    final encoded = _encode(record);
+    _requireOwner(lease);
+    await _write(encoded);
+  }
+
+  String _encode(TerminalWorkspaceRecoveryRecord record) {
     final encoded = jsonEncode(record.toJson());
     if (encoded.length > maximumStorageLength) {
       throw StateError('Terminal recovery store exceeds limit');
     }
-    _requireOwner(lease);
-    await _write(encoded);
+    return encoded;
+  }
+
+  TerminalWorkspaceRecoveryRecord _withSnapshot(
+    TerminalWorkspaceRecoveryRecord previous,
+    TerminalArrangement snapshot,
+  ) {
+    if (previous.snapshot != null &&
+        jsonEncode(previous.snapshot!.toJson()) ==
+            jsonEncode(snapshot.toJson())) {
+      return previous;
+    }
+    return TerminalWorkspaceRecoveryRecord(
+      enabled: true,
+      relaunchLocalShells: previous.relaunchLocalShells,
+      snapshot: snapshot,
+      savedAt: _clock(),
+    );
   }
 
   bool _owns(TerminalWorkspaceRecoveryLease lease) =>

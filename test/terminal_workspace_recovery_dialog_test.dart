@@ -87,31 +87,51 @@ void main() {
     expect(results, [null]);
   });
 
-  testWidgets('pending save is single-flight and prevents dismissal', (
-    tester,
-  ) async {
-    final pending = Completer<TerminalWorkspaceRecoveryRecord>();
-    var saves = 0;
-    final results = await _open(
-      tester,
-      onSave: (enabled, relaunch) {
-        saves++;
-        return pending.future;
+  for (final systemBack in [false, true]) {
+    testWidgets(
+      'pending save permits ${systemBack ? 'back' : 'Close'} and cannot pop a replacement route',
+      (tester) async {
+        final pending = Completer<TerminalWorkspaceRecoveryRecord>();
+        var saves = 0;
+        final results = await _open(
+          tester,
+          onSave: (enabled, relaunch) {
+            saves++;
+            return pending.future;
+          },
+        );
+        await tester.tap(find.byKey(_saveKey));
+        await tester.pump();
+        expect(
+          tester.widget<FilledButton>(find.byKey(_saveKey)).onPressed,
+          isNull,
+        );
+        expect(_toggle(tester, _enabledKey).onChanged, isNull);
+        expect(find.widgetWithText(TextButton, 'Close'), findsOneWidget);
+        final navigator = Navigator.of(tester.element(find.byKey(_dialogKey)));
+        if (systemBack) {
+          await navigator.maybePop();
+        } else {
+          await tester.tap(find.widgetWithText(TextButton, 'Close'));
+        }
+        // Complete while the old route is still animating out, rather than
+        // relying only on State.mounted after the dialog has been disposed.
+        unawaited(
+          navigator.push<void>(
+            MaterialPageRoute(
+              builder: (_) => const Scaffold(body: Text('Replacement page')),
+            ),
+          ),
+        );
+        pending.complete(const TerminalWorkspaceRecoveryRecord.disabled());
+        await tester.pumpAndSettle();
+        expect(results, [null]);
+        expect(saves, 1);
+        expect(find.text('Replacement page'), findsOneWidget);
+        expect(tester.takeException(), isNull);
       },
     );
-    await tester.tap(find.byKey(_saveKey));
-    await tester.pump();
-    expect(tester.widget<FilledButton>(find.byKey(_saveKey)).onPressed, isNull);
-    expect(_toggle(tester, _enabledKey).onChanged, isNull);
-    await Navigator.of(tester.element(find.byKey(_dialogKey))).maybePop();
-    await tester.pump();
-    expect(find.byKey(_dialogKey), findsOneWidget);
-    expect(results, isEmpty);
-    expect(saves, 1);
-    pending.complete(const TerminalWorkspaceRecoveryRecord.disabled());
-    await tester.pumpAndSettle();
-    expect(results, [true]);
-  });
+  }
 
   testWidgets('save failure retains edits and can be submitted again', (
     tester,
@@ -265,6 +285,8 @@ void main() {
         'This turns off recovery and clears the saved workspace. Your current terminals stay open.',
         'Forget',
         'Retry',
+        'Close',
+        'Another terminal workspace is managing recovery.',
         'Loading saved workspace…',
         'Workspace recovered. Connect each SSH destination when ready.',
         'Could not load session recovery. Saved data was kept.',

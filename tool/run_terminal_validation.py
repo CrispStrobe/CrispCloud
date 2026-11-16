@@ -17,6 +17,9 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE = ROOT / 'docs/validation/terminal-parity-continuation'
 NEW_TESTS = [
+    'test/terminal_workspace_recovery_test.dart',
+    'test/terminal_workspace_recovery_dialog_test.dart',
+    'test/terminal_workspace_recovery_widget_test.dart',
     'test/ssh_connection_sharing_test.dart',
     'test/terminal_connection_sharing_test.dart',
     'test/ssh_shared_terminal_adapters_test.dart',

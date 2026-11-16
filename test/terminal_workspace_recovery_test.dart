@@ -33,7 +33,7 @@ TerminalArrangement _fullSnapshot() {
         TerminalArrangementTab(
           name: 'Terminal $index',
           paneState: TerminalPaneState(
-            fontSize: 8 + index * 3,
+            fontSize: 8.0 + index * 3,
             sshConfig: index.isEven
                 ? null
                 : SshTerminalConfig(
@@ -696,6 +696,240 @@ void main() {
     );
   });
 
+  group('final checkpoint handoff', () {
+    test(
+      'rapid remount loads final snapshot before its own mutation',
+      () async {
+        var raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(
+            enabled: true,
+            snapshot: _snapshot('Previously saved'),
+            savedAt: savedAt,
+          ).toJson(),
+        );
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        var firstRead = true;
+        final store = TerminalWorkspaceRecovery(
+          read: () async {
+            if (firstRead) {
+              firstRead = false;
+              entered.complete();
+              await release.future;
+            }
+            return raw;
+          },
+          write: (value) async => raw = value,
+        );
+        final old = store.acquireLease();
+        final finishing = store.finish(_snapshot('Final layout'), lease: old);
+        expect(old.isCurrent, isFalse);
+        final current = store.acquireLease();
+        addTearDown(current.close);
+        var loaded = false;
+        final loading = store.load().then((record) {
+          loaded = true;
+          return record;
+        });
+        await entered.future;
+        expect(loaded, isFalse);
+        release.complete();
+        await finishing;
+        expect((await loading).snapshot!.tabs.single.name, 'Final layout');
+        await store.save(_snapshot('New owner layout'), lease: current);
+        await expectLater(
+          store.finish(_snapshot('Old late layout'), lease: old),
+          throwsA(isA<TerminalWorkspaceRecoveryLeaseExpired>()),
+        );
+        expect(
+          (await store.load()).snapshot!.tabs.single.name,
+          'New owner layout',
+        );
+      },
+    );
+
+    for (final forget in [false, true]) {
+      test(
+        'later ${forget ? 'forget' : 'disable'} fences sealed snapshot',
+        () async {
+          var raw = jsonEncode(
+            TerminalWorkspaceRecoveryRecord(
+              enabled: true,
+              snapshot: _snapshot('Original'),
+              savedAt: savedAt,
+            ).toJson(),
+          );
+          final entered = Completer<void>();
+          final release = Completer<void>();
+          var firstRead = true;
+          final writes = <String>[];
+          final store = TerminalWorkspaceRecovery(
+            read: () async {
+              if (firstRead) {
+                firstRead = false;
+                entered.complete();
+                await release.future;
+              }
+              return raw;
+            },
+            write: (value) async {
+              writes.add(value);
+              raw = value;
+            },
+          );
+          final old = store.acquireLease();
+          final finishing = store.finish(
+            _snapshot('Do not publish'),
+            lease: old,
+          );
+          await entered.future;
+          final current = store.acquireLease();
+          addTearDown(current.close);
+          final change = forget
+              ? store.forget(lease: current)
+              : store.configure(
+                  lease: current,
+                  enabled: false,
+                  relaunchLocalShells: false,
+                );
+          release.complete();
+          await Future.wait([finishing, change]);
+          expect(writes, hasLength(1));
+          expect(raw, isNot(contains('Do not publish')));
+          final loaded = await store.load();
+          expect(loaded.enabled, isFalse);
+          expect(loaded.snapshot?.tabs.single.name, forget ? null : 'Original');
+        },
+      );
+    }
+
+    test(
+      'finish supersedes an older pending save with its final snapshot',
+      () async {
+        var raw = jsonEncode(
+          TerminalWorkspaceRecoveryRecord(enabled: true).toJson(),
+        );
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        var firstRead = true;
+        final store = TerminalWorkspaceRecovery(
+          read: () async {
+            if (firstRead) {
+              firstRead = false;
+              entered.complete();
+              await release.future;
+            }
+            return raw;
+          },
+          write: (value) async => raw = value,
+        );
+        final lease = store.acquireLease();
+        final pending = store.save(_snapshot('Intermediate'), lease: lease);
+        final pendingFailure = expectLater(
+          pending,
+          throwsA(isA<TerminalWorkspaceRecoveryLeaseExpired>()),
+        );
+        await entered.future;
+        final finishing = store.finish(_snapshot('Final'), lease: lease);
+        release.complete();
+        await pendingFailure;
+        await finishing;
+        expect((await store.load()).snapshot!.tabs.single.name, 'Final');
+        expect(lease.isCurrent, isFalse);
+      },
+    );
+
+    test(
+      'finish never resets corrupt or newer bytes and closes ownership',
+      () async {
+        for (final original in ['invalid json', '{"version":2}']) {
+          var raw = original;
+          var writes = 0;
+          final store = TerminalWorkspaceRecovery(
+            read: () async => raw,
+            write: (value) async {
+              raw = value;
+              writes++;
+            },
+          );
+          final old = store.acquireLease();
+          final finishing = store.finish(_snapshot('Keep data'), lease: old);
+          expect(old.isCurrent, isFalse);
+          await expectLater(finishing, throwsFormatException);
+          expect(raw, original);
+          expect(writes, 0);
+          final current = store.acquireLease();
+          await store.forget(lease: current);
+          current.close();
+          expect(writes, 1);
+        }
+      },
+    );
+
+    test(
+      'finish cannot enable recovery and never-authorized owner fails',
+      () async {
+        String? raw;
+        var writes = 0;
+        final store = TerminalWorkspaceRecovery(
+          read: () async => raw,
+          write: (value) async {
+            raw = value;
+            writes++;
+          },
+        );
+        final old = store.acquireLease();
+        await store.finish(_snapshot('Not opted in'), lease: old);
+        expect(raw, isNull);
+        expect(writes, 0);
+        final superseded = store.acquireLease();
+        final current = store.acquireLease();
+        addTearDown(current.close);
+        await expectLater(
+          store.finish(_snapshot('Superseded'), lease: superseded),
+          throwsA(isA<TerminalWorkspaceRecoveryLeaseExpired>()),
+        );
+        expect(current.isCurrent, isTrue);
+        expect(writes, 0);
+      },
+    );
+  });
+
+  test('timed-out reads release the queue and ignore late results', () async {
+    final delayed = Completer<String?>();
+    String? raw;
+    var firstRead = true;
+    var writes = 0;
+    final store = TerminalWorkspaceRecovery(
+      readTimeout: const Duration(milliseconds: 10),
+      read: () {
+        if (firstRead) {
+          firstRead = false;
+          return delayed.future;
+        }
+        return Future.value(raw);
+      },
+      write: (value) async {
+        raw = value;
+        writes++;
+      },
+    );
+    final lease = store.acquireLease();
+    addTearDown(lease.close);
+    await expectLater(store.load(), throwsA(isA<TimeoutException>()));
+    await store.forget(lease: lease);
+    await store.configure(
+      lease: lease,
+      enabled: true,
+      relaunchLocalShells: false,
+    );
+    await store.save(_snapshot('After retry'), lease: lease);
+    delayed.complete('{"version":9999}');
+    await Future<void>.delayed(Duration.zero);
+    expect(writes, 3);
+    expect((await store.load()).snapshot!.tabs.single.name, 'After retry');
+  });
+
   test(
     'default services share preferences and exclusive mount authority',
     () async {
@@ -709,6 +943,11 @@ void main() {
         relaunchLocalShells: true,
       );
       await first.save(_snapshot('Original'), lease: firstLease);
+      final finishing = first.finish(
+        _snapshot('Final unmount'),
+        lease: firstLease,
+      );
+      expect(firstLease.isCurrent, isFalse);
       final secondLease = second.acquireLease();
       addTearDown(secondLease.close);
       expect(firstLease.isCurrent, isFalse);
@@ -716,7 +955,8 @@ void main() {
         first.save(_snapshot('Old mount'), lease: firstLease),
         throwsA(isA<TerminalWorkspaceRecoveryLeaseExpired>()),
       );
-      expect((await second.load()).snapshot!.tabs.single.name, 'Original');
+      await finishing;
+      expect((await second.load()).snapshot!.tabs.single.name, 'Final unmount');
       await second.save(_snapshot('New mount'), lease: secondLease);
       expect((await first.load()).snapshot!.tabs.single.name, 'New mount');
       final preferences = await SharedPreferences.getInstance();
