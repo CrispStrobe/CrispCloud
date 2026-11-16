@@ -14,9 +14,11 @@ legacy parser pin. See `validation/repo-integration-20261116/` for the exact
 source cutoff, branch ancestry and fresh local validation. Earlier qualification
 counts and live-corpus results below retain their original source identities.
 
-Shared spreadsheet-level ODS list definitions and validation rules on blank
-input cells are now imported. Dynamic source-range links and non-list validation
-families remain open.
+Shared spreadsheet-level ODS definitions and validation rules on blank input
+cells are now imported. Whole-number, decimal, date and text-length validation
+operators are integrated alongside list rules. Dynamic list links, custom and
+formula-driven validation, and full native prompt/error metadata remain open.
+Current qualification is recorded in `validation/terminal-ods-refresh-20261116/`.
 
 ## Earlier verified state
 
