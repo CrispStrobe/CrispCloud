@@ -1,3 +1,4 @@
+import 'viewer_escape_scope.dart';
 import 'app_scaffold_messenger.dart';
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
@@ -1430,119 +1431,123 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Widget build(BuildContext context) {
     final strings = KeePassStrings(context);
     final title = '${widget.file.name}${_dirty ? ' *' : ''}';
-    return PopScope<Object?>(
-      canPop: _allowPop,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_requestClose());
-      },
-      child: Listener(
-        onPointerDown: (_) => _touch(),
-        onPointerMove: (_) => _touch(),
-        onPointerSignal: (_) => _touch(),
-        child: Focus(
-          onKeyEvent: (_, _) {
-            _touch();
-            return KeyEventResult.ignored;
-          },
-          child: CallbackShortcuts(
-            bindings: {
-              const SingleActivator(
-                LogicalKeyboardKey.keyS,
-                control: true,
-              ): () {
-                if (!_busy && _dirty) unawaited(_saveDatabase());
-              },
-              const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
-                if (!_busy && _dirty) unawaited(_saveDatabase());
-              },
-              const SingleActivator(LogicalKeyboardKey.escape): () {
-                unawaited(_requestClose());
-              },
+    return ViewerEscapeScope(
+      onEscape: () => unawaited(_requestClose()),
+      child: PopScope<Object?>(
+        canPop: _allowPop,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) unawaited(_requestClose());
+        },
+        child: Listener(
+          onPointerDown: (_) => _touch(),
+          onPointerMove: (_) => _touch(),
+          onPointerSignal: (_) => _touch(),
+          child: Focus(
+            onKeyEvent: (_, _) {
+              _touch();
+              return KeyEventResult.ignored;
             },
-            child: AppScaffoldMessenger(
-              key: _messenger,
-              child: Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    key: const ValueKey('keepass-close'),
-                    tooltip: context.commanderTr('Close'),
-                    icon: const Icon(Icons.close),
-                    onPressed: _saving || _locking ? null : _requestClose,
-                  ),
-                  title: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  actions: [
-                    if (widget.positionLabel case final label?)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Center(child: Text(label)),
-                      ),
-                    if (widget.onPrevious != null || widget.onNext != null) ...[
-                      IconButton(
-                        tooltip: strings.text('previous'),
-                        icon: const Icon(Icons.chevron_left),
-                        onPressed:
-                            !_busy && !_dirty && widget.onPrevious != null
-                            ? () => _navigate(widget.onPrevious!)
-                            : null,
-                      ),
-                      IconButton(
-                        tooltip: strings.text('next'),
-                        icon: const Icon(Icons.chevron_right),
-                        onPressed: !_busy && !_dirty && widget.onNext != null
-                            ? () => _navigate(widget.onNext!)
-                            : null,
-                      ),
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(
+                  LogicalKeyboardKey.keyS,
+                  control: true,
+                ): () {
+                  if (!_busy && _dirty) unawaited(_saveDatabase());
+                },
+                const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+                  if (!_busy && _dirty) unawaited(_saveDatabase());
+                },
+                const SingleActivator(LogicalKeyboardKey.escape): () {
+                  unawaited(_requestClose());
+                },
+              },
+              child: AppScaffoldMessenger(
+                key: _messenger,
+                child: Scaffold(
+                  appBar: AppBar(
+                    leading: IconButton(
+                      key: const ValueKey('keepass-close'),
+                      tooltip: context.commanderTr('Close'),
+                      icon: const Icon(Icons.close),
+                      onPressed: _saving || _locking ? null : _requestClose,
+                    ),
+                    title: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    actions: [
+                      if (widget.positionLabel case final label?)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Center(child: Text(label)),
+                        ),
+                      if (widget.onPrevious != null ||
+                          widget.onNext != null) ...[
+                        IconButton(
+                          tooltip: strings.text('previous'),
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed:
+                              !_busy && !_dirty && widget.onPrevious != null
+                              ? () => _navigate(widget.onPrevious!)
+                              : null,
+                        ),
+                        IconButton(
+                          tooltip: strings.text('next'),
+                          icon: const Icon(Icons.chevron_right),
+                          onPressed: !_busy && !_dirty && widget.onNext != null
+                              ? () => _navigate(widget.onNext!)
+                              : null,
+                        ),
+                      ],
+                      if (!_editable)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Center(child: Text(strings.text('readOnly'))),
+                        ),
+                      if (!_locked)
+                        IconButton(
+                          key: const ValueKey('keepass-lock'),
+                          tooltip: strings.text('lock'),
+                          icon: const Icon(Icons.lock_outline),
+                          onPressed: _lock,
+                        ),
+                      if (_editable)
+                        IconButton(
+                          key: const ValueKey('keepass-save'),
+                          tooltip: context.commanderTr('Save'),
+                          icon: const Icon(Icons.save_outlined),
+                          onPressed: !_locked && !_busy && _dirty
+                              ? _saveDatabase
+                              : null,
+                        ),
                     ],
-                    if (!_editable)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Center(child: Text(strings.text('readOnly'))),
-                      ),
-                    if (!_locked)
-                      IconButton(
-                        key: const ValueKey('keepass-lock'),
-                        tooltip: strings.text('lock'),
-                        icon: const Icon(Icons.lock_outline),
-                        onPressed: _lock,
-                      ),
-                    if (_editable)
-                      IconButton(
-                        key: const ValueKey('keepass-save'),
-                        tooltip: context.commanderTr('Save'),
-                        icon: const Icon(Icons.save_outlined),
-                        onPressed: !_locked && !_busy && _dirty
-                            ? _saveDatabase
-                            : null,
-                      ),
-                  ],
-                ),
-                body: Column(
-                  children: [
-                    if (_loading || _unlocking || _locking || _saving)
-                      const LinearProgressIndicator(),
-                    if (_errorKey case final error?)
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          strings.text(error),
-                          key: const ValueKey('keepass-error'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                  ),
+                  body: Column(
+                    children: [
+                      if (_loading || _unlocking || _locking || _saving)
+                        const LinearProgressIndicator(),
+                      if (_errorKey case final error?)
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            strings.text(error),
+                            key: const ValueKey('keepass-error'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
+                      Expanded(
+                        child: _loading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _locked
+                            ? _lockedView(strings)
+                            : _databaseView(strings),
                       ),
-                    Expanded(
-                      child: _loading
-                          ? const Center(child: CircularProgressIndicator())
-                          : _locked
-                          ? _lockedView(strings)
-                          : _databaseView(strings),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

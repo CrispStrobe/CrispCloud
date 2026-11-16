@@ -6,6 +6,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_cache_service.dart';
+import 'package:crisp_cloud/services/captured_file_target.dart';
 import 'package:crisp_cloud/services/office_device_export.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
@@ -76,6 +77,7 @@ class OfficeTestHarness {
     String fixture = 'word.docx',
     Uint8List? initialBytes,
     Uint8List? bytesOverride,
+    CapturedFileTarget? targetOverride,
     bool expectEditor = true,
     OfficeDeviceExporter copyExporter = exportOfficeCopy,
     Locale locale = const Locale('en'),
@@ -118,9 +120,11 @@ class OfficeTestHarness {
                       file: file,
                       side: PanelSide.remote,
                       bytesOverride: bytesOverride,
-                      targetOverride: bytesOverride == null
-                          ? null
-                          : panel.captureFileTarget(file),
+                      targetOverride:
+                          targetOverride ??
+                          (bytesOverride == null
+                              ? null
+                              : panel.captureFileTarget(file)),
                       copyExporter: copyExporter,
                     ),
                   ),

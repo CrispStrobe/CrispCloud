@@ -71,8 +71,10 @@ class ShapedGlyph {
 }
 
 /// Offset applied after the base advance so a combining mark sits on it.
-typedef MarkAttachFn =
-    ({double dx, double dy}) Function(ShapedGlyph base, ShapedGlyph mark);
+typedef MarkAttachFn = ({double dx, double dy}) Function(
+  ShapedGlyph base,
+  ShapedGlyph mark,
+);
 
 /// Width provider used by the breaker (typically [FontMetrics.characterWidth]).
 typedef GlyphWidthFn = double Function(int codePoint);
@@ -308,7 +310,8 @@ abstract final class LineBreaker {
     final boundaries = <int>[
       0,
       for (var i = 1; i < logical.length; i++)
-        if (clusterStarts.contains(logical[i].logicalIndex) &&
+        if (logical[i].codePoint != 0x0020 &&
+            clusterStarts.contains(logical[i].logicalIndex) &&
             logical[i].logicalIndex != logical[i - 1].logicalIndex &&
             // A lam-alef ghost belongs to the preceding painted ligature.
             logical[i].codePoint != 0)
@@ -675,6 +678,10 @@ abstract final class LineBreaker {
       return true;
     }
     final int next = glyphs[i + 1].codePoint;
+    // A soft wrap owns the following ordinary spaces. In particular, a
+    // hyphen followed by a space must not leave that space at the beginning
+    // of the next line. Keep tabs and nonbreaking spaces distinct.
+    if (next == 0x0020) return false;
     if (_isBreakSpace(cp)) {
       return true;
     }

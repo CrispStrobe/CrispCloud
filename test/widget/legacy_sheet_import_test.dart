@@ -30,7 +30,7 @@ void main() {
           tester,
           name: 'legacy.xls',
           initialBytes: original,
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             expect(name, 'legacy.xlsx');
             output = bytes;
             return OfficeCopyOutcome.savedCopy;
@@ -74,7 +74,7 @@ void main() {
           tester,
           name: 'legacy.xlt',
           initialBytes: _source(),
-          copyExporter: (bytes, name, title) {
+          copyExporter: (bytes, name, title, {initialDirectory}) {
             expect(name, 'legacy.xlsx');
             output = bytes;
             return picker.future;
@@ -115,7 +115,7 @@ void main() {
           name: 'refused.xls',
           bytesOverride: supplied,
           expectEditor: false,
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             expect(name, 'refused.xls');
             expect(title, 'Export original');
             output = bytes;

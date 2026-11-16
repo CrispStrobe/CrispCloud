@@ -344,8 +344,6 @@ Future<void> _marginsDialog(
 ) async {
   key.currentState!.perform(OfficeEditorAction.pageSetup);
   await tester.pumpAndSettle();
-  await tester.tap(find.widgetWithText(SimpleDialogOption, 'Margins'));
-  await tester.pumpAndSettle();
 }
 
 Finder _field(String label) => find.widgetWithText(TextField, label);
@@ -357,7 +355,13 @@ Future<void> _set(WidgetTester tester, String label, String value) async {
 }
 
 Future<void> _apply(WidgetTester tester) async {
-  await tester.tap(find.widgetWithText(ElevatedButton, 'Apply'));
+  await tester.pump();
+  final filled = find.widgetWithText(FilledButton, 'Apply');
+  await tester.tap(
+    filled.evaluate().isNotEmpty
+        ? filled
+        : find.widgetWithText(ElevatedButton, 'Apply'),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -749,9 +753,25 @@ void main() {
   ) async {
     final (controller, key) = await _host(tester);
     await _marginsDialog(tester, key);
+    final originalTop = tester
+        .widget<TextField>(_field('Top (in)'))
+        .controller!
+        .text;
+    final originalBottom = tester
+        .widget<TextField>(_field('Bottom (in)'))
+        .controller!
+        .text;
     await _set(tester, 'Top (in)', 'NaN');
     await _set(tester, 'Bottom (in)', 'Infinity');
     await _set(tester, 'Left (in)', '0.875');
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Apply'))
+          .onPressed,
+      isNull,
+    );
+    await _set(tester, 'Top (in)', originalTop);
+    await _set(tester, 'Bottom (in)', originalBottom);
     await _apply(tester);
     _cycles(controller, 'margins-edit', (bytes) {
       _expectBody(bytes);

@@ -69,7 +69,7 @@ void main() {
         tester,
         name: 'budget.ods',
         initialBytes: original,
-        copyExporter: (bytes, name, title) async {
+        copyExporter: (bytes, name, title, {initialDirectory}) async {
           expect(name, 'budget.xlsx');
           expect(title, 'Save a copy');
           copied = bytes;
@@ -108,7 +108,7 @@ void main() {
           tester,
           name: 'budget.ods',
           initialBytes: original,
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             copies++;
             expect(name, 'budget.xlsx');
             _checkCopy(bytes, 'Unsaved');
@@ -141,7 +141,7 @@ void main() {
         tester,
         name: 'budget.ods',
         initialBytes: original,
-        copyExporter: (bytes, name, title) {
+        copyExporter: (bytes, name, title, {initialDirectory}) {
           copied = bytes;
           return picker.future;
         },

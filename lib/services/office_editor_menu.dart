@@ -10,6 +10,7 @@ enum OfficeEditorKind { word, sheet, slides, unsupported }
 
 enum OfficeEditorAction {
   save,
+  saveCopy,
   close,
   undo,
   redo,
@@ -79,10 +80,7 @@ enum OfficeEditorAction {
 }
 
 class OfficeEditorMenuActions {
-  const OfficeEditorMenuActions({
-    required this.kind,
-    required this.perform,
-  });
+  const OfficeEditorMenuActions({required this.kind, required this.perform});
 
   final OfficeEditorKind kind;
   final void Function(OfficeEditorAction action) perform;

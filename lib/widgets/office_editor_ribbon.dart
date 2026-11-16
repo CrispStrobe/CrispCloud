@@ -1,3 +1,4 @@
+import 'office_dimension_dialog.dart';
 // lib/widgets/office_editor_ribbon.dart
 //
 // Host ribbon for the embedded Quds Office editors. The package paints the
@@ -18,6 +19,7 @@ import '../l10n/office_ribbon_control_strings.dart';
 import '../services/office_editor_menu.dart';
 import '../services/office_picture.dart';
 import 'office_editor_dialogs.dart';
+import 'office_page_layout_dialog.dart';
 
 // A modal result belongs to the document/story/range that opened it. Layout and
 // viewport notifications are harmless; content or target changes invalidate it.
@@ -87,6 +89,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   bool _slideDeletePending = false;
   bool _lineNumbers = false;
   bool _transitionAll = false;
+  bool _hyperlinkOpen = false;
 
   OfficeController get _c => widget.controller;
   WordEditorController get _word => _c as WordEditorController;
@@ -1152,6 +1155,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               active: widget.config.showNotesPane,
             ),
           ]),
+          _group('Measurements', <Widget>[_unitControl()]),
           _group('Workspace', <Widget>[
             _bigButton(
               Icons.chrome_reader_mode_outlined,
@@ -1343,6 +1347,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 _actionItem('Columns', _sheetDeleteCols),
               ],
             ),
+            _bigButton(
+              Icons.straighten,
+              'Row height…',
+              () => _sheetDimension(row: true),
+            ),
+            _bigButton(
+              Icons.straighten,
+              'Column width…',
+              () => _sheetDimension(row: false),
+            ),
             _iconButton(
               Icons.height,
               'Row height +',
@@ -1494,6 +1508,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               active: widget.config.showGridHeaders,
             ),
           ]),
+          _group('Measurements', <Widget>[_unitControl()]),
           _group('Workspace', <Widget>[
             _bigButton(
               Icons.chrome_reader_mode_outlined,
@@ -2488,6 +2503,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     switch (action) {
       case OfficeEditorAction.save:
         widget.onSave();
+      case OfficeEditorAction.saveCopy:
+        if (!widget.saving) widget.onSaveCopy?.call();
       case OfficeEditorAction.close:
         widget.onClose();
       case OfficeEditorAction.undo:
@@ -2683,8 +2700,25 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   Future<void> _paste() => _c.pasteFromClipboard();
   void _selectAll() => _c.selectAll();
 
+  Widget _unitControl() => SizedBox(
+    width: 96,
+    child: DropdownButton<OfficeLengthUnit>(
+      key: const ValueKey('office-measurement-unit'),
+      value: widget.config.lengthUnit,
+      isExpanded: true,
+      items: [
+        for (final unit in OfficeLengthUnit.values)
+          DropdownMenuItem(value: unit, child: Text(unit.suffix)),
+      ],
+      onChanged: (unit) {
+        if (unit != null) _setConfig(lengthUnit: unit);
+      },
+    ),
+  );
+
   void _setConfig({
     bool? showRulers,
+    OfficeLengthUnit? lengthUnit,
     bool? showFormulaBar,
     bool? showGridHeaders,
     bool? showGridlines,
@@ -2693,6 +2727,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }) {
     final OfficeSurfaceConfig next = widget.config.copyWith(
       showRulers: showRulers,
+      lengthUnit: lengthUnit,
       showNotesPane: showNotesPane,
       showFormulaBar: showFormulaBar,
       showGridHeaders: showGridHeaders,
@@ -2710,7 +2745,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _aboutEditor() {
-    showDialog<void>(
+    showOfficeModal<void>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
         title: Text(context.tr('Office editor')),
@@ -2734,7 +2769,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Future<void> _wordCount() async {
     final OfficeTextStats stats = _c.documentStats;
-    await showDialog<void>(
+    await showOfficeModal<void>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
         title: Text(context.tr('Statistics')),
@@ -2909,6 +2944,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final WordParagraphChoice? choice = await showWordParagraphDialog(
       context,
       current: current,
+      unit: widget.config.lengthUnit == OfficeLengthUnit.inches
+          ? null
+          : widget.config.lengthUnit,
     );
     if (choice == null || !mounted) return;
     final bool tabsChanged = !listEquals(
@@ -3079,14 +3117,26 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _insertHyperlink() async {
-    final ({String text, String url})? result = await showHyperlinkDialog(
-      context,
-    );
-    if (result == null) return;
-    _word.insertHyperlink(
-      text: result.text.isEmpty ? result.url : result.text,
-      target: result.url,
-    );
+    if (_hyperlinkOpen || !_canMutate || widget.kind != OfficeEditorKind.word)
+      return;
+    final controller = _word;
+    final target = _wordEditTarget(controller);
+    _hyperlinkOpen = true;
+    try {
+      final result = await showHyperlinkDialog(context);
+      if (result == null ||
+          !mounted ||
+          !identical(widget.controller, controller) ||
+          !controller.config.allowsMutation ||
+          _wordEditTarget(controller) != target)
+        return;
+      controller.insertHyperlink(
+        text: result.text.isEmpty ? result.url : result.text,
+        target: result.url,
+      );
+    } finally {
+      _hyperlinkOpen = false;
+    }
   }
 
   void _insertComment() async {
@@ -3172,61 +3222,49 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   void _setMargins(WmlPageMargins margins) => _word.setPageMargins(margins);
 
-  void _customMargins() async {
-    final WmlPageMargins current = _word.sectionAtCaret.margins;
-    final ({double top, double bottom, double left, double right})? result =
-        await showPageMarginsDialog(context, current: current);
-    if (result == null || !mounted) return;
-    if (result.top == current.top &&
-        result.bottom == current.bottom &&
-        result.left == current.left &&
-        result.right == current.right) {
-      return;
-    }
-    _word.setPageMargins(
-      current.copyWith(
-        top: result.top,
-        bottom: result.bottom,
-        left: result.left,
-        right: result.right,
-      ),
-    );
-  }
+  void _customMargins() => _pageSetupMenu();
 
-  void _pageSetupMenu() {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext ctx) => SimpleDialog(
-        title: Text(context.tr('Page Setup')),
-        children: <Widget>[
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _customMargins();
-            },
-            child: Text(context.tr('Margins')),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _word.setPageLandscape(!_word.isPageLandscape);
-            },
-            child: Text(
-              _word.isPageLandscape
-                  ? context.tr('Portrait')
-                  : context.tr('Landscape'),
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _watermark();
-            },
-            child: Text(context.tr('Watermark')),
-          ),
-        ],
-      ),
+  void _pageSetupMenu() async {
+    if (!_canMutate) return;
+    final controller = _word;
+    final target = _wordEditTarget(controller);
+    final section = controller.sectionAtCaret;
+    final oldSize = section.pageSize;
+    final oldMargins = section.margins;
+    final result = await showOfficePageLayoutDialog(
+      context,
+      size: oldSize,
+      margins: oldMargins,
+      unit: widget.config.lengthUnit,
+      columns: section.columnCount,
+      columnSpace: section.columnSpace,
     );
+    if (result == null ||
+        !mounted ||
+        !identical(widget.controller, controller) ||
+        _wordEditTarget(controller) != target ||
+        !controller.config.allowsMutation)
+      return;
+    if (result.unit != widget.config.lengthUnit)
+      _setConfig(lengthUnit: result.unit);
+    final sizeChanged =
+        oldSize.width != result.size.width ||
+        oldSize.height != result.size.height;
+    final marginChanged =
+        oldMargins.top != result.margins.top ||
+        oldMargins.bottom != result.margins.bottom ||
+        oldMargins.left != result.margins.left ||
+        oldMargins.right != result.margins.right ||
+        oldMargins.header != result.margins.header ||
+        oldMargins.footer != result.margins.footer;
+    if (!sizeChanged && !marginChanged) return;
+    controller.commands.beginBatch();
+    try {
+      if (sizeChanged) controller.setPageSize(result.size);
+      if (marginChanged) controller.setPageMargins(result.margins);
+    } finally {
+      controller.commands.endBatch();
+    }
   }
 
   void _toggleTrackChanges() {
@@ -3321,6 +3359,36 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   void _sheetClearFormat() {
     _sheet.clearSelectionFormatting();
+  }
+
+  Future<void> _sheetDimension({required bool row}) async {
+    final controller = _sheet;
+    final sheet = controller.sheet;
+    final range = controller.selection.range;
+    final revision = controller.contentRevision;
+    final pixels = row
+        ? sheet.rowHeightAt(range.minRow)
+        : sheet.columnWidth(range.minCol);
+    final points = await showOfficeDimensionDialog(
+      context,
+      title: row ? 'Row height' : 'Column width',
+      points: pixels * 72 / 96,
+      unit: widget.config.lengthUnit,
+    );
+    if (points == null ||
+        !mounted ||
+        !identical(widget.controller, controller) ||
+        !identical(controller.sheet, sheet) ||
+        controller.selection.range != range ||
+        controller.contentRevision != revision ||
+        !controller.config.allowsMutation)
+      return;
+    if (row) {
+      controller.previewRowHeight(range.minRow, points * 96 / 72);
+    } else {
+      controller.previewColumnWidth(range.minCol, points * 96 / 72);
+    }
+    controller.commitResize();
   }
 
   void _sheetDeleteRows() {

@@ -8,6 +8,64 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  testWidgets(
+    'compact save confirmation expires despite persistent notification preference',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await container
+          .read(notificationSettingsProvider.notifier)
+          .update(seconds: 0);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(accessibleNavigation: true),
+              child: AppScaffoldMessenger(child: child!),
+            ),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const TransientSnackBar(
+                      content: Text('Saved: report.docx'),
+                    ),
+                  ),
+                  child: const Text('Save'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSize(find.byType(SnackBar)).height,
+        lessThanOrEqualTo(56),
+      );
+      expect(
+        tester.widget<SnackBar>(find.byType(SnackBar)).duration,
+        const Duration(seconds: 30),
+      );
+      expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist, isFalse);
+      await tester.pump(const Duration(seconds: 29));
+      expect(find.text('Saved: report.docx'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved: report.docx'), findsNothing);
+      expect(
+        container.read(notificationHistoryProvider).single.message,
+        'Saved: report.docx',
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
+    },
+  );
   testWidgets('Undo notification closes at 30 seconds and stays in history', (
     tester,
   ) async {

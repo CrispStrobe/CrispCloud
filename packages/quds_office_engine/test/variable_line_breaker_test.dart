@@ -51,6 +51,49 @@ void main() {
       });
     }
   }
+  for (final spaces in [' ', '   ']) {
+    test('soft wrap after hyphen consumes boundary spaces: "$spaces"', () {
+      final text = 'Stadt-${spaces}und Kreisjugendringen';
+      final fixed = LineBreaker.breakLines(
+        text: text,
+        maxWidth: 36,
+        widthOf: _width,
+      );
+      final prepared = LineBreaker.prepare(text: text, widthOf: _width);
+      final first = prepared.breakNext(start: 0, maxWidth: 36);
+      expect(first.nextOffset, 6 + spaces.length);
+      for (final lines in [fixed, _prepared(text, (_) => 36)]) {
+        expect(
+          String.fromCharCodes(lines.first.glyphs.map((g) => g.codePoint)),
+          'Stadt-',
+        );
+        expect(lines[1].glyphs.first.codePoint, 'u'.codeUnitAt(0));
+        expect(lines[1].logicalStart, 6 + spaces.length);
+        expect(
+          lines
+              .expand((l) => l.glyphs)
+              .where((g) => !g.isSpace)
+              .map((g) => g.logicalIndex)
+              .toSet()
+              .length,
+          text.runes.where((cp) => cp != 32).length,
+        );
+      }
+    });
+  }
+  test('explicit line break preserves intentional leading spaces', () {
+    final lines = _prepared('Stadt-\n  und Kreis', (_) => 90);
+    expect(lines[1].logicalStart, 7);
+    expect(lines[1].glyphs.take(2).every((g) => g.codePoint == 32), isTrue);
+  });
+  test('nonbreaking space after hyphen is never treated as ordinary boundary space', () {
+    final prepared = LineBreaker.prepare(
+      text: 'Stadt-\u00a0und Kreis',
+      widthOf: _width,
+    );
+    final first = prepared.breakNext(start: 0, maxWidth: 36);
+    expect(first.nextOffset, 6);
+  });
   test('variable widths consume Unicode and hard breaks exactly once', () {
     const text = 'One 😀 two\r\n\r\nthree 🧭 four five six\nseven eight nine';
     final lines = _prepared(text, (i) => i < 3 ? 38 : 100);

@@ -5,6 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/notification_provider.dart';
 
+/// Routine confirmations have a fixed deadline, even when actionable or error
+/// notifications are configured to remain until dismissed.
+class TransientSnackBar extends SnackBar {
+  const TransientSnackBar({
+    super.key,
+    required super.content,
+    super.action,
+    super.backgroundColor,
+  }) : super(duration: const Duration(seconds: 30), persist: false);
+}
+
 /// Applies the same dismissal policy to root and editor-local notifications.
 /// Flutter otherwise makes snackbars with an Undo action persistent by default.
 class AppScaffoldMessenger extends ScaffoldMessenger {
@@ -36,16 +47,18 @@ class _AppScaffoldMessengerState extends ScaffoldMessengerState {
     }
     Timer? timer;
     late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
-    final duration = Duration(
-      seconds: settings.seconds == 0 ? 31536000 : settings.seconds,
-    );
+    final seconds = snackBar is TransientSnackBar ? 30 : settings.seconds;
+    final duration = Duration(seconds: seconds == 0 ? 31536000 : seconds);
     final replacement = SnackBar(
       key: snackBar.key,
-      content: snackBar.content,
+      content: DefaultTextStyle.merge(
+        style: Theme.of(context).textTheme.bodySmall,
+        child: snackBar.content,
+      ),
       backgroundColor: snackBar.backgroundColor,
       elevation: snackBar.elevation,
       margin: snackBar.margin,
-      padding: snackBar.padding,
+      padding: snackBar.padding ?? const EdgeInsets.symmetric(horizontal: 12),
       width: snackBar.width,
       shape: snackBar.shape,
       hitTestBehavior: snackBar.hitTestBehavior,
@@ -55,13 +68,13 @@ class _AppScaffoldMessengerState extends ScaffoldMessengerState {
       showCloseIcon: true,
       closeIconColor: snackBar.closeIconColor,
       duration: duration,
-      persist: settings.seconds == 0,
+      persist: seconds == 0,
       animation: snackBar.animation,
       dismissDirection: snackBar.dismissDirection,
       clipBehavior: snackBar.clipBehavior,
       onVisible: () {
         // Also time out action bars with accessibility navigation enabled.
-        if (settings.seconds > 0) {
+        if (seconds > 0) {
           timer = Timer(duration, () {
             if (mounted) controller.close();
           });

@@ -1,3 +1,4 @@
+import 'viewer_escape_scope.dart';
 import 'app_scaffold_messenger.dart';
 
 import 'dart:async';
@@ -682,36 +683,39 @@ class _GalleryViewerDialogState extends State<GalleryViewerDialog>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return PopScope<GalleryViewerResult>(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) _close();
-      },
-      child: AppScaffoldMessenger(
-        key: _messenger,
-        child: Scaffold(
-          backgroundColor: scheme.surface,
-          body: SafeArea(
-            child: Focus(
-              focusNode: _focus,
-              autofocus: true,
-              onKeyEvent: _onKeyEvent,
-              child: LayoutBuilder(
-                builder: (context, constraints) => !_isSourceCurrent
-                    ? _buildExpiredSource()
-                    : Column(
-                        children: [
-                          _buildHeader(),
-                          _buildControls(),
-                          Expanded(child: _buildWorkspace()),
-                          if (_showFilmstrip &&
-                              widget.files.isNotEmpty &&
-                              constraints.maxHeight >= 280)
-                            _buildFilmstrip(
-                              height: constraints.maxHeight >= 440 ? 104 : 72,
-                            ),
-                        ],
-                      ),
+    return ViewerEscapeScope(
+      onEscape: _close,
+      child: PopScope<GalleryViewerResult>(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) _close();
+        },
+        child: AppScaffoldMessenger(
+          key: _messenger,
+          child: Scaffold(
+            backgroundColor: scheme.surface,
+            body: SafeArea(
+              child: Focus(
+                focusNode: _focus,
+                autofocus: true,
+                onKeyEvent: _onKeyEvent,
+                child: LayoutBuilder(
+                  builder: (context, constraints) => !_isSourceCurrent
+                      ? _buildExpiredSource()
+                      : Column(
+                          children: [
+                            _buildHeader(),
+                            _buildControls(),
+                            Expanded(child: _buildWorkspace()),
+                            if (_showFilmstrip &&
+                                widget.files.isNotEmpty &&
+                                constraints.maxHeight >= 280)
+                              _buildFilmstrip(
+                                height: constraints.maxHeight >= 440 ? 104 : 72,
+                              ),
+                          ],
+                        ),
+                ),
               ),
             ),
           ),

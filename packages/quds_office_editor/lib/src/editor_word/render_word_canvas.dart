@@ -4331,7 +4331,21 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         top += ascent * (largest / first.fontSize - 1);
       }
     }
-    painter.paint(canvas, Offset(paintX, top));
+    if (first.underline == WmlUnderline.single ||
+        first.underline == WmlUnderline.thick) {
+      PaintRunText.paintUnderlined(
+        canvas,
+        Offset(paintX, top),
+        decorated: painter,
+        text: text,
+        first: first,
+        themeFamily: _theme.fontFamily,
+        color: _colorFromHex(first.color),
+      );
+    } else {
+      painter.paint(canvas, Offset(paintX, top));
+    }
+    painter.dispose();
   }
 
   void _drawTocLeader(

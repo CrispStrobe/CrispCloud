@@ -5,6 +5,9 @@
 
 import 'package:flutter/material.dart';
 
+import 'office_modal.dart';
+export 'office_modal.dart' show showOfficeModal;
+
 import '../l10n/misc_ui_strings.dart';
 
 import 'package:flutter/services.dart';
@@ -133,7 +136,7 @@ Future<String?> showOfficeColorPicker(
   String selected = _normalizeHex(initial ?? '');
   String error = '';
 
-  return showDialog<String>(
+  return showOfficeModal<String>(
     context: context,
     builder: (BuildContext ctx) {
       return StatefulBuilder(
@@ -281,7 +284,7 @@ Future<WordFontChoice?> showWordFontDialog(
   WmlVertAlign vertAlign = current.vertAlign;
   final Set<WordFontProperty> edited = <WordFontProperty>{};
 
-  return showDialog<WordFontChoice>(
+  return showOfficeModal<WordFontChoice>(
     context: context,
     builder: (BuildContext ctx) {
       return StatefulBuilder(
@@ -675,25 +678,34 @@ typedef WordParagraphChoice = ({
 Future<WordParagraphChoice?> showWordParagraphDialog(
   BuildContext context, {
   required WmlParagraphProps current,
+  OfficeLengthUnit? unit,
 }) {
+  String display(double points) => unit == null
+      ? points.toString()
+      : unit
+            .fromPoints(points)
+            .toStringAsFixed(4)
+            .replaceFirst(RegExp(r'\.?0+$'), '');
+  String label(BuildContext context, String text) =>
+      context.tr(text).replaceAll('(pt)', '(${unit?.suffix ?? 'pt'})');
   WmlJustification align = current.justification;
   final TextEditingController left = TextEditingController(
-    text: current.indent.left.toString(),
+    text: display(current.indent.left),
   );
   final TextEditingController right = TextEditingController(
-    text: current.indent.right.toString(),
+    text: display(current.indent.right),
   );
   final TextEditingController first = TextEditingController(
-    text: current.indent.firstLine.toString(),
+    text: display(current.indent.firstLine),
   );
   final TextEditingController hanging = TextEditingController(
-    text: current.indent.hanging.toString(),
+    text: display(current.indent.hanging),
   );
   final TextEditingController before = TextEditingController(
-    text: current.spacingBefore.toString(),
+    text: display(current.spacingBefore),
   );
   final TextEditingController after = TextEditingController(
-    text: current.spacingAfter.toString(),
+    text: display(current.spacingAfter),
   );
   final TextEditingController line = TextEditingController(
     text: current.lineSpacing.toString(),
@@ -709,7 +721,7 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
   bool keepTogether = current.keepTogether;
   bool pageBreakBefore = current.pageBreakBefore;
 
-  return showDialog<WordParagraphChoice>(
+  return showOfficeModal<WordParagraphChoice>(
     context: context,
     builder: (BuildContext ctx) {
       return StatefulBuilder(
@@ -757,13 +769,16 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     Row(
                       children: <Widget>[
                         Expanded(
-                          child: _numberField(left, ctx.tr('Left indent (pt)')),
+                          child: _numberField(
+                            left,
+                            label(ctx, 'Left indent (pt)'),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _numberField(
                             right,
-                            ctx.tr('Right indent (pt)'),
+                            label(ctx, 'Right indent (pt)'),
                           ),
                         ),
                       ],
@@ -772,11 +787,17 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     Row(
                       children: <Widget>[
                         Expanded(
-                          child: _numberField(first, ctx.tr('First line (pt)')),
+                          child: _numberField(
+                            first,
+                            label(ctx, 'First line (pt)'),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _numberField(hanging, ctx.tr('Hanging (pt)')),
+                          child: _numberField(
+                            hanging,
+                            label(ctx, 'Hanging (pt)'),
+                          ),
                         ),
                       ],
                     ),
@@ -786,14 +807,14 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                         Expanded(
                           child: _numberField(
                             before,
-                            ctx.tr('Space before (pt)'),
+                            label(ctx, 'Space before (pt)'),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _numberField(
                             after,
-                            ctx.tr('Space after (pt)'),
+                            label(ctx, 'Space after (pt)'),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -894,7 +915,15 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     bool nonnegative = false,
                     bool positive = false,
                   }) {
-                    final value = double.tryParse(c.text.trim());
+                    final physical = c != line;
+                    if (physical && c.text == display(fallback))
+                      return fallback;
+                    final value = physical && unit != null
+                        ? unit.parsePoints(c.text)
+                        : double.tryParse(c.text.trim()) ??
+                              (physical
+                                  ? OfficeLengthUnit.inches.parsePoints(c.text)
+                                  : null);
                     if (value == null ||
                         !value.isFinite ||
                         (nonnegative && value < 0) ||
@@ -991,7 +1020,7 @@ Future<({int rows, int columns})?> showInsertTableDialog(
   final TextEditingController colController = TextEditingController(
     text: '$columns',
   );
-  return showDialog<({int rows, int columns})>(
+  return showOfficeModal<({int rows, int columns})>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(ctx.tr('Insert table')),
@@ -1057,7 +1086,11 @@ Future<({String text, String url})?> showHyperlinkDialog(
     text: text,
   );
   final TextEditingController urlController = TextEditingController(text: url);
-  return showDialog<({String text, String url})>(
+  urlController.selection = TextSelection(
+    baseOffset: 0,
+    extentOffset: url.length,
+  );
+  return showOfficeModal<({String text, String url})>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(ctx.tr('Insert hyperlink')),
@@ -1077,6 +1110,7 @@ Future<({String text, String url})?> showHyperlinkDialog(
             const SizedBox(height: 10),
             TextField(
               controller: urlController,
+              autofocus: true,
               decoration: InputDecoration(
                 labelText: ctx.tr('Address'),
                 isDense: true,
@@ -1115,7 +1149,9 @@ showPageMarginsDialog(BuildContext context, {required WmlPageMargins current}) {
   final TextEditingController bottom = inches(current.bottom);
   final TextEditingController left = inches(current.left);
   final TextEditingController right = inches(current.right);
-  return showDialog<({double top, double bottom, double left, double right})>(
+  return showOfficeModal<
+    ({double top, double bottom, double left, double right})
+  >(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(ctx.tr('Page margins')),
@@ -1194,7 +1230,7 @@ Future<String?> showOfficePromptDialog(
   String confirmLabel = 'OK',
 }) {
   final TextEditingController controller = TextEditingController(text: initial);
-  return showDialog<String>(
+  return showOfficeModal<String>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(title),
@@ -1240,7 +1276,7 @@ Future<({String text, String author})?> showCommentDialog(
   final TextEditingController authorController = TextEditingController(
     text: author,
   );
-  return showDialog<({String text, String author})>(
+  return showOfficeModal<({String text, String author})>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(ctx.tr('New comment')),
@@ -1298,7 +1334,7 @@ Future<bool> showOfficeConfirm(
   String confirmLabel = 'OK',
   bool destructive = false,
 }) async {
-  final bool? result = await showDialog<bool>(
+  final bool? result = await showOfficeModal<bool>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(title),
@@ -1327,8 +1363,11 @@ Future<bool> showOfficeConfirm(
 void showOfficeShortcuts(BuildContext context, String kind) {
   final List<(String, String)> rows = <(String, String)>[
     ('Ctrl/Cmd + S', 'Save'),
+    ('F12 / Ctrl/Cmd + Shift + S', 'Save a copy'),
+    ('Ctrl/Cmd + P', 'Print'),
     ('Ctrl/Cmd + Z', 'Undo'),
-    ('Ctrl/Cmd + Y', 'Redo'),
+    ('Ctrl/Cmd + Y / Shift + Z', 'Redo'),
+    ('Ctrl/Cmd + H / Shift + F', 'Replace'),
     ('Ctrl/Cmd + F', 'Find'),
     ('Ctrl/Cmd + A', 'Select all'),
     ('Ctrl/Cmd + C / X / V', 'Copy / cut / paste'),
@@ -1336,10 +1375,14 @@ void showOfficeShortcuts(BuildContext context, String kind) {
       ('Ctrl/Cmd + B', 'Bold'),
       ('Ctrl/Cmd + I', 'Italic'),
       ('Ctrl/Cmd + U', 'Underline'),
+      ('Ctrl/Cmd + K', 'Hyperlink'),
+      ('Ctrl/Cmd + D', 'Font'),
+      ('Ctrl/Cmd + Enter', 'Page break'),
+      ('Ctrl/Cmd + L / E / R / J', 'Align left / center / right / justify'),
     ],
     ('Esc', 'Close find bar, then the editor'),
   ];
-  showDialog<void>(
+  showOfficeModal<void>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
       title: Text(ctx.tr('Keyboard shortcuts')),

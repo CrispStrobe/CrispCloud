@@ -9,6 +9,11 @@ import 'package:crisp_cloud/services/office_editor_menu.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/storage_reference.dart';
+import 'package:crisp_cloud/services/captured_file_target.dart';
+import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 import 'package:xml/xml.dart' as xml;
@@ -86,6 +91,159 @@ Future<void> _choose(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets(
+    'hyperlink shortcuts focus the URL and modal typing never edits Word',
+    (tester) async {
+      await tester.runAsync(() async {
+        final host = await OfficeTestHarness.open(tester);
+        final word = host.controller as WordEditorController;
+        final before = _text(word.saveBytes());
+        for (final modifier in [
+          LogicalKeyboardKey.controlLeft,
+          LogicalKeyboardKey.metaLeft,
+        ]) {
+          tester
+              .widget<QudsWordEditor>(find.byType(QudsWordEditor))
+              .focusNode!
+              .requestFocus();
+          await tester.pump();
+          await tester.sendKeyDownEvent(modifier);
+          await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
+          await tester.sendKeyUpEvent(modifier);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          final field = tester.widget<EditableText>(
+            find.descendant(
+              of: find.widgetWithText(TextField, 'Address'),
+              matching: find.byType(EditableText),
+            ),
+          );
+          expect(
+            field.focusNode.hasFocus,
+            isTrue,
+            reason:
+                'primary=${FocusManager.instance.primaryFocus}; URL=${field.focusNode}',
+          );
+          expect(
+            field.controller.selection,
+            const TextSelection(baseOffset: 0, extentOffset: 8),
+          );
+          tester.testTextInput.enterText('https://example.test');
+          await tester.pump();
+          expect(field.controller.text, 'https://example.test');
+          expect(_text(word.saveBytes()), before);
+          await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(find.byType(AlertDialog), findsNothing);
+        }
+        for (final action in [
+          OfficeEditorAction.font,
+          OfficeEditorAction.paragraph,
+          OfficeEditorAction.pageSetup,
+          OfficeEditorAction.insertTable,
+        ]) {
+          tester
+              .widget<QudsWordEditor>(find.byType(QudsWordEditor))
+              .focusNode!
+              .requestFocus();
+          await tester.pump();
+          tester
+              .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+              .perform(action);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(
+            word.input.isAttached,
+            isFalse,
+            reason: '$action must release document IME',
+          );
+          expect(FocusManager.instance.primaryFocus, isNotNull);
+          expect(_text(word.saveBytes()), before);
+          await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+        }
+        expect(word.isDirty, isFalse);
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'F12 and Shift+S copy to captured source folder and preserve edits',
+    (tester) async {
+      await tester.runAsync(() async {
+        final sourceFolder = await Directory.systemTemp.createTemp(
+          'office-copy-source-',
+        );
+        addTearDown(() => sourceFolder.delete(recursive: true));
+        final sourcePath = '${sourceFolder.path}/report.docx';
+        final bytes = File(
+          'packages/quds_office_engine/test/fixtures/fidelity/word.docx',
+        ).readAsBytesSync();
+        File(sourcePath).writeAsBytesSync(bytes);
+        final target = CapturedFileTarget.local(
+          reference: FileReference(
+            storage: const StorageReference(
+              kind: 'local',
+              provider: 'local',
+              accountKey: 'local',
+            ),
+            path: sourcePath,
+          ),
+          service: LocalFileService(),
+          file: FileItem(
+            name: 'report.docx',
+            path: sourcePath,
+            isFolder: false,
+          ),
+          isCurrent: () => true,
+        );
+        var copies = 0;
+        final host = await OfficeTestHarness.open(
+          tester,
+          bytesOverride: bytes,
+          targetOverride: target,
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
+            expect(initialDirectory, sourceFolder.path);
+            expect(name, 'report.docx');
+            expect(title, 'Save a copy');
+            expect(_text(bytes), contains('Unsaved copy edit '));
+            copies++;
+            return OfficeCopyOutcome.savedCopy;
+          },
+        );
+        final word = host.controller as WordEditorController;
+        word.insertText('Unsaved copy edit ');
+        final editor = tester.widget<QudsWordEditor>(
+          find.byType(QudsWordEditor),
+        );
+        editor.focusNode!.requestFocus();
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.f12);
+        await officePumpUntil(tester, () => copies == 1 && !host.ribbon.saving);
+        for (final modifier in [
+          LogicalKeyboardKey.controlLeft,
+          LogicalKeyboardKey.metaLeft,
+        ]) {
+          await tester.sendKeyDownEvent(modifier);
+          await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+          await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+          await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+          await tester.sendKeyUpEvent(modifier);
+          await officePumpUntil(tester, () => !host.ribbon.saving);
+        }
+        expect(copies, 3);
+        expect(word.isDirty, isTrue);
+        expect(File(sourcePath).readAsBytesSync(), orderedEquals(bytes));
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     'sorting alone prompts on Back and saves undoable reordered rows',
     (tester) async {
@@ -310,7 +468,7 @@ void main() {
           tester,
           name: 'notes.pptx',
           fixture: 'native.pptx',
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             copied = bytes;
             return OfficeCopyOutcome.savedCopy;
           },
@@ -483,7 +641,7 @@ void main() {
       Uint8List? copied;
       final host = await OfficeTestHarness.open(
         tester,
-        copyExporter: (bytes, name, title) async {
+        copyExporter: (bytes, name, title, {initialDirectory}) async {
           copied = bytes;
           expect(name, 'report.docx');
           expect(title, 'Save a copy');
@@ -523,7 +681,7 @@ void main() {
         Uint8List? copied;
         final host = await OfficeTestHarness.open(
           tester,
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             calls++;
             if (calls == 1) {
               if (failure == 'error') throw StateError('Destination full');
@@ -565,7 +723,7 @@ void main() {
         var copies = 0;
         final host = await OfficeTestHarness.open(
           tester,
-          copyExporter: (bytes, name, title) {
+          copyExporter: (bytes, name, title, {initialDirectory}) {
             copies++;
             copied = bytes;
             return picker.future;
@@ -604,7 +762,7 @@ void main() {
       var copies = 0;
       final host = await OfficeTestHarness.open(
         tester,
-        copyExporter: (bytes, name, title) async {
+        copyExporter: (bytes, name, title, {initialDirectory}) async {
           copies++;
           expect(_text(bytes), isNotEmpty);
           return OfficeCopyOutcome.savedCopy;
@@ -633,7 +791,7 @@ void main() {
           tester,
           name: 'recovery.$extension',
           fixture: 'native.$extension',
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             copied = bytes;
             expect(name, 'recovery.$extension');
             return OfficeCopyOutcome.savedCopy;
@@ -726,7 +884,7 @@ void main() {
           tester,
           bytesOverride: supplied,
           expectEditor: false,
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             exported = bytes;
             expect(title, 'Export original');
             return OfficeCopyOutcome.savedCopy;
@@ -765,7 +923,7 @@ void main() {
             name: 'signed.$extension',
             bytesOverride: supplied,
             expectEditor: false,
-            copyExporter: (bytes, name, title) async {
+            copyExporter: (bytes, name, title, {initialDirectory}) async {
               exported = bytes;
               expect(name, 'signed.$extension');
               expect(title, 'Export original');
@@ -801,7 +959,7 @@ void main() {
       var copying = false;
       final host = await OfficeTestHarness.open(
         tester,
-        copyExporter: (bytes, name, title) {
+        copyExporter: (bytes, name, title, {initialDirectory}) {
           copying = true;
           return picker.future;
         },

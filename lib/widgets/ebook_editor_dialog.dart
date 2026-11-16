@@ -1,3 +1,4 @@
+import 'viewer_escape_scope.dart';
 import 'app_scaffold_messenger.dart';
 import '../services/document_printing.dart';
 import 'document_print_scope.dart';
@@ -1987,10 +1988,13 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         ),
       ),
     );
-    return DocumentPrintScope(
-      enabled: _document != null && !_loading && !_busy,
-      onPrint: _printDocument,
-      child: printContent,
+    return ViewerEscapeScope(
+      onEscape: () => unawaited(_requestClose()),
+      child: DocumentPrintScope(
+        enabled: _document != null && !_loading && !_busy,
+        onPrint: _printDocument,
+        child: printContent,
+      ),
     );
   }
 

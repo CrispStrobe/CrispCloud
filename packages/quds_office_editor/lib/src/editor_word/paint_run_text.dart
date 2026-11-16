@@ -265,6 +265,7 @@ abstract final class PaintRunText {
     TextDecoration? decoration,
     TextDecorationStyle? decorationStyle,
     double? decorationThickness,
+    Paint? foreground,
   }) {
     return TextPainter(
       text: TextSpan(
@@ -279,7 +280,8 @@ abstract final class PaintRunText {
           fontFamilyFallback: fallbacksFor(text, runFamily: first.fontFamily),
           fontWeight: first.bold ? FontWeight.bold : FontWeight.normal,
           fontStyle: first.italic ? FontStyle.italic : FontStyle.normal,
-          color: color,
+          color: foreground == null ? color : null,
+          foreground: foreground,
           decoration: decoration,
           decorationStyle: decorationStyle,
           decorationThickness: decorationThickness,
@@ -289,6 +291,55 @@ abstract final class PaintRunText {
       textDirection: directionFor(bidiLevel: first.glyph.level, text: text),
       maxLines: 1,
     );
+  }
+
+  /// Keep native font underline metrics, with gaps around descender ink.
+  /// Glyphs themselves are painted exactly once, preserving their antialiasing.
+  static void paintUnderlined(
+    Canvas canvas,
+    Offset offset, {
+    required TextPainter decorated,
+    required String text,
+    required LaidOutGlyph first,
+    String? themeFamily,
+    Color? color,
+  }) {
+    final plain = painterFor(
+      text: text,
+      first: first,
+      themeFamily: themeFamily,
+      color: color,
+    )..layout();
+    final baseline = plain.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
+    final band = Rect.fromLTRB(
+      offset.dx - first.fontSize,
+      offset.dy + baseline,
+      offset.dx + decorated.width + first.fontSize,
+      offset.dy + decorated.height + first.fontSize,
+    );
+    canvas.save();
+    canvas.clipRect(band);
+    canvas.saveLayer(band, Paint());
+    decorated.paint(canvas, offset);
+    for (final style in [PaintingStyle.fill, PaintingStyle.stroke]) {
+      final mask = painterFor(
+        text: text,
+        first: first,
+        themeFamily: themeFamily,
+        foreground: Paint()
+          ..blendMode = BlendMode.clear
+          ..style = style
+          ..strokeWidth = first.fontSize * 0.10,
+      )..layout();
+      mask.paint(canvas, offset);
+      mask.dispose();
+    }
+    canvas.restore();
+    canvas.restore();
+    plain.paint(canvas, offset);
+    plain.dispose();
   }
 
   static final Map<String, double> _advanceCache = <String, double>{};
@@ -556,9 +607,8 @@ abstract final class PaintRunText {
     required String paragraph,
     String? themeFamily,
   }) {
-    final List<List<LaidOutGlyph>> segments = paintSegments(
-      line,
-    ).toList(growable: false);
+    final List<List<LaidOutGlyph>> segments = paintSegments(line)
+        .toList(growable: false);
     for (int s = 0; s < segments.length; s++) {
       final List<LaidOutGlyph> run = segments[s];
       final LaidOutGlyph first = run.first;

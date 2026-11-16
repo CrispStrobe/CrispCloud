@@ -1,5 +1,8 @@
 import '../services/document_printing.dart';
+import '../services/office_measurement_preferences.dart';
 import 'document_print_scope.dart';
+import 'viewer_escape_scope.dart';
+import 'app_scaffold_messenger.dart' show TransientSnackBar;
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
 // lib/widgets/office_editor_dialog.dart
@@ -24,6 +27,7 @@ import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:quds_office_editor/quds_office_editor.dart'
     hide WordPackagePreservation;
 import 'package:quds_office_engine/quds_office_engine.dart'
@@ -175,6 +179,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   bool _zoteroCredentialsLoaded = false;
   bool _zoteroOpen = false;
 
+  int _unitRevision = 0;
+
   OfficeSurfaceConfig _config = const OfficeSurfaceConfig(
     mode: OfficeInteractionMode.editing,
     autofocus: true,
@@ -186,6 +192,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     super.initState();
     _target = widget.targetOverride;
     unawaited(_load());
+    unawaited(_loadUnits());
   }
 
   @override
@@ -416,7 +423,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       });
       ref.read(panelProvider(widget.side)).refreshFiles();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${context.tr('Saved')}: ${widget.file.name}')),
+        TransientSnackBar(
+          content: Text('${context.tr('Saved')}: ${widget.file.name}'),
+        ),
       );
       // A notes/formatting dialog can hold a newer draft while the upload runs.
       // Only close this editor's own route; popping the current top route would
@@ -521,6 +530,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         Uint8List.fromList(bytes).asUnmodifiableView(),
         _copyOutputName(original: original),
         context.tr(original ? 'Export original' : 'Save a copy'),
+        initialDirectory: _copyInitialDirectory,
       );
       if (!mounted || outcome == null) return;
       // Legacy Save has no writable original target. A completed native copy
@@ -534,7 +544,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         setState(() => _dirty = controller.isDirty);
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        TransientSnackBar(
           content: Text(
             context.tr(
               outcome == OfficeCopyOutcome.savedCopy
@@ -561,6 +571,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
+  }
+
+  String? get _copyInitialDirectory {
+    final reference = _target?.reference;
+    // A remote provider path is not a device directory. Use the captured
+    // original identity, independent of navigation in either browser pane.
+    if (reference == null || !reference.storage.isLocal || kIsWeb) return null;
+    return path.dirname(reference.path);
   }
 
   String _copyOutputName({bool original = false}) {
@@ -601,7 +619,28 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     ref.read(officeEditorMenuProvider.notifier).state = actions;
   }
 
+  Future<void> _loadUnits() async {
+    final revision = _unitRevision;
+    try {
+      final unit = await OfficeMeasurementPreferences.read();
+      if (!mounted || revision != _unitRevision) return;
+      setState(() => _config = _config.copyWith(lengthUnit: unit));
+      _controller?.syncConfig(_config);
+    } catch (_) {
+      /* Existing defaults remain usable. */
+    }
+  }
+
   void _onConfigChanged(OfficeSurfaceConfig next) {
+    if (next.lengthUnit != _config.lengthUnit) {
+      _unitRevision++;
+      unawaited(
+        OfficeMeasurementPreferences.write(next.lengthUnit)
+            .catchError((Object error) {
+              _log.warn('Could not save measurement units', error);
+            }),
+      );
+    }
     setState(() => _config = next);
     _controller?.syncConfig(next);
   }
@@ -623,6 +662,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     final OfficeController? controller = _controller;
     if (controller is WordEditorController) {
       controller.applyRunFormat(update);
+    }
+  }
+
+  void _wordAlignment(WmlJustification value) {
+    final controller = _controller;
+    if (controller is WordEditorController) {
+      controller.applyParagraphFormat((props) => props.justification = value);
     }
   }
 
@@ -649,7 +695,86 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
               unawaited(_save()),
           const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
               unawaited(_save()),
+          const SingleActivator(
+            LogicalKeyboardKey.f12,
+            includeRepeats: false,
+          ): () =>
+              unawaited(_saveCopy()),
+          for (final meta in [false, true]) ...{
+            for (final entry in {
+              LogicalKeyboardKey.keyL: WmlJustification.left,
+              LogicalKeyboardKey.keyE: WmlJustification.center,
+              LogicalKeyboardKey.keyR: WmlJustification.right,
+              LogicalKeyboardKey.keyJ: WmlJustification.justify,
+            }.entries)
+              SingleActivator(entry.key, control: !meta, meta: meta): () =>
+                  _wordAlignment(entry.value),
+            SingleActivator(
+              LogicalKeyboardKey.keyS,
+              control: !meta,
+              meta: meta,
+              shift: true,
+              includeRepeats: false,
+            ): () =>
+                unawaited(_saveCopy()),
+            SingleActivator(
+              LogicalKeyboardKey.keyZ,
+              control: !meta,
+              meta: meta,
+              shift: true,
+            ): () =>
+                _controller?.redo(),
+            SingleActivator(
+              LogicalKeyboardKey.keyH,
+              control: !meta,
+              meta: meta,
+              includeRepeats: false,
+            ): () =>
+                _controller?.requestReplace(),
+            SingleActivator(
+              LogicalKeyboardKey.keyF,
+              control: !meta,
+              meta: meta,
+              shift: true,
+              includeRepeats: false,
+            ): () =>
+                _controller?.requestReplace(),
+            SingleActivator(
+              LogicalKeyboardKey.enter,
+              control: !meta,
+              meta: meta,
+              includeRepeats: false,
+            ): () =>
+                _ribbonKey.currentState?.perform(OfficeEditorAction.pageBreak),
+            SingleActivator(
+              LogicalKeyboardKey.keyD,
+              control: !meta,
+              meta: meta,
+              includeRepeats: false,
+            ): () =>
+                _ribbonKey.currentState?.perform(OfficeEditorAction.font),
+          },
+          const SingleActivator(
+            LogicalKeyboardKey.keyW,
+            control: true,
+            includeRepeats: false,
+          ): () =>
+              unawaited(_close()),
+          const SingleActivator(
+            LogicalKeyboardKey.keyW,
+            meta: true,
+            includeRepeats: false,
+          ): () =>
+              unawaited(_close()),
           const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
+          const SingleActivator(LogicalKeyboardKey.keyK, control: true): () =>
+              _ribbonKey.currentState?.perform(
+                OfficeEditorAction.insertHyperlink,
+              ),
+          const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () =>
+              _ribbonKey.currentState?.perform(
+                OfficeEditorAction.insertHyperlink,
+              ),
           const SingleActivator(LogicalKeyboardKey.keyF, control: true):
               _requestFind,
           const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
@@ -690,10 +815,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         ),
       ),
     );
-    return DocumentPrintScope(
-      enabled: _controller != null && !_loading && !_saving && !_exporting,
-      onPrint: _printDocument,
-      child: printContent,
+    return ViewerEscapeScope(
+      onEscape: _handleEscape,
+      child: DocumentPrintScope(
+        enabled: _controller != null && !_loading && !_saving && !_exporting,
+        onPrint: _printDocument,
+        child: printContent,
+      ),
     );
   }
 

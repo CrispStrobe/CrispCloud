@@ -72,6 +72,15 @@ class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
         if (mounted && (_route?.isCurrent ?? true)) Navigator.maybePop(context);
       },
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Let a viewer/editor's own autofocus win. Focusing this ancestor first
+      // strands its child's Escape, find and navigation shortcuts below focus.
+      FocusManager.instance.applyFocusChangesIfNeeded();
+      if ((_route?.isCurrent ?? true) && !_shortcutFocus.hasFocus) {
+        _shortcutFocus.requestFocus();
+      }
+    });
   }
 
   void _publish() {
@@ -142,7 +151,7 @@ class _DocumentPrintScopeState extends ConsumerState<DocumentPrintScope> {
       },
       child: Focus(
         focusNode: _shortcutFocus,
-        autofocus: true,
+        autofocus: false,
         child: _PrintState(
           action: _action,
           busy: _running,

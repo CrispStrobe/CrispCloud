@@ -8,8 +8,9 @@ import 'office_device_export_types.dart';
 Future<OfficeCopyOutcome?> exportOfficeCopy(
   Uint8List bytes,
   String name,
-  String dialogTitle,
-) async {
+  String dialogTitle, {
+  String? initialDirectory,
+}) async {
   final url = html.Url.createObjectUrlFromBlob(
     html.Blob([bytes], 'application/octet-stream'),
   );

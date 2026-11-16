@@ -6,5 +6,6 @@ enum OfficeCopyOutcome { savedCopy, downloadedCopy }
 typedef OfficeDeviceExporter = Future<OfficeCopyOutcome?> Function(
   Uint8List bytes,
   String suggestedName,
-  String dialogTitle,
-);
+  String dialogTitle, {
+  String? initialDirectory,
+});

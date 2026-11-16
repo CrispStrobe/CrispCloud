@@ -7,10 +7,12 @@ import 'pdf_edit_session.dart';
 Future<OfficeCopyOutcome?> exportOfficeCopy(
   Uint8List bytes,
   String name,
-  String dialogTitle,
-) async {
+  String dialogTitle, {
+  String? initialDirectory,
+}) async {
   final result = await NativePdfDeviceExport(
     dialogTitle: dialogTitle,
+    initialDirectory: initialDirectory,
     allowedExtensions: [name.toLowerCase().split('.').last],
   ).exportCopy(bytes, name);
   return switch (result) {

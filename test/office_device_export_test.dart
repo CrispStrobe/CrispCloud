@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 class _Picker extends FilePicker {
   String? name;
   String? title;
+  String? directory;
   List<String>? extensions;
   Uint8List? bytes;
   final result = Completer<String?>();
@@ -24,6 +25,7 @@ class _Picker extends FilePicker {
     bool lockParentWindow = false,
   }) {
     title = dialogTitle;
+    directory = initialDirectory;
     name = fileName;
     extensions = allowedExtensions;
     this.bytes = bytes;
@@ -45,12 +47,14 @@ void main() {
         Uint8List.fromList([1, 2, 3]),
         r'C:\reports\Budget.XLSX',
         'Kopie speichern',
+        initialDirectory: '/source/reports',
       );
       picker.result.complete(null);
       expect(await exporting, isNull);
       expect(picker.name, 'Budget.XLSX');
       expect(picker.extensions, ['xlsx']);
       expect(picker.title, 'Kopie speichern');
+      expect(picker.directory, '/source/reports');
       if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
         expect(
           picker.bytes,

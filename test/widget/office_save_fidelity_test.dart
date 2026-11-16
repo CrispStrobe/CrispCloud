@@ -1248,7 +1248,7 @@ void main() {
         final controller = await _open(
           tester,
           cloud,
-          copyExporter: (bytes, name, title) async {
+          copyExporter: (bytes, name, title, {initialDirectory}) async {
             expect(name, 'report.docx');
             expect(title, 'Save a copy');
             attempts++;
@@ -1297,7 +1297,7 @@ void main() {
         final controller = await _open(
           tester,
           cloud,
-          copyExporter: (bytes, name, title) {
+          copyExporter: (bytes, name, title, {initialDirectory}) {
             captured = Uint8List.fromList(bytes);
             return release.future;
           },

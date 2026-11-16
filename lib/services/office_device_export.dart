@@ -22,8 +22,9 @@ String officeCopyName(String suggestedName) {
 Future<OfficeCopyOutcome?> exportOfficeCopy(
   Uint8List bytes,
   String suggestedName,
-  String dialogTitle,
-) {
+  String dialogTitle, {
+  String? initialDirectory,
+}) {
   if (bytes.length > kOfficeCopyOutputLimitBytes) {
     throw StateError('The Office document exceeds the 128 MiB export limit.');
   }
@@ -31,5 +32,6 @@ Future<OfficeCopyOutcome?> exportOfficeCopy(
     Uint8List.fromList(bytes).asUnmodifiableView(),
     officeCopyName(suggestedName),
     dialogTitle,
+    initialDirectory: initialDirectory,
   );
 }

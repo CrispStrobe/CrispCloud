@@ -2,6 +2,7 @@ import '../services/viewer_text_decoder.dart';
 import '../services/editor_document.dart';
 import '../services/document_printing.dart';
 import 'document_print_scope.dart';
+import 'viewer_escape_scope.dart';
 import '../services/document_activity.dart';
 // lib/widgets/internal_viewer_dialog.dart
 //
@@ -445,6 +446,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---- Search --------------------------------------------------------------
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
+  final FocusNode _viewerFocus = FocusNode(debugLabel: 'Internal viewer');
   Timer? _searchDebounce;
   bool _searchOpen = false;
   bool _searching = false;
@@ -612,6 +614,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
+    _viewerFocus.dispose();
     _vScroll.dispose();
     _disposeModeResources(spool: _spool);
     _spool = null;
@@ -2216,6 +2219,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         _searchOpen = false;
         _searchController.clear();
       });
+      _viewerFocus.requestFocus();
       return;
     }
     setState(() => _searchOpen = true);
@@ -2904,6 +2908,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _handleEscape() {
+    if (ModalRoute.of(context)?.isCurrent == false) return;
     if (_searchOpen) {
       _toggleSearch();
       return;
@@ -3294,6 +3299,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         const SingleActivator(LogicalKeyboardKey.escape): _handleEscape,
       },
       child: Focus(
+        focusNode: _viewerFocus,
         autofocus: true,
         child: Scaffold(
           backgroundColor: theme.colorScheme.surface,
@@ -3547,10 +3553,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         ),
       ),
     );
-    return DocumentPrintScope(
-      enabled: _canPrintDocument,
-      onPrint: _printDocument,
-      child: printContent,
+    return ViewerEscapeScope(
+      onEscape: _handleEscape,
+      child: DocumentPrintScope(
+        enabled: _canPrintDocument,
+        onPrint: _printDocument,
+        child: printContent,
+      ),
     );
   }
 

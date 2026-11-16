@@ -1354,6 +1354,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       _editorItem(
         context,
+        'Save a copy',
+        OfficeEditorAction.saveCopy,
+        editor,
+        shortcut: const SingleActivator(
+          LogicalKeyboardKey.keyS,
+          meta: true,
+          shift: true,
+        ),
+      ),
+      _editorItem(
+        context,
         'Close Editor',
         OfficeEditorAction.close,
         editor,
