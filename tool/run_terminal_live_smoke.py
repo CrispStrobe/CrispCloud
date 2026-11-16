@@ -67,6 +67,7 @@ KbdInteractiveAuthentication no
 PubkeyAuthentication yes
 PubkeyAcceptedAlgorithms ssh-ed25519,rsa-sha2-512,rsa-sha2-256
 UsePAM no
+SetEnv ZDOTDIR={root}
 StrictModes no
 AllowUsers {username}
 AllowTcpForwarding yes
@@ -125,7 +126,7 @@ LogLevel VERBOSE
                         else:
                             raise RuntimeError("ssh-agent fixture did not start within five seconds")
                         environment.update({"SSH_AUTH_SOCK": str(agent_socket), "SSH_ASKPASS_REQUIRE": "never"})
-                        subprocess.run([add, "-t", "120", str(root / "client")], env=environment, stdin=subprocess.DEVNULL, check=True)
+                        subprocess.run([add, "-t", "600", str(root / "client")], env=environment, stdin=subprocess.DEVNULL, check=True)
                         unix_agent = True
                         unix_agent_reason = ""
                 if not unix_agent:
