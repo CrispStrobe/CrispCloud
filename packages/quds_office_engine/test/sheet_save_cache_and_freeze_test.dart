@@ -137,15 +137,18 @@ void main() {
         range: SmlRange.parse('A1:A5'),
         kind: SmlConditionalKind.top,
         rank: 3,
+        fillRgb: '00FF00',
       ),
       SmlConditionalRule(
         range: SmlRange.parse('A1:A5'),
         kind: SmlConditionalKind.bottomPercent,
         rank: 20,
+        fillRgb: 'FF0000',
       ),
       SmlConditionalRule(
         range: SmlRange.parse('A1:A5'),
         kind: SmlConditionalKind.belowAverage,
+        fillRgb: '0000FF',
       ),
     ]);
     final saved = await OfficeIsolateSave.workbook(book);
@@ -158,14 +161,17 @@ void main() {
     final reopened = SheetDeserializer().readBytes(saved).firstSheet;
     expect(reopened.conditionalFormats[0].kind, SmlConditionalKind.top);
     expect(reopened.conditionalFormats[0].rank, 3);
+    expect(reopened.conditionalFormats[0].fillRgb, '00FF00');
     expect(
       reopened.conditionalFormats[1].kind,
       SmlConditionalKind.bottomPercent,
     );
     expect(reopened.conditionalFormats[1].rank, 20);
+    expect(reopened.conditionalFormats[1].fillRgb, 'FF0000');
     expect(
       reopened.conditionalFormats[2].kind,
       SmlConditionalKind.belowAverage,
     );
+    expect(reopened.conditionalFormats[2].fillRgb, '0000FF');
   });
 }
