@@ -1,0 +1,30 @@
+{
+  "recorded_utc": "2026-11-16T08:50:33.694966+00:00",
+  "first_parent": "01e231b59d0873d8ada1b23085049612fc67622e",
+  "integrated_main": "c7463402d878a418d6b31cfd0bfce5c8f6cca63c",
+  "retained_original_pr_heads": [
+    "2b6ac08219418cf2c2d91968d117437684370c4d",
+    "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210"
+  ],
+  "original_head_content_proof": "squash-head-identities.json",
+  "method": "Normal merge of new main; only source-pin manifest conflict resolved to the canonical two-parent combination. Original squash-equivalent PR heads retained as additional parents.",
+  "canonical_repository": "CrispStrobe/quds_office_suite",
+  "canonical_branch": "codex/terminal-sharing-office-20261116",
+  "canonical_commit": "4235e690602195cc504438a6b937972c71f1ad39",
+  "canonical_tree": "bb5f1912fe2ff2b5cfb3d9c7091a184ba54de0ae",
+  "canonical_parents": [
+    "428679a33381f943a8ae63117d4207f01dd15462",
+    "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
+  ],
+  "managed_entries": 2409,
+  "host_hash_and_index_guard_passed": true,
+  "ssh_vendor_guard_passed": true,
+  "preexisting_mode_corrected": {
+    "path": "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+    "from": "100755",
+    "to": "100644",
+    "bytes_changed": false
+  },
+  "source_verification_note": "The first --source command pointed at an intentionally unmaterialized Git clone. It reported absent filesystem paths, not content drift. Its log is retained; the host hash/index guard passed and the complete canonical Git-object inventory is verified separately.",
+  "github_actions_queried_or_awaited": false
+}

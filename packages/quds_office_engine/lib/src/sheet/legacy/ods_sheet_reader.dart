@@ -27,8 +27,14 @@ typedef _OdsImage = ({
   double height,
 });
 typedef _OdsValidation = ({
+  SmlValidationKind kind,
+  SmlValidationOperator operator,
+  String formula1,
+  String formula2,
   List<String> items,
   bool allowBlank,
+  String errorTitle,
+  String error,
   SmlRange? sourceRange,
   String? sourceSheet,
 });
@@ -489,13 +495,7 @@ abstract final class OdsSheetReader {
           ));
           continue;
         }
-        _addListValidations(
-          sheet,
-          refs,
-          definition.value.items,
-          definition.value.allowBlank,
-          budget,
-        );
+        _addValidations(sheet, refs, definition.value, budget);
       }
       book.sheets.add(sheet);
     }
@@ -525,13 +525,18 @@ abstract final class OdsSheetReader {
         if (items.length >= 1000) break;
       }
       if (items.isEmpty) continue;
-      _addListValidations(
-        pending.sheet,
-        pending.refs,
-        items,
-        definition.allowBlank,
-        budget,
-      );
+      _addValidations(pending.sheet, pending.refs, (
+        kind: SmlValidationKind.list,
+        operator: SmlValidationOperator.between,
+        formula1: items.join(','),
+        formula2: '',
+        items: items,
+        allowBlank: definition.allowBlank,
+        errorTitle: definition.errorTitle,
+        error: definition.error,
+        sourceRange: null,
+        sourceSheet: null,
+      ), budget);
     }
     _readOdsNamedMetadata(spreadsheet, book);
     return book;
@@ -668,11 +673,10 @@ abstract final class OdsSheetReader {
     return defaults;
   }
 
-  static void _addListValidations(
+  static void _addValidations(
     SmlWorksheet sheet,
     List<SmlCellRef> refs,
-    List<String> items,
-    bool allowBlank,
+    _OdsValidation definition,
     _OdsBudget budget,
   ) {
     refs.sort(
@@ -691,9 +695,13 @@ abstract final class OdsSheetReader {
       sheet.validations.add(
         SmlDataValidation(
           range: SmlRange.parse('${refs[index].a1}:${refs[end].a1}'),
-          kind: SmlValidationKind.list,
-          formula1: items.join(','),
-          allowBlank: allowBlank,
+          kind: definition.kind,
+          operator: definition.operator,
+          formula1: definition.formula1,
+          formula2: definition.formula2,
+          allowBlank: definition.allowBlank,
+          errorTitle: definition.errorTitle,
+          error: definition.error,
         ),
       );
       index = end + 1;
@@ -704,6 +712,14 @@ abstract final class OdsSheetReader {
     XmlElement table,
   ) {
     final definitions = <String, _OdsValidation>{};
+    final listCondition = RegExp(
+      r'cell-content-is-in-list\((.*)\)\s*$',
+      dotAll: true,
+    );
+    final between = RegExp(r'cell-content-is-between\(([^,]+),([^)]+)\)');
+    final comparison = RegExp(
+      r'cell-content(?:-text-length)?\(\)\s*(>=|<=|<>|!=|>|<|=)\s*([^\s)]+)',
+    );
     for (final validation in _descendants(
       table,
       'content-validation',
@@ -712,40 +728,118 @@ abstract final class OdsSheetReader {
       final name = _attribute(validation, 'name', _table);
       final condition = _attribute(validation, 'condition', _table);
       if (name == null || condition == null) continue;
-      final match = RegExp(
-        r'cell-content-is-in-list\((.*)\)\s*$',
-        dotAll: true,
-      ).firstMatch(condition);
-      if (match == null) continue;
-      final argument = match.group(1)!.trim();
-      final items = <String>[];
-      SmlRange? sourceRange;
-      String? sourceSheet;
-      if (argument.contains(':') &&
-          !argument.contains(';') &&
-          !argument.contains('"')) {
-        final parsed = _odsRangeAddress(argument);
-        sourceRange = parsed?.range;
-        sourceSheet = parsed?.sheet;
-      } else {
-        for (final raw in argument.split(';')) {
-          var item = raw.trim();
-          if (item.length >= 2 && item.startsWith('"') && item.endsWith('"')) {
-            item = item.substring(1, item.length - 1).replaceAll('""', '"');
+      final lowerCondition = condition.toLowerCase();
+      final allowBlank =
+          _attribute(validation, 'allow-empty-cell', _table) != 'false';
+      final errorTitle = _attribute(validation, 'title', _table) ?? '';
+      final error = _attribute(validation, 'message', _table) ?? '';
+      final listMatch = listCondition.firstMatch(condition);
+      if (listMatch != null) {
+        final argument = listMatch.group(1)!.trim();
+        final items = <String>[];
+        SmlRange? sourceRange;
+        String? sourceSheet;
+        if (argument.contains(':') &&
+            !argument.contains(';') &&
+            !argument.contains('"')) {
+          final parsed = _odsRangeAddress(argument);
+          sourceRange = parsed?.range;
+          sourceSheet = parsed?.sheet;
+        } else {
+          for (final raw in argument.split(';')) {
+            var item = raw.trim();
+            if (item.length >= 2 &&
+                item.startsWith('"') &&
+                item.endsWith('"')) {
+              item = item.substring(1, item.length - 1).replaceAll('""', '"');
+            }
+            if (item.isNotEmpty) items.add(item);
           }
-          if (item.isNotEmpty) items.add(item);
         }
+        if (items.isEmpty && sourceRange == null) continue;
+        definitions[name] = (
+          kind: SmlValidationKind.list,
+          operator: SmlValidationOperator.between,
+          formula1: items.join(','),
+          formula2: '',
+          items: items,
+          allowBlank: allowBlank,
+          errorTitle: errorTitle,
+          error: error,
+          sourceRange: sourceRange,
+          sourceSheet: sourceSheet,
+        );
+        continue;
       }
-      if (items.isEmpty && sourceRange == null) continue;
+
+      final SmlValidationKind kind;
+      if (lowerCondition.contains('cell-content-is-whole-number')) {
+        kind = SmlValidationKind.whole;
+      } else if (lowerCondition.contains('cell-content-is-decimal-number')) {
+        kind = SmlValidationKind.decimal;
+      } else if (lowerCondition.contains('cell-content-is-date')) {
+        kind = SmlValidationKind.date;
+      } else if (lowerCondition.contains('cell-content-text-length')) {
+        kind = SmlValidationKind.textLength;
+      } else {
+        continue;
+      }
+      var operator = SmlValidationOperator.between;
+      var formula1 = '';
+      var formula2 = '';
+      final betweenMatch = between.firstMatch(condition);
+      if (betweenMatch != null) {
+        formula1 = betweenMatch.group(1)!.trim();
+        formula2 = betweenMatch.group(2)!.trim();
+      } else {
+        final comparisonMatch = comparison.firstMatch(condition);
+        if (comparisonMatch == null) continue;
+        formula1 = comparisonMatch.group(2)!.trim();
+        operator = switch (comparisonMatch.group(1)!) {
+          '>=' => SmlValidationOperator.greaterThanOrEqual,
+          '<=' => SmlValidationOperator.lessThanOrEqual,
+          '<>' || '!=' => SmlValidationOperator.notEqual,
+          '>' => SmlValidationOperator.greaterThan,
+          '<' => SmlValidationOperator.lessThan,
+          '=' => SmlValidationOperator.equal,
+          _ => SmlValidationOperator.between,
+        };
+      }
+      if (kind == SmlValidationKind.date) {
+        formula1 = _validationDateValue(formula1);
+        if (formula2.isNotEmpty) formula2 = _validationDateValue(formula2);
+      }
       definitions[name] = (
-        items: items,
-        allowBlank:
-            _attribute(validation, 'allow-empty-cell', _table) != 'false',
-        sourceRange: sourceRange,
-        sourceSheet: sourceSheet,
+        kind: kind,
+        operator: operator,
+        formula1: formula1,
+        formula2: formula2,
+        items: const <String>[],
+        allowBlank: allowBlank,
+        errorTitle: errorTitle,
+        error: error,
+        sourceRange: null,
+        sourceSheet: null,
       );
     }
     return definitions;
+  }
+
+  static String _validationDateValue(String raw) {
+    final match = RegExp(
+      r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$',
+    ).firstMatch(raw.trim());
+    if (match == null) return raw;
+    final date = DateTime.utc(
+      int.parse(match.group(1)!),
+      int.parse(match.group(2)!),
+      int.parse(match.group(3)!),
+    );
+    final serial =
+        date.difference(DateTime.utc(1899, 12, 30)).inMilliseconds / 86400000;
+    return serial == serial.roundToDouble()
+        ? serial.toStringAsFixed(0)
+        : '$serial';
   }
 
   static void _readOdsNamedMetadata(XmlElement spreadsheet, SmlWorkbook book) {

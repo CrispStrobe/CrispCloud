@@ -1,0 +1,38 @@
+[
+  {
+    "pr": 162,
+    "original_head": "2b6ac08219418cf2c2d91968d117437684370c4d",
+    "squash_commit": "3f7bc046ed7691ee6e8121e8a93c65a7a8f97f44",
+    "original_parents": [
+      "45ed126a6d7da0ecd80f3a765155f54008b278f3"
+    ],
+    "squash_parents": [
+      "45ed126a6d7da0ecd80f3a765155f54008b278f3"
+    ],
+    "trees": {
+      "2b6ac08219418cf2c2d91968d117437684370c4d": "eb271f6fdf1d8e644aca67757dd7eab678dd3a4c",
+      "3f7bc046ed7691ee6e8121e8a93c65a7a8f97f44": "eb271f6fdf1d8e644aca67757dd7eab678dd3a4c"
+    },
+    "exact_tree_identity": true,
+    "original_is_actual_ancestor_of_main": false,
+    "squash_is_actual_ancestor_of_main": true
+  },
+  {
+    "pr": 163,
+    "original_head": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
+    "squash_commit": "c7463402d878a418d6b31cfd0bfce5c8f6cca63c",
+    "original_parents": [
+      "3f7bc046ed7691ee6e8121e8a93c65a7a8f97f44"
+    ],
+    "squash_parents": [
+      "3f7bc046ed7691ee6e8121e8a93c65a7a8f97f44"
+    ],
+    "trees": {
+      "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210": "1cbdbd14d3ebac1c2f0f823567da9740624d04af",
+      "c7463402d878a418d6b31cfd0bfce5c8f6cca63c": "1cbdbd14d3ebac1c2f0f823567da9740624d04af"
+    },
+    "exact_tree_identity": true,
+    "original_is_actual_ancestor_of_main": false,
+    "squash_is_actual_ancestor_of_main": true
+  }
+]
