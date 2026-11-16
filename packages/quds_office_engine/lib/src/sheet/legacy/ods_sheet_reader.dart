@@ -191,6 +191,9 @@ abstract final class OdsSheetReader {
         hidden:
             _property(tableStyle, 'table-properties', 'display', _table) ==
             'false',
+        tabColorRgb: _hex(
+          _property(tableStyle, 'table-properties', 'tab-color', _table),
+        ),
       );
       final printRanges = _attribute(table, 'print-ranges', _table);
       if (printRanges != null) {

@@ -1,0 +1,18 @@
+{
+  "sha256": {
+    "README.md": "5b444841887ea62f0cd596c436acc6ed0650d678bd9f4dbf8707d34a0d5fc906",
+    "host/host-analysis.log": "31dcfbd76f752f9e58407aed2a681c238ea204794131d2424e73bce7015b6736",
+    "host/host-dependency-inputs.json": "3282584756164ef615016471713f76391d5a9863c3794a704b9127b236c6eb37",
+    "host/host-format.log": "1aa1cf39de99bf647d4a2e1e7ffdac6d1231e9d3c98e1a3b5a831922b5de7f05",
+    "host/host-pub-get.log": "fea3bc6529a7618a490eb99f09fa81d3830aeb9ae70c4f80bca6b239396076ec",
+    "host/host-source-after.json.gz": "0ea2c7fe81413163905da033c0badac36c0a2dc88e19d0473bae8513d1c87e9a",
+    "host/host-source-before.json.gz": "0ea2c7fe81413163905da033c0badac36c0a2dc88e19d0473bae8513d1c87e9a",
+    "host/host-tests.log": "3d5979b6ac158ddf88f43602bd58935f2fbe510ffc165891c2e78b9817b4fb3c",
+    "host/host-validation-receipt.json": "59ead7b64dfb37221f2e5f084d7f65ad49d971ffb72003ccd2f068f1a771b470",
+    "host/host-vendor-verify-tracked.log": "731851b42848dc580c8db51553fc91b8828c8e993761317295507f0d72fb7b49",
+    "host/host-vendor-verify.log": "731851b42848dc580c8db51553fc91b8828c8e993761317295507f0d72fb7b49",
+    "host/host-whitespace.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "host/standalone-parser-proof.json": "4d95fa1d46f47a1124d38b53dbd9109b7a54143c9f3f97383e5b4cd39f08ced4",
+    "incoming-refs.json": "563fcb37dc80a720ebb3d6fa46449ffebfde5dfdcfbdc1d295024ed64da090bc"
+  }
+}

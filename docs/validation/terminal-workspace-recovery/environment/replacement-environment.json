@@ -1,0 +1,64 @@
+{
+  "purpose": "Pinned replacement-worker toolchain and production graph for recovered local validation",
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/732a154614f9/toolchain/flutter"
+  },
+  "sdk_source_revision": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "sdk_source_diff": [],
+  "manifest_diff": [],
+  "verified_hosted_archives": 322,
+  "app_hosted_archives": 238,
+  "app_archive_hashes_match_lockfile": true,
+  "normal_pub_command": [
+    "/workspace/scratch/732a154614f9/toolchain/run",
+    "flutter",
+    "pub",
+    "get",
+    "--enforce-lockfile",
+    "--offline"
+  ],
+  "native_toolchain_installed": false,
+  "validation_scope": "Normal Dart analysis/format and normal web build; focused runtime suite separately uses explicit isolated native/data asset feature flags.",
+  "cache_omitted_nonruntime_trees": [
+    "example",
+    "examples",
+    "test",
+    "tests",
+    "benchmark",
+    "benchmarks",
+    "doc",
+    "docs",
+    "screenshots"
+  ],
+  "sdk_optional_binaries_omitted": false,
+  "active_binaries": {
+    "bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "git_blob_sha": "3f2ebcf182d0783e2e24133364aa6ad802b8e96b"
+    },
+    "bin/dartaotruntime": {
+      "bytes": 5710176,
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+      "git_blob_sha": "af8c31f4afed3e9ec48d2d006c2a281dd82350f1"
+    },
+    "bin/snapshots/dart2js_aot.dart.snapshot": {
+      "bytes": 20827888,
+      "sha256": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6",
+      "git_blob_sha": "dbfffc3b46d286ce25c2d2c4bfeb3d3971d4e817"
+    }
+  },
+  "github_actions_queried_or_awaited": false
+}

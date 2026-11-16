@@ -1,0 +1,15 @@
+{
+  "memory.max": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.max'",
+  "memory.current": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.current'",
+  "memory.peak": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.peak'",
+  "memory.events": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.events'",
+  "memory.events.local": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.events.local'",
+  "memory.stat": "[Errno 2] No such file or directory: '/sys/fs/cgroup/memory.stat'",
+  "self_cgroup": "0::/\n",
+  "meminfo": [
+    "MemTotal:       10206472 kB",
+    "MemAvailable:    4921236 kB",
+    "SwapTotal:             0 kB",
+    "Shmem:           2877652 kB"
+  ]
+}

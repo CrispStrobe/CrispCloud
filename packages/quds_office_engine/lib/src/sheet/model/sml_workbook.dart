@@ -402,6 +402,7 @@ class SmlWorksheet {
     this.sourcePartUri,
     this.rightToLeft = false,
     this.hidden = false,
+    this.tabColorRgb,
     this.freezeRows = 0,
     this.freezeCols = 0,
     Map<int, SmlRow>? rows,
@@ -442,6 +443,9 @@ class SmlWorksheet {
 
   /// Whether the worksheet tab is hidden in the workbook.
   bool hidden;
+
+  /// Optional six-digit RGB tab colour, without alpha.
+  String? tabColorRgb;
 
   /// Imported native rule groups remain intact while their editable projection
   /// is unchanged. A reference-only rename rebases these snapshots atomically.

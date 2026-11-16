@@ -1,6 +1,30 @@
 # Zotero validation — 16 November 2026
 
-## Current continuation: catalog insertion, rich fields and note numbering
+## Current optimization: verified batching and native scaling
+
+Application source `1c5aa295cdc1cedf0e5496e4673731f35ad5d18c` pins canonical
+Quds `0dd09811b1c02514c32c33bd13744dadb202e7af`. The exact source passed
+**39 host tests**, eight-target strict analysis, formatting and both vendor
+guards. All 2,411 managed Office entries verified; 1,617 measured host inputs,
+the manifest and the standalone parser remained unchanged. The canonical
+source separately passed 364 unique tests and six-target strict analysis.
+The combined focused total is **403**, excluding overlapping development runs.
+
+Basic citation refresh now uses one complete verified metadata batch per
+library, keeping all results staged until every source and the original edit
+target verify. Native field enumeration calculates current note positions once
+per response and resolves fields directly. See the [complete evidence and
+benchmark scope](validation/zotero-optimization-20261116/README.md).
+
+Saved searches, small capitals and native bibliography paragraphs from the
+[fidelity continuation](validation/zotero-fidelity-20261116/README.md) remain
+included. Sections below are historical receipts for their stated sources;
+their older limitations do not supersede the current [user guide](zotero.md).
+This pass did not repeat a full application build, live Zotero acceptance or
+terminal tests. Checkpoints were saved remotely; GitHub Actions were not queried
+or awaited.
+
+## Historical continuation: catalog insertion, rich fields and note numbering
 
 CrispCloud incorporates the Quds implementation qualified at
 `72691877bd9bafab761e655c13d0c9a0936b55bb`. Later documentation-only Quds pins
