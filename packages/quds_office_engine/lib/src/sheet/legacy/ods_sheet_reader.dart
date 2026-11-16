@@ -110,6 +110,8 @@ abstract final class OdsSheetReader {
 
     final styles = <String, XmlElement>{};
     final numberStyles = <String, XmlElement>{};
+    final pageLayouts = <String, XmlElement>{};
+    final masterPages = <String, XmlElement>{};
     void collectStyles(XmlElement styleRoot) {
       for (final collection in ['styles', 'automatic-styles']) {
         final parent = styleRoot.firstChild(collection, namespaceUri: _office);
@@ -125,6 +127,8 @@ abstract final class OdsSheetReader {
           if (_is(style, 'style', _style)) {
             final family = _attribute(style, 'family', _style);
             if (family != null) styles['$family:$name'] = style;
+          } else if (_is(style, 'page-layout', _style)) {
+            pageLayouts[name] = style;
           } else if (style.namespaceUri == _number) {
             numberStyles[name] = style;
           }
@@ -143,6 +147,17 @@ abstract final class OdsSheetReader {
       collectStyles(named);
     }
     collectStyles(root);
+    void collectMasters(XmlElement source) {
+      for (final master in _descendants(source, 'master-page', _style)) {
+        final name = _attribute(master, 'name', _style);
+        if (name != null) masterPages[name] = master;
+      }
+    }
+
+    if (zip.contains('styles.xml')) {
+      collectMasters(_readXml(zip, 'styles.xml', budget));
+    }
+    collectMasters(root);
 
     final book = SmlWorkbook(sheets: <SmlWorksheet>[], styles: SmlStyleSheet());
     final tables = spreadsheet.childrenNamed('table', namespaceUri: _table);
@@ -205,6 +220,13 @@ abstract final class OdsSheetReader {
           _property(tableStyle, 'table-properties', 'tab-color', _table),
         ),
       );
+      final masterName = _styleAttribute(tableStyle, 'master-page-name');
+      final master = masterName == null ? null : masterPages[masterName];
+      final layoutName = master == null
+          ? null
+          : _attribute(master, 'page-layout-name', _style);
+      final layout = layoutName == null ? null : pageLayouts[layoutName];
+      if (layout != null) sheet.pageSetup = _odsPageSetup(layout);
       final printRanges = _attribute(table, 'print-ranges', _table);
       if (printRanges != null) {
         for (final part in printRanges.split(RegExp(r'\s+'))) {
@@ -1899,6 +1921,81 @@ abstract final class OdsSheetReader {
     // properties; append them after the named chain so explicit styles win.
     if (defaultStyle != null) result.add(defaultStyle);
     return result;
+  }
+
+  static SmlPageSetup _odsPageSetup(XmlElement layout) {
+    final setup = SmlPageSetup();
+    final properties = layout.firstChild(
+      'page-layout-properties',
+      namespaceUri: _style,
+    );
+    if (properties == null) return setup;
+    double? length(String name) {
+      final points = _lengthToPoints(
+        properties.getAttribute(name, namespaceUri: _fo),
+      );
+      return points == null ? null : points / 72;
+    }
+
+    setup.paperWidthIn = length('page-width') ?? setup.paperWidthIn;
+    setup.paperHeightIn = length('page-height') ?? setup.paperHeightIn;
+    setup.orientation =
+        properties.getAttribute('print-orientation', namespaceUri: _style) ==
+            'landscape'
+        ? SmlPageOrientation.landscape
+        : SmlPageOrientation.portrait;
+    setup.marginLeftIn = length('margin-left') ?? setup.marginLeftIn;
+    setup.marginRightIn = length('margin-right') ?? setup.marginRightIn;
+    setup.marginTopIn = length('margin-top') ?? setup.marginTopIn;
+    setup.marginBottomIn = length('margin-bottom') ?? setup.marginBottomIn;
+    final scale = properties.getAttribute('scale-to', namespaceUri: _style);
+    if (scale != null) {
+      setup.scale =
+          int.tryParse(scale.replaceAll(RegExp(r'[^0-9]'), '')) ?? setup.scale;
+    }
+    setup.fitToWidth =
+        int.tryParse(
+          properties.getAttribute('scale-to-X', namespaceUri: _style) ?? '',
+        ) ??
+        setup.fitToWidth;
+    setup.fitToHeight =
+        int.tryParse(
+          properties.getAttribute('scale-to-Y', namespaceUri: _style) ?? '',
+        ) ??
+        setup.fitToHeight;
+    final firstPage = int.tryParse(
+      properties.getAttribute('first-page-number', namespaceUri: _style) ?? '',
+    );
+    if (firstPage != null) {
+      setup
+        ..firstPageNumber = firstPage
+        ..useFirstPageNumber = true;
+    }
+    final print = properties.getAttribute('print', namespaceUri: _style) ?? '';
+    setup.printGridlines = print.contains('grid');
+    setup.printHeadings = print.contains('headers');
+    if (setup.paperWidthIn < setup.paperHeightIn) {
+      // Keep the modeled orientation's paper dimensions stable for XLSX.
+      if (setup.orientation == SmlPageOrientation.landscape) {
+        final swap = setup.paperWidthIn;
+        setup.paperWidthIn = setup.paperHeightIn;
+        setup.paperHeightIn = swap;
+      }
+    }
+    final width = setup.paperWidthIn;
+    final height = setup.paperHeightIn;
+    final short = width < height ? width : height;
+    final long = width < height ? height : width;
+    setup.paperSize = (short - 8.27).abs() < 0.2 && (long - 11.69).abs() < 0.2
+        ? 9
+        : (short - 8.5).abs() < 0.2 && (long - 11.0).abs() < 0.2
+        ? 1
+        : (short - 8.5).abs() < 0.2 && (long - 14.0).abs() < 0.2
+        ? 5
+        : (short - 11.69).abs() < 0.2 && (long - 16.54).abs() < 0.2
+        ? 8
+        : 9;
+    return setup;
   }
 
   static String? _styleAttribute(List<XmlElement> styles, String name) {

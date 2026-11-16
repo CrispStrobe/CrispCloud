@@ -129,26 +129,11 @@ abstract final class OdsSheetWriter {
     layout.writeColumnStyles(w);
     layout.writeRowStyles(w);
     layout.writeCellStyles(w);
-    w.writeStartElement('page-layout', prefix: 'style');
-    w.writeAttribute('style:name', 'pm1');
-    w.writeStartElement('page-layout-properties', prefix: 'style');
-    w.writeAttribute('fo:page-width', '8.2677in');
-    w.writeAttribute('fo:page-height', '11.6929in');
-    w.writeAttribute('style:print-orientation', 'portrait');
-    w.writeAttribute('fo:margin-top', '0.7874in');
-    w.writeAttribute('fo:margin-bottom', '0.7874in');
-    w.writeAttribute('fo:margin-left', '0.7874in');
-    w.writeAttribute('fo:margin-right', '0.7874in');
-    w.writeEndElement();
-    w.writeEndElement();
+    layout.writePageLayouts(w);
     w.writeEndElement();
 
     w.writeStartElement('master-styles', prefix: 'office');
-    w.writeEmptyElement(
-      'master-page',
-      prefix: 'style',
-      attributes: {'style:name': 'Standard', 'style:page-layout-name': 'pm1'},
-    );
+    layout.writeMasterPages(w);
     w.writeEndElement();
     w.writeEndElement();
     return w.toXml();
@@ -736,7 +721,8 @@ class _OdsLayout {
       this.validationXml.add(validationXml);
       tableStyle.add('ta$sheetIndex');
       tableBuffers.add(
-        '<style:style style:name="ta$sheetIndex" style:family="table">'
+        '<style:style style:name="ta$sheetIndex" style:family="table" '
+        'style:master-page-name="mp$sheetIndex">'
         '<style:table-properties table:display="${sheet.hidden ? 'false' : 'true'}"'
         '${sheet.tabColorRgb == null ? '' : ' table:tab-color="#${sheet.tabColorRgb!.toLowerCase()}"'}/>'
         '</style:style>',
@@ -1049,6 +1035,107 @@ class _OdsLayout {
     }
     for (final buffer in cellStyleBuffers) {
       w.writeRaw(buffer);
+    }
+  }
+
+  void writePageLayouts(XmlWriter w) {
+    for (var index = 0; index < book.sheets.length; index++) {
+      final setup = book.sheets[index].pageSetup ?? SmlPageSetup();
+      var width = setup.paperWidthIn;
+      var height = setup.paperHeightIn;
+      if (setup.orientation == SmlPageOrientation.landscape && width < height) {
+        final swap = width;
+        width = height;
+        height = swap;
+      } else if (setup.orientation == SmlPageOrientation.portrait &&
+          width > height) {
+        final swap = width;
+        width = height;
+        height = swap;
+      }
+      w.writeStartElement('page-layout', prefix: 'style');
+      w.writeAttribute('style:name', 'pm$index');
+      w.writeStartElement('page-layout-properties', prefix: 'style');
+      w.writeAttribute('fo:page-width', '${width.toStringAsFixed(4)}in');
+      w.writeAttribute('fo:page-height', '${height.toStringAsFixed(4)}in');
+      w.writeAttribute(
+        'style:print-orientation',
+        setup.orientation == SmlPageOrientation.landscape
+            ? 'landscape'
+            : 'portrait',
+      );
+      w.writeAttribute(
+        'fo:margin-left',
+        '${setup.marginLeftIn.toStringAsFixed(4)}in',
+      );
+      w.writeAttribute(
+        'fo:margin-right',
+        '${setup.marginRightIn.toStringAsFixed(4)}in',
+      );
+      w.writeAttribute(
+        'fo:margin-top',
+        '${setup.marginTopIn.toStringAsFixed(4)}in',
+      );
+      w.writeAttribute(
+        'fo:margin-bottom',
+        '${setup.marginBottomIn.toStringAsFixed(4)}in',
+      );
+      if (setup.scale != 100) {
+        w.writeAttribute('style:scale-to', '${setup.scale}%');
+      }
+      if (setup.fitToWidth > 0) {
+        w.writeAttribute('style:scale-to-X', '${setup.fitToWidth}');
+      }
+      if (setup.fitToHeight > 0) {
+        w.writeAttribute('style:scale-to-Y', '${setup.fitToHeight}');
+      }
+      if (setup.useFirstPageNumber && setup.firstPageNumber != null) {
+        w.writeAttribute('style:first-page-number', '${setup.firstPageNumber}');
+      }
+      final print = <String>[
+        if (setup.printGridlines) 'grid',
+        if (setup.printHeadings) 'headers',
+      ];
+      if (print.isNotEmpty) {
+        w.writeAttribute('style:print', print.join(' '));
+      }
+      w.writeEndElement();
+      w.writeStartElement('header-style', prefix: 'style');
+      w.writeEmptyElement(
+        'header-footer-properties',
+        prefix: 'style',
+        attributes: {
+          'fo:min-height': '0.2953in',
+          'fo:margin-left': '0in',
+          'fo:margin-right': '0in',
+          'fo:margin-bottom': '0.0984in',
+        },
+      );
+      w.writeEndElement();
+      w.writeStartElement('footer-style', prefix: 'style');
+      w.writeEmptyElement(
+        'header-footer-properties',
+        prefix: 'style',
+        attributes: {
+          'fo:min-height': '0.2953in',
+          'fo:margin-left': '0in',
+          'fo:margin-right': '0in',
+          'fo:margin-top': '0.0984in',
+        },
+      );
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+  }
+
+  void writeMasterPages(XmlWriter w) {
+    for (var index = 0; index < book.sheets.length; index++) {
+      w.writeStartElement('master-page', prefix: 'style');
+      w.writeAttribute('style:name', 'mp$index');
+      w.writeAttribute('style:page-layout-name', 'pm$index');
+      w.writeEmptyElement('header', prefix: 'style');
+      w.writeEmptyElement('footer', prefix: 'style');
+      w.writeEndElement();
     }
   }
 
