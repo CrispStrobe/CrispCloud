@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../services/macos_application_launcher.dart';
 import '../models/folder_size_measurement.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
@@ -6124,7 +6125,49 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> navigateInto(FileItem item) async {
+  bool canLaunchApplication(FileItem item) {
+    if (isInArchive ||
+        !_ref.read(macApplicationLauncherProvider).isApplicationBundle(item)) {
+      return false;
+    }
+    final origin = originForOperation(item);
+    return origin != null &&
+        origin.isCurrent &&
+        origin.source is LocalPanelSource;
+  }
+
+  Future<void> launchApplication(FileItem item) async {
+    try {
+      final origin = originForOperation(item);
+      final launcher = _ref.read(macApplicationLauncherProvider);
+      if (origin == null ||
+          !origin.isCurrent ||
+          origin.source is! LocalPanelSource ||
+          !launcher.isApplicationBundle(item)) {
+        throw StateError(
+          'The original local application is unavailable. Refresh the folder.',
+        );
+      }
+      final path = item.path ?? p.join(origin.source.currentPath, item.name);
+      await _localFileService.withFileOperationAccess(path, () async {
+        if (!origin.isCurrent) {
+          throw StateError('The original application folder is unavailable.');
+        }
+        await launcher.launch(path);
+      });
+    } catch (error) {
+      if (!_isDisposed) {
+        _ref
+            .read(errorProvider)
+            .addError('Could not launch application: $error');
+      }
+    }
+  }
+
+  Future<void> navigateInto(
+    FileItem item, {
+    bool browseApplicationBundle = false,
+  }) async {
     _log.info(
       'navigateInto: ${item.name} isFolder=${item.isFolder} path=${item.path}',
     );
@@ -6137,6 +6180,10 @@ class PanelNotifier extends ChangeNotifier {
           .addError(
             'This result no longer has a verified source. Run the search again.',
           );
+      return;
+    }
+    if (!browseApplicationBundle && canLaunchApplication(item)) {
+      await launchApplication(item);
       return;
     }
     // If we're inside an archive, navigate within it

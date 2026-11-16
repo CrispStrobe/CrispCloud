@@ -545,7 +545,8 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         panel.toggleSelection(file, shiftKey: shift, ctrlKey: toggle);
       } else {
         panel.setCursorOnly(file);
-        if (file.isFolder || (open && isDefaultArchiveFilename(file.name))) {
+        if ((file.isFolder && (open || !panel.canLaunchApplication(file))) ||
+            (open && isDefaultArchiveFilename(file.name))) {
           await panel.navigateInto(file);
         } else if (open) {
           viewSelectedFile(context, ref);
@@ -618,7 +619,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     if (key == LogicalKeyboardKey.arrowRight ||
         key == LogicalKeyboardKey.enter) {
       final file = panel.cursorItem;
-      if (file != null && (file.isFolder || key == LogicalKeyboardKey.enter)) {
+      if (file != null &&
+          (key == LogicalKeyboardKey.enter ||
+              (file.isFolder && !panel.canLaunchApplication(file)))) {
         unawaited(_perform(_columns.last, file, open: true));
       }
       return KeyEventResult.handled;

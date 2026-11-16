@@ -1,0 +1,281 @@
+00:00 +0: loading /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_launcher_test.dart
+00:00 +0: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_launcher_test.dart: recognizes application directories only on supported platforms
+00:00 +1: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_launcher_test.dart: launches the exact absolute bundle as a separate argument without a shell
+00:00 +2: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_launcher_test.dart: launch failures are surfaced instead of changing to the bundle directory
+00:03 +3: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_live_test.dart: live Launch Services opens a temporary background app bundle
+00:04 +4: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: default opening launches a verified local app and keeps the folder view
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt") returned 2 entities
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt/Viewer.app
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt/Viewer.app
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt/Viewer.app (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt/Viewer.app (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-ihzzBt/Viewer.app") returned 1 entities
+00:04 +5: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: navigation during access keeps the captured original application target
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-n5sceV (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-n5sceV (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-n5sceV") returned 2 entities
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-n5sceV/ordinary (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-n5sceV/ordinary (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-n5sceV/ordinary") returned 0 entities
+00:04 +6: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: remote application folders stay browsable without launching or downloading
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-wxudaA (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-wxudaA (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-wxudaA") returned 2 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: Remote.app isFolder=true path=/Remote.app
+ℹ️ [PanelNotifier] navigateToPath: /Remote.app (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/Remote.app side=PanelSide.remote
+00:04 +7: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: an unverified replacement row cannot launch an application
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-JeHfxM (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-JeHfxM (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-JeHfxM") returned 2 entities
+00:04 +8: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: denied filesystem access does not launch or enter the bundle
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-YNCpEt (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-YNCpEt (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-YNCpEt") returned 2 entities
+00:04 +9: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: column selection and Right never launch; Enter and double click do
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-EUFw83 (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-EUFw83 (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-EUFw83") returned 2 entities
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-EUFw83/Viewer.app
+ℹ️ [PanelNotifier] navigateInto: Viewer.app isFolder=true path=/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-EUFw83/Viewer.app
+00:07 +10: /private/tmp/crispcloud-terminal-ods-isolated/test/macos_application_navigation_test.dart: context menu offers Launch and Browse package contents separately
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-HzQLLr (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-HzQLLr (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/application-navigation-HzQLLr") returned 2 entities
+🐛 [FileContextMenu] file=Viewer.app side=local web=false
+🐛 [PanelNotifier] clearSelection (was 0)
+🐛 [PanelNotifier] toggleSelection: Viewer.app shift=false ctrl=false lastSelected=null side=PanelSide.local
+00:08 +11: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: noninteractive navigation uses its captured snapshot without access prompts
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-DsFJdc/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-DsFJdc/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-DsFJdc/current") returned 1 entities
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-DsFJdc/target (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-DsFJdc/target (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-DsFJdc/target") returned 1 entities
+00:08 +12: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: noninteractive denied folder preserves the current view
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-zTDzGe/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-zTDzGe/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-zTDzGe/current") returned 1 entities
+🐛 [PanelNotifier] selectAll (2 visible files)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-zTDzGe/target (side=PanelSide.local, web=false)
+00:08 +13: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: noninteractive missing folder preserves the current view
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mcfhDb/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mcfhDb/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mcfhDb/current") returned 1 entities
+🐛 [PanelNotifier] selectAll (2 visible files)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mcfhDb/target (side=PanelSide.local, web=false)
+00:08 +14: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: a rejected continuation does not accept a navigation intent
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mde6Mt/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mde6Mt/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-mde6Mt/current") returned 1 entities
+00:08 +15: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: cancellation during a snapshot cannot change the visible path or marks
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-EagII0/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-EagII0/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-EagII0/current") returned 1 entities
+🐛 [PanelNotifier] selectAll (2 visible files)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-EagII0/target (side=PanelSide.local, web=false)
+00:08 +16: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: newer manual navigation wins over a pending noninteractive snapshot
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/current") returned 1 entities
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/target (side=PanelSide.local, web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/manual (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/manual (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-oaoCJG/manual") returned 1 entities
+00:08 +17: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: the intent revision changes before a manual access check finishes
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-1FsU2E/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-1FsU2E/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-1FsU2E/current") returned 1 entities
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-1FsU2E/manual (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-1FsU2E/manual (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-1FsU2E/manual") returned 1 entities
+00:08 +18: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: manual navigation keeps its existing explicit grant flow
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-nq8kuv/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-nq8kuv/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-nq8kuv/current") returned 1 entities
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-nq8kuv/manual (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-nq8kuv/manual (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-nq8kuv/manual") returned 1 entities
+00:08 +19: /private/tmp/crispcloud-terminal-ods-isolated/test/panel_guarded_navigation_test.dart: a cancelled remote listing cannot publish its delayed rows
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+ℹ️ [PanelNotifier] navigateToPath: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-L9k6w4/current (side=PanelSide.local, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-L9k6w4/current (web=false)
+🐛 [PanelNotifier] listDirectory("/var/folders/53/8b_q74j10mv9xq84_j44tm1w0000gn/T/guarded-navigation-L9k6w4/current") returned 1 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /delayed (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Memory path=/delayed side=PanelSide.remote
+00:12 +20: /private/tmp/crispcloud-terminal-ods-isolated/test/file_list_i18n_test.dart: file list labels preserve translations and placeholders
+00:13 +21: /private/tmp/crispcloud-terminal-ods-isolated/test/file_list_i18n_test.dart: compact file tile exposes localized screen reader text
+00:14 +22: /private/tmp/crispcloud-terminal-ods-isolated/test/file_list_i18n_test.dart: a folder row with no path keeps localized focus semantics
+00:14 +23: /private/tmp/crispcloud-terminal-ods-isolated/test/file_list_i18n_test.dart: a folder row with an empty path keeps localized focus semantics
+00:14 +24: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: opening an executable keeps its ordinary viewer action
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:16 +25: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a direct deep location hydrates parents without blocking its live column
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+00:17 +26: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a refreshed listing rejects older ancestor hydration
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +27: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: ancestor hydration stays with the original account at identical paths
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+ℹ️ [MultiCloudService] Adding connection: second (Second account / Test cloud)
+ℹ️ [MultiCloudNotifier] Connection added: second
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Test cloud → Test cloud (path=/docs/nested)
+00:17 +28: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: unavailable ancestors stay skipped until an explicit refresh
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +29: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: remote ancestors stop at the advertised source root
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [MultiCloudService] Adding connection: scoped (Scoped account / Test cloud)
+ℹ️ [MultiCloudNotifier] Connection added: scoped
+🐛 [PanelSource] setSource: Test cloud path=/sandbox/docs/nested side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Local → Test cloud (path=/sandbox/docs/nested)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:17 +30: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: local ancestor reads preserve shared state and stay inside the grant
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /selected/docs/deep (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /selected/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/selected/docs/deep") returned 0 entities
+00:17 +31: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: named local roots reject snapshots from a replaced grant
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/docs/deep (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/docs/deep") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/docs/deep") returned 0 entities
+00:17 +32: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a replaced local grant discards already published ancestor rows
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/docs/deep (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/docs/deep") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/docs/deep") returned 0 entities
+00:18 +33: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a replaced local grant rejects an ancestor action before rebuilding
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/docs/deep (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/docs/deep") returned 0 entities
+00:18 +34: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a grant replaced during ancestor reload cannot select its matching row
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /Photos/docs/deep (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos/docs/deep (web=false)
+🐛 [PanelNotifier] listDirectory("/Photos/docs/deep") returned 0 entities
+ℹ️ [PanelNotifier] navigateToPath: /Photos (side=PanelSide.remote, web=false)
+🐛 [PanelNotifier] _loadLocalFiles: /Photos (web=false)
+00:18 +35: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: very deep navigation keeps root context with bounded ancestor work
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /level0/level1/level2/level3/level4/level5/level6/level7/level8/level9/level10/level11/level12/level13/level14/level15/level16/level17/level18/level19/level20/level21/level22/level23/level24/level25/level26/level27/level28/level29/level30/level31/level32/level33/level34/level35/level36/level37/level38/level39/level40/level41/level42/level43/level44/level45/level46/level47/level48/level49/level50/level51/level52/level53/level54/level55/level56/level57/level58/level59/level60/level61/level62/level63/level64/level65/level66/level67/level68/level69/level70/level71/level72/level73/level74/level75/level76/level77/level78/level79/level80/level81/level82/level83/level84/level85/level86/level87/level88/level89/level90/level91/level92/level93/level94/level95/level96/level97/level98/level99/level100/level101/level102/level103/level104/level105/level106/level107/level108/level109/level110/level111/level112/level113/level114/level115/level116/level117/level118/level119/level120/level121/level122/level123/level124/level125/level126/level127/level128/level129/level130/level131/level132/level133/level134/level135/level136/level137/level138/level139/level140/level141/level142/level143/level144/level145/level146/level147/level148/level149 (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/level0/level1/level2/level3/level4/level5/level6/level7/level8/level9/level10/level11/level12/level13/level14/level15/level16/level17/level18/level19/level20/level21/level22/level23/level24/level25/level26/level27/level28/level29/level30/level31/level32/level33/level34/level35/level36/level37/level38/level39/level40/level41/level42/level43/level44/level45/level46/level47/level48/level49/level50/level51/level52/level53/level54/level55/level56/level57/level58/level59/level60/level61/level62/level63/level64/level65/level66/level67/level68/level69/level70/level71/level72/level73/level74/level75/level76/level77/level78/level79/level80/level81/level82/level83/level84/level85/level86/level87/level88/level89/level90/level91/level92/level93/level94/level95/level96/level97/level98/level99/level100/level101/level102/level103/level104/level105/level106/level107/level108/level109/level110/level111/level112/level113/level114/level115/level116/level117/level118/level119/level120/level121/level122/level123/level124/level125/level126/level127/level128/level129/level130/level131/level132/level133/level134/level135/level136/level137/level138/level139/level140/level141/level142/level143/level144/level145/level146/level147/level148/level149 side=PanelSide.remote
+00:19 +36: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: keeps ancestor listings and renders actual horizontal columns
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateInto: nested isFolder=true path=/docs/nested
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+00:19 +37: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: dragging into a hydrated ancestor folder reviews copy without navigating (variant: TargetPlatform.linux)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+00:21 +38: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: dragging into a hydrated ancestor folder reviews move without navigating (variant: TargetPlatform.linux)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+00:21 +39: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a removed ancestor folder cannot receive a captured drop
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+00:22 +40: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: ancestor destinations cannot become drag sources
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateToPath: /docs/nested (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs/nested side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:22 +41: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: filters the live column without replacing ancestor snapshots
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:22 +42: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: ancestor selection reloads and selects the exact fresh row
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+00:22 +43: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: ancestor context menu captures the original directory and row
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+🐛 [FileContextMenu] file=root.txt side=remote web=false
+🐛 [PanelNotifier] clearSelection (was 0)
+🐛 [PanelNotifier] toggleSelection: root.txt shift=false ctrl=false lastSelected=null side=PanelSide.remote
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+00:23 +44: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a missing ancestor item cannot open a stale context menu
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+00:23 +45: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: modifier clicks mark a folder without navigating
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] toggleSelection: docs shift=false ctrl=true lastSelected=null side=PanelSide.remote
+00:23 +46: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: keyboard navigation keeps focus and forwards modified Enter
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+00:23 +47: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: inline rename uses the shared editor and keeps text keys local
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:23 +48: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: changing tabs does not reuse another tabs ancestor snapshots
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+🐛 [PanelNotifier] addTab: path=/other
+ℹ️ [PanelNotifier] navigateToPath: /other (side=PanelSide.remote, web=false)
+00:24 +49: /private/tmp/crispcloud-terminal-ods-isolated/test/widget/file_column_view_test.dart: a delayed ancestor action cannot cross an account switch
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+ℹ️ [PanelNotifier] navigateInto: docs isFolder=true path=/docs
+ℹ️ [PanelNotifier] navigateToPath: /docs (side=PanelSide.remote, web=false)
+🐛 [PanelSource] setSource: Test cloud path=/docs side=PanelSide.remote
+ℹ️ [PanelNotifier] navigateToPath: / (side=PanelSide.remote, web=false)
+ℹ️ [MultiCloudService] Adding connection: second (Second account / Test cloud)
+ℹ️ [MultiCloudNotifier] Connection added: second
+🐛 [PanelSource] setSource: Test cloud path=/ side=PanelSide.remote
+ℹ️ [PanelNotifier] Source switched: Test cloud → Test cloud (path=/)
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:24 +50: All tests passed!

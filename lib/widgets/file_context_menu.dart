@@ -262,6 +262,20 @@ void _showResultListContextMenu(
     items: [
       if (externalComparison != null) externalComparison.buildItem(),
       if (externalEditing != null) externalEditing.buildItem(),
+      if (folder != null && panel.canLaunchApplication(folder)) ...[
+        command(
+          context.commanderTr('Launch application'),
+          Icons.play_arrow,
+          () => panel.launchApplication(folder),
+          requiresSource: false,
+        ),
+        command(
+          context.commanderTr('Browse package contents'),
+          Icons.folder_open,
+          () => panel.navigateInto(folder, browseApplicationBundle: true),
+          requiresSource: false,
+        ),
+      ],
       if (folder != null && panel.folderSizeFor(folder)?.isActive == true)
         command(
           StorageAnalyzerStrings(context).text('cancel'),
@@ -653,23 +667,51 @@ void showFileContextMenu(
     );
   }
 
-  // Open (folders only)
+  // macOS application bundles launch by default; their contents stay browsable.
   if (isSingleFolder) {
+    final application = panel.canLaunchApplication(file);
     items.add(
       PopupMenuItem(
         child: Row(
           children: [
-            const Icon(Icons.folder_open),
+            Icon(application ? Icons.play_arrow : Icons.folder_open),
             const SizedBox(width: 8),
-            Expanded(child: Text(AppLocalizations.of(context)!.open)),
+            Expanded(
+              child: Text(
+                application
+                    ? context.commanderTr('Launch application')
+                    : AppLocalizations.of(context)!.open,
+              ),
+            ),
           ],
         ),
         onTap: () => Future.delayed(
           Duration.zero,
-          () => ref.read(panelProvider(side)).navigateInto(file),
+          () => application
+              ? panel.launchApplication(file)
+              : panel.navigateInto(file),
         ),
       ),
     );
+    if (application) {
+      items.add(
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(Icons.folder_open),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(context.commanderTr('Browse package contents')),
+              ),
+            ],
+          ),
+          onTap: () => Future.delayed(
+            Duration.zero,
+            () => panel.navigateInto(file, browseApplicationBundle: true),
+          ),
+        ),
+      );
+    }
   }
 
   // Specialized editors and text/code editing for a single file.

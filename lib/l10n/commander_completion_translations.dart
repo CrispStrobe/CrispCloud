@@ -1,5 +1,25 @@
 // Additional Commander workflow translations: de, fr, es, pt, zh, ja, ko, ar.
 const commanderCompletionTranslations = <String, List<String>>{
+  "Launch application": [
+    "Anwendung starten",
+    "Lancer l’application",
+    "Iniciar aplicación",
+    "Iniciar aplicativo",
+    "启动应用程序",
+    "アプリケーションを起動",
+    "앱 실행",
+    "تشغيل التطبيق",
+  ],
+  "Browse package contents": [
+    "Paketinhalt anzeigen",
+    "Parcourir le contenu du paquet",
+    "Explorar contenido del paquete",
+    "Explorar conteúdo do pacote",
+    "浏览程序包内容",
+    "パッケージの内容を表示",
+    "패키지 내용 보기",
+    "تصفح محتويات الحزمة",
+  ],
   "Container details": [
     "Containerdetails",
     "Détails du conteneur",

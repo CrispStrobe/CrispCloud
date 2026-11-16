@@ -698,7 +698,8 @@ void main() {
                 ),
               )
               .onPressed,
-          isNull,
+          isNotNull,
+          reason: 'A valid review enables explicit Start; the checks above prove no transfer starts on drop.',
         );
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();

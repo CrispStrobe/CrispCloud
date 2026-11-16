@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-16",
+  "platform": "macOS",
+  "flutter": "3.47.8",
+  "tests": {
+    "passed": 50,
+    "skipped": 0,
+    "failures": 0,
+    "live": "Actual /usr/bin/open -a of a temporary compiled background .app, verified by marker output; fixture exits and is deleted."
+  },
+  "analysis": {
+    "focused_targets": 8,
+    "issues": 0,
+    "broader_panel_analysis": "No errors or warnings; 13 existing informational lints outside the changed sections."
+  },
+  "behavior": {
+    "default": "Local macOS .app folders launch on explicit Open, Enter or double-click.",
+    "context_menu": [
+      "Launch application",
+      "Browse package contents"
+    ],
+    "column_view": "Selection and Right do not launch applications.",
+    "remote_archive": "No application launch; folder browsing remains available."
+  },
+  "baseline_test_correction": "Two existing column drag-review cases also failed on unchanged production files. Valid reviews now assert an enabled explicit Start button while retaining no automatic transfer assertions.",
+  "installed_app": "No running installed app replaced."
+}

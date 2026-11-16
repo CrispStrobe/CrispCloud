@@ -1,0 +1,17 @@
+Analyzing 7 items...                                            
+
+   info • Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._owner') to initialize the field • lib/providers/panel_provider.dart:119:8 • prefer_initializing_formals
+   info • Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._isCurrent') to initialize the field • lib/providers/panel_provider.dart:122:8 • prefer_initializing_formals
+   info • Use an initializing formal to assign a parameter to a field. Try using an initialing formal ('this._revision') to initialize the field • lib/providers/panel_provider.dart:123:8 • prefer_initializing_formals
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:3959:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:5003:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:5167:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:5208:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:7398:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:7618:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:7627:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:7906:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:7926:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/providers/panel_provider.dart:7952:9 • curly_braces_in_flow_control_structures
+
+13 issues found. (ran in 18.6s)
