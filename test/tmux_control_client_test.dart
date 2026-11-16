@@ -119,6 +119,8 @@ void main() {
   );
 
   test('captured cursor and keyboard modes govern the first input', () async {
+    server.version = 'next-3.7';
+    server.bracketFlagSupported = true;
     server.cursorMode = true;
     server.bracketMode = true;
     await server.start(client);
@@ -130,6 +132,31 @@ void main() {
     server.paneOutput('%0', ascii.encode('x'));
     expect(terminal.buffer.getText().trim(), 'captured %0x');
   });
+
+  test(
+    'tmux 3.2 missing paste-mode format uses zero and learns live mode',
+    () async {
+      server.version = '3.2';
+      server.bracketMode = true;
+      await server.start(client);
+      final terminal = client.panes['%0']!.session.terminal;
+      terminal.paste('initial');
+      await _events();
+      expect(utf8.decode(server.inputBytes), 'initial');
+      server.inputBytes.clear();
+      server.paneOutput('%0', ascii.encode('\x1b[?2004h'));
+      terminal.paste('live');
+      await _events();
+      expect(utf8.decode(server.inputBytes), '\x1b[200~live\x1b[201~');
+      server.inputBytes.clear();
+      server.panes.single.height = 40;
+      server.layout(80, 40);
+      await Future<void>.delayed(const Duration(milliseconds: 70));
+      terminal.paste('after-resize');
+      await _events();
+      expect(utf8.decode(server.inputBytes), '\x1b[200~after-resize\x1b[201~');
+    },
+  );
 
   test(
     'attaching in the alternate screen preserves the saved primary screen',
@@ -203,6 +230,189 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 70));
       expect(client.panes.keys, ['%0']);
       expect(first.isConnected, isTrue);
+    },
+  );
+
+  test('resize gates redraw bytes before metadata arrives', () async {
+    await server.start(client);
+    final terminal = client.panes['%0']!.session.terminal;
+    server.panes.single.height = 40;
+    server.captureText = '${'\n' * 39}row40';
+    server.cursorY = 39;
+    server.layout(80, 40);
+    server.paneOutput('%0', ascii.encode('\x1b[40;1Hrow40'));
+    // This output would clamp to row24 in the old emulator without gating.
+    expect(terminal.buffer.getText(), isNot(contains('row40')));
+    await Future<void>.delayed(const Duration(milliseconds: 70));
+    expect(client.ready, isTrue);
+    expect(terminal.viewHeight, 40);
+    final rows = terminal.buffer.getText().split('\n');
+    expect(rows[39], 'row40');
+    expect(rows[23], isNot(contains('row40')));
+  });
+
+  test(
+    'typing during a blocked resize capture is retained and delivered',
+    () async {
+      await server.start(client);
+      final terminal = client.panes['%0']!.session.terminal;
+      final gate = Completer<void>();
+      final entered = Completer<void>();
+      server.captureGate = gate;
+      server.captureEntered = entered;
+      server.panes.single.height = 40;
+      server.layout(80, 40);
+      await entered.future.timeout(const Duration(seconds: 1));
+      terminal.textInput('typed during resize');
+      await _events();
+      expect(server.inputBytes, isEmpty);
+      gate.complete();
+      await _events();
+      expect(client.ready, isTrue);
+      expect(terminal.viewHeight, 40);
+      expect(utf8.decode(server.inputBytes), 'typed during resize');
+    },
+  );
+
+  test('unchanged layout keeps scrollback and streaming output', () async {
+    server.addSplit();
+    await server.start(client);
+    final terminal = client.panes['%0']!.session.terminal;
+    server.paneOutput(
+      '%0',
+      ascii.encode(List.generate(300, (i) => 'history$i\r\n').join()),
+    );
+    final captureCount = server.commands
+        .where((command) => command.startsWith('capture-pane'))
+        .length;
+    const layout = '0000,80x24,0,0{40x24,0,0,0,39x24,41,0,1}';
+    server.notification('%layout-change @0 $layout $layout *');
+    server.paneOutput('%0', ascii.encode('still-live'));
+    expect(terminal.buffer.getText(), contains('still-live'));
+    await Future<void>.delayed(const Duration(milliseconds: 70));
+    expect(terminal.buffer.getText(), contains('history0'));
+    expect(
+      server.commands.where((command) => command.startsWith('capture-pane')),
+      hasLength(captureCount),
+    );
+  });
+
+  test('new layout during metadata never publishes stale geometry', () async {
+    await server.start(client);
+    final published = <int>[];
+    client.addListener(() => published.add(client.windows.single.height));
+    server.panes.single.height = 40;
+    server.captureText = '${'\n' * 39}row40';
+    server.cursorY = 39;
+    server.afterCommand = (command) {
+      if (!command.startsWith('list-panes')) return;
+      server.afterCommand = null;
+      server.panes.single.height = 60;
+      server.captureText = '${'\n' * 59}row60';
+      server.cursorY = 59;
+      server.layout(80, 60);
+      server.paneOutput('%0', ascii.encode('\x1b[60;1Hrow60'));
+    };
+    server.layout(80, 40);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(client.ready, isTrue);
+    expect(client.windows.single.height, 60);
+    expect(published, isNot(contains(40)));
+    expect(
+      client.panes['%0']!.session.terminal.buffer.getText().split('\n')[59],
+      'row60',
+    );
+  });
+
+  test(
+    'new layout invalidates an in-flight capture before resuming output',
+    () async {
+      await server.start(client);
+      server.panes.single.height = 40;
+      server.captureText = '${'\n' * 39}old-snapshot';
+      server.cursorY = 39;
+      server.afterCommand = (command) {
+        if (!command.startsWith('capture-pane -p -e -C -t')) return;
+        server.afterCommand = null;
+        server.panes.single.height = 60;
+        server.captureText = '${'\n' * 59}current-snapshot';
+        server.cursorY = 59;
+        server.layout(80, 60);
+        server.paneOutput('%0', ascii.encode('\x1b[60;1Hcurrent-snapshot'));
+      };
+      server.layout(80, 40);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(client.ready, isTrue);
+      expect(client.windows.single.height, 60);
+      final text = client.panes['%0']!.session.terminal.buffer.getText();
+      expect(text.split('\n')[59], 'current-snapshot');
+      expect(text, isNot(contains('old-snapshot')));
+    },
+  );
+
+  test(
+    'capture dimensions detect a resize after the initial metadata',
+    () async {
+      server.afterCommand = (command) {
+        if (!command.startsWith('list-panes')) return;
+        server.afterCommand = null;
+        server.panes.single.height = 40;
+        server.captureText = '${'\n' * 39}new-size';
+        server.cursorY = 39;
+      };
+      await server.start(client);
+      expect(client.ready, isTrue);
+      expect(client.windows.single.height, 40);
+      expect(
+        client.panes['%0']!.session.terminal.buffer.getText().split('\n')[39],
+        'new-size',
+      );
+    },
+  );
+
+  test(
+    'superseded replacement panes are pruned without releasing visible panes',
+    () async {
+      void replacePanes(int firstId) {
+        server.panes
+          ..clear()
+          ..addAll(
+            List.generate(TmuxControlClient.maximumPanes, (index) {
+              return _Pane('%${firstId + index}', '@0', active: index == 0)
+                ..height = 1
+                ..y = index;
+            }),
+          );
+      }
+
+      server.cursorX = 0;
+      server.captureText = '';
+      replacePanes(0);
+      await server.start(client);
+      final visible = client.panes['%0']!.session;
+      var firstId = 100;
+      var superseded = 0;
+      replacePanes(firstId);
+      server.afterCommand = (command) {
+        if (command != 'refresh-client -A %${firstId + 63}:continue' ||
+            firstId == 400) {
+          return;
+        }
+        expect(visible.isConnected, isTrue);
+        firstId += 100;
+        superseded++;
+        replacePanes(firstId);
+        server.notification('%layout-change @0 replacement-layout');
+      };
+      server.notification('%layout-change @0 replacement-layout');
+      await client.selectWindow('@0');
+      expect(client.ready, isTrue);
+      expect(superseded, 3);
+      expect(client.panes, hasLength(64));
+      expect(client.panes.containsKey('%400'), isTrue);
+      expect(client.panes.containsKey('%0'), isFalse);
+      await _events();
+      expect(visible.isConnected, isFalse);
     },
   );
 
@@ -461,12 +671,15 @@ class _Server {
       pendingBytes;
   int cursorX = 11, cursorY = 0;
   bool cursorMode = false, bracketMode = false;
+  bool bracketFlagSupported = false;
   bool alternate = false;
   int serial = 100;
   int closeCount = 0;
   Completer<void>? cancelGate;
+  Completer<void>? captureGate, captureEntered;
   bool failClose = false, injectHook = false;
   int? heldSerial;
+  void Function(String)? afterCommand;
 
   TmuxControlClient client({
     Duration commandTimeout = const Duration(seconds: 3),
@@ -494,6 +707,11 @@ class _Server {
     if (!output.isClosed) output.add(utf8.encode('$record\n'));
   }
 
+  void layout(int width, int height) {
+    final value = '0000,${width}x$height,0,0,0';
+    notification('%layout-change @0 $value $value *');
+  }
+
   void paneOutput(String id, List<int> bytes) {
     final escaped = <int>[];
     for (final byte in bytes) {
@@ -518,6 +736,12 @@ class _Server {
   }
 
   Future<void> write(String value) async {
+    if (captureGate != null && value.startsWith('refresh-client -A')) {
+      final gate = captureGate!;
+      captureGate = null;
+      captureEntered?.complete();
+      await gate.future;
+    }
     for (final command in value.trimRight().split(' ; ')) {
       if (output.isClosed) return;
       commands.add(command);
@@ -573,8 +797,36 @@ class _Server {
       } else if (command.startsWith('display-message -p -t')) {
         final id = RegExp(r'-t (%\d+)').firstMatch(command)![1]!;
         final pane = panes.firstWhere((pane) => pane.id == id);
+        // Expand the actual requested formats so a missing/unknown field in
+        // the command cannot accidentally pass with a hard-coded reply shape.
+        final values = <String, String>{
+          'cursor_x': '$cursorX',
+          'cursor_y': '$cursorY',
+          'alternate_on': alternate ? '1' : '0',
+          'cursor_flag': '1',
+          'keypad_cursor_flag': cursorMode ? '1' : '0',
+          'keypad_flag': '0',
+          'insert_flag': '0',
+          'wrap_flag': '1',
+          'origin_flag': '0',
+          if (bracketFlagSupported)
+            'bracket_paste_flag': bracketMode ? '1' : '0',
+          'scroll_region_upper': '0',
+          'scroll_region_lower': '${pane.height - 1}',
+          'alternate_saved_x': '0',
+          'alternate_saved_y': '0',
+          'pane_width': '${pane.width}',
+          'pane_height': '${pane.height}',
+        };
+        final format = command.substring(
+          command.indexOf("'") + 1,
+          command.lastIndexOf("'"),
+        );
         body = [
-          '$cursorX $cursorY ${alternate ? 1 : 0} 1 ${cursorMode ? 1 : 0} 0 0 1 0 ${bracketMode ? 1 : 0} 0 ${pane.height - 1} 0 0',
+          format.replaceAllMapped(
+            RegExp(r'#\{([^{}]+)\}'),
+            (match) => values[match[1]!] ?? '',
+          ),
         ];
       } else if (command.startsWith('send-keys')) {
         inputBytes.addAll(
@@ -620,6 +872,7 @@ class _Server {
         output.add(ascii.encode('%begin 1 999 0\nhook output\n%end 1 999 0\n'));
       }
       output.add(utf8.encode(response.toString()));
+      afterCommand?.call(command);
       if (failure) return;
     }
   }

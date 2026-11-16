@@ -18,6 +18,7 @@ commit, including main and PR #161. No merge was required. Exact refs are in
 | `aa8c736f` | Incremental native tmux protocol, raw SSH transport and workspace implementation |
 | `6e11d2d6` | Screen restoration, ownership, focused regression coverage and visual evidence |
 | `4316f7fc` | Clean merge of the newer Zotero/Office head `e980293c` |
+| `359e3997` | Detached-buffer browsing, retryable cleanup and integrated provenance evidence |
 
 The 07:26:39 UTC refresh found new PR #161 work after the initial snapshot.
 Checkpoint `4316f7fc` merges that exact head and contains all 189 refreshed refs.
@@ -64,8 +65,11 @@ replace this status once completed.
 A later 42-test SSH transport run covers cleanup retry and release even if a
 stream cancellation fails. The final workspace test additionally exercises real
 wheel/selection/copy gestures and local window/pane navigation after disconnect,
-with remote commands and input revoked. Protocol resize/output review remains
-in progress before the final source freeze.
+with remote commands and input revoked. Additional protocol tests cover output
+crossing a size change, superseded metadata/captures, unchanged-layout history,
+continued input during capture, and an absent older-tmux paste-mode format.
+The UI's final 13-test run includes visible failure after exceeding the bounded
+input budget. Final combined acceptance remains pending below.
 
 Four production-widget fixture captures were inspected: desktop split panes,
 local zoom, 320x320 compact layout and the compact pane picker. They verify
@@ -101,6 +105,10 @@ screen restoration and detachment without destroying the remote session.
 This is an initial bounded native workspace, not complete iTerm2 tmux parity.
 Limits are 16 windows, 64 panes and bounded geometry, buffers and queued input.
 Initial history is at most 200 lines within the pane buffer budget. Original
+history can also be reduced to that capture budget after a real pane-size
+change; unchanged-geometry notifications preserve it. On older tmux versions
+without `bracket_paste_flag`, initial attachment cannot infer an already-enabled
+paste mode; modes observed from live output survive later recaptures. Original
 soft-wrap metadata, custom tab stops and every terminal/SGR mode are not restored.
 Direct pane input does not render tmux's interactive prefix/copy-mode interface;
 ordinary PTY mode remains available for that workflow. Mouse/focus forwarding,

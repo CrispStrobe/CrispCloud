@@ -6,6 +6,7 @@ import 'package:crisp_cloud/providers/focus_area_provider.dart';
 import 'package:crisp_cloud/providers/terminal_key_bindings_provider.dart';
 import 'package:crisp_cloud/providers/terminal_provider.dart';
 import 'package:crisp_cloud/providers/terminal_triggers_provider.dart';
+import 'package:crisp_cloud/services/terminal_session.dart';
 import 'package:crisp_cloud/widgets/tmux_control_workspace.dart';
 import 'package:crisp_cloud/services/tmux_control_client.dart';
 import 'package:flutter/gestures.dart';
@@ -435,6 +436,78 @@ void main() {
       );
       await finish(tester);
     },
+  );
+
+  testWidgets(
+    'oversized paste exposes active pane failure and keeps its buffer readable',
+    (tester) async {
+      client.dispose();
+      client = TmuxWorkspaceFixture(maximumPendingInputCodeUnits: 16384);
+      String? copied;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.getData') {
+              return {'text': 'x' * 16385};
+            }
+            if (call.method == 'Clipboard.setData') {
+              copied = (call.arguments as Map)['text'] as String;
+            }
+            return null;
+          });
+      await mount(tester, size: const Size(320, 320));
+      await tester.tap(find.byKey(const ValueKey('tmux-action-paste')));
+      await tester.pump();
+      await tester.pump();
+      final session = client.panes['%1']!.session;
+      expect(session.status, TerminalSessionStatus.failed);
+      expect(session.error, isNotNull);
+      expect(client.connections['%1']!.input, isEmpty);
+      expect(find.text('Pane failed. Reconnect to continue.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('tmux-error')), findsOneWidget);
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const ValueKey('tmux-action-paste')))
+            .onPressed,
+        isNull,
+      );
+      final terminalFinder = find.byType(TerminalView);
+      final view = tester.widget<TerminalView>(terminalFinder);
+      expect(view.readOnly, isTrue);
+      expect(view.focusNode!.hasFocus, isFalse);
+      final render = tester
+          .state<TerminalViewState>(terminalFinder)
+          .renderTerminal;
+      final start =
+          tester.getTopLeft(terminalFinder) +
+          Offset(render.cellSize.width / 2, render.lineHeight / 2);
+      final gesture = await tester.startGesture(
+        start,
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveBy(Offset(render.cellSize.width * 12, 0));
+      await gesture.up();
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('tmux-action-copy')));
+      await tester.pump();
+      expect(copied, contains('%1 ready'));
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(client.connections['%1']!.input, isEmpty);
+
+      client.selectFromRemote('%2');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('tmux-error')), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(client.connections['%2']!.input, ['\r']);
+      client.selectFromRemote('%1');
+      await tester.pump();
+      expect(find.text('Pane failed. Reconnect to continue.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await finish(tester);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
   testWidgets(

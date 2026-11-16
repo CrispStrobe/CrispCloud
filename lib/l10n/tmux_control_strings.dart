@@ -101,4 +101,14 @@ const _values = <String, List<String>>{
     'tmux 작업을 완료하지 못했습니다.',
     'تعذر إكمال إجراء tmux.',
   ],
+  'Pane failed. Reconnect to continue.': [
+    'Bereich fehlgeschlagen. Zum Fortfahren erneut verbinden.',
+    'Échec du volet. Reconnectez-vous pour continuer.',
+    'El panel falló. Vuelve a conectarte para continuar.',
+    'O painel falhou. Volte a ligar para continuar.',
+    '窗格发生错误。请重新连接以继续。',
+    'ペインでエラーが発生しました。再接続して続行してください。',
+    '패널에 오류가 발생했습니다. 계속하려면 다시 연결하세요.',
+    'تعطل الجزء. أعد الاتصال للمتابعة.',
+  ],
 };

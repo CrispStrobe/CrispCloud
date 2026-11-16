@@ -1,0 +1,45 @@
+{
+  "recorded_utc": "2026-11-16T07:43:02.537035+00:00",
+  "scope": "Production widget with injected pane connections; not live SSH/tmux or browser runtime acceptance.",
+  "visual_test_passed": 1,
+  "visual_test_failed": 0,
+  "views_inspected": 4,
+  "captures": [
+    {
+      "path": "docs/validation/terminal-tmux-control/focused/screenshots/tmux-native-compact.png",
+      "sha256": "85be7790286ef51b711d18d0aa8b031dfd510f32322b98315fa0c3c2067897b3",
+      "width": 320,
+      "height": 320,
+      "identical_to_root_previously_inspected_capture": true
+    },
+    {
+      "path": "docs/validation/terminal-tmux-control/focused/screenshots/tmux-native-desktop.png",
+      "sha256": "966721aac39251641b20871806e38f166b05a368985d6656db4e3a241e757e5b",
+      "width": 1180,
+      "height": 700,
+      "identical_to_root_previously_inspected_capture": true
+    },
+    {
+      "path": "docs/validation/terminal-tmux-control/focused/screenshots/tmux-native-pane-picker.png",
+      "sha256": "59eaf955558d7a76ce6b68e4176053fd04cb7030fdb0758381dfd1157668d590",
+      "width": 320,
+      "height": 320,
+      "identical_to_root_previously_inspected_capture": true
+    },
+    {
+      "path": "docs/validation/terminal-tmux-control/focused/screenshots/tmux-native-zoom.png",
+      "sha256": "869a3eacba6c48623236c43e352f06d54d6b2f9347f5cc2c48d88f44b89254a0",
+      "width": 1180,
+      "height": 700,
+      "identical_to_root_previously_inspected_capture": true
+    }
+  ],
+  "github_actions_queried_or_awaited": false,
+  "source_sha256": {
+    "lib/widgets/tmux_control_workspace.dart": "83a99c146f75c9a873d7168ec5e1cb2599276e244c8883c2d82489d1ad8a2df7",
+    "lib/l10n/tmux_control_strings.dart": "6321a2f1b7dff88fd36a4af173c5ce78b11f96892db63fd284f1106361256a7c",
+    "test/tmux_control_workspace_test.dart": "557d041176b450b9a531f4bf72fee8431de1739cdea42276d98c54e7ec6b490f",
+    "test/tmux_control_visual_test.dart": "9b9fb4fe01f3353a09248438d896ee8d0844c805aef2f4479054ecdc8c4a3974",
+    "test/support/tmux_control_workspace_fixture.dart": "71c49bb77b0e3dd6ecb508603fb1ddb2bb7f96ebc17f93ae77db2d1576577853"
+  }
+}

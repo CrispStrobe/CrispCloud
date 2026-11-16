@@ -1,0 +1,7 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_visual_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: capture native tmux workspace at desktop and compact sizes
+00:01 +1: (tearDownAll)
+00:01 +1: All tests passed!

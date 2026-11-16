@@ -39,15 +39,23 @@ void main() {
         Future<void>? closing;
         Future<void> stop() => closing ??= () async {
           try {
-            await process.stdin.close();
-          } catch (_) {}
-          try {
-            await process.exitCode.timeout(const Duration(seconds: 2));
-          } on TimeoutException {
-            process.kill(ProcessSignal.sigterm);
-            await process.exitCode.timeout(const Duration(seconds: 2));
+            try {
+              await process.stdin.close().timeout(const Duration(seconds: 2));
+            } catch (_) {}
+            try {
+              await process.exitCode.timeout(const Duration(seconds: 2));
+            } on TimeoutException {
+              process.kill(ProcessSignal.sigterm);
+              try {
+                await process.exitCode.timeout(const Duration(seconds: 2));
+              } on TimeoutException {
+                process.kill(ProcessSignal.sigkill);
+                await process.exitCode.timeout(const Duration(seconds: 2));
+              }
+            }
+          } finally {
+            await errors.cancel();
           }
-          await errors.cancel();
         }();
         final client = TmuxControlClient(
           output: process.stdout,
@@ -116,6 +124,19 @@ void main() {
         await client.selectPane(firstPane);
         expect(client.activePaneId, firstPane);
         await client.resize(120, 40);
+        final clientGeometry = await command([
+          'list-clients',
+          '-t',
+          '=crispcloud-check',
+          '-F',
+          '#{client_width} #{client_height}',
+        ]);
+        expect(clientGeometry.exitCode, 0, reason: '${clientGeometry.stderr}');
+        // Compare with the requested size, not merely two mutually stale
+        // snapshots. tmux still owns its shared-window sizing policy.
+        expect(const LineSplitter().convert(clientGeometry.stdout.toString()), [
+          '120 40',
+        ]);
         final geometry = await command([
           'list-windows',
           '-F',
@@ -170,12 +191,46 @@ void main() {
           0,
         );
       } finally {
-        for (final client in clients) {
-          await client.close();
-          client.dispose();
+        final cleanupFailures = <String>[];
+        try {
+          for (final client in clients) {
+            try {
+              await client.close().timeout(const Duration(seconds: 10));
+            } catch (error) {
+              cleanupFailures.add('control client close: $error');
+            } finally {
+              try {
+                client.dispose();
+              } catch (error) {
+                cleanupFailures.add('control client dispose: $error');
+              }
+            }
+          }
+        } finally {
+          try {
+            // Never address the user's default server, even after a client
+            // shutdown failure or a failed prerequisite command.
+            final stopped = await command(['kill-server'])
+                .timeout(const Duration(seconds: 10));
+            if (stopped.exitCode != 0) {
+              cleanupFailures.add(
+                'dedicated server cleanup exited ${stopped.exitCode}: '
+                '${stopped.stderr}',
+              );
+            }
+          } catch (error) {
+            cleanupFailures.add('dedicated server cleanup: $error');
+          } finally {
+            try {
+              await directory.delete(recursive: true);
+            } catch (error) {
+              cleanupFailures.add('scratch directory cleanup: $error');
+            }
+          }
         }
-        await command(['kill-server']); // This fixture's dedicated socket only.
-        await directory.delete(recursive: true);
+        if (cleanupFailures.isNotEmpty) {
+          fail('Real tmux cleanup failed: ${cleanupFailures.join('; ')}');
+        }
       }
     },
     skip: !_enabled

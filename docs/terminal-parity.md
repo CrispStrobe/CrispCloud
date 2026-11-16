@@ -15,7 +15,8 @@ triggers are supported. Closing the client detaches without issuing remote kill
 commands. Saved destinations and arrangements retain the mode in a v4 envelope.
 
 This is a bounded first native workspace, not complete iTerm2 tmux equivalence.
-It captures up to 200 history lines within local buffer limits and restores
+Attachment and pane-size resynchronization capture up to 200 history lines
+within local buffer limits. A size change can trim older local history. The client restores
 active/saved primary screens, pending parser bytes and common cursor/input modes.
 Original soft-wrap metadata, every parser/SGR state, tmux's interactive prefix
 and copy-mode interface, mouse/focus forwarding, full command-history controls and independent native
@@ -24,11 +25,18 @@ operating-system windows remain incomplete. See the
 [current acceptance record](validation/terminal-tmux-control/README.md).
 Actual tmux daemon startup is blocked by this host's Unix-socket policy; recorded
 protocol/widget coverage must not be read as live tmux-server acceptance.
+Versions without the `bracket_paste_flag` format need a subsequent application
+mode change to establish bracketed paste locally after initial attachment;
+already-observed live mode changes survive later captures.
 
 Before implementation, a fresh fetch again contained all **38 branch heads and
 151 PR heads** at `ce386fd6`, including main and PR #161. No additional merge was
-needed. The [fresh snapshot](validation/terminal-tmux-control/integration.json)
-records exact ancestry. Remote checkpoints retain every intermediate change;
+needed. A later refresh found the newer PR #161 head `e980293c`; merge checkpoint
+`4316f7fc` integrated its saved-search, small-caps and bibliography-layout work.
+All 189 refreshed refs are actual ancestors, and all 2,407 current Office vendor
+entries pass the provenance guard. The [fresh snapshot](validation/terminal-tmux-control/integration.json)
+and [later integration audit](validation/terminal-tmux-control/audit-final/README.md)
+record exact ancestry. Remote checkpoints retain every intermediate change;
 GitHub Actions results are neither queried nor awaited.
 
 ### Previous agent/profile continuation
@@ -65,7 +73,7 @@ historical evidence; it no longer describes the current validation environment.
 Source changes are saved incrementally to `codex/terminal-screen-workspace`.
 GitHub Actions results are neither queried nor awaited; checkpoints carry
 `[skip ci]`. Local validation and its explicit platform limits are recorded below
-and in [the current evidence directory](validation/terminal-agent-profiles/README.md).
+and in [the current evidence directory](validation/terminal-tmux-control/README.md).
 
 ## Previous integration baselines and refreshes
 
@@ -289,7 +297,7 @@ forwarding failure or an oversized input operation. The per-event bound is
 262,144 UTF-16 code units, not a byte count. Stop also revokes pending deliveries
 that have not reached their transports. Groups are never persisted.
 
-## Current agent/profile verification
+## Previous agent/profile verification
 
 At source checkpoint `9753a980`, the full terminal cohort passed **813 tests,
 two platform skips and zero failures across 69 files**. Analysis and formatting

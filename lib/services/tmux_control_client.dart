@@ -138,6 +138,7 @@ class TmuxControlClient extends ChangeNotifier {
   Timer? _resizeTimer;
   int _columns = 80;
   int _rows = 24;
+  int _layoutRevision = 0;
   (int, int)? _requestedSize;
   final _resizeWaiters = <Completer<void>>[];
 
@@ -271,6 +272,9 @@ class TmuxControlClient extends ChangeNotifier {
       final pane = _ownedPanes[notification.text.trim()];
       if (pane != null) pane._capturing = true;
     }
+    if (notification.name == '%layout-change') {
+      _layoutChanged(notification.text);
+    }
     if (const {
       '%layout-change',
       '%window-add',
@@ -285,6 +289,29 @@ class TmuxControlClient extends ChangeNotifier {
       '%pause',
     }.contains(notification.name)) {
       _scheduleRefresh();
+    }
+  }
+
+  void _layoutChanged(String arguments) {
+    _layoutRevision++;
+    final fields = arguments.split(' ');
+    if (fields.isEmpty || !_windowId.hasMatch(fields.first)) {
+      throw const TmuxControlProtocolException('Invalid layout window.');
+    }
+    // Geometry is consumed at the notification boundary, before the next
+    // %output in this same packet can be interpreted at the old dimensions.
+    // Visible layout accounts for remote zoom. Unchanged cells, including
+    // panes merely moved within a window, keep their existing history.
+    final sizes = fields.length >= 3 ? _LayoutPaneSizes.parse(fields[2]) : null;
+    for (final pane in _ownedPanes.values) {
+      if (pane.windowId != fields.first) continue;
+      final size = sizes?[pane.id];
+      if (sizes == null ||
+          (size != null &&
+              (size.$1 != pane.session.terminal.viewWidth ||
+                  size.$2 != pane.session.terminal.viewHeight))) {
+        pane._capturing = true;
+      }
     }
   }
 
@@ -406,6 +433,18 @@ class TmuxControlClient extends ChangeNotifier {
   }
 
   Future<void> _refreshSnapshot() async {
+    // A notification can arrive while metadata or a pane capture is in flight.
+    // Never publish a mixture of revisions or un-gate output with stale sizes.
+    for (var attempt = 0; attempt < 16; attempt++) {
+      if (await _refreshSnapshotAttempt()) return;
+    }
+    throw const TmuxControlException(
+      'The tmux layout kept changing during refresh. Reconnect to continue.',
+    );
+  }
+
+  Future<bool> _refreshSnapshotAttempt() async {
+    final revision = _layoutRevision;
     // The names are display-only. POSIX cntrl replacement prevents a remote
     // window name from injecting a metadata row or a protocol record.
     final results = await _batch([
@@ -417,6 +456,7 @@ class TmuxControlClient extends ChangeNotifier {
       ),
     ]);
     _checkOpen();
+    if (revision != _layoutRevision) return false;
     final windows = results[0].lines
         .map(
           (line) =>
@@ -503,11 +543,27 @@ class TmuxControlClient extends ChangeNotifier {
       );
     }
     nextWindows.sort((a, b) => a.index.compareTo(b.index));
+    // A superseded capture may have created sessions which no viewport ever
+    // received. Release those before constructing another replacement. Keep
+    // every published pane alive until the complete snapshot replaces it.
+    for (final id
+        in _ownedPanes.keys
+            .where((id) => !paneIds.contains(id) && !_panes.containsKey(id))
+            .toList()) {
+      final abandoned = _ownedPanes.remove(id)!;
+      abandoned._connection.finish();
+      abandoned.session.dispose();
+    }
     // Publish only a complete, mutually consistent window/pane snapshot.
     final nextPanes = <String, TmuxControlPane>{};
     for (final record in paneRecords) {
       var pane = _ownedPanes[record.id];
       if (pane == null) {
+        if (_ownedPanes.length >= maximumPanes * 2) {
+          throw const TmuxControlException(
+            'The tmux workspace has too many pending replacement panes.',
+          );
+        }
         final session = TerminalSession(
           maxLines: (200000 ~/ record.width).clamp(record.height, 500),
           maximumPendingInputCodeUnits: 16384,
@@ -542,17 +598,27 @@ class TmuxControlClient extends ChangeNotifier {
             send?.call(data);
           }
         };
+        if (revision != _layoutRevision) return false;
       }
+      if (pane.session.terminal.viewWidth != record.width ||
+          pane.session.terminal.viewHeight != record.height) {
+        pane._capturing = true;
+      }
+      if (pane._capturing && !await _capture(pane, record, revision)) {
+        return false;
+      }
+      _checkOpen();
+      if (revision != _layoutRevision) return false;
+      nextPanes[record.id] = pane;
+    }
+    for (final record in paneRecords) {
+      final pane = nextPanes[record.id]!;
       pane.windowId = record.windowId;
       pane.x = record.x;
       pane.y = record.y;
       pane.width = record.width;
       pane.height = record.height;
       pane.active = record.active;
-      pane.session.terminal.resize(record.width, record.height);
-      if (pane._capturing) await _capture(pane);
-      _checkOpen();
-      nextPanes[record.id] = pane;
     }
     for (final id
         in _ownedPanes.keys.where((id) => !paneIds.contains(id)).toList()) {
@@ -572,13 +638,19 @@ class TmuxControlClient extends ChangeNotifier {
     while (_retiredPanes.length > maximumPanes) {
       _retiredPanes.removeFirst().session.dispose();
     }
+    return true;
   }
 
-  Future<void> _capture(TmuxControlPane pane) async {
+  Future<bool> _capture(
+    TmuxControlPane pane,
+    _PaneRecord record,
+    int revision,
+  ) async {
     TmuxControlBlock? screen;
     TmuxControlBlock? savedScreen;
     TmuxControlBlock? parserPending;
     List<String>? state;
+    var installed = false;
     // All commands are synchronous in one tmux command list. Turn off this
     // client's output first, discard its pre-capture backlog, then re-enable
     // it at the same server event-loop boundary as the snapshot. Capture is
@@ -598,7 +670,9 @@ class TmuxControlClient extends ChangeNotifier {
         (block) => parserPending = block,
       ),
       _Command(
-        "display-message -p -t ${pane.id} '#{cursor_x} #{cursor_y} #{alternate_on} #{cursor_flag} #{keypad_cursor_flag} #{keypad_flag} #{insert_flag} #{wrap_flag} #{origin_flag} #{bracket_paste_flag} #{scroll_region_upper} #{scroll_region_lower} #{alternate_saved_x} #{alternate_saved_y}'",
+        // Older tmux releases have no bracket_paste_flag format. Only that
+        // field may be empty; restore the pane's last observed live mode then.
+        "display-message -p -t ${pane.id} '#{cursor_x} #{cursor_y} #{alternate_on} #{cursor_flag} #{keypad_cursor_flag} #{keypad_flag} #{insert_flag} #{wrap_flag} #{origin_flag} #{bracket_paste_flag} #{scroll_region_upper} #{scroll_region_lower} #{alternate_saved_x} #{alternate_saved_y} #{pane_width} #{pane_height}'",
         (block) {
           state = block.text.split(' ');
         },
@@ -606,16 +680,41 @@ class TmuxControlClient extends ChangeNotifier {
       _Command('refresh-client -A ${pane.id}:on'),
       _Command('refresh-client -A ${pane.id}:continue', (_) {
         if (_closed || !identical(_ownedPanes[pane.id], pane)) return;
+        if (revision != _layoutRevision) return;
         if (screen == null ||
             state == null ||
             savedScreen == null ||
             parserPending == null) {
           throw const TmuxControlProtocolException('Incomplete pane capture.');
         }
-        _installCapture(pane, screen!, savedScreen!, parserPending!, state!);
+        final capturedState = state!;
+        if (capturedState.length != 16 ||
+            !_number.hasMatch(capturedState[14]) ||
+            !_number.hasMatch(capturedState[15])) {
+          throw const TmuxControlProtocolException(
+            'Invalid captured terminal dimensions.',
+          );
+        }
+        final width = int.parse(capturedState[14]);
+        final height = int.parse(capturedState[15]);
+        _checkDimensions(width, height);
+        // These dimensions were sampled in the same synchronous command list
+        // as the grid. A resize after list-panes requires a fresh metadata pass.
+        if (width != record.width || height != record.height) return;
+        _installCapture(
+          pane,
+          screen!,
+          savedScreen!,
+          parserPending!,
+          capturedState,
+          width,
+          height,
+        );
         pane._capturing = false;
+        installed = true;
       }),
     ]);
+    return installed;
   }
 
   void _installCapture(
@@ -624,10 +723,13 @@ class TmuxControlClient extends ChangeNotifier {
     TmuxControlBlock savedCapture,
     TmuxControlBlock parserPending,
     List<String> state,
+    int width,
+    int height,
   ) {
-    if (state.length != 14 ||
+    if (state.length != 16 ||
         state.take(2).any((value) => !_number.hasMatch(value)) ||
-        state.skip(2).take(8).any((value) => value != '0' && value != '1') ||
+        state.skip(2).take(7).any((value) => value != '0' && value != '1') ||
+        (state[9].isNotEmpty && state[9] != '0' && state[9] != '1') ||
         state.skip(10).any((value) => !_number.hasMatch(value))) {
       throw const TmuxControlProtocolException(
         'Invalid captured terminal state.',
@@ -639,12 +741,12 @@ class TmuxControlClient extends ChangeNotifier {
     final bottom = int.parse(state[11]);
     final savedX = int.parse(state[12]);
     final savedY = int.parse(state[13]);
-    if (x > pane.width ||
-        y >= pane.height ||
+    if (x > width ||
+        y >= height ||
         top > bottom ||
-        bottom >= pane.height ||
-        capture.lines.length > historyLines + pane.height + 1 ||
-        savedCapture.lines.length > historyLines + pane.height + 1 ||
+        bottom >= height ||
+        capture.lines.length > historyLines + height + 1 ||
+        savedCapture.lines.length > historyLines + height + 1 ||
         parserPending.lines.length > 1 ||
         savedX > maximumColumns ||
         savedY > maximumRows) {
@@ -669,7 +771,7 @@ class TmuxControlClient extends ChangeNotifier {
       // Populate it before entering 1049 so leaving vim/less restores it.
       appendScreen(savedCapture);
       text.write(
-        '\x1b[${savedY.clamp(0, pane.height - 1) + 1};${savedX.clamp(0, pane.width - 1) + 1}H',
+        '\x1b[${savedY.clamp(0, height - 1) + 1};${savedX.clamp(0, width - 1) + 1}H',
       );
       text.write('\x1b[?1049h');
     }
@@ -683,14 +785,22 @@ class TmuxControlClient extends ChangeNotifier {
     text.write('\x1b[4${state[6] == '1' ? 'h' : 'l'}');
     mode(7, state[7]);
     mode(6, state[8]);
-    mode(2004, state[9]);
+    mode(
+      2004,
+      state[9].isNotEmpty
+          ? state[9]
+          : pane.session.terminal.bracketedPasteMode
+          ? '1'
+          : '0',
+    );
     final cursorRow = state[8] == '1' ? y - top + 1 : y + 1;
     if (cursorRow < 1) {
       throw const TmuxControlProtocolException('Cursor precedes the origin.');
     }
-    text.write('\x1b[$cursorRow;${x.clamp(0, pane.width - 1) + 1}H');
+    text.write('\x1b[$cursorRow;${x.clamp(0, width - 1) + 1}H');
     // Captured state cannot run triggers or send terminal replies.
     pane._connection.resetDecoder();
+    pane.session.terminal.resize(width, height);
     pane.session.terminal.write(text.toString());
     // Continue an escape sequence or UTF-8 code point interrupted at attach.
     // `capture-pane -P -C` uses octal escapes, unlike its screen-capture mode.
@@ -702,12 +812,12 @@ class TmuxControlClient extends ChangeNotifier {
   Future<void> _sendInput(String id, String text) async {
     if (text.isEmpty) return;
     final pane = _ownedPanes[id];
-    if (!ready ||
-        pane == null ||
-        pane._capturing ||
-        !pane.session.isConnected) {
+    if (!ready || pane == null || !pane.session.isConnected) {
       return;
     }
+    // A geometry recapture gates display bytes, not explicit user input.
+    // Commands still target the same live pane and queue between atomic
+    // capture batches, so a resize cannot silently discard typed characters.
     final bytes = utf8.encode(text);
     if (bytes.length > maximumInputBytes) {
       throw const TmuxControlException('The tmux input is too large.');
@@ -1025,6 +1135,85 @@ class _OutputSink implements StringSink {
   void writeCharCode(int charCode) => emit(String.fromCharCode(charCode));
   @override
   void writeln([Object? value = '']) => emit('$value\n');
+}
+
+/// Only a bounded geometry hint; list-panes remains the authoritative model.
+/// The recursive tmux layout grammar has a four-hex checksum, then leaf panes
+/// or horizontal/vertical groups. Unknown syntax safely requests recapture.
+class _LayoutPaneSizes {
+  _LayoutPaneSizes(this.source);
+  final String source;
+  final sizes = <String, (int, int)>{};
+  int position = 5;
+  int nodes = 0;
+  static final _prefix = RegExp(r'^[0-9a-fA-F]{4},');
+  static final _geometry = RegExp(
+    r'([0-9]{1,5})x([0-9]{1,5}),([0-9]{1,5}),([0-9]{1,5})',
+  );
+  static final _id = RegExp(r'[0-9]{1,10}');
+
+  static Map<String, (int, int)>? parse(String source) {
+    if (source.length > 16384 || !_prefix.hasMatch(source)) return null;
+    final parser = _LayoutPaneSizes(source);
+    try {
+      parser.node(0);
+      if (parser.position != source.length || parser.sizes.isEmpty) {
+        return null;
+      }
+      return parser.sizes;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  void node(int depth) {
+    if (depth > TmuxControlClient.maximumPanes ||
+        ++nodes > TmuxControlClient.maximumPanes * 2) {
+      throw const FormatException('Layout is too deep.');
+    }
+    final geometry = _geometry.matchAsPrefix(source, position);
+    if (geometry == null) throw const FormatException('Missing geometry.');
+    final width = int.parse(geometry[1]!);
+    final height = int.parse(geometry[2]!);
+    if (width < 1 ||
+        width > TmuxControlClient.maximumColumns ||
+        height < 1 ||
+        height > TmuxControlClient.maximumRows) {
+      throw const FormatException('Invalid layout dimensions.');
+    }
+    position = geometry.end;
+    if (position == source.length) {
+      throw const FormatException('Missing layout pane.');
+    }
+    final next = source[position++];
+    if (next == ',') {
+      final id = _id.matchAsPrefix(source, position);
+      if (id == null || sizes.length == TmuxControlClient.maximumPanes) {
+        throw const FormatException('Invalid layout pane.');
+      }
+      position = id.end;
+      if (sizes.containsKey('%${id[0]}')) {
+        throw const FormatException('Duplicate layout pane.');
+      }
+      sizes['%${id[0]}'] = (width, height);
+      return;
+    }
+    if (next != '[' && next != '{') {
+      throw const FormatException('Invalid layout group.');
+    }
+    final end = next == '[' ? ']' : '}';
+    while (true) {
+      node(depth + 1);
+      if (position == source.length) {
+        throw const FormatException('Unterminated layout group.');
+      }
+      final delimiter = source[position++];
+      if (delimiter == end) return;
+      if (delimiter != ',') {
+        throw const FormatException('Invalid layout delimiter.');
+      }
+    }
+  }
 }
 
 class _WindowRecord {
