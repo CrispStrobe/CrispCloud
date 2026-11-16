@@ -26,6 +26,7 @@ import '../models/tmux_session_options.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ssh_gateway.dart';
+import 'ssh_port_forwarding.dart';
 import 'terminal_output.dart';
 import 'terminal_mount_failure.dart';
 
@@ -161,6 +162,7 @@ class _SessionState {
   TerminalOutput? shellOutput;
   int shellGeneration = 0;
   bool discoveryRunning = false;
+  SshPortForwarding? forwarding;
 
   _SessionState({required this.session, required this.route});
 }
@@ -1006,6 +1008,21 @@ class SshTerminalService {
         .toList(growable: false);
   }
 
+  /// Runtime tunnels belong to this exact verified connection. A reconnect
+  /// gets a fresh manager; listeners and destinations are never persisted.
+  SshPortForwarding forwarding(String sessionId) {
+    final state = _requireSession(sessionId);
+    if (_disposed || !state.session.connected || state.client.isClosed) {
+      throw const SshPortForwardException('The SSH connection is closed.');
+    }
+    return state.forwarding ??= SshPortForwarding(
+      state.client,
+      onActivity: () {
+        if (identical(_sessions[sessionId], state)) _touch(sessionId);
+      },
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Lifecycle
   // -------------------------------------------------------------------------
@@ -1057,6 +1074,7 @@ class SshTerminalService {
   void _clientClosed(String id, _SessionState state) {
     if (!identical(_sessions[id], state)) return;
     state.session = state.session.copyWith(connected: false);
+    unawaited(state.forwarding?.close());
     // An attached shell drains its stdout/stderr before removing the session.
     // Connections used only for execute have no terminal streams to drain.
     if (state.shellOutput == null) unawaited(disconnect(id));
@@ -1072,6 +1090,7 @@ class SshTerminalService {
 
   Future<void> _closeState(_SessionState state) async {
     state.shellGeneration++;
+    await state.forwarding?.close();
     try {
       state.shellSession?.close();
     } catch (_) {}

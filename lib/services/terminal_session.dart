@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:xterm2/xterm.dart';
 
+import '../models/terminal_trigger.dart';
+import 'ssh_port_forwarding.dart';
 import 'terminal_connection.dart';
+import 'terminal_forwarding_connection.dart';
 import 'terminal_shell_integration.dart';
+import 'terminal_triggers.dart';
 import 'terminal_user_input.dart';
 
 enum TerminalSessionStatus {
@@ -32,6 +36,7 @@ class TerminalCleanupFailure implements Exception {
 /// during connection cannot attach a stale process or mix two shells' output.
 class TerminalSession extends ChangeNotifier {
   TerminalSession() {
+    _triggerEngine = TerminalTriggerEngine(onMatch: _onTrigger);
     terminal = _createTerminal(TerminalSessionKind.local);
     _bindTerminal();
   }
@@ -72,6 +77,67 @@ class TerminalSession extends ChangeNotifier {
 
   late Terminal terminal;
   late TerminalShellIntegration shellIntegration;
+  late final TerminalTriggerEngine _triggerEngine;
+  bool _hasOutputTriggers = false;
+  int triggerNotificationSerial = 0;
+  TerminalTriggerMatch? triggerNotification;
+
+  /// Configuration follows the workspace, while cooldown and one-shot state
+  /// belong to this connection. Rebuilds must not reset those runtime limits.
+  void updateTriggers(List<TerminalTrigger> triggers) {
+    if (_disposed) return;
+    _triggerEngine.updateTriggers(triggers);
+    _hasOutputTriggers = triggers.any((trigger) => trigger.enabled);
+  }
+
+  void _onTrigger(TerminalTriggerMatch match) {
+    if (_disposed || terminal.isUsingAltBuffer) return;
+    switch (match.trigger.action) {
+      case TerminalTriggerAction.mark:
+        shellIntegration.addMark();
+      case TerminalTriggerAction.notify:
+        triggerNotification = match;
+        triggerNotificationSerial++;
+        notifyListeners();
+    }
+  }
+
+  void _readOutput(String data) {
+    if (!_hasOutputTriggers) {
+      final alternate = terminal.isUsingAltBuffer;
+      terminal.write(data);
+      _triggerEngine.addOutput(data, alternateScreen: alternate);
+      return;
+    }
+    // Emit each completed line while the emulator's cursor still belongs to
+    // that line. Multiple matches in one transport chunk get distinct marks,
+    // and fragmented output has the same result as a single large write.
+    var start = 0;
+    while (true) {
+      final newline = data.indexOf('\n', start);
+      final end = newline < 0 ? data.length : newline;
+      if (end > start) {
+        final fragment = data.substring(start, end);
+        final alternate = terminal.isUsingAltBuffer;
+        terminal.write(fragment);
+        _triggerEngine.addOutput(fragment, alternateScreen: alternate);
+      }
+      if (newline < 0) break;
+      _triggerEngine.addOutput(
+        '\n',
+        alternateScreen: terminal.isUsingAltBuffer,
+      );
+      terminal.write('\n');
+      start = newline + 1;
+    }
+  }
+
+  SshPortForwarding? get portForwarding {
+    final connection = _connection;
+    return isConnected && connection is TerminalForwardingConnection
+        ? connection.portForwarding
+        : null;
+  }
 
   void _shellChanged() {
     if (!_disposed) notifyListeners();
@@ -152,6 +218,9 @@ class TerminalSession extends ChangeNotifier {
     this.label = label;
     error = null;
     exitCode = null;
+    _triggerEngine.reset();
+    triggerNotification = null;
+    triggerNotificationSerial = 0;
     status = TerminalSessionStatus.connecting;
     final previousTerminal = terminal;
     shellIntegration.dispose();
@@ -190,7 +259,7 @@ class TerminalSession extends ChangeNotifier {
       status = TerminalSessionStatus.connected;
       _subscription = connection.output.listen(
         (data) {
-          if (_current(generation)) terminal.write(data);
+          if (_current(generation)) _readOutput(data);
         },
         onError: (Object error) => _fail(generation, error),
         onDone: () => unawaited(_ended(generation, connection!)),
@@ -247,6 +316,7 @@ class TerminalSession extends ChangeNotifier {
 
   Future<void> _ended(int generation, TerminalConnection connection) async {
     if (!_current(generation)) return;
+    _triggerEngine.finish();
     _subscription = null;
     // A process can close its terminal output and keep running. Disable input
     // while preserving the user's ability to disconnect that owned process.

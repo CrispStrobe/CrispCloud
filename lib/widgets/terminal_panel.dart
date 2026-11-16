@@ -10,6 +10,8 @@ import 'package:xterm2/xterm.dart';
 import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_key_binding_strings.dart';
+import '../l10n/terminal_trigger_strings.dart';
+import '../l10n/ssh_port_forwarding_strings.dart';
 import '../l10n/terminal_shell_strings.dart';
 import '../l10n/ssh_multiplexer_strings.dart';
 import '../l10n/screen_terminal_strings.dart';
@@ -21,6 +23,7 @@ import '../models/terminal_arrangement.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_workspace_provider.dart';
 import '../providers/terminal_key_bindings_provider.dart';
+import '../providers/terminal_triggers_provider.dart';
 import '../providers/ssh_terminal_profiles_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
@@ -44,6 +47,8 @@ import 'terminal_search_bar.dart';
 import 'terminal_command_history_dialog.dart';
 import 'terminal_shell_setup_dialog.dart';
 import 'terminal_key_bindings_dialog.dart';
+import 'terminal_triggers_dialog.dart';
+import 'ssh_port_forwarding_dialog.dart';
 import '../l10n/external_terminal_strings.dart';
 
 export '../models/ssh_terminal_config.dart';
@@ -137,6 +142,8 @@ enum _PanelAction {
   notifyCommand,
   shellSetup,
   keyBindings,
+  triggers,
+  forwarding,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -174,6 +181,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   double _fontSize = 13;
   int _connectionRequest = 0;
   int _shellNotificationSerial = 0;
+  int _triggerNotificationSerial = 0;
+  bool _triggerNoticeScheduled = false;
   CellAnchor? _commandNavigationAnchor;
   bool _revealingCommand = false;
   Set<PhysicalKeyboardKey> get _mappedKeyPresses =>
@@ -265,6 +274,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _detachTitleHandler();
     _clearCommandNavigation();
     _shellNotificationSerial = 0;
+    _triggerNotificationSerial = 0;
     final terminal = _session.terminal;
     _observedTerminal = terminal;
     _title = null;
@@ -314,6 +324,27 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (!mounted) return;
     if (!identical(_observedTerminal, _session.terminal)) _attachTerminal();
     final shell = _session.shellIntegration;
+    if (_session.triggerNotificationSerial != _triggerNotificationSerial &&
+        !_triggerNoticeScheduled) {
+      _triggerNoticeScheduled = true;
+      final identity = _session.connectionIdentity;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _triggerNoticeScheduled = false;
+        if (!mounted || !identical(identity, _session.connectionIdentity))
+          return;
+        _triggerNotificationSerial = _session.triggerNotificationSerial;
+        final match = _session.triggerNotification;
+        if (match == null) return;
+        final line = match.line.length > 160
+            ? '${match.line.substring(0, 160)}…'
+            : match.line;
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        messenger?.hideCurrentSnackBar();
+        messenger?.showSnackBar(
+          SnackBar(content: Text('${match.trigger.name} · $line')),
+        );
+      });
+    }
     if (shell.notificationSerial != _shellNotificationSerial) {
       _shellNotificationSerial = shell.notificationSerial;
       final mark = shell.completionNotification;
@@ -1183,6 +1214,23 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         );
       case _PanelAction.keyBindings:
         unawaited(_showKeyBindings());
+      case _PanelAction.triggers:
+        unawaited(
+          showDialog<void>(
+            context: context,
+            builder: (_) => const TerminalTriggersDialog(),
+          ),
+        );
+      case _PanelAction.forwarding:
+        final forwarding = _session.portForwarding;
+        if (forwarding != null) {
+          unawaited(
+            showDialog<void>(
+              context: context,
+              builder: (_) => SshPortForwardingDialog(forwarding: forwarding),
+            ),
+          );
+        }
       case _PanelAction.zoomIn:
         _setFontSize(_fontSize + 1);
       case _PanelAction.zoomOut:
@@ -1419,6 +1467,18 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         ),
                       ),
                       PopupMenuItem(
+                        value: _PanelAction.triggers,
+                        child: Text(
+                          context.terminalTriggerTr('Output triggers'),
+                        ),
+                      ),
+                      if (_session.kind == TerminalSessionKind.ssh)
+                        PopupMenuItem(
+                          value: _PanelAction.forwarding,
+                          enabled: _session.portForwarding != null,
+                          child: Text(context.sshForwardTr('Port forwarding')),
+                        ),
+                      PopupMenuItem(
                         value: _PanelAction.shellSetup,
                         child: Text(
                           context.terminalShellTr('Shell integration setup'),
@@ -1591,6 +1651,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     // Keep mappings current across every mounted pane, including hidden tabs.
     // Errors remain in the settings dialog; malformed data never enables input.
     ref.watch(terminalKeyBindingListProvider);
+    final triggers = ref.watch(terminalTriggerListProvider);
+    _session.updateTriggers(triggers.valueOrNull ?? const []);
     ref.listen<FocusArea>(focusAreaProvider, (_, next) {
       if (next == FocusArea.terminal) {
         _focusIfVisible();
