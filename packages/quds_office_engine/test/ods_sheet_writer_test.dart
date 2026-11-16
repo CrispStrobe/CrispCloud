@@ -80,6 +80,31 @@ void main() {
     expect(reopened.formulaNames.single.name, 'Total');
   });
 
+  test('writes row outline groups and geometry outside the cell extent', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    sheet.cellA1('A1').value = 'Header';
+    sheet.cellA1('A2').value = 'One';
+    sheet.cellA1('A5').value = 'Four';
+    sheet.rowOutlineLevels[1] = 1;
+    sheet.rowOutlineLevels[2] = 1;
+    sheet.rowOutlineLevels[3] = 2;
+    sheet.rowOutlineLevels[4] = 1;
+    sheet.hiddenRows.add(10);
+    sheet.rowHeights[11] = 28;
+    sheet.columnWidths[8] = 120;
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final written = reopened.sheets.first;
+    expect(written.rowOutlineLevels[1], 1);
+    expect(written.rowOutlineLevels[2], 1);
+    expect(written.rowOutlineLevels[3], 2);
+    expect(written.rowOutlineLevels[4], 1);
+    expect(written.hiddenRows, contains(10));
+    expect(written.rowHeights[11], closeTo(28, 0.01));
+    expect(written.columnWidths[8], closeTo(114, 0.01));
+  });
+
   test('writes autofilter predicate values', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     sheet.cellA1('A1').value = 'Name';
