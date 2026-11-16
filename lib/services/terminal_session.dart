@@ -135,7 +135,7 @@ class TerminalSession extends ChangeNotifier {
   SshPortForwarding? get portForwarding {
     final connection = _connection;
     return isConnected && connection is TerminalForwardingConnection
-        ? connection.portForwarding
+        ? (connection as TerminalForwardingConnection).portForwarding
         : null;
   }
 

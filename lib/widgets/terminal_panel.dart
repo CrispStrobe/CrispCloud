@@ -275,6 +275,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _clearCommandNavigation();
     _shellNotificationSerial = 0;
     _triggerNotificationSerial = 0;
+    _triggerNoticeScheduled = false;
     final terminal = _session.terminal;
     _observedTerminal = terminal;
     _title = null;
@@ -330,8 +331,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       final identity = _session.connectionIdentity;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _triggerNoticeScheduled = false;
-        if (!mounted || !identical(identity, _session.connectionIdentity))
+        if (!mounted || !identical(identity, _session.connectionIdentity)) {
           return;
+        }
         _triggerNotificationSerial = _session.triggerNotificationSerial;
         final match = _session.triggerNotification;
         if (match == null) return;

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/ssh_port_forwarding_strings.dart';
-import '../models/ssh_port_forward.dart';
 import '../services/ssh_port_forwarding.dart';
 
 /// Edits only the listeners owned by this exact SSH connection. Closing the
@@ -26,6 +25,7 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
   Future<void> _add() async {
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AddSshPortForwardDialog(forwarding: widget.forwarding),
     );
   }
@@ -187,7 +187,10 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                     children: [
                       FilledButton.tonalIcon(
                         key: const ValueKey('ssh-forward-add'),
-                        onPressed: available && forwards.length < 16
+                        onPressed:
+                            available &&
+                                forwards.length <
+                                    SshPortForwarding.maximumForwards
                             ? _add
                             : null,
                         icon: const Icon(Icons.add),
@@ -247,8 +250,11 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
   }
 
   Future<void> _start() async {
-    if (_busy || !_form.currentState!.validate() || widget.forwarding.isClosed)
+    if (_busy ||
+        !_form.currentState!.validate() ||
+        widget.forwarding.isClosed) {
       return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -267,117 +273,92 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
               : int.parse(_targetPort.text.trim()),
         ),
       );
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        setState(() => _busy = false);
+        Navigator.of(context).pop();
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error =
               'Could not start forwarding. Check the listener and destination.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: widget.forwarding,
-    builder: (context, _) => AlertDialog(
-      scrollable: true,
-      insetPadding: const EdgeInsets.all(16),
-      title: Text(context.sshForwardTr('Add forwarding')),
-      content: SizedBox(
-        width: 440,
-        child: Form(
-          key: _form,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<SshPortForwardKind>(
-                key: const ValueKey('ssh-forward-kind'),
-                initialValue: _kind,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.sshForwardTr('Type'),
-                ),
-                items: [
-                  for (final kind in SshPortForwardKind.values)
-                    DropdownMenuItem(
-                      value: kind,
-                      child: Text(
-                        context.sshForwardTr(switch (kind) {
-                          SshPortForwardKind.local => 'Local',
-                          SshPortForwardKind.remote => 'Remote',
-                          SshPortForwardKind.dynamic => 'SOCKS5',
-                        }),
-                      ),
-                    ),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (value) => setState(() => _kind = value!),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.sshForwardTr(switch (_kind) {
-                  SshPortForwardKind.local => 'Listen on this device. Reach the destination from the SSH server.',
-                  SshPortForwardKind.remote => 'Listen on the SSH server. Reach the destination from this device.',
-                  SshPortForwardKind.dynamic => 'Listen on this device as a SOCKS5 proxy through the SSH server.',
-                }),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _bindHost,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.sshForwardTr('Loopback address'),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: '127.0.0.1',
-                    child: Text('127.0.0.1 (IPv4)'),
-                  ),
-                  DropdownMenuItem(value: '::1', child: Text('::1 (IPv6)')),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (value) => setState(() => _bindHost = value!),
-              ),
-              TextFormField(
-                key: const ValueKey('ssh-forward-bind-port'),
-                controller: _bindPort,
-                enabled: !_busy,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(5),
-                ],
-                decoration: InputDecoration(
-                  labelText: context.sshForwardTr(
-                    'Listening port (0 = automatic)',
-                  ),
-                ),
-                validator: (value) => _port(value, zero: true),
-              ),
-              if (_kind != SshPortForwardKind.dynamic) ...[
-                TextFormField(
-                  key: const ValueKey('ssh-forward-target-host'),
-                  controller: _targetHost,
-                  enabled: !_busy,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  maxLength: 253,
+  Widget build(BuildContext context) => PopScope(
+    canPop: !_busy,
+    child: AnimatedBuilder(
+      animation: widget.forwarding,
+      builder: (context, _) => AlertDialog(
+        scrollable: true,
+        insetPadding: const EdgeInsets.all(16),
+        title: Text(context.sshForwardTr('Add forwarding')),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: _form,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<SshPortForwardKind>(
+                  key: const ValueKey('ssh-forward-kind'),
+                  initialValue: _kind,
+                  isExpanded: true,
                   decoration: InputDecoration(
-                    labelText: context.sshForwardTr('Destination host'),
+                    labelText: context.sshForwardTr('Type'),
                   ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? context.sshForwardTr('Enter a destination host.')
-                      : null,
+                  items: [
+                    for (final kind in SshPortForwardKind.values)
+                      DropdownMenuItem(
+                        value: kind,
+                        child: Text(
+                          context.sshForwardTr(switch (kind) {
+                            SshPortForwardKind.local => 'Local',
+                            SshPortForwardKind.remote => 'Remote',
+                            SshPortForwardKind.dynamic => 'SOCKS5',
+                          }),
+                        ),
+                      ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (value) => setState(() => _kind = value!),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.sshForwardTr(switch (_kind) {
+                    SshPortForwardKind.local => 'Listen on this device. Reach the destination from the SSH server.',
+                    SshPortForwardKind.remote => 'Listen on the SSH server. Reach the destination from this device.',
+                    SshPortForwardKind.dynamic => 'Listen on this device as a SOCKS5 proxy through the SSH server.',
+                  }),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _bindHost,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: context.sshForwardTr('Loopback address'),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: '127.0.0.1',
+                      child: Text('127.0.0.1 (IPv4)'),
+                    ),
+                    DropdownMenuItem(value: '::1', child: Text('::1 (IPv6)')),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (value) => setState(() => _bindHost = value!),
                 ),
                 TextFormField(
-                  key: const ValueKey('ssh-forward-target-port'),
-                  controller: _targetPort,
+                  key: const ValueKey('ssh-forward-bind-port'),
+                  controller: _bindPort,
                   enabled: !_busy,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -385,33 +366,67 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
                     LengthLimitingTextInputFormatter(5),
                   ],
                   decoration: InputDecoration(
-                    labelText: context.sshForwardTr('Destination port'),
+                    labelText: context.sshForwardTr(
+                      'Listening port (0 = automatic)',
+                    ),
                   ),
-                  validator: _port,
+                  validator: (value) => _port(value, zero: true),
                 ),
+                if (_kind != SshPortForwardKind.dynamic) ...[
+                  TextFormField(
+                    key: const ValueKey('ssh-forward-target-host'),
+                    controller: _targetHost,
+                    enabled: !_busy,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    maxLength: 253,
+                    decoration: InputDecoration(
+                      labelText: context.sshForwardTr('Destination host'),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? context.sshForwardTr('Enter a destination host.')
+                        : null,
+                  ),
+                  TextFormField(
+                    key: const ValueKey('ssh-forward-target-port'),
+                    controller: _targetPort,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(5),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: context.sshForwardTr('Destination port'),
+                    ),
+                    validator: _port,
+                  ),
+                ],
+                if (widget.forwarding.isClosed)
+                  Text(context.sshForwardTr('This SSH connection has ended.')),
+                if (_error != null)
+                  Text(
+                    context.sshForwardTr(_error!),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
               ],
-              if (widget.forwarding.isClosed)
-                Text(context.sshForwardTr('This SSH connection has ended.')),
-              if (_error != null)
-                Text(
-                  context.sshForwardTr(_error!),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-            ],
+            ),
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: _busy ? null : () => Navigator.of(context).pop(),
+            child: Text(context.sshForwardTr('Cancel')),
+          ),
+          FilledButton(
+            key: const ValueKey('ssh-forward-start'),
+            onPressed: _busy || widget.forwarding.isClosed ? null : _start,
+            child: Text(context.sshForwardTr(_busy ? 'Starting' : 'Start')),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(),
-          child: Text(context.sshForwardTr('Cancel')),
-        ),
-        FilledButton(
-          key: const ValueKey('ssh-forward-start'),
-          onPressed: _busy || widget.forwarding.isClosed ? null : _start,
-          child: Text(context.sshForwardTr(_busy ? 'Starting' : 'Start')),
-        ),
-      ],
     ),
   );
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
@@ -76,6 +75,9 @@ class _NativeForwarding extends SshPortForwarding {
     _entries[entry.id] = entry;
     changed();
     try {
+      if (!current(entry)) {
+        throw const SshPortForwardException('Forwarding was cancelled.');
+      }
       if (spec.kind == SshPortForwardKind.remote) {
         final pending = client.forwardRemote(
           host: spec.bindHost,
@@ -90,7 +92,7 @@ class _NativeForwarding extends SshPortForwarding {
           pending.then<void>((remote) async {
             if (remote != null && !current(entry)) {
               try {
-                await cancelRemote(remote);
+                await cancelRemote(remote, unclaimed: true);
               } catch (_) {}
             }
           }, onError: (Object _, StackTrace __) {}),
@@ -102,7 +104,7 @@ class _NativeForwarding extends SshPortForwarding {
           );
         }
         if (!current(entry)) {
-          await cancelRemote(remote);
+          await cancelRemote(remote, unclaimed: true);
           throw const SshPortForwardException('Forwarding was cancelled.');
         }
         entry.remote = remote;
@@ -182,7 +184,7 @@ class _NativeForwarding extends SshPortForwarding {
   void acceptRemote(_Forward entry, SSHForwardChannel channel) {
     if (!current(entry) ||
         entry.peers.length >= SshPortForwarding.maximumConnections) {
-      destroyChannel(channel);
+      _destroyChannel(channel);
       return;
     }
     final peer = _Peer(this, entry, channel: channel);
@@ -204,25 +206,38 @@ class _NativeForwarding extends SshPortForwarding {
   // cancel reply. If cancellation fails, retry cannot revoke it. Closing the
   // SSH transport is the only reliable way to stop that remote listener.
   final _remoteCancellations = Expando<Future<void>>();
-  Future<void> cancelRemote(SSHRemoteForward remote) =>
-      _remoteCancellations[remote] ??= () async {
-        if (client.isClosed) return;
-        try {
-          if (!await client
-              .cancelForwardRemote(remote)
-              .timeout(connectTimeout)) {
-            throw StateError('Cancellation rejected');
-          }
-        } catch (_) {
-          unawaited(client.close().catchError((Object _) {}));
-          try {
-            client.socket.destroy();
-          } catch (_) {}
-          throw const SshPortForwardException(
-            'The server did not confirm stopping the forward; the SSH connection was closed.',
-          );
-        }
-      }();
+  Future<void> cancelRemote(
+    SSHRemoteForward remote, {
+    bool unclaimed = false,
+  }) => _remoteCancellations[remote] ??= () async {
+    // A late listener has never had a consumer. Drain any channel already
+    // queued before cancellation instead of dropping its owned resources.
+    final drain = unclaimed
+        ? remote.connections.listen(
+            _destroyChannel,
+            onError: (Object _, StackTrace __) {},
+          )
+        : null;
+    try {
+      if (client.isClosed) return;
+      if (!await client.cancelForwardRemote(remote).timeout(connectTimeout)) {
+        throw StateError('Cancellation rejected');
+      }
+    } catch (_) {
+      unawaited(client.close().catchError((Object _) {}));
+      try {
+        client.socket.destroy();
+      } catch (_) {}
+      throw const SshPortForwardException(
+        'The server did not confirm stopping the forward; the SSH connection was closed.',
+      );
+    } finally {
+      if (drain != null) {
+        await Future<void>.delayed(Duration.zero);
+        await drain.cancel();
+      }
+    }
+  }();
 
   Future<void> release(_Forward entry) => entry.releasing ??= () async {
     for (final peer in entry.peers.toList()) {
@@ -262,7 +277,9 @@ class _NativeForwarding extends SshPortForwarding {
   Future<void> close() => _closing ??= () async {
     _closed = true;
     final entries = _entries.values.toList();
-    for (final entry in entries) entry.live = false;
+    for (final entry in entries) {
+      entry.live = false;
+    }
     changed();
     await Future.wait(
       entries.map((entry) => release(entry).catchError((Object _) {})),
@@ -324,7 +341,7 @@ class _Peer {
       final input = reader = _SocketReader(local);
       final _Target target;
       if (forward.spec.kind == SshPortForwardKind.dynamic) {
-        target = await negotiate(input, local).timeout(owner.handshakeTimeout);
+        target = await _negotiate(input, local).timeout(owner.handshakeTimeout);
         socksReady = true;
       } else {
         target = _Target(forward.spec.targetHost!, forward.spec.targetPort!);
@@ -338,17 +355,17 @@ class _Peer {
       );
       unawaited(
         pending.then<void>((late) {
-          if (!current) destroyChannel(late);
+          if (!current) _destroyChannel(late);
         }, onError: (Object _, StackTrace __) {}),
       );
       final remote = await pending.timeout(owner.connectTimeout);
       if (!current) {
-        destroyChannel(remote);
+        _destroyChannel(remote);
         return;
       }
       channel = remote;
       if (socksReady) {
-        local.add(socksReply(0));
+        local.add(_socksReply(0));
         await local.flush();
         socksReady = false;
       }
@@ -356,7 +373,7 @@ class _Peer {
     } catch (error) {
       if (current) {
         if (socksReady) {
-          socket?.add(socksReply(4));
+          socket?.add(_socksReply(4));
           try {
             await socket?.flush().timeout(const Duration(seconds: 1));
           } catch (_) {}
@@ -446,14 +463,14 @@ class _Peer {
     closed = true;
     socket?.destroy();
     final remote = channel;
-    if (remote != null) destroyChannel(remote);
+    if (remote != null) _destroyChannel(remote);
     unawaited(reader?.cancel() ?? Future<void>.value());
     forward.peers.remove(this);
     owner.changed();
   }
 }
 
-void destroyChannel(SSHForwardChannel channel) {
+void _destroyChannel(SSHForwardChannel channel) {
   try {
     unawaited(
       channel.done.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
@@ -474,9 +491,9 @@ class _Target {
   final int port;
 }
 
-List<int> socksReply(int code) => [5, code, 0, 1, 0, 0, 0, 0, 0, 0];
+List<int> _socksReply(int code) => [5, code, 0, 1, 0, 0, 0, 0, 0, 0];
 
-Future<_Target> negotiate(_SocketReader reader, Socket socket) async {
+Future<_Target> _negotiate(_SocketReader reader, Socket socket) async {
   Future<Never> reject(List<int> reply) async {
     socket.add(reply);
     await socket.flush();
@@ -490,29 +507,29 @@ Future<_Target> negotiate(_SocketReader reader, Socket socket) async {
   socket.add([5, 0]);
   await socket.flush();
   final request = await reader.read(4);
-  if (request[0] != 5 || request[2] != 0) return reject(socksReply(1));
-  if (request[1] != 1) return reject(socksReply(7));
+  if (request[0] != 5 || request[2] != 0) return reject(_socksReply(1));
+  if (request[1] != 1) return reject(_socksReply(7));
   final String host;
   switch (request[3]) {
     case 1:
       host = (await reader.read(4)).join('.');
     case 3:
       final length = (await reader.read(1)).single;
-      if (length == 0) return reject(socksReply(8));
+      if (length == 0) return reject(_socksReply(8));
       final bytes = await reader.read(length);
-      if (bytes.any((byte) => byte > 127)) return reject(socksReply(8));
+      if (bytes.any((byte) => byte > 127)) return reject(_socksReply(8));
       host = ascii.decode(bytes);
       if (!SshPortForwardSpec.isValidTargetHost(host) || host.contains(':')) {
-        return reject(socksReply(8));
+        return reject(_socksReply(8));
       }
     case 4:
       host = InternetAddress.fromRawAddress(await reader.read(16)).address;
     default:
-      return reject(socksReply(8));
+      return reject(_socksReply(8));
   }
   final bytes = await reader.read(2);
   final port = (bytes[0] << 8) | bytes[1];
-  if (port == 0) return reject(socksReply(1));
+  if (port == 0) return reject(_socksReply(1));
   return _Target(host, port);
 }
 

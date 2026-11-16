@@ -54,10 +54,15 @@ class TerminalTrigger {
   final int cooldownSeconds;
   late final TerminalTriggerPattern? _matcher;
 
-  bool matches(String line) => _matcher?.hasMatch(line) ??
+  bool matches(String line) =>
+      _matcher?.hasMatch(line) ??
       (caseSensitive
           ? line.contains(pattern)
           : line.toLowerCase().contains(pattern.toLowerCase()));
+
+  /// Conservative work estimate for the observer's per-second budget. This is
+  /// separate from the notification limit, which cannot bound no-match work.
+  int get matchWorkPerRune => _matcher?.workPerRune ?? 1;
 
   TerminalTrigger copyWith({bool? enabled}) => TerminalTrigger(
     id: id,
@@ -90,8 +95,11 @@ class TerminalTrigger {
         value['matchKind'] is! String ||
         value['action'] is! String ||
         value['cooldownSeconds'] is! int ||
-        ['enabled', 'caseSensitive', 'oncePerSession']
-            .any((key) => value[key] is! bool)) {
+        [
+          'enabled',
+          'caseSensitive',
+          'oncePerSession',
+        ].any((key) => value[key] is! bool)) {
       throw const FormatException('Invalid terminal trigger record');
     }
     final kinds = TerminalTriggerMatchKind.values.where(
@@ -163,7 +171,8 @@ class TerminalTriggerPattern {
           }
           var last = first;
           if (index + 1 < source.length &&
-              source[index] == 45 && source[index + 1] != 93) {
+              source[index] == 45 &&
+              source[index + 1] != 93) {
             index++;
             last = source[index++];
             if (last == 92) {
@@ -173,20 +182,28 @@ class TerminalTriggerPattern {
             }
             if (last < first) _invalid();
           }
-          first = _fold(first);
-          last = _fold(last);
-          if (last < first) _invalid();
           ranges.add((first, last));
         }
         if (index >= source.length || ranges.isEmpty) _invalid();
         index++; // Closing bracket.
         atom = _PatternAtom(ranges: ranges, inverse: inverse);
       } else {
-        if (const {40, 41, 123, 125, 124, 42, 43, 63, 94, 36, 93}
-            .contains(rune)) {
+        if (const {
+          40,
+          41,
+          123,
+          125,
+          124,
+          42,
+          43,
+          63,
+          94,
+          36,
+          93,
+        }.contains(rune)) {
           _invalid();
         }
-        atom = _PatternAtom.literal(_fold(rune));
+        atom = _PatternAtom.literal(rune);
       }
       if (index < source.length && const {42, 43, 63}.contains(source[index])) {
         atom.quantifier = source[index++];
@@ -203,8 +220,15 @@ class TerminalTriggerPattern {
   bool _start = false;
   bool _end = false;
 
-  int _fold(int rune) => caseSensitive
-      ? rune : String.fromCharCode(rune).toLowerCase().runes.first;
+  int get workPerRune => _atoms.length * 3 +
+      _atoms.fold(0, (sum, atom) => sum + atom.ranges.length);
+
+  static int _singleRune(String value, int fallback) {
+    final runes = value.runes.iterator;
+    if (!runes.moveNext()) return fallback;
+    final result = runes.current;
+    return runes.moveNext() ? fallback : result;
+  }
 
   static Never _invalid() =>
       throw const FormatException('Unsupported terminal pattern syntax');
@@ -238,24 +262,29 @@ class TerminalTriggerPattern {
   }
 
   bool hasMatch(String value) {
-    final source = caseSensitive ? value : value.toLowerCase();
     var states = List<bool>.filled(_atoms.length + 1, false);
+    var next = List<bool>.filled(states.length, false);
     states[0] = true;
     _closure(states);
-    for (final rune in source.runes) {
+    for (final rune in value.runes) {
+      final text = caseSensitive ? null : String.fromCharCode(rune);
+      final lower = text == null ? rune : _singleRune(text.toLowerCase(), rune);
+      final upper = text == null ? rune : _singleRune(text.toUpperCase(), rune);
       if (!_start) {
         states[0] = true;
         _closure(states);
       }
-      final next = List<bool>.filled(states.length, false);
+      next.fillRange(0, next.length, false);
       for (var i = 0; i < _atoms.length; i++) {
-        if (states[i] && _atoms[i].matches(rune)) {
+        if (states[i] && _atoms[i].matches(rune, lower, upper)) {
           next[i + 1] = true;
           if (_atoms[i].repeating) next[i] = true;
         }
       }
       _closure(next);
+      final previous = states;
       states = next;
+      next = previous;
       if (!_end && states.last) return true;
     }
     return states.last;
@@ -263,9 +292,11 @@ class TerminalTriggerPattern {
 }
 
 class _PatternAtom {
-  _PatternAtom({required this.ranges, this.inverse = false, this.any = false});
+  _PatternAtom({required this.ranges, this.inverse = false}) : any = false;
   _PatternAtom.literal(int rune)
-    : ranges = [(rune, rune)], inverse = false, any = false;
+    : ranges = [(rune, rune)],
+      inverse = false,
+      any = false;
   _PatternAtom.any() : ranges = const [], inverse = false, any = true;
 
   final List<(int, int)> ranges;
@@ -274,6 +305,10 @@ class _PatternAtom {
   int quantifier = 0;
   bool get skippable => quantifier == 42 || quantifier == 63;
   bool get repeating => quantifier == 42 || quantifier == 43;
-  bool matches(int rune) => any ||
-      ranges.any((range) => rune >= range.$1 && rune <= range.$2) != inverse;
+  bool matches(int rune, int lower, int upper) =>
+      any ||
+      ranges.any((range) =>
+        (rune >= range.$1 && rune <= range.$2) ||
+        (lower >= range.$1 && lower <= range.$2) ||
+        (upper >= range.$1 && upper <= range.$2)) != inverse;
 }

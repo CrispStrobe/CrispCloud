@@ -49,7 +49,8 @@ class TerminalTriggers {
     }
     final data = jsonDecode(raw);
     if (data is! Map<String, dynamic> ||
-        data['version'] is! int || data['version'] != 1 ||
+        data['version'] is! int ||
+        data['version'] != 1 ||
         data['triggers'] is! List) {
       throw const FormatException('Unsupported terminal trigger store');
     }
@@ -76,7 +77,8 @@ class TerminalTriggers {
       _lock.synchronized(() async {
         final triggers = (await _load()).toList();
         final previous = replacing == null
-            ? -1 : triggers.indexWhere((item) => item.id == replacing);
+            ? -1
+            : triggers.indexWhere((item) => item.id == replacing);
         if (replacing != null && previous < 0) {
           throw StateError('Terminal trigger changed while editing');
         }
@@ -129,13 +131,12 @@ enum _OutputState { text, escape, csi, string, stringEscape, charset }
 /// excluded. Feed only incoming transport text, before rendering it; never feed
 /// input, protocol responses, or in-app notifications back into this observer.
 class TerminalTriggerEngine {
-  TerminalTriggerEngine({
-    required this.onMatch,
-    DateTime Function()? now,
-  }) : _now = now ?? DateTime.now;
+  TerminalTriggerEngine({required this.onMatch, DateTime Function()? now})
+    : _now = now ?? DateTime.now;
 
   static const maximumLineLength = 4096;
   static const maximumActionsPerSecond = 10;
+  static const maximumMatchWorkPerSecond = 2 * 1000 * 1000;
   final void Function(TerminalTriggerMatch) onMatch;
   final DateTime Function() _now;
   List<TerminalTrigger> _triggers = const [];
@@ -153,6 +154,12 @@ class TerminalTriggerEngine {
   String _csi = '';
   DateTime? _burstStart;
   int _burstCount = 0;
+  int _matchWork = 0;
+  int _skippedLines = 0;
+
+  /// Completed lines skipped because all eligible matching would exceed the
+  /// observer's budget. Output rendering continues independently.
+  int get skippedLines => _skippedLines;
 
   void updateTriggers(List<TerminalTrigger> triggers) {
     if (triggers.length > TerminalTriggers.maximumTriggers ||
@@ -176,6 +183,8 @@ class TerminalTriggerEngine {
     _highSurrogate = null;
     _burstStart = null;
     _burstCount = 0;
+    _matchWork = 0;
+    _skippedLines = 0;
     _finished = false;
   }
 
@@ -233,8 +242,10 @@ class TerminalTriggerEngine {
     }
     if (_state == _OutputState.stringEscape) {
       _state = rune == 92 || rune == 0x9c || (_stringIsOsc && rune == 7)
-          ? _OutputState.text : rune == 27
-          ? _OutputState.stringEscape : _OutputState.string;
+          ? _OutputState.text
+          : rune == 27
+          ? _OutputState.stringEscape
+          : _OutputState.string;
       return;
     }
     if (_state == _OutputState.charset) {
@@ -290,7 +301,9 @@ class TerminalTriggerEngine {
       if (_cursor > 0) _cursor--;
     } else if (rune == 9) {
       final end = (_cursor ~/ 8 + 1) * 8;
-      while (_cursor < end && !_invalidLine && !_alternate) { _put(32); }
+      while (_cursor < end && !_invalidLine && !_alternate) {
+        _put(32);
+      }
     } else if (rune >= 32 && !(rune >= 0x7f && rune <= 0x9f)) {
       _put(rune);
     }
@@ -318,6 +331,14 @@ class TerminalTriggerEngine {
         _alternate = finalByte == 'h';
         _clearLine();
       }
+      // Origin, insert, wrapping and scrolling modes affect how a line is
+      // displayed. Ignore only known non-text modes; invalidate everything else.
+      if (modes.any((mode) => !const {
+        '1', '12', '25', '47', '1047', '1049', '1000', '1002', '1003',
+        '1004', '1005', '1006', '1015', '2004',
+      }.contains(mode))) {
+        _invalidLine = true;
+      }
       return;
     }
     if (finalByte == 'm') return; // Graphics rendition never changes text.
@@ -325,7 +346,9 @@ class TerminalTriggerEngine {
       if (_csi.isEmpty || _csi == '0') {
         if (_cursor < _line.length) _line.removeRange(_cursor, _line.length);
       } else if (_csi == '1') {
-        for (var i = 0; i <= _cursor && i < _line.length; i++) { _line[i] = 32; }
+        for (var i = 0; i <= _cursor && i < _line.length; i++) {
+          _line[i] = 32;
+        }
       } else if (_csi == '2') {
         _line.clear();
         // Erase does not move the terminal cursor.
@@ -337,7 +360,10 @@ class TerminalTriggerEngine {
     }
     // Terminal replies, keyboard protocol, cursor visibility and mode changes
     // do not constitute printable text. Cursor/screen edits invalidate the line.
-    if (const {'n', 'c', 'u', 'h', 'l', 't'}.contains(finalByte)) return;
+    if (finalByte == 'u' &&
+        (_csi.startsWith('>') || _csi.startsWith('<') ||
+          _csi.startsWith('=') || _csi.startsWith('?'))) return;
+    if (const {'n', 'c'}.contains(finalByte)) return;
     _invalidLine = true;
   }
 
@@ -354,16 +380,33 @@ class TerminalTriggerEngine {
     if (_burstStart == null || now.difference(_burstStart!).inSeconds >= 1) {
       _burstStart = now;
       _burstCount = 0;
+      _matchWork = 0;
     }
-    // Snapshot allows callback-driven edits without mutating this iteration.
+    final eligible = <TerminalTrigger>[];
     for (final trigger in _triggers) {
-      if (_burstCount >= maximumActionsPerSecond) break;
-      if (!trigger.enabled || (trigger.oncePerSession && _fired.contains(trigger.id))) {
+      if (!trigger.enabled ||
+          (trigger.oncePerSession && _fired.contains(trigger.id))) {
         continue;
       }
+      eligible.add(trigger);
+    }
+    if (eligible.isEmpty) return;
+    final work = _line.length * eligible.fold(0, (sum, rule) => sum + rule.matchWorkPerRune);
+    // Reserve the whole line before matching. Transport chunking therefore
+    // cannot change which rules receive an expensive line, and no-match floods
+    // are bounded just like matching floods. Skipped lines are not replayed.
+    if (work > maximumMatchWorkPerSecond - _matchWork) {
+      _skippedLines++;
+      return;
+    }
+    _matchWork += work;
+    // Snapshot allows callback-driven edits without mutating this iteration.
+    for (final trigger in eligible) {
+      if (_burstCount >= maximumActionsPerSecond) break;
       final previous = _lastFired[trigger.id];
-      if (previous != null && now.difference(previous).inMilliseconds <
-          trigger.cooldownSeconds * 1000) {
+      if (previous != null &&
+          now.difference(previous).inMilliseconds <
+              trigger.cooldownSeconds * 1000) {
         continue;
       }
       if (!trigger.matches(line)) continue;

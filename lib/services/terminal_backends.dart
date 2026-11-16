@@ -215,10 +215,16 @@ class SshTerminalConnection
   TerminalBackend get backend => TerminalBackend.ssh;
 
   @override
-  SshPortForwarding? get portForwarding =>
-      _active && SshPortForwarding.supported
-      ? service.forwarding(sessionId)
-      : null;
+  SshPortForwarding? get portForwarding {
+    if (!_active || !SshPortForwarding.supported) return null;
+    try {
+      return service.forwarding(sessionId);
+    } on SshPortForwardException {
+      // SSH can already be closed before its completion callback updates the
+      // service's session snapshot. Capability lookup during a rebuild is inert.
+      return null;
+    }
+  }
 
   // The service can reap a shell after its channels drain but before the UI
   // consumes their buffered output. Late layout/input must not turn that
