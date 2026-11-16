@@ -33,12 +33,12 @@ exact source identities, commands and the separately qualified terminal results.
 ## Earlier verified state
 
 - CrispCloud `main` snapshot: `4eea7d16`
-- Vendored Quds source checkpoint: `f938d7fc3cb9aa42ea8d30b1c2ab50ccca694699`
+- Vendored Quds source checkpoint: `c6a7eff46bcfcb806ee7c43252636b06c088963c`
   (`packages/QUDS_FORKS.md`, 2,503 managed files)
-- Quds sheet/ODS cohort: **511 tests**; the last clean full engine run was
+- Quds sheet/ODS cohort: **512 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader+writer: **113 tests**
+- CrispCloud vendored ODS reader+writer: **114 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -119,8 +119,7 @@ source ranges, bounds, blank policy and messages.
 named expressions, sheet tab colours, cell hyperlinks, row/column outline groups,
 and database filter predicates with equality, comparison and empty checks.\
 **Remaining:** unmodeled named-expression semantics, filter operators outside
-the modeled equality/not-equality subset, and uncommon page-style details such
-as header/footer content and rare paper-size codes.\
+the modeled equality/not-equality subset, and rare paper-size codes.\
 **Next step:** add the corresponding model fields or preserve/rebase native
 ODS metadata.\
 **Acceptance:** an ODS with each feature opens, saves as XLSX, and reopens with
@@ -159,8 +158,8 @@ leaking payloads into plain text/search.
 **Current:** `OdsSheetWriter` exports the modeled workbook subset as a new ODS
 package: values, formulas, styles, number formats, merges, geometry, hidden
 state, comments, hyperlinks, names, print metadata, autofilter ranges and
-predicates, pictures, conditional formats, validations, row outline groups and
-authored page setup. F4 exposes this as **Export as ODS**; ordinary Save still
+predicates, pictures, conditional formats, validations, row outline groups,
+authored page setup and header/footer sections. F4 exposes this as **Export as ODS**; ordinary Save still
 writes a new `.xlsx`. No ODT or ODP writer exists.\
 **Remaining:** ODT/ODP serialization.\
 **Next step:** decide whether ODT/ODP writers are a product requirement.\
