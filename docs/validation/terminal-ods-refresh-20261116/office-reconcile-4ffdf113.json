@@ -1,17 +1,11 @@
 {
   "parents": [
-    "9bf7b7aa9559d4d2a318152b9fe4eaa16c97ffd9",
+    "cf2c3814b3c35c14122702f7b3cceb68b624ffc3",
     "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
   ],
-  "target": "cf2c3814b3c35c14122702f7b3cceb68b624ffc3",
+  "target": "d65649004960ebf7ea4edd356212c13864215810",
   "managed_files": 2410,
-  "writes": [
-    {
-      "path": "packages/quds_office_engine/CHANGELOG.md",
-      "before_sha256": "a0238c7844a8fb3ff34fd16f7d27bd9b5ea207b4be998b721817d5eab37ac2b3",
-      "after_sha256": "df175d14276316af78b0deab693052b6a356919732e840d995abaeddb39aac38"
-    }
-  ],
+  "writes": [],
   "deleted": [],
   "validation": "Every current file matched a merge-parent manifest or the exact combined canonical source before replacement; standalone parser remained unchanged."
 }
