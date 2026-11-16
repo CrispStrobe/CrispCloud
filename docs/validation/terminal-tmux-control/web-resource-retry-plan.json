@@ -1,0 +1,10 @@
+{
+  "recorded_utc": "2026-11-16T07:56:37.039897+00:00",
+  "failed_attempt_heap_mb": 3072,
+  "failure": "Explicit Dart2JS Out of Memory during global type inference, exit253; Flutter exit1.",
+  "sdk_restored_exactly": true,
+  "next_attempt_heap_mb": 4096,
+  "reason": "Increase compiler resource allowance after observed heap exhaustion; application/dependencies/O4/minification unchanged.",
+  "application_source": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+  "github_actions_queried_or_awaited": false
+}

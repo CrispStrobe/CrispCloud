@@ -22,15 +22,23 @@ native hook was used for the terminal acceptance phases.
 | Formatting | **142 Dart files**, no changes | [format.json](format.json), [format.log](format.log) |
 | Actual loopback OpenSSH | **17 passed, 2 explicit skips, 0 failures across three files**; 93.066 seconds | [live.json](live.json), [live.log](live.log) |
 | Production-widget visual inspection | **Four** desktop/320x320 captures; all regenerated on the accepted UI and inspected | [visual receipt](focused/visual-receipt.json), [screenshots](focused/screenshots) |
-| Office provenance | **2,409 managed files**, tracked modes and hashes pass at Quds `ca4011de` | [postmerge provenance](remote-cutoff/postmerge-vendor-verification.json) |
+| Office provenance | **2,409 managed files**; final pin-only update to Quds `428679a3` preserves every managed-file hash | [completion integration](completion-incoming/README.md) |
 | SSH provenance | **96 dartssh2 4.1.0 upstream files and four reviewed patches** pass | [postmerge provenance](remote-cutoff/postmerge-vendor-verification.json) |
-| Full optimized application web release | **Running; not yet accepted at this checkpoint** | Final result will be recorded in `web.json` |
+| Full optimized application web release | **Retry running with a 4,096 MB compiler heap; not yet accepted at this checkpoint** | Final result will be recorded in `web.json` |
 
 All **5,535 watched source/dependency/test files** have identical hashes across
 native, analysis, formatting and live OpenSSH phases. Each phase also checks
 before/after equality. The inventories are retained as losslessly compressed
 `*-source-sha256.json.gz` files. [Pre-web source verification](pre-web-source-verification.json)
 records their identity. Final web/source verification follows after the build.
+
+The first optimized build explicitly exhausted its 3,072 MB compiler heap
+during global type inference, returning Dart2JS exit 253 / Flutter exit 1. It did
+not report an application compilation error. Its complete log, source inventory
+and resource/restoration receipts remain under [web-attempt-3072mb/](web-attempt-3072mb).
+The SDK was restored exactly. The retry changes only the compiler heap cap to
+4,096 MB; its independent O4/minification preflight passed with unchanged SDK
+hashes. See [the resource adjustment record](web-resource-retry-plan.json).
 
 The new deterministic suites are registered in the applicable browser/native
 workflow lists and the 75-file local runner. All **33 workflow YAMLs** parse with
@@ -88,6 +96,13 @@ terminal runner. The resulting merge tree is
 postmerge ancestry are retained in [the first refresh](audit-final/README.md)
 and [the final cutoff](remote-cutoff/README.md).
 
+The completion advertisement finished at **07:54:21.308626 UTC** and found one
+more PR #161 head, `5efae773`. Its 195 evidence files and one manifest pin update
+change no application, test or dependency inputs. Merge `48775630` retains that
+head; all **5,535 accepted source hashes** and all **2,409 managed Office hashes**
+remain identical. The final canonical pin is Quds `428679a3`. The web retry uses
+that integrated tree. See [the completion integration review](completion-incoming/README.md).
+
 | Published checkpoint | Purpose |
 | --- | --- |
 | `8625aad7` | Initial complete branch/PR ancestry audit |
@@ -97,6 +112,8 @@ and [the final cutoff](remote-cutoff/README.md).
 | `359e3997` | Detached-buffer browsing, cleanup retry and integration evidence |
 | `e61256c2` | Resize/output synchronization, bounded snapshot ownership and final focused fixes |
 | `60bc3a41` | Merge final incoming typography/bibliography head `fc09d3f5`; source used by full acceptance |
+| `b14ba65d` | Passing 896-test cohort, static/SSH results and complete integration evidence |
+| `48775630` | Merge final Zotero qualification and pin-only head `5efae773`, preserving all accepted inputs |
 
 GitHub checkpoints are created through the connected Git data API because the
 local Git remote lacks push credentials. Every published tree is compared with
@@ -232,10 +249,11 @@ run from the repository root:
 ../toolchain/run python3 tool/run_terminal_validation.py live --evidence docs/validation/terminal-tmux-control
 ```
 
-The full web build uses the existing
-[`web-resource-runner.py`](../terminal-agent-profiles/web-resource-runner.py)
+The full web build uses the continuation's
+[`web-resource-runner.py`](web-resource-runner.py)
 with `--run` and this evidence directory. It applies a compiler-only 3,072 MB VM
-heap cap to the standard O4/minified release build and verifies exact SDK binary,
+heap cap on the archived first attempt and a **4,096 MB** cap on the retry, while
+preserving the standard O4/minified release build. It verifies exact SDK binary,
 snapshot and mode restoration. It must run after other SDK users finish.
 
 Protocol compatibility was reviewed against upstream

@@ -35,8 +35,10 @@ needed. A later refresh found the newer PR #161 head `e980293c`; merge checkpoin
 `4316f7fc` integrated its saved-search, small-caps and bibliography-layout work.
 The final pre-acceptance cutoff at 07:44:13 UTC found `fc09d3f5`; checkpoint
 `60bc3a41` integrates its typography/bibliography hardening. All 189 cutoff refs
-are actual ancestors, and all 2,409 current Office vendor entries pass the guard
-at Quds `ca4011de`. The [fresh snapshot](validation/terminal-tmux-control/integration.json)
+are actual ancestors. The 07:54 completion refresh then found `5efae773`;
+`48775630` integrates its qualification records and pin-only update to Quds
+`428679a3`, preserving all 2,409 managed Office hashes and all accepted runtime
+inputs. The [fresh snapshot](validation/terminal-tmux-control/integration.json)
 and [final integration audit](validation/terminal-tmux-control/remote-cutoff/README.md)
 record exact ancestry. Remote checkpoints retain every intermediate change;
 GitHub Actions results are neither queried nor awaited.
@@ -46,7 +48,8 @@ across 75 files**, clean analysis/formatting of **142 Dart files**, and **17 act
 OpenSSH tests with two explicit environment skips**. Four production-widget
 captures were regenerated and inspected. All **5,535 watched source/dependency/
 test files** match across the completed phases. The optimized web release build
-is running; its final result belongs in the current acceptance record above.
+is retrying with a 4,096 MB compiler heap after the previous 3,072 MB cap was
+exhausted during optimization; its final result belongs in the acceptance record.
 
 ### Previous agent/profile continuation
 
