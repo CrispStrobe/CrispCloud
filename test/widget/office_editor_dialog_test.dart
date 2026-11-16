@@ -376,4 +376,65 @@ void main() {
     final book = OdsSheetReader.readBytes(exported!);
     expect(book.sheets, isNotEmpty);
   });
+
+  testWidgets('word Export as ODT writes a readable package', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    Uint8List? exported;
+    String? exportedName;
+    final source = File(
+      'test/fixtures/office_native_workflows/native-word-source.docx',
+    ).readAsBytesSync();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: OfficeEditorDialog(
+            file: FileItem(
+              name: 'document.docx',
+              isFolder: false,
+              size: source.length,
+            ),
+            side: PanelSide.local,
+            bytesOverride: source,
+            copyExporter: (bytes, name, title, {initialDirectory}) async {
+              exported = bytes;
+              exportedName = name;
+              return OfficeCopyOutcome.savedCopy;
+            },
+          ),
+        ),
+      ),
+    );
+    for (
+      var i = 0;
+      i < 100 && find.byType(QudsWordEditor).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(find.byType(QudsWordEditor), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(OfficeEditorDialog)),
+    );
+    container
+        .read(officeEditorMenuProvider)!
+        .perform(OfficeEditorAction.exportOdt);
+    for (var i = 0; i < 100 && exported == null; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(exported, isNotNull);
+    expect(exportedName, endsWith('.odt'));
+    final package = OpcPackage.openBytes(exported!);
+    final content = package.getPart('/content.xml')!.readText();
+    expect(content, contains('<office:document-content'));
+    expect(content, contains('<office:text'));
+  });
 }

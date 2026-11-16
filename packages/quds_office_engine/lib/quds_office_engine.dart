@@ -130,6 +130,7 @@ export 'src/word/model/word_zotero.dart';
 export 'src/word/model/word_zotero_citing.dart';
 export 'src/word/model/word_zotero_data.dart';
 export 'src/word/properties/wml_properties.dart';
+export 'src/word/serial/odt_document_writer.dart';
 export 'src/word/serial/word_deserializer.dart';
 export 'src/word/serial/word_drawing_io.dart';
 export 'src/word/serial/word_heading_io.dart';
