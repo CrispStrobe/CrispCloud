@@ -1,0 +1,324 @@
+The following plugins do not support Swift Package Manager for macos:
+  - crisp_audio
+  - flutter_inappwebview_macos
+  - flutter_local_notifications
+  - flutter_secure_storage_macos
+  - macos_secure_bookmarks
+  - pdfx
+  - system_tray
+This will become an error in a future version of Flutter. Please contact the plugin maintainers to request Swift Package Manager adoption.
+Running pod install...                                              4.0s
+Building macOS application...                                   
+implicit conversion loses integer precision: 'i64' (aka 'long long') to 'int' [-Wshorten-64-to-32]
+ 255240 |         int n2 = MIN(nHalf, pT->nMap-i1-n1);
+        |             ~~       ^~~~~
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  215 | #define MIN(a, b) (((a)<(b))?(a):(b))
+      |                               ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:255240:40: warning: implicit conversion loses integer precision: 'i64' (aka 'long long') to 'int' [-Wshorten-64-to-32]
+ 255240 |         int n2 = MIN(nHalf, pT->nMap-i1-n1);
+        |             ~~              ~~~~~~~~~~~^~~
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  215 | #define MIN(a, b) (((a)<(b))?(a):(b))
+      |                                   ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:256338:12: warning: implicit conversion loses integer precision: 'i64' (aka 'long long') to 'int' [-Wshorten-64-to-32]
+ 256338 |   i2 = pT->nMap;
+        |      ~ ~~~~^~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:256693:22: warning: ambiguous expansion of macro 'MAX' [-Wambiguous-macro]
+ 256693 |   int nSlotPerPage = MAX(MINSLOT, (p->pConfig->pgsz - 8) / szKey);
+        |                      ^
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  218 | #define MAX(a, b) (((a)>(b))?(a):(b))
+      |         ^
+ 15576 | # define MAX(A,B) ((A)>(B)?(A):(B))
+       |          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:256723:13: warning: ambiguous expansion of macro 'MAX' [-Wambiguous-macro]
+ 256723 |     nSlot = MAX(nElem*4, MINSLOT);
+        |             ^
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  218 | #define MAX(a, b) (((a)>(b))?(a):(b))
+      |         ^
+ 15576 | # define MAX(A,B) ((A)>(B)?(A):(B))
+       |          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:257241:53: warning: ambiguous expansion of macro 'MIN' [-Wambiguous-macro]
+ 257241 |         res = fts5Memcmp(&pLeaf->p[iOff], zIdxTerm, MIN(nTerm, nIdxTerm));
+        |                                                     ^
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  215 | #define MIN(a, b) (((a)<(b))?(a):(b))
+      |         ^
+ 15573 | # define MIN(A,B) ((A)<(B)?(A):(B))
+       |          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:259152:40: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 259152 |       pSorter->aIdx[i] = &aBlob[nBlob] - a;
+        |                        ~ ~~~~~~~~~~~~~~^~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:261897:38: warning: implicit conversion loses integer precision: 'i64' (aka 'long long') to 'int' [-Wshorten-64-to-32]
+ 261897 |     sqlite3_result_text(pCtx, zText, nText, SQLITE_TRANSIENT);
+        |     ~~~~~~~~~~~~~~~~~~~              ^~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:261920:38: warning: implicit conversion loses integer precision: 'i64' (aka 'long long') to 'int' [-Wshorten-64-to-32]
+ 261920 |     sqlite3_result_blob(pCtx, pBlob, nBlob, sqlite3_free);
+        |     ~~~~~~~~~~~~~~~~~~~              ^~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:264142:19: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 264142 |         is = zCsr - (unsigned char*)pText;
+        |            ~ ~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:264149:21: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 264149 |           is = zCsr - (unsigned char*)pText;
+        |              ~ ~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:264199:17: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 264199 |       ie = zCsr - (unsigned char*)pText;
+        |          ~ ~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:264203:37: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 264203 |     rc = xToken(pCtx, 0, aFold, zOut-aFold, is, ie);
+        |          ~~~~~~                 ~~~~^~~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:265030:24: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 265030 |       aStart[ii] = zIn - (const unsigned char*)pText;
+        |                  ~ ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:265052:19: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 265052 |       iNext = zIn - (const unsigned char*)pText;
+        |             ~ ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:265062:36: warning: implicit conversion loses integer precision: 'long' to 'int' [-Wshorten-64-to-32]
+ 265062 |     rc = xToken(pCtx, 0, aBuf, zOut-aBuf, aStart[0], iNext);
+        |          ~~~~~~                ~~~~^~~~~
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:266727:18: warning: ambiguous expansion of macro 'MIN' [-Wambiguous-macro]
+ 266727 |       int nCmp = MIN(nTerm, pCsr->nLeTerm);
+        |                  ^
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  215 | #define MIN(a, b) (((a)<(b))?(a):(b))
+      |         ^
+ 15573 | # define MIN(A,B) ((A)<(B)?(A):(B))
+       |          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:266801:20: warning: ambiguous expansion of macro 'MIN' [-Wambiguous-macro]
+ 266801 |         int nCmp = MIN(nTerm, pCsr->nLeTerm);
+        |                    ^
+In module 'Darwin' imported from /tmp/crispcloud-terminal-ods-isolated/macos/Pods/sqlite3/sqlite-src-3520000/sqlite3.c:27675:
+  215 | #define MIN(a, b) (((a)<(b))?(a):(b))
+      |         ^
+ 15573 | # define MIN(A,B) ((A)<(B)?(A):(B))
+       |          ^
+192 warnings generated.
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/file_selector_macos-0.9.5/macos/file_selector_macos/Sources/file_selector_macos/FileSelectorPlugin.swift:127:17: warning: 'allowedFileTypes' was deprecated in macOS 12.0: Use -allowedContentTypes instead
+          panel.allowedFileTypes = allowedTypes
+                ^
+/tmp/crispcloud-terminal-ods-isolated/packages/pro_video_editor/darwin/pro_video_editor/Sources/pro_video_editor/src/shared/features/render/helpers/BitrateCappedExporter.swift:420:16: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure
+            if writer.status == .completed {
+               ^
+@interface AVAssetWriter : NSObject
+           ^
+/tmp/crispcloud-terminal-ods-isolated/packages/pro_video_editor/darwin/pro_video_editor/Sources/pro_video_editor/src/shared/features/render/helpers/BitrateCappedExporter.swift:421:15: warning: capture of 'terminator' with non-Sendable type 'BitrateCappedExporter.ContinuationTerminator' in a '@Sendable' closure
+              terminator.finish(.success(()))
+              ^
+  private final class ContinuationTerminator {
+                      ^
+/tmp/crispcloud-terminal-ods-isolated/packages/pro_video_editor/darwin/pro_video_editor/Sources/pro_video_editor/src/shared/features/render/helpers/BitrateCappedExporter.swift:442:9: warning: capture of 'reader' with non-Sendable type 'AVAssetReader' in a '@Sendable' closure; this is an error in the Swift 6 language mode
+        reader.cancelReading()
+        ^
+@interface AVAssetReader : NSObject
+           ^
+/tmp/crispcloud-terminal-ods-isolated/packages/pro_video_editor/darwin/pro_video_editor/Sources/pro_video_editor/src/shared/features/render/helpers/BitrateCappedExporter.swift:443:9: warning: capture of 'writer' with non-Sendable type 'AVAssetWriter' in a '@Sendable' closure; this is an error in the Swift 6 language mode
+        writer.cancelWriting()
+        ^
+@interface AVAssetWriter : NSObject
+           ^
+/tmp/crispcloud-terminal-ods-isolated/packages/pro_video_editor/darwin/pro_video_editor/Sources/pro_video_editor/src/shared/features/metadata/Metadata.swift:288:15: warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+    } else if #available(iOS 13.4, macOS 10.15.4, *) {
+              ^
+    if #available(iOS 15.0, macOS 12.0, *) {
+    ^
+1 | #import "Headers/video_player_avfoundation-umbrella.h"
+2 | 
+
+13 | #import "AVAssetTrackUtils.h"
+14 | #import "FVPAssetProvider.h"
+15 | #import "FVPAVFactory.h"
+16 | #import "FVPDisplayLink.h"
+17 | #import "FVPEventBridge.h"
+
+1 warning generated.
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/video_player_avfoundation-2.10.0/darwin/video_player_avfoundation/Sources/video_player_avfoundation_objc/include/video_player_avfoundation_objc/FVPAVFactory.h:38:4: warning: 'AVKeyValueStatus' is deprecated: first deprecated in macOS 13.0 - Use AVAsyncProperty.Status instead
+ 36 | 
+ 37 | /// Wraps the underlying asset's statusOfValueForKey:error: method.
+ 38 | - (AVKeyValueStatus)statusOfValueForKey:(NSString *)key
+    |    `- warning: 'AVKeyValueStatus' is deprecated: first deprecated in macOS 13.0 - Use AVAsyncProperty.Status instead
+ 39 |                                   error:(NSError *_Nullable *_Nullable)outError;
+ 40 | 
+
+14 | NS_ASSUME_NONNULL_BEGIN
+15 | 
+16 | typedef NS_ENUM(NSInteger, AVKeyValueStatus) {
+17 | 	AVKeyValueStatusUnknown = 0,
+18 | 	AVKeyValueStatusLoading = 1,
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/video_player_avfoundation-2.10.0/darwin/video_player_avfoundation/Sources/video_player_avfoundation/NativeVideoViewFactory.swift:53:8: warning: result of 'createArgsCodec()' has different optionality than expected by protocol 'FlutterPlatformViewFactory'
+  func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+       ^
+                                                                  ?
+optional func createArgsCodec() -> (any FlutterMessageCodec & NSObjectProtocol)?}
+              ^
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/FlutterWebViewController.swift:131:21: warning: value 'wId' was defined but never used; consider replacing with boolean test
+        else if let wId = windowId {
+                ~~~~^~~~~~
+                                   != nil
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppBrowser/InAppBrowserWebViewController.swift:103:16: warning: value 'wId' was defined but never used; consider replacing with boolean test
+        if let wId = windowId {
+           ~~~~^~~~~~
+                              != nil
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:147:25: warning: 'clearCache' is deprecated: Use InAppWebViewManager.clearAllCache instead.
+            if settings.clearCache {
+                        ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:148:17: warning: 'clearCache()' is deprecated: Use InAppWebViewManager.clearAllCache instead.
+                clearCache()
+                ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:172:39: warning: 'javaScriptEnabled' was deprecated in macOS 11.0: Use WKWebpagePreferences.allowsContentJavaScript to disable content JavaScript on a per-navigation basis
+            configuration.preferences.javaScriptEnabled = settings.javaScriptEnabled
+                                      ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/WKProcessPoolManager.swift:12:36: warning: 'WKProcessPool' was deprecated in macOS 12.0: Creating and using multiple instances of WKProcessPool no longer has any effect.
+    static let sharedProcessPool = WKProcessPool()
+                                   ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:246:23: warning: 'processPool' was deprecated in macOS 12.0: Creating and using multiple instances of WKProcessPool no longer has any effect.
+        configuration.processPool = WKProcessPoolManager.sharedProcessPool
+                      ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:682:63: warning: 'clearCache' is deprecated: Use InAppWebViewManager.clearAllCache instead.
+        if newSettingsMap["clearCache"] != nil && newSettings.clearCache {
+                                                              ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:683:13: warning: 'clearCache()' is deprecated: Use InAppWebViewManager.clearAllCache instead.
+            clearCache()
+            ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:687:39: warning: 'javaScriptEnabled' was deprecated in macOS 11.0: Use WKWebpagePreferences.allowsContentJavaScript to disable content JavaScript on a per-navigation basis
+            configuration.preferences.javaScriptEnabled = newSettings.javaScriptEnabled
+                                      ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:2210:38: warning: 'onFindResultReceived(activeMatchOrdinal:numberOfMatches:isDoneCounting:)' is deprecated: Use FindInteractionChannelDelegate.onFindResultReceived instead.
+            webView.channelDelegate?.onFindResultReceived(activeMatchOrdinal: activeMatchOrdinal, numberOfMatches: numberOfMatches, isDoneCounting: isDoneCounting)
+                                     ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebView.swift:2474:38: warning: 'javaScriptEnabled' was deprecated in macOS 11.0: Use WKWebpagePreferences.allowsContentJavaScript to disable content JavaScript on a per-navigation basis
+        if configuration.preferences.javaScriptEnabled {
+                                     ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/InAppWebViewSettings.swift:92:75: warning: 'javaScriptEnabled' was deprecated in macOS 11.0: Use WKWebpagePreferences.allowsContentJavaScript to disable content JavaScript on a per-navigation basis
+            realSettings["javaScriptEnabled"] = configuration.preferences.javaScriptEnabled
+                                                                          ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/PrintJob/PrintJobChannelDelegate.swift:20:13: warning: initialization of immutable value 'arguments' was never used; consider replacing with assignment to '_' or removing it
+        let arguments = call.arguments as? NSDictionary
+        ~~~~^~~~~~~~~
+        _
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/PrintJob/PrintJobSettings.swift:207:13: warning: variable 'realOptions' was never mutated; consider changing to 'let' constant
+        var realOptions: [String: Any?] = toMap()
+        ~~~ ^
+        let
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/Types/URLCredential.swift:14:25: warning: comparing non-optional value of type '[Any]' to 'nil' always returns true
+        if certificates != nil {
+           ~~~~~~~~~~~~ ^  ~~~
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/Types/URLProtectionSpace.swift:18:38: warning: 'SecTrustEvaluate' was deprecated in macOS 10.15: renamed to 'SecTrustEvaluateWithError(_:_:)'
+        let secTrustEvaluateStatus = SecTrustEvaluate(serverTrust, &secResult);
+                                     ^
+        let secTrustEvaluateStatus = SecTrustEvaluate(serverTrust, &secResult);
+                                     ^~~~~~~~~~~~~~~~
+                                     SecTrustEvaluateWithError
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/Types/URLProtectionSpace.swift:20:77: warning: 'SecTrustGetCertificateAtIndex' was deprecated in macOS 12.0: renamed to 'SecTrustCopyCertificateChain(_:)'
+        if secTrustEvaluateStatus == errSecSuccess, let serverCertificate = SecTrustGetCertificateAtIndex(serverTrust, 0) {
+                                                                            ^
+        if secTrustEvaluateStatus == errSecSuccess, let serverCertificate = SecTrustGetCertificateAtIndex(serverTrust, 0) {
+                                                                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                                                            SecTrustCopyCertificateChain
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/Types/URLProtectionSpace.swift:40:9: warning: 'SecTrustEvaluate' was deprecated in macOS 10.15: renamed to 'SecTrustEvaluateWithError(_:_:)'
+        SecTrustEvaluate(serverTrust, &secResult);
+        ^
+        SecTrustEvaluate(serverTrust, &secResult);
+        ^~~~~~~~~~~~~~~~
+        SecTrustEvaluateWithError
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/WebMessage/WebMessageChannelChannelDelegate.swift:43:21: warning: variable 'message' was never mutated; consider changing to 'let' constant
+                var message = WebMessage.fromMap(map: arguments!["message"] as! [String: Any?])
+                ~~~ ^
+                let
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/WebViewChannelDelegate.swift:259:22: warning: 'clearCache()' is deprecated: Use InAppWebViewManager.clearAllCache instead.
+            webView?.clearCache()
+                     ^
+/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/flutter_inappwebview_macos-1.1.2/macos/Classes/InAppWebView/WebViewChannelDelegate.swift:483:21: warning: variable 'message' was never mutated; consider changing to 'let' constant
+                var message = WebMessage.fromMap(map: arguments!["message"] as! [String: Any?])
+                ~~~ ^
+                let
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+1 | #import "Headers/video_player_avfoundation-umbrella.h"
+2 | #import "Headers/video_player_avfoundation-Swift.h"
+3 | 
+
+13 | #import "AVAssetTrackUtils.h"
+14 | #import "FVPAssetProvider.h"
+15 | #import "FVPAVFactory.h"
+16 | #import "FVPDisplayLink.h"
+17 | #import "FVPEventBridge.h"
+
+1 warning generated.
+/private/tmp/crispcloud-terminal-ods-isolated/build/macos/Build/Products/Release/video_player_avfoundation/video_player_avfoundation.framework/Headers/FVPAVFactory.h:38:4: warning: 'AVKeyValueStatus' is deprecated: first deprecated in macOS 13.0 - Use AVAsyncProperty.Status instead
+ 36 | 
+ 37 | /// Wraps the underlying asset's statusOfValueForKey:error: method.
+ 38 | - (AVKeyValueStatus)statusOfValueForKey:(NSString *)key
+    |    `- warning: 'AVKeyValueStatus' is deprecated: first deprecated in macOS 13.0 - Use AVAsyncProperty.Status instead
+ 39 |                                   error:(NSError *_Nullable *_Nullable)outError;
+ 40 | 
+
+14 | NS_ASSUME_NONNULL_BEGIN
+15 | 
+16 | typedef NS_ENUM(NSInteger, AVKeyValueStatus) {
+17 | 	AVKeyValueStatusUnknown = 0,
+18 | 	AVKeyValueStatusLoading = 1,
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:26:10: warning: 'SecKeychainUnlock' was deprecated in macOS 10.10: SecKeychain is deprecated
+         SecKeychainUnlock($0, 0, nil, false)
+         ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/AppDelegate.swift:157:11: warning: 'allowedFileTypes' was deprecated in macOS 12.0: Use -allowedContentTypes instead
+    panel.allowedFileTypes = ["keychain", "keychain-db"]
+          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/AppDelegate.swift:192:11: warning: 'allowedFileTypes' was deprecated in macOS 12.0: Use -allowedContentTypes instead
+    panel.allowedFileTypes = ["keychain-db"]
+          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/AppDelegate.swift:245:11: warning: 'allowedFileTypes' was deprecated in macOS 12.0: Use -allowedContentTypes instead
+    panel.allowedFileTypes = ["keychain", "keychain-db"]
+          ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:46:18: warning: 'SecKeychainCopySearchList' was deprecated in macOS 10.10: SecKeychain is deprecated
+    let status = SecKeychainCopySearchList(&searchList)
+                 ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:86:18: warning: 'SecKeychainGetPath' was deprecated in macOS 10.10: SecKeychain is deprecated
+    let status = SecKeychainGetPath(keychain, &length, &buffer)
+                 ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:155:9: warning: 'SecKeychainCreate' was deprecated in macOS 10.10: SecKeychain is deprecated
+        SecKeychainCreate(fileName, UInt32(bytes.count), buffer.baseAddress, false, nil, &created)
+        ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:164:7: warning: 'SecKeychainUnlock' was deprecated in macOS 10.10: SecKeychain is deprecated
+      SecKeychainUnlock(created, UInt32(bytes.count), buffer.baseAddress, true)
+      ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:307:41: warning: 'SecKeychainOpen' was deprecated in macOS 10.10: SecKeychain is deprecated
+    let opened = url.path.withCString { SecKeychainOpen($0, &keychain) }
+                                        ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:314:19: warning: 'SecKeychainGetStatus' was deprecated in macOS 10.10: SecKeychain is deprecated
+    let checked = SecKeychainGetStatus(keychain, &state)
+                  ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:326:23: warning: 'SecKeychainGetStatus' was deprecated in macOS 10.10: SecKeychain is deprecated
+      let rechecked = SecKeychainGetStatus(keychain, &state)
+                      ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:392:18: warning: 'SecKeychainSetSettings' was deprecated in macOS 10.10: SecKeychain is deprecated
+    let status = SecKeychainSetSettings(keychain, &settings)
+                 ^
+/tmp/crispcloud-terminal-ods-isolated/macos/Runner/CustomKeychainStore.swift:400:18: warning: 'SecKeychainCopySettings' was deprecated in macOS 10.10: SecKeychain is deprecated
+    let status = SecKeychainCopySettings(keychain, &settings)
+                 ^
+ld: warning: search path '/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.3.7003.10.FPssee/Metal.xctoolchain/usr/lib/swift/macosx' not found
+warning: Run script build phase 'Run Script' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'Flutter Assemble' from project 'Runner')
+warning: no rule to process file '/tmp/crispcloud-pub-cache-20261116/hosted/pub.dev/cryptography_flutter-2.3.4/macos/cryptography_flutter/Sources/cryptography_flutter/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'cryptography_flutter' from project 'Pods')
+✓ Built build/macos/Build/Products/Release/CrispCloud.app (147.1MB)
