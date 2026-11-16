@@ -20,7 +20,7 @@ abstract final class OdsSheetWriter {
     final layout = _OdsLayout(book);
     final content = _contentXml(book, layout);
     final styles = _stylesXml(book, layout);
-    final manifest = _manifestXml();
+    final manifest = _manifestXml(layout.media.keys.toList());
     final meta = _metaXml();
 
     final zip = ZipWriter();
@@ -29,10 +29,13 @@ abstract final class OdsSheetWriter {
     zip.addFile('content.xml', utf8.encode(content));
     zip.addFile('styles.xml', utf8.encode(styles));
     zip.addFile('meta.xml', utf8.encode(meta));
+    for (final entry in layout.media.entries) {
+      zip.addFile(entry.key, entry.value);
+    }
     return zip.close();
   }
 
-  static String _manifestXml() {
+  static String _manifestXml(List<String> media) {
     final w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement(
@@ -53,6 +56,9 @@ abstract final class OdsSheetWriter {
     entry('content.xml', 'text/xml');
     entry('styles.xml', 'text/xml');
     entry('meta.xml', 'text/xml');
+    for (final path in media) {
+      entry(path, _mediaType(path));
+    }
     w.writeEndElement();
     return w.toXml();
   }
@@ -407,6 +413,24 @@ abstract final class OdsSheetWriter {
       w.writeEndElement();
       w.writeEndElement();
     }
+    for (final image in layout.imagesAt(sheet, col, row)) {
+      w.writeStartElement('frame', prefix: 'draw');
+      w.writeAttribute('draw:name', image.name);
+      w.writeAttribute(
+        'svg:width',
+        '${(image.width / 72).toStringAsFixed(4)}in',
+      );
+      w.writeAttribute(
+        'svg:height',
+        '${(image.height / 72).toStringAsFixed(4)}in',
+      );
+      w.writeEmptyElement(
+        'image',
+        prefix: 'draw',
+        attributes: {'xlink:href': image.path},
+      );
+      w.writeEndElement();
+    }
     w.writeEndElement();
   }
 
@@ -437,6 +461,26 @@ abstract final class OdsSheetWriter {
       SmlConditionalKind.duplicate => 'duplicate',
     };
   }
+
+  static String _imageExt(List<int> bytes) {
+    if (bytes.length >= 4 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return 'png';
+    }
+    if (bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
+      return 'jpg';
+    }
+    return 'bin';
+  }
+
+  static String _mediaType(String path) => path.endsWith('.png')
+      ? 'image/png'
+      : path.endsWith('.jpg')
+      ? 'image/jpeg'
+      : 'application/octet-stream';
 
   static String _plainSheet(String name) =>
       RegExp(r'[^A-Za-z0-9_]').hasMatch(name) ? _escapeSheet(name) : name;
@@ -616,6 +660,26 @@ class _OdsLayout {
         '${sheet.tabColorRgb == null ? '' : ' table:tab-color="#${sheet.tabColorRgb!.toLowerCase()}"'}/>'
         '</style:style>',
       );
+      for (final drawing in sheet.drawings) {
+        final bytes = drawing.visual.imageBytes;
+        if (bytes == null || bytes.isEmpty) continue;
+        final ext = OdsSheetWriter._imageExt(bytes);
+        final path = 'Pictures/image${media.length + 1}.$ext';
+        media[path] = bytes;
+        images['${sheet.name}:${drawing.col}:${drawing.row}'] =
+            (images['${sheet.name}:${drawing.col}:${drawing.row}'] ??
+                  <_WriterImage>[])
+              ..add(
+                _WriterImage(
+                  path: path,
+                  name: drawing.visual.title.isEmpty
+                      ? 'Picture'
+                      : drawing.visual.title,
+                  width: drawing.visual.width,
+                  height: drawing.visual.height,
+                ),
+              );
+      }
       for (final cell in sheet.allCells) {
         if (cell.type == SmlCellType.string &&
             cell.value == null &&
@@ -707,6 +771,8 @@ class _OdsLayout {
   final List<String> validationDefinitions = [];
   final List<List<String>> validationXml = [];
   final Map<String, String> validationNames = {};
+  final Map<String, List<int>> media = {};
+  final Map<String, List<_WriterImage>> images = {};
   var _validationCount = 0;
 
   final Map<String, String> cellStyles = {};
@@ -715,6 +781,9 @@ class _OdsLayout {
 
   String? cellStyle(SmlWorksheet sheet, SmlCell cell) =>
       cellStyles[cellKey(book.sheets.indexOf(sheet), cell)];
+
+  List<_WriterImage> imagesAt(SmlWorksheet sheet, int col, int row) =>
+      images['${sheet.name}:$col:$row'] ?? const <_WriterImage>[];
 
   String? validationName(SmlWorksheet sheet, int col, int row) =>
       validationNames['${sheet.name}:${SmlCellRef(col, row).a1}'];
@@ -907,4 +976,18 @@ class _OdsLayout {
       w.writeRaw(buffer);
     }
   }
+}
+
+class _WriterImage {
+  const _WriterImage({
+    required this.path,
+    required this.name,
+    required this.width,
+    required this.height,
+  });
+
+  final String path;
+  final String name;
+  final double width;
+  final double height;
 }

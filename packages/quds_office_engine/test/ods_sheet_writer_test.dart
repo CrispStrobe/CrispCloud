@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
@@ -75,6 +78,34 @@ void main() {
     expect(a1(data.autoFilter!.range), 'A1:B3');
     expect(reopened.namedRanges.single.name, 'Sales');
     expect(reopened.formulaNames.single.name, 'Total');
+  });
+
+  test('writes worksheet pictures into the package', () {
+    final png = Uint8List.fromList(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nXQAAAAASUVORK5CYII=',
+      ),
+    );
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    sheet.drawings.add(
+      SmlDrawing(
+        col: 0,
+        row: 0,
+        visual: OfficeVisual(
+          kind: OfficeVisualKind.picture,
+          title: 'Logo',
+          imageBytes: png,
+          width: 72,
+          height: 72,
+        ),
+      ),
+    );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final drawing = reopened.sheets.first.drawings.single;
+    expect(drawing.visual.title, 'Logo');
+    expect(drawing.visual.imageBytes, png);
   });
 
   test('writes list validation prompts and errors', () {

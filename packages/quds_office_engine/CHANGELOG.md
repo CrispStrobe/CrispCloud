@@ -12,7 +12,7 @@ All notable changes to `quds_office_engine` are documented here.
   values, cached formulas/OpenFormula references, cell styles, number formats,
   merges, geometry, hidden state, tab colours, comments, hyperlinks, named
   ranges/expressions, print areas/titles and autofilter ranges. This is a new
-  export path; drawings/images and page styles remain follow-up work.
+  export path; page-style serialization remains follow-up work.
 
 - Import spreadsheet-level ODS list-validation definitions for all referring
   worksheets, including lists resolved from a later source sheet. Retain
