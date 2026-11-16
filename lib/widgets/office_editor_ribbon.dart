@@ -55,6 +55,7 @@ class OfficeEditorRibbon extends StatefulWidget {
     required this.onSave,
     this.onSaveCopy,
     this.onSaveAs,
+    this.onExportOds,
     this.onPrint,
     this.onZotero,
     required this.onClose,
@@ -71,6 +72,7 @@ class OfficeEditorRibbon extends StatefulWidget {
   final VoidCallback onSave;
   final VoidCallback? onSaveCopy;
   final VoidCallback? onSaveAs;
+  final VoidCallback? onExportOds;
   final VoidCallback? onPrint;
   final VoidCallback? onZotero;
   final VoidCallback onClose;
@@ -2524,6 +2526,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         if (!widget.saving) widget.onSaveAs?.call();
       case OfficeEditorAction.saveCopy:
         if (!widget.saving) widget.onSaveCopy?.call();
+      case OfficeEditorAction.exportOds:
+        if (!widget.saving) widget.onExportOds?.call();
       case OfficeEditorAction.close:
         widget.onClose();
       case OfficeEditorAction.undo:
