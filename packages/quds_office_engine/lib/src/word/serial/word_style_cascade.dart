@@ -97,6 +97,9 @@ class _StyleCascade {
     for (final note in [...document.footnotes, ...document.endnotes]) {
       walk(note.blocks);
     }
+    for (final comment in document.comments) {
+      walk(comment.paragraphs);
+    }
     return true;
   }
 

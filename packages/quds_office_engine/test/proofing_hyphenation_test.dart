@@ -160,6 +160,80 @@ void main() {
   });
   group('Word language and hyphenation settings', () {
     test(
+      'header overlay fragments retain exact offsets for repeated labels',
+      () {
+        const source = '  Text\t Text \tText\t Text  ';
+        final paragraph = WmlParagraph(inlines: [WmlRun(text: source)]);
+        final doc = WmlDocument.empty(text: 'Body');
+        doc.sections.single.header.add(paragraph);
+        final header = WordLayoutEngine(
+          font: null,
+        ).layout(doc, updateFields: false).pages.single.header;
+        expect(header.map((line) => line.overlayText), [
+          'Text',
+          'Text',
+          'Text Text',
+        ]);
+        expect(header.map((line) => line.sourceText), everyElement(source));
+        expect(
+          header.every((line) => identical(line.sourceParagraph, paragraph)),
+          isTrue,
+        );
+        expect(header[0].proofingOffsets, [2, 3, 4, 5, 6]);
+        expect(header[1].proofingOffsets, [8, 9, 10, 11, 12]);
+        expect(header[2].proofingOffsets, [
+          14,
+          15,
+          16,
+          17,
+          null,
+          20,
+          21,
+          22,
+          23,
+          24,
+        ]);
+      },
+    );
+
+    test('trimmed footer offsets count complete UTF-16 source positions', () {
+      const source = '  😀 Fehlerr  ';
+      final paragraph = WmlParagraph(inlines: [WmlRun(text: source)]);
+      final doc = WmlDocument.empty(text: 'Body');
+      doc.sections.single.footer.add(paragraph);
+      final footer = WordLayoutEngine(
+        font: null,
+      ).layout(doc, updateFields: false).pages.single.footer.single;
+      expect(footer.overlayText, '😀 Fehlerr');
+      expect(footer.sourceText, source);
+      expect(footer.proofingOffsets, List.generate(11, (index) => index + 2));
+      expect(footer.proofingOffsetAt(3), 5);
+    });
+
+    test(
+      'generated header/footer page labels never claim authored offsets',
+      () {
+        final doc = WmlDocument.empty(text: 'Body');
+        doc.sections.single.header.add(
+          WmlParagraph(inlines: [WmlRun(text: 'Text\t99')]),
+        );
+        doc.sections.single.footer.add(
+          WmlParagraph(
+            inlines: [WmlRun(text: '99')],
+            properties: WmlParagraphProps(pageNumberField: true),
+          ),
+        );
+        final page = WordLayoutEngine(
+          font: null,
+        ).layout(doc, updateFields: false).pages.single;
+        expect(page.header.last.overlayText, '1');
+        expect(page.header.last.proofingOffsets, [null, null]);
+        expect(page.footer.single.overlayText, '1');
+        expect(page.footer.single.proofingOffsets, [null, null]);
+      },
+    );
+
+    test(
       'native Word discretionary and nonbreaking hyphens survive import/save',
       () {
         final package = WordSerializer().write(

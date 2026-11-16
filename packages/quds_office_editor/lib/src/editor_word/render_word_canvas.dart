@@ -18,6 +18,7 @@ import 'caret_engine.dart';
 import 'office_ruler.dart';
 import 'paint_equation.dart';
 import 'paint_run_text.dart';
+import 'word_proofing_geometry.dart';
 
 /// Class WordCanvas.
 class WordCanvas extends LeafRenderObjectWidget {
@@ -83,6 +84,7 @@ class WordCanvas extends LeafRenderObjectWidget {
     this.compact = false,
     this.findHits = const <OfficeFindHit>[],
     this.activeFindIndex = -1,
+    this.proofingFindings = const <WmlParagraph, List<OfficeProofingFinding>>{},
   });
 
   /// document API.
@@ -285,6 +287,9 @@ class WordCanvas extends LeafRenderObjectWidget {
   /// activeFindIndex API.
   final int activeFindIndex;
 
+  /// Ephemeral findings indexed by exact source paragraph identity.
+  final Map<WmlParagraph, List<OfficeProofingFinding>> proofingFindings;
+
   @override
   /// createRenderObject API.
   RenderWordCanvas createRenderObject(BuildContext context) {
@@ -348,6 +353,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       compact: compact,
       findHits: findHits,
       activeFindIndex: activeFindIndex,
+      proofingFindings: proofingFindings,
     );
   }
 
@@ -416,6 +422,7 @@ class WordCanvas extends LeafRenderObjectWidget {
       ..compact = compact
       ..findHits = findHits
       ..activeFindIndex = activeFindIndex;
+    renderObject.proofingFindings = proofingFindings;
     if (viewport != null && !identical(renderObject.viewport, viewport)) {
       renderObject.viewport = viewport!;
       // A replacement viewport has no extent until layout initializes it.
@@ -494,6 +501,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     this.compact = false,
     this.findHits = const <OfficeFindHit>[],
     this.activeFindIndex = -1,
+    this.proofingFindings = const <WmlParagraph, List<OfficeProofingFinding>>{},
   });
 
   /// document API.
@@ -690,6 +698,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   /// findHits API.
   List<OfficeFindHit> findHits;
+
+  Map<WmlParagraph, List<OfficeProofingFinding>> proofingFindings;
 
   /// activeFindIndex API.
   int activeFindIndex;
@@ -2531,6 +2541,10 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     final LaidOutBox? cell = _cellAt(laidPage, local);
     final int? commentId = _commentIdAt(laidPage, local) ?? selectedCommentId;
     final WmlHyperlink? link = _linkAt(laidPage, local);
+    ({WmlParagraph paragraph, int offset})? proofingHit;
+    if (visual == null && equation == null && handle == null) {
+      proofingHit = _proofingHitAt(laidPage, local);
+    }
     final OfficeContextKind kind;
     if (handle != null) {
       kind = OfficeContextKind.tableHandle;
@@ -2558,6 +2572,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         commentId: commentId,
         link: link,
         equation: equation?.equation,
+        paragraph: proofingHit?.paragraph,
+        proofingOffset: proofingHit?.offset,
       ),
     );
   }
@@ -3109,17 +3125,19 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   int _hitOffsetOnLine(LaidOutLine line, Offset local) {
     if (line.glyphs.isEmpty) {
-      final String text = line.overlayText ?? '';
-      if (text.isEmpty || line.width <= 0) {
-        return 0;
-      }
-      final bool rtl = CaretEngine.resolveRtl(
-        paragraphRtl: _paragraphRtl(line.paragraphIndex),
-        nearbyText: text,
+      final LaidOutPage? page =
+          line.pageIndex >= 0 && line.pageIndex < laidOut.pages.length
+          ? laidOut.pages[line.pageIndex]
+          : null;
+      final overlay = _layoutOverlay(
+        line,
+        pageWidth: page?.width,
+        marginRight: page == null ? null : _marginRightOf(page),
       );
-      final double t = ((local.dx - line.x) / line.width).clamp(0.0, 1.0);
-      final double visual = rtl ? 1 - t : t;
-      return (visual * text.length).round();
+      if (overlay == null) return 0;
+      return overlay.painter
+          .getPositionForOffset(local - overlay.origin)
+          .offset;
     }
     return PaintRunText.hitLogicalIndexOnLine(
       line,
@@ -3508,6 +3526,94 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         canvas.drawRect(r, Paint()..color = fill);
       }
     }
+  }
+
+  void _paintProofing(Canvas canvas, LaidOutLine line) {
+    final List<OfficeProofingFinding>? findings =
+        proofingFindings[line.sourceParagraph];
+    if (findings == null) return;
+    final String? source = line.sourceParagraph?.text;
+    for (final OfficeProofingFinding finding in findings) {
+      if (!_findingMatchesSource(source, finding)) continue;
+      for (final Rect rect in proofingRectsOnLine(line, finding)) {
+        _paintProofingWave(canvas, rect, finding.category);
+      }
+    }
+  }
+
+  static bool _findingMatchesSource(
+    String? source,
+    OfficeProofingFinding finding,
+  ) =>
+      source != null &&
+      finding.start >= 0 &&
+      finding.end >= finding.start &&
+      finding.end <= source.length &&
+      source.substring(finding.start, finding.end) == finding.originalText;
+
+  ({WmlParagraph paragraph, int offset})? _proofingHitAt(
+    LaidOutPage page,
+    Offset local,
+  ) {
+    for (final LaidOutLine line in <LaidOutLine>[
+      ...page.lines,
+      ...page.header,
+      ...page.footer,
+      ...page.notes,
+    ]) {
+      final WmlParagraph? paragraph = line.sourceParagraph;
+      final List<OfficeProofingFinding>? findings = proofingFindings[paragraph];
+      if (paragraph == null || findings == null || findings.isEmpty) continue;
+      final String source = paragraph.text;
+      final overlay = line.glyphs.isEmpty
+          ? _layoutOverlay(
+              line,
+              pageWidth: page.width,
+              marginRight: _marginRightOf(page),
+            )
+          : null;
+      for (final OfficeProofingFinding finding in findings) {
+        if (!_findingMatchesSource(source, finding)) continue;
+        final List<Rect> rects = overlay == null
+            ? proofingRectsOnLine(line, finding)
+            : _overlayProofingRects(line, finding, overlay);
+        if (rects.any((rect) => rect.contains(local))) {
+          // A context hit owns the finding under the pointer, not the nearest
+          // caret boundary. The final half of its last glyph is still inside
+          // the issue; generated labels have no source rectangles.
+          return (paragraph: paragraph, offset: finding.start);
+        }
+      }
+    }
+    return null;
+  }
+
+  void _paintProofingWave(
+    Canvas canvas,
+    Rect rect,
+    OfficeProofingCategory category,
+  ) {
+    if (rect.width <= 0) return;
+    final Color color = switch (category) {
+      OfficeProofingCategory.spelling => const Color(0xFFC62828),
+      OfficeProofingCategory.grammar => const Color(0xFF1565C0),
+      OfficeProofingCategory.style => const Color(0xFF7B1FA2),
+    };
+    final double y = rect.bottom - 1;
+    final Path path = Path()..moveTo(rect.left, y);
+    bool up = true;
+    for (double x = rect.left + 2; x < rect.right; x += 2) {
+      path.lineTo(x, y + (up ? -1 : 1));
+      up = !up;
+    }
+    path.lineTo(rect.right, y);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
   }
 
   /// Fill for selected text, cells and in-range pictures.
@@ -4112,15 +4218,14 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     return document.sections[page.sectionIndex].margins.right;
   }
 
-  void _drawOverlay(
-    Canvas canvas,
+  ({TextPainter painter, Offset origin})? _layoutOverlay(
     LaidOutLine line, {
     double? pageWidth,
     double? marginRight,
   }) {
     final String? text = line.overlayText;
     if (text == null || text.isEmpty) {
-      return;
+      return null;
     }
     final TextPainter painter = TextPainter(
       text: TextSpan(
@@ -4166,7 +4271,71 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     } else if (line.justification == WmlJustification.center) {
       x = line.x + (line.width - painter.width) / 2;
     }
-    painter.paint(canvas, Offset(x, line.y));
+    return (painter: painter, origin: Offset(x, line.y));
+  }
+
+  List<Rect> _overlayProofingRects(
+    LaidOutLine line,
+    OfficeProofingFinding finding,
+    ({TextPainter painter, Offset origin}) overlay,
+  ) {
+    final String text = line.overlayText ?? '';
+    final List<Rect> rects = <Rect>[];
+    for (final (int start, int end) in proofingLayoutRanges(
+      line,
+      finding.start,
+      finding.end,
+    )) {
+      final int from = start.clamp(0, text.length);
+      final int to = end.clamp(from, text.length);
+      if (from == to) {
+        final Offset caret = overlay.painter.getOffsetForCaret(
+          TextPosition(offset: from),
+          Rect.fromLTWH(0, 0, 1, overlay.painter.height),
+        );
+        rects.add(
+          Rect.fromLTWH(
+            caret.dx - 1,
+            caret.dy,
+            3,
+            overlay.painter.height,
+          ).shift(overlay.origin),
+        );
+      } else {
+        for (final TextBox box in overlay.painter.getBoxesForSelection(
+          TextSelection(baseOffset: from, extentOffset: to),
+        )) {
+          rects.add(box.toRect().shift(overlay.origin));
+        }
+      }
+    }
+    return rects;
+  }
+
+  void _drawOverlay(
+    Canvas canvas,
+    LaidOutLine line, {
+    double? pageWidth,
+    double? marginRight,
+  }) {
+    final overlay = _layoutOverlay(
+      line,
+      pageWidth: pageWidth,
+      marginRight: marginRight,
+    );
+    if (overlay == null) return;
+    overlay.painter.paint(canvas, overlay.origin);
+    final List<OfficeProofingFinding>? findings =
+        proofingFindings[line.sourceParagraph];
+    if (findings != null) {
+      final String? source = line.sourceParagraph?.text;
+      for (final OfficeProofingFinding finding in findings) {
+        if (!_findingMatchesSource(source, finding)) continue;
+        for (final Rect rect in _overlayProofingRects(line, finding, overlay)) {
+          _paintProofingWave(canvas, rect, finding.category);
+        }
+      }
+    }
   }
 
   void _drawLine(
@@ -4274,6 +4443,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         marginRight: marginRight,
       );
     }
+    _paintProofing(canvas, line);
   }
 
   void _paintTextRun(

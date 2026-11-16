@@ -83,16 +83,18 @@ final class OfficePlatformSpellingProvider extends OfficeProofingProvider {
       final spans = await service
           .fetchSpellCheckSuggestions(locale, request.text)
           .timeout(timeout);
-      if (_disposed)
+      if (_disposed) {
         return result(
           OfficeProofingStatus.unavailable,
           'System spelling has been disposed.',
         );
-      if (spans == null)
+      }
+      if (spans == null) {
         return result(
           OfficeProofingStatus.failed,
           'The system spell checker could not complete this request.',
         );
+      }
       final findings = <OfficeProofingFinding>[];
       if (!request.ignoredRuleIds.contains('platform.spelling')) {
         for (final span in spans) {

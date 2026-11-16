@@ -41,6 +41,8 @@ class OfficeContextHit {
     this.equation,
     this.cell,
     this.shape,
+    this.paragraph,
+    this.proofingOffset,
   });
 
   /// kind API.
@@ -75,6 +77,10 @@ class OfficeContextHit {
 
   /// shape API.
   final PmlShape? shape;
+
+  /// Exact logical source under the pointer, including non-body stories.
+  final WmlParagraph? paragraph;
+  final int? proofingOffset;
 }
 
 /// Class OfficeContextAction.

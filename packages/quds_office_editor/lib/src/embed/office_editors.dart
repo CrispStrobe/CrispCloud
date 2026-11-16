@@ -16,6 +16,7 @@ import 'office_controller.dart';
 import 'office_direction_keys.dart';
 import 'office_theme.dart';
 import 'word_notes_pane.dart';
+import 'word_proofing_dialog.dart';
 
 /// Class OfficeUndoIntent.
 class OfficeUndoIntent extends Intent {
@@ -237,6 +238,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
       }
     })..start();
     _c.addListener(_onCtrl);
+    _attachProofing(_c);
     PaintingBinding.instance.systemFonts.addListener(_onSystemFonts);
     _c.onRequestFocus = () {
       if (mounted) {
@@ -257,6 +259,12 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   /// didUpdateWidget API.
   void didUpdateWidget(QudsWordEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.controller, _c)) {
+      oldWidget.controller.removeListener(_onCtrl);
+      _detachProofing(oldWidget.controller);
+      _c.addListener(_onCtrl);
+      _attachProofing(_c);
+    }
     if (widget.config != null && !identical(widget.config, _c.config)) {
       _c.syncConfig(widget.config!);
     }
@@ -267,6 +275,28 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     if (mounted) {
       _c.refreshMetrics();
     }
+  }
+
+  void _attachProofing(WordEditorController controller) {
+    controller.proofing.addListener(_onProofing);
+    controller.proofing.attachView();
+    controller.onSpellCheckRequested ??= _openProofing;
+  }
+
+  void _detachProofing(WordEditorController controller) {
+    controller.proofing.removeListener(_onProofing);
+    controller.proofing.detachView();
+    if (controller.onSpellCheckRequested == _openProofing) {
+      controller.onSpellCheckRequested = null;
+    }
+  }
+
+  void _onProofing() {
+    if (mounted) setState(() {});
+  }
+
+  void _openProofing() {
+    if (mounted) unawaited(showWordProofingDialog(context, controller: _c));
   }
 
   void _onCtrl() {
@@ -282,6 +312,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     _dismissContextMenu();
     _ticker.dispose();
     _c.removeListener(_onCtrl);
+    _detachProofing(_c);
     PaintingBinding.instance.systemFonts.removeListener(_onSystemFonts);
     _c.onRequestFocus = null;
     if (_ownsFocus) {
@@ -297,12 +328,69 @@ class _QudsWordEditorState extends State<QudsWordEditor>
 
   void _showWordContext(OfficeContextHit hit) {
     _dismissContextMenu();
+    final List<WordProofingIssue> issues =
+        hit.paragraph != null && hit.proofingOffset != null
+        ? _c.proofing.issuesAt(hit.paragraph!, hit.proofingOffset!)
+        : const <WordProofingIssue>[];
+    final WordProofingIssue? issue = issues.isEmpty ? null : issues.first;
+    final List<OfficeContextAction> actions = <OfficeContextAction>[
+      if (issue != null) ...<OfficeContextAction>[
+        OfficeContextAction.caption(issue.finding.message),
+        for (
+          int index = 0;
+          index < issue.finding.replacements.length && index < 8;
+          index++
+        )
+          OfficeContextAction(
+            id: 'proofing:replace:$index',
+            label: issue.finding.replacements[index].isEmpty
+                ? 'Delete'
+                : issue.finding.replacements[index],
+            enabled: _c.proofing.canApply(issue),
+          ),
+        const OfficeContextAction(id: 'proofing:ignore', label: 'Ignore once'),
+        if (issue.finding.category == OfficeProofingCategory.spelling)
+          const OfficeContextAction(
+            id: 'proofing:add',
+            label: 'Add to personal words',
+          ),
+      ],
+      const OfficeContextAction(
+        id: 'proofing:review',
+        label: 'Spelling and writing…',
+        shortcut: 'F7',
+        separatorBefore: true,
+      ),
+      ...OfficeContextMenu.word(hit: hit, controller: _c),
+    ];
     _contextMenu = OfficeContextMenu.show(
       context: context,
       globalPosition: hit.globalPosition,
-      actions: OfficeContextMenu.word(hit: hit, controller: _c),
+      actions: actions,
       onSelect: (String id) {
         _contextMenu = null;
+        if (id == 'proofing:review') {
+          _openProofing();
+          return;
+        }
+        if (issue != null && id.startsWith('proofing:')) {
+          if (id == 'proofing:ignore') {
+            _c.proofing.ignoreOnce(issue);
+          } else if (id == 'proofing:add') {
+            _c.proofing.addWord(issue);
+          } else if (id.startsWith('proofing:replace:')) {
+            final int? index = int.tryParse(id.split(':').last);
+            if (index != null &&
+                index >= 0 &&
+                index < issue.finding.replacements.length) {
+              _c.proofing.applySuggestion(
+                issue,
+                issue.finding.replacements[index],
+              );
+            }
+          }
+          return;
+        }
         _runWordContext(hit, id);
       },
     );
@@ -778,6 +866,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
                           textField: config.allowsMutation,
                           child: WordCanvas(
                             document: _c.document,
+                            proofingFindings: _c.proofing.findingsByParagraph,
                             laidOut: _c.documentLaidOut,
                             caret: _c.caret,
                             findHits: _c.findSession.hits,

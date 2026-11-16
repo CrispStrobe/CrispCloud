@@ -163,6 +163,10 @@ class WordDeserializer {
     }
     _ensureHeadersFooters(document, package, docUri);
     _readNotes(document, package, docUri);
+    // Comments participate in the same effective style cascade as every other
+    // modeled story, including inherited proofing language and noProof.
+    _readComments(document, package, docUri);
+    _readCommentsExtended(document, package, docUri);
     _readStyles(document, package, docUri);
     _applyDocumentStyles(document);
     _notBold.clear();
@@ -170,8 +174,6 @@ class WordDeserializer {
     _applyTableStyles(document, package, docUri);
     _applyNumbering(document, package, docUri);
     _collapseTocFields(document);
-    _readComments(document, package, docUri);
-    _readCommentsExtended(document, package, docUri);
     _readWatermark(document, package);
     WordBibliographyIo.read(document, package, docUri);
     _readSettingsFlags(document, package, docUri);
@@ -3536,6 +3538,9 @@ class WordDeserializer {
     }
 
     walk(document.paragraphs);
+    for (final comment in document.comments) {
+      walk(comment.paragraphs);
+    }
     for (final WmlNote note in <WmlNote>[
       ...document.footnotes,
       ...document.endnotes,

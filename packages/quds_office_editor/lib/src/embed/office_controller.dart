@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
@@ -15,6 +18,8 @@ import '../editor_word/paint_run_text.dart';
 import '../editor_word/table_history.dart';
 import 'office_clipboard.dart';
 import 'office_theme.dart';
+
+part 'word_proofing.dart';
 
 /// Live find/replace cursor shared by every host.
 class OfficeFindSession {
@@ -444,8 +449,15 @@ abstract class OfficeController extends ChangeNotifier {
 /// Word document controller: IME, caret, layout, load/save.
 class WordEditorController extends OfficeController {
   /// WordEditorController API.
-  WordEditorController({WmlDocument? document, super.config, this.layoutEngine})
-    : document = document ?? WmlDocument.empty() {
+  WordEditorController({
+    WmlDocument? document,
+    super.config,
+    this.layoutEngine,
+    OfficeProofingVocabulary? proofingVocabulary,
+    OfficeProofingService? proofingService,
+  }) : document = document ?? WmlDocument.empty(),
+       _initialProofingVocabulary = proofingVocabulary,
+       _initialProofingService = proofingService {
     _requestedMode = _config.mode;
     _config = _effectiveConfig(_config);
     relayout();
@@ -473,6 +485,71 @@ class WordEditorController extends OfficeController {
 
   /// document API.
   WmlDocument document;
+
+  final OfficeProofingVocabulary? _initialProofingVocabulary;
+  final OfficeProofingService? _initialProofingService;
+  WordProofingSession? _proofing;
+
+  /// Document-wide proofing. [WordProofingSession.start] starts background work;
+  /// merely constructing a controller never creates timers or loads dictionaries.
+  WordProofingSession get proofing => _proofing ??= WordProofingSession._(
+    this,
+    vocabulary: _initialProofingVocabulary,
+    service: _initialProofingService,
+  );
+
+  /// Language used when text does not carry an explicit language tag.
+  String get proofingLanguage =>
+      normalizeProofingLanguage(document.proofingLanguage ?? 'de-DE');
+
+  /// Sets the document default in one undoable command. Explicit run/paragraph
+  /// language overrides remain authoritative.
+  void setProofingLanguage(String language) {
+    if (!config.allowsMutation) return;
+    final next = normalizeProofingLanguage(language);
+    if (next.isEmpty || document.proofingLanguage == next) return;
+    final target = document;
+    final before = target.proofingLanguage;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => target.proofingLanguage = next,
+        undoFn: () => target.proofingLanguage = before,
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
+  /// Saves the displayed fallback language with the hyphenation toggle, so an
+  /// untagged document actually receives the chosen linguistic line breaking.
+  void setAutomaticHyphenation(bool enabled) {
+    if (!config.allowsMutation) return;
+    final target = document;
+    final before = target.autoHyphenation;
+    final languageBefore = target.proofingLanguage;
+    final languageAfter = enabled ? proofingLanguage : languageBefore;
+    if (before == enabled && languageBefore == languageAfter) return;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          target.autoHyphenation = enabled;
+          target.proofingLanguage = languageAfter;
+        },
+        undoFn: () {
+          target.autoHyphenation = before;
+          target.proofingLanguage = languageBefore;
+        },
+      ),
+    );
+    relayout();
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _proofing?.dispose();
+    super.dispose();
+  }
 
   // Keep the host's requested interaction mode separate from document
   // restrictions so a rebuild cannot bypass protection or undo enable edits
@@ -3795,9 +3872,8 @@ class WordEditorController extends OfficeController {
           WmlRunEdit.replaceRange(last, 0, to, '');
           WordRevisions.joinParagraphs(document, first, last);
           first.inlines.addAll(
-            _cloneInlinesFrom(
-              last.inlines,
-            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(last.inlines)
+                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(first);
           parent.removeRange(range.startPara + 1, range.endPara + 1);
@@ -4416,9 +4492,8 @@ class WordEditorController extends OfficeController {
             ..addAll(_cloneInlinesFrom(keepInlines));
           WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
-            _cloneInlinesFrom(
-              dropInlines,
-            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(dropInlines)
+                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(keep);
           parent.remove(drop);
@@ -4524,9 +4599,8 @@ class WordEditorController extends OfficeController {
             ..addAll(_cloneInlinesFrom(keepInlines));
           WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
-            _cloneInlinesFrom(
-              dropInlines,
-            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(dropInlines)
+                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(keep);
           parent.remove(drop);
@@ -7490,9 +7564,9 @@ class WordEditorController extends OfficeController {
     if (!config.allowsMutation || WordNotes.editableText(note) == text) {
       return;
     }
-    final beforeText = WordNotes.editableParagraphs(
-      note,
-    ).map((paragraph) => paragraph.text).toList();
+    final beforeText = WordNotes.editableParagraphs(note)
+        .map((paragraph) => paragraph.text)
+        .toList();
     final paragraphs = note.allParagraphs.toList();
     final hasInlineControls = paragraphs.any(
       WordContentControls.hasInlineControls,
@@ -7541,9 +7615,9 @@ class WordEditorController extends OfficeController {
     WordNotes.editText(note, text);
     if (listEquals(
       beforeText,
-      WordNotes.editableParagraphs(
-        note,
-      ).map((paragraph) => paragraph.text).toList(),
+      WordNotes.editableParagraphs(note)
+          .map((paragraph) => paragraph.text)
+          .toList(),
     )) {
       return;
     }

@@ -394,7 +394,9 @@ class CaretEngine {
     var x = 0.0;
     double? runStart;
     for (final ShapedGlyph g in line.glyphs) {
-      final bool inside = g.logicalIndex >= from && g.logicalIndex < to;
+      final bool inside = g.isDiscretionaryHyphen && g.sourceLength == 0
+          ? from < g.logicalIndex && g.logicalIndex <= to
+          : g.logicalIndex >= from && g.logicalIndex < to;
       if (inside) {
         runStart ??= x;
       } else if (runStart != null) {
@@ -427,7 +429,10 @@ class CaretEngine {
     double? runStart;
     var runEnd = 0.0;
     for (final LaidOutGlyph g in line.glyphs) {
-      final bool inside = g.glyph.logicalIndex < to && g.logicalEnd > from;
+      final bool inside =
+          g.glyph.isDiscretionaryHyphen && g.glyph.sourceLength == 0
+          ? from < g.glyph.logicalIndex && g.glyph.logicalIndex <= to
+          : g.glyph.logicalIndex < to && g.logicalEnd > from;
       // Measure on the pen position: [LaidOutGlyph.x] includes the glyph's
       // paint offset (kerning, mark attachment), which would open gaps and
       // overlaps between neighbouring boxes.
@@ -472,6 +477,16 @@ class CaretEngine {
       return line.x;
     }
     for (final glyph in line.glyphs) {
+      if (glyph.glyph.isDiscretionaryHyphen &&
+          logicalIndex >= glyph.glyph.logicalIndex &&
+          logicalIndex <= glyph.logicalEnd) {
+        // A generated hyphen has one source boundary, after its visible ink.
+        // An authored soft hyphen has two boundaries in the run's direction.
+        final after = logicalIndex >= glyph.logicalEnd;
+        return after == glyph.glyph.level.isEven
+            ? glyph.x + glyph.advance
+            : glyph.x;
+      }
       if (glyph.displayText == null ||
           logicalIndex < glyph.glyph.logicalIndex ||
           logicalIndex > glyph.logicalEnd) {
@@ -594,7 +609,9 @@ class CaretEngine {
       return 0;
     }
     for (final glyph in line.glyphs) {
-      if (glyph.displayText == null) continue;
+      if (glyph.displayText == null || glyph.glyph.isDiscretionaryHyphen) {
+        continue;
+      }
       final group = line.glyphs.where(
         (g) =>
             g.displayText != null &&
@@ -634,7 +651,7 @@ class CaretEngine {
       return (min: 0, max: 0);
     }
     var min = line.glyphs.first.glyph.logicalIndex;
-    var max = min + 1;
+    var max = min;
     for (final LaidOutGlyph glyph in line.glyphs) {
       if (glyph.glyph.logicalIndex < min) {
         min = glyph.glyph.logicalIndex;
