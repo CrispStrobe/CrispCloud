@@ -466,6 +466,17 @@ class SheetDeserializer {
                 _ => SmlValidationKind.custom,
               },
               formula1: '',
+              operator: switch (reader.getAttribute('operator')) {
+                'notBetween' => SmlValidationOperator.notBetween,
+                'equal' => SmlValidationOperator.equal,
+                'notEqual' => SmlValidationOperator.notEqual,
+                'greaterThan' => SmlValidationOperator.greaterThan,
+                'lessThan' => SmlValidationOperator.lessThan,
+                'greaterThanOrEqual' =>
+                  SmlValidationOperator.greaterThanOrEqual,
+                'lessThanOrEqual' => SmlValidationOperator.lessThanOrEqual,
+                _ => SmlValidationOperator.between,
+              },
               allowBlank: reader.getAttribute('allowBlank') != '0',
             ),
           );
@@ -1412,6 +1423,18 @@ class SheetSerializer {
           '${rule.range.start.a1}:${rule.range.end.a1}',
         );
         w.writeAttribute('allowBlank', rule.allowBlank ? '1' : '0');
+        if (rule.kind != SmlValidationKind.list) {
+          w.writeAttribute('operator', switch (rule.operator) {
+            SmlValidationOperator.between => 'between',
+            SmlValidationOperator.notBetween => 'notBetween',
+            SmlValidationOperator.equal => 'equal',
+            SmlValidationOperator.notEqual => 'notEqual',
+            SmlValidationOperator.greaterThan => 'greaterThan',
+            SmlValidationOperator.lessThan => 'lessThan',
+            SmlValidationOperator.greaterThanOrEqual => 'greaterThanOrEqual',
+            SmlValidationOperator.lessThanOrEqual => 'lessThanOrEqual',
+          });
+        }
         final formula1 = rule.kind == SmlValidationKind.list
             ? '"${rule.listItems.join(',')}"'
             : rule.formula1;
