@@ -410,7 +410,7 @@ class TmuxControlClient extends ChangeNotifier {
     // window name from injecting a metadata row or a protocol record.
     final results = await _batch([
       const _Command(
-        "list-windows -F '#{window_id} #{window_index} #{window_width} #{window_height} #{window_active} #{pane_id} #{window_zoomed_flag} #{s/[[:cntrl:]]/ /:window_name}'",
+        "list-windows -F '#{window_id} #{window_index} #{window_width} #{window_height} #{window_active} #{pane_id} #{window_zoomed_flag} #{s/#{l:[[:cntrl:]]}/ /:window_name}'",
       ),
       const _Command(
         "list-panes -s -F '#{window_id} #{pane_id} #{pane_width} #{pane_height} #{pane_left} #{pane_top} #{pane_active}'",

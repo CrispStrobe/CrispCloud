@@ -81,8 +81,16 @@ void main() {
           'crispcloud-check',
         ]);
         expect(created.exitCode, 0, reason: '${created.stderr}');
+        final renamed = await command([
+          'rename-window',
+          '-t',
+          '=crispcloud-check:0',
+          'native café 中',
+        ]);
+        expect(renamed.exitCode, 0, reason: '${renamed.stderr}');
         var client = await attach();
         expect(client.windows, hasLength(1));
+        expect(client.windows.single.name, 'native café 中');
         final firstPane = client.activePaneId!;
         final firstWindow = client.activeWindowId!;
         client.panes[firstPane]!.session.terminal.textInput(
