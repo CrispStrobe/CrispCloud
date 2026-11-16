@@ -64,6 +64,8 @@ class SmlStyleSheet {
     List<bool>? cellXfsWrap,
     List<int>? cellXfsFillId,
     List<int>? cellXfsFontId,
+    List<String>? dxfFills,
+    List<String>? dxfFonts,
     List<String>? themeColors,
     Map<String, String>? themeFontFamilies,
   }) : numFmts = numFmts ?? Map<int, String>.from(_builtIn),
@@ -77,6 +79,8 @@ class SmlStyleSheet {
        fontFamilies = fontFamilies ?? <String>['Calibri'],
        cellXfsFillId = cellXfsFillId ?? <int>[0],
        cellXfsFontId = cellXfsFontId ?? <int>[0],
+       dxfFills = dxfFills ?? <String>[],
+       dxfFonts = dxfFonts ?? <String>[],
        themeColors = themeColors ?? List<String>.from(_officeTheme),
        themeFontFamilies = Map<String, String>.unmodifiable(
          themeFontFamilies ?? const <String, String>{},
@@ -117,6 +121,12 @@ class SmlStyleSheet {
 
   /// cellXfsFontId API.
   final List<int> cellXfsFontId;
+
+  /// Differential-style fill RGB (`RRGGBB`) per `dxfs/dxf` entry.
+  final List<String> dxfFills;
+
+  /// Differential-style font RGB (`RRGGBB`) per `dxfs/dxf` entry.
+  final List<String> dxfFonts;
 
   /// Theme scheme colors (dk1 … folHlink).
   final List<String> themeColors;
@@ -234,6 +244,8 @@ class SmlStyleSheet {
       fontSizes: <double>[],
       cellXfsFillId: <int>[],
       cellXfsFontId: <int>[],
+      dxfFills: <String>[],
+      dxfFonts: <String>[],
       themeColors: themeColors,
       themeFontFamilies: themeFontFamilies,
     );
@@ -296,6 +308,27 @@ class SmlStyleSheet {
       final name = font.firstChild('name', namespaceUri: namespace);
       sheet.fontFamilies.add(
         name == null ? 'Calibri' : (_attribute(name, 'val') ?? 'Calibri'),
+      );
+    }
+
+    for (final dxf in entries('dxfs', 'dxf')) {
+      final pattern = dxf
+          .firstChild('fill', namespaceUri: namespace)
+          ?.firstChild('patternFill', namespaceUri: namespace);
+      final fill = color(
+        pattern?.firstChild('fgColor', namespaceUri: namespace),
+      );
+      sheet.dxfFills.add(
+        fill.isNotEmpty
+            ? fill
+            : color(pattern?.firstChild('bgColor', namespaceUri: namespace)),
+      );
+      sheet.dxfFonts.add(
+        color(
+          dxf
+              .firstChild('font', namespaceUri: namespace)
+              ?.firstChild('color', namespaceUri: namespace),
+        ),
       );
     }
     for (final format in entries('cellXfs', 'xf')) {
