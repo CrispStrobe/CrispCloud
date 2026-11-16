@@ -33,6 +33,18 @@ evidence. Its tree and four ordered parents match the reviewed ordinary merge.
 Later validation uses this fixed inventory rather than continually moving its
 source inputs.
 
+Review of that incoming ODS change found that a sheet with both a tab colour
+and a picture tried to write its drawing namespace after the worksheet start
+tag had closed. The new combined regression fails on canonical `18c76e88` and
+passes after moving the existing namespace declaration before child elements.
+Canonical commit `4fadcc68` is saved on
+`CrispStrobe/quds_office_suite:codex/terminal-integration-ods-20261116`; its
+complete ODS suite passes **91 tests**, with clean analysis and formatting of
+both changed files. CrispCloud contains those exact two Git blobs, and all
+**2,411 managed Office files** verify against the updated pin. The standalone
+parser pin and application dependency declarations remain unchanged.
+[Canonical reproduction, fix and vendor receipts](canonical-ods-repair/README.md).
+
 ## Changes and checkpoint status
 
 - Ordinary terminal sessions keep one in-flight resize and the latest pending
@@ -64,6 +76,15 @@ not counted as new validation.
 The [Screen resolver before/after proof](screen-resolver-regression.json) runs the
 extracted production shell through actual `/bin/sh` and `awk` with controlled
 Screen listings. It qualifies command resolution, not a live GNU Screen daemon.
+
+Independent review also reproduced a remaining trailing-tab ambiguity. GNU
+Screen emits one separator tab and preserves tabs inside session names. The
+final parser removes exactly one separator at each boundary, retaining trailing
+tabs, repeated tabs and tab/space combinations in unsupported names. All **32
+actual shell cases** in [the additional before/after proof](screen-tab-regression.json)
+pass; 12 reproduce the defect in checkpoint `bb300164`. The
+[runnable harness](screen-tab-regression.py) records the producer source used
+to confirm the format. Formatting both changed Dart files requires no changes.
 
 ## Development findings retained
 

@@ -182,7 +182,7 @@
     "tree_matches_reviewed_unrepaired_ordinary_merge": true,
     "parents_match_reviewed_order": true,
     "inventory_source": "docs/validation/terminal-session-optimization-20261116/main-refresh-review.json",
-    "inventory_source_sha256": "e1a8bc230f1bbc16cf8fa2579ffc1d464e8be5354fed1709c357c27dc98e80d3",
+    "inventory_source_sha256": "a3a0d928913d4f5a347c9878561d89896bbd797b8f3b4e8222380d914ec62f03",
     "inventory_recorded_utc": "2026-11-16T10:47:11.259385+00:00",
     "branch_head_count": 46,
     "pr_head_count": 159,
@@ -1218,6 +1218,16 @@
     ],
     "additional_remote_discovery_performed": false,
     "github_actions_queried_or_awaited": false,
-    "scope": "This verifies the fixed saved cutoff only. The ODS canonical repair is a separate subsequent change."
+    "scope": "This verifies the fixed saved cutoff only. The ODS canonical repair is a separate subsequent change.",
+    "original_inventory_source_sha256": "e1a8bc230f1bbc16cf8fa2579ffc1d464e8be5354fed1709c357c27dc98e80d3",
+    "inventory_annotation_update": {
+      "verified_at_utc": "2026-11-16T11:00:18.665670+00:00",
+      "added_keys": [
+        "post_integration_ancestry",
+        "canonical_repair"
+      ],
+      "original_inventory_and_all_other_fields_unchanged": true,
+      "original_inventory_file_commit": "bb300164e60560caa09bbfb27497998c5c5f518f"
+    }
   }
 }

@@ -1,0 +1,102 @@
+{
+  "recorded_utc": "2026-11-16T10:57:57.533935+00:00",
+  "host_base_commit": "df18aed3873836c385062f0cb7431d77a7f6cf73",
+  "source_repository": "CrispStrobe/quds_office_suite",
+  "source_branch": "codex/terminal-integration-ods-20261116",
+  "source_commit": "4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+  "source_tree": "7574aa05506e693812d6c6e282846b344a470ca6",
+  "source_parent": "18c76e886623ae3be9a41addd80e7f6837c2d3b0",
+  "source_url": "https://github.com/CrispStrobe/quds_office_suite/commit/4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+  "sync": {
+    "command": [
+      "python3",
+      "tool/sync_office_fidelity.py",
+      "--source",
+      "/workspace/scratch/cb0df5963965/quds-ods-integration",
+      "--ref",
+      "4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+      "--branch",
+      "codex/terminal-integration-ods-20261116",
+      "--apply"
+    ],
+    "dry_run_exit_code": 0,
+    "apply_exit_code": 0,
+    "written_paths": [
+      "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+    ],
+    "deleted_paths": [],
+    "manifest_updated": "tool/office_fidelity_manifest.json"
+  },
+  "verification": {
+    "command": [
+      "python3",
+      "tool/verify_office_fidelity.py"
+    ],
+    "exit_code": 0,
+    "log": "vendor-guard.log",
+    "total_pinned_files": 2411,
+    "canonical_files_blob_mode_compared": 554,
+    "canonical_mismatches": [],
+    "standalone_sources": {
+      "packages/legacy_doc_parser": {
+        "repository": "CrispStrobe/legacy-doc-parser",
+        "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+      }
+    },
+    "shared_index_modified_by_sync_agent": false,
+    "require_tracked_before_root_checkpoint": {
+      "exit_code": 1,
+      "reason": "Exactly the two updated source files and manifest still differ from the shared index; root owns staging and checkpointing."
+    }
+  },
+  "qualification_evidence": [
+    {
+      "path": "README.md",
+      "sha256": "af77aa72dc3c6109eaf27e6201920157da7d4dabb8078d966446e62adb9d6e39"
+    },
+    {
+      "path": "analysis.log",
+      "sha256": "845a7e6798be21dec1c57e0b0b70ef3cdaee833ccda7a4220d13e5d234e6ee51"
+    },
+    {
+      "path": "baseline-regression.log",
+      "sha256": "d8737d6f6be1814028728c9fa770ac9b5bcd61ea21628c167e17aec589573002"
+    },
+    {
+      "path": "baseline-unregistered-images.log",
+      "sha256": "2bb5bea0f07a4ca9d985eaec3bb50f4de5a4318298f97199c22151882d83ae65"
+    },
+    {
+      "path": "baseline-wrong-cwd.log",
+      "sha256": "6f8523594bc27bf08aba26dc8b5f51efdb4a9ff15f7c58ff96e1521f0fac8594"
+    },
+    {
+      "path": "fixed-ods-suite.log",
+      "sha256": "d49823f49c5cc6f7c9644a647692e630fce367f7315b03f22f27fb530892cd91"
+    },
+    {
+      "path": "format.log",
+      "sha256": "34b1a81a6635805e7b82c15d0a132700c07cc78c5e5ce1948a25a32f613e4bfa"
+    },
+    {
+      "path": "pub-get-online.log",
+      "sha256": "539dcf22ce8650db943fc2502ac19e36004352770191dfef0d4e697bc2482395"
+    },
+    {
+      "path": "pub-get.log",
+      "sha256": "1a393a236226312ef7194d555f1205edc6212b188883466d69474c02c146062d"
+    },
+    {
+      "path": "receipt.json",
+      "sha256": "2b12959a5535c857ae37707bc55cfabcf12a53f431f70ed68f29bd8085328507"
+    },
+    {
+      "path": "resolved-workspace-pubspec.lock",
+      "sha256": "344190a0224b9e6dcc2161cbfb1be3b7a9569a3a03a809f42801d99f9052e130"
+    }
+  ],
+  "runtime_source_edits_complete": true,
+  "sdk_process_started_after_handover": false,
+  "github_actions_queried_or_awaited": false
+}

@@ -105,18 +105,54 @@ exit "${CRISP_SCREEN_ATTACH_STATUS:-0}"
           'work (11/15/26 20:15:00)',
           'work ',
           'work\textra',
+          'work\t',
+          'work\t\t',
+          'work\t ',
+          'work \t',
         ]) {
-          for (final target in ['work', '123.work']) {
-            final result = await run(
-              target,
-              sessions(['123.$name\t(Detached)']),
-            );
-            expect(result.exitCode, 44, reason: '$target: $name');
-            expect(await arguments.exists(), isFalse);
+          for (final date in ['', '\t(11/15/26 20:15:00)']) {
+            for (final target in ['work', '123.work']) {
+              final result = await run(
+                target,
+                sessions(['123.$name$date\t(Detached)']),
+              );
+              expect(result.exitCode, 44, reason: '$target: $name$date');
+              expect(await arguments.exists(), isFalse);
+            }
           }
         }
       },
     );
+
+    test('dated listings remove only the actual timestamp suffix', () async {
+      for (final name in [
+        'work\t(11/15/26 20:15:00)',
+        'work\t\t(11/15/26 20:15:00)',
+      ]) {
+        for (final target in ['work', '123.work']) {
+          final result = await run(
+            target,
+            sessions(['123.$name\t(11/15/26 20:16:00)\t(Detached)']),
+          );
+          expect(result.exitCode, 44, reason: '$target: $name');
+          expect(await arguments.exists(), isFalse);
+        }
+      }
+    });
+
+    test('trailing tab names do not shadow an exact session', () async {
+      for (final date in ['', '\t(11/15/26 20:15:00)']) {
+        final result = await run(
+          'work',
+          sessions([
+            '123.work$date\t(Detached)',
+            '456.work\t$date\t(Detached)',
+          ]),
+        );
+        expect(result.exitCode, 0, reason: '${result.stderr}');
+        expect(await arguments.readAsLines(), ['-x', '123.work']);
+      }
+    });
 
     test('duplicate exact names require a full ID', () async {
       final result = await run(
@@ -230,12 +266,19 @@ exit "${CRISP_SCREEN_ATTACH_STATUS:-0}"
     test(
       'unsupported names still participate in prefix collision checks',
       () async {
-        final result = await run(
-          '123.work',
-          sessions(['123.work\t(Detached)', '456.123.work extra\t(Detached)']),
-        );
-        expect(result.exitCode, 47);
-        expect(await arguments.exists(), isFalse);
+        for (final suffix in [' extra', '\t', '\t\t', '\t ']) {
+          for (final date in ['', '\t(11/15/26 20:15:00)']) {
+            final result = await run(
+              '123.work',
+              sessions([
+                '123.work$date\t(Detached)',
+                '456.123.work$suffix$date\t(Detached)',
+              ]),
+            );
+            expect(result.exitCode, 47, reason: '$suffix$date');
+            expect(await arguments.exists(), isFalse);
+          }
+        }
       },
     );
 

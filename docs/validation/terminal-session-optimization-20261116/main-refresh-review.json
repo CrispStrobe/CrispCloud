@@ -1432,5 +1432,42 @@
     "combined tab-colour/picture regression added by canonical fix",
     "complete Office vendor guard after exact new canonical pin"
   ],
-  "integration_recommendation": "Use the reviewed combined tree and ordered parents after frozen native qualification completes, preserving all terminal runtime/test/dependency blobs. Vendor the authorized canonical namespace-order correction with its new immutable source pin before claiming incoming ODS acceptance. No full terminal rerun is needed solely for this incoming Office/docs integration if source identity remains verified."
+  "integration_recommendation": "Use the reviewed combined tree and ordered parents after frozen native qualification completes, preserving all terminal runtime/test/dependency blobs. Vendor the authorized canonical namespace-order correction with its new immutable source pin before claiming incoming ODS acceptance. No full terminal rerun is needed solely for this incoming Office/docs integration if source identity remains verified.",
+  "canonical_repair": {
+    "status": "Canonical commit saved remotely and exact vendor blobs/pin applied to host worktree; source frozen for root qualification.",
+    "source_commit": "4fadcc68d52d51e72e8d782765a0dd5086b982c6",
+    "source_parent": "18c76e886623ae3be9a41addd80e7f6837c2d3b0",
+    "source_tree": "7574aa05506e693812d6c6e282846b344a470ca6",
+    "source_branch": "codex/terminal-integration-ods-20261116",
+    "receipt": "canonical-ods-repair/sync-receipt.json",
+    "qualification": "canonical-ods-repair/receipt.json",
+    "baseline_regression": {
+      "passed": 0,
+      "failed": 1,
+      "error": "Bad state: Attributes can only be written on an open start tag"
+    },
+    "fixed_ods_suite": {
+      "passed": 91,
+      "skipped": 0,
+      "failed": 0
+    },
+    "vendor_guard_pinned_files": 2411,
+    "canonical_blob_mode_mismatches": []
+  },
+  "post_integration_ancestry": {
+    "recorded_utc": "2026-11-16T10:58:05.206153+00:00",
+    "head": "df18aed3873836c385062f0cb7431d77a7f6cf73",
+    "tree": "048bfd53abc424715149bf8b35bf253173dbfe62",
+    "parents": [
+      "71256dbfc446612c5e4f1ea775dae991ca0924a8",
+      "9cce54118756b599da199006e1d7aaab1fb4b181",
+      "77409e329dfee38eff7cb70626f54376e040bcf0",
+      "9c2047da22110db1518a6226ee7a35e421fb9d51"
+    ],
+    "cutoff_ref_count": 205,
+    "not_ancestors": [],
+    "all_cutoff_refs_are_ancestors": true,
+    "ref_inventory_refreshed": false,
+    "method": "git merge-base --is-ancestor for each of the 205 already recorded cutoff refs against the exact integrated commit."
+  }
 }

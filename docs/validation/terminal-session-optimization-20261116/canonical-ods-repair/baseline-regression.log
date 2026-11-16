@@ -1,0 +1,19 @@
+00:00 +0: loading test/ods_sheet_reader_test.dart
+00:00 +0: ODS tab colour and picture survive save together
+00:00 +0 -1: ODS tab colour and picture survive save together [E]
+  Bad state: Attributes can only be written on an open start tag
+  package:quds_office_engine/src/xml/xml_writer.dart 98:7               XmlWriter.writeAttribute
+  package:quds_office_engine/src/xml/xml_writer.dart 113:7              XmlWriter.writeNamespace
+  package:quds_office_engine/src/sheet/serial/sheet_serial.dart 1336:9  SheetSerializer._sheetXml
+  package:quds_office_engine/src/sheet/serial/sheet_serial.dart 954:22  SheetSerializer.write
+  package:quds_office_engine/src/sheet/serial/sheet_serial.dart 847:12  SheetSerializer.writeBytes
+  package:quds_office_engine/src/opc/office_isolate_save.dart 186:28    _encodeWorkbook
+  package:quds_office_engine/src/opc/office_isolate_save.dart 130:23    OfficeIsolateSave.workbook.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  test/ods_sheet_reader_test.dart: ODS tab colour and picture survive save together
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
