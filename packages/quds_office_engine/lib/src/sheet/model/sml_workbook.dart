@@ -205,6 +205,7 @@ class SmlCell {
     this.borderRgb = '',
     this.borderWidth = 0,
     this.locked = true,
+    this.hyperlink,
   });
 
   /// ref API.
@@ -218,6 +219,9 @@ class SmlCell {
 
   /// formula API.
   String? formula;
+
+  /// External URL or internal `Sheet!A1` location.
+  String? hyperlink;
 
   /// styleIndex API.
   int styleIndex;
@@ -411,6 +415,7 @@ class SmlWorksheet {
     Map<int, Map<String, String>>? columnProperties,
     Map<int, double>? rowHeights,
     Set<int>? hiddenRows,
+    Map<int, int>? rowOutlineLevels,
     List<SmlMerge>? merges,
     List<SmlDataValidation>? validations,
     List<SmlConditionalRule>? conditionalFormats,
@@ -430,6 +435,7 @@ class SmlWorksheet {
        columnProperties = columnProperties ?? <int, Map<String, String>>{},
        rowHeights = rowHeights ?? <int, double>{},
        hiddenRows = hiddenRows ?? <int>{},
+       rowOutlineLevels = rowOutlineLevels ?? <int, int>{},
        merges = merges ?? <SmlMerge>[],
        validations = validations ?? <SmlDataValidation>[],
        conditionalFormats = conditionalFormats ?? <SmlConditionalRule>[],
@@ -953,6 +959,9 @@ class SmlWorksheet {
 
   /// Whether a row is hidden by the sheet, independently of filters.
   bool isRowHidden(int row) => hiddenRows.contains(row);
+
+  /// Authored row outline levels, keyed by zero-based row.
+  final Map<int, int> rowOutlineLevels;
 
   /// rowHeightAt API.
   double rowHeightAt(int row) {

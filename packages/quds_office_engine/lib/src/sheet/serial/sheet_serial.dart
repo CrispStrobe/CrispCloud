@@ -603,6 +603,13 @@ class SheetDeserializer {
             r < SmlWorksheet.excelRowCount) {
           sheet.hiddenRows.add(r);
         }
+        final outline = int.tryParse(reader.getAttribute('outlineLevel') ?? '');
+        if (outline != null &&
+            outline > 0 &&
+            r >= 0 &&
+            r < SmlWorksheet.excelRowCount) {
+          sheet.rowOutlineLevels[r] = outline;
+        }
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'c') {
@@ -1327,7 +1334,12 @@ class SheetSerializer {
     w.writeStartDocument();
     w.writeStartElement('worksheet');
     w.writeAttribute('xmlns', OfficeNamespaces.x);
-    if (sheet.drawings.isNotEmpty) {
+    if (sheet.drawings.isNotEmpty ||
+        sheet.rows.values.any(
+          (row) => row.cells.values.any(
+            (cell) => cell.hyperlink?.contains('://') ?? false,
+          ),
+        )) {
       w.writeNamespace('r', OfficeNamespaces.r);
     }
     if (sheet.tabColorRgb case final rgb?) {
@@ -1343,6 +1355,7 @@ class SheetSerializer {
       ...sheet.rows.keys,
       ...sheet.rowHeights.keys,
       ...sheet.hiddenRows,
+      ...sheet.rowOutlineLevels.keys,
     };
     final List<int> rowIdx = rowKeys.toList()..sort();
     for (final int r in rowIdx) {
@@ -1350,6 +1363,10 @@ class SheetSerializer {
       w.writeStartElement('row');
       w.writeAttribute('r', '${r + 1}');
       if (sheet.hiddenRows.contains(r)) w.writeAttribute('hidden', '1');
+      final outline = sheet.rowOutlineLevels[r];
+      if (outline != null && outline > 0) {
+        w.writeAttribute('outlineLevel', '$outline');
+      }
       final double? ht = sheet.rowHeights[r];
       if (ht != null) {
         w.writeAttribute('ht', '${SmlWorksheet.rowHeightToExcel(ht)}');
@@ -1409,13 +1426,38 @@ class SheetSerializer {
     }
     w.writeEndElement();
     if (sheet.autoFilter != null) {
-      w.writeEmptyElement(
-        'autoFilter',
-        attributes: <String, String>{
-          'ref':
-              '${sheet.autoFilter!.range.start.a1}:${sheet.autoFilter!.range.end.a1}',
-        },
-      );
+      final filter = sheet.autoFilter!;
+      final ref = '${filter.range.start.a1}:${filter.range.end.a1}';
+      if (filter.hiddenValues.values.every((values) => values.isEmpty)) {
+        w.writeEmptyElement('autoFilter', attributes: {'ref': ref});
+      } else {
+        w.writeStartElement('autoFilter');
+        w.writeAttribute('ref', ref);
+        for (final entry in filter.hiddenValues.entries) {
+          if (entry.value.isEmpty) continue;
+          final column = filter.range.minCol + entry.key;
+          final values = <String>{};
+          for (
+            var row = filter.range.minRow + 1;
+            row <= filter.range.maxRow;
+            row++
+          ) {
+            final value = sheet.cell(SmlCellRef(column, row)).asString;
+            if (value.isNotEmpty) values.add(value);
+          }
+          final visible = values.difference(entry.value).toList()..sort();
+          if (visible.isEmpty) continue;
+          w.writeStartElement('filterColumn');
+          w.writeAttribute('colId', '${entry.key}');
+          w.writeStartElement('filters');
+          for (final value in visible) {
+            w.writeEmptyElement('filter', attributes: {'val': value});
+          }
+          w.writeEndElement();
+          w.writeEndElement();
+        }
+        w.writeEndElement();
+      }
     }
     if (sheet.protection != null && sheet.protection!.enabled) {
       w.writeEmptyElement(
@@ -1566,6 +1608,7 @@ class SheetSerializer {
       }
       w.writeEndElement();
     }
+    _writeHyperlinks(w, sheet, package, sheetUri);
     final SmlHeaderFooter? hf = sheet.headerFooter;
     if (hf != null && !hf.isEmpty) {
       w.writeStartElement('headerFooter');
@@ -1616,6 +1659,56 @@ class SheetSerializer {
       'headerFooter',
       'drawing',
     }, _worksheetOrder);
+  }
+
+  static void _writeHyperlinks(
+    XmlWriter w,
+    SmlWorksheet sheet,
+    OpcPackage package,
+    String sheetUri,
+  ) {
+    final linked = <SmlCell>[
+      for (final row in sheet.rows.values)
+        for (final cell in row.cells.values)
+          if (cell.hyperlink case final link? when link.isNotEmpty) cell,
+    ];
+    if (linked.isEmpty) return;
+    final rels = package.relationshipsFor(sheetUri);
+    w.writeStartElement('hyperlinks');
+    for (final cell in linked) {
+      final link = cell.hyperlink!;
+      w.writeStartElement('hyperlink');
+      w.writeAttribute('ref', cell.ref.a1);
+      final external =
+          link.contains('://') ||
+          link.startsWith('mailto:') ||
+          link.startsWith('ftp:');
+      if (external) {
+        final existing = rels.items
+            .where(
+              (rel) =>
+                  rel.type == RelationshipTypes.hyperlink &&
+                  rel.targetMode == RelationshipTargetMode.external &&
+                  rel.target == link,
+            )
+            .firstOrNull;
+        final rel =
+            existing ??
+            rels.add(
+              type: RelationshipTypes.hyperlink,
+              target: link,
+              targetMode: RelationshipTargetMode.external,
+            );
+        w.writeAttribute('r:id', rel.id);
+      } else {
+        w.writeAttribute(
+          'location',
+          link.startsWith('#') ? link.substring(1) : link,
+        );
+      }
+      w.writeEndElement();
+    }
+    w.writeEndElement();
   }
 
   static void _writeSheetFormat(

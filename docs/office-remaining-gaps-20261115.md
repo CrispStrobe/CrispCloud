@@ -28,13 +28,13 @@ identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `28db447a`
-- Vendored Quds source checkpoint: `14fde4b1bd2539f0c6168be4569ac1adcc5105cd`
-  (`packages/QUDS_FORKS.md`, 2,391 managed files)
-- Quds sheet/ODS cohort: **503 tests**; the last clean full engine run was
+- CrispCloud `main` snapshot: `3760bf9e`
+- Vendored Quds source checkpoint: `777bcb876a9c8cc170586d117fa41f8331ef84ad`
+  (`packages/QUDS_FORKS.md`, 2,413 managed files)
+- Quds sheet/ODS cohort: **505 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader: **88 tests**
+- CrispCloud vendored ODS reader: **102 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -59,8 +59,9 @@ identities, commands and the separately qualified terminal results.
 - ODS list/range-source, whole, decimal, date, text-length and custom-formula
   validations; operators, date serials, prompts, error title/message/style and
   XLSX attribute round-trips.
-- ODS print areas/titles, named ranges and basic database-range autofilters,
-  including XLSX print-area read/write.
+- ODS print areas/titles, named ranges/expressions, database-range
+  autofilters, tab colours, cell hyperlinks and row/column outline groups,
+  including XLSX round-trips.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
   text, tables, lists and footnotes.
 - Exact host goldens for the reviewed Word pages.
@@ -91,13 +92,11 @@ cfRule + dxf, and reopen in Excel.
 ### OG-03 — ODS data-validation breadth
 
 **Status:** Partial\
-**Covered:** literal list rules and bounded range-source snapshots, shared
-spreadsheet-level definitions, blank input cells, and literal whole-number,
-decimal, date and text-length bounds with comparison/between operators.
-Supported custom formula conditions translate into XLSX rules; native prompt/error
-text, titles and modeled error styles are retained.\
-**Remaining:** arbitrary condition grammar, dynamic source-range links, complete
-native validation semantics and unmodeled cross-sheet filter cases.\
+**Covered:** literal and range-source lists, whole-number, decimal, date,
+text-length and custom-formula rules, comparison/between operators, blank policy,
+prompts, error titles/messages/styles and XLSX round-trips.\
+**Remaining:** ODF condition grammar outside the shared model (for example time
+or arbitrary multi-condition expressions) and dynamic source-range links.\
 **Next step:** extend condition coverage without approximating unsupported
 expressions and qualify dynamic range behavior.\
 **Acceptance:** list, numeric and date rules survive ODS → XLSX, with the same
@@ -106,13 +105,11 @@ source ranges, bounds, blank policy and messages.
 ### OG-04 — ODS workbook metadata
 
 **Status:** Partial\
-**Covered:** print areas, print-title rows/columns, global and sheet-local
-named ranges, and a basic database-range autofilter.
-**Covered additionally:** modeled named expressions and sheet tab colors, including
-namespace-correct XLSX copies when drawings coexist.\
-**Remaining:** unmodeled named-expression semantics, database filter conditions,
-row/column outline grouping, cell hyperlinks, and several page-style
-properties.\
+**Covered:** print areas/titles, global and sheet-local named ranges and modeled
+named expressions, sheet tab colours, cell hyperlinks, row/column outline groups,
+and database filter predicates with equality, comparison and empty checks.\
+**Remaining:** unmodeled named-expression semantics, filter operators outside
+the modeled equality/not-equality subset, and several page-style properties.\
 **Next step:** add the corresponding model fields or preserve/rebase native
 ODS metadata.\
 **Acceptance:** an ODS with each feature opens, saves as XLSX, and reopens with

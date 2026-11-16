@@ -47,6 +47,7 @@ typedef _OdsCellContent = ({
   String? valueType,
   _OdsAnnotation? annotation,
   List<_OdsImage> images,
+  String? hyperlink,
 });
 
 /// Thrown when an ODS package cannot be read safely.
@@ -246,6 +247,18 @@ abstract final class OdsSheetReader {
           budget.dimensions(rowRepeat);
           for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
             sheet.hiddenRows.add(rowIndex + r);
+          }
+        }
+        var rowOutlineLevel = 0;
+        XmlElement? rowAncestor = row.parent;
+        while (rowAncestor != null && !_is(rowAncestor, 'table', _table)) {
+          if (_is(rowAncestor, 'table-row-group', _table)) rowOutlineLevel++;
+          rowAncestor = rowAncestor.parent;
+        }
+        if (rowOutlineLevel > 0) {
+          budget.dimensions(rowRepeat);
+          for (var r = 0; r < rowRepeat && rowIndex + r < _maxRows; r++) {
+            sheet.rowOutlineLevels[rowIndex + r] = rowOutlineLevel;
           }
         }
         final rowDefault = _attribute(row, 'default-cell-style-name', _table);
@@ -633,7 +646,8 @@ abstract final class OdsSheetReader {
       ..hasExplicitFontColorEdit = source.hasExplicitFontColorEdit
       ..fontBold = source.fontBold
       ..fontSize = source.fontSize
-      ..fontFamily = source.fontFamily;
+      ..fontFamily = source.fontFamily
+      ..hyperlink = source.hyperlink;
   }
 
   static Map<int, String> _readColumns(
@@ -667,6 +681,12 @@ abstract final class OdsSheetReader {
           visibility == 'collapse' ||
           visibility == 'hidden' ||
           visibility == 'false';
+      var outlineLevel = 0;
+      XmlElement? ancestor = element.parent;
+      while (ancestor != null && !_is(ancestor, 'table', _table)) {
+        if (_is(ancestor, 'table-column-group', _table)) outlineLevel++;
+        ancestor = ancestor.parent;
+      }
       // Column definitions commonly include a full-sheet metadata tail. It
       // has no cells to preserve outside the admitted grid.
       final end = (column + repeat).clamp(0, _maxColumns);
@@ -684,12 +704,13 @@ abstract final class OdsSheetReader {
           }
         }
       }
-      if (hidden && count > 0) {
+      if ((hidden || outlineLevel > 0) && count > 0) {
         budget.dimensions(count);
         for (var i = 0; i < count; i++) {
-          (sheet.columnProperties[column + i] ??=
-                  <String, String>{})['hidden'] =
-              '1';
+          final properties = sheet.columnProperties[column + i] ??=
+              <String, String>{};
+          if (hidden) properties['hidden'] = '1';
+          if (outlineLevel > 0) properties['outlineLevel'] = '$outlineLevel';
         }
       }
       if (cellStyle != null) {
@@ -996,7 +1017,81 @@ abstract final class OdsSheetReader {
       final parsed = _odsRangeAddress(target);
       final sheet = parsed == null ? null : book.sheetByName(parsed.sheet);
       if (sheet != null && sheet.autoFilter == null) {
-        sheet.autoFilter = SmlAutoFilter(range: parsed!.range);
+        final filter = SmlAutoFilter(range: parsed!.range);
+        final visibleByField = <int, Set<String>>{};
+        for (final condition in _descendants(
+          element,
+          'filter-condition',
+          _table,
+        )) {
+          final field = int.tryParse(
+            _attribute(condition, 'field-number', _table) ?? '',
+          );
+          final value = _attribute(condition, 'value', _table);
+          final operator = _attribute(condition, 'operator', _table) ?? '=';
+          if (field == null || value == null || field < 0) continue;
+          final column = filter.range.minCol + field;
+          final all = <String>{};
+          for (
+            var row = filter.range.minRow + 1;
+            row <= filter.range.maxRow;
+            row++
+          ) {
+            final text = sheet.cell(SmlCellRef(column, row)).asString;
+            if (text.isNotEmpty) all.add(text);
+          }
+          bool passes(String candidate) {
+            final left = double.tryParse(candidate);
+            final right = double.tryParse(value);
+            final compare = left != null && right != null
+                ? left.compareTo(right)
+                : candidate.compareTo(value);
+            return switch (operator) {
+              '=' => candidate == value,
+              '<>' || '!=' => candidate != value,
+              '<' => compare < 0,
+              '<=' => compare <= 0,
+              '>' => compare > 0,
+              '>=' => compare >= 0,
+              'empty' => candidate.isEmpty,
+              'not-empty' => candidate.isNotEmpty,
+              _ => true,
+            };
+          }
+
+          if (!const {
+            '=',
+            '<>',
+            '!=',
+            '<',
+            '<=',
+            '>',
+            '>=',
+            'empty',
+            'not-empty',
+          }.contains(operator)) {
+            continue;
+          }
+          final visible = all.where(passes).toSet();
+          visibleByField[field] = visibleByField.containsKey(field)
+              ? visibleByField[field]!.intersection(visible)
+              : visible;
+        }
+        for (final entry in visibleByField.entries) {
+          final column = filter.range.minCol + entry.key;
+          final all = <String>{};
+          for (
+            var row = filter.range.minRow + 1;
+            row <= filter.range.maxRow;
+            row++
+          ) {
+            final text = sheet.cell(SmlCellRef(column, row)).asString;
+            if (text.isNotEmpty) all.add(text);
+          }
+          final hidden = all.difference(entry.value);
+          if (hidden.isNotEmpty) filter.hiddenValues[entry.key] = hidden;
+        }
+        sheet.autoFilter = filter;
       }
     }
   }
@@ -1281,7 +1376,19 @@ abstract final class OdsSheetReader {
       valueType: valueType,
       annotation: _readAnnotation(element),
       images: _readImages(element, zip, budget),
+      hyperlink: _readHyperlink(element),
     );
+  }
+
+  static String? _readHyperlink(XmlElement element) {
+    final link = _descendants(element, 'a', _textNs).firstOrNull;
+    final href = link == null ? null : _attribute(link, 'href', _xlink);
+    if (href == null || href.isEmpty) return null;
+    if (href.startsWith('#')) {
+      final target = href.substring(1).replaceFirst('.', '!');
+      return target.isEmpty ? null : target;
+    }
+    return href;
   }
 
   static List<_OdsImage> _readImages(
@@ -1360,12 +1467,14 @@ abstract final class OdsSheetReader {
     _OdsBudget budget, {
     required bool preserveEmptyStyle,
   }) {
-    final (:value, :formula, :valueType, :annotation, images: _) = content;
+    final (:value, :formula, :valueType, :annotation, images: _, :hyperlink) =
+        content;
     // The named Default style on empty spreadsheet padding is not cell data.
     if (value == null &&
         formula == null &&
         annotation == null &&
         content.images.isEmpty &&
+        hyperlink == null &&
         (styleName == null || styleName == 'Default')) {
       return null;
     }
@@ -1428,6 +1537,7 @@ abstract final class OdsSheetReader {
       cell.formula = formula;
       cell.type = SmlCellType.formula;
     }
+    if (hyperlink != null) cell.hyperlink = hyperlink;
     cell
       ..fontBold = bold
       ..horizontalAlign = align
