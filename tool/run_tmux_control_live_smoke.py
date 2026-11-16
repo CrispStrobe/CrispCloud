@@ -37,12 +37,14 @@ def main():
         version.check_returncode()
         with tempfile.TemporaryDirectory(prefix='tmux-probe-', dir=os.environ.get('TMPDIR')) as path:
             socket = str(Path(path) / 'server')
+            # Keep interactive zsh panes independent of user startup scripts.
+            environment = dict(os.environ, ZDOTDIR=path)
             command = [binary, '-S', socket, '-f', '/dev/null', 'new-session',
                        '-d', '-s', 'crispcloud-probe']
             record['probe_command'] = command
             probe = None
             try:
-                probe = subprocess.run(command, capture_output=True, text=True, timeout=10)
+                probe = subprocess.run(command, capture_output=True, text=True, timeout=10, env=environment)
                 record.update(probe_exit_code=probe.returncode,
                               probe_stdout=probe.stdout, probe_stderr=probe.stderr)
                 if probe.returncode:
@@ -58,7 +60,7 @@ def main():
                                'test/tmux_control_live_test.dart']
                     record['command'] = command
                     with (args.evidence / 'live-tmux.log').open('w') as log:
-                        result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+                        result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, env=environment)
                     result_code = result.returncode
                     record.update(status='passed' if result_code == 0 else 'failed', exit_code=result_code)
                     if result_code == 0:
