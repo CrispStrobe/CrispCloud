@@ -201,6 +201,7 @@ class SshTerminalConnection
     implements
         TerminalConnection,
         TerminalConnectionMetadata,
+        TerminalConnectionSharing,
         TerminalForwardingConnection {
   SshTerminalConnection(this.service, this.sessionId, this.output);
   final SshTerminalService service;
@@ -213,6 +214,16 @@ class SshTerminalConnection
 
   @override
   TerminalBackend get backend => TerminalBackend.ssh;
+
+  @override
+  bool get canOpenSibling => service.canShareSession(sessionId);
+
+  @override
+  int get sharedSessionCount => service.connectionSessionCount(sessionId);
+
+  @override
+  Future<TerminalConnection> openSibling(int columns, int rows) =>
+      openSharedSshShell(service, sessionId, columns, rows);
 
   @override
   SshPortForwarding? get portForwarding {
@@ -245,4 +256,26 @@ class SshTerminalConnection
 
   @override
   Future<void> close() => service.disconnect(sessionId);
+}
+
+/// Opens a plain shell through a newly reserved logical lease. Once reserved,
+/// the source terminal can close without canceling this independent channel.
+Future<TerminalConnection> openSharedSshShell(
+  SshTerminalService service,
+  String sourceSessionId,
+  int columns,
+  int rows,
+) async {
+  final session = await service.shareSession(sourceSessionId);
+  try {
+    final output = await service.startShell(
+      session.id,
+      width: columns,
+      height: rows,
+    );
+    return SshTerminalConnection(service, session.id, output);
+  } catch (_) {
+    await service.disconnect(session.id);
+    rethrow;
+  }
 }

@@ -167,6 +167,36 @@ class TerminalSession extends ChangeNotifier {
   TerminalConnection? _connection;
   TerminalWorkspaceConnection? _workspaceConnection;
 
+  /// A snapshot capability: a menu opened for one connection cannot silently
+  /// acquire a shell on its replacement. After acquisition, the new shell's
+  /// lease belongs to its own session and survives closure of this source.
+  TerminalConnectionFactory? get siblingConnectionFactory {
+    final connection = _connection;
+    if (!isConnected ||
+        connection is! TerminalConnectionSharing ||
+        !(connection as TerminalConnectionSharing).canOpenSibling) {
+      return null;
+    }
+    final sharing = connection as TerminalConnectionSharing;
+    final generation = _generation;
+    return (columns, rows) async {
+      if (!_current(generation) ||
+          !isConnected ||
+          !identical(_connection, connection) ||
+          !sharing.canOpenSibling) {
+        throw StateError('The source SSH connection is no longer available.');
+      }
+      return sharing.openSibling(columns, rows);
+    };
+  }
+
+  int get sharedConnectionSessionCount {
+    final connection = _connection;
+    return isConnected && connection is TerminalConnectionSharing
+        ? (connection as TerminalConnectionSharing).sharedSessionCount
+        : 0;
+  }
+
   /// A workspace survives viewport removal and transport disconnect. The
   /// session releases its buffers only when replaced or explicitly disposed.
   TerminalWorkspaceConnection? get workspaceConnection => _workspaceConnection;

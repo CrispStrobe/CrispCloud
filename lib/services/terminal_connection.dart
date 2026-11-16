@@ -30,6 +30,20 @@ abstract interface class TerminalConnectionMetadata {
   TerminalBackend get backend;
 }
 
+/// An optional capability to open an independent shell on the exact verified
+/// transport already owned by this connection. This never looks up a different
+/// connection by destination or copies a remote multiplexer launch command.
+abstract interface class TerminalConnectionSharing {
+  bool get canOpenSibling;
+
+  /// Logical terminals currently retaining this transport, including this one.
+  int get sharedSessionCount;
+
+  /// Reserves a new transport lease before awaiting the remote shell channel.
+  /// The returned connection owns that lease independently of its source.
+  Future<TerminalConnection> openSibling(int columns, int rows);
+}
+
 /// A transport may own a workspace whose individual panes receive input.
 /// The outer connection must not be offered as a broadcast destination: its
 /// active pane can change without replacing the verified SSH connection.

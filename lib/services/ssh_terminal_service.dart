@@ -3,8 +3,8 @@
 // Embedded SSH terminal service for SFTP connections.
 //
 // Supports password-based and key-based authentication.
-// Manages a pool of up to [maxSessions] concurrent sessions.
-// Sessions idle longer than [idleTimeout] are automatically disconnected.
+// Manages up to [maxSessions] verified routes, each shared explicitly by a
+// bounded number of independent logical sessions. Idle expiry is route-wide.
 //
 // Native platforms use TCP. Browsers require an explicit secure WebSocket
 // gateway that already forwards to the chosen SSH host.
@@ -166,7 +166,9 @@ class _SessionState {
   SshTmuxControlOutput? tmuxControlOutput;
   int shellGeneration = 0;
   bool discoveryRunning = false;
-  SshPortForwarding? forwarding;
+  final discoveryChannels = <SSHSession>{};
+  final commands = <SSHSession, TerminalOutput>{};
+  final closeCallbacks = <void Function()>{};
 
   _SessionState({required this.session, required this.route});
 }
@@ -174,12 +176,22 @@ class _SessionState {
 /// Owns each transport as soon as it exists, including clients still awaiting
 /// host-key approval or authentication. Late arrivals are closed after cancel.
 class _SshClientRoute {
+  _SshClientRoute(this.generation, this.lastActivityAt);
+
+  final int generation;
+  DateTime lastActivityAt;
+  final sessionIds = <String>{};
   final clients = <SSHClient>[];
   final _sockets = <SSHClient, SSHSocket>{};
   SSHSocket? _pendingSocket;
   bool closed = false;
+  bool unavailable = false;
   Future<void>? _closing;
   SshAgentConnection? agent;
+  SshPortForwarding? forwarding;
+
+  bool get usable =>
+      !closed && !unavailable && clients.every((client) => !client.isClosed);
 
   void ownSocket(SSHSocket socket) {
     if (closed) {
@@ -204,7 +216,15 @@ class _SshClientRoute {
 
   Future<void> _close() async {
     closed = true;
+    unavailable = true;
     agent?.close();
+    // Listeners and their clients belong to the route, not the first tab that
+    // opened their manager. Release them only when this route is ending.
+    try {
+      await forwarding?.close();
+    } catch (_) {
+      // A failed listener cleanup must not retain authenticated transports.
+    }
     final pending = _pendingSocket;
     _pendingSocket = null;
     if (pending != null) await _closeSocket(pending);
@@ -281,8 +301,13 @@ class _SshRouteTarget {
 class SshTerminalService {
   static const _log = Log('SshTerminalService');
 
-  /// Maximum number of concurrent SSH sessions.
+  /// Maximum number of distinct verified SSH routes (including handshakes).
   static const int maxSessions = 5;
+
+  /// Maximum logical sessions sharing one verified route. The server can
+  /// independently impose a lower channel limit; a rejection affects only
+  /// the new session, never its existing siblings.
+  static const int maxSharedSessions = 8;
 
   /// Default idle timeout after which sessions are automatically closed.
   static const Duration defaultIdleTimeout = Duration(minutes: 30);
@@ -298,7 +323,9 @@ class SshTerminalService {
   final SshSocketConnector? _socketConnector;
   final SshVerifiedClientOpener _verifiedClientOpener;
   final SshAgentFactory _agentFactory;
+  final DateTime Function() _clock;
   final _pendingRoutes = <_SshClientRoute>{};
+  final _closingSessions = <String, Future<void>>{};
 
   /// Internal session registry.
   final Map<String, _SessionState> _sessions = {};
@@ -318,9 +345,11 @@ class SshTerminalService {
     @visibleForTesting this._socketConnector,
     @visibleForTesting SshVerifiedClientOpener? verifiedClientOpener,
     @visibleForTesting SshAgentFactory? agentFactory,
+    @visibleForTesting DateTime Function()? clock,
   }) : _secure = secureStorage ?? PlatformSecureStorage(),
        _verifiedClientOpener = verifiedClientOpener ?? openVerifiedSsh,
-       _agentFactory = agentFactory ?? SshAgentConnection.system;
+       _agentFactory = agentFactory ?? SshAgentConnection.system,
+       _clock = clock ?? DateTime.now;
 
   // -------------------------------------------------------------------------
   // Platform guard
@@ -516,7 +545,7 @@ class SshTerminalService {
     _checkPoolCapacity();
     _pendingConnections++;
     final generation = _connectionGeneration;
-    final route = _SshClientRoute();
+    final route = _SshClientRoute(generation, _clock());
     _pendingRoutes.add(route);
     bool current() =>
         !_disposed &&
@@ -531,6 +560,7 @@ class SshTerminalService {
           isCurrent: () =>
               !_disposed &&
               !route.closed &&
+              !route.unavailable &&
               generation == _connectionGeneration &&
               (registered || (isCurrent?.call() ?? true)),
         );
@@ -569,7 +599,7 @@ class SshTerminalService {
       }
       if (client.isClosed) throw StateError('SSH connection closed');
 
-      final now = DateTime.now();
+      final now = _clock();
       final session = SshSession(
         id: _generateId(),
         host: host,
@@ -582,19 +612,23 @@ class SshTerminalService {
       final state = _SessionState(session: session, route: route);
       registered = true;
       _sessions[session.id] = state;
+      route.sessionIds.add(session.id);
+      route.lastActivityAt = now;
       _idleTimer ??= Timer.periodic(
         const Duration(minutes: 1),
         (_) => _sweepIdle(),
       );
-      unawaited(
-        client.done.then<void>(
-          (_) => _clientClosed(session.id, state),
-          onError: (Object error, StackTrace stack) {
-            _log.error('SSH connection closed', error);
-            _clientClosed(session.id, state);
-          },
-        ),
-      );
+      for (final member in route.clients) {
+        unawaited(
+          member.done.then<void>(
+            (_) => _clientClosed(route),
+            onError: (Object error, StackTrace stack) {
+              _log.error('SSH connection closed', error);
+              _clientClosed(route);
+            },
+          ),
+        );
+      }
       _log.info('Session ${session.id} established to $host:$port');
       return session;
     } catch (error) {
@@ -701,28 +735,114 @@ class SshTerminalService {
   }
 
   // -------------------------------------------------------------------------
+  // Explicit connection sharing
+  // -------------------------------------------------------------------------
+
+  /// Whether this exact live session can authorize another shell on its route.
+  /// Matching host names, saved profiles or credentials never select a route.
+  bool canShareSession(String sessionId) {
+    final state = _sessions[sessionId];
+    return state != null &&
+        _isActive(state) &&
+        state.route.sessionIds.length < maxSharedSessions;
+  }
+
+  /// Number of live logical sessions on the exact route selected by [sessionId].
+  /// Expired IDs expose no route capability, even if a sibling remains alive.
+  int connectionSessionCount(String sessionId) {
+    final state = _sessions[sessionId];
+    return state != null && _isActive(state)
+        ? state.route.sessionIds.length
+        : 0;
+  }
+
+  /// Reserve an independent logical session on an already authenticated route.
+  ///
+  /// Reservation is synchronous, before this future is returned. Closing the
+  /// source afterward cannot revoke the new owner's lease. The caller must
+  /// disconnect the returned ID if it no longer needs it or its shell fails.
+  /// No authentication, key lookup or agent permission is repeated or enlarged.
+  Future<SshSession> shareSession(
+    String sourceSessionId, {
+    bool Function()? isCurrent,
+  }) async {
+    if (_disposed || !(isCurrent?.call() ?? true)) {
+      throw StateError('SSH connection sharing was cancelled');
+    }
+    final source = _requireSession(sourceSessionId);
+    if (!_isActive(source)) {
+      throw TerminalMountStateError(
+        TerminalMountCode.sshDisconnected,
+        'Session $sourceSessionId is not connected',
+        {'session': sourceSessionId},
+      );
+    }
+    final route = source.route;
+    if (route.sessionIds.length >= maxSharedSessions) {
+      throw TerminalMountStateError(
+        TerminalMountCode.sshPoolFull,
+        'This SSH connection already has $maxSharedSessions sessions.',
+        {'max': maxSharedSessions},
+      );
+    }
+    final now = _clock();
+    final session = source.session.copyWith(
+      id: _generateId(),
+      startedAt: now,
+      lastActivityAt: now,
+    );
+    _sessions[session.id] = _SessionState(session: session, route: route);
+    route.sessionIds.add(session.id);
+    route.lastActivityAt = now;
+    return session;
+  }
+
+  // -------------------------------------------------------------------------
   // Disconnect
   // -------------------------------------------------------------------------
 
-  /// Closes the SSH connection for [sessionId] and removes it from the pool.
-  Future<void> disconnect(String sessionId) async {
+  /// Releases only this session's channels. Its verified route, forwarded
+  /// agent and listeners remain alive until the last sibling is released.
+  Future<void> disconnect(String sessionId) {
+    final closing = _closingSessions[sessionId];
+    if (closing != null) return closing;
     final state = _sessions.remove(sessionId);
-    if (state == null) return;
+    if (state == null) return Future<void>.value();
 
     _log.info('Disconnecting session $sessionId');
-    await _closeState(state);
+    state.route.sessionIds.remove(sessionId);
+    for (final cancel in state.closeCallbacks.toList()) {
+      cancel();
+    }
+    final result = _closeState(state);
+    _closingSessions[sessionId] = result;
+    unawaited(
+      result.then<void>(
+        (_) => _closingSessions.remove(sessionId),
+        onError: (Object _, StackTrace __) {
+          _closingSessions.remove(sessionId);
+        },
+      ),
+    );
+    return result;
   }
 
   /// Closes all active sessions.
   Future<void> disconnectAll() async {
     _connectionGeneration++;
-    for (final route in _pendingRoutes.toList()) {
-      await route.close();
-    }
+    // Revoke every route before the first await. Sibling creation or callbacks
+    // cannot acquire a lease while another route is asynchronously closing.
+    final routes = {
+      ..._pendingRoutes,
+      for (final state in _sessions.values) state.route,
+    };
+    final routesClosing = [for (final route in routes) route.close()];
     final ids = List<String>.from(_sessions.keys);
-    for (final id in ids) {
-      await disconnect(id);
-    }
+    await Future.wait([
+      ...routesClosing,
+      for (final id in ids) disconnect(id),
+      ..._closingSessions.values,
+    ]);
   }
 
   // -------------------------------------------------------------------------
@@ -735,7 +855,7 @@ class SshTerminalService {
   Future<String> execute(String sessionId, String command) async {
     final state = _requireSession(sessionId);
     final client = state.client;
-    if (client.isClosed) {
+    if (!_isActive(state)) {
       throw TerminalMountStateError(
         TerminalMountCode.sshDisconnected,
         'Session $sessionId is not connected',
@@ -746,10 +866,54 @@ class SshTerminalService {
     _touch(sessionId);
     _log.info('execute($sessionId)');
 
+    SSHSession? channel;
+    TerminalOutput? output;
+    final cancelled = Completer<void>();
+    void cancel() {
+      if (!cancelled.isCompleted) cancelled.complete();
+    }
+
+    state.closeCallbacks.add(cancel);
+    bool current() => identical(_sessions[sessionId], state);
     try {
-      final result = await client.run(command);
-      final output = utf8.decode(result, allowMalformed: true);
-      return output;
+      // Own the channel explicitly: client.run hides it, so disconnecting
+      // one logical session could otherwise leave its command alive on a
+      // transport retained by a sibling. Late opens are released as well.
+      final opening = client.execute(command, pty: null);
+      unawaited(
+        opening.then<void>((opened) {
+          if (!current()) opened.close();
+        }, onError: (Object _, StackTrace __) {}),
+      );
+      final opened = await Future.any<SSHSession>([
+        opening,
+        cancelled.future.then<SSHSession>((_) {
+          throw StateError('SSH command was cancelled');
+        }),
+      ]);
+      channel = opened;
+      if (!current() || !_isActive(state)) {
+        throw StateError('SSH command was cancelled');
+      }
+      final commandOutput = TerminalOutput([
+        opened.stdout,
+        opened.stderr,
+      ], onActivity: () => _touch(sessionId));
+      output = commandOutput;
+      state.commands[opened] = commandOutput;
+      final completed = Future.wait<Object?>([
+        commandOutput.stream.join(),
+        opened.done,
+      ], eagerError: true).then((parts) => parts.first as String);
+      final result = await Future.any([
+        completed,
+        cancelled.future.then<String>((_) {
+          throw StateError('SSH command was cancelled');
+        }),
+      ]);
+      if (!current()) throw StateError('SSH command was cancelled');
+      _touch(sessionId);
+      return result;
     } catch (e) {
       _log.error('execute error', e);
       throw TerminalMountException(
@@ -757,6 +921,24 @@ class SshTerminalService {
         'Command execution failed: $e',
         {'error': e},
       );
+    } finally {
+      state.closeCallbacks.remove(cancel);
+      if (channel != null) {
+        state.commands.remove(channel);
+        try {
+          channel.close();
+        } catch (_) {}
+      }
+      try {
+        await output?.dispose();
+      } catch (_) {}
+      if (current() &&
+          !state.route.usable &&
+          state.commands.isEmpty &&
+          state.shellOutput == null &&
+          state.tmuxControlOutput == null) {
+        await disconnect(sessionId);
+      }
     }
   }
 
@@ -770,10 +952,8 @@ class SshTerminalService {
   }) async {
     final state = _requireSession(sessionId);
     bool current() =>
-        !_disposed &&
         identical(_sessions[sessionId], state) &&
-        state.session.connected &&
-        !state.client.isClosed &&
+        _isActive(state) &&
         (isCurrent?.call() ?? true);
     if (!current()) throw StateError('SSH session discovery was cancelled');
     if (state.discoveryRunning) {
@@ -871,6 +1051,7 @@ class SshTerminalService {
             return;
           }
           channel = opened;
+          state.discoveryChannels.add(opened);
           try {
             stdoutSubscription = opened.stdout.listen(
               (data) => receive(output, data),
@@ -912,6 +1093,7 @@ class SshTerminalService {
       deadline.cancel();
       cancellation.cancel();
       closeChannel(channel);
+      state.discoveryChannels.remove(channel);
       try {
         await stdoutSubscription?.cancel().timeout(const Duration(seconds: 2));
       } catch (_) {}
@@ -950,7 +1132,7 @@ class SshTerminalService {
     final command = tmux?.command ?? screen?.command;
     final state = _requireSession(sessionId);
     final client = state.client;
-    if (client.isClosed) {
+    if (!_isActive(state)) {
       throw TerminalMountStateError(
         TerminalMountCode.sshDisconnected,
         'Session $sessionId is not connected',
@@ -972,7 +1154,7 @@ class SshTerminalService {
     previousShell?.close();
     await previousOutput?.dispose();
     await previousControl?.dispose();
-    if (!_isCurrentShell(sessionId, state, generation)) {
+    if (!_isCurrentShell(sessionId, state, generation) || !_isActive(state)) {
       throw StateError('SSH shell start was cancelled');
     }
 
@@ -992,7 +1174,7 @@ class SshTerminalService {
       }
       rethrow;
     }
-    if (!_isCurrentShell(sessionId, state, generation)) {
+    if (!_isCurrentShell(sessionId, state, generation) || !_isActive(state)) {
       shell.close();
       throw StateError('SSH shell start was cancelled');
     }
@@ -1046,7 +1228,7 @@ class SshTerminalService {
     }
     final command = tmux.command;
     final state = _requireSession(sessionId);
-    if (state.client.isClosed) throw StateError('SSH connection is closed');
+    if (!_isActive(state)) throw StateError('SSH connection is closed');
     final generation = ++state.shellGeneration;
     final previousShell = state.shellSession;
     final previousOutput = state.shellOutput;
@@ -1058,7 +1240,9 @@ class SshTerminalService {
     await previousOutput?.dispose();
     await previousControl?.dispose();
     bool current() => _isCurrentShell(sessionId, state, generation);
-    if (!current()) throw StateError('tmux control start was cancelled');
+    if (!current() || !_isActive(state)) {
+      throw StateError('tmux control start was cancelled');
+    }
     _touch(sessionId);
     SSHSession shell;
     try {
@@ -1067,7 +1251,7 @@ class SshTerminalService {
       if (current()) await disconnect(sessionId);
       rethrow;
     }
-    if (!current()) {
+    if (!current() || !_isActive(state)) {
       shell.close();
       throw StateError('tmux control start was cancelled');
     }
@@ -1078,7 +1262,9 @@ class SshTerminalService {
       stderr: shell.stderr,
       exitCode: exitCode,
       write: (command) async {
-        if (!current()) throw StateError('tmux control channel was replaced');
+        if (!current() || !_isActive(state)) {
+          throw StateError('tmux control channel was replaced');
+        }
         _touch(sessionId);
         shell.stdin.add(Uint8List.fromList(utf8.encode(command)));
       },
@@ -1157,22 +1343,25 @@ class SshTerminalService {
   /// Capability probes never create a manager or throw for expired sessions.
   bool canForwardPorts(String sessionId) {
     final state = _sessions[sessionId];
-    return SshPortForwarding.supported &&
-        !_disposed &&
-        state != null &&
-        state.session.connected &&
-        !state.client.isClosed;
+    return SshPortForwarding.supported && state != null && _isActive(state);
   }
 
   SshPortForwarding forwarding(String sessionId) {
     final state = _requireSession(sessionId);
-    if (_disposed || !state.session.connected || state.client.isClosed) {
+    if (!_isActive(state)) {
       throw const SshPortForwardException('The SSH connection is closed.');
     }
-    return state.forwarding ??= SshPortForwarding(
+    final route = state.route;
+    return route.forwarding ??= SshPortForwarding(
       state.client,
       onActivity: () {
-        if (identical(_sessions[sessionId], state)) _touch(sessionId);
+        // A listener can outlive the tab that created it. Its activity belongs
+        // to the shared route and keeps all sibling owners' connection alive.
+        if (!_disposed &&
+            route.generation == _connectionGeneration &&
+            route.usable) {
+          route.lastActivityAt = _clock();
+        }
       },
     );
   }
@@ -1195,7 +1384,8 @@ class SshTerminalService {
   // -------------------------------------------------------------------------
 
   void _checkPoolCapacity() {
-    if (_sessions.length + _pendingConnections >= maxSessions) {
+    final routes = {for (final state in _sessions.values) state.route};
+    if (routes.length + _pendingConnections >= maxSessions) {
       throw TerminalMountStateError(
         TerminalMountCode.sshPoolFull,
         'SSH session pool is full (max $maxSessions concurrent sessions).',
@@ -1218,22 +1408,37 @@ class SshTerminalService {
 
   void _touch(String sessionId) {
     final state = _sessions[sessionId];
-    if (state == null) return;
-    state.session = state.session.copyWith(lastActivityAt: DateTime.now());
+    if (state == null || !_isActive(state)) return;
+    final now = _clock();
+    state.session = state.session.copyWith(lastActivityAt: now);
+    state.route.lastActivityAt = now;
   }
+
+  bool _isActive(_SessionState state) =>
+      !_disposed &&
+      state.session.connected &&
+      state.route.generation == _connectionGeneration &&
+      state.route.usable;
 
   bool _isCurrentShell(String id, _SessionState state, int generation) =>
       identical(_sessions[id], state) && state.shellGeneration == generation;
 
-  void _clientClosed(String id, _SessionState state) {
-    if (!identical(_sessions[id], state)) return;
-    state.session = state.session.copyWith(connected: false);
-    state.route.agent?.close();
-    unawaited(state.forwarding?.close());
-    // An attached shell drains its stdout/stderr before removing the session.
-    // Connections used only for execute have no terminal streams to drain.
-    if (state.shellOutput == null && state.tmuxControlOutput == null) {
-      unawaited(disconnect(id));
+  void _clientClosed(_SshClientRoute route) {
+    if (route.unavailable) return;
+    route.unavailable = true;
+    route.agent?.close();
+    unawaited(route.forwarding?.close());
+    for (final id in route.sessionIds.toList()) {
+      final state = _sessions[id];
+      if (state == null || !identical(state.route, route)) continue;
+      state.session = state.session.copyWith(connected: false);
+      // Preserve final output already queued in each channel. Each owner
+      // releases independently after both its output and status have drained.
+      if (state.shellOutput == null &&
+          state.tmuxControlOutput == null &&
+          state.commands.isEmpty) {
+        unawaited(disconnect(id));
+      }
     }
   }
 
@@ -1247,30 +1452,45 @@ class SshTerminalService {
 
   Future<void> _closeState(_SessionState state) async {
     state.shellGeneration++;
-    state.route.agent?.close();
-    await state.forwarding?.close();
+    // Begin final-route revocation before waiting on any stream cancellation.
+    final routeClosing = state.route.sessionIds.isEmpty
+        ? state.route.close()
+        : null;
     try {
       state.shellSession?.close();
     } catch (_) {}
+    for (final discovery in state.discoveryChannels.toList()) {
+      try {
+        discovery.close();
+      } catch (_) {}
+    }
     try {
       await state.shellOutput?.dispose();
     } catch (_) {}
     try {
       await state.tmuxControlOutput?.dispose();
     } catch (_) {}
-    await state.route.close();
+    for (final command in state.commands.entries.toList()) {
+      try {
+        command.key.close();
+      } catch (_) {}
+      try {
+        await command.value.dispose();
+      } catch (_) {}
+    }
+    await routeClosing;
   }
 
   void _sweepIdle() {
-    final cutoff = DateTime.now().subtract(idleTimeout);
-    final stale = _sessions.entries
-        .where((e) => e.value.session.lastActivityAt.isBefore(cutoff))
-        .map((e) => e.key)
-        .toList();
-
-    for (final id in stale) {
-      _log.info('Auto-disconnecting idle session $id');
-      disconnect(id);
+    final cutoff = _clock().subtract(idleTimeout);
+    final routes = {for (final state in _sessions.values) state.route};
+    for (final route in routes) {
+      if (!route.lastActivityAt.isBefore(cutoff)) continue;
+      _log.info('Auto-disconnecting idle SSH route');
+      unawaited(route.close());
+      for (final id in route.sessionIds.toList()) {
+        unawaited(disconnect(id));
+      }
     }
   }
 
@@ -1306,6 +1526,6 @@ class SshTerminalService {
   }
 
   String _generateId() =>
-      DateTime.now().microsecondsSinceEpoch.toRadixString(36) +
+      _clock().microsecondsSinceEpoch.toRadixString(36) +
       (_nextId++).toRadixString(36);
 }

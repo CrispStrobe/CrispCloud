@@ -10,11 +10,13 @@ import '../l10n/terminal_controls_strings.dart';
 import '../l10n/terminal_arrangement_strings.dart';
 import '../l10n/terminal_broadcast_strings.dart';
 import '../l10n/terminal_strings.dart';
+import '../l10n/ssh_connection_sharing_strings.dart';
 import '../models/terminal_arrangement.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/terminal_session.dart';
 import '../services/terminal_broadcast.dart';
+import '../services/terminal_connection.dart';
 import 'terminal_panel.dart';
 import 'terminal_arrangements_dialog.dart';
 import 'terminal_broadcast_dialog.dart';
@@ -25,6 +27,7 @@ class _TerminalTab {
     this.session, {
     required this.owned,
     required this.start,
+    this.sharedConnection = false,
     TerminalPaneState? paneState,
     this.name,
   }) : paneState = paneState ?? TerminalPaneState();
@@ -33,9 +36,18 @@ class _TerminalTab {
   final TerminalSession session;
   final bool owned;
   final bool start;
+  final bool sharedConnection;
   final key = GlobalKey();
   String? name;
   TerminalPaneState paneState;
+}
+
+class _SharedShellRequest {
+  const _SharedShellRequest(this.source, this.open, this.paneState);
+
+  final _TerminalTab source;
+  final TerminalConnectionFactory open;
+  final TerminalPaneState paneState;
 }
 
 /// Keeps independent sessions and view state alive while tabs or panes change.
@@ -71,6 +83,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
   int _focusRequest = 0;
   late final TerminalBroadcast _broadcast;
   int _broadcastStopSerial = 0;
+  _SharedShellRequest? _sharedShellRequest;
 
   @override
   void initState() {
@@ -83,17 +96,24 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
           _active == id &&
           ref.read(focusAreaProvider) == FocusArea.terminal,
     )..addListener(_broadcastChanged);
-    final tab = _makeTab(widget.session);
+    final tab = _makeTab(initial: widget.session);
     _active = tab.id;
     _layout = TerminalPaneLeaf(tab.id);
   }
 
-  _TerminalTab _makeTab([TerminalSession? initial]) {
+  _TerminalTab _makeTab({
+    TerminalSession? initial,
+    bool? start,
+    bool sharedConnection = false,
+    TerminalPaneState? paneState,
+  }) {
     final tab = _TerminalTab(
       _nextId++,
       initial ?? widget.sessionFactory?.call() ?? TerminalSession(),
       owned: initial == null,
-      start: initial == null && widget.sessionFactory == null,
+      start: start ?? (initial == null && widget.sessionFactory == null),
+      sharedConnection: sharedConnection,
+      paneState: paneState,
     );
     tab.session.addListener(_changed);
     _tabs.add(tab);
@@ -142,7 +162,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
     }
     if (!identical(oldWidget.session, widget.session)) {
       _releaseTabs();
-      final tab = _makeTab(widget.session);
+      final tab = _makeTab(initial: widget.session);
       _active = tab.id;
       _layout = TerminalPaneLeaf(tab.id);
       _zoomed = false;
@@ -196,6 +216,68 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       _zoomed = false;
       _focusRequest++;
     });
+  }
+
+  void _captureSharedShellRequest() {
+    _sharedShellRequest = null;
+    if (!widget.visible || _arranging || _closing) return;
+    final source = _tabs.firstWhere((tab) => tab.id == _active);
+    final open = source.session.siblingConnectionFactory;
+    if (open == null) return;
+    _sharedShellRequest = _SharedShellRequest(
+      source,
+      open,
+      TerminalPaneState(
+        fontSize: source.paneState.fontSize,
+        sshConfig: source.paneState.sshConfig?.forSharedShell(),
+      ),
+    );
+  }
+
+  Future<void> _openSharedShell({Axis? split}) async {
+    final request = _sharedShellRequest;
+    _sharedShellRequest = null;
+    if (request == null ||
+        !mounted ||
+        !widget.visible ||
+        _arranging ||
+        _closing ||
+        _tabs.length >= TerminalTabs.maxTabs ||
+        !_tabs.contains(request.source) ||
+        request.source.id != _active) {
+      return;
+    }
+    ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
+    late final _TerminalTab tab;
+    setState(() {
+      tab = _makeTab(
+        start: false,
+        sharedConnection: true,
+        paneState: request.paneState,
+      );
+      _layout = split == null
+          ? _layout.replaceLeaf(_active, tab.id)
+          : _layout.splitLeaf(
+              _active,
+              tab.id,
+              split == Axis.horizontal
+                  ? TerminalSplitAxis.horizontal
+                  : TerminalSplitAxis.vertical,
+            );
+      _active = tab.id;
+      _zoomed = false;
+      _focusRequest++;
+    });
+    final config = request.paneState.sshConfig;
+    // This factory is bound to the source connection captured when the menu
+    // opened. The destination session owns any late result after cancellation.
+    await tab.session.connect(
+      request.open,
+      kind: TerminalSessionKind.ssh,
+      label: config == null
+          ? request.source.session.label
+          : '${config.username}@${config.host}',
+    );
   }
 
   void _singlePane() {
@@ -309,9 +391,13 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
           builder: (context) => AlertDialog(
             title: Text(context.terminalControlsTr('Close terminal?')),
             content: Text(
-              context.terminalControlsTr(
-                'Closing ends this connection. Use tmux or screen to keep remote work running.',
-              ),
+              tab.session.sharedConnectionSessionCount > 1
+                  ? context.sshSharingTr(
+                      'Closing releases this terminal. Other terminals keep the SSH connection, port forwards and permitted agent access until the last terminal closes.',
+                    )
+                  : context.terminalControlsTr(
+                      'Closing ends this connection. Use tmux or screen to keep remote work running.',
+                    ),
             ),
             actions: [
               TextButton(
@@ -762,6 +848,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                       key: tab.key,
                       session: tab.session,
                       autoStart: tab.start,
+                      sharedConnection: tab.sharedConnection,
                       initialPaneState: tab.paneState,
                       onPaneStateChanged: (state) {
                         if (_tabs.contains(tab)) tab.paneState = state;
@@ -947,12 +1034,19 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
             tooltip: context.terminalControlsTr('Terminal layout'),
             enabled: !_arranging,
             icon: const Icon(Icons.space_dashboard_outlined, size: 20),
+            onCanceled: () => _sharedShellRequest = null,
             onSelected: (value) {
               switch (value) {
                 case 'horizontal':
                   _split(Axis.horizontal);
                 case 'vertical':
                   _split(Axis.vertical);
+                case 'shared-ssh-tab':
+                  unawaited(_openSharedShell());
+                case 'shared-ssh-horizontal':
+                  unawaited(_openSharedShell(split: Axis.horizontal));
+                case 'shared-ssh-vertical':
+                  unawaited(_openSharedShell(split: Axis.vertical));
                 case 'single':
                   _singlePane();
                 case 'zoom':
@@ -979,86 +1073,113 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
                   unawaited(_chooseBroadcastGroup());
               }
             },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'horizontal',
-                enabled: _tabs.length < TerminalTabs.maxTabs,
-                child: Text(context.terminalControlsTr('Split side by side')),
-              ),
-              PopupMenuItem(
-                value: 'vertical',
-                enabled: _tabs.length < TerminalTabs.maxTabs,
-                child: Text(context.terminalControlsTr('Split top and bottom')),
-              ),
-              PopupMenuItem(
-                value: 'single',
-                enabled: _layout.leafIds.length > 1,
-                child: Text(context.terminalControlsTr('Single pane')),
-              ),
-              PopupMenuItem(
-                value: 'zoom',
-                enabled: _layout.leafIds.length > 1,
-                child: Text(
-                  context.terminalControlsTr(
-                    _zoomed ? 'Restore panes' : 'Zoom active pane',
+            itemBuilder: (_) {
+              _captureSharedShellRequest();
+              return [
+                if (_sharedShellRequest != null) ...[
+                  PopupMenuItem(
+                    value: 'shared-ssh-tab',
+                    enabled: _tabs.length < TerminalTabs.maxTabs,
+                    child: Text(context.sshSharingTr('New SSH shell')),
+                  ),
+                  PopupMenuItem(
+                    value: 'shared-ssh-horizontal',
+                    enabled: _tabs.length < TerminalTabs.maxTabs,
+                    child: Text(context.sshSharingTr('Split SSH side by side')),
+                  ),
+                  PopupMenuItem(
+                    value: 'shared-ssh-vertical',
+                    enabled: _tabs.length < TerminalTabs.maxTabs,
+                    child: Text(
+                      context.sshSharingTr('Split SSH top and bottom'),
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                ],
+                PopupMenuItem(
+                  value: 'horizontal',
+                  enabled: _tabs.length < TerminalTabs.maxTabs,
+                  child: Text(context.terminalControlsTr('Split side by side')),
+                ),
+                PopupMenuItem(
+                  value: 'vertical',
+                  enabled: _tabs.length < TerminalTabs.maxTabs,
+                  child: Text(
+                    context.terminalControlsTr('Split top and bottom'),
                   ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'previous-pane',
-                enabled: _layout.leafIds.length > 1,
-                child: Text(context.terminalControlsTr('Previous pane')),
-              ),
-              PopupMenuItem(
-                value: 'next-pane',
-                enabled: _layout.leafIds.length > 1,
-                child: Text(context.terminalControlsTr('Next pane')),
-              ),
-              PopupMenuItem(
-                value: 'rename',
-                child: Text(context.terminalControlsTr('Rename terminal')),
-              ),
-              PopupMenuItem(
-                value: 'move-left',
-                enabled: _tabs.first.id != _active,
-                child: Text(
-                  context.terminalArrangementTr('Move terminal left'),
+                PopupMenuItem(
+                  value: 'single',
+                  enabled: _layout.leafIds.length > 1,
+                  child: Text(context.terminalControlsTr('Single pane')),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'move-right',
-                enabled: _tabs.last.id != _active,
-                child: Text(
-                  context.terminalArrangementTr('Move terminal right'),
+                PopupMenuItem(
+                  value: 'zoom',
+                  enabled: _layout.leafIds.length > 1,
+                  child: Text(
+                    context.terminalControlsTr(
+                      _zoomed ? 'Restore panes' : 'Zoom active pane',
+                    ),
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'balance',
-                enabled: _layout.leafIds.length > 1,
-                child: Text(context.terminalArrangementTr('Balance panes')),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'save-arrangement',
-                child: Text(context.terminalArrangementTr('Save arrangement')),
-              ),
-              PopupMenuItem(
-                value: 'arrangements',
-                child: Text(
-                  context.terminalArrangementTr('Saved arrangements'),
+                PopupMenuItem(
+                  value: 'previous-pane',
+                  enabled: _layout.leafIds.length > 1,
+                  child: Text(context.terminalControlsTr('Previous pane')),
                 ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'broadcast',
-                enabled:
-                    _tabs
-                        .where((tab) => tab.session.acceptsDirectInput)
-                        .length >=
-                    2,
-                child: Text(context.terminalBroadcastTr('Broadcast input')),
-              ),
-            ],
+                PopupMenuItem(
+                  value: 'next-pane',
+                  enabled: _layout.leafIds.length > 1,
+                  child: Text(context.terminalControlsTr('Next pane')),
+                ),
+                PopupMenuItem(
+                  value: 'rename',
+                  child: Text(context.terminalControlsTr('Rename terminal')),
+                ),
+                PopupMenuItem(
+                  value: 'move-left',
+                  enabled: _tabs.first.id != _active,
+                  child: Text(
+                    context.terminalArrangementTr('Move terminal left'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'move-right',
+                  enabled: _tabs.last.id != _active,
+                  child: Text(
+                    context.terminalArrangementTr('Move terminal right'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'balance',
+                  enabled: _layout.leafIds.length > 1,
+                  child: Text(context.terminalArrangementTr('Balance panes')),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'save-arrangement',
+                  child: Text(
+                    context.terminalArrangementTr('Save arrangement'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'arrangements',
+                  child: Text(
+                    context.terminalArrangementTr('Saved arrangements'),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'broadcast',
+                  enabled:
+                      _tabs
+                          .where((tab) => tab.session.acceptsDirectInput)
+                          .length >=
+                      2,
+                  child: Text(context.terminalBroadcastTr('Broadcast input')),
+                ),
+              ];
+            },
           ),
         ],
       ),
