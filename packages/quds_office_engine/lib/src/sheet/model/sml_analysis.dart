@@ -66,6 +66,18 @@ class SmlFormulaName extends SmlDefinedName {
 /// How a cell value is validated.
 enum SmlValidationKind { list, whole, decimal, date, textLength, custom }
 
+/// Comparison operator used by non-list data validations.
+enum SmlValidationOperator {
+  between,
+  notBetween,
+  equal,
+  notEqual,
+  greaterThan,
+  lessThan,
+  greaterThanOrEqual,
+  lessThanOrEqual,
+}
+
 /// Data-validation rule on a range.
 class SmlDataValidation {
   /// SmlDataValidation API.
@@ -74,6 +86,7 @@ class SmlDataValidation {
     required this.kind,
     this.formula1 = '',
     this.formula2 = '',
+    this.operator = SmlValidationOperator.between,
     this.allowBlank = true,
     this.errorTitle = '',
     this.error = '',
@@ -90,6 +103,9 @@ class SmlDataValidation {
 
   /// formula2 API.
   String formula2;
+
+  /// operator API.
+  SmlValidationOperator operator;
 
   /// allowBlank API.
   bool allowBlank;
@@ -127,12 +143,16 @@ class SmlDataValidation {
           (String item) => item.toLowerCase() == raw.toLowerCase(),
         );
       case SmlValidationKind.whole:
-        return int.tryParse(raw) != null && _inNumericBounds(double.parse(raw));
+        final double? n = double.tryParse(raw);
+        return n != null && n == n.truncateToDouble() && _inNumericBounds(n);
       case SmlValidationKind.decimal:
         final double? n = double.tryParse(raw);
         return n != null && _inNumericBounds(n);
       case SmlValidationKind.date:
-        return DateTime.tryParse(raw) != null;
+        final value = _dateBound(raw);
+        final lower = _dateBound(formula1);
+        final upper = _dateBound(formula2);
+        return value != null && _inBounds(value, lower, upper);
       case SmlValidationKind.textLength:
         return _inNumericBounds(raw.length.toDouble());
       case SmlValidationKind.custom:
@@ -141,15 +161,54 @@ class SmlDataValidation {
   }
 
   bool _inNumericBounds(double value) {
-    final double? min = double.tryParse(formula1);
-    final double? max = double.tryParse(formula2);
-    if (min != null && value < min) {
-      return false;
+    final lower = double.tryParse(formula1);
+    final upper = double.tryParse(formula2);
+    return _inBounds(value, lower, upper);
+  }
+
+  bool _inBounds(double value, double? lower, double? upper) {
+    switch (operator) {
+      case SmlValidationOperator.between:
+        return (lower == null || value >= lower) &&
+            (upper == null || value <= upper);
+      case SmlValidationOperator.notBetween:
+        return (lower == null || value < lower) ||
+            (upper == null || value > upper);
+      case SmlValidationOperator.equal:
+        return lower != null && value == lower;
+      case SmlValidationOperator.notEqual:
+        return lower != null && value != lower;
+      case SmlValidationOperator.greaterThan:
+        return lower != null && value > lower;
+      case SmlValidationOperator.lessThan:
+        return lower != null && value < lower;
+      case SmlValidationOperator.greaterThanOrEqual:
+        return lower != null && value >= lower;
+      case SmlValidationOperator.lessThanOrEqual:
+        return lower != null && value <= lower;
     }
-    if (max != null && value > max) {
-      return false;
+  }
+
+  double? _dateBound(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return null;
+    final serial = double.tryParse(text);
+    if (serial != null) return serial;
+    final match = RegExp(
+      r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$',
+    ).firstMatch(text);
+    if (match == null) return null;
+    try {
+      final date = DateTime.utc(
+        int.parse(match.group(1)!),
+        int.parse(match.group(2)!),
+        int.parse(match.group(3)!),
+      );
+      return date.difference(DateTime.utc(1899, 12, 30)).inMilliseconds /
+          86400000;
+    } on ArgumentError {
+      return null;
     }
-    return true;
   }
 }
 
