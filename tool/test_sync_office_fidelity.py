@@ -100,6 +100,8 @@ class SyncOfficeFidelityTest(unittest.TestCase):
             'packages/quds_office_engine/lib/src/bidi/german_hyphenation_data.dart': 'embedded patterns',
             'packages/quds_office_engine/third_party/hyphenation/hyph-de-1996.tex': 'original patterns and notice',
             'packages/quds_office_engine/third_party/hyphenation/LICENSE': 'original notice',
+            'packages/quds_office_engine/third_party/hyphenation/ENGLISH_US_LICENSE': 'original Kuiken permission and copyright',
+            'packages/quds_office_engine/third_party/hyphenation/ENGLISH_GB_LICENSE': 'original British MIT permission and copyright',
             'packages/quds_office_engine/third_party/hyphenation/README.md': 'pattern provenance',
             'packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE': 'original word-list notice',
             'packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE': 'supplement notice',
@@ -113,6 +115,8 @@ class SyncOfficeFidelityTest(unittest.TestCase):
             'packages/quds_office_engine/third_party/fonttools-other/LICENSE',
             'packages/quds_office_editor/third_party/fonttools/LICENSE',
             'packages/quds_office_editor/third_party/proofing/LICENSE',
+            'packages/quds_office_editor/third_party/hyphenation/ENGLISH_US_LICENSE',
+            'packages/quds_office_engine/third_party/hyphenation-other/ENGLISH_GB_LICENSE',
             'packages/quds_proofing_harper/pubspec.yaml',
             'packages/quds_proofing_harper/native/src/lib.rs',
         ]
@@ -136,7 +140,9 @@ class SyncOfficeFidelityTest(unittest.TestCase):
         self.commit()
         for notice in (
                 'packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE',
-                'packages/quds_office_engine/third_party/fonttools/LICENSE'):
+                'packages/quds_office_engine/third_party/fonttools/LICENSE',
+                'packages/quds_office_engine/third_party/hyphenation/ENGLISH_US_LICENSE',
+                'packages/quds_office_engine/third_party/hyphenation/ENGLISH_GB_LICENSE'):
             with self.subTest(notice=notice):
                 original = (self.host/notice).read_text()
                 (self.host/notice).write_text('host edit')

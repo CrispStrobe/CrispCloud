@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/zotero-recovery-20261116",
-  "source_commit": "becfa07c1be62429a8bcf78910aa1ffb46248b1a",
+  "source_commit": "5b05664357eead5ddc86922bab248224dbd4da6d",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -2399,7 +2399,9 @@
     "packages/quds_office_engine/test/zotero_paragraph_runs_test.dart": "a33fddacd1f19588e6fa265b51689d8b33bdda76d7a6c1e70ee60e1f63afaef5",
     "packages/quds_office_engine/test/zotero_saved_search_test.dart": "f69e461446f5eb5c12e125121f7308077a9c5bd7543c3775355faa7f81c338ce",
     "packages/quds_office_engine/third_party/fonttools/LICENSE": "0b9d2e1458441c63e9f139b2a1d43e6ec22a06ea119911d47447d8ce9bcffc90",
-    "packages/quds_office_engine/third_party/hyphenation/ENGLISH.md": "88017c8d81ecb2c2821aef59a28d10c1ac945805edbb1a9ca4adafb3550a0c2e",
+    "packages/quds_office_engine/third_party/hyphenation/ENGLISH.md": "3c7522df41dec40757da4361fd2118833af7212d7ae1a2448e501e2b74972f7e",
+    "packages/quds_office_engine/third_party/hyphenation/ENGLISH_GB_LICENSE": "8a9d78cb8e3aa30383acc91fb05962035eed59877016263bd97be63c63341977",
+    "packages/quds_office_engine/third_party/hyphenation/ENGLISH_US_LICENSE": "1011c22144f360184ed86200fa2d2ca9df9ac19dd2ab4a31c0b4c94d998bb6f1",
     "packages/quds_office_engine/third_party/hyphenation/LICENSE": "0d4a2c679490537f8c07955b76c055919e603125d99a00850d6765c00ec73ebd",
     "packages/quds_office_engine/third_party/hyphenation/README.md": "cf14096887ae10387b72fa06c083320c9c5a97dc8d92ceb35bba676535d8732e",
     "packages/quds_office_engine/third_party/hyphenation/english-manifest.json": "35b51baaf776248bd6c1be7f7758715cc352485853720f8f5687618ed2354df4",
@@ -2507,7 +2509,7 @@
     "packages/quds_office_engine/tool/fidelity/word_steps.dart": "0feec1cd8600fdd8581d4c4088037580d5e6f5012d11d4e7af5eeb618de9584a",
     "packages/quds_office_engine/tool/fidelity/word_structure_oracle.py": "c3877a89604a2b2b0c100173b05fb7dc133c89f06632e9de2970747fb3ee4964",
     "packages/quds_office_engine/tool/fidelity/word_structure_steps.dart": "c1be2b878fc14edc3607e1f2afc81b63ee1b8a084ceb717a57cbabf0c3ad42f4",
-    "packages/quds_office_engine/tool/proofing/generate_english_hyphenation.py": "6aca64a3d3d53e5d7723fd0a7e99dfef7db29fa8d0a269610f376a038c6ee504",
+    "packages/quds_office_engine/tool/proofing/generate_english_hyphenation.py": "3453787ccba66a9abeb233bda885af69f1dfad03de16b72c44a989b292bfcee0",
     "packages/quds_office_engine/tool/proofing/generate_german_lexicon.py": "b79a86ec963c9dd91cf2ab861d851204029f89db4c7c69dbf48a8fb9c29707b9",
     "packages/quds_office_engine/tool/proofing/generate_hyphenation.py": "7af1b115946d7019fb4d989b13c67d105307e5ed0d4809fe521d94bd41724eb1",
     "packages/quds_office_engine/tool/proofing/german_common_words.txt": "0c9a0116ff47f9a071410be3d4edc1a1ecb63f798f35cef778f8dd6c1d2f36ed",

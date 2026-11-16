@@ -16,6 +16,10 @@ void main() {
       const prefix = 'packages/quds_office_engine/third_party/';
       const notices = {
         'German hyphenation patterns': 'hyphenation/LICENSE',
+        'American English hyphenation patterns (LicenseRef-Kuiken-permissive)':
+            'hyphenation/ENGLISH_US_LICENSE',
+        'British English hyphenation patterns (MIT)':
+            'hyphenation/ENGLISH_GB_LICENSE',
         'Werners Wortliste (German spelling)': 'proofing/WORTLISTE_LICENSE',
         'Quds German word supplement': 'proofing/QUDS_WORDS_LICENSE',
         'FontTools (Unicode range data)': 'fonttools/LICENSE',
@@ -34,8 +38,20 @@ void main() {
             .map((paragraph) => paragraph.text)
             .join('\n');
         expect(text, contains('Copyright'));
-        expect(text, contains('Permission is hereby granted'));
-        expect(text, contains('THE SOFTWARE IS PROVIDED'));
+        if (notice.value == 'hyphenation/ENGLISH_US_LICENSE') {
+          expect(text, contains('Gerard D.C. Kuiken'));
+          expect(text, contains('Copying and distribution of this file'));
+          expect(text, contains('are permitted in any medium without royalty'));
+          expect(text, contains('notice and this notice are preserved'));
+          expect(text, isNot(contains('name: MIT')));
+        } else {
+          expect(text, contains('Permission is hereby granted'));
+          expect(text, contains('THE SOFTWARE IS PROVIDED'));
+        }
+        if (notice.value == 'hyphenation/ENGLISH_GB_LICENSE') {
+          expect(text, contains('Dominik Wujastyk, Graham Toal'));
+          expect(text, contains('name: MIT'));
+        }
       }
       final hyphenation = entries.first.paragraphs
           .map((paragraph) => paragraph.text)
@@ -56,7 +72,7 @@ void main() {
   );
 
   test(
-    'hyphenation notice retains the complete upstream header text',
+    'hyphenation notices retain the complete upstream header text',
     () async {
       const prefix = 'packages/quds_office_engine/third_party/hyphenation/';
       final original = await File('${prefix}hyph-de-1996.tex').readAsString();
@@ -71,6 +87,21 @@ void main() {
           .join('\n')
           .trimRight();
       expect(await rootBundle.loadString('${prefix}LICENSE'), '$notice\n');
+      for (final entry in const {
+        'ENGLISH_US_LICENSE': 'hyph-en-us.tex',
+        'ENGLISH_GB_LICENSE': 'hyph-en-gb.tex',
+      }.entries) {
+        final source = await File('$prefix${entry.value}').readAsString();
+        final patterns = RegExp(
+          r'^\\patterns\{',
+          multiLine: true,
+        ).firstMatch(source);
+        expect(patterns, isNotNull);
+        expect(
+          await rootBundle.loadString('$prefix${entry.key}'),
+          source.substring(0, patterns!.start),
+        );
+      }
     },
   );
 }

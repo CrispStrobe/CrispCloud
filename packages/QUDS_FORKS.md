@@ -21,13 +21,20 @@ The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
 PowerPoint file, editing it and saving it must not silently change or lose
 content.
 
-## Current integrated state (16 November 2026)
+## Current integrated state (17 November 2026)
 
 The app mirrors the canonical Quds source and the standalone legacy parser.
 Exact revisions, source boundaries and the complete managed-file inventory are
 recorded in [the fidelity manifest](../tool/office_fidelity_manifest.json).
-The current checkpoint is `c6a7eff46bcfcb806ee7c43252636b06c088963c`; the
-managed inventory contains 2,503 files. The host now exposes a sheet-only
+The current canonical checkpoint is `5b05664357eead5ddc86922bab248224dbd4da6d`;
+the managed inventory contains 2,521 files, including the unchanged 1,857-file
+standalone parser. This continuation retains the completed Zotero recovery,
+English hyphenation, proofing and ranked/average spreadsheet work. The host
+bundles all six original Office notices, including the American English
+`LicenseRef-Kuiken-permissive` grant and the British English MIT notice.
+The [previous completed qualification](../docs/validation/zotero-recovery-20261116/README.md)
+retains its original implementation identities; its totals are not a fresh
+qualification of this newer integrated source. The host now exposes a sheet-only
 **Export as ODS** action backed by `OdsSheetWriter`; ordinary Save and the
 legacy-Excel path still produce new XLSX copies.
 Managed files must match those sources; the guarded sync and verifier enforce
@@ -94,11 +101,11 @@ validations, prompts and error styles are imported; tab colours, cell
 hyperlinks, named expressions, outline groups and comparison/empty filter predicates round-trip; conditional formats are painted and serialized with dxf styling. Hidden rows, columns and sheets
 survive an ODS→XLSX save. Absolute sheet references, clock components and
 elapsed time formats survive XLSX saves. The sheet/ODS development cohort is
-512 tests; the ODS reader+writer suite is 114 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
+514 tests; the ODS reader+writer suite is 115 tests; the last clean full engine run was 2,205 tests, with two unrelated CLI
 bookmark/content-control tests currently failing on main. The ODS writer emits
 the modeled workbook subset, including pictures, conditional formats,
-validations, authored page setup and header/footer sections; ODT/ODP writers
-remain open. A host widget test opens an XLSX fixture and reads the exported ODS
+validations, ranked/average conditional rules, authored page setup and
+header/footer sections; ODT/ODP writers remain open. A host widget test opens an XLSX fixture and reads the exported ODS
 back. The combined host qualification remains separately source-bound
 in the storage evidence.
 

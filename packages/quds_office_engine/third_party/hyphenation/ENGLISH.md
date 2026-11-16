@@ -15,6 +15,11 @@ MIT. Its copyright and permission notice remain in the complete original
 source and generated Dart preface. The GB file's full MIT notice is retained
 in both places. Neither file is taken from LibreOffice's converted resources.
 
+The standalone [American notice](ENGLISH_US_LICENSE) and
+[British notice](ENGLISH_GB_LICENSE) contain the complete original TeX preambles
+verbatim, including their copyright, permission, provenance and word-list
+statements. Hosts can bundle these notices for their license registry.
+
 The GB source explains that the underlying Oxford University Press word list
 may not be redistributed. This repository ships the licensed pattern file,
 not that word list. The original exception lists are reproduced unchanged,
@@ -62,7 +67,9 @@ From the repository root:
 python3 packages/quds_office_engine/tool/proofing/generate_english_hyphenation.py --check
 ```
 
-Omit `--check` to regenerate the two Dart data files. The generator uses only
+Omit `--check` to regenerate the two Dart data files and standalone notices.
+`--check` verifies each notice byte-for-byte against its pinned source preamble.
+The generator uses only
 Python's standard library and the checked-in sources; it rejects changed
 source hashes, unsupported TeX syntax, duplicate keys, count drift and output
 digest drift. The existing German generator and German runtime are unchanged.

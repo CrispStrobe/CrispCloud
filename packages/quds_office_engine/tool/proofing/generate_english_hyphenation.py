@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the licensed English Dart pattern constants, without network I/O."""
+"""Reproduce the English Dart patterns and original notices, without network I/O."""
 from pathlib import Path
 import argparse
 import hashlib
@@ -11,13 +11,33 @@ PINNED = {
     'en-US': ('f4ffcd96c5cbc886bdad23f95dcae8edc3cd3620eae62f7946eceda97c4e68f8', 4938, 14),
     'en-GB': ('e95bb4ab350f620c41c231c4785d7bdb4f91949d3e631b30e08b3ead3c340a52', 8527, 8),
 }
+NOTICES = {
+    'en-US': 'ENGLISH_US_LICENSE',
+    'en-GB': 'ENGLISH_GB_LICENSE',
+}
+
+
+def pinned_source(entry):
+    raw = (ROOT / 'third_party/hyphenation' / entry['source']).read_bytes()
+    digest = PINNED[entry['language']][0]
+    if hashlib.sha256(raw).hexdigest() != digest or entry['source_sha256'] != digest:
+        raise ValueError('Unreviewed source; inspect the original license and provenance first')
+    return raw
+
+
+def original_notice(entry):
+    # Keep every byte before the pattern section, including original TeX
+    # comments, copyright, permission, provenance and word-list restrictions.
+    # Hosts can bundle these small files without shipping the pattern sources.
+    preface, marker, _ = pinned_source(entry).partition(b'\\patterns{')
+    if not marker or not preface:
+        raise ValueError('Missing original source preface')
+    return preface
 
 
 def generate(entry):
-    raw = (ROOT / 'third_party/hyphenation' / entry['source']).read_bytes()
-    digest, pattern_count, exception_count = PINNED[entry['language']]
-    if hashlib.sha256(raw).hexdigest() != digest or entry['source_sha256'] != digest:
-        raise ValueError('Unreviewed source; inspect the original license and provenance first')
+    raw = pinned_source(entry)
+    _, pattern_count, exception_count = PINNED[entry['language']]
     source = raw.decode('utf-8')
     clean = re.sub(r'%[^\n]*', '', source)
     pattern_blocks = re.findall(r'\\patterns\{([^}]*)\}', clean)
@@ -69,17 +89,22 @@ def main():
     for entry in manifest['inputs']:
         output = generate(entry)
         path = ROOT / entry['generated']
-        if args.check:
-            if path.read_bytes() != output:
-                raise ValueError(f'Stale generated file: {path}')
-        else:
-            path.write_bytes(output)
+        notice = original_notice(entry)
+        notice_path = ROOT / 'third_party/hyphenation' / NOTICES[entry['language']]
+        for artifact, expected in [(path, output), (notice_path, notice)]:
+            if args.check:
+                if not artifact.is_file() or artifact.read_bytes() != expected:
+                    raise ValueError(f'Stale generated file: {artifact}')
+            else:
+                artifact.write_bytes(expected)
         receipt.append({
             'language': entry['language'],
             'patterns': entry['patterns'],
             'exceptions': entry['exceptions'],
             'source_sha256': entry['source_sha256'],
             'generated_sha256': hashlib.sha256(output).hexdigest(),
+            'notice': str(notice_path.relative_to(ROOT)),
+            'notice_sha256': hashlib.sha256(notice).hexdigest(),
         })
     print(json.dumps({'mode': 'check' if args.check else 'write', 'inputs': receipt}, indent=2))
 

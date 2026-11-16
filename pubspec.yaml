@@ -302,6 +302,8 @@ flutter:
     - packages/legacy_doc_parser/third_party/quds_office_engine-MIT.txt
     - packages/legacy_doc_parser/third_party/JSDoc-0BSD.txt
     - packages/quds_office_engine/third_party/hyphenation/LICENSE
+    - packages/quds_office_engine/third_party/hyphenation/ENGLISH_US_LICENSE
+    - packages/quds_office_engine/third_party/hyphenation/ENGLISH_GB_LICENSE
     - packages/quds_office_engine/third_party/proofing/WORTLISTE_LICENSE
     - packages/quds_office_engine/third_party/proofing/QUDS_WORDS_LICENSE
     - packages/quds_office_engine/third_party/fonttools/LICENSE
