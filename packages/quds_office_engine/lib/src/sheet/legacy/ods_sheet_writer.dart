@@ -227,17 +227,46 @@ abstract final class OdsSheetWriter {
     if (filters.isNotEmpty) {
       w.writeStartElement('database-ranges', prefix: 'table');
       for (final sheet in filters) {
-        final range = sheet.autoFilter!.range;
-        w.writeEmptyElement(
-          'database-range',
-          prefix: 'table',
-          attributes: {
-            'table:target-range-address':
-                '${_plainSheet(sheet.name)}.${range.start.a1}:'
-                '${_plainSheet(sheet.name)}.${range.end.a1}',
-            'table:display-filter-buttons': 'true',
-          },
+        final filter = sheet.autoFilter!;
+        final range = filter.range;
+        final conditions = <({int field, String value})>[];
+        for (final entry in filter.hiddenValues.entries) {
+          if (entry.value.isEmpty) continue;
+          final visible = <String>{
+            for (var row = range.minRow + 1; row <= range.maxRow; row++)
+              if (sheet
+                      .cellOrNull(SmlCellRef(range.minCol + entry.key, row))
+                      ?.asString
+                  case final text? when text.isNotEmpty)
+                text,
+          }..removeAll(entry.value);
+          for (final value in visible) {
+            conditions.add((field: entry.key, value: value));
+          }
+        }
+        w.writeStartElement('database-range', prefix: 'table');
+        w.writeAttribute(
+          'table:target-range-address',
+          '${_plainSheet(sheet.name)}.${range.start.a1}:'
+              '${_plainSheet(sheet.name)}.${range.end.a1}',
         );
+        w.writeAttribute('table:display-filter-buttons', 'true');
+        if (conditions.isNotEmpty) {
+          w.writeStartElement('filter', prefix: 'table');
+          for (final condition in conditions) {
+            w.writeEmptyElement(
+              'filter-condition',
+              prefix: 'table',
+              attributes: {
+                'table:field-number': '${condition.field}',
+                'table:operator': '=',
+                'table:value': condition.value,
+              },
+            );
+          }
+          w.writeEndElement();
+        }
+        w.writeEndElement();
       }
       w.writeEndElement();
     }
