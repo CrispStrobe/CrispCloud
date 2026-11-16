@@ -1,0 +1,45 @@
+{
+  "verified_utc": "2026-11-16T08:51:14.571013+00:00",
+  "host_initial": "ea560e8c20c897f98809664e54961509e570b9cb",
+  "host_head_at_verification": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+  "host_merge_in_progress": false,
+  "canonical_repository": "CrispStrobe/quds_office_suite",
+  "canonical_branch": "codex/terminal-sharing-office-20261116",
+  "canonical_commit": "4235e690602195cc504438a6b937972c71f1ad39",
+  "canonical_tree": "bb5f1912fe2ff2b5cfb3d9c7091a184ba54de0ae",
+  "canonical_parents": [
+    "428679a33381f943a8ae63117d4207f01dd15462",
+    "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
+  ],
+  "fetched_remote_branch_matches": true,
+  "managed_entries": 2409,
+  "quds_entries": 552,
+  "separately_pinned_legacy_entries": 1857,
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "changed_content_paths": [
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "mode_corrections": [
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+      "before": "100755",
+      "after": "100644",
+      "content_unchanged": true
+    }
+  ],
+  "inventory_sha256": "7167b6ed148ff4865212aed6a87cdec15f7ed5d71974b69cf07f88f77462431a",
+  "all_managed_hashes_verified": true,
+  "all_index_blobs_and_modes_verified": true,
+  "all_canonical_quds_blobs_and_modes_verified": true,
+  "standalone_legacy_bytes_unchanged": true,
+  "errors": [],
+  "scope": "All host bytes are freshly SHA-256 hashed and tied to stage-0 index blobs and filesystem modes. All 552 Quds entries match the fetched canonical Git commit by exact blob and mode. All 1,857 standalone legacy parser hashes retain the original manifest pin and unchanged UPSTREAM.json source boundary. No source checkout or CI is used."
+}

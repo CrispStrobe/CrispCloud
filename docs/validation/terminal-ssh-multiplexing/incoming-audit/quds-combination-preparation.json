@@ -1,0 +1,187 @@
+{
+  "utc": "2026-11-16T08:47:50.721860+00:00",
+  "pins": [
+    "428679a33381f943a8ae63117d4207f01dd15462",
+    "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
+  ],
+  "refs": [
+    {
+      "ref": "refs/remotes/origin/HEAD",
+      "sha": "bd130094b4d1bc666aa9b166e6ed7fb1b447aeb3",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-support-20261115",
+      "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/codex/zotero-support-20261116",
+      "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+      "contains_zotero": true,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/metadata-closed",
+      "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/readme-remaining-gaps",
+      "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/remaining-gaps",
+      "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/docs/validation-operators",
+      "sha": "01f62eb1812ca54827cc14e074e03abd82f963d7",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/conditional-affix",
+      "sha": "20681b8658392212c128f51b4c91f0b638942448",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/conditional-between",
+      "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/conditional-dxf",
+      "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/conditional-operators",
+      "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/conditional-text",
+      "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-conditional",
+      "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-default-geometry",
+      "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-default-style",
+      "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-images",
+      "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-metadata",
+      "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-validation-operators",
+      "sha": "8769019fb8be5483939edd4655dd88005e2515c4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/ods-validations",
+      "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/sheet-hidden-sheets",
+      "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/feat/sheet-hidden-state",
+      "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/sdt-multi-section-control",
+      "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/sdt-trailing-section-break",
+      "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/fix/utf16-custom-xml",
+      "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/main",
+      "sha": "bd130094b4d1bc666aa9b166e6ed7fb1b447aeb3",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/vendor/ods-metadata",
+      "sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/vendor/ods-metadata-zotero",
+      "sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/vendor/ods-validation",
+      "sha": "c7bb6d6f51885e4082882252f502bbf2de81d552",
+      "contains_zotero": false,
+      "contains_ods_validation": false
+    },
+    {
+      "ref": "refs/remotes/origin/vendor/ods-validation-current",
+      "sha": "4ffdf113803806ba5f8ade4a0846eee85dcfbe68",
+      "contains_zotero": false,
+      "contains_ods_validation": true
+    }
+  ],
+  "combined_refs": [],
+  "merge_tree_exit": 0,
+  "merge_tree_output": "bb5f1912fe2ff2b5cfb3d9c7091a184ba54de0ae\n",
+  "merge_tree_stderr": ""
+}

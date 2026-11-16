@@ -1,0 +1,73 @@
+{
+  "utc": "2026-11-16T08:48:32.121441+00:00",
+  "canonical_parents": [
+    "428679a33381f943a8ae63117d4207f01dd15462",
+    "4ffdf113803806ba5f8ade4a0846eee85dcfbe68"
+  ],
+  "canonical_base_tree": "c284db83156f1fcae84013cbe58494e3b340a08e",
+  "canonical_combined_tree": "bb5f1912fe2ff2b5cfb3d9c7091a184ba54de0ae",
+  "merge_conflicts": [],
+  "host_initial": "ea560e8c20c897f98809664e54961509e570b9cb",
+  "incoming_main": "c7463402d878a418d6b31cfd0bfce5c8f6cca63c",
+  "managed_entries": 2409,
+  "quds_entries": 552,
+  "separately_pinned_legacy_entries": 1857,
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  },
+  "changed_canonical_paths": [
+    "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+    "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart"
+  ],
+  "replacements": [
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "sha256": "25f5b432acaca424a75481eea0a688ce008d7111ad39057d49703359b1889009",
+      "mode": "100644",
+      "git_blob": "3731596028c87b6c18ac0a7006a1f00cf88254cc",
+      "source": "combined_quds"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_analysis.dart",
+      "sha256": "a259e3c9b3e8837a4ee563902254ae8e740f1db8c98da1e8dc7fd1a84637320e",
+      "mode": "100644",
+      "git_blob": "fe5cb7c25f2f397390fcbc4ef3feadd0a995ea71",
+      "source": "combined_quds"
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "sha256": "7bbe17cba2efb354a52e392a62d1783edb81c54c48cedd09144ad0af2ddb3fb1",
+      "mode": "100644",
+      "git_blob": "2c6971a6fd5958c8e04faec6e052b4f8ad0e777d",
+      "source": "combined_quds"
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "sha256": "49c092f4c3101058bad20c9a09d93ffb32c3434d344f73b23cccdc387a7fcc07",
+      "mode": "100644",
+      "git_blob": "3d3f677d7af8aebc4834909b213a1bde002a53ef",
+      "source": "combined_quds"
+    }
+  ],
+  "all_other_managed_entries_preserved": true,
+  "all_managed_hashes_verified": true,
+  "tracked_modes_verified": false,
+  "errors": [
+    "Canonical entry mismatch: packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart"
+  ],
+  "scope": "Canonical Quds entries are compared by exact Git blob and mode; expected SHA-256 hashes are computed against current bytes, with four replacement bytes read from the clean merged canonical tree. Separately maintained legacy bytes remain at their existing standalone pin. The one pre-existing host executable-bit difference is recorded separately; all content hashes pass.",
+  "preexisting_host_mode_drift": [
+    {
+      "path": "packages/quds_office_engine/lib/src/pdf/pdf_canvas.dart",
+      "host_mode": "100755",
+      "canonical_mode": "100644",
+      "identical_git_blob": "e3c1270563fd8c192c8c615b41584630816415c5",
+      "action": "Normalize host tracked mode to canonical 100644 during integration; no content changes."
+    }
+  ]
+}

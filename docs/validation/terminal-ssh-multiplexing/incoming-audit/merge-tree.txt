@@ -1,0 +1,7 @@
+dab8f2313f5a5b3b792a2a065ce31924df089b48
+100644 c338b7ec86256d14304c77d7477f94d5b1a87943 1	tool/office_fidelity_manifest.json
+100644 25b215fa11b4b38cd9e2a67c3b5e301c40b65d76 2	tool/office_fidelity_manifest.json
+100644 5dc0f73f50c7faaa941ff62a45c5007d1afdf29a 3	tool/office_fidelity_manifest.json
+
+Auto-merging tool/office_fidelity_manifest.json
+CONFLICT (content): Merge conflict in tool/office_fidelity_manifest.json

@@ -1,0 +1,49 @@
+{
+  "recorded_utc": "2026-11-16T08:54:40.751650+00:00",
+  "accepted_application_source": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+  "verified_head": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+  "watched_source_count": 5544,
+  "all_phase_inventories_identical": true,
+  "current_worktree_source_matches": true,
+  "all_watched_bytes_and_modes_match_accepted_git_source": true,
+  "runtime_paths_changed_since_accepted_source": [],
+  "phases": {
+    "native": {
+      "head_at_start": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+      "exit_code": 0,
+      "source_count": 5544,
+      "source_inventory_uncompressed_sha256": "210f00e7b4801ab59fbdc622f99fedfb1ea425a4f2ce949d12ffd6aac89bbe3a",
+      "record_sha256": "50ad1ef43e21dcff612537f15509304125e12eb2cf089978c70ac1590d55fa97",
+      "log_uncompressed_sha256": "f1b01d8a0d0772bdfb857354b4a87c8b44263f68978b0b14865d48add1623cc2"
+    },
+    "analysis": {
+      "head_at_start": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+      "exit_code": 0,
+      "source_count": 5544,
+      "source_inventory_uncompressed_sha256": "210f00e7b4801ab59fbdc622f99fedfb1ea425a4f2ce949d12ffd6aac89bbe3a",
+      "record_sha256": "b2cfa3fc0caa74b7d8fa1e70a0bab0088818dfbb306e3f06b820a42a0e45815d",
+      "log_uncompressed_sha256": "c2943dd32b98a013a872bbd17bd2607a585caedd9237d647588c861240f9d943"
+    },
+    "format": {
+      "head_at_start": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+      "exit_code": 0,
+      "source_count": 5544,
+      "source_inventory_uncompressed_sha256": "210f00e7b4801ab59fbdc622f99fedfb1ea425a4f2ce949d12ffd6aac89bbe3a",
+      "record_sha256": "22e28d78dba1d5cfe657bb12ec4e02b6b3978f3a9b337815a7441a822485ba31",
+      "log_uncompressed_sha256": "8c8aedb5853f058071a9ddbbb0974bd061eb1ca5b5f37fa277c7387909f44d87"
+    },
+    "live": {
+      "head_at_start": "2ca566a3a386b5876274d36ff7d93ea21c93fa80",
+      "exit_code": 0,
+      "source_count": 5544,
+      "source_inventory_uncompressed_sha256": "210f00e7b4801ab59fbdc622f99fedfb1ea425a4f2ce949d12ffd6aac89bbe3a",
+      "record_sha256": "a478b082444119b3002d6241ded01a95dff0f1fb3c6fb61a364ff75d96dd1132",
+      "log_uncompressed_sha256": "bc83d0f6608517206766e57d452ce2f14761e35326914caef2522fe881a14e68"
+    }
+  },
+  "targeted_office_source_and_adapters_verified": true,
+  "visual_image_hashes_verified": true,
+  "visual_packaging_source_differences": [],
+  "visual_identity_limit": "Focused executions occurred before this packaging snapshot. Their stdout does not contain an execution-time full source inventory. This snapshot must not be represented as proof of a frozen full application run.",
+  "github_actions_queried_or_awaited": false
+}
