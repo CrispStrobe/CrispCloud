@@ -500,6 +500,48 @@ abstract final class OdsSheetWriter {
     w.writeEndElement();
   }
 
+  static void _writeHeaderText(XmlWriter w, String text) {
+    final buffer = StringBuffer();
+    void flush() {
+      if (buffer.isEmpty) return;
+      w.writeText(buffer.toString());
+      buffer.clear();
+    }
+
+    for (var i = 0; i < text.length; i++) {
+      if (text[i] != '&' || i + 1 >= text.length) {
+        buffer.write(text[i]);
+        continue;
+      }
+      final code = text[i + 1].toUpperCase();
+      final element = switch (code) {
+        'P' => 'page-number',
+        'N' => 'page-count',
+        'D' => 'date',
+        'T' => 'time',
+        'A' => 'sheet-name',
+        'F' => 'title',
+        _ => null,
+      };
+      if (element == null) {
+        if (code == '&') {
+          buffer.write('&');
+          i++;
+        } else {
+          buffer
+            ..write('&')
+            ..write(text[i + 1]);
+          i++;
+        }
+        continue;
+      }
+      flush();
+      w.writeEmptyElement(element, prefix: 'text');
+      i++;
+    }
+    flush();
+  }
+
   static String _condition(SmlConditionalRule rule) {
     String quote(String value) => '"${value.replaceAll('"', '""')}"';
     return switch (rule.kind) {
@@ -1133,10 +1175,40 @@ class _OdsLayout {
       w.writeStartElement('master-page', prefix: 'style');
       w.writeAttribute('style:name', 'mp$index');
       w.writeAttribute('style:page-layout-name', 'pm$index');
-      w.writeEmptyElement('header', prefix: 'style');
-      w.writeEmptyElement('footer', prefix: 'style');
+      _writeHeaderFooter(w, book.sheets[index].headerFooter, header: true);
+      _writeHeaderFooter(w, book.sheets[index].headerFooter, header: false);
       w.writeEndElement();
     }
+  }
+
+  static void _writeHeaderFooter(
+    XmlWriter w,
+    SmlHeaderFooter? hf, {
+    required bool header,
+  }) {
+    final tag = header ? 'header' : 'footer';
+    if (hf == null || hf.isEmpty) {
+      w.writeEmptyElement(tag, prefix: 'style');
+      return;
+    }
+    final sections = <String, String>{
+      'left': header ? hf.headerLeft : hf.footerLeft,
+      'center': header ? hf.headerCenter : hf.footerCenter,
+      'right': header ? hf.headerRight : hf.footerRight,
+    }..removeWhere((_, value) => value.isEmpty);
+    if (sections.isEmpty) {
+      w.writeEmptyElement(tag, prefix: 'style');
+      return;
+    }
+    w.writeStartElement(tag, prefix: 'style');
+    for (final entry in sections.entries) {
+      w.writeStartElement('region-${entry.key}', prefix: 'style');
+      w.writeStartElement('p', prefix: 'text');
+      OdsSheetWriter._writeHeaderText(w, entry.value);
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+    w.writeEndElement();
   }
 
   void writeConditionalStyles(XmlWriter w) {
