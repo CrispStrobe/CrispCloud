@@ -422,7 +422,7 @@ void main() {
       var superseded = 0;
       replacePanes(firstId);
       server.afterCommand = (command) {
-        if (command != 'refresh-client -A %${firstId + 63}:continue' ||
+        if (command != "refresh-client -A '%${firstId + 63}:continue'" ||
             firstId == 400) {
           return;
         }
