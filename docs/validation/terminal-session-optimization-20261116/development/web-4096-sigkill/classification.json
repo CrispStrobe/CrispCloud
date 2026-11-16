@@ -1,0 +1,13 @@
+{
+  "recorded_utc": "2026-11-16T11:22:27.204645+00:00",
+  "classification": "External compiler SIGKILL; precise cause and actor are not established.",
+  "compiler_exit_code": -9,
+  "application_validation_exit_code": 1,
+  "sdk_restored_exactly": true,
+  "unchanged_source_count": 5556,
+  "peak_owned_rss_kb": 3399552,
+  "minimum_available_memory_kb": 1287524,
+  "cgroup_memory_counters": "Unavailable: memory.max and memory.events are absent from the exposed cgroup filesystem.",
+  "next_step": "Preserve the normal O4/minify release and retry with a bounded 3072 MB compiler-only old-generation heap cap.",
+  "github_actions_queried_or_awaited": false
+}

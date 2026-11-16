@@ -1,0 +1,1511 @@
+{
+  "started_utc": "2026-11-16T11:17:50.867812+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_validation.py",
+    "web",
+    "--evidence",
+    "/workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+  ],
+  "heap_mb": 4096,
+  "sdk": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk",
+  "sdk_before": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_modes_before": {
+    "bin/dart": 33261,
+    "bin/dartaotruntime": 33261,
+    "bin/snapshots/dart2js_aot.dart.snapshot": 33188
+  },
+  "launcher_sha256": "2f432b4e4f04ff0802a69093aa023216fa646e5405b0c13613da8da8a0868c22",
+  "application_or_dependency_changes": false,
+  "compiler_args": "Unchanged Flutter compile-js arguments; SDK implicit arguments preserved.",
+  "process_scope": "Only the launched validation process and visible descendants.",
+  "github_actions_queried_or_awaited": false,
+  "samples": [
+    {
+      "utc": "2026-11-16T11:17:50.870308+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 7335152,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 96844
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 328,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:17:53.871612+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 6960812,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 463176
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 134032,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 69,
+          "ppid": 46,
+          "name": "dart:dartdev_ao",
+          "rss_kb": 31096,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original compile kernel --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --output=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/objective_c/6782ff62a0/hook.dill --depfile=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/objective_c/6782ff62a0/hook.dill.d /workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/objective_c-9.6.2/hook/build.dart"
+        },
+        {
+          "pid": 74,
+          "ppid": 69,
+          "name": "dart:gen_kernel",
+          "rss_kb": 119748,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/gen_kernel_aot.dart.snapshot --platform=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/_internal/vm_platform_product.dill -Ddart.vm.product=true -Ddart.vm.asan=false -Ddart.vm.msan=false -Ddart.vm.tsan=false --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --depfile=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/objective_c/6782ff62a0/hook.dill.d --output=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/objective_c/6782ff62a0/hook.dill --invocation-modes=compile --verbosity=all /workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/objective_c-9.6.2/hook/build.dart"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 147964,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:17:56.873318+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 6355820,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 1017896
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 129188,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 706160,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        },
+        {
+          "pid": 118,
+          "ppid": 46,
+          "name": "dart:dartdev_ao",
+          "rss_kb": 31436,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original compile kernel --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --output=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/crisp_catalog/6782ff62a0/hook.dill --depfile=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/crisp_catalog/6782ff62a0/hook.dill.d /workspace/scratch/cb0df5963965/crispcloud/packages/crisp_catalog/hook/build.dart"
+        },
+        {
+          "pid": 123,
+          "ppid": 118,
+          "name": "dart:gen_kernel",
+          "rss_kb": 120824,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/gen_kernel_aot.dart.snapshot --platform=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/_internal/vm_platform_product.dill -Ddart.vm.product=true -Ddart.vm.asan=false -Ddart.vm.msan=false -Ddart.vm.tsan=false --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --depfile=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/crisp_catalog/6782ff62a0/hook.dill.d --output=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/crisp_catalog/6782ff62a0/hook.dill --invocation-modes=compile --verbosity=all /workspace/scratch/cb0df5963965/crispcloud/packages/crisp_catalog/hook/build.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:17:59.874930+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 5775260,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 1522884
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125116,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1232872,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        },
+        {
+          "pid": 184,
+          "ppid": 46,
+          "name": "dart:dartdev_ao",
+          "rss_kb": 31308,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original compile kernel --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --output=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/flutter_pty2/6782ff62a0/hook.dill --depfile=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/flutter_pty2/6782ff62a0/hook.dill.d /workspace/scratch/cb0df5963965/crispcloud/packages/flutter_pty2/hook/build.dart"
+        },
+        {
+          "pid": 189,
+          "ppid": 184,
+          "name": "dart:gen_kernel",
+          "rss_kb": 103784,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/gen_kernel_aot.dart.snapshot --platform=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/_internal/vm_platform_product.dill -Ddart.vm.product=true -Ddart.vm.asan=false -Ddart.vm.msan=false -Ddart.vm.tsan=false --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --depfile=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/flutter_pty2/6782ff62a0/hook.dill.d --output=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/hooks_runner/flutter_pty2/6782ff62a0/hook.dill --invocation-modes=compile --verbosity=all /workspace/scratch/cb0df5963965/crispcloud/packages/flutter_pty2/hook/build.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:02.878409+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 5422576,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 1847964
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1666672,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:05.883323+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4909192,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2464444
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1954288,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:08.886004+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4514768,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2897216
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2105464,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:11.888862+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4772392,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2420744
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2238456,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:14.891142+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4825528,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2389344
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2206956,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:17.892464+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4871904,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2385228
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2202936,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:20.898607+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4898640,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2383956
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2201888,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:23.903115+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4937936,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2407548
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2225788,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:26.905004+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4942804,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2426884
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2244928,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:29.908246+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4952740,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2452600
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2253312,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:32.912195+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4950616,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2468984
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2270092,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:35.914561+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4927012,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2539720
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125000,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 80,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2347156,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill --packages=/workspace/scratch/cb0df5963965/crispcloud/.dart_tool/package_config.json --cfe-only /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:38.916153+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 6057780,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 1213020
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125124,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 595664,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:41.918692+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4866812,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 2501736
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125124,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1073152,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:44.922423+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 4126668,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 3229204
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125124,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1315920,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:47.924095+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 3386412,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 3791100
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125124,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1514180,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:50.925775+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 3224044,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 3948048
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 125124,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1603516,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:53.927997+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 3082332,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4068916
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1748920,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:56.932447+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 3018764,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4208648
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1882864,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:18:59.938512+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 3066140,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4243028
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 1931652,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:02.966865+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2913232,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4367284
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2053040,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:05.978464+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2809028,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4489328
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2160504,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:08.981689+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2560356,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4747436
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2304488,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:11.984226+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2351764,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4963180
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2503688,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:14.986867+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2089056,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5170324
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 96492,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2640868,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:17.991607+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2049548,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5070420
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 93256,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2778296,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:20.996549+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1755688,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5266832
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 93256,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 2921500,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:24.000580+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2944416,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4095960
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 92732,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3074356,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:27.006995+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2556936,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4550824
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 92732,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3159160,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:30.014184+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2306912,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4813068
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 92732,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3162296,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:33.058459+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2256960,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4881316
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 92732,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3164168,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:36.078787+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 2123100,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 4981732
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 92732,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3172272,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:39.081139+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1970964,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5163280
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 92644,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3188176,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:42.084202+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1830608,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5284096
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 88312,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3202536,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:45.087269+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1765832,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5336020
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 88252,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3159520,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:48.090182+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1573528,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5503840
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 83292,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3184516,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:51.094383+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1438476,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5724752
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 82996,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3299548,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:54.098894+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1348648,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5816532
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 71428,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3229660,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:19:57.105047+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 1287524,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 5994464
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17008,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        },
+        {
+          "pid": 46,
+          "ppid": 21,
+          "name": "dart:flutter_to",
+          "rss_kb": 63488,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartvm --resolved_executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --executable_name=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dart.resource-original --packages=/workspace/scratch/cb0df5963965/toolchain/flutter/packages/flutter_tools/.dart_tool/package_config.json /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_tools.snapshot build web --release --no-pub --no-wasm-dry-run --dart-define=APP_VERSION=1.3.4+28 --dart-define=GIT_HASH=040f6d75"
+        },
+        {
+          "pid": 211,
+          "ppid": 46,
+          "name": "dart:dart2js_ao",
+          "rss_kb": 3221592,
+          "command": "/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/dartaotruntime --old_gen_heap_size=4096 /workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/bin/snapshots/dart2js_aot.dart.snapshot --libraries-spec=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/dart-sdk/lib/libraries.json --cfe-invocation-modes=compile --invoker=dart_cli --platform-binaries=/workspace/scratch/cb0df5963965/toolchain/flutter/bin/cache/flutter_web_sdk/kernel --invoker=flutter_tool -Ddart.vm.product=true -DAPP_VERSION=1.3.4+28 -DGIT_HASH=040f6d75 -DFLUTTER_BUILD_NAME=1.3.4 -DFLUTTER_BUILD_NUMBER=28 -DFLUTTER_VERSION=3.47.8 -DFLUTTER_CHANNEL=[user-branch] -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=737ba8f885 -DFLUTTER_ENGINE_REVISION=cf636b1dfb -DFLUTTER_DART_VERSION=3.13.7 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=https://www.gstatic.com/flutter-canvaskit/cf636b1dfb818dd6a3ff16e390e93b1a036969c8/ --write-resources --native-null-assertions --no-source-maps -O4 --minify -o /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/main.dart.js /workspace/scratch/cb0df5963965/crispcloud/.dart_tool/flutter_build/e494b4ea5d6c89fac1972568def98755/app.dill"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-16T11:20:00.141269+00:00",
+      "memory_kb": {
+        "MemTotal": 10206472,
+        "MemAvailable": 7017156,
+        "SwapTotal": 0,
+        "SwapFree": 0,
+        "AnonPages": 129920
+      },
+      "processes": [
+        {
+          "pid": 21,
+          "ppid": 2,
+          "name": "python3",
+          "rss_kb": 17828,
+          "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 tool/run_terminal_validation.py web --evidence /workspace/scratch/cb0df5963965/crispcloud/docs/validation/terminal-session-optimization-20261116"
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "sdk_after": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_modes_after": {
+    "bin/dart": 33261,
+    "bin/dartaotruntime": 33261,
+    "bin/snapshots/dart2js_aot.dart.snapshot": 33188
+  },
+  "sdk_restored_exactly": true,
+  "finished_utc": "2026-11-16T11:20:01.492514+00:00",
+  "seconds": 130.624,
+  "peak_visible_rss_kb": 3399552,
+  "minimum_available_memory_kb": 1287524
+}

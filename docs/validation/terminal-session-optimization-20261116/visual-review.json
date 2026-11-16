@@ -1,0 +1,171 @@
+{
+  "reviewed_utc": "2026-11-16T11:17:55.764330+00:00",
+  "reviewer": "/root/review_recent_history",
+  "method": "Direct visual inspection of all nine original PNG files using view_image; image metadata and SHA-256 measured without editing or recompressing the files.",
+  "capture_receipt": {
+    "path": "docs/validation/terminal-session-optimization-20261116/visual.json",
+    "sha256": "2754c8a4c1a0b406a70cfbf4c2ac479abc96dabb33256e8ee9f865466a0f5dc3",
+    "head_at_start": "0a400e74876949ae9c3196c71936a785df123e36",
+    "watched_source_count": 5556,
+    "changed_sources": [],
+    "test_counts": {
+      "passed": 2,
+      "skipped": 0,
+      "failed": 0
+    },
+    "exit_code": 0
+  },
+  "overall_result": "The captured recovery and tmux layouts fit their desktop and compact viewports. No blocking visual layout defect was found. The fixture has a documented CJK font-coverage limitation.",
+  "image_count": 9,
+  "viewports": {
+    "desktop": {
+      "width": 1180,
+      "height": 700,
+      "captures": 4
+    },
+    "compact": {
+      "width": 320,
+      "height": 320,
+      "captures": 5
+    }
+  },
+  "recovery_disclosure": "Desktop and scrolled compact captures show what is restored and state that SSH still requires authentication; passwords, terminal output and running processes are not saved. Local-shell relaunch starts new shells and does not restore prior commands or working directories.",
+  "compact_accessibility_review": {
+    "visual_affordances": "At 320x320, the pane menu shows full labels, a selected check mark, and fully visible rows. Recovery actions stay visible as content scrolls.",
+    "source_corroboration": {
+      "path": "lib/widgets/tmux_control_workspace.dart",
+      "sha256": "0f77547eb18f0d656b4a33ac3dccd34c6deb187299343d5328127da5a0b68cf6",
+      "observed": "The selector uses a Select tmux pane tooltip and CheckedPopupMenuItem entries; each pane provides a Semantics label and selected state."
+    },
+    "qualification_boundary": "PNG inspection verifies visual labels, selection indication and layout only. Screen-reader output, focus traversal, touch target measurements, contrast ratios and scaled-text behavior were not newly tested by this review."
+  },
+  "limitations": [
+    "In tmux-native-desktop.png the Chinese sample characters appear as two missing-glyph boxes with the fixture fonts, while cafe with accented e and the check mark render. Full Unicode font fallback is not qualified by these captures.",
+    "The visual tests use production widgets with in-memory recovery and pane connections; the captures do not establish end-to-end SSH or native tmux transport behavior.",
+    "The compact recovery content is scrollable. Content cut at its viewport edge becomes visible in the subsequent scrolled captures; the action area remains fixed."
+  ],
+  "images": [
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/recovery/recovered-workspace-desktop.png",
+      "width": 1180,
+      "height": 700,
+      "bytes": 44592,
+      "sha256": "b4a704d2ff76c843bec5d166152d803ba3601d89a8bb748a4cd41105f59749ab",
+      "inspected_with": "view_image",
+      "observations": [
+        "Three idle panes and the three workspace tabs are visible. The selected Build server tab and SSH pane use clear selection accents.",
+        "The SSH pane offers Reconnect SSH and the local panes offer Start local shell; no restored terminal output or running process is implied.",
+        "The bottom message says the workspace was recovered and SSH destinations can be connected when ready. Pane headers, action controls and start buttons remain inside their bounds."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/recovery/recovery-settings-compact-bottom.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 28144,
+      "sha256": "64ec41b3c02399b1aeab88bd5fab1dd8a19e53a6ddf85cd48d426d7b89779d6b",
+      "inspected_with": "view_image",
+      "observations": [
+        "The complete SSH authentication and excluded-data disclosure is readable at 320x320 after scrolling.",
+        "Forget saved workspace, Cancel and Save are visible and fit within the dialog.",
+        "No horizontal text overflow, clipped action label or content painted outside the dialog is visible."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/recovery/recovery-settings-compact-choices.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 31124,
+      "sha256": "80242003740c6a235d4f11662c44a924513df7ff1ae0b2b44674eb99cf85d05f",
+      "inspected_with": "view_image",
+      "observations": [
+        "The scrolled 320x320 view exposes both preference labels and switches, with Remember terminal workspace wrapping to two lines.",
+        "The local-shell explanation is readable; the longer SSH disclosure continues below the scroll viewport.",
+        "Cancel and Save stay visible, and the scrollbar indicates further content."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/recovery/recovery-settings-compact-top.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 25848,
+      "sha256": "18f5f4012ef401eb9cdf3fd561ef081f88cc9e9464984671b68510750226e886",
+      "inspected_with": "view_image",
+      "observations": [
+        "At 320x320 the dialog remains inset from all screen edges. The title and opening recovery description wrap within the dialog.",
+        "The next preference row is partially clipped at the scrolling viewport boundary; the choices capture shows that row fully after scrolling. This is scroll clipping, not content painted beyond the dialog.",
+        "Cancel and Save remain visible in the fixed action area."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/recovery/recovery-settings-desktop.png",
+      "width": 1180,
+      "height": 700,
+      "bytes": 92284,
+      "sha256": "38da385b62b4a1391aaf58fc276fa11a9b9ea515f1e31fc6f2db8df8c0087f9e",
+      "inspected_with": "view_image",
+      "observations": [
+        "The centered recovery dialog fits at 1180x700 with readable text, both switches, Forget saved workspace, Cancel and Save visible.",
+        "The text describes restored workspace metadata, explicit SSH authentication, new local shells, and exclusions for passwords, terminal output and running processes.",
+        "Labels and disclosure paragraphs wrap cleanly, with no visible overlap or overflow."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/tmux/tmux-native-compact.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 15196,
+      "sha256": "85be7790286ef51b711d18d0aa8b031dfd510f32322b98315fa0c3c2067897b3",
+      "inspected_with": "view_image",
+      "observations": [
+        "At 320x320 the active pane fills the terminal area beneath the two toolbar rows; tabs, new-window and overflow controls remain on-screen.",
+        "The pane-selector label is intentionally ellipsized while its drop-down arrow remains visible. The adjacent split, zoom, search, copy and paste controls fit in the row.",
+        "Terminal sample text is readable and remains inside the active-pane border. The disabled copy icon is visually distinct."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/tmux/tmux-native-desktop.png",
+      "width": 1180,
+      "height": 700,
+      "bytes": 34155,
+      "sha256": "966721aac39251641b20871806e38f166b05a368985d6656db4e3a241e757e5b",
+      "inspected_with": "view_image",
+      "observations": [
+        "Two terminal panes fit side by side beneath the window tabs and toolbar. The active pane has a blue border and terminal ANSI colors remain distinct.",
+        "The pane selector, split controls, zoom, search, copy and paste icons fit within the toolbar.",
+        "The sample cafe with an accented e and the check mark are visible. The two Chinese sample characters render as missing-glyph boxes in this capture font set; this image does not establish CJK font coverage."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/tmux/tmux-native-pane-picker.png",
+      "width": 320,
+      "height": 320,
+      "bytes": 10342,
+      "sha256": "59eaf955558d7a76ce6b68e4176053fd04cb7030fdb0758381dfd1157668d590",
+      "inspected_with": "view_image",
+      "observations": [
+        "The open 320x320 pane menu stays entirely within the viewport.",
+        "Both full Pane %1 and Pane %2 labels are visible with generous row spacing; a check mark identifies Pane %1 as selected.",
+        "The menu provides the full labels hidden by the compact trigger ellipsis. It naturally overlays the terminal while open; no menu item is clipped."
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/visuals/tmux/tmux-native-zoom.png",
+      "width": 1180,
+      "height": 700,
+      "bytes": 19837,
+      "sha256": "869a3eacba6c48623236c43e352f06d54d6b2f9347f5cc2c48d88f44b89254a0",
+      "inspected_with": "view_image",
+      "observations": [
+        "The selected pane expands across the desktop workspace while the window tabs, pane selector and toolbar remain visible.",
+        "The zoom control changes to the restore icon, and the active-pane border stays within the viewport.",
+        "No visible clipping or overflow appears in the terminal sample or controls."
+      ]
+    }
+  ],
+  "images_modified": false,
+  "runtime_sources_modified": false,
+  "sdk_process_started_by_reviewer": false,
+  "browser_started": false,
+  "github_actions_queried_or_awaited": false
+}

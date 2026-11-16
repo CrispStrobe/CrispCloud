@@ -121,7 +121,25 @@ scrolls; native tmux retains a pane picker when only one pane fits. Captures use
 in-memory connections and disconnected recovery sessions, so they establish
 widget layout rather than a live multiplexer or browser runtime. The desktop
 tmux fixture lacks a Chinese font fallback and displays two missing-glyph boxes;
-these images do not qualify complete Unicode glyph coverage.
+these images do not qualify complete Unicode glyph coverage. The independent
+[nine-image review](visual-review.json) records exact image hashes, dimensions,
+scrolling/picker observations and the limits of visual accessibility checks.
+
+The first full standard O4/minified web attempt ended with compiler exit `-9`
+(SIGKILL) after 127.3 seconds. Peak measured process-tree RSS was 3,399,552 kB;
+available system memory reached 1,287,524 kB. These observations show an external
+kill during memory pressure but do not identify its precise cause or actor;
+cgroup memory counters are unavailable. All watched sources stayed unchanged,
+and SDK binaries and modes were restored exactly. The complete attempt is
+preserved under [`development/web-4096-sigkill`](development/web-4096-sigkill/).
+
+The current [resource runner](web-resource-runner.py) and
+[launcher](web-resource-launcher.sh) retain the original SDK verification,
+implicit compiler arguments, release flags, lock and restoration paths while
+allowing only 2,048/3,072/4,096 MB compiler heap caps. The
+[3,072 MB preflight](resource-3072-preflight/web-resource-preflight.json) verifies
+the effective VM flag and compiles/runs an O4/minified probe without replacing
+SDK files. It is preparation for the complete retry, not full app acceptance.
 
 ## Development findings retained
 
