@@ -1327,13 +1327,13 @@ class SheetSerializer {
     w.writeStartDocument();
     w.writeStartElement('worksheet');
     w.writeAttribute('xmlns', OfficeNamespaces.x);
+    if (sheet.drawings.isNotEmpty) {
+      w.writeNamespace('r', OfficeNamespaces.r);
+    }
     if (sheet.tabColorRgb case final rgb?) {
       w.writeStartElement('sheetPr');
       w.writeEmptyElement('tabColor', attributes: {'rgb': 'FF$rgb'});
       w.writeEndElement();
-    }
-    if (sheet.drawings.isNotEmpty) {
-      w.writeNamespace('r', OfficeNamespaces.r);
     }
     _writeSheetViews(w, sheet);
     _writeSheetFormat(w, sheet, sourceXml);

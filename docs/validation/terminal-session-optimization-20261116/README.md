@@ -23,6 +23,16 @@ records exact refs, parents, and canonical source comparisons. The Office
 inventory now verifies 2,411 files at Quds `91c725fe`, with all seven changed/new
 files matching the canonical Git blobs and modes.
 
+The final fixed inventory, recorded at **10:47:11 UTC**, contains **46 branch
+heads and 159 PR heads (205 references)**. Integration `df18aed3` preserves every
+one as an actual ancestor, including latest main `b9772e1a`, the original
+squash-equivalent ODS PR #168, Zotero PR #167 and the newer terminal recovery
+evidence. Its tree and four ordered parents match the reviewed ordinary merge.
+[Cutoff review](main-refresh-review.json) and
+[actual ancestry proof](final-cutoff-merge-audit.json) retain the complete refs.
+Later validation uses this fixed inventory rather than continually moving its
+source inputs.
+
 ## Changes and checkpoint status
 
 - Ordinary terminal sessions keep one in-flight resize and the latest pending
@@ -44,9 +54,12 @@ files matching the canonical Git blobs and modes.
   snapshot, while partial replies cannot extend the active pane's deadline.
   The 256-command admission limit remains in place.
 
-The first implementation checkpoint is intentionally saved before the complete
-Flutter qualification. Local commands and outcomes will be added as they finish;
-historical acceptance from earlier commits is not counted as new validation.
+Implementation and evidence are saved in separate incremental remote
+checkpoints. The final focused tmux suite passes **64 tests with no skips or
+failures**, including hard per-pane deadlines, queued input behind a progressing
+capture and resize reversals. Complete final qualification will be recorded
+below as each command finishes; historical acceptance from earlier commits is
+not counted as new validation.
 
 The [Screen resolver before/after proof](screen-resolver-regression.json) runs the
 extracted production shell through actual `/bin/sh` and `awk` with controlled
@@ -64,7 +77,16 @@ run and its unchanged source inventory remain under
 
 The first incoming Office command ran pure-Dart engine tests through the root
 Flutter graph, which does not declare `package:test`: four files failed to
-load while all 39 editor-dialog tests passed. The engine is being qualified
-through its own declared development graph without changing the application's
-production manifests or lockfile. That runner mismatch is preserved separately
-from feature-test outcomes.
+load while all 39 editor-dialog tests passed. The engine's own declared
+development graph then passes **118 tests with no skips or failures**. Its ten
+runtime dependencies match the application graph exactly; no application
+production manifest or lockfile changed. [Engine commands and dependency
+identity](incoming-engine-README.md) preserve that qualification separately from
+the initial runner mismatch.
+
+A second two-worker native run stopped progressing after 185 passing tests
+without reporting an assertion failure. It was interrupted with exit 130;
+[`development/stalled-native`](development/stalled-native/) preserves its exact
+command, last-progress timestamp and source inventory. The last printed test is
+not evidence of the cause. The validation runner now accepts `--concurrency 1`
+so the final full cohort can run serially on this constrained host.

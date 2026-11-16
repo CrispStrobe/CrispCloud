@@ -76,9 +76,13 @@ def main():
     parser.add_argument('phase', choices=['native', 'live', 'analysis', 'format', 'web'])
     parser.add_argument('--flutter', default='flutter')
     parser.add_argument('--dart', default='dart')
+    parser.add_argument('--concurrency', type=int, default=2,
+                        help='Parallel native test workers (use 1 on constrained hosts).')
     parser.add_argument('--evidence', type=pathlib.Path,
                         default=ROOT / 'docs/validation/terminal-forwarding-triggers')
     args = parser.parse_args()
+    if args.concurrency < 1:
+        parser.error('--concurrency must be positive')
     evidence = args.evidence.resolve()
     evidence.mkdir(parents=True, exist_ok=True)
     suites = sorted(set(json.loads((BASELINE / 'native-summary.json').read_text())['suite_files'] + NEW_TESTS))
@@ -95,7 +99,7 @@ def main():
         suites = ['test/ssh_terminal_live_test.dart', 'test/ssh_port_forwarding_live_test.dart',
                   'test/ssh_agent_live_test.dart', 'test/ssh_connection_sharing_live_test.dart']
     if args.phase == 'native':
-        command = [args.flutter, 'test', '--no-pub', '--concurrency=2',
+        command = [args.flutter, 'test', '--no-pub', f'--concurrency={args.concurrency}',
                    '--reporter=expanded', *suites]
     elif args.phase == 'live':
         command = [sys.executable, 'tool/run_terminal_live_smoke.py', '--flutter', args.flutter,

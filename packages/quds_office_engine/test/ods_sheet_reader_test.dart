@@ -264,6 +264,7 @@ void main() {
   annotationAndAuthoredDateTests();
   edgeTests();
   defaultAndTimeTests();
+  imageTests();
   defaultStyleTests();
   defaultGeometryTests();
   hiddenStateTests();
@@ -1352,6 +1353,31 @@ void imageTests() {
     final restored = reopened.sheets.first.drawings.single;
     expect(restored.visual.imageBytes, png);
     expect(restored.visual.width, closeTo(144, 0.01));
+  });
+
+  test('ODS tab colour and picture survive save together', () async {
+    final source = _ods(
+      '<t:table t:name="Data" t:style-name="taColor">'
+      '<t:table-row><t:table-cell>'
+      '<dr:frame dr:name="Logo" svg:width="2in" svg:height="1in">'
+      '<dr:image xl:href="Pictures/p.png"/></dr:frame>'
+      '</t:table-cell></t:table-row></t:table>',
+      styles:
+          '<s:style s:name="taColor" s:family="table">'
+          '<s:table-properties t:tab-color="#ff0000"/></s:style>',
+      parts: {'Pictures/p.png': png},
+    );
+    final book = OdsSheetReader.readBytes(source);
+    expect(book.sheets.first.tabColorRgb, 'FF0000');
+    expect(book.sheets.first.drawings.single.visual.imageBytes, png);
+
+    final saved = await OfficeIsolateSave.workbook(book, recalculate: false);
+    final reopened = SheetDeserializer().readBytes(saved);
+    expect(reopened.sheets.first.tabColorRgb, 'FF0000');
+    final drawing = reopened.sheets.first.drawings.single;
+    expect(drawing.visual.imageBytes, png);
+    expect(drawing.visual.width, closeTo(144, 0.01));
+    expect(drawing.visual.height, closeTo(72, 0.01));
   });
 }
 
