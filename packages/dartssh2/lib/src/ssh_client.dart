@@ -280,6 +280,11 @@ class SSHClient {
   /// true if the connection is closed normally or due to an error.
   bool get isClosed => _transport.isClosed;
 
+  /// Established channels still retained by this client, including locally
+  /// closed channels awaiting the peer's close acknowledgement. Unresolved
+  /// channel-open requests are excluded and must be accounted for separately.
+  int get retainedChannelCount => _channels.length;
+
   SSHClient(
     this.socket, {
     required this.username,

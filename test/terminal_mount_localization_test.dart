@@ -6,6 +6,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('shared-route capacity is distinguished from the connection pool', () {
+    final error = TerminalMountStateError(
+      TerminalMountCode.sshSharedPoolFull,
+      'This SSH connection already has 8 sessions.',
+      {'max': 8},
+    );
+    for (final locale in AppLocalizations.supportedLocales) {
+      final message = localizedTerminalMountErrorForLanguage(
+        locale.languageCode,
+        error,
+      );
+      expect(message, contains('8'));
+      expect(message, isNot(contains('{max}')));
+      final global = localizedTerminalMountErrorForLanguage(
+        locale.languageCode,
+        TerminalMountStateError(TerminalMountCode.sshPoolFull, '', {'max': 8}),
+      );
+      expect(message, isNot(global));
+    }
+  });
+
   testWidgets(
     'session errors retain contracts and render session values in each locale',
     (tester) async {
@@ -34,9 +55,8 @@ void main() {
       expect(errors.first, isA<StateError>());
       expect(
         errors.first.toString(),
-        StateError(
-          'SSH session pool is full (max 5 concurrent sessions).',
-        ).toString(),
+        StateError('SSH session pool is full (max 5 concurrent sessions).')
+            .toString(),
       );
       expect(errors.last, isA<ArgumentError>());
       expect(

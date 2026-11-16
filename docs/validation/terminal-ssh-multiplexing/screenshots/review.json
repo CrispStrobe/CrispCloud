@@ -1,0 +1,134 @@
+{
+  "recorded_utc": "2026-11-16T08:41:53.738737+00:00",
+  "scope": "Five actual PNG captures of production TerminalTabs and TerminalPanel widgets driven by an in-memory synthetic transport. Visual review only; no live SSH transport or platform acceptance is established by these images.",
+  "capture_test": "test/ssh_connection_sharing_visual_test.dart",
+  "capture_command": [
+    "../toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=2",
+    "--reporter",
+    "expanded",
+    "--dart-define=SSH_SHARING_VISUALS=true",
+    "test/ssh_connection_sharing_widget_test.dart",
+    "test/terminal_tabs_test.dart",
+    "test/terminal_arrangements_widget_test.dart",
+    "test/ssh_tmux_panel_lifecycle_test.dart",
+    "test/ssh_connection_sharing_visual_test.dart"
+  ],
+  "capture_log": "../focused/sharing-widgets-visuals.log",
+  "capture_log_sha256": "bf74122d0e48d3f05d275e8911e2bc17279fe840ef3026e0b4a721d4378edcde",
+  "source_snapshot": "visual-source-snapshot.json",
+  "source_snapshot_sha256": "6a101f7385ea18a67644c051e852bba99a7fdf038e1da3b03bf9ccdf66ddb6f2",
+  "source_identity_limit": "Focused executions occurred before this packaging snapshot. Their stdout does not contain an execution-time full source inventory. This snapshot must not be represented as proof of a frozen full application run.",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width_px": 1180,
+      "height_px": 700
+    },
+    {
+      "name": "compact",
+      "width_px": 320,
+      "height_px": 320
+    }
+  ],
+  "fixture": {
+    "transport": "In-memory _Connection implements TerminalConnection and TerminalConnectionSharing; no socket is opened.",
+    "endpoint": "developer@build.example.net (synthetic)",
+    "output": "Deterministic fixture strings, including example build output and an independent shell prompt.",
+    "fonts": [
+      "SharingRoboto loaded from assets/fonts/Roboto-Regular.ttf",
+      "AppMono loaded from assets/fonts/RobotoMono-Regular.ttf",
+      "MaterialIcons loaded from Flutter material font asset"
+    ],
+    "capture_pixel_ratio": 1,
+    "platform_limit": "A Linux Flutter widget-test renderer with two viewport sizes; not browser runtime, a packaged desktop application or a physical mobile device."
+  },
+  "review": {
+    "performed": true,
+    "reviewer": "parity_review implementation agent",
+    "method": "Opened and visually inspected each original PNG individually after the successful widget cohort; copied originals without image modification.",
+    "findings": [
+      "All three explicit shared SSH actions are readable at desktop and compact widths.",
+      "Independent desktop terminal output and shared-route badges are visible.",
+      "Close confirmation accurately discloses remaining shared-route ownership.",
+      "At compact width the active pane is retained and the workspace menu remains scrollable."
+    ],
+    "limits": [
+      "This inspection covers English labels only; translation completeness and placeholder preservation are behavioral-test assertions, not separate locale screenshots.",
+      "The fixture font set does not qualify platform font fallback; existing auxiliary keyboard-row glyphs appear as fallback boxes in desktop captures.",
+      "Root independent visual review, full terminal cohort, optimized web build and complete source-identity checks are separate."
+    ]
+  },
+  "screenshots": [
+    {
+      "file": "shared-shell-menu-desktop.png",
+      "source": "build/ssh-sharing-visuals/shared-shell-menu-desktop.png",
+      "sha256": "c67c9e178dc3d2dd06fd82203af94399e2cfa0df89953e92e5f8582a48678e23",
+      "bytes": 41118,
+      "width_px": 1180,
+      "height_px": 700,
+      "pixel_ratio": 1,
+      "source_file_mtime_utc": "2026-11-16T08:33:50.839053+00:00",
+      "reviewed": true,
+      "reviewer": "parity_review implementation agent",
+      "review_finding": "Desktop workspace menu exposes explicit shared shell and shared split actions before ordinary pane actions."
+    },
+    {
+      "file": "shared-shell-split-desktop.png",
+      "source": "build/ssh-sharing-visuals/shared-shell-split-desktop.png",
+      "sha256": "ad137d14e18612365afd60761735e108a73f63eecf0a37ab16457ee423e91625",
+      "bytes": 43246,
+      "width_px": 1180,
+      "height_px": 700,
+      "pixel_ratio": 1,
+      "source_file_mtime_utc": "2026-11-16T08:33:51.179049+00:00",
+      "reviewed": true,
+      "reviewer": "parity_review implementation agent",
+      "review_finding": "Two production terminal panels render independent fixture output and shared-route badges."
+    },
+    {
+      "file": "shared-shell-close-desktop.png",
+      "source": "build/ssh-sharing-visuals/shared-shell-close-desktop.png",
+      "sha256": "193c1289ad0d805c13d0b60a3320ba4aa521e4517bfc8caf0639792aa154d4ad",
+      "bytes": 58468,
+      "width_px": 1180,
+      "height_px": 700,
+      "pixel_ratio": 1,
+      "source_file_mtime_utc": "2026-11-16T08:33:51.303048+00:00",
+      "reviewed": true,
+      "reviewer": "parity_review implementation agent",
+      "review_finding": "Close confirmation explains independent terminal release and the route resources retained by remaining terminals."
+    },
+    {
+      "file": "shared-shell-compact.png",
+      "source": "build/ssh-sharing-visuals/shared-shell-compact.png",
+      "sha256": "c0966292d3bd61a8ef3111972ce67ff6f9f40f33e149c43eda05db7646671219",
+      "bytes": 11467,
+      "width_px": 320,
+      "height_px": 320,
+      "pixel_ratio": 1,
+      "source_file_mtime_utc": "2026-11-16T08:33:51.495046+00:00",
+      "reviewed": true,
+      "reviewer": "parity_review implementation agent",
+      "review_finding": "Compact workspace displays the active terminal, keeps the shared-route badge visible and collapses the split."
+    },
+    {
+      "file": "shared-shell-menu-compact.png",
+      "source": "build/ssh-sharing-visuals/shared-shell-menu-compact.png",
+      "sha256": "cbbd889b617b3ab961b6073629002753122d6233dc3161ebaf6ee8b4a3055ccd",
+      "bytes": 18058,
+      "width_px": 320,
+      "height_px": 320,
+      "pixel_ratio": 1,
+      "source_file_mtime_utc": "2026-11-16T08:33:52.003041+00:00",
+      "reviewed": true,
+      "reviewer": "parity_review implementation agent",
+      "review_finding": "Compact scrollable workspace menu keeps all three explicit shared SSH actions visible."
+    }
+  ],
+  "github_actions_queried_or_awaited": false,
+  "packaging_invoked_sdk": false
+}

@@ -1,0 +1,39 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart
+00:00 +0: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a sibling gets its own emulator, input and lifecycle
+00:00 +1: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a captured factory rejects a replaced source before acquiring
+00:00 +2: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a captured factory rejects a disconnected source
+00:00 +3: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a captured factory rechecks route availability at use time
+00:00 +4: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: source disposal after acquisition preserves the pending sibling
+00:00 +5: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: destination cancellation releases the pending lease before a remote reply
+00:00 +6: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: replacing a pending opening cancels only its reserved lease
+00:00 +7: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: disposal cancels a reserved lease while the remote opener is silent
+00:00 +8: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: ordinary transports keep the capability absent
+00:00 +9: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: one opening cannot be claimed by two targets
+00:00 +10: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: reclaiming an opening on its own target does not cancel it
+00:00 +11: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: a late failed cancellation remains owned after disconnect completed
+00:00 +12: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: failed opening cancellation remains retryable before replacement
+00:00 +13: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_connection_sharing_test.dart: plain sibling metadata strips every secret and multiplexer option
+00:00 +14: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: SSH adapter reserves a new ID and always opens an ordinary shell
+00:00 +15: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: native tmux adapter opens a plain sibling without using its control client
+00:00 +16: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: opening failure releases the sibling and preserves the source
+00:00 +17: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: a closed source cannot create a sibling
+00:00 +18: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: source can close while the separately reserved channel opens
+00:00 +19: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_terminal_adapters_test.dart: cancellation closes the acquired child before a remote channel reply
+00:00 +20: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: interprets cursor controls, color and alternate screen from the transport
+00:00 +21: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: interprets cursor controls, color and alternate screen from the transport
+00:00 +22: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: keys and bracketed paste reach the PTY without line submission or local echo
+00:00 +23: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: terminal answers device-attribute and cursor queries over its transport
+00:00 +24: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: uses initial size and catches layout changes during connection
+00:00 +25: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: restart rejects a late connection and never mixes its output
+00:00 +26: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: disconnect during connection disposes the eventual process
+00:00 +27: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: disposal during connection cannot revive a session
+00:00 +28: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: finished shell preserves trailing output and exit code
+00:00 +29: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: disconnect can close a process after output EOF but before its exit
+00:00 +30: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: transport errors close the session and retain output for inspection
+00:00 +31: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: asynchronous input failure is handled rather than escaping the event loop
+00:00 +32: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: queued input from a closed shell never reaches a new one
+00:00 +33: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: client platform is set and Windows reflow applies only to local PTYs
+00:00 +34: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_session_test.dart: scrollback remains bounded for long-running jobs
+00:00 +35: All tests passed!

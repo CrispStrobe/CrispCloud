@@ -197,8 +197,12 @@ class TerminalSession extends ChangeNotifier {
     TerminalConnectionOpening opening, {
     required TerminalSessionKind kind,
     String? label,
-  }) =>
-      connect(opening.open, kind: kind, label: label, openingCleanup: opening);
+  }) => connect(
+    opening.claim(),
+    kind: kind,
+    label: label,
+    openingCleanup: opening,
+  );
 
   int get sharedConnectionSessionCount {
     final connection = _connection;
@@ -299,6 +303,11 @@ class TerminalSession extends ChangeNotifier {
         openingCleanup: openingCleanup,
       );
     } finally {
+      // A destination may cancel before the adapter registers the child-ID
+      // release callback. Revisit the opening when it settles so a late failed
+      // release remains tracked and retryable even after a generation change.
+      // Successful adapters transfer ownership and unregister before returning.
+      if (openingCleanup != null) await _release(openingCleanup, null);
       final removed = _pendingOpenings.remove(openingCleanup);
       if (removed && !_disposed) notifyListeners();
     }
@@ -528,7 +537,7 @@ class TerminalSession extends ChangeNotifier {
   }
 
   Future<void> _release(
-    TerminalConnection? connection,
+    TerminalCloseable? connection,
     StreamSubscription<String>? subscription,
   ) async {
     // Register shutdown before cancellation: a stream's onCancel may itself

@@ -2,8 +2,8 @@
   "files": {
     "lib/src/ssh_agent.dart": "631817f31647692897868b5d608c822772ddf5777606e500c9b80537cbce6d37",
     "lib/src/ssh_channel.dart": "ddee287d90cbb75f91c45aad1b90e88ecf126af4337b523db05a6edc170984e2",
-    "lib/src/ssh_client.dart": "db86b25cf02d10437afd6d3e5742d78baac88517560fd1e233974802f30230e9",
+    "lib/src/ssh_client.dart": "07aa54cd6c7ae67290be75c78611614894f1411177eab2caa192954584c33a76",
     "lib/src/ssh_transport.dart": "5d3c29e612d323c70d9c9c5c72c44973f439e7f71f8437cfc6eed73abf1ef834"
   },
-  "patch_sha256": "06a6d022c1cad5b9d1a4d554468fd6b743e72b44154fe2de0b9329f40bf5d8f8"
+  "patch_sha256": "b1f578cc5a3024ec49830ceeb07db000f8ad23ef1fd2d4a2729a962efbfa6011"
 }

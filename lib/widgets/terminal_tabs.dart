@@ -275,7 +275,7 @@ class _TerminalTabsState extends ConsumerState<TerminalTabs> {
       request.opening,
       kind: TerminalSessionKind.ssh,
       label: config == null
-          ? request.source.session.label
+          ? context.sshSharingTr('New SSH shell')
           : '${config.username}@${config.host}',
     );
   }

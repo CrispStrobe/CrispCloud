@@ -170,6 +170,7 @@ class _SessionState {
   final commands = <SSHSession, TerminalOutput>{};
   final closeCallbacks = <void Function()>{};
   void Function()? cancelShellOpen;
+  int pendingChannels = 0;
 
   _SessionState({required this.session, required this.route});
 }
@@ -182,6 +183,8 @@ class _SshClientRoute {
   final int generation;
   DateTime lastActivityAt;
   final sessionIds = <String>{};
+  final channels = <SSHSession, _SessionState>{};
+  int pendingChannels = 0;
   final clients = <SSHClient>[];
   final _sockets = <SSHClient, SSHSocket>{};
   SSHSocket? _pendingSocket;
@@ -309,6 +312,11 @@ class SshTerminalService {
   /// independently impose a lower channel limit; a rejection affects only
   /// the new session, never its existing siblings.
   static const int maxSharedSessions = 8;
+
+  /// Includes remote opens that have been canceled locally but have not yet
+  /// produced a channel. A silent peer cannot turn repeated canceled tabs or
+  /// commands into an unbounded queue on a surviving shared connection.
+  static const int maxChannelsPerConnection = 32;
 
   /// Default idle timeout after which sessions are automatically closed.
   static const Duration defaultIdleTimeout = Duration(minutes: 30);
@@ -745,6 +753,7 @@ class SshTerminalService {
     final state = _sessions[sessionId];
     return state != null &&
         _isActive(state) &&
+        _hasChannelCapacity(state.route) &&
         state.route.sessionIds.length < maxSharedSessions;
   }
 
@@ -779,9 +788,10 @@ class SshTerminalService {
       );
     }
     final route = source.route;
+    _checkChannelCapacity(route);
     if (route.sessionIds.length >= maxSharedSessions) {
       throw TerminalMountStateError(
-        TerminalMountCode.sshPoolFull,
+        TerminalMountCode.sshSharedPoolFull,
         'This SSH connection already has $maxSharedSessions sessions.',
         {'max': maxSharedSessions},
       );
@@ -880,10 +890,13 @@ class SshTerminalService {
       // Own the channel explicitly: client.run hides it, so disconnecting
       // one logical session could otherwise leave its command alive on a
       // transport retained by a sibling. Late opens are released as well.
-      final opening = client.execute(command, pty: null);
+      final opening = _requestChannel(
+        state,
+        () => client.execute(command, pty: null),
+      );
       unawaited(
         opening.then<void>((opened) {
-          if (!current()) opened.close();
+          if (!current()) _closeChannel(opened, state.route);
         }, onError: (Object _, StackTrace __) {}),
       );
       final opened = await Future.any<SSHSession>([
@@ -893,7 +906,7 @@ class SshTerminalService {
         }),
       ]);
       channel = opened;
-      if (!current() || !_isActive(state)) {
+      if (!current()) {
         throw StateError('SSH command was cancelled');
       }
       final commandOutput = TerminalOutput([
@@ -926,20 +939,12 @@ class SshTerminalService {
       state.closeCallbacks.remove(cancel);
       if (channel != null) {
         state.commands.remove(channel);
-        try {
-          channel.close();
-        } catch (_) {}
+        _closeChannel(channel, state.route);
       }
       try {
         await output?.dispose();
       } catch (_) {}
-      if (current() &&
-          !state.route.usable &&
-          state.commands.isEmpty &&
-          state.shellOutput == null &&
-          state.tmuxControlOutput == null) {
-        await disconnect(sessionId);
-      }
+      _reapClosedSession(state);
     }
   }
 
@@ -974,9 +979,7 @@ class SshTerminalService {
     StreamSubscription<Uint8List>? stderrSubscription;
 
     void closeChannel(SSHSession? session) {
-      try {
-        session?.close();
-      } catch (_) {}
+      _closeChannel(session, state.route);
     }
 
     void fail(Object error) {
@@ -1039,7 +1042,8 @@ class SshTerminalService {
     });
 
     try {
-      final request = Future<SSHSession>.sync(
+      final request = _requestChannel(
+        state,
         () => state.client.execute(sshMultiplexerListCommand(kind)),
       );
       unawaited(
@@ -1130,11 +1134,11 @@ class SshTerminalService {
     state.cancelShellOpen = cancel;
     state.closeCallbacks.add(cancel);
     try {
-      final opening = Future<SSHSession>.sync(open);
+      final opening = _requestChannel(state, open);
       unawaited(
         opening.then<void>((channel) {
           if (revoked || !_isCurrentShell(id, state, generation)) {
-            channel.close();
+            _closeChannel(channel, state.route);
           }
         }, onError: (Object _, StackTrace __) {}),
       );
@@ -1191,7 +1195,7 @@ class SshTerminalService {
     state.shellOutput = null;
     state.tmuxControlOutput = null;
     state.shellSession = null;
-    previousShell?.close();
+    _closeChannel(previousShell, state.route);
     await previousOutput?.dispose();
     await previousControl?.dispose();
     if (!_isCurrentShell(sessionId, state, generation) || !_isActive(state)) {
@@ -1219,8 +1223,8 @@ class SshTerminalService {
       }
       rethrow;
     }
-    if (!_isCurrentShell(sessionId, state, generation) || !_isActive(state)) {
-      shell.close();
+    if (!_isCurrentShell(sessionId, state, generation)) {
+      _closeChannel(shell, state.route);
       throw StateError('SSH shell start was cancelled');
     }
     state.shellSession = shell;
@@ -1282,7 +1286,7 @@ class SshTerminalService {
     state.shellSession = null;
     state.shellOutput = null;
     state.tmuxControlOutput = null;
-    previousShell?.close();
+    _closeChannel(previousShell, state.route);
     await previousOutput?.dispose();
     await previousControl?.dispose();
     bool current() => _isCurrentShell(sessionId, state, generation);
@@ -1302,8 +1306,8 @@ class SshTerminalService {
       if (current()) await disconnect(sessionId);
       rethrow;
     }
-    if (!current() || !_isActive(state)) {
-      shell.close();
+    if (!current()) {
+      _closeChannel(shell, state.route);
       throw StateError('tmux control start was cancelled');
     }
     state.shellSession = shell;
@@ -1447,6 +1451,85 @@ class SshTerminalService {
     }
   }
 
+  bool _hasChannelCapacity(_SshClientRoute route) {
+    var retained = route.channels.length;
+    try {
+      // Local CHANNEL_CLOSE completes our streams, but the SSH client retains
+      // its protocol entry until the peer acknowledges. Those entries must
+      // still consume admission or a silent peer can accumulate tombstones.
+      // Other channel types conservatively count toward new terminal opens.
+      final protocolCount = route.clients.last.retainedChannelCount;
+      if (protocolCount > retained) retained = protocolCount;
+    } on NoSuchMethodError {
+      // Older injected clients expose only the service-owned session API.
+    }
+    return retained + route.pendingChannels < maxChannelsPerConnection;
+  }
+
+  void _checkChannelCapacity(_SshClientRoute route) {
+    if (_hasChannelCapacity(route)) return;
+    throw TerminalMountStateError(
+      TerminalMountCode.sshChannelLimit,
+      'This SSH connection has too many active or unanswered channel requests. '
+      'Close unused sessions or reconnect.',
+    );
+  }
+
+  Future<SSHSession> _requestChannel(
+    _SessionState state,
+    Future<SSHSession> Function() open,
+  ) async {
+    _requireActive(state);
+    final route = state.route;
+    _checkChannelCapacity(route);
+    route.pendingChannels++;
+    state.pendingChannels++;
+    try {
+      final channel = await open();
+      // Establish ownership before resolving to the caller. The transport can
+      // end in the same packet as final channel data/status, before a shell or
+      // command has had a chance to subscribe to that already-buffered output.
+      route.channels[channel] = state;
+      return channel;
+    } finally {
+      // A canceled logical owner does not free this admission slot until the
+      // peer actually resolves its request. Late channels are destroyed by
+      // the original owner's completion handler.
+      route.pendingChannels--;
+      state.pendingChannels--;
+      _reapClosedSession(state);
+    }
+  }
+
+  void _closeChannel(SSHSession? session, _SshClientRoute route) {
+    if (session == null) return;
+    var failed = false;
+    try {
+      // SSHSession.close() only half-closes stdin while a quiet peer can keep
+      // output open forever. A logical session must release its whole channel
+      // without closing the transport retained by its sibling terminals.
+      session.channel.destroy();
+    } on NoSuchMethodError {
+      // Keep the existing injected SSHSession test/embedding adapters, which
+      // provide close() but do not expose a dartssh2 protocol channel.
+      try {
+        session.close();
+      } catch (_) {
+        failed = true;
+      }
+    } catch (_) {
+      failed = true;
+    }
+    final owner = route.channels.remove(session);
+    if (failed) {
+      // If a channel cannot be revoked, retaining the authenticated route
+      // could leave an unowned remote command. End the route as a fallback.
+      _clientClosed(route);
+      unawaited(route.close());
+    }
+    if (owner != null) _reapClosedSession(owner);
+  }
+
   _SessionState _requireSession(String sessionId) {
     final state = _sessions[sessionId];
     if (state == null) {
@@ -1496,11 +1579,19 @@ class SshTerminalService {
       state.session = state.session.copyWith(connected: false);
       // Preserve final output already queued in each channel. Each owner
       // releases independently after both its output and status have drained.
-      if (state.shellOutput == null &&
-          state.tmuxControlOutput == null &&
-          state.commands.isEmpty) {
-        unawaited(disconnect(id));
-      }
+      _reapClosedSession(state);
+    }
+  }
+
+  void _reapClosedSession(_SessionState state) {
+    if (identical(_sessions[state.session.id], state) &&
+        !state.route.usable &&
+        state.pendingChannels == 0 &&
+        !state.route.channels.containsValue(state) &&
+        state.shellOutput == null &&
+        state.tmuxControlOutput == null &&
+        state.commands.isEmpty) {
+      unawaited(disconnect(state.session.id));
     }
   }
 
@@ -1518,13 +1609,9 @@ class SshTerminalService {
     final routeClosing = state.route.sessionIds.isEmpty
         ? state.route.close()
         : null;
-    try {
-      state.shellSession?.close();
-    } catch (_) {}
+    _closeChannel(state.shellSession, state.route);
     for (final discovery in state.discoveryChannels.toList()) {
-      try {
-        discovery.close();
-      } catch (_) {}
+      _closeChannel(discovery, state.route);
     }
     try {
       await state.shellOutput?.dispose();
@@ -1533,14 +1620,13 @@ class SshTerminalService {
       await state.tmuxControlOutput?.dispose();
     } catch (_) {}
     for (final command in state.commands.entries.toList()) {
-      try {
-        command.key.close();
-      } catch (_) {}
+      _closeChannel(command.key, state.route);
       try {
         await command.value.dispose();
       } catch (_) {}
     }
     await routeClosing;
+    if (state.route.closed) await state.route.close();
   }
 
   void _sweepIdle() {

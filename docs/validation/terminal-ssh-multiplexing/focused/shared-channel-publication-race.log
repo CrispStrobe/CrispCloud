@@ -1,0 +1,28 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_channel_cleanup_test.dart
+00:00 +0: execute retains queued final output when channel and transport finish during open
+ℹ️ [SshTerminalService] Session ho7k2ouao70 established to shared.example:22
+ℹ️ [SshTerminalService] execute(ho7k2ouao70)
+ℹ️ [SshTerminalService] Disconnecting session ho7k2ouao70
+ℹ️ [SshTerminalService] Disconnecting session ho7k2oug8j1
+❌ [SshTerminalService] execute error
+  Error: Bad state: SSH command was cancelled
+00:00 +0 -1: execute retains queued final output when channel and transport finish during open [E]
+  Exception: Command execution failed: Bad state: SSH command was cancelled
+  package:crisp_cloud/services/ssh_terminal_service.dart 932:7  SshTerminalService.execute
+  
+00:00 +0 -1: shell retains queued final output when channel and transport finish during open
+ℹ️ [SshTerminalService] Session ho7k2ovlob0 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7k2ovlob0)
+ℹ️ [SshTerminalService] Disconnecting session ho7k2ovlob0
+ℹ️ [SshTerminalService] Disconnecting session ho7k2ovlwx1
+00:00 +0 -2: shell retains queued final output when channel and transport finish during open [E]
+  Bad state: SSH shell start was cancelled
+  package:crisp_cloud/services/ssh_terminal_service.dart 1233:7  SshTerminalService.startShell
+  
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_channel_cleanup_test.dart: execute retains queued final output when channel and transport finish during open
+  /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_channel_cleanup_test.dart: shell retains queued final output when channel and transport finish during open

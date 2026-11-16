@@ -410,6 +410,10 @@ jobs:
           test/tmux_control_protocol_test.dart test/tmux_control_client_test.dart
           test/tmux_control_workspace_test.dart test/ssh_native_tmux_persistence_test.dart
           test/terminal_input_budget_test.dart test/ssh_tmux_panel_lifecycle_test.dart
+          test/ssh_connection_sharing_test.dart test/terminal_connection_sharing_test.dart
+          test/ssh_shared_terminal_adapters_test.dart test/ssh_connection_sharing_widget_test.dart
+          test/ssh_shared_forwarding_profiles_test.dart
+          test/ssh_shared_channel_cleanup_test.dart
           test/ssh_agent_channel_test.dart test/ssh_agent_profiles_test.dart
           test/ssh_agent_test.dart test/ssh_agent_widget_test.dart
           test/ssh_public_key_auth_test.dart test/ssh_forwarding_profiles_test.dart
@@ -666,6 +670,10 @@ jobs:
           test/tmux_control_protocol_test.dart test/tmux_control_client_test.dart
           test/tmux_control_workspace_test.dart test/ssh_native_tmux_persistence_test.dart
           test/terminal_input_budget_test.dart test/ssh_tmux_panel_lifecycle_test.dart
+          test/ssh_connection_sharing_test.dart test/terminal_connection_sharing_test.dart
+          test/ssh_shared_terminal_adapters_test.dart test/ssh_connection_sharing_widget_test.dart
+          test/ssh_shared_forwarding_profiles_test.dart
+          test/ssh_shared_channel_cleanup_test.dart
           test/ssh_agent_channel_test.dart test/ssh_agent_profiles_test.dart
           test/ssh_agent_route_test.dart test/ssh_agent_test.dart
           test/ssh_agent_widget_test.dart test/ssh_public_key_auth_test.dart
@@ -793,6 +801,10 @@ jobs:
           test/tmux_control_protocol_test.dart test/tmux_control_client_test.dart
           test/tmux_control_workspace_test.dart test/ssh_native_tmux_persistence_test.dart
           test/terminal_input_budget_test.dart test/ssh_tmux_panel_lifecycle_test.dart
+          test/ssh_connection_sharing_test.dart test/terminal_connection_sharing_test.dart
+          test/ssh_shared_terminal_adapters_test.dart test/ssh_connection_sharing_widget_test.dart
+          test/ssh_shared_forwarding_profiles_test.dart
+          test/ssh_shared_channel_cleanup_test.dart
           test/ssh_agent_channel_test.dart test/ssh_agent_profiles_test.dart
           test/ssh_agent_route_test.dart test/ssh_agent_test.dart
           test/ssh_agent_widget_test.dart test/ssh_public_key_auth_test.dart

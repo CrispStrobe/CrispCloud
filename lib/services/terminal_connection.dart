@@ -47,6 +47,7 @@ abstract interface class TerminalConnectionSharing {
 
   /// Reserves a new transport lease before awaiting the remote shell channel.
   /// The returned connection owns that lease independently of its source.
+  /// Unregister startup cancellation when ownership transfers to the result.
   Future<TerminalConnection> openSibling(
     int columns,
     int rows, {
@@ -87,10 +88,25 @@ class TerminalConnectionCancellation {
 /// A factory and its cancellation authority travel together. Existing plain
 /// factories remain supported for transports without cancelable startup.
 class TerminalConnectionOpening implements TerminalCloseable {
-  TerminalConnectionOpening(this.open, this.cancellation);
+  TerminalConnectionOpening(TerminalConnectionFactory open, this.cancellation)
+    : _open = open;
 
-  final TerminalConnectionFactory open;
+  final TerminalConnectionFactory _open;
   final TerminalConnectionCancellation cancellation;
+  bool _claimed = false;
+
+  /// Exactly one destination can claim this opening, and its factory can run
+  /// once. Reusing a menu snapshot must never join two cancellation owners.
+  TerminalConnectionFactory claim() {
+    if (_claimed) throw StateError('Terminal opening has already been claimed');
+    _claimed = true;
+    var opened = false;
+    return (columns, rows) {
+      if (opened) throw StateError('Terminal opening has already been started');
+      opened = true;
+      return _open(columns, rows);
+    };
+  }
 
   @override
   Future<void> close() => cancellation.cancel();

@@ -277,6 +277,14 @@ rejected new shell leaves existing shells usable. The 30-minute idle timeout is
 shared: activity from any shell or port forward keeps the route alive.
 Canceling a new shell releases its reserved session promptly, even when the
 server has not answered the channel request; a later channel is closed.
+New terminal channel requests have a 32-slot admission budget on the route.
+Unanswered opens and locally closed channels still awaiting the peer's close
+acknowledgement remain charged. Other retained channels also count when admitting
+a new terminal request, so repeated terminal cancellation cannot grow the SSH
+client's channel table indefinitely while the peer is silent.
+The limit leaves existing shell input usable; close unused sessions or reconnect
+if a server has stopped answering. Channel teardown sends a complete SSH close
+instead of waiting indefinitely after closing only its input side.
 
 Sharing is explicit and lasts while the authenticated route is live. Matching
 destinations never reuse each other's authentication automatically. After the
@@ -462,6 +470,13 @@ current listeners running. **Delete and stop** stops matching listeners across
 open sessions and removes the recipe. If cleanup cannot be confirmed, the
 recipe remains available and the error is shown. These actions also cancel
 queued starts, so a late result cannot recreate a deleted or replaced recipe.
+
+Shared terminals coordinate starts and stops through their common connection.
+Concurrent starts of the same profile resolve to one listener. If the initiating
+terminal closes during automatic startup, another eligible shared terminal can
+finish it. Closing a profile panel does not abandon a pending stop, edit or
+deletion; a late listener is still cleaned up. A manually requested start keeps
+its authority even when automatic startup joins the same operation.
 
 Startup errors stay beside the saved profile and failed listener, and automatic
 startup failures also appear as an in-app message. A failed listener does not

@@ -1,0 +1,10 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_shared_channel_cleanup_test.dart
+00:00 +0: disconnect destroys a silent shell without closing the shared transport
+ℹ️ [SshTerminalService] Session ho7jzxdeq10 established to shared.example:22
+ℹ️ [SshTerminalService] startShell(ho7jzxdeq10)
+ℹ️ [SshTerminalService] Disconnecting session ho7jzxdeq10
+ℹ️ [SshTerminalService] startShell(ho7jzxdkvz1)
+ℹ️ [SshTerminalService] Disconnecting session ho7jzxdkvz1
+00:00 +1: All tests passed!

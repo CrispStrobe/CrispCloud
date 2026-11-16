@@ -73,7 +73,7 @@ void main() {
         (_, _) async => replacement,
         kind: TerminalSessionKind.ssh,
       );
-      await expectLater(opening.open(80, 24), throwsStateError);
+      await expectLater(opening.claim()(80, 24), throwsStateError);
       expect(original.openSizes, isEmpty);
       expect(replacement.openSizes, isEmpty);
     },
@@ -84,7 +84,7 @@ void main() {
     await source.disconnect();
     expect(source.siblingConnectionOpening, isNull);
     expect(source.sharedConnectionSessionCount, 0);
-    await expectLater(opening.open(80, 24), throwsStateError);
+    await expectLater(opening.claim()(80, 24), throwsStateError);
     expect(original.openSizes, isEmpty);
   });
 
@@ -92,7 +92,7 @@ void main() {
     final opening = source.siblingConnectionOpening!;
     route.available = false;
     expect(source.siblingConnectionOpening, isNull);
-    await expectLater(opening.open(80, 24), throwsStateError);
+    await expectLater(opening.claim()(80, 24), throwsStateError);
     expect(original.openSizes, isEmpty);
   });
 
@@ -190,6 +190,118 @@ void main() {
     expect(target.siblingConnectionOpening, isNull);
     expect(target.sharedConnectionSessionCount, 0);
   });
+
+  test('one opening cannot be claimed by two targets', () async {
+    original.openGate = Completer<void>();
+    final opening = source.siblingConnectionOpening!;
+    final first = target.connectOpening(opening, kind: TerminalSessionKind.ssh);
+    await _events();
+    final other = TerminalSession();
+    addTearDown(other.dispose);
+    expect(
+      () => other.connectOpening(opening, kind: TerminalSessionKind.ssh),
+      throwsStateError,
+    );
+    expect(other.status, TerminalSessionStatus.idle);
+    await other.disconnect();
+    expect(route.connections.last.closed, isFalse);
+    original.openGate!.complete();
+    await first;
+    expect(target.isConnected, isTrue);
+  });
+
+  test('reclaiming an opening on its own target does not cancel it', () async {
+    original.openGate = Completer<void>();
+    final opening = source.siblingConnectionOpening!;
+    final first = target.connectOpening(opening, kind: TerminalSessionKind.ssh);
+    await _events();
+    final identity = target.connectionIdentity;
+    expect(
+      () => target.connectOpening(opening, kind: TerminalSessionKind.ssh),
+      throwsStateError,
+    );
+    expect(target.connectionIdentity, same(identity));
+    expect(target.isConnecting, isTrue);
+    original.openGate!.complete();
+    await first;
+    expect(target.isConnected, isTrue);
+    expect(route.connections.last.closed, isFalse);
+  });
+
+  test(
+    'a late failed cancellation remains owned after disconnect completed',
+    () async {
+      final registered = Completer<void>();
+      final cancellation = TerminalConnectionCancellation();
+      var cleanupFails = true;
+      var releases = 0;
+      Future<void> release() async {
+        releases++;
+        if (cleanupFails) throw StateError('late cleanup not confirmed');
+      }
+
+      final opening = TerminalConnectionOpening((_, _) async {
+        await registered.future;
+        await cancellation.register(release);
+        throw StateError('canceled opening');
+      }, cancellation);
+      final connecting = target.connectOpening(
+        opening,
+        kind: TerminalSessionKind.ssh,
+      );
+      await _events();
+      await target.disconnect();
+      expect(releases, 0);
+      expect(target.status, TerminalSessionStatus.disconnected);
+      registered.complete();
+      await connecting;
+      expect(releases, greaterThan(0));
+      expect(target.status, TerminalSessionStatus.failed);
+      expect(target.error, isA<TerminalCleanupFailure>());
+      expect(target.canDisconnect, isTrue);
+      cleanupFails = false;
+      await target.disconnect();
+      expect(target.status, TerminalSessionStatus.disconnected);
+      expect(target.canDisconnect, isFalse);
+    },
+  );
+
+  test(
+    'failed opening cancellation remains retryable before replacement',
+    () async {
+      final cancellation = TerminalConnectionCancellation();
+      final pending = Completer<TerminalConnection>();
+      var releases = 0;
+      Future<void> release() async {
+        releases++;
+        if (releases == 1) throw StateError('cleanup not confirmed');
+        if (!pending.isCompleted) {
+          pending.completeError(StateError('cancelled'));
+        }
+      }
+
+      final opening = TerminalConnectionOpening((_, _) async {
+        await cancellation.register(release);
+        return pending.future;
+      }, cancellation);
+      final connecting = target.connectOpening(
+        opening,
+        kind: TerminalSessionKind.ssh,
+      );
+      await _events();
+      await target.disconnect();
+      expect(target.status, TerminalSessionStatus.failed);
+      expect(target.error, isA<TerminalCleanupFailure>());
+      expect(target.canDisconnect, isTrue);
+      expect(releases, 1);
+      await target.disconnect();
+      await connecting.timeout(const Duration(seconds: 1));
+      expect(releases, 2);
+      expect(target.status, TerminalSessionStatus.disconnected);
+      expect(target.canDisconnect, isFalse);
+      expect(source.isConnected, isTrue);
+    },
+  );
 
   test('plain sibling metadata strips every secret and multiplexer option', () {
     final configs = [

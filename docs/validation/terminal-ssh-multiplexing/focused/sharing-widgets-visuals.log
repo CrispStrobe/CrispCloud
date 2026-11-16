@@ -1,0 +1,49 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart
+00:00 +0: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: new SSH shell copies presentation and plain destination only
+00:02 +1: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:02 +2: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:02 +3: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: tabs retain independent buffers, views and input ownership
+00:02 +4: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: ordinary new tab does not acquire SSH sharing authority
+00:03 +5: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: split resize accessibility describes and applies each step
+00:03 +6: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: split resize accessibility describes and applies each step
+00:03 +7: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_widget_test.dart: pending sibling cancellation keeps the original route lease
+00:03 +8: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+00:04 +9: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: split panes are visible and only the clicked pane owns focus
+00:04 +10: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: search stays visible while clicks route typing to either split viewport (variant: TargetPlatform.linux)
+00:05 +11: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:08 +12: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:09 +13: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: save and restore preserve order, names, zoom and resized split
+00:09 +14: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: pane shortcuts split, navigate and zoom without writing to shells
+00:09 +15: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: SSH arrangements stay disconnected and reconnect asks again
+00:09 +16: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: SSH arrangements stay disconnected and reconnect asks again
+00:10 +17: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: SSH arrangements stay disconnected and reconnect asks again
+00:10 +18: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: narrow and short layouts collapse and restore splits without losing sessions
+00:10 +19: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:11 +20: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:11 +21: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:11 +22: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: blocked divider motion preserves saved ratios when the window widens
+00:11 +23: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: failed close keeps the tab available for a cleanup retry
+00:11 +24: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:12 +25: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:13 +26: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: nested arrangements preserve hidden tabs and independent dividers
+00:13 +27: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: macOS command shortcuts also stay inside the workspace
+00:13 +28: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: cancel keeps live sessions and every existing screen
+00:13 +29: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_tabs_test.dart: renaming a tab preserves its connection and other tab labels
+00:13 +30: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:13 +31: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: cleanup failure retains every tab and permits a later retry
+00:14 +32: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: pending connection is kept until its opener settles
+00:14 +33: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: failed load cannot save over an unreadable store
+00:14 +34: /workspace/scratch/b4bccf05666a/CrispCloud/test/terminal_arrangements_widget_test.dart: delete confirms without affecting the current workspace
+00:15 +35: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: caller-owned tmux survives viewport removal and remount
+00:15 +36: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: disconnect retains the readonly workspace across remount
+00:16 +37: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_tmux_panel_lifecycle_test.dart: replacement waits for old pane views before releasing buffers
+00:16 +38: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: capture shared SSH tabs and controls at desktop and compact sizes
+00:17 +39: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: capture shared SSH tabs and controls at desktop and compact sizes
+00:17 +40: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: capture shared SSH tabs and controls at desktop and compact sizes
+00:17 +41: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: capture shared SSH tabs and controls at desktop and compact sizes
+00:18 +42: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: capture shared SSH tabs and controls at desktop and compact sizes
+00:18 +43: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: capture shared SSH tabs and controls at desktop and compact sizes
+00:19 +44: /workspace/scratch/b4bccf05666a/CrispCloud/test/ssh_connection_sharing_visual_test.dart: (tearDownAll)
+00:19 +44: All tests passed!

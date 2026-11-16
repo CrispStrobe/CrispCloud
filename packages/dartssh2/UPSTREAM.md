@@ -15,6 +15,13 @@ SSH terminals, SFTP clients, native hooks, tests, and release builds.
 Four runtime files change: agent framing, client authentication/channel admission,
 channel send completion and transport flush behavior during key reexchange.
 
+`SSHClient.retainedChannelCount` exposes the number of established channels still
+retained in the client, including locally closed channels awaiting the peer's
+close acknowledgement. Unresolved channel-open requests are excluded; callers
+must account for those separately when enforcing a connection-wide resource
+budget. This read-only accessor does not change channel creation, close or packet
+dispatch behavior.
+
 - An inbound agent channel is accepted only after a successfully authenticated
   client has actually requested agent forwarding for a session.
 - At most 16 agent channels are admitted per client, each with a 64 KiB receive

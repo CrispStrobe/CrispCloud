@@ -17,6 +17,12 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE = ROOT / 'docs/validation/terminal-parity-continuation'
 NEW_TESTS = [
+    'test/ssh_connection_sharing_test.dart',
+    'test/terminal_connection_sharing_test.dart',
+    'test/ssh_shared_terminal_adapters_test.dart',
+    'test/ssh_connection_sharing_widget_test.dart',
+    'test/ssh_shared_forwarding_profiles_test.dart',
+    'test/ssh_shared_channel_cleanup_test.dart',
     'test/tmux_control_protocol_test.dart',
     'test/tmux_control_client_test.dart',
     'test/tmux_control_workspace_test.dart',
@@ -83,7 +89,7 @@ def main():
     head = git('rev-parse', 'HEAD')
     if args.phase == 'live':
         suites = ['test/ssh_terminal_live_test.dart', 'test/ssh_port_forwarding_live_test.dart',
-                  'test/ssh_agent_live_test.dart']
+                  'test/ssh_agent_live_test.dart', 'test/ssh_connection_sharing_live_test.dart']
     if args.phase == 'native':
         command = [args.flutter, 'test', '--no-pub', '--concurrency=2',
                    '--reporter=expanded', *suites]
