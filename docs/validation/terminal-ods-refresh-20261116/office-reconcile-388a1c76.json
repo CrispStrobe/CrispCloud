@@ -1,0 +1,11 @@
+{
+  "parents": [
+    "315f4ec2c5263b76b17e9f982bf31157f3918f73",
+    "388a1c76339507d493bab577424affd80732446c"
+  ],
+  "target": "e5e1e9af6beb0972a010d8208c1690a642809113",
+  "managed_files": 2413,
+  "writes": [],
+  "deleted": [],
+  "validation": "Every current file matched a merge-parent manifest or the exact combined canonical source before replacement; standalone parser remained unchanged."
+}
