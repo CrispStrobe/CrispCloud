@@ -462,11 +462,13 @@ final class WordZoteroCitingSession {
         WordZoteroDocumentData.read(document) != _originalData) {
       throw StateError('The Zotero document changed while formatting.');
     }
-    final body = _flowParagraphs(document.sections.expand((s) => s.blocks))
-        .toList();
+    final body = _flowParagraphs(
+      document.sections.expand((s) => s.blocks),
+    ).toList();
     if (body.length != _body.length ||
-        Iterable<int>.generate(body.length)
-            .any((i) => !identical(body[i], _body[i])) ||
+        Iterable<int>.generate(
+          body.length,
+        ).any((i) => !identical(body[i], _body[i])) ||
         _sourceTexts.entries.any((e) => e.key.text != e.value)) {
       throw StateError('The document changed while Zotero was open.');
     }

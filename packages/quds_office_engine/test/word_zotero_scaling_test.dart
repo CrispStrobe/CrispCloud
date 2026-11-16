@@ -60,8 +60,9 @@ List<Map<String, Object>> _fields(WordZoteroCitingSession session) =>
 
 String _citationId(Map<String, Object> field) =>
     (jsonDecode(
-          (field['code'] as String).substring('ITEM CSL_CITATION '.length),
-        ) as Map)['citationID']
+              (field['code'] as String).substring('ITEM CSL_CITATION '.length),
+            )
+            as Map)['citationID']
         as String;
 
 Map<String, Object> _field(WordZoteroCitingSession session, String id) =>
