@@ -35,15 +35,30 @@ class TerminalCleanupFailure implements Exception {
 /// A generation guards every asynchronous operation: closing or restarting
 /// during connection cannot attach a stale process or mix two shells' output.
 class TerminalSession extends ChangeNotifier {
-  TerminalSession() {
+  TerminalSession({int maxLines = 10000, this.maximumPendingInputCodeUnits})
+    : _maxLines = maxLines {
+    if (maxLines < 1 || maxLines > 10000) {
+      throw ArgumentError.value(
+        maxLines,
+        'maxLines',
+        'Invalid scrollback limit',
+      );
+    }
+    if (maximumPendingInputCodeUnits != null &&
+        maximumPendingInputCodeUnits! < 1) {
+      throw ArgumentError('Pending terminal input limit must be positive');
+    }
     _triggerEngine = TerminalTriggerEngine(onMatch: _onTrigger);
-    terminal = _createTerminal(TerminalSessionKind.local);
+    terminal = _createTerminal(TerminalSessionKind.local, _maxLines);
     _bindTerminal();
   }
 
-  static Terminal _createTerminal(TerminalSessionKind kind) =>
+  final int _maxLines;
+  final int? maximumPendingInputCodeUnits;
+
+  static Terminal _createTerminal(TerminalSessionKind kind, int maxLines) =>
       InputAwareTerminal(
-        maxLines: 10000,
+        maxLines: maxLines,
         platform: kIsWeb
             ? TerminalTargetPlatform.web
             : switch (defaultTargetPlatform) {
@@ -150,8 +165,22 @@ class TerminalSession extends ChangeNotifier {
   int? exitCode;
 
   TerminalConnection? _connection;
+  TerminalWorkspaceConnection? _workspaceConnection;
+
+  /// A workspace survives viewport removal and transport disconnect. The
+  /// session releases its buffers only when replaced or explicitly disposed.
+  TerminalWorkspaceConnection? get workspaceConnection => _workspaceConnection;
+
+  void _replaceWorkspace(TerminalWorkspaceConnection? connection) {
+    if (identical(_workspaceConnection, connection)) return;
+    final previous = _workspaceConnection;
+    _workspaceConnection = connection;
+    previous?.disposeWorkspace();
+  }
+
   StreamSubscription<String>? _subscription;
   Future<void> _writes = Future<void>.value();
+  int _pendingInputCodeUnits = 0;
   Future<void> _resizes = Future<void>.value();
   int _generation = 0;
   bool _disposed = false;
@@ -220,8 +249,10 @@ class TerminalSession extends ChangeNotifier {
     final subscription = _subscription;
     final pendingCleanup = _failedCleanup.keys.toList();
     _connection = null;
+    _replaceWorkspace(null);
     _subscription = null;
     _writes = Future<void>.value();
+    _pendingInputCodeUnits = 0;
     _resizes = Future<void>.value();
     this.kind = kind;
     this.label = label;
@@ -233,7 +264,7 @@ class TerminalSession extends ChangeNotifier {
     status = TerminalSessionStatus.connecting;
     final previousTerminal = terminal;
     shellIntegration.dispose();
-    terminal = _createTerminal(kind)..resize(columns, rows);
+    terminal = _createTerminal(kind, _maxLines)..resize(columns, rows);
     _bindTerminal();
     previousTerminal.onOutput = null;
     previousTerminal.onResize = null;
@@ -259,6 +290,11 @@ class TerminalSession extends ChangeNotifier {
         return;
       }
       _connection = connection;
+      _replaceWorkspace(
+        connection is TerminalWorkspaceConnection
+            ? connection as TerminalWorkspaceConnection
+            : null,
+      );
       this.kind = switch (connection.terminalBackend) {
         TerminalBackend.sandbox => TerminalSessionKind.sandbox,
         TerminalBackend.ios => TerminalSessionKind.ios,
@@ -294,13 +330,24 @@ class TerminalSession extends ChangeNotifier {
     final connection = _connection;
     final generation = _generation;
     final lease = _inputLease;
-    if (!isConnected || connection == null || data.isEmpty) return;
+    if (!acceptsDirectInput || connection == null || data.isEmpty) return;
+    final pendingLimit = maximumPendingInputCodeUnits;
+    if (pendingLimit != null &&
+        _pendingInputCodeUnits + data.length > pendingLimit) {
+      _fail(generation, StateError('Pending terminal input exceeds the limit'));
+      return;
+    }
+    _pendingInputCodeUnits += data.length;
     _writes = _writes
         .then((_) async {
-          if (_current(generation) &&
-              isConnected &&
-              (lease == null || lease())) {
-            await connection.write(data);
+          try {
+            if (_current(generation) &&
+                acceptsDirectInput &&
+                (lease == null || lease())) {
+              await connection.write(data);
+            }
+          } finally {
+            if (_current(generation)) _pendingInputCodeUnits -= data.length;
           }
         })
         .catchError((Object error) => _fail(generation, error));
@@ -353,6 +400,7 @@ class TerminalSession extends ChangeNotifier {
   void _fail(int generation, Object failure) {
     if (!_current(generation)) return;
     ++_generation;
+    _pendingInputCodeUnits = 0;
     final connection = _connection;
     final subscription = _subscription;
     _connection = null;
@@ -367,6 +415,7 @@ class TerminalSession extends ChangeNotifier {
   Future<void> disconnect() async {
     if (_disposed) return;
     final generation = ++_generation;
+    _pendingInputCodeUnits = 0;
     final connection = _connection;
     final subscription = _subscription;
     final pendingCleanup = _failedCleanup.keys.toList();
@@ -413,6 +462,12 @@ class TerminalSession extends ChangeNotifier {
       // Still close the process if its output stream already failed.
     }
     await closing;
+    // A late opener or a replaced workspace was never retained by the current
+    // session. Disconnection of the current workspace keeps its screen intact.
+    if (connection is TerminalWorkspaceConnection &&
+        !identical(connection, _workspaceConnection)) {
+      (connection as TerminalWorkspaceConnection).disposeWorkspace();
+    }
     if (!_disposed) {
       if (_failedCleanup.isNotEmpty &&
           _connection == null &&
@@ -451,6 +506,7 @@ class TerminalSession extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     ++_generation;
+    _pendingInputCodeUnits = 0;
     shellIntegration.dispose();
     onUserInput = null;
     terminal.onOutput = null;
@@ -458,6 +514,7 @@ class TerminalSession extends ChangeNotifier {
     final connection = _connection;
     final subscription = _subscription;
     final pendingCleanup = _failedCleanup.keys.toList();
+    _replaceWorkspace(null);
     unawaited(() async {
       await _release(connection, subscription);
       await _retryCleanup(pendingCleanup);

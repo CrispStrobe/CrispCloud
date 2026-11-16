@@ -1,0 +1,162 @@
+[
+  {
+    "name": "clang-19",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+    "sha256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4",
+    "bytes": 116584
+  },
+  {
+    "name": "libclang-cpp19",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+    "sha256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47",
+    "bytes": 13191148
+  },
+  {
+    "name": "libllvm19",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libllvm19_19.1.7-3+b1_amd64.deb",
+    "sha256": "db0d614d61345ca710fb73e75105f1ec6e38898fa7b3aa99fa7eb7d8b0a11d57",
+    "bytes": 25978316
+  },
+  {
+    "name": "libclang-common-19-dev",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+    "sha256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc",
+    "bytes": 739932
+  },
+  {
+    "name": "llvm-19-linker-tools",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/llvm-19-linker-tools_19.1.7-3+b1_amd64.deb",
+    "sha256": "874a0a5cde797cda3e94e9310a0a9958608f526f177637414a8ce9620c804818",
+    "bytes": 1263460
+  },
+  {
+    "name": "llvm-19",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/llvm-19_19.1.7-3+b1_amd64.deb",
+    "sha256": "0b1b7263f4f45e261099240fdbf00fc14b42b88410fd829e041bf83ea45866cb",
+    "bytes": 16385748
+  },
+  {
+    "name": "llvm-19-runtime",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/llvm-19-runtime_19.1.7-3+b1_amd64.deb",
+    "sha256": "84a9dfc277f0914cb84e6cb3d139d3eb3dfe19f06670bbdea4241e8e3d921a4e",
+    "bytes": 550636
+  },
+  {
+    "name": "libclang1-19",
+    "kind": "deb",
+    "version": "1:19.1.7-3+b1",
+    "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang1-19_19.1.7-3+b1_amd64.deb",
+    "sha256": "4e7e2a5fe236e280d32fb529350b3c1cfd9410a964629a57ea079a314c45d7a3",
+    "bytes": 7623496
+  },
+  {
+    "name": "cmake",
+    "kind": "deb",
+    "version": "3.31.6-2",
+    "url": "https://deb.debian.org/debian/pool/main/c/cmake/cmake_3.31.6-2_amd64.deb",
+    "sha256": "dee2fc94973325240604ffbca677a3f16b462fb6520946bd81be1ecbac770a02",
+    "bytes": 11969144
+  },
+  {
+    "name": "cmake-data",
+    "kind": "deb",
+    "version": "3.31.6-2",
+    "url": "https://deb.debian.org/debian/pool/main/c/cmake/cmake-data_3.31.6-2_all.deb",
+    "sha256": "d9060145be892f43cd1888024114ceab019c81479d4b0a3383fe14cebe2295cb",
+    "bytes": 2268208
+  },
+  {
+    "name": "ninja-build",
+    "kind": "deb",
+    "version": "1.12.1-1",
+    "url": "https://deb.debian.org/debian/pool/main/n/ninja-build/ninja-build_1.12.1-1_amd64.deb",
+    "sha256": "bc172ce9270bd6fcd6d5335a83ff9d3c7ba0d13ec624cfdfa1b5aa06901dc453",
+    "bytes": 142132
+  },
+  {
+    "name": "libz3-4",
+    "kind": "deb",
+    "version": "4.13.3-1",
+    "url": "https://deb.debian.org/debian/pool/main/z/z3/libz3-4_4.13.3-1_amd64.deb",
+    "sha256": "71383373523ef62d47eccf660cf6535c3febcbb3f88e54cb7a43124014b57359",
+    "bytes": 8560036
+  },
+  {
+    "name": "libpfm4",
+    "kind": "deb",
+    "version": "4.13.0+git99-gc5587f9-1",
+    "url": "https://deb.debian.org/debian/pool/main/libp/libpfm4/libpfm4_4.13.0+git99-gc5587f9-1_amd64.deb",
+    "sha256": "55f0d470f5bdd63061593180c5b34bcb9cefdb09b4cfc9c67b3cb170b0162525",
+    "bytes": 371144
+  },
+  {
+    "name": "libjsoncpp26",
+    "kind": "deb",
+    "version": "1.9.6-3",
+    "url": "https://deb.debian.org/debian/pool/main/libj/libjsoncpp/libjsoncpp26_1.9.6-3_amd64.deb",
+    "sha256": "fd0b75839fe7b1a08df49e4203b1fb042df4f7d982db8d91c1fd7bdbcd4b1460",
+    "bytes": 81684
+  },
+  {
+    "name": "librhash1",
+    "kind": "deb",
+    "version": "1.4.5-1",
+    "url": "https://deb.debian.org/debian/pool/main/r/rhash/librhash1_1.4.5-1_amd64.deb",
+    "sha256": "9bf56d7d8ce3e7680a0dd8e3cfe8acdf50e0aa3b98b0a907cf744a4d1711af72",
+    "bytes": 132184
+  },
+  {
+    "name": "libuv1t64",
+    "kind": "deb",
+    "version": "1.50.0-2",
+    "url": "https://deb.debian.org/debian/pool/main/libu/libuv1/libuv1t64_1.50.0-2_amd64.deb",
+    "sha256": "5fec8035002e0c745b64d1c5b3e1dc42790d1a77574315b976cf3e4aab9ddc0a",
+    "bytes": 153752
+  },
+  {
+    "name": "libarchive13t64",
+    "kind": "deb",
+    "version": "3.7.4-4+deb13u1",
+    "url": "https://deb.debian.org/debian/pool/main/liba/libarchive/libarchive13t64_3.7.4-4+deb13u1_amd64.deb",
+    "sha256": "12e06195a899e8db371803ed70111fc7302573d3ed84e967d3d48ef2d543ace8",
+    "bytes": 350192
+  },
+  {
+    "name": "rustc",
+    "kind": "rust",
+    "version": "1.100.0 (0ef1bc386 2026-11-09)",
+    "url": "https://static.rust-lang.org/dist/2026-11-12/rustc-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+    "sha256": "f1d0b1dec81dab6f523cd098507763487b0d4bd7fd2c87582f154128719be03b",
+    "bytes": 84955936
+  },
+  {
+    "name": "rust-std",
+    "kind": "rust",
+    "version": "1.100.0 (0ef1bc386 2026-11-09)",
+    "url": "https://static.rust-lang.org/dist/2026-11-12/rust-std-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+    "sha256": "4591b6486594ded52ecd6135db95bf9355bbd3ca7a380888b141528bbcf9a5d4",
+    "bytes": 31283108
+  },
+  {
+    "name": "cargo",
+    "kind": "rust",
+    "version": "0.101.0 (3acc79c0c 2026-11-05)",
+    "url": "https://static.rust-lang.org/dist/2026-11-12/cargo-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+    "sha256": "7e29ce07d7c6e92d1826870575ba27d57fff6cb3e754aa57d99099cb88fab35d",
+    "bytes": 10946408
+  }
+]

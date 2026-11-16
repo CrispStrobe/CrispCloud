@@ -1,0 +1,170 @@
+[
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/environment.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/environment.json",
+    "bytes": 6285,
+    "sha256": "1a91873a414c2d7c2fe7027d1c2975eebf838af31c7336244d5a7bcc662dff32"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/native-downloads.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/native-downloads.json",
+    "bytes": 5889,
+    "sha256": "3d78a1b9821a30a76bc3d96e63a2e13926c819e0d34fbbca82e0fe71050c460b"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/pub-downloads.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/pub-downloads.json",
+    "bytes": 64442,
+    "sha256": "c79616029dfa867b3247dd9470028009745de3b267f645175cb853ca2e149cfa"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/native-probes.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/native-probes.json",
+    "bytes": 1369,
+    "sha256": "cfa3b4e7849be61845a4b0f71cdc7192d174862519ebc03a7f33986b91da6ffb"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/native-probes-initial.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/native-probes-initial.json",
+    "bytes": 1410,
+    "sha256": "53f44f292395b8ca1bffad7a41f5d7843ac7afe64ca84d316355385c97486d88"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/socket-probes.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/socket-probes.json",
+    "bytes": 168,
+    "sha256": "62380530484b74320edf72136e1d87935f7868b70dc57aea2f54f3716c9f21c5"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/tmux-downloads.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/tmux-downloads.json",
+    "bytes": 811,
+    "sha256": "43d07fcfa86982ab6a31f4d4d17fb96bd866410e1b42acf8f1dec014f238c049"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/tmux-native-attempt.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/tmux-native-attempt.json",
+    "bytes": 909,
+    "sha256": "0f5b26f2aa51f7fe7540bf454dda688b32aa032edcd4eef6cba7766c8df31121"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/setup_native.py",
+    "retained": "docs/validation/terminal-tmux-control/environment/setup_native.py",
+    "bytes": 2989,
+    "sha256": "307cffdb2a82fc03a33557243ab1ff47042911e92739e182fcef961e03028fbe"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/warm_pub.py",
+    "retained": "docs/validation/terminal-tmux-control/environment/warm_pub.py",
+    "bytes": 2518,
+    "sha256": "3180d047f3317438b3afed5d6ee29c566bc73875a6b2379c506562d52ddd8f77"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/run",
+    "retained": "docs/validation/terminal-tmux-control/environment/toolchain-run.sh",
+    "bytes": 692,
+    "sha256": "27ec74610eb51997970aee4d260e32518511d9ebb3cb8f55a6b6908e144126aa"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/bin/flutter",
+    "retained": "docs/validation/terminal-tmux-control/environment/flutter-direct-launcher.sh",
+    "bytes": 966,
+    "sha256": "fbc0feb0b270a09bb7394a76d871b9828515b46eaf38c31c1a66e2930ad57464"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/bin/clang",
+    "retained": "docs/validation/terminal-tmux-control/environment/clang-launcher.sh",
+    "bytes": 364,
+    "sha256": "e5012b26d41970e6e728b4126a78c809da6dd8bc64b8c4b7891e39ef6c105455"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/bin/cargo",
+    "retained": "docs/validation/terminal-tmux-control/environment/cargo-launcher.sh",
+    "bytes": 743,
+    "sha256": "980a4c1e67538770984b4613f80609a9fdb9bd6150f830b082834968c9a4d326"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/flutter-bootstrap.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/flutter-bootstrap.log",
+    "bytes": 1415,
+    "sha256": "2ee166cfb466db0fdce2c52c5f88f7203db5667a40068d1ce61b86bfbc631cf1"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/flutter-tool-offline-resolve.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/flutter-tool-offline-resolve.log",
+    "bytes": 2356,
+    "sha256": "9c8df1911e33b7e40f8d4bd541017b7bf28706fedddd025ef2a2a234970e97d1"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/flutter-tool-compile.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/flutter-tool-compile.log",
+    "bytes": 3063,
+    "sha256": "ef7a91193b0339f120e5376c5d69a96f7d50e103dd52ecf74915cbe8274bbb2a"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/flutter-version-final.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/flutter-version-final.json",
+    "bytes": 630,
+    "sha256": "afc8c56fafeeb901907eb783b6c049a8135f2d4fd076c22878b7d9c4457c7871"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/flutter-precache.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/flutter-precache.log",
+    "bytes": 944,
+    "sha256": "fe4a220d8a7812f64866248550f8f6adcb53d2db3e0e7f4599e9693c9db34ac2"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/app-pub-get-online.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/app-pub-get-online.log",
+    "bytes": 93,
+    "sha256": "b781fb4ce1dfa3feec9fbb65563fa386788dce5f42f95a72377771a8a411bfd1"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/app-pub-get-offline.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/app-pub-get-offline.log",
+    "bytes": 1843,
+    "sha256": "0b3b287008a5d1ee2256119d70633bea2117133cb39201cc9b6a0838f4e9f550"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/native-setup.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/native-setup.log",
+    "bytes": 1298,
+    "sha256": "0a582cb932842f7fe83943defc0d0b4bf86191a5fff629bcd81a2e65e7940a7d"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/pub-warm.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/pub-warm.log",
+    "bytes": 9808,
+    "sha256": "4443e427ee814a0b023e81525bfec3df73c777cac216af6d272a012078a7a9f9"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/catalog-cargo-fetch.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/catalog-cargo-fetch.log",
+    "bytes": 1958,
+    "sha256": "9a6ecc929878eebf982ddf461f2a8bd2843834a7517b4814847d092ef5aff8c8"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/storage-cargo-fetch.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/storage-cargo-fetch.log",
+    "bytes": 3624,
+    "sha256": "07d38d25c0d5f5b58d0d05cae562a42da1a70ab0eac56cf1e62698adb24bc8fc"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/logs/native-pty-bootstrap.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/native-pty-bootstrap.log",
+    "bytes": 843,
+    "sha256": "2d609f4d9edcf2d0d3c0b94dc2958acec3e08511000c53e4b587efa7f5ba2233"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/web-preflight/web-resource-preflight.json",
+    "retained": "docs/validation/terminal-tmux-control/environment/web-resource-preflight.json",
+    "bytes": 1990,
+    "sha256": "ef58a4ea2d63acfa5f4be1243420d7d2076b99a587ed5044b28bc8a11258125e"
+  },
+  {
+    "source": "/workspace/scratch/6c8a74f9de7f/toolchain/web-preflight/web-resource-preflight.log",
+    "retained": "docs/validation/terminal-tmux-control/environment/web-resource-preflight.log",
+    "bytes": 13948,
+    "sha256": "f64886032a9e2ea84a069f994f394e118b1e7f1b5f9b8bb18b5e8d13239abe9c"
+  }
+]

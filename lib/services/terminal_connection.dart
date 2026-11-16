@@ -35,6 +35,14 @@ abstract interface class TerminalConnectionMetadata {
 /// active pane can change without replacing the verified SSH connection.
 abstract interface class TerminalWorkspaceConnection {
   bool get acceptsDirectInput;
+
+  /// View state owned by the session rather than one mounted viewport.
+  /// It remains available for read-only inspection after disconnect.
+  Object get workspace;
+
+  /// Releases retained buffers when the session is replaced or disposed.
+  /// Implementations may defer actual disposal until mounted views detach.
+  void disposeWorkspace();
 }
 
 extension TerminalConnectionBackend on TerminalConnection {

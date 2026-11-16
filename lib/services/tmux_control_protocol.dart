@@ -176,12 +176,25 @@ class TmuxControlParser {
 }
 
 /// Decodes tmux's octal representation without joining unrelated pane bytes.
-Uint8List decodeTmuxOctal(List<int> source) {
+Uint8List decodeTmuxOctal(List<int> source) =>
+    _decodeTmuxEscapes(source, false);
+
+/// `capture-pane -C` escapes a literal backslash as `\\`, whereas `%output`
+/// uses `\134`. Keep these two wire grammars distinct.
+Uint8List decodeTmuxCapture(List<int> source) =>
+    _decodeTmuxEscapes(source, true);
+
+Uint8List _decodeTmuxEscapes(List<int> source, bool capture) {
   final bytes = BytesBuilder(copy: false);
   for (var i = 0; i < source.length; i++) {
     final value = source[i];
     if (value != 92) {
       bytes.addByte(value);
+      continue;
+    }
+    if (capture && i + 1 < source.length && source[i + 1] == 92) {
+      bytes.addByte(92);
+      i++;
       continue;
     }
     if (i + 3 >= source.length ||

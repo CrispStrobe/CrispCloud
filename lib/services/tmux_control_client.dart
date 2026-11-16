@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -54,6 +53,8 @@ class TmuxControlPane {
     required this.active,
     required this.session,
     required _TmuxPaneConnection connection,
+    // Keep the public-facing argument independent of the private transport field.
+    // ignore: prefer_initializing_formals
   }) : _connection = connection;
 
   final String id;
@@ -81,6 +82,8 @@ class TmuxControlClient extends ChangeNotifier {
     required Future<int?> exitCode,
     this.commandTimeout = const Duration(seconds: 10),
   }) : _source = output,
+       // The transport callback is intentionally a private implementation field.
+       // ignore: prefer_initializing_formals
        _write = write,
        _closeTransport = close,
        _transportExit = exitCode {
@@ -173,6 +176,7 @@ class TmuxControlClient extends ChangeNotifier {
     );
     try {
       await _startup.future;
+      startupTimer.cancel();
       _checkOpen();
       final version = (await _command("display-message -p '#{version}'")).text;
       final parsed = RegExp(r'^(?:next-)?([0-9]+)\.([0-9]+)(?:[a-z]|[-.].*)?$')
@@ -252,7 +256,7 @@ class TmuxControlClient extends ChangeNotifier {
           ),
         );
       } else {
-        unawaited(close());
+        _closeInBackground();
       }
       return;
     }
@@ -455,10 +459,8 @@ class TmuxControlClient extends ChangeNotifier {
       if (children.isEmpty ||
           !children.any((pane) => pane.id == window.activePaneId) ||
           children.where((pane) => pane.active).length != 1 ||
-          !children
-              .singleWhere((pane) => pane.active)
-              .id
-              .contains(window.activePaneId)) {
+          children.singleWhere((pane) => pane.active).id !=
+              window.activePaneId) {
         throw const TmuxControlProtocolException(
           'Invalid active pane metadata.',
         );
@@ -506,7 +508,10 @@ class TmuxControlClient extends ChangeNotifier {
     for (final record in paneRecords) {
       var pane = _ownedPanes[record.id];
       if (pane == null) {
-        final session = TerminalSession();
+        final session = TerminalSession(
+          maxLines: (200000 ~/ record.width).clamp(record.height, 500),
+          maximumPendingInputCodeUnits: 16384,
+        );
         final connection = _TmuxPaneConnection(
           (text) => _sendInput(record.id, text),
         );
@@ -533,8 +538,9 @@ class TmuxControlClient extends ChangeNotifier {
         // tmux itself already answers application queries. Never feed a
         // second emulator's status replies back into the remote application.
         terminal.onOutput = (data) {
-          if (terminal is InputAwareTerminal && terminal.hasActiveUserInput)
+          if (terminal is InputAwareTerminal && terminal.hasActiveUserInput) {
             send?.call(data);
+          }
         };
       }
       pane.windowId = record.windowId;
@@ -570,6 +576,8 @@ class TmuxControlClient extends ChangeNotifier {
 
   Future<void> _capture(TmuxControlPane pane) async {
     TmuxControlBlock? screen;
+    TmuxControlBlock? savedScreen;
+    TmuxControlBlock? parserPending;
     List<String>? state;
     // All commands are synchronous in one tmux command list. Turn off this
     // client's output first, discard its pre-capture backlog, then re-enable
@@ -582,16 +590,29 @@ class TmuxControlClient extends ChangeNotifier {
         (block) => screen = block,
       ),
       _Command(
-        "display-message -p -t ${pane.id} '#{cursor_x} #{cursor_y} #{alternate_on} #{cursor_flag} #{keypad_cursor_flag} #{keypad_flag} #{insert_flag} #{wrap_flag} #{origin_flag} #{bracket_paste_flag} #{scroll_region_upper} #{scroll_region_lower}'",
+        'capture-pane -p -e -C -a -q -t ${pane.id} -S -$historyLines',
+        (block) => savedScreen = block,
+      ),
+      _Command(
+        'capture-pane -p -P -C -t ${pane.id}',
+        (block) => parserPending = block,
+      ),
+      _Command(
+        "display-message -p -t ${pane.id} '#{cursor_x} #{cursor_y} #{alternate_on} #{cursor_flag} #{keypad_cursor_flag} #{keypad_flag} #{insert_flag} #{wrap_flag} #{origin_flag} #{bracket_paste_flag} #{scroll_region_upper} #{scroll_region_lower} #{alternate_saved_x} #{alternate_saved_y}'",
         (block) {
           state = block.text.split(' ');
         },
       ),
-      _Command('refresh-client -A ${pane.id}:on', (_) {
+      _Command('refresh-client -A ${pane.id}:on'),
+      _Command('refresh-client -A ${pane.id}:continue', (_) {
         if (_closed || !identical(_ownedPanes[pane.id], pane)) return;
-        if (screen == null || state == null)
+        if (screen == null ||
+            state == null ||
+            savedScreen == null ||
+            parserPending == null) {
           throw const TmuxControlProtocolException('Incomplete pane capture.');
-        _installCapture(pane, screen!, state!);
+        }
+        _installCapture(pane, screen!, savedScreen!, parserPending!, state!);
         pane._capturing = false;
       }),
     ]);
@@ -600,9 +621,11 @@ class TmuxControlClient extends ChangeNotifier {
   void _installCapture(
     TmuxControlPane pane,
     TmuxControlBlock capture,
+    TmuxControlBlock savedCapture,
+    TmuxControlBlock parserPending,
     List<String> state,
   ) {
-    if (state.length != 12 ||
+    if (state.length != 14 ||
         state.take(2).any((value) => !_number.hasMatch(value)) ||
         state.skip(2).take(8).any((value) => value != '0' && value != '1') ||
         state.skip(10).any((value) => !_number.hasMatch(value))) {
@@ -614,27 +637,44 @@ class TmuxControlClient extends ChangeNotifier {
     final y = int.parse(state[1]);
     final top = int.parse(state[10]);
     final bottom = int.parse(state[11]);
+    final savedX = int.parse(state[12]);
+    final savedY = int.parse(state[13]);
     if (x > pane.width ||
         y >= pane.height ||
         top > bottom ||
         bottom >= pane.height ||
-        capture.lines.length > historyLines + pane.height + 1) {
+        capture.lines.length > historyLines + pane.height + 1 ||
+        savedCapture.lines.length > historyLines + pane.height + 1 ||
+        parserPending.lines.length > 1 ||
+        savedX > maximumColumns ||
+        savedY > maximumRows) {
       throw const TmuxControlProtocolException(
         'Captured terminal state exceeds its pane.',
       );
     }
     final text = StringBuffer('\x1bc');
-    if (state[2] == '1') text.write('\x1b[?1049h');
     // No trailing newline: the last captured row must remain the last screen
     // row, rather than creating an extra blank line and scrolling the screen.
-    for (var i = 0; i < capture.lines.length; i++) {
-      if (i != 0) text.write('\r\n');
-      text.write(
-        utf8.decode(decodeTmuxOctal(capture.lines[i]), allowMalformed: true),
-      );
+    void appendScreen(TmuxControlBlock screen) {
+      for (var i = 0; i < screen.lines.length; i++) {
+        if (i != 0) text.write('\r\n');
+        text.write(
+          utf8.decode(decodeTmuxCapture(screen.lines[i]), allowMalformed: true),
+        );
+      }
     }
+
+    if (state[2] == '1') {
+      // tmux's saved grid is the primary screen while an alternate is active.
+      // Populate it before entering 1049 so leaving vim/less restores it.
+      appendScreen(savedCapture);
+      text.write(
+        '\x1b[${savedY.clamp(0, pane.height - 1) + 1};${savedX.clamp(0, pane.width - 1) + 1}H',
+      );
+      text.write('\x1b[?1049h');
+    }
+    appendScreen(capture);
     text.write('\x1b[${top + 1};${bottom + 1}r');
-    text.write('\x1b[${y + 1};${x.clamp(0, pane.width - 1) + 1}H');
     void mode(int number, String flag) =>
         text.write('\x1b[?$number${flag == '1' ? 'h' : 'l'}');
     mode(25, state[3]);
@@ -644,22 +684,42 @@ class TmuxControlClient extends ChangeNotifier {
     mode(7, state[7]);
     mode(6, state[8]);
     mode(2004, state[9]);
+    final cursorRow = state[8] == '1' ? y - top + 1 : y + 1;
+    if (cursorRow < 1) {
+      throw const TmuxControlProtocolException('Cursor precedes the origin.');
+    }
+    text.write('\x1b[$cursorRow;${x.clamp(0, pane.width - 1) + 1}H');
     // Captured state cannot run triggers or send terminal replies.
     pane._connection.resetDecoder();
     pane.session.terminal.write(text.toString());
+    // Continue an escape sequence or UTF-8 code point interrupted at attach.
+    // `capture-pane -P -C` uses octal escapes, unlike its screen-capture mode.
+    if (parserPending.lines.isNotEmpty) {
+      pane._connection.addBytes(decodeTmuxOctal(parserPending.lines.single));
+    }
   }
 
   Future<void> _sendInput(String id, String text) async {
     if (text.isEmpty) return;
     final pane = _ownedPanes[id];
-    if (!ready || pane == null || pane._capturing) return;
+    if (!ready ||
+        pane == null ||
+        pane._capturing ||
+        !pane.session.isConnected) {
+      return;
+    }
     final bytes = utf8.encode(text);
-    if (bytes.length > maximumInputBytes)
+    if (bytes.length > maximumInputBytes) {
       throw const TmuxControlException('The tmux input is too large.');
+    }
     // Literal hex bytes cannot introduce tmux command separators or formats.
     // Await each bounded chunk to limit queued commands and honor revocation.
     for (var start = 0; start < bytes.length; start += 1024) {
-      if (!ready || !identical(_ownedPanes[id], pane)) return;
+      if (!ready ||
+          !identical(_ownedPanes[id], pane) ||
+          !pane.session.isConnected) {
+        return;
+      }
       final end = (start + 1024).clamp(0, bytes.length);
       final hex = bytes
           .sublist(start, end)
@@ -671,38 +731,43 @@ class TmuxControlClient extends ChangeNotifier {
 
   Future<void> selectWindow(String id) async {
     _checkReady();
-    if (!_windowId.hasMatch(id) || !_windows.any((window) => window.id == id))
+    if (!_windowId.hasMatch(id) || !_windows.any((window) => window.id == id)) {
       throw ArgumentError('Unknown tmux window.');
+    }
     await _command('select-window -t $id');
     await _refresh();
   }
 
   Future<void> selectPane(String id) async {
     _checkReady();
-    if (!_paneId.hasMatch(id) || !_panes.containsKey(id))
+    if (!_paneId.hasMatch(id) || !_panes.containsKey(id)) {
       throw ArgumentError('Unknown tmux pane.');
+    }
     await _command('select-pane -t $id');
     await _refresh();
   }
 
   Future<void> newWindow() async {
     _checkReady();
-    if (_windows.length >= maximumWindows || _panes.length >= maximumPanes)
+    if (_windows.length >= maximumWindows || _panes.length >= maximumPanes) {
       throw const TmuxControlException(
         'The tmux workspace is at its window or pane limit.',
       );
+    }
     await _command('new-window');
     await _refresh();
   }
 
   Future<void> splitPane(String id, {required bool horizontal}) async {
     _checkReady();
-    if (!_paneId.hasMatch(id) || !_panes.containsKey(id))
+    if (!_paneId.hasMatch(id) || !_panes.containsKey(id)) {
       throw ArgumentError('Unknown tmux pane.');
-    if (_panes.length >= maximumPanes)
+    }
+    if (_panes.length >= maximumPanes) {
       throw const TmuxControlException(
         'The tmux workspace is at its pane limit.',
       );
+    }
     await _command('split-window -${horizontal ? 'h' : 'v'} -t $id');
     await _refresh();
   }
@@ -714,8 +779,9 @@ class TmuxControlClient extends ChangeNotifier {
     _checkDimensions(columns, rows);
     if (_closed ||
         !_ready ||
-        (columns == _columns && rows == _rows && _requestedSize == null))
+        (columns == _columns && rows == _rows && _requestedSize == null)) {
       return Future<void>.value();
+    }
     _requestedSize = (columns, rows);
     final completion = Completer<void>();
     _resizeWaiters.add(completion);
@@ -757,11 +823,12 @@ class TmuxControlClient extends ChangeNotifier {
     if (_closed) return;
     try {
       _parser.finish();
-      if (!_ready)
+      if (!_ready) {
         throw const TmuxControlException(
           'tmux closed before the workspace opened.',
         );
-      unawaited(close());
+      }
+      _closeInBackground();
     } catch (failure, stack) {
       _fail(failure, stack);
     }
@@ -770,7 +837,16 @@ class TmuxControlClient extends ChangeNotifier {
   void _fail(Object failure, [StackTrace? stack]) {
     if (_closed) return;
     _error = failure;
-    unawaited(close());
+    _closeInBackground();
+  }
+
+  void _closeInBackground() {
+    unawaited(
+      close().catchError((Object failure, StackTrace stack) {
+        _error ??= failure;
+        _notify();
+      }),
+    );
   }
 
   /// Revokes writes immediately, releases the SSH owner, and preserves buffers
@@ -789,8 +865,9 @@ class TmuxControlClient extends ChangeNotifier {
     while (_pending.isNotEmpty) {
       final pending = _pending.removeFirst();
       pending.timer?.cancel();
-      if (!pending.completer.isCompleted)
+      if (!pending.completer.isCompleted) {
         pending.completer.completeError(failure);
+      }
     }
     for (final waiter in _resizeWaiters) {
       if (!waiter.isCompleted) waiter.complete();
@@ -803,34 +880,43 @@ class TmuxControlClient extends ChangeNotifier {
     try {
       // Begin closing the route before canceling a source whose cancellation
       // may itself wait for that route's channel shutdown.
-      final closing = Future<void>.sync(_closeTransport);
-      await _subscription?.cancel();
-      await closing;
+      await Future.wait<void>([
+        Future<void>.sync(_closeTransport),
+        Future<void>.sync(() => _subscription?.cancel()),
+      ]);
       try {
         _exitCode = await _transportExit.timeout(const Duration(seconds: 2));
       } catch (_) {}
+    } catch (failure) {
+      _error ??= failure;
+      _closing = null; // An explicit owner can retry unconfirmed cleanup.
+      _notify();
+      rethrow;
     } finally {
       if (!_done.isCompleted) _done.complete(_exitCode);
     }
   }
 
   void _checkOpen() {
-    if (_closed || _disposed)
+    if (_closed || _disposed) {
       throw const TmuxControlException('The tmux connection is closed.');
+    }
   }
 
   void _checkReady() {
     _checkOpen();
-    if (!_ready)
+    if (!_ready) {
       throw const TmuxControlException('The tmux workspace is still loading.');
+    }
   }
 
   static void _checkDimensions(int columns, int rows) {
     if (columns < 1 ||
         columns > maximumColumns ||
         rows < 1 ||
-        rows > maximumRows)
+        rows > maximumRows) {
       throw ArgumentError('Invalid tmux client dimensions.');
+    }
   }
 
   void _notify() {
@@ -841,7 +927,7 @@ class TmuxControlClient extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    unawaited(close());
+    _closeInBackground();
     for (final pane in [..._ownedPanes.values, ..._retiredPanes]) {
       pane.session.dispose();
     }
@@ -959,8 +1045,9 @@ class _WindowRecord {
     final match = RegExp(
       r'^(@[0-9]{1,10}) ([0-9]{1,10}) ([0-9]{1,4}) ([0-9]{1,4}) ([01]) (%[0-9]{1,10}) ([01]) (.*)$',
     ).firstMatch(value);
-    if (match == null)
+    if (match == null) {
       throw const TmuxControlProtocolException('Invalid window metadata.');
+    }
     final width = int.parse(match[3]!);
     final height = int.parse(match[4]!);
     TmuxControlClient._checkDimensions(width, height);
@@ -995,8 +1082,9 @@ class _PaneRecord {
     final match = RegExp(
       r'^(@[0-9]{1,10}) (%[0-9]{1,10}) ([0-9]{1,4}) ([0-9]{1,4}) ([0-9]{1,4}) ([0-9]{1,4}) ([01])$',
     ).firstMatch(value);
-    if (match == null)
+    if (match == null) {
       throw const TmuxControlProtocolException('Invalid pane metadata.');
+    }
     final width = int.parse(match[3]!);
     final height = int.parse(match[4]!);
     TmuxControlClient._checkDimensions(width, height);

@@ -9,12 +9,11 @@ class SshTmuxControlOutput {
     required Stream<List<int>> stdout,
     required Stream<List<int>> stderr,
     required this.exitCode,
-    required Future<void> Function(String) write,
-    required Future<void> Function() close,
+    required this._write,
+    required this._close,
     void Function()? onActivity,
     void Function()? onDone,
-  }) : _write = write,
-       _close = close {
+  }) {
     unawaited(
       exitCode.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
     );
@@ -102,7 +101,12 @@ class SshTmuxControlOutput {
     await _write(command);
   }
 
-  Future<void> close() => _closing ??= _close();
+  Future<void> close() =>
+      _closing ??= Future<void>.sync(_close)
+          .onError((Object error, StackTrace stack) {
+            _closing = null;
+            Error.throwWithStackTrace(error, stack);
+          });
 
   Future<void> _abort() async {
     await dispose();

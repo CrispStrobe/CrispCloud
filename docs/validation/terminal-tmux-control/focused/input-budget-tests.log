@@ -1,0 +1,7 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/terminal_input_budget_test.dart
+00:00 +0: bounded input fails before scheduling an overflowing queued operation
+00:00 +1: successful writes release capacity for later user operations
+00:00 +2: a new connection gets its own budget after pending old writes close
+00:00 +3: All tests passed!

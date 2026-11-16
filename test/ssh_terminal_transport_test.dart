@@ -102,6 +102,165 @@ void main() {
     },
   );
 
+  test(
+    'native tmux preserves raw stdout and separates stderr without a PTY',
+    () async {
+      final output = await service.startTmuxControl(
+        session.id,
+        tmux: const TmuxSessionOptions(
+          sessionName: 'work',
+          mode: TmuxSessionMode.attach,
+          controlMode: true,
+        ),
+      );
+      expect(client.commands, ["exec tmux -C attach-session -t '=work'"]);
+      expect(client.pty, isNull);
+      expect(client.shellRequests, 0);
+      final shell = client.shells.single;
+      final expected = <int>[
+        ...utf8.encode('%output %1 '),
+        0xe2,
+        ...utf8.encode('\n%output %1 '),
+        0x82,
+        0xac,
+        10,
+      ];
+      for (final byte in expected) {
+        shell.output.add(Uint8List.fromList([byte]));
+      }
+      shell.errors.add(
+        Uint8List.fromList(utf8.encode('%exit forged stderr\n')),
+      );
+      await _flushEvents();
+      final received = <int>[];
+      final done = Completer<void>();
+      output.output.listen(received.addAll, onDone: done.complete);
+      await output.write('list-windows\n');
+      await _flushEvents();
+      expect(shell.received.single, utf8.encode('list-windows\n'));
+      shell.completeChannel(23);
+      await shell.output.close();
+      await _flushEvents();
+      expect(done.isCompleted, isFalse);
+      await shell.errors.close();
+      await done.future;
+      expect(received, expected);
+      expect(output.diagnostics, '%exit forged stderr');
+      expect(await output.exitCode, 23);
+    },
+  );
+
+  test(
+    'raw tmux validates mode and name before replacing a running shell',
+    () async {
+      await service.startShell(session.id);
+      final shell = client.shells.single;
+      for (final tmux in [
+        const TmuxSessionOptions(sessionName: 'work'),
+        const TmuxSessionOptions(
+          sessionName: 'work;kill-server',
+          controlMode: true,
+        ),
+      ]) {
+        await expectLater(
+          service.startTmuxControl(session.id, tmux: tmux),
+          throwsArgumentError,
+        );
+        expect(shell.closed, isFalse);
+      }
+      await expectLater(
+        service.startShell(
+          session.id,
+          tmux: const TmuxSessionOptions(
+            sessionName: 'work',
+            controlMode: true,
+          ),
+        ),
+        throwsArgumentError,
+      );
+      expect(shell.closed, isFalse);
+      expect(client.commands, isEmpty);
+    },
+  );
+
+  test('disconnect during native tmux startup closes a late channel', () async {
+    final pending = Completer<SSHSession>();
+    client.pendingExecution = pending.future;
+    final starting = service.startTmuxControl(
+      session.id,
+      tmux: const TmuxSessionOptions(sessionName: 'work', controlMode: true),
+    );
+    final rejected = expectLater(starting, throwsStateError);
+    await _flushEvents();
+    await service.disconnect(session.id);
+    final late = _Shell();
+    pending.complete(late);
+    await rejected;
+    expect(late.closed, isTrue);
+    expect(service.getActiveSessions(), isEmpty);
+  });
+
+  test(
+    'replaced native controller cannot write to or close its replacement',
+    () async {
+      final output = await service.startTmuxControl(
+        session.id,
+        tmux: const TmuxSessionOptions(sessionName: 'work', controlMode: true),
+      );
+      final firstDone = output.output.drain<void>();
+      final oldShell = client.shells.single;
+      final next = await service.startShell(session.id);
+      final subscription = next.listen((_) {});
+      await firstDone;
+      await output.close();
+      await expectLater(output.write('kill-server\n'), throwsStateError);
+      expect(oldShell.closed, isTrue);
+      expect(client.isClosed, isFalse);
+      await service.writeToShell(session.id, 'still the new shell\r');
+      await _flushEvents();
+      expect(
+        client.shells.last.received.single,
+        utf8.encode('still the new shell\r'),
+      );
+      await subscription.cancel();
+    },
+  );
+
+  test(
+    'native control cancellation releases channel, route and pool slot',
+    () async {
+      final output = await service.startTmuxControl(
+        session.id,
+        tmux: const TmuxSessionOptions(sessionName: 'work', controlMode: true),
+      );
+      final subscription = output.output.listen((_) {});
+      await subscription.cancel();
+      expect(client.shells.single.closed, isTrue);
+      expect(client.isClosed, isTrue);
+      expect(service.getActiveSessions(), isEmpty);
+    },
+  );
+
+  test('native startup output is bounded before the client listens', () async {
+    final output = await service.startTmuxControl(
+      session.id,
+      tmux: const TmuxSessionOptions(sessionName: 'work', controlMode: true),
+    );
+    client.shells.single.errors.add(
+      Uint8List.fromList(List.filled(20000, 120)),
+    );
+    client.shells.single.output.add(Uint8List(1024 * 1024 + 1));
+    await _flushEvents();
+    final errors = <Object>[];
+    final done = Completer<void>();
+    output.output.listen((_) {}, onError: errors.add, onDone: done.complete);
+    await done.future;
+    await _flushEvents();
+    expect(errors.single, isStateError);
+    expect(output.diagnostics.length, lessThanOrEqualTo(16 * 1024));
+    expect(client.isClosed, isTrue);
+  });
+
   test('invalid tmux names leave an existing shell untouched', () async {
     await service.startShell(session.id);
     final shell = client.shells.single;

@@ -61,6 +61,8 @@ class TmuxControlWorkspace extends ConsumerStatefulWidget {
 
 enum _TmuxAction {
   newWindow,
+  previousPane,
+  nextPane,
   splitHorizontal,
   splitVertical,
   zoom,
@@ -123,6 +125,11 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
       !widget.client.isClosed;
 
   _PaneView? get _activeView => _views[widget.client.activePaneId];
+
+  List<String> get _windowPaneIds => [
+    for (final pane in widget.client.panes.values)
+      if (pane.windowId == widget.client.activeWindowId) pane.id,
+  ];
 
   @override
   void initState() {
@@ -232,8 +239,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                 !identical(notice.$1.connectionIdentity, notice.$2) ||
                 !_views.values.any(
                   (view) => identical(view.session, notice.$1),
-                ))
+                )) {
               return;
+            }
             final messenger = ScaffoldMessenger.maybeOf(context);
             messenger?.hideCurrentSnackBar();
             messenger?.showSnackBar(SnackBar(content: Text(notice.$3)));
@@ -245,7 +253,10 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
   }
 
   void _focusChanged() {
-    final focused = _enabled && (_activeView?.focus.hasFocus ?? false);
+    final focused =
+        _enabled &&
+        ref.read(focusAreaProvider) == FocusArea.terminal &&
+        (_activeView?.focus.hasFocus ?? false);
     if (focused == _reportedFocus) return;
     _reportedFocus = focused;
     widget.onPaneFocusChanged?.call(focused);
@@ -266,7 +277,13 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     _focusScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusScheduled = false;
-      if (!mounted || !_enabled || _busy || _showSearch) return;
+      if (!mounted ||
+          !_enabled ||
+          _busy ||
+          _showSearch ||
+          ref.read(focusAreaProvider) != FocusArea.terminal) {
+        return;
+      }
       _activeView?.focus.requestFocus();
     });
   }
@@ -295,8 +312,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     if (!widget.visible ||
         _busy ||
         !widget.client.ready ||
-        widget.client.isClosed)
+        widget.client.isClosed) {
       return;
+    }
     widget.onActivate?.call();
     final client = widget.client;
     if (changesSelection) {
@@ -376,8 +394,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     if (view == null || !widget.visible) return;
     final terminal = view.session.terminal;
     final selection = view.controller.selectionFor(terminal.buffer);
-    if (selection != null)
+    if (selection != null) {
       await _copyText(terminal.buffer.getText(selection, true));
+    }
   }
 
   Future<void> _paste() async {
@@ -399,14 +418,16 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
         !identical(view, _activeView) ||
         !identical(terminal, view.session.terminal) ||
         !view.session.isConnected ||
-        !view.focus.hasFocus) {
+        !view.focus.hasFocus ||
+        ref.read(focusAreaProvider) != FocusArea.terminal) {
       return;
     }
     if (data?.text case final text?) {
       terminal.paste(text);
       view.controller.clearSelection();
-      if (view.scroll.hasClients)
+      if (view.scroll.hasClients) {
         view.scroll.jumpTo(view.scroll.position.maxScrollExtent);
+      }
     }
   }
 
@@ -424,12 +445,14 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
         id != widget.client.activePaneId ||
         view == null ||
         !view.focus.hasFocus ||
+        ref.read(focusAreaProvider) != FocusArea.terminal ||
         !view.session.isConnected) {
       return KeyEventResult.handled;
     }
     final workspace = widget.onWorkspaceKey?.call(event);
-    if (workspace != null && workspace != KeyEventResult.ignored)
+    if (workspace != null && workspace != KeyEventResult.ignored) {
       return workspace;
+    }
     final keyboard = HardwareKeyboard.instance;
     final apple =
         defaultTargetPlatform == TargetPlatform.macOS ||
@@ -452,8 +475,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
         _ => null,
       };
       if (fontSize != null) {
-        if (event is KeyDownEvent)
+        if (event is KeyDownEvent) {
           widget.onFontSizeChanged?.call(fontSize.clamp(8.0, 32.0));
+        }
         return KeyEventResult.handled;
       }
       final action = switch (event.logicalKey) {
@@ -511,8 +535,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                 alt: keyboard.isAltPressed,
                 shift: keyboard.isShiftPressed,
                 meta: keyboard.isMetaPressed,
-              ))
+              )) {
             continue;
+          }
           mappedPresses.add(event.physicalKey);
           final terminal = view.session.terminal;
           if (terminal is InputAwareTerminal) {
@@ -521,8 +546,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
             binding.input.applyTo(terminal);
           }
           view.controller.clearSelection();
-          if (view.scroll.hasClients)
+          if (view.scroll.hasClients) {
             view.scroll.jumpTo(view.scroll.position.maxScrollExtent);
+          }
           return KeyEventResult.handled;
         }
       }
@@ -535,6 +561,13 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     switch (action) {
       case _TmuxAction.newWindow:
         unawaited(_command(widget.client.newWindow, changesSelection: true));
+      case _TmuxAction.previousPane:
+      case _TmuxAction.nextPane:
+        final panes = _windowPaneIds;
+        if (panes.length > 1 && pane != null) {
+          final step = action == _TmuxAction.nextPane ? 1 : -1;
+          _selectPane(panes[(panes.indexOf(pane) + step) % panes.length]);
+        }
       case _TmuxAction.splitHorizontal:
       case _TmuxAction.splitVertical:
         if (pane != null) {
@@ -602,6 +635,8 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
 
   String _actionLabel(_TmuxAction action) => switch (action) {
     _TmuxAction.newWindow => context.tmuxControlTr('New tmux window'),
+    _TmuxAction.previousPane => context.terminalControlsTr('Previous pane'),
+    _TmuxAction.nextPane => context.terminalControlsTr('Next pane'),
     _TmuxAction.splitHorizontal => context.terminalControlsTr(
       'Split side by side',
     ),
@@ -611,7 +646,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     _TmuxAction.zoom => context.terminalControlsTr(
       _zoomed ? 'Restore panes' : 'Zoom active pane',
     ),
-    _TmuxAction.copy => context.terminalTr('Copy'),
+    _TmuxAction.copy => context.terminalTr('Copy selection'),
     _TmuxAction.paste => context.terminalTr('Paste'),
     _TmuxAction.find => context.terminalSearchTr('Find in terminal'),
     _TmuxAction.detach => context.terminalTr('Detach from tmux'),
@@ -625,8 +660,15 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
       return view != null &&
           view.controller.selectionFor(view.session.terminal.buffer) != null;
     }
-    if (action == _TmuxAction.find || action == _TmuxAction.zoom)
+    if (action == _TmuxAction.find || action == _TmuxAction.zoom) {
       return view != null;
+    }
+    if (action == _TmuxAction.previousPane || action == _TmuxAction.nextPane) {
+      return _windowPaneIds.length > 1 &&
+          !_busy &&
+          widget.client.ready &&
+          !widget.client.isClosed;
+    }
     return widget.client.ready && !widget.client.isClosed && !_busy;
   }
 
@@ -707,53 +749,77 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
 
   Widget _toolbar(List<String> paneIds) => Material(
     color: Theme.of(context).colorScheme.surfaceContainer,
-    child: Row(
-      children: [
-        Expanded(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: PopupMenuButton<String>(
-              key: const ValueKey('tmux-pane-selector'),
-              tooltip: context.tmuxControlTr('Select tmux pane'),
-              enabled:
-                  paneIds.isNotEmpty &&
-                  !_busy &&
-                  widget.visible &&
-                  !widget.client.isClosed,
-              onSelected: _selectPane,
-              itemBuilder: (_) => [
-                for (final id in paneIds)
-                  CheckedPopupMenuItem(
-                    value: id,
-                    checked: id == widget.client.activePaneId,
-                    child: Text(
-                      context.tmuxControlTr('Pane {id}').replaceAll('{id}', id),
+    child: LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: PopupMenuButton<String>(
+                key: const ValueKey('tmux-pane-selector'),
+                tooltip: context.tmuxControlTr('Select tmux pane'),
+                enabled:
+                    paneIds.isNotEmpty &&
+                    !_busy &&
+                    widget.visible &&
+                    !widget.client.isClosed,
+                onSelected: _selectPane,
+                itemBuilder: (_) => [
+                  for (final id in paneIds)
+                    CheckedPopupMenuItem(
+                      value: id,
+                      checked: id == widget.client.activePaneId,
+                      child: Text(
+                        context
+                            .tmuxControlTr('Pane {id}')
+                            .replaceAll('{id}', id),
+                      ),
                     ),
+                ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
                   ),
-              ],
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                child: Text(
-                  context
-                      .tmuxControlTr('Pane {id}')
-                      .replaceAll('{id}', widget.client.activePaneId ?? '—'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          context
+                              .tmuxControlTr('Pane {id}')
+                              .replaceAll(
+                                '{id}',
+                                widget.client.activePaneId ?? '—',
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(Icons.arrow_drop_down, size: 18),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        _button(_TmuxAction.splitHorizontal, Icons.vertical_split_outlined),
-        _button(_TmuxAction.splitVertical, Icons.horizontal_split_outlined),
-        _button(
-          _TmuxAction.zoom,
-          _zoomed ? Icons.close_fullscreen : Icons.open_in_full,
-        ),
-        _button(_TmuxAction.find, Icons.search),
-        _button(_TmuxAction.copy, Icons.copy_outlined),
-        _button(_TmuxAction.paste, Icons.paste_outlined),
-      ],
+          if (constraints.maxWidth >= 300) ...[
+            _button(_TmuxAction.splitHorizontal, Icons.vertical_split_outlined),
+            _button(_TmuxAction.splitVertical, Icons.horizontal_split_outlined),
+          ],
+          if (constraints.maxWidth >= 130) ...[
+            _button(
+              _TmuxAction.zoom,
+              _zoomed ? Icons.close_fullscreen : Icons.open_in_full,
+            ),
+            _button(_TmuxAction.find, Icons.search),
+          ],
+          if (constraints.maxWidth >= 260) ...[
+            _button(_TmuxAction.copy, Icons.copy_outlined),
+            _button(_TmuxAction.paste, Icons.paste_outlined),
+          ],
+        ],
+      ),
     ),
   );
 
@@ -856,13 +922,14 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                     ? 'tmux connection closed'
                     : 'Loading tmux windows…',
               ),
+              style: const TextStyle(color: Color(0xffcccccc)),
             ),
           ),
         );
       }
       final compact = paneIds.any((id) {
         final pane = widget.client.panes[id]!;
-        return size.width * pane.width / windowWidth < 140 ||
+        return size.width * pane.width / windowWidth < 180 ||
             size.height * pane.height / windowHeight < 72;
       });
       final active = widget.client.activePaneId!;
@@ -892,6 +959,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
   @override
   Widget build(BuildContext context) {
     ref.watch(terminalKeyBindingListProvider);
+    final ownsKeyboard = ref.watch(focusAreaProvider) == FocusArea.terminal;
     final triggers =
         ref.watch(terminalTriggerListProvider).valueOrNull ?? const [];
     for (final view in _views.values) {
@@ -919,7 +987,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     final cell = Size(math.max(1, painter.width), math.max(1, painter.height));
     painter.dispose();
     return ExcludeFocus(
-      excluding: !widget.active || !widget.visible,
+      excluding: !widget.active || !widget.visible || !ownsKeyboard,
       child: Focus(
         canRequestFocus: false,
         skipTraversal: true,
@@ -937,7 +1005,8 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                     height: math.min(36, constraints.maxHeight),
                     child: _header(),
                   ),
-                  if (toolbar) SizedBox(height: 36, child: _toolbar(paneIds)),
+                  if (toolbar)
+                    SizedBox(height: 36, child: _toolbar(_windowPaneIds)),
                   if (search)
                     TerminalSearchBar(
                       key: const ValueKey('tmux-search'),
@@ -947,7 +1016,7 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                       lineHeight: () =>
                           view.key.currentState?.renderTerminal.lineHeight ??
                           cell.height,
-                      active: widget.visible && widget.active,
+                      active: widget.visible && widget.active && ownsKeyboard,
                       autofocus: true,
                       focusRequest: widget.focusRequest + _searchFocusRequest,
                       onActivate: widget.onActivate,

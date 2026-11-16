@@ -381,8 +381,9 @@ The forwarding bridge preserves backpressure and both half-close directions,
 allowing a server to send its final response after the requesting client closes
 its write side. Dial operations have a 15-second deadline and SOCKS negotiation
 has a 10-second deadline. Browser builds cannot listen on native TCP sockets;
-the forwarding action remains unavailable there. Shared SSH connections across
-terminal tabs and native tmux control mode remain separate work.
+the forwarding action remains unavailable there. Sharing SSH connections across
+terminal tabs remains separate work. Native tmux panes share one verified SSH
+route within their own control workspace, as described below.
 
 ### Saved forwarding profiles
 
@@ -514,11 +515,12 @@ The Session selector offers five modes:
 | **Create new screen** | Creates a new GNU screen session with the requested name. |
 | **Attach existing screen** | Resolves an exact existing screen name or full `PID.name` ID, then joins that session. Missing or ambiguous targets fail. |
 
-The remote server must have `tmux` available on the SSH command path and allow
-PTY execution. Names contain 1–64 ASCII letters, digits, underscores or hyphens
+The remote server must have `tmux` available on the SSH command path. Ordinary
+attachment requires PTY execution; **Native tmux panes** uses a control channel
+without a PTY. Names contain 1–64 ASCII letters, digits, underscores or hyphens
 and cannot start with a hyphen. This deliberately excludes tmux target patterns,
 window/pane separators and shell syntax. The service validates names before
-replacing a running shell. It launches tmux through an SSH PTY exec request,
+replacing a running shell. Ordinary attachment launches tmux through an SSH PTY exec request,
 never by typing a startup command into the terminal. It does not detach other
 attached clients. Missing tmux, a missing attach-only target, and server errors
 remain visible in terminal output; no fresh-shell fallback hides the failure.
@@ -570,6 +572,70 @@ or `d` to detach. Prefix actions select their pane before subsequent typing.
 See the upstream [tmux getting started guide](https://github.com/tmux/tmux/wiki/Getting-Started)
 for the default bindings and remote session model.
 See also the [GNU screen invocation manual](https://www.gnu.org/software/screen/manual/html_node/Invoking-Screen.html).
+
+### Native tmux windows and panes
+
+In **Connect via SSH**, choose **Create or attach tmux** or **Attach existing
+tmux**, enter the session name, and enable **Native tmux panes**. This option is
+off by default and requires tmux **3.2 or later** on the remote command path.
+It uses the same independently verified destination/jump route, authentication
+choices and explicit agent permission as ordinary SSH. Saved SSH profiles,
+arrangements and reconnect forms retain the selected mode without credentials.
+Saving native mode upgrades their store envelope to v4 so older applications
+preserve the record instead of silently treating it as an ordinary PTY.
+
+Remote windows appear as a scrollable tab strip inside this terminal tab.
+Each remote pane has its own emulator, selection, scrollback and keyboard state.
+The remote cell layout determines pane geometry. Choose a window or click a pane
+to select it remotely; the pane picker remains available when the display is too
+small to show the complete layout. Window/pane creation and layout changes from
+another tmux client are reflected after the next bounded metadata refresh.
+
+The tmux toolbar provides **New window**, horizontal and vertical splits, local
+pane zoom, copy, paste and search. Window creation and splits start remote
+processes using that server's normal tmux settings. Local zoom only changes the
+view. Resizing updates this client's overall size; the remote tmux window-size
+policy still determines shared geometry. Custom terminal key bindings and
+saved output triggers apply to the individual pane emulators. Clipboard access
+is explicit; output escape sequences cannot read or write the local clipboard.
+
+**Detach** closes this control client and its SSH route without sending a
+kill-session, kill-window or kill-pane command. It leaves remote processes
+subject to the server's normal tmux settings, including `destroy-unattached`.
+Hiding the terminal retains the connection. Remote pane identities are not
+added to the cross-tab broadcast group: changing a selected tmux pane must not
+silently change an approved broadcast destination.
+
+This first native workspace has explicit limits:
+
+- At most **16 windows and 64 panes** on one control connection, with bounded
+  metadata, response sizes, pane buffers and queued input. Oversized or malformed
+  protocol data closes the connection and leaves the remote session alone.
+- Initial attachment captures up to **200 history lines** plus the visible
+  screen for each pane, within its local buffer budget. It restores the active
+  screen, saved primary screen when an alternate screen is active, pending
+  parser bytes, cursor and common input modes. It does not recreate original
+  soft-wrap metadata, custom tab stops or every terminal/SGR state. Some
+  full-screen applications may need to redraw after attachment.
+- Keyboard, IME, paste and custom mappings target the selected remote pane.
+  Input goes directly to that pane; tmux's interactive prefix bindings and
+  copy-mode interface are not rendered. Use ordinary PTY tmux mode for those
+  interfaces, or the native toolbar and pane search/copy controls here.
+  Mouse/focus protocol forwarding and every advanced keyboard protocol are
+  not yet qualified. tmux itself answers application terminal queries; the
+  second emulator's automatic replies are suppressed.
+- Pane search, copy/paste and output triggers are available in the native
+  workspace. The ordinary panel's command-history/status actions and mobile
+  prefix row are separate controls and are not mapped onto native panes yet.
+- The workspace is contained within the existing terminal tab. Independent
+  operating-system windows and automatic reconnection/restoration remain work.
+
+The implementation follows the upstream
+[control-mode protocol](https://github.com/tmux/tmux/wiki/Control-Mode).
+[Local validation and its limits](validation/terminal-tmux-control/README.md)
+distinguish deterministic protocol/widget coverage and actual SSH transport
+checks from running a real tmux daemon. The current validation host rejects Unix
+sockets, so actual tmux-server behavior requires a separate platform run.
 
 ### Jump hosts
 
@@ -623,8 +689,8 @@ disconnect, replacement or hidden panel cannot start a shell.
 
 The listing is a snapshot and does not eliminate remote session rename/exit
 races. Missing tools and failed or oversized listings are reported. This
-workflow attaches the normal terminal stream; native tmux control-mode window
-and pane mapping is not implemented.
+workflow attaches the normal terminal stream. To use native window/pane mapping,
+reopen the SSH form with that exact session name and enable **Native tmux panes**.
 
 ## Saved SSH profiles
 
@@ -650,6 +716,8 @@ Agent authentication or forwarding upgrades the store to version 3, which also
 never downgrades. Saved arrangements likewise use version 3 when agent settings
 require it, so older readers preserve/refuse those records instead of discarding
 an authentication or forwarding choice.
+Native tmux panes upgrades either store to version 4, also without downgrading
+after the last native profile or arrangement is deleted.
 
 An attach-only profile remains attach-only, including after restarting the
 app. Profile loading does not bypass host-key verification or connect

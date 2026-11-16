@@ -1,0 +1,40 @@
+{
+  "recorded_utc": "2026-11-16T07:21:49.538041+00:00",
+  "scope": "Focused ownership regression run. Final combined acceptance is recorded separately.",
+  "test_command": [
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/ssh_tmux_panel_lifecycle_test.dart",
+    "test/terminal_broadcast_test.dart",
+    "test/terminal_session_test.dart"
+  ],
+  "test_exit_code": 0,
+  "counts": {
+    "passed": 36,
+    "skipped": 0,
+    "failed": 0
+  },
+  "analysis_command": [
+    "dart",
+    "analyze",
+    "lib/services/terminal_connection.dart",
+    "lib/services/terminal_session.dart",
+    "lib/services/tmux_terminal_connection.dart",
+    "lib/widgets/terminal_panel.dart",
+    "test/terminal_broadcast_test.dart",
+    "test/ssh_tmux_panel_lifecycle_test.dart"
+  ],
+  "analysis_exit_code": 0,
+  "source_hashes_at_receipt": {
+    "lib/services/terminal_connection.dart": "670e2ecb9206fe45be44a56158356b4acf759157af84dcd492abebeae906f1be",
+    "lib/services/terminal_session.dart": "e1617d6970bb1667693ff84923aaf50334fa0ba70341ee9920403f2079ea846c",
+    "lib/services/tmux_terminal_connection.dart": "3e3c24bccc454dd3db13cc18ac7a33c159ef0eccd8ac68d9de5fa5622927017c",
+    "lib/widgets/terminal_panel.dart": "45b23e560c925aa760554017d83730229bf2de65bfac800cf721d876849240b9",
+    "test/terminal_broadcast_test.dart": "087898c98157808a96a300ad2ab20295d0264c0af052a333b71f0b1d0ceb592a",
+    "test/ssh_tmux_panel_lifecycle_test.dart": "80c5c3b77fb3eb0b0a76ebdabd4b53f6947c8f14aa6bb6d54db66a0f19bd542f"
+  },
+  "github_actions_queried_or_awaited": false
+}

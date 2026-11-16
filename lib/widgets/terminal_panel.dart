@@ -180,8 +180,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   SshForwardingProfileSession? _forwardingProfiles;
   final _forwardingDialogLeases = <SshForwardingProfileSession, int>{};
   Terminal? _tmuxTerminal;
-  TmuxControlClient? _tmuxControl;
-  Terminal? _tmuxControlTerminal;
+  TmuxTerminalConnection? _tmuxWorkspaceConnection;
+  final _pendingTmuxControls = <TmuxControlClient>{};
+  final _pendingTmuxRoutes = <String>{};
   bool _tmuxPaneFocused = false;
   Terminal? _screenTerminal;
   bool _showSearch = false;
@@ -220,26 +221,43 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   bool get _usingTmux =>
       _session.kind == TerminalSessionKind.ssh &&
-      identical(_tmuxTerminal, _session.terminal);
+      (_nativeTmux != null || identical(_tmuxTerminal, _session.terminal));
 
   bool get _usingScreen =>
       _session.kind == TerminalSessionKind.ssh &&
       identical(_screenTerminal, _session.terminal);
 
-  TmuxControlClient? get _nativeTmux =>
-      identical(_tmuxControlTerminal, _session.terminal) ? _tmuxControl : null;
+  TmuxControlClient? get _nativeTmux => _tmuxWorkspaceConnection?.client;
+
+  void _syncTmuxWorkspace() {
+    final workspace = _session.workspaceConnection;
+    final next = workspace is TmuxTerminalConnection ? workspace : null;
+    if (identical(next, _tmuxWorkspaceConnection)) return;
+    _retireTmuxControl();
+    _tmuxWorkspaceConnection = next;
+    next?.retainView();
+  }
 
   void _retireTmuxControl() {
-    final client = _tmuxControl;
-    _tmuxControl = null;
-    _tmuxControlTerminal = null;
+    final connection = _tmuxWorkspaceConnection;
+    _tmuxWorkspaceConnection = null;
     _tmuxPaneFocused = false;
-    if (client == null) return;
-    // Existing pane views detach before their emulators are disposed.
+    if (connection == null) return;
+    // View removal releases only the viewport's lease. The owning session
+    // decides when to close the route and release retained pane buffers.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(client.close().whenComplete(client.dispose));
+      connection.releaseView();
     });
     WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _cancelPendingTmuxStarts() {
+    for (final client in _pendingTmuxControls.toList()) {
+      unawaited(client.close().catchError((Object _) {}));
+    }
+    for (final id in _pendingTmuxRoutes.toList()) {
+      unawaited(_ssh.disconnect(id).catchError((Object _) {}));
+    }
   }
 
   bool get _canCopy =>
@@ -260,7 +278,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _attachSession(widget.session);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (widget.visible && widget.active) _focus.requestFocus();
+      if (widget.visible && widget.active && _nativeTmux == null) {
+        _focus.requestFocus();
+      }
       if (_ownsSession || widget.autoStart) {
         unawaited(_startLocal());
       } else {
@@ -284,6 +304,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _session = session ?? TerminalSession();
     _session.addListener(_onSessionChanged);
     _attachTerminal();
+    _syncTmuxWorkspace();
   }
 
   void _detachTitleHandler() {
@@ -324,6 +345,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void didUpdateWidget(TerminalPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.session, widget.session)) {
+      _cancelPendingTmuxStarts();
       _retireTmuxControl();
       _connectionRequest++;
       _clearForwardingProfiles();
@@ -351,10 +373,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _onSessionChanged() {
     if (!mounted) return;
-    if (_tmuxControl != null &&
-        !identical(_tmuxControlTerminal, _session.terminal)) {
-      _retireTmuxControl();
-    }
+    _syncTmuxWorkspace();
     final forwardingProfiles = _forwardingProfiles;
     if (forwardingProfiles != null && !forwardingProfiles.isCurrent) {
       _clearForwardingProfiles();
@@ -811,21 +830,20 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           }
           final tmux = launchConfig.tmux;
           if (tmux?.controlMode == true) {
-            final raw = await _ssh.startTmuxControl(
-              session.id,
-              tmux: tmux!,
-              width: columns,
-              height: rows,
-            );
-            final client = TmuxControlClient(
-              output: raw.output,
-              write: raw.write,
-              close: raw.close,
-              exitCode: raw.exitCode,
-            );
             final owner = _session;
+            TmuxControlClient? pendingClient;
+            String Function()? diagnostics;
+            _pendingTmuxRoutes.add(session.id);
             void cancelStaleStart() {
-              if (!currentAttempt()) unawaited(client.close());
+              if (!currentAttempt()) {
+                final client = pendingClient;
+                if (client != null) {
+                  unawaited(client.close().catchError((Object _) {}));
+                }
+                unawaited(
+                  _ssh.disconnect(session.id).catchError((Object _) {}),
+                );
+              }
             }
 
             owner.addListener(cancelStaleStart);
@@ -833,23 +851,44 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               if (!currentAttempt()) {
                 throw StateError('tmux control start was cancelled');
               }
+              final raw = await _ssh.startTmuxControl(
+                session.id,
+                tmux: tmux!,
+                width: columns,
+                height: rows,
+              );
+              diagnostics = () => raw.diagnostics;
+              final client = TmuxControlClient(
+                output: raw.output,
+                write: raw.write,
+                close: raw.close,
+                exitCode: raw.exitCode,
+              );
+              pendingClient = client;
+              _pendingTmuxControls.add(client);
+              if (!currentAttempt()) {
+                throw StateError('tmux control start was cancelled');
+              }
               await client.start(columns: columns, rows: rows);
               if (!currentAttempt()) {
                 throw StateError('tmux control start was cancelled');
               }
-              _tmuxControl = client;
-              _tmuxControlTerminal = connectingTerminal;
               return TmuxTerminalConnection(_ssh, session.id, client);
             } catch (error) {
-              await client.close();
-              client.dispose();
-              final diagnostics = raw.diagnostics;
-              if (diagnostics.isNotEmpty) {
-                throw StateError('$error\n$diagnostics');
+              try {
+                await pendingClient?.close();
+              } finally {
+                pendingClient?.dispose();
+              }
+              final detail = diagnostics?.call() ?? '';
+              if (detail.isNotEmpty) {
+                throw StateError('$error\n$detail');
               }
               rethrow;
             } finally {
               owner.removeListener(cancelStaleStart);
+              _pendingTmuxControls.remove(pendingClient);
+              _pendingTmuxRoutes.remove(session.id);
             }
           }
           final stream = await _ssh.startShell(
@@ -1967,6 +2006,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                                   ref.watch(focusAreaProvider) ==
                                       FocusArea.terminal,
                               fontSize: _fontSize,
+                              onFontSizeChanged: _setFontSize,
                               focusRequest: widget.focusRequest,
                               onActivate: _activateInput,
                               onPaneFocusChanged: _onTmuxPaneFocusChanged,
@@ -2071,6 +2111,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    _cancelPendingTmuxStarts();
     _retireTmuxControl();
     _scroll.removeListener(_onScrollChanged);
     _clearCommandNavigation();

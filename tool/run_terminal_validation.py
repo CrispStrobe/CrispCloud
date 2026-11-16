@@ -17,6 +17,12 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASELINE = ROOT / 'docs/validation/terminal-parity-continuation'
 NEW_TESTS = [
+    'test/tmux_control_protocol_test.dart',
+    'test/tmux_control_client_test.dart',
+    'test/tmux_control_workspace_test.dart',
+    'test/ssh_native_tmux_persistence_test.dart',
+    'test/terminal_input_budget_test.dart',
+    'test/ssh_tmux_panel_lifecycle_test.dart',
     'test/ssh_agent_channel_test.dart',
     'test/ssh_agent_profiles_test.dart',
     'test/ssh_agent_route_test.dart',
