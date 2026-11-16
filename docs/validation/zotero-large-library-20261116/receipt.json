@@ -1,0 +1,121 @@
+{
+  "repository": "CrispStrobe/CrispCloud",
+  "qualified_remote_source_commit": "07c54fe650d5dbcba664cedd8e5324176f5c7ada",
+  "qualified_source_tree": "345ced2c3e8f38fffb0c9036618abe478c4e7922",
+  "canonical_quds_source_commit": "98079023680a549cb126752c1d4f539749f46938",
+  "companion_crispcloud_source_commit": "07c54fe650d5dbcba664cedd8e5324176f5c7ada",
+  "commands": [
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_ribbon_test.dart"
+      ],
+      "workspace_relative_cwd": "zotero-toolchain/crisp-host-harness",
+      "exit_code": 0,
+      "passed_tests": 39,
+      "log": "logs/host-zotero-final.log",
+      "log_sha256": "4aba4ff771787cf49abfc112d0df7360b07c8c41af3a9cc26dfc1de28f6fd69a"
+    },
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--concurrency=2",
+        "--reporter",
+        "expanded",
+        "test/terminal_session_test.dart",
+        "test/tmux_control_client_test.dart",
+        "test/tmux_control_protocol_test.dart"
+      ],
+      "workspace_relative_cwd": "zotero-toolchain/crisp-terminal-harness",
+      "exit_code": 0,
+      "passed_tests": 70,
+      "log": "logs/terminal-reconciliation.log",
+      "log_sha256": "c81f5b49db29bb3b9fd9d820d64e5f679c28d0a214a4f6bcde6b7b37b4096e8a"
+    },
+    {
+      "command": [
+        "dart",
+        "analyze",
+        "--fatal-infos",
+        "lib/services/terminal_session.dart",
+        "lib/services/tmux_control_client.dart",
+        "test/terminal_session_test.dart",
+        "test/tmux_control_client_test.dart",
+        "test/tmux_control_protocol_test.dart"
+      ],
+      "workspace_relative_cwd": "CrispCloud",
+      "exit_code": 0,
+      "passed_tests": null,
+      "log": "logs/terminal-analysis.log",
+      "log_sha256": "597edbcdb4506afed723b11479eba7d5b6619d1c2c63a4e3f7cf475830d8bf32"
+    },
+    {
+      "command": [
+        "python3",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "../quds_office_suite",
+        "--require-tracked"
+      ],
+      "workspace_relative_cwd": "CrispCloud",
+      "exit_code": 0,
+      "passed_tests": null,
+      "log": "logs/vendor-verification.log",
+      "log_sha256": "335294fb24900b06f899882fe6432b20d4fe582a52972bb6f65dd2274cfac8c9"
+    }
+  ],
+  "passed_tests_this_repository": 109,
+  "passed_tests_across_both_repositories": 457,
+  "counts_exclude_setup_smokes_overlapping_runs_and_expected_failure_controls": true,
+  "measured_files_match_qualified_commit_at_recording": true,
+  "source_file_sha256": {
+    "lib/services/office_zotero.dart": "a359e56bedeef51383713df1cd5fa66b06712bb9a82f398e6196eddb2845ccf0",
+    "lib/services/office_zotero_transport.dart": "708a40526c95527b0105ce68f5710803ed6ffabbf8bb1eb1e53769d8de9dd320",
+    "lib/services/terminal_session.dart": "0670b6c17d7352428fa0556b726a0df2edf6cc0a74a6cc9325a95af8d8e942a9",
+    "lib/services/tmux_control_client.dart": "c525d54ef7a90d95c742e6473d0d1386e6cd03668bc1e90db79918f1cc833bb4",
+    "test/office_zotero_citing_transport_test.dart": "d10ddc7a48741c4a40e5aa17db2c04011510d8919952f44f4332b244936c25be",
+    "test/office_zotero_ribbon_test.dart": "651535c5bf87bf329017bd9a72197e1a2ec9e60dd3bff3c556ba4a5d4276a229",
+    "test/office_zotero_test.dart": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+    "test/terminal_session_test.dart": "3e25d7a422d49fd720475ed0993b08483f730b231b1d94c4e415cb059bc96185",
+    "test/tmux_control_client_test.dart": "c0df9e38169b20f9dcda33c2581caa2a033c011834be9e59124f1718dcbb9d11",
+    "test/tmux_control_protocol_test.dart": "8b7c772a3d84e42a71f11251297a51f32f57b475436cf5c2e91e44915695847d",
+    "tool/office_fidelity_manifest.json": "179c256f5e75c638254c08158da40a06728dba3e2000bd7d22a1024852cd91f2"
+  },
+  "locked_harness_input_sha256": {
+    "crisp-host-harness": {
+      "pubspec.yaml": "8f9d8de2fecb46d6fc59cd24064206f688f6a725b0d1be59d48eb0270fcbba57",
+      "pubspec.lock": "8226a3274534b93cc1cdcd5c78c4c189ba49533cff1ebfad5904e64df7842277",
+      ".dart_tool/package_config.json": "326dd5f1220892d9f3013429397511b01eaf3d246a2557a60dd2ad0c87208287"
+    },
+    "crisp-terminal-harness": {
+      "pubspec.yaml": "8ec90f1f447571f68ed392ea74f3a2c0d8eb935157f0f6b08eb9d23c3d2bc721",
+      "pubspec.lock": "2cdb4ef03201a9b391560bd9b76e787de76259ad1708138e0184ad86c835b025",
+      ".dart_tool/package_config.json": "beef9cccf96a281e9e51c818e34aa4fdb87833595bc32f4aa2da895de694cee4"
+    }
+  },
+  "analysis_configuration": "Temporarily normalized absolute package roots from the enforced harness graph; original canonical .dart_tool/package_config.json restored afterward.",
+  "runtime": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "framework": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "engine": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8"
+  },
+  "production_dependency_manifests_changed": false,
+  "github_actions_queried_awaited_or_rerun": false,
+  "qualification_scope": "Focused local production-code tests with synthetic documents and mocked network/protocol responses. No new full-app build or live external-service acceptance.",
+  "managed_office_files": 2412,
+  "standalone_sources": {
+    "packages/legacy_doc_parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  }
+}

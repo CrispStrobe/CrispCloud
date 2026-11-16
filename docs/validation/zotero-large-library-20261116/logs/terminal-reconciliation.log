@@ -1,0 +1,72 @@
+00:00 +0: loading /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart
+00:00 +0: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: interprets cursor controls, color and alternate screen from the transport
+00:00 +1: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: keys and bracketed paste reach the PTY without line submission or local echo
+00:00 +2: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: terminal answers device-attribute and cursor queries over its transport
+00:00 +3: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: uses initial size and catches layout changes during connection
+00:00 +4: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: resize bursts retain only the latest geometry behind an in-flight request
+00:00 +5: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: a resize reversal restores the last completed geometry
+00:00 +6: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: same-turn resizing sends one final size without duplicate transport calls
+00:00 +7: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: late resize failure cannot clear a replacement session resize
+00:00 +8: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: disconnect revokes a pending resize without waiting for its reply
+00:00 +9: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: resize errors fail the owned session and close its transport
+00:00 +10: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: restart rejects a late connection and never mixes its output
+00:00 +11: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: disconnect during connection disposes the eventual process
+00:00 +12: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: disposal during connection cannot revive a session
+00:00 +13: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: finished shell preserves trailing output and exit code
+00:00 +14: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: disconnect can close a process after output EOF but before its exit
+00:00 +15: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: transport errors close the session and retain output for inspection
+00:00 +16: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: asynchronous input failure is handled rather than escaping the event loop
+00:00 +17: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: queued input from a closed shell never reaches a new one
+00:00 +18: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: client platform is set and Windows reflow applies only to local PTYs
+00:00 +19: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/terminal_session_test.dart: scrollback remains bounded for long-running jobs
+00:00 +20: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: starts after the unsolicited guard and maps native panes and geometry
+00:00 +21: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: snapshot publishes before output in the same transport chunk
+00:00 +22: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: UTF-8 split between records is independent for every pane
+00:00 +23: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: control-looking captured lines stay screen content
+00:00 +24: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: explicit input is hex encoded while emulator replies are suppressed
+00:00 +25: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: captured cursor and keyboard modes govern the first input
+00:00 +26: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: tmux 3.2 missing paste-mode format uses zero and learns live mode
+00:00 +27: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_protocol_test.dart: capture escape grammar differs from output for literal backslashes
+00:00 +28: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_protocol_test.dart: capture escape grammar differs from output for literal backslashes
+00:00 +29: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: a parser sequence pending at capture is completed by live output
+00:00 +30: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_protocol_test.dart: fragments every byte without interpreting notification-like command data
+00:00 +31: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +32: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +33: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +34: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +35: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +36: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +37: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_protocol_test.dart: line limit applies across chunks and before allocating a whole line
+00:00 +38: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: external topology change reconciles without recreating retained panes
+00:00 +39: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: external topology change reconciles without recreating retained panes
+00:00 +40: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: external topology change reconciles without recreating retained panes
+00:00 +41: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: external topology change reconciles without recreating retained panes
+00:00 +42: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: resize gates redraw bytes before metadata arrives
+00:01 +43: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: typing during a blocked resize capture is retained and delivered
+00:01 +44: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: unchanged layout keeps scrollback and streaming output
+00:01 +45: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: new layout during metadata never publishes stale geometry
+00:01 +46: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: new layout invalidates an in-flight capture before resuming output
+00:01 +47: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: capture dimensions detect a resize after the initial metadata
+00:01 +48: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: superseded replacement panes are pruned without releasing visible panes
+00:01 +49: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: capture retains literal backslashes and restored cell colors
+00:01 +50: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: input queue admission revokes remaining chunks after a stalled reply
+00:01 +51: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: early cleanup errors are observed while source cancellation is pending
+00:01 +52: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: hook guards cannot consume the pending user command response
+00:01 +53: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: resize coalesces rapid changes and uses client size policy
+00:01 +54: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: resize retains the original size requested during an in-flight change
+00:02 +55: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: repeated in-flight size waits without issuing another resize
+00:02 +56: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: closing an in-flight resize settles queued geometry without sending it
+00:02 +57: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: pane captures amortize round trips with bounded synchronous groups
+00:02 +58: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: closing a grouped capture revokes unissued groups and publication
+00:02 +59: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: progressing captures retain per-pane deadlines and queued input budget
+00:02 +60: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: partial pane replies cannot extend a grouped capture hard deadline
+00:02 +61: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: close revokes queued input and keeps read-only pane buffers
+00:02 +62: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: detach sends only the client detach command and preserves remote panes
+00:02 +63: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: unsupported tmux version and malformed metadata fail before publication
+00:02 +64: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: duplicate IDs, overlapping geometry and excessive sizes fail closed
+00:02 +65: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: startup cancellation owns late protocol events and does not resurrect panes
+00:02 +66: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: a timed out command closes the stream instead of reusing late replies
+00:02 +67: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: unknown unbounded output is not retained before pane discovery
+00:03 +68: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: a failed multi-command capture aborts before any later response is reused
+00:03 +69: /workspace/scratch/1e8827a47266/zotero-toolchain/crisp-terminal-harness/test/tmux_control_client_test.dart: natural EOF with a partial guard is a visible protocol failure
+00:03 +70: All tests passed!

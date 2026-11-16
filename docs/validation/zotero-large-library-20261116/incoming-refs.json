@@ -1,7 +1,6 @@
 {
   "repository": "CrispStrobe/CrispCloud",
   "captured_at_utc": "2026-11-16T10:43:24.541318+00:00",
-  "integration_head_at_capture": "a50baf14d2119ca5ef4b6e2a99ba87a5f418a767",
   "integration_tree_at_capture": "71cbd8c286a5339b6677969f6386abab508bf7f4",
   "branch_count": 46,
   "pr_head_count": 158,
@@ -1044,5 +1043,7 @@
       "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
       "status": "ancestor"
     }
-  ]
+  ],
+  "local_integration_head_at_capture": "a50baf14d2119ca5ef4b6e2a99ba87a5f418a767",
+  "qualified_remote_source_commit": "07c54fe650d5dbcba664cedd8e5324176f5c7ada"
 }
