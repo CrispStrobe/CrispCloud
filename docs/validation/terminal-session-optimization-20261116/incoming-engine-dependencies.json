@@ -36,7 +36,10 @@
         }
       },
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/_fe_analyzer_shared-95.0.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/_fe_analyzer_shared-93.0.0",
+      "same_resolved_package_root": false
     },
     {
       "name": "analyzer",
@@ -60,7 +63,10 @@
         }
       },
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/analyzer-10.1.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/analyzer-10.0.1",
+      "same_resolved_package_root": false
     },
     {
       "name": "archive",
@@ -84,7 +90,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/archive-4.6.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/archive-4.6.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "args",
@@ -108,7 +117,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/args-2.7.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/args-2.7.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "async",
@@ -132,7 +144,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/async-2.13.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/async-2.13.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "boolean_selector",
@@ -156,7 +171,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/boolean_selector-2.1.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/boolean_selector-2.1.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "characters",
@@ -180,7 +198,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/characters-1.4.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/characters-1.4.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "cli_config",
@@ -196,7 +217,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/cli_config-0.2.0",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "collection",
@@ -220,7 +244,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/collection-1.19.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/collection-1.19.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "convert",
@@ -244,7 +271,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/convert-3.1.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/convert-3.1.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "coverage",
@@ -260,7 +290,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/coverage-1.15.1",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "crypto",
@@ -284,7 +317,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/crypto-3.0.7",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/crypto-3.0.7",
+      "same_resolved_package_root": true
     },
     {
       "name": "ffi",
@@ -308,7 +344,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/ffi-2.2.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/ffi-2.2.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "file",
@@ -332,7 +371,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/file-7.0.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/file-7.0.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "frontend_server_client",
@@ -348,7 +390,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/frontend_server_client-4.0.0",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "glob",
@@ -372,7 +417,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/glob-2.1.3",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/glob-2.1.3",
+      "same_resolved_package_root": true
     },
     {
       "name": "http_multi_server",
@@ -396,7 +444,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/http_multi_server-3.2.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/http_multi_server-3.2.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "http_parser",
@@ -420,7 +471,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/http_parser-4.1.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/http_parser-4.1.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "io",
@@ -444,7 +498,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/io-1.0.5",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/io-1.0.5",
+      "same_resolved_package_root": true
     },
     {
       "name": "legacy_doc_parser",
@@ -466,7 +523,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": null
+      "same_hosted_archive": null,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/crispcloud/packages/legacy_doc_parser",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/crispcloud/packages/legacy_doc_parser",
+      "same_resolved_package_root": true
     },
     {
       "name": "lints",
@@ -490,7 +550,10 @@
         }
       },
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/lints-6.1.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/lints-3.0.0",
+      "same_resolved_package_root": false
     },
     {
       "name": "logging",
@@ -514,7 +577,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/logging-1.3.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/logging-1.3.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "matcher",
@@ -538,7 +604,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/matcher-0.12.20",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/matcher-0.12.20",
+      "same_resolved_package_root": true
     },
     {
       "name": "meta",
@@ -562,7 +631,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/meta-1.19.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/meta-1.19.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "mime",
@@ -586,7 +658,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/mime-2.1.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/mime-2.1.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "node_preamble",
@@ -602,7 +677,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/node_preamble-2.0.2",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "package_config",
@@ -626,7 +704,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/package_config-2.2.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/package_config-2.2.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "path",
@@ -650,7 +731,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/path-1.9.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/path-1.9.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "pool",
@@ -674,7 +758,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/pool-1.5.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/pool-1.5.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "posix",
@@ -698,7 +785,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/posix-6.5.4",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/posix-6.5.4",
+      "same_resolved_package_root": true
     },
     {
       "name": "pub_semver",
@@ -722,7 +812,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/pub_semver-2.2.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/pub_semver-2.2.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "shelf",
@@ -746,7 +839,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/shelf-1.4.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/shelf-1.4.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "shelf_packages_handler",
@@ -762,7 +858,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/shelf_packages_handler-3.0.2",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "shelf_static",
@@ -778,7 +877,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/shelf_static-1.1.3",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "shelf_web_socket",
@@ -802,7 +904,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/shelf_web_socket-3.0.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/shelf_web_socket-3.0.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "source_map_stack_trace",
@@ -818,7 +923,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/source_map_stack_trace-2.1.2",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "source_maps",
@@ -834,7 +942,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/source_maps-0.10.13",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "source_span",
@@ -858,7 +969,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/source_span-1.10.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/source_span-1.10.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "stack_trace",
@@ -882,7 +996,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/stack_trace-1.12.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/stack_trace-1.12.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "stream_channel",
@@ -906,7 +1023,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/stream_channel-2.1.4",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/stream_channel-2.1.4",
+      "same_resolved_package_root": true
     },
     {
       "name": "string_scanner",
@@ -930,7 +1050,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/string_scanner-1.4.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/string_scanner-1.4.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "term_glyph",
@@ -954,7 +1077,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/term_glyph-1.2.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/term_glyph-1.2.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "test",
@@ -970,7 +1096,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/test-1.31.1",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "test_api",
@@ -994,7 +1123,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/test_api-0.7.12",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/test_api-0.7.12",
+      "same_resolved_package_root": true
     },
     {
       "name": "test_core",
@@ -1010,7 +1142,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/test_core-0.6.18",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "typed_data",
@@ -1034,7 +1169,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/typed_data-1.4.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/typed_data-1.4.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "vm_service",
@@ -1058,7 +1196,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/vm_service-15.2.0",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/vm_service-15.2.0",
+      "same_resolved_package_root": true
     },
     {
       "name": "watcher",
@@ -1082,7 +1223,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/watcher-1.2.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/watcher-1.2.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "web",
@@ -1106,7 +1250,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/web-1.1.2",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/web-1.1.2",
+      "same_resolved_package_root": true
     },
     {
       "name": "web_socket",
@@ -1130,7 +1277,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/web_socket-1.0.1",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/web_socket-1.0.1",
+      "same_resolved_package_root": true
     },
     {
       "name": "web_socket_channel",
@@ -1154,7 +1304,10 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/web_socket_channel-3.0.3",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/web_socket_channel-3.0.3",
+      "same_resolved_package_root": true
     },
     {
       "name": "webkit_inspection_protocol",
@@ -1170,7 +1323,10 @@
       },
       "application": null,
       "same_version_and_source": false,
-      "same_hosted_archive": false
+      "same_hosted_archive": false,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/webkit_inspection_protocol-1.2.1",
+      "resolved_application_package_root": null,
+      "same_resolved_package_root": false
     },
     {
       "name": "yaml",
@@ -1194,7 +1350,11 @@
         }
       },
       "same_version_and_source": true,
-      "same_hosted_archive": true
+      "same_hosted_archive": true,
+      "resolved_engine_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/yaml-3.1.3",
+      "resolved_application_package_root": "/workspace/scratch/cb0df5963965/toolchain/pub-cache/hosted/pub.dev/yaml-3.1.3",
+      "same_resolved_package_root": true
     }
-  ]
+  ],
+  "runtime_same_package_roots": true
 }

@@ -648,76 +648,98 @@ void main() {
   testWidgets(
     'progressing captures retain per-pane deadlines and queued input budget',
     (tester) async {
-      server.setPaneRows(8);
-      await server.start(client);
-      await tester.pump(const Duration(milliseconds: 40));
-      server.afterCommand = (command) {
-        if (command.startsWith('list-panes')) {
-          server.afterCommand = null;
-          server.deferReplies = true;
-        }
-      };
-      server.notification('%layout-change @0 recapture-all-panes');
-      await tester.pump(const Duration(milliseconds: 40));
-      expect(server.deferredReplies, hasLength(56));
-      final session = client.panes['%0']!.session;
-      session.terminal.textInput('queued behind the snapshot');
-      await tester.pump();
-      expect(server.deferredReplies, hasLength(57));
-
-      // This fixture's timeout is three seconds. A complete pane arrives
-      // every two seconds, so all eight retain their original budget even
-      // though the grouped capture takes sixteen seconds overall.
-      for (var pane = 0; pane < 8; pane++) {
-        await tester.pump(const Duration(seconds: 2));
-        expect(client.ready, isTrue, reason: 'waiting for pane $pane');
-        server.flushReplies(limit: 7);
+      // Futures and stream controllers must belong to this fake-clock zone,
+      // rather than the ordinary test fixture created by the shared setUp.
+      final server = _Server();
+      final client = server.client();
+      try {
+        server.setPaneRows(8);
+        final starting = server.start(client);
         await tester.pump();
+        await starting;
+        await tester.pump(const Duration(milliseconds: 40));
+        server.afterCommand = (command) {
+          if (command.startsWith('list-panes')) {
+            server.afterCommand = null;
+            server.deferReplies = true;
+          }
+        };
+        server.notification('%layout-change @0 recapture-all-panes');
+        await tester.pump(const Duration(milliseconds: 40));
+        expect(server.deferredReplies, hasLength(56));
+        final session = client.panes['%0']!.session;
+        session.terminal.textInput('queued behind the snapshot');
+        await tester.pump();
+        expect(server.deferredReplies, hasLength(57));
+
+        // This fixture's timeout is three seconds. A complete pane arrives
+        // every two seconds, so all eight retain their original budget even
+        // though the grouped capture takes sixteen seconds overall.
+        for (var pane = 0; pane < 8; pane++) {
+          await tester.pump(const Duration(seconds: 2));
+          expect(client.ready, isTrue, reason: 'waiting for pane $pane');
+          server.flushReplies(limit: 7);
+          await tester.pump();
+        }
+        expect(server.deferredReplies, hasLength(1));
+        await tester.pump(const Duration(seconds: 2));
+        expect(client.ready, isTrue);
+        expect(session.isConnected, isTrue);
+        server.deferReplies = false;
+        server.flushReplies();
+        await tester.pump();
+        expect(client.error, isNull);
+        expect(session.error, isNull);
+        expect(utf8.decode(server.inputBytes), 'queued behind the snapshot');
+      } finally {
+        final closing = client.close();
+        await tester.pump();
+        await closing;
+        client.dispose();
       }
-      expect(server.deferredReplies, hasLength(1));
-      await tester.pump(const Duration(seconds: 2));
-      expect(client.ready, isTrue);
-      expect(session.isConnected, isTrue);
-      server.deferReplies = false;
-      server.flushReplies();
-      await tester.pump();
-      expect(client.error, isNull);
-      expect(session.error, isNull);
-      expect(utf8.decode(server.inputBytes), 'queued behind the snapshot');
     },
   );
 
   testWidgets(
     'partial pane replies cannot extend a grouped capture hard deadline',
     (tester) async {
-      server.setPaneRows(8);
-      server.afterCommand = (command) {
-        if (command.startsWith('list-panes')) {
-          server.afterCommand = null;
-          server.deferReplies = true;
-        }
-      };
-      final starting = server.start(client);
-      final failed = expectLater(
-        starting,
-        throwsA(isA<TmuxControlException>()),
-      );
-      await tester.pump();
-      expect(server.deferredReplies, hasLength(56));
-      await tester.pump(const Duration(seconds: 2));
-      server.flushReplies(limit: 1);
-      await tester.pump();
-      expect(client.isClosed, isFalse);
-      // The first pane still has six pending replies. Progress on its first
-      // command must not renew the complete pane's three-second hard cap.
-      await tester.pump(const Duration(seconds: 1));
-      await failed;
-      expect(client.isClosed, isTrue);
-      expect(client.error.toString(), contains('timed out'));
-      expect(client.panes, isEmpty);
-      server.flushReplies();
-      await tester.pump();
-      expect(server.closeCount, 1);
+      final server = _Server();
+      final client = server.client();
+      try {
+        server.setPaneRows(8);
+        server.afterCommand = (command) {
+          if (command.startsWith('list-panes')) {
+            server.afterCommand = null;
+            server.deferReplies = true;
+          }
+        };
+        final starting = server.start(client);
+        final failed = expectLater(
+          starting,
+          throwsA(isA<TmuxControlException>()),
+        );
+        await tester.pump();
+        expect(server.deferredReplies, hasLength(56));
+        await tester.pump(const Duration(seconds: 2));
+        server.flushReplies(limit: 1);
+        await tester.pump();
+        expect(client.isClosed, isFalse);
+        // The first pane still has six pending replies. Progress on its first
+        // command must not renew the complete pane's three-second hard cap.
+        await tester.pump(const Duration(seconds: 1));
+        await failed;
+        expect(client.isClosed, isTrue);
+        expect(client.error.toString(), contains('timed out'));
+        expect(client.panes, isEmpty);
+        server.flushReplies();
+        await tester.pump();
+        expect(server.closeCount, 1);
+      } finally {
+        final closing = client.close();
+        await tester.pump();
+        await closing;
+        client.dispose();
+      }
     },
   );
 
@@ -878,7 +900,9 @@ class _Server {
   _Server() {
     output = StreamController<List<int>>(
       sync: true,
-      onCancel: () => cancelGate?.future,
+      // Avoid StreamSubscription.cancel's root-zone null Future singleton:
+      // fake-clock tests need cancellation owned by their current zone.
+      onCancel: () => cancelGate?.future ?? Future<void>.value(),
     );
   }
   late final StreamController<List<int>> output;

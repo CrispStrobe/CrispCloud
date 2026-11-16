@@ -1,0 +1,9 @@
+{
+  "status": "interrupted_after_compiler_exit",
+  "exit_code": 130,
+  "observed_completed_tests": 39,
+  "failure": "Dart compiler exited unexpectedly; Flutter test_compiler null-check; cause under investigation",
+  "source_identity": "No completed source-proof receipt: controller interrupted after compiler failure",
+  "log": "tmux-deadline-focused.log",
+  "github_actions_queried_or_awaited": false
+}

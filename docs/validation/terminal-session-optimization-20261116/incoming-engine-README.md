@@ -36,7 +36,7 @@ Every runtime dependency resolves to the exact same package directory as the app
 | posix | 6.5.4 | 6.5.4 |
 | typed_data | 1.4.0 | 1.4.0 |
 
-`incoming-engine-dependencies.json` records all 53 resolved packages, both graphs’ versions/source descriptions/archive digests, normalized package roots and test-only differences. `incoming-engine.json` records exact commands, timings, initial/final production hashes and counts. Logs and the compressed complete source map are adjacent.
+`incoming-engine-dependencies.json` records all 53 resolved packages, both graphs’ versions/source descriptions/archive digests, normalized package roots and test-only differences. `incoming-engine.json` records exact commands, timings, initial/final production hashes and counts. Compressed logs (`incoming-engine-pub-get.log.gz` and `incoming-engine-tests.log.gz`) and the complete source map are adjacent.
 
 The earlier application-graph Flutter attempt could not load these four engine files because that graph does not include `package:test`. Its original failure evidence is retained separately. This successful run uses the unchanged test declarations of the package that owns these suites. It establishes these engine behaviors; broader application and platform acceptance have separate evidence.
 
