@@ -46,6 +46,49 @@ void main() {
     expect(data.cellA1('E4').hyperlink, 'https://example.com');
   });
 
+  test('writes workbook metadata and reads it back', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1)
+      ..printArea = SmlRange.parse('A1:B3')
+      ..printTitleRows = SmlRange.parse('A1:A1')
+      ..printTitleCols = SmlRange.parse('A1:A1')
+      ..autoFilter = SmlAutoFilter(range: SmlRange.parse('A1:B3'));
+    sheet.cellA1('A1').value = 'Name';
+    sheet.cellA1('A2').value = 'A';
+    sheet.cellA1('B2').value = 1;
+    final book = SmlWorkbook(sheets: [sheet])
+      ..namedRanges.add(
+        SmlNamedRange(
+          name: 'Sales',
+          sheetName: 'Data',
+          range: SmlRange.parse('A2:B3'),
+        ),
+      )
+      ..formulaNames.add(
+        SmlFormulaName(name: 'Total', formula: 'SUM(Data!B2:B3)'),
+      );
+    final reopened = OdsSheetReader.readBytes(OdsSheetWriter.writeBytes(book));
+    final data = reopened.sheets.single;
+    String a1(SmlRange range) => '${range.start.a1}:${range.end.a1}';
+    expect(a1(data.printArea!), 'A1:B3');
+    expect(a1(data.printTitleRows!), 'A1:A1');
+    expect(a1(data.printTitleCols!), 'A1:A1');
+    expect(a1(data.autoFilter!.range), 'A1:B3');
+    expect(reopened.namedRanges.single.name, 'Sales');
+    expect(reopened.formulaNames.single.name, 'Total');
+  });
+
+  test('writes authored number formats', () {
+    final styles = SmlStyleSheet();
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
+    sheet.cellA1('A1')
+      ..value = 0.256
+      ..styleIndex = styles.xfFor(numFmtCode: '0.0%');
+    final book = SmlWorkbook(sheets: [sheet], styles: styles);
+    final reopened = OdsSheetReader.readBytes(OdsSheetWriter.writeBytes(book));
+    final cell = reopened.sheets.first.cellA1('A1');
+    expect(reopened.styles!.format(cell.value, cell.styleIndex), '25.6%');
+  });
+
   test('writes multiple sheets, hidden state and tab colours', () {
     final visible = SmlWorksheet(name: 'Visible', sheetId: 1)
       ..tabColorRgb = 'FF0000';

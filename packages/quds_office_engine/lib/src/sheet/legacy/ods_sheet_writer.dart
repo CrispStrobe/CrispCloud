@@ -168,6 +168,49 @@ abstract final class OdsSheetWriter {
     for (var index = 0; index < book.sheets.length; index++) {
       _writeSheet(w, book, book.sheets[index], index, layout);
     }
+    final globals = <String>[];
+    for (final name in book.namedRanges) {
+      if (name.localSheetId == null) {
+        globals.add(
+          '<table:named-range table:name="${_escapeAttr(name.name)}" '
+          'table:cell-range-address="${_rangeAddress(name.sheetName, name.range)}" '
+          'table:base-cell-address="${_baseAddress(name.sheetName)}"/>',
+        );
+      }
+    }
+    for (final name in book.formulaNames) {
+      if (name.localSheetId == null) {
+        globals.add(
+          '<table:named-expression table:name="${_escapeAttr(name.name)}" '
+          'table:expression="${_escapeAttr(_dropOf(name.formula))}"/>',
+        );
+      }
+    }
+    if (globals.isNotEmpty) {
+      w.writeStartElement('named-expressions', prefix: 'table');
+      for (final name in globals) {
+        w.writeRaw(name);
+      }
+      w.writeEndElement();
+    }
+    final filters = book.sheets.where((sheet) => sheet.autoFilter != null);
+    if (filters.isNotEmpty) {
+      w.writeStartElement('database-ranges', prefix: 'table');
+      for (final sheet in filters) {
+        final range = sheet.autoFilter!.range;
+        w.writeEmptyElement(
+          'database-range',
+          prefix: 'table',
+          attributes: {
+            'table:target-range-address':
+                '${_plainSheet(sheet.name)}.${range.start.a1}:'
+                '${_plainSheet(sheet.name)}.${range.end.a1}',
+            'table:display-filter-buttons': 'true',
+          },
+        );
+      }
+      w.writeEndElement();
+    }
     w.writeEndElement();
     w.writeEndElement();
     w.writeEndElement();
@@ -184,6 +227,13 @@ abstract final class OdsSheetWriter {
     w.writeStartElement('table', prefix: 'table');
     w.writeAttribute('table:name', sheet.name);
     w.writeAttribute('table:style-name', layout.tableStyle[index]);
+    if (sheet.printArea case final area?) {
+      w.writeAttribute(
+        'table:print-ranges',
+        '${_plainSheet(sheet.name)}.${area.start.a1}:'
+            '${_plainSheet(sheet.name)}.${area.end.a1}',
+      );
+    }
     final extent = sheet.usedExtent();
     final maxCol = extent.col;
     final maxRow = extent.row;
@@ -214,6 +264,37 @@ abstract final class OdsSheetWriter {
           continue;
         }
         _writeCell(w, sheet, col, row, merge, layout);
+      }
+      w.writeEndElement();
+    }
+    final localNames = <String>[];
+    if (sheet.printTitleRows != null || sheet.printTitleCols != null) {
+      localNames.add(
+        '<table:named-expression table:name="Excel_BuiltIn_Print_Titles" '
+        'table:expression="${_printTitles(sheet)}"/>',
+      );
+    }
+    for (final name in book.namedRanges) {
+      if (name.localSheetId == index) {
+        localNames.add(
+          '<table:named-range table:name="${_escapeAttr(name.name)}" '
+          'table:cell-range-address="${_rangeAddress(name.sheetName, name.range)}" '
+          'table:base-cell-address="${_baseAddress(name.sheetName)}"/>',
+        );
+      }
+    }
+    for (final name in book.formulaNames) {
+      if (name.localSheetId == index) {
+        localNames.add(
+          '<table:named-expression table:name="${_escapeAttr(name.name)}" '
+          'table:expression="${_escapeAttr(_dropOf(name.formula))}"/>',
+        );
+      }
+    }
+    if (localNames.isNotEmpty) {
+      w.writeStartElement('named-expressions', prefix: 'table');
+      for (final name in localNames) {
+        w.writeRaw(name);
       }
       w.writeEndElement();
     }
@@ -291,6 +372,44 @@ abstract final class OdsSheetWriter {
       w.writeEndElement();
     }
     w.writeEndElement();
+  }
+
+  static String _plainSheet(String name) =>
+      RegExp(r'[^A-Za-z0-9_]').hasMatch(name) ? _escapeSheet(name) : name;
+
+  static String _escapeSheet(String name) => "'${name.replaceAll("'", "''")}'";
+
+  static String _escapeAttr(String value) => value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;');
+
+  static String _rangeAddress(String sheet, SmlRange range) =>
+      '\$${_escapeSheet(sheet)}.${range.start.a1}:.${range.end.a1}';
+
+  static String _baseAddress(String sheet) => '\$${_escapeSheet(sheet)}.\$A\$1';
+
+  static String _dropOf(String formula) =>
+      formula.startsWith('of:=') ? formula.substring(4) : formula;
+
+  static String _printTitles(SmlWorksheet sheet) {
+    final parts = <String>[];
+    if (sheet.printTitleRows case final rows?) {
+      parts.add(
+        '[\$${_escapeSheet(sheet.name)}.\$${rows.minRow + 1}:'
+        '.\$${rows.maxRow + 1}]',
+      );
+    }
+    if (sheet.printTitleCols case final cols?) {
+      final start = SmlCellRef(
+        cols.minCol,
+        0,
+      ).a1.replaceAll(RegExp(r'\d+'), '');
+      final end = SmlCellRef(cols.maxCol, 0).a1.replaceAll(RegExp(r'\d+'), '');
+      parts.add('[\$${_escapeSheet(sheet.name)}.\$$start:.\$$end]');
+    }
+    return parts.join(';');
   }
 
   static String _toOpenFormula(String formula) {
@@ -377,6 +496,7 @@ abstract final class OdsSheetWriter {
 class _OdsLayout {
   _OdsLayout(this.book) {
     final cellStyleIds = <String, String>{};
+    final numberStyleIds = <String, String>{};
     for (var sheetIndex = 0; sheetIndex < book.sheets.length; sheetIndex++) {
       final sheet = book.sheets[sheetIndex];
       final columnStyles = <int, String>{};
@@ -423,6 +543,17 @@ class _OdsLayout {
             cell.styleIndex == 0) {
           continue;
         }
+        String? numberCode;
+        final styleSheet = book.styles;
+        if (styleSheet != null &&
+            cell.styleIndex >= 0 &&
+            cell.styleIndex < styleSheet.cellXfsNumFmt.length) {
+          final id = styleSheet.cellXfsNumFmt[cell.styleIndex];
+          final code = styleSheet.numFmts[id];
+          if (code != null && code.trim().isNotEmpty && code != 'General') {
+            numberCode = code;
+          }
+        }
         final key = [
           cell.fontBold,
           cell.fontSize,
@@ -431,11 +562,21 @@ class _OdsLayout {
           cell.fillRgb,
           cell.horizontalAlign.name,
           cell.wrapText ?? false,
+          numberCode ?? '',
         ].join('|');
         cellStyleIds.putIfAbsent(key, () {
           final name = 'ce${cellStyleIds.length + 1}';
+          String? dataStyle;
+          if (numberCode != null) {
+            dataStyle = numberStyleIds.putIfAbsent(numberCode, () {
+              final numberName = 'N${numberStyleIds.length + 1}';
+              numberStyleBuffers.add(_numberStyleXml(numberCode!, numberName));
+              return numberName;
+            });
+          }
           final buffer = StringBuffer(
-            '<style:style style:name="$name" style:family="table-cell">',
+            '<style:style style:name="$name" style:family="table-cell"'
+            '${dataStyle == null ? '' : ' style:data-style-name="$dataStyle"'}>',
           );
           buffer.write('<style:table-cell-properties');
           if (cell.fillRgb.isNotEmpty) {
@@ -480,6 +621,7 @@ class _OdsLayout {
   final List<String> columnStyleBuffers = [];
   final List<String> rowStyleBuffers = [];
   final List<String> cellStyleBuffers = [];
+  final List<String> numberStyleBuffers = [];
 
   final Map<String, String> cellStyles = {};
 
@@ -488,7 +630,57 @@ class _OdsLayout {
   String? cellStyle(SmlWorksheet sheet, SmlCell cell) =>
       cellStyles[cellKey(book.sheets.indexOf(sheet), cell)];
 
-  void writeNumberStyles(XmlWriter w) {}
+  void writeNumberStyles(XmlWriter w) {
+    for (final buffer in numberStyleBuffers) {
+      w.writeRaw(buffer);
+    }
+  }
+
+  static String _numberStyleXml(String code, String name) {
+    final clean = code.replaceAll(RegExp(r'\[[^\]]*\]'), '');
+    final percent = clean.contains('%');
+    final date = RegExp(
+      r'yyyy|yy|mmm|dd',
+      caseSensitive: false,
+    ).hasMatch(clean);
+    final currency = RegExp(r'[$€£¥]').firstMatch(clean)?.group(0);
+    final decimals = _decimals(clean);
+    final grouping = clean.contains(',');
+    final number =
+        '<number:number number:decimal-places="$decimals" '
+        'number:min-decimal-places="$decimals" number:min-integer-digits="1"'
+        '${grouping ? ' number:grouping="true"' : ''}/>';
+    if (percent) {
+      return '<number:percentage-style style:name="$name">'
+          '$number<number:text>%</number:text></number:percentage-style>';
+    }
+    if (date) {
+      return '<number:date-style style:name="$name">'
+          '<number:year number:style="long"/><number:text>-</number:text>'
+          '<number:month number:style="long"/><number:text>-</number:text>'
+          '<number:day number:style="long"/></number:date-style>';
+    }
+    if (currency != null) {
+      return '<number:currency-style style:name="$name">'
+          '<number:currency-symbol>$currency</number:currency-symbol>'
+          '$number</number:currency-style>';
+    }
+    return '<number:number-style style:name="$name">$number</number:number-style>';
+  }
+
+  static int _decimals(String code) {
+    final dot = code.indexOf('.');
+    if (dot < 0) return 0;
+    var count = 0;
+    for (var i = dot + 1; i < code.length; i++) {
+      if (code[i] == '0' || code[i] == '#') {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return count.clamp(0, 10);
+  }
 
   void writeColumnStyles(XmlWriter w) {
     for (final buffer in columnStyleBuffers) {
