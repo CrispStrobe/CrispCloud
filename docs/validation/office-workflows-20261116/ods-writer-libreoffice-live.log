@@ -1,0 +1,4 @@
+Independent LibreOffice roundtrip: generated synthetic native.ods and converted with isolated headless Calc profile to native.xlsx.
+Hyperlinks, named ranges and print area are verified directly in LibreOffice OOXML output; the engine deserializer does not hydrate all these fields.
+PASS: independent LibreOffice ODS → XLSX roundtrip retained all checked values, formulas/results, font style, merges, comments, percentage formatting.
+PASS: LibreOffice output preserved the E4 external hyperlink, Sales named range and A1:F4 print area.

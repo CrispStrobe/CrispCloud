@@ -9,12 +9,13 @@
     "skip_reason": "Existing Linux/Windows-only native-copy write tests on macOS"
   },
   "engine": {
-    "passed": 136,
+    "passed": 141,
     "failures": 0,
     "suites": [
       "ods_sheet_reader_test",
       "variable_line_breaker_test",
-      "word_layout_test"
+      "word_layout_test",
+      "ods_sheet_writer_test"
     ]
   },
   "paragraph_font_layout": {
@@ -28,12 +29,18 @@
   },
   "io_scope": "Real temporary-file writes and subsequent Save target checks; native picker destinations are injected/mocked in automated tests. No live OS picker interaction or installed app replacement.",
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_pin": "3dcf949474b390759c8238e6f1650d040e903cf8",
+  "source_pin": "04899a2d8315127788240d3a5c2d6bec700577d3",
   "ci": "Not queried or awaited.",
-  "managed_files": 2420,
+  "managed_files": 2422,
   "final_rendering": {
     "passed": 2,
     "failures": 0,
     "note": "Rechecked after reducing underline ink clearance; no glyph/layout changes."
+  },
+  "ods_writer_live": {
+    "passed": 1,
+    "independent_application": "LibreOffice Calc, isolated headless profile",
+    "checks": "values, formula/result, bold, merge, comment, hyperlink, percentage, named range, print area",
+    "note": "Hyperlinks and named metadata checked directly in independent OOXML; engine deserializer does not hydrate every metadata field."
   }
 }
