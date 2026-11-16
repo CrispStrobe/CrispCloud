@@ -104,6 +104,7 @@ class SshJumpHost {
     final authentication = switch (value['authentication']) {
       'password' => SshTerminalAuthentication.password,
       'privateKey' => SshTerminalAuthentication.privateKey,
+      'agent' => SshTerminalAuthentication.agent,
       _ => throw const FormatException('Unknown SSH jump authentication'),
     };
     try {

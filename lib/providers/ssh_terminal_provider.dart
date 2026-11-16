@@ -63,6 +63,7 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String password, {
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
   }) async {
@@ -73,6 +74,7 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       password,
       gateway: gateway,
       jumpHosts: jumpHosts,
+      forwardAgent: forwardAgent,
       hostKeyPrompt: hostKeyPrompt,
       isCurrent: isCurrent,
     );
@@ -88,6 +90,7 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String privateKey, {
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
     String? passphrase,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
@@ -99,7 +102,33 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       privateKey,
       gateway: gateway,
       jumpHosts: jumpHosts,
+      forwardAgent: forwardAgent,
       passphrase: passphrase,
+      hostKeyPrompt: hostKeyPrompt,
+      isCurrent: isCurrent,
+    );
+    _refresh();
+    return session;
+  }
+
+  /// Connects using the local Unix SSH agent and refreshes state.
+  Future<SshSession> connectWithAgent(
+    String host,
+    int port,
+    String username, {
+    Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
+    HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
+  }) async {
+    final session = await _service.connectWithAgent(
+      host,
+      port,
+      username,
+      gateway: gateway,
+      jumpHosts: jumpHosts,
+      forwardAgent: forwardAgent,
       hostKeyPrompt: hostKeyPrompt,
       isCurrent: isCurrent,
     );

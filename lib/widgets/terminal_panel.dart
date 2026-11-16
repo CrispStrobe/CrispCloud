@@ -25,8 +25,10 @@ import '../providers/terminal_workspace_provider.dart';
 import '../providers/terminal_key_bindings_provider.dart';
 import '../providers/terminal_triggers_provider.dart';
 import '../providers/ssh_terminal_profiles_provider.dart';
+import '../providers/ssh_forwarding_profiles_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
+import '../services/ssh_forwarding_profiles.dart';
 import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
 import '../services/keyboard_shortcut_service.dart';
@@ -172,6 +174,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   TerminalWorkspace? _workspace;
   // Reconnect remembers the destination and session mode, never credentials.
   SshTerminalConfig? _lastSshConfig;
+  SshForwardingProfileSession? _forwardingProfiles;
   Terminal? _tmuxTerminal;
   Terminal? _screenTerminal;
   bool _showSearch = false;
@@ -299,6 +302,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.session, widget.session)) {
       _connectionRequest++;
+      _clearForwardingProfiles();
       _workspace = null;
       _restorePaneState();
       _session.removeListener(_onSessionChanged);
@@ -323,6 +327,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _onSessionChanged() {
     if (!mounted) return;
+    final forwardingProfiles = _forwardingProfiles;
+    if (forwardingProfiles != null && !forwardingProfiles.isCurrent) {
+      _clearForwardingProfiles();
+    }
     if (!identical(_observedTerminal, _session.terminal)) _attachTerminal();
     final shell = _session.shellIntegration;
     if (_session.triggerNotificationSerial != _triggerNotificationSerial &&
@@ -663,31 +671,41 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
     final connecting = _session.connect(
       (columns, rows) async {
-        final session =
-            config.authentication == SshTerminalAuthentication.privateKey
-            ? await _ssh.connectWithKey(
-                config.host,
-                config.port,
-                config.username,
-                config.privateKey,
-                passphrase: config.passphrase.isEmpty
-                    ? null
-                    : config.passphrase,
-                gateway: config.gateway,
-                jumpHosts: config.jumpHosts,
-                isCurrent: currentAttempt,
-                hostKeyPrompt: prompt,
-              )
-            : await _ssh.connect(
-                config.host,
-                config.port,
-                config.username,
-                config.password,
-                gateway: config.gateway,
-                jumpHosts: config.jumpHosts,
-                isCurrent: currentAttempt,
-                hostKeyPrompt: prompt,
-              );
+        final session = await switch (config.authentication) {
+          SshTerminalAuthentication.privateKey => _ssh.connectWithKey(
+            config.host,
+            config.port,
+            config.username,
+            config.privateKey,
+            passphrase: config.passphrase.isEmpty ? null : config.passphrase,
+            gateway: config.gateway,
+            jumpHosts: config.jumpHosts,
+            forwardAgent: config.forwardAgent,
+            isCurrent: currentAttempt,
+            hostKeyPrompt: prompt,
+          ),
+          SshTerminalAuthentication.password => _ssh.connect(
+            config.host,
+            config.port,
+            config.username,
+            config.password,
+            gateway: config.gateway,
+            jumpHosts: config.jumpHosts,
+            forwardAgent: config.forwardAgent,
+            isCurrent: currentAttempt,
+            hostKeyPrompt: prompt,
+          ),
+          SshTerminalAuthentication.agent => _ssh.connectWithAgent(
+            config.host,
+            config.port,
+            config.username,
+            gateway: config.gateway,
+            jumpHosts: config.jumpHosts,
+            forwardAgent: config.forwardAgent,
+            isCurrent: currentAttempt,
+            hostKeyPrompt: prompt,
+          ),
+        };
         try {
           if (!currentAttempt()) {
             throw StateError('SSH connection was cancelled');
@@ -724,6 +742,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
               privateKey: config.privateKey,
               passphrase: config.passphrase,
               authentication: config.authentication,
+              forwardAgent: config.forwardAgent,
               gateway: config.gateway,
               jumpHosts: config.jumpHosts,
               tmux: selected.tmuxOptions,
@@ -770,8 +789,50 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     await connecting;
     if (mounted && identical(_session.terminal, connectingTerminal)) {
       if (selectionCancelled) await _session.disconnect();
+      if (_session.isConnected) _startSavedForwarding(launchConfig);
       _focusIfVisible();
     }
+  }
+
+  void _clearForwardingProfiles() {
+    final previous = _forwardingProfiles;
+    _forwardingProfiles = null;
+    previous?.dispose();
+  }
+
+  void _startSavedForwarding(SshTerminalConfig config) {
+    _clearForwardingProfiles();
+    final manager = _session.portForwarding;
+    if (manager == null) return;
+    final identity = _session.connectionIdentity;
+    final profiles = SshForwardingProfileSession(
+      store: ref.read(sshForwardingProfilesProvider),
+      route: SshForwardingRoute.fromConfig(config),
+      forwarding: manager,
+      isCurrent: () =>
+          mounted &&
+          _session.isConnected &&
+          identical(identity, _session.connectionIdentity) &&
+          identical(manager, _session.portForwarding),
+    );
+    _forwardingProfiles = profiles;
+    // This runs only after the verified shell is published. A canceled session
+    // picker, failed authentication or replacement never starts saved listeners.
+    // The coordinator cancels pending work when this connection identity ends.
+    unawaited(
+      profiles.startAutomatic().then((_) {
+        if (!mounted || !profiles.isCurrent) return;
+        String? error = profiles.error;
+        for (final profile in profiles.profiles) {
+          error ??= profiles.profileError(profile.id);
+        }
+        if (error != null) {
+          ScaffoldMessenger.maybeOf(
+            context,
+          )?.showSnackBar(SnackBar(content: Text(context.sshForwardTr(error))));
+        }
+      }),
+    );
   }
 
   Future<SshMultiplexerSession?> _chooseMultiplexerSession(
@@ -1229,7 +1290,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           unawaited(
             showDialog<void>(
               context: context,
-              builder: (_) => SshPortForwardingDialog(forwarding: forwarding),
+              builder: (_) => SshPortForwardingDialog(
+                forwarding: forwarding,
+                profiles: _forwardingProfiles,
+              ),
             ),
           );
         }
@@ -1859,6 +1923,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _scroll.removeListener(_onScrollChanged);
     _clearCommandNavigation();
     _connectionRequest++;
+    _clearForwardingProfiles();
     _focus.removeListener(_onInputFocusChanged);
     _controller.removeListener(_scheduleMenuUpdate);
     _session.removeListener(_onSessionChanged);

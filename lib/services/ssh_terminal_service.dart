@@ -25,6 +25,7 @@ import '../models/ssh_multiplexer_session.dart';
 import '../models/tmux_session_options.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'ssh_agent.dart';
 import 'ssh_gateway.dart';
 import 'ssh_port_forwarding.dart';
 import 'terminal_output.dart';
@@ -54,6 +55,7 @@ typedef SshVerifiedClientOpener = Future<SSHClient> Function(
   required String username,
   String? password,
   List<SSHIdentity>? identities,
+  SSHAgentHandler? agentHandler,
   required FutureOr<bool> Function(String, Uint8List) verify,
   void Function(SSHClient)? onCreated,
 });
@@ -175,6 +177,7 @@ class _SshClientRoute {
   SSHSocket? _pendingSocket;
   bool closed = false;
   Future<void>? _closing;
+  SshAgentConnection? agent;
 
   void ownSocket(SSHSocket socket) {
     if (closed) {
@@ -199,6 +202,7 @@ class _SshClientRoute {
 
   Future<void> _close() async {
     closed = true;
+    agent?.close();
     final pending = _pendingSocket;
     _pendingSocket = null;
     if (pending != null) await _closeSocket(pending);
@@ -246,6 +250,8 @@ class _SshRouteTarget {
     this.username, {
     this.password,
     this.identities,
+    this.agentAuthentication = false,
+    this.forwardAgent = false,
   });
 
   final String host;
@@ -253,6 +259,8 @@ class _SshRouteTarget {
   final String username;
   final String? password;
   final List<SSHIdentity>? identities;
+  final bool agentAuthentication;
+  final bool forwardAgent;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,6 +295,7 @@ class SshTerminalService {
   final SshClientConnector? _clientConnector;
   final SshSocketConnector? _socketConnector;
   final SshVerifiedClientOpener _verifiedClientOpener;
+  final SshAgentFactory _agentFactory;
   final _pendingRoutes = <_SshClientRoute>{};
 
   /// Internal session registry.
@@ -306,8 +315,10 @@ class SshTerminalService {
     @visibleForTesting this._clientConnector,
     @visibleForTesting this._socketConnector,
     @visibleForTesting SshVerifiedClientOpener? verifiedClientOpener,
+    @visibleForTesting SshAgentFactory? agentFactory,
   }) : _secure = secureStorage ?? PlatformSecureStorage(),
-       _verifiedClientOpener = verifiedClientOpener ?? openVerifiedSsh;
+       _verifiedClientOpener = verifiedClientOpener ?? openVerifiedSsh,
+       _agentFactory = agentFactory ?? SshAgentConnection.system;
 
   // -------------------------------------------------------------------------
   // Platform guard
@@ -360,6 +371,7 @@ class SshTerminalService {
     String password, {
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
   }) => _connect(
@@ -369,6 +381,7 @@ class SshTerminalService {
     password: password,
     gateway: gateway,
     jumpHosts: jumpHosts,
+    forwardAgent: forwardAgent,
     hostKeyPrompt: hostKeyPrompt,
     isCurrent: isCurrent,
   );
@@ -393,6 +406,7 @@ class SshTerminalService {
     String privateKey, {
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
     String? passphrase,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
@@ -411,10 +425,34 @@ class SshTerminalService {
       identities: [keyPair],
       gateway: gateway,
       jumpHosts: jumpHosts,
+      forwardAgent: forwardAgent,
       hostKeyPrompt: hostKeyPrompt,
       isCurrent: isCurrent,
     );
   }
+
+  /// Authenticate with public keys advertised by the local Unix SSH agent.
+  /// Key material never leaves the agent. Jump hosts choose independently.
+  Future<SshSession> connectWithAgent(
+    String host,
+    int port,
+    String username, {
+    Uri? gateway,
+    List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
+    HostKeyPrompt? hostKeyPrompt,
+    bool Function()? isCurrent,
+  }) => _connect(
+    host,
+    port,
+    username,
+    agentAuthentication: true,
+    forwardAgent: forwardAgent,
+    gateway: gateway,
+    jumpHosts: jumpHosts,
+    hostKeyPrompt: hostKeyPrompt,
+    isCurrent: isCurrent,
+  );
 
   Future<SshSession> _connect(
     String host,
@@ -424,6 +462,8 @@ class SshTerminalService {
     List<SSHIdentity>? identities,
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool agentAuthentication = false,
+    bool forwardAgent = false,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
   }) async {
@@ -453,6 +493,8 @@ class SshTerminalService {
               jump.authentication == SshTerminalAuthentication.privateKey
               ? [_requireKeyPair(jump.privateKey, jump.passphrase)]
               : null,
+          agentAuthentication:
+              jump.authentication == SshTerminalAuthentication.agent,
         ),
       _SshRouteTarget(
         host,
@@ -460,6 +502,8 @@ class SshTerminalService {
         username,
         password: password,
         identities: identities,
+        agentAuthentication: agentAuthentication,
+        forwardAgent: forwardAgent,
       ),
     ];
     _checkPlatform(gateway);
@@ -477,17 +521,31 @@ class SshTerminalService {
         generation == _connectionGeneration &&
         !route.closed &&
         (isCurrent?.call() ?? true);
+    var registered = false;
     try {
+      List<SSHIdentity>? agentIdentities;
+      if (forwardAgent || targets.any((target) => target.agentAuthentication)) {
+        final agent = _agentFactory(
+          isCurrent: () =>
+              !_disposed &&
+              !route.closed &&
+              generation == _connectionGeneration &&
+              (registered || (isCurrent?.call() ?? true)),
+        );
+        route.agent = agent;
+        agentIdentities = await agent.loadIdentities();
+        if (!current()) throw StateError('SSH connection was cancelled');
+      }
       final connector = _clientConnector;
       late final SSHClient client;
-      if (connector != null && jumps.isEmpty) {
+      if (connector != null && jumps.isEmpty && !forwardAgent) {
         // Keep the original direct-client seam compatible with existing tests.
         client = await connector(
           host,
           port,
           username: username,
           password: password,
-          identities: identities,
+          identities: agentAuthentication ? agentIdentities : identities,
           gateway: gateway,
         );
         route.ownClient(client);
@@ -498,6 +556,7 @@ class SshTerminalService {
           gateway: gateway,
           hostKeyPrompt: effectiveHostKeyPrompt,
           current: current,
+          agentIdentities: agentIdentities,
         );
       }
       if (!current()) throw StateError('SSH connection was cancelled');
@@ -519,6 +578,7 @@ class SshTerminalService {
         lastActivityAt: now,
       );
       final state = _SessionState(session: session, route: route);
+      registered = true;
       _sessions[session.id] = state;
       _idleTimer ??= Timer.periodic(
         const Duration(minutes: 1),
@@ -545,6 +605,7 @@ class SshTerminalService {
           !(isCurrent?.call() ?? true)) {
         throw StateError('SSH connection was cancelled');
       }
+      if (error is SshAgentException) rethrow;
       throw TerminalMountException(
         identities == null
             ? TerminalMountCode.sshConnection
@@ -564,6 +625,7 @@ class SshTerminalService {
     Uri? gateway,
     HostKeyPrompt? hostKeyPrompt,
     required bool Function() current,
+    List<SSHIdentity>? agentIdentities,
   }) async {
     void ensureCurrent() {
       if (!current()) throw StateError('SSH connection was cancelled');
@@ -606,7 +668,10 @@ class SshTerminalService {
         socket,
         username: target.username,
         password: target.password,
-        identities: target.identities,
+        identities: target.agentAuthentication
+            ? agentIdentities
+            : target.identities,
+        agentHandler: target.forwardAgent ? route.agent : null,
         onCreated: route.ownClient,
         verify: (_, fingerprint) async {
           ensureCurrent();
@@ -1084,6 +1149,7 @@ class SshTerminalService {
   void _clientClosed(String id, _SessionState state) {
     if (!identical(_sessions[id], state)) return;
     state.session = state.session.copyWith(connected: false);
+    state.route.agent?.close();
     unawaited(state.forwarding?.close());
     // An attached shell drains its stdout/stderr before removing the session.
     // Connections used only for execute have no terminal streams to drain.
@@ -1100,6 +1166,7 @@ class SshTerminalService {
 
   Future<void> _closeState(_SessionState state) async {
     state.shellGeneration++;
+    state.route.agent?.close();
     await state.forwarding?.close();
     try {
       state.shellSession?.close();

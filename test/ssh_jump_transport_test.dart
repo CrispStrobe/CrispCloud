@@ -500,6 +500,7 @@ class _Harness {
           required username,
           password,
           identities,
+          agentHandler,
           required verify,
           onCreated,
         }) async {

@@ -1,0 +1,158 @@
+import 'package:flutter/widgets.dart';
+
+extension SshAgentStrings on BuildContext {
+  String sshAgentTr(String english) => sshAgentText(
+    Localizations.maybeLocaleOf(this)?.languageCode ?? 'en',
+    english,
+  );
+}
+
+String sshAgentText(String language, String english) {
+  final index = _languages.indexOf(language);
+  return index < 0 ? english : _values[english]?[index] ?? english;
+}
+
+const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
+const _values = <String, List<String>>{
+  'SSH agent': [
+    'SSH-Agent',
+    'Agent SSH',
+    'Agente SSH',
+    'Agente SSH',
+    'SSH 代理',
+    'SSH エージェント',
+    'SSH 에이전트',
+    'وكيل SSH',
+  ],
+  'Forward SSH agent': [
+    'SSH-Agent weiterleiten',
+    'Transférer l’agent SSH',
+    'Reenviar agente SSH',
+    'Encaminhar agente SSH',
+    '转发 SSH 代理',
+    'SSH エージェントを転送',
+    'SSH 에이전트 전달',
+    'تمرير وكيل SSH',
+  ],
+  'Uses the local SSH agent': [
+    'Verwendet den lokalen SSH-Agenten',
+    'Utilise l’agent SSH local',
+    'Usa el agente SSH local',
+    'Usa o agente SSH local',
+    '使用本地 SSH 代理',
+    'ローカル SSH エージェントを使用',
+    '로컬 SSH 에이전트 사용',
+    'يستخدم وكيل SSH المحلي',
+  ],
+  'Use keys from the local SSH agent. Private keys stay in the agent.': [
+    'Schlüssel des lokalen SSH-Agenten verwenden. Private Schlüssel bleiben im Agenten.',
+    'Utiliser les clés de l’agent SSH local. Les clés privées restent dans l’agent.',
+    'Usa claves del agente SSH local. Las claves privadas permanecen en el agente.',
+    'Use as chaves do agente SSH local. As chaves privadas permanecem no agente.',
+    '使用本地 SSH 代理中的密钥。私钥始终保留在代理中。',
+    'ローカル SSH エージェントの鍵を使用します。秘密鍵はエージェント内に保持されます。',
+    '로컬 SSH 에이전트의 키를 사용합니다. 개인 키는 에이전트에 유지됩니다.',
+    'استخدم مفاتيح وكيل SSH المحلي. تبقى المفاتيح الخاصة داخل الوكيل.',
+  ],
+  'Programs on the final SSH server can request signatures from these agent keys while connected. Jump hosts do not receive agent access.':
+      [
+        'Programme auf dem Ziel-SSH-Server können während der Verbindung Signaturen dieser Agentenschlüssel anfordern. Sprungserver erhalten keinen Agentenzugriff.',
+        'Les programmes du serveur SSH final peuvent demander des signatures avec ces clés tant que la connexion est active. Les serveurs intermédiaires n’ont pas accès à l’agent.',
+        'Los programas del servidor SSH final pueden solicitar firmas con estas claves mientras esté conectado. Los servidores de salto no tienen acceso al agente.',
+        'Os programas no servidor SSH final podem pedir assinaturas com estas chaves durante a ligação. Os servidores intermediários não recebem acesso ao agente.',
+        '连接期间，最终 SSH 服务器上的程序可请求使用这些代理密钥签名。跳板主机无法访问代理。',
+        '接続中は最終 SSH サーバーのプログラムがこれらのエージェント鍵で署名を要求できます。踏み台ホストにはエージェントへのアクセスを許可しません。',
+        '연결 중 최종 SSH 서버의 프로그램이 이 에이전트 키로 서명을 요청할 수 있습니다. 점프 호스트에는 에이전트 접근이 허용되지 않습니다.',
+        'يمكن للبرامج على خادم SSH النهائي طلب توقيعات بهذه المفاتيح أثناء الاتصال. لا تحصل خوادم العبور على وصول إلى الوكيل.',
+      ],
+  'SSH agent access requires the Linux or macOS native app.': [
+    'SSH-Agentenzugriff erfordert die native Linux- oder macOS-App.',
+    'L’accès à l’agent SSH nécessite l’application native Linux ou macOS.',
+    'El acceso al agente SSH requiere la aplicación nativa de Linux o macOS.',
+    'O acesso ao agente SSH requer a aplicação nativa Linux ou macOS.',
+    '访问 SSH 代理需要 Linux 或 macOS 原生应用。',
+    'SSH エージェントへのアクセスには Linux または macOS のネイティブアプリが必要です。',
+    'SSH 에이전트 접근에는 Linux 또는 macOS 네이티브 앱이 필요합니다.',
+    'يتطلب الوصول إلى وكيل SSH تطبيق Linux أو macOS الأصلي.',
+  ],
+  'No SSH agent is available. Start an agent and set SSH_AUTH_SOCK before opening CrispCloud.': [
+    'Kein SSH-Agent verfügbar. Starten Sie einen Agenten und setzen Sie SSH_AUTH_SOCK, bevor Sie CrispCloud öffnen.',
+    'Aucun agent SSH disponible. Démarrez un agent et définissez SSH_AUTH_SOCK avant d’ouvrir CrispCloud.',
+    'No hay agente SSH disponible. Inicia un agente y configura SSH_AUTH_SOCK antes de abrir CrispCloud.',
+    'Não há agente SSH disponível. Inicie um agente e defina SSH_AUTH_SOCK antes de abrir o CrispCloud.',
+    '没有可用的 SSH 代理。请先启动代理并设置 SSH_AUTH_SOCK，然后打开 CrispCloud。',
+    'SSH エージェントがありません。エージェントを起動し、SSH_AUTH_SOCK を設定してから CrispCloud を開いてください。',
+    '사용 가능한 SSH 에이전트가 없습니다. 에이전트를 시작하고 SSH_AUTH_SOCK을 설정한 후 CrispCloud를 여세요.',
+    'لا يوجد وكيل SSH متاح. شغّل وكيلاً واضبط SSH_AUTH_SOCK قبل فتح CrispCloud.',
+  ],
+  'Could not connect to the local SSH agent.': [
+    'Verbindung zum lokalen SSH-Agenten nicht möglich.',
+    'Connexion à l’agent SSH local impossible.',
+    'No se pudo conectar al agente SSH local.',
+    'Não foi possível ligar ao agente SSH local.',
+    '无法连接本地 SSH 代理。',
+    'ローカル SSH エージェントに接続できませんでした。',
+    '로컬 SSH 에이전트에 연결할 수 없습니다.',
+    'تعذر الاتصال بوكيل SSH المحلي.',
+  ],
+  'The SSH agent has no supported keys.': [
+    'Der SSH-Agent enthält keine unterstützten Schlüssel.',
+    'L’agent SSH ne contient aucune clé prise en charge.',
+    'El agente SSH no tiene claves compatibles.',
+    'O agente SSH não tem chaves suportadas.',
+    'SSH 代理中没有受支持的密钥。',
+    'SSH エージェントに対応する鍵がありません。',
+    'SSH 에이전트에 지원되는 키가 없습니다.',
+    'لا توجد مفاتيح مدعومة في وكيل SSH.',
+  ],
+  'The SSH agent refused the signature request.': [
+    'Der SSH-Agent hat die Signaturanfrage abgelehnt.',
+    'L’agent SSH a refusé la demande de signature.',
+    'El agente SSH rechazó la solicitud de firma.',
+    'O agente SSH recusou o pedido de assinatura.',
+    'SSH 代理拒绝了签名请求。',
+    'SSH エージェントが署名要求を拒否しました。',
+    'SSH 에이전트가 서명 요청을 거부했습니다.',
+    'رفض وكيل SSH طلب التوقيع.',
+  ],
+  'The SSH agent returned an invalid response.': [
+    'Der SSH-Agent hat eine ungültige Antwort zurückgegeben.',
+    'L’agent SSH a renvoyé une réponse invalide.',
+    'El agente SSH devolvió una respuesta no válida.',
+    'O agente SSH devolveu uma resposta inválida.',
+    'SSH 代理返回了无效响应。',
+    'SSH エージェントが無効な応答を返しました。',
+    'SSH 에이전트가 잘못된 응답을 반환했습니다.',
+    'أعاد وكيل SSH استجابة غير صالحة.',
+  ],
+  'The SSH agent did not respond in time.': [
+    'Der SSH-Agent hat nicht rechtzeitig geantwortet.',
+    'L’agent SSH n’a pas répondu à temps.',
+    'El agente SSH no respondió a tiempo.',
+    'O agente SSH não respondeu a tempo.',
+    'SSH 代理响应超时。',
+    'SSH エージェントの応答がタイムアウトしました。',
+    'SSH 에이전트의 응답 시간이 초과되었습니다.',
+    'لم يستجب وكيل SSH في الوقت المحدد.',
+  ],
+  'SSH agent access has ended.': [
+    'Der SSH-Agentenzugriff wurde beendet.',
+    'L’accès à l’agent SSH est terminé.',
+    'El acceso al agente SSH ha finalizado.',
+    'O acesso ao agente SSH terminou.',
+    'SSH 代理访问已结束。',
+    'SSH エージェントへのアクセスは終了しました。',
+    'SSH 에이전트 접근이 종료되었습니다.',
+    'انتهى الوصول إلى وكيل SSH.',
+  ],
+  'The SSH agent request limit was reached.': [
+    'Das Limit für SSH-Agentenanfragen wurde erreicht.',
+    'La limite de requêtes à l’agent SSH a été atteinte.',
+    'Se alcanzó el límite de solicitudes al agente SSH.',
+    'Foi atingido o limite de pedidos ao agente SSH.',
+    '已达到 SSH 代理请求上限。',
+    'SSH エージェントの要求数が上限に達しました。',
+    'SSH 에이전트 요청 한도에 도달했습니다.',
+    'تم بلوغ حد طلبات وكيل SSH.',
+  ],
+};

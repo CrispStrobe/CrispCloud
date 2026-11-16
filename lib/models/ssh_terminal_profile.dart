@@ -53,6 +53,7 @@ class SshTerminalProfile {
     'port': config.port,
     'username': config.username,
     'authentication': config.authentication.name,
+    if (config.forwardAgent) 'forwardAgent': true,
     if (config.gateway != null) 'gateway': config.gateway.toString(),
     if (config.jumpHosts.isNotEmpty)
       'jumpHosts': config.jumpHosts.map((jump) => jump.toJson()).toList(),
@@ -83,8 +84,13 @@ class SshTerminalProfile {
     final authentication = switch (text('authentication')) {
       'password' => SshTerminalAuthentication.password,
       'privateKey' => SshTerminalAuthentication.privateKey,
+      'agent' => SshTerminalAuthentication.agent,
       _ => throw const FormatException('Unknown SSH authentication method'),
     };
+    final forwardAgent = value['forwardAgent'];
+    if (forwardAgent != null && forwardAgent is! bool) {
+      throw const FormatException('Invalid SSH agent forwarding choice');
+    }
     final gatewayValue = value['gateway'];
     if (gatewayValue != null && gatewayValue is! String) {
       throw const FormatException('Invalid SSH profile gateway');
@@ -162,6 +168,7 @@ class SshTerminalProfile {
         port: port,
         username: text('username'),
         authentication: authentication,
+        forwardAgent: forwardAgent == true,
         gateway: gateway,
         jumpHosts: jumpHosts,
         tmux: tmux,

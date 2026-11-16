@@ -438,7 +438,7 @@ void main() {
         for (final invalid in [
           '{bad json',
           'null',
-          jsonEncode({'version': 3, 'arrangements': []}),
+          jsonEncode({'version': 99, 'arrangements': []}),
           jsonEncode({'version': 1.0, 'arrangements': []}),
           jsonEncode({'version': 1, 'arrangements': 'invalid'}),
           jsonEncode({

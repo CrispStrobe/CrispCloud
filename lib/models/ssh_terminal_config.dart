@@ -17,6 +17,7 @@ class SshTerminalConfig {
     this.privateKey = '',
     this.passphrase = '',
     this.authentication = SshTerminalAuthentication.password,
+    this.forwardAgent = false,
     this.gateway,
     this.jumpHosts = const [],
     this.tmux,
@@ -30,12 +31,23 @@ class SshTerminalConfig {
   final String privateKey;
   final String passphrase;
   final SshTerminalAuthentication authentication;
+
+  /// Explicit permission for the final server to request agent signatures.
+  /// This does not expose the agent to jump hosts or store any key material.
+  final bool forwardAgent;
   final Uri? gateway;
 
   /// Ordered outermost first; the gateway, if any, reaches the first hop.
   final List<SshJumpHost> jumpHosts;
   final TmuxSessionOptions? tmux;
   final ScreenSessionOptions? screen;
+
+  bool get usesAgent =>
+      authentication == SshTerminalAuthentication.agent ||
+      forwardAgent ||
+      jumpHosts.any(
+        (jump) => jump.authentication == SshTerminalAuthentication.agent,
+      );
 
   /// Validate mutually exclusive launch options before replacing a connection.
   void validateSessionOptions() {
@@ -72,6 +84,7 @@ class SshTerminalConfig {
     port: port,
     username: username,
     authentication: authentication,
+    forwardAgent: forwardAgent,
     gateway: gateway,
     jumpHosts: List.unmodifiable(
       jumpHosts.map((jump) => jump.withoutSecrets()),

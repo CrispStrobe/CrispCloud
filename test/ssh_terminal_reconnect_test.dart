@@ -725,6 +725,7 @@ class _RecordingSshService extends SshTerminalService {
     String password, {
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
   }) => _connect(
@@ -735,6 +736,7 @@ class _RecordingSshService extends SshTerminalService {
       password: password,
       gateway: gateway,
       jumpHosts: jumpHosts,
+      forwardAgent: forwardAgent,
     ),
     hostKeyPrompt: hostKeyPrompt,
   );
@@ -747,6 +749,7 @@ class _RecordingSshService extends SshTerminalService {
     String privateKey, {
     Uri? gateway,
     List<SshJumpHost> jumpHosts = const [],
+    bool forwardAgent = false,
     String? passphrase,
     HostKeyPrompt? hostKeyPrompt,
     bool Function()? isCurrent,
@@ -760,6 +763,7 @@ class _RecordingSshService extends SshTerminalService {
       authentication: SshTerminalAuthentication.privateKey,
       gateway: gateway,
       jumpHosts: jumpHosts,
+      forwardAgent: forwardAgent,
     ),
     hostKeyPrompt: hostKeyPrompt,
   );

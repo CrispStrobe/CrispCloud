@@ -1,17 +1,26 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
 
 import '../l10n/ssh_port_forwarding_strings.dart';
+import '../services/ssh_forwarding_profiles.dart';
 import '../services/ssh_port_forwarding.dart';
 
-/// Edits only the listeners owned by this exact SSH connection. Closing the
-/// dialog leaves them active; reconnecting never recreates them implicitly.
+/// Edits listeners owned by this exact SSH connection and, when supplied, the
+/// saved recipes for its exact route. Closing this dialog leaves listeners and
+/// the connection-owned profile coordinator active.
 class SshPortForwardingDialog extends StatefulWidget {
-  const SshPortForwardingDialog({super.key, required this.forwarding});
+  const SshPortForwardingDialog({
+    super.key,
+    required this.forwarding,
+    this.profiles,
+  });
 
   final SshPortForwarding forwarding;
+  final SshForwardingProfileSession? profiles;
 
   @override
   State<SshPortForwardingDialog> createState() =>
@@ -20,21 +29,78 @@ class SshPortForwardingDialog extends StatefulWidget {
 
 class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
   final Set<String> _stopping = {};
+  final Set<String> _updatingProfiles = {};
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    assert(
+      widget.profiles == null ||
+          identical(widget.profiles!.forwarding, widget.forwarding),
+    );
+    unawaited(widget.profiles?.refresh());
+  }
 
   Future<void> _add() async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AddSshPortForwardDialog(forwarding: widget.forwarding),
+      builder: (_) => AddSshPortForwardDialog(
+        forwarding: widget.forwarding,
+        profiles: widget.profiles,
+      ),
     );
+  }
+
+  Future<void> _editProfile({
+    SshForwardingProfile? profile,
+    SshPortForwardSpec? spec,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AddSshPortForwardDialog(
+        forwarding: widget.forwarding,
+        profiles: widget.profiles,
+        profile: profile,
+        initialSpec: spec,
+        saveOnly: true,
+      ),
+    );
+  }
+
+  Future<void> _profileAction(
+    SshForwardingProfile profile, {
+    bool delete = false,
+  }) async {
+    if (!_updatingProfiles.add(profile.id)) return;
+    setState(() => _error = null);
+    try {
+      if (delete) {
+        await widget.profiles!.delete(profile);
+      } else {
+        await widget.profiles!.start(profile.id);
+      }
+    } catch (error) {
+      if (mounted)
+        setState(() => _error = sshForwardingProfileErrorMessage(error));
+    } finally {
+      _updatingProfiles.remove(profile.id);
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _stop(String id) async {
     if (!_stopping.add(id)) return;
     setState(() => _error = null);
     try {
-      await widget.forwarding.stop(id);
+      final profiles = widget.profiles;
+      if (profiles == null) {
+        await widget.forwarding.stop(id);
+      } else {
+        await profiles.stop(id);
+      }
     } catch (error) {
       if (mounted) {
         setState(
@@ -66,9 +132,13 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: widget.forwarding,
+      animation: Listenable.merge([
+        widget.forwarding,
+        if (widget.profiles != null) widget.profiles!,
+      ]),
       builder: (context, _) {
         final forwards = widget.forwarding.forwards;
+        final profiles = widget.profiles;
         final available =
             SshPortForwarding.supported && !widget.forwarding.isClosed;
         return Dialog(
@@ -92,9 +162,20 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                     children: [
                       Text(
                         context.sshForwardTr(
-                          'Listeners stop on disconnect and are not restored automatically.',
+                          profiles == null
+                              ? 'Listeners stop on disconnect and are not restored automatically.'
+                              : 'Listeners stop on disconnect.',
                         ),
                       ),
+                      if (profiles != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            context.sshForwardTr(
+                              'Saved profiles with Auto-start restart after a verified connection.',
+                            ),
+                          ),
+                        ),
                       if (!available)
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
@@ -165,22 +246,107 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
                                           .error,
                                     ),
                                   ),
-                                Align(
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  child: TextButton.icon(
-                                    onPressed: _stopping.contains(forward.id)
-                                        ? null
-                                        : () => _stop(forward.id),
-                                    icon: const Icon(
-                                      Icons.stop_circle_outlined,
+                                OverflowBar(
+                                  alignment: MainAxisAlignment.end,
+                                  spacing: 8,
+                                  children: [
+                                    if (profiles != null)
+                                      TextButton.icon(
+                                        key: ValueKey(
+                                          'ssh-forward-save-${forward.id}',
+                                        ),
+                                        onPressed:
+                                            profiles.error != null ||
+                                                profiles.profiles.any(
+                                                  (profile) =>
+                                                      sshForwardingSpecsEqual(
+                                                        profile.spec,
+                                                        forward.spec,
+                                                      ),
+                                                )
+                                            ? null
+                                            : () => _editProfile(
+                                                spec: forward.spec,
+                                              ),
+                                        icon: const Icon(
+                                          Icons.bookmark_add_outlined,
+                                        ),
+                                        label: Text(
+                                          context.sshForwardTr(
+                                            'Save as profile',
+                                          ),
+                                        ),
+                                      ),
+                                    TextButton.icon(
+                                      onPressed: _stopping.contains(forward.id)
+                                          ? null
+                                          : () => _stop(forward.id),
+                                      icon: const Icon(
+                                        Icons.stop_circle_outlined,
+                                      ),
+                                      label: Text(context.sshForwardTr('Stop')),
                                     ),
-                                    label: Text(context.sshForwardTr('Stop')),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
                         ),
+                      if (profiles != null) ...[
+                        const SizedBox(height: 20),
+                        Text(
+                          context.sshForwardTr('Saved for this SSH route'),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          context.sshForwardTr(
+                            'Profiles match the exact server, user, gateway and jump route. Credentials are not saved.',
+                          ),
+                        ),
+                        if (profiles.error != null) ...[
+                          Text(
+                            context.sshForwardTr(profiles.error!),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: TextButton(
+                              onPressed: profiles.refresh,
+                              child: Text(context.sshForwardTr('Retry')),
+                            ),
+                          ),
+                        ] else if (profiles.profiles.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              context.sshForwardTr(
+                                'No saved forwarding profiles',
+                              ),
+                            ),
+                          ),
+                        for (final profile in profiles.profiles)
+                          _profileCard(profile, profiles, available),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: TextButton.icon(
+                            key: const ValueKey('ssh-forward-new-profile'),
+                            onPressed:
+                                profiles.error != null ||
+                                    profiles.profiles.length >=
+                                        SshForwardingProfiles
+                                            .maximumProfilesPerRoute
+                                ? null
+                                : () => _editProfile(),
+                            icon: const Icon(Icons.bookmark_add_outlined),
+                            label: Text(
+                              context.sshForwardTr('New saved profile'),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -216,11 +382,100 @@ class _SshPortForwardingDialogState extends State<SshPortForwardingDialog> {
       },
     );
   }
+
+  Widget _profileCard(
+    SshForwardingProfile profile,
+    SshForwardingProfileSession profiles,
+    bool available,
+  ) {
+    final listener = profiles.listenerFor(profile);
+    final busy =
+        _updatingProfiles.contains(profile.id) ||
+        profiles.isStarting(profile.id);
+    final running =
+        listener != null && listener.status != SshPortForwardStatus.failed;
+    final error = profiles.profileError(profile.id);
+    return Card(
+      key: ValueKey('ssh-forward-profile-${profile.id}'),
+      margin: const EdgeInsets.only(top: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(profile.name, style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 6),
+            Text(
+              '${_kind(profile.spec.kind)} · ${profile.spec.bindHost}:${profile.spec.bindPort}',
+            ),
+            if (profile.spec.kind != SshPortForwardKind.dynamic)
+              Text(
+                '${context.sshForwardTr('Destination')}: ${profile.spec.targetHost}:${profile.spec.targetPort}',
+              ),
+            if (profile.autoStart)
+              Text(
+                context.sshForwardTr('Auto-start after a verified connection'),
+              ),
+            if (listener != null)
+              Text(
+                '${_status(listener.status)} · ${listener.spec.bindHost}:${listener.port}',
+              ),
+            if (error != null)
+              Text(
+                context.sshForwardTr(error),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              spacing: 8,
+              children: [
+                TextButton(
+                  key: ValueKey('ssh-forward-profile-start-${profile.id}'),
+                  onPressed:
+                      !available || busy || running || profiles.error != null
+                      ? null
+                      : () => _profileAction(profile),
+                  child: Text(
+                    context.sshForwardTr(busy ? 'Starting' : 'Start'),
+                  ),
+                ),
+                TextButton(
+                  key: ValueKey('ssh-forward-profile-edit-${profile.id}'),
+                  onPressed: busy || profiles.error != null
+                      ? null
+                      : () => _editProfile(profile: profile),
+                  child: Text(context.sshForwardTr('Edit')),
+                ),
+                TextButton(
+                  key: ValueKey('ssh-forward-profile-delete-${profile.id}'),
+                  onPressed: busy || profiles.error != null
+                      ? null
+                      : () => _profileAction(profile, delete: true),
+                  child: Text(context.sshForwardTr('Delete and stop')),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class AddSshPortForwardDialog extends StatefulWidget {
-  const AddSshPortForwardDialog({super.key, required this.forwarding});
+  const AddSshPortForwardDialog({
+    super.key,
+    required this.forwarding,
+    this.profiles,
+    this.profile,
+    this.initialSpec,
+    this.saveOnly = false,
+  });
   final SshPortForwarding forwarding;
+  final SshForwardingProfileSession? profiles;
+  final SshForwardingProfile? profile;
+  final SshPortForwardSpec? initialSpec;
+  final bool saveOnly;
 
   @override
   State<AddSshPortForwardDialog> createState() =>
@@ -229,16 +484,38 @@ class AddSshPortForwardDialog extends StatefulWidget {
 
 class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
   final _form = GlobalKey<FormState>();
+  final _name = TextEditingController();
   final _bindPort = TextEditingController(text: '0');
   final _targetHost = TextEditingController(text: '127.0.0.1');
   final _targetPort = TextEditingController();
   SshPortForwardKind _kind = SshPortForwardKind.local;
   String _bindHost = '127.0.0.1';
   bool _busy = false;
+  bool _autoStart = false;
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    assert(!widget.saveOnly || widget.profiles != null);
+    final profile = widget.profile;
+    final spec = profile?.spec ?? widget.initialSpec;
+    if (spec != null) {
+      _kind = spec.kind;
+      _bindHost = spec.bindHost;
+      _bindPort.text = '${spec.bindPort}';
+      _targetHost.text = spec.targetHost ?? '127.0.0.1';
+      _targetPort.text = spec.targetPort?.toString() ?? '';
+    }
+    if (profile != null) {
+      _name.text = profile.name;
+      _autoStart = profile.autoStart;
+    }
+  }
+
+  @override
   void dispose() {
+    _name.dispose();
     _bindPort.dispose();
     _targetHost.dispose();
     _targetPort.dispose();
@@ -258,7 +535,7 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
   Future<void> _start() async {
     if (_busy ||
         !_form.currentState!.validate() ||
-        widget.forwarding.isClosed) {
+        (!widget.saveOnly && widget.forwarding.isClosed)) {
       return;
     }
     setState(() {
@@ -266,19 +543,41 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
       _error = null;
     });
     try {
-      await widget.forwarding.start(
-        SshPortForwardSpec(
-          kind: _kind,
-          bindHost: _bindHost,
-          bindPort: int.parse(_bindPort.text.trim()),
-          targetHost: _kind == SshPortForwardKind.dynamic
-              ? null
-              : _targetHost.text.trim(),
-          targetPort: _kind == SshPortForwardKind.dynamic
-              ? null
-              : int.parse(_targetPort.text.trim()),
-        ),
+      final spec = SshPortForwardSpec(
+        kind: _kind,
+        bindHost: _bindHost,
+        bindPort: int.parse(_bindPort.text.trim()),
+        targetHost: _kind == SshPortForwardKind.dynamic
+            ? null
+            : _targetHost.text.trim(),
+        targetPort: _kind == SshPortForwardKind.dynamic
+            ? null
+            : int.parse(_targetPort.text.trim()),
       );
+      if (widget.saveOnly) {
+        await widget.profiles!.save(
+          SshForwardingProfile(
+            id: widget.profile?.id ?? const Uuid().v4(),
+            name: _name.text.trim(),
+            route: widget.profiles!.route,
+            spec: spec,
+            autoStart: _autoStart,
+          ),
+          replacing: widget.profile,
+        );
+      } else {
+        final duplicate = widget.forwarding.forwards.any(
+          (listener) =>
+              sshForwardingSpecsEqual(listener.spec, spec) &&
+              listener.status != SshPortForwardStatus.failed,
+        );
+        if (duplicate) {
+          throw const SshForwardingProfileException(
+            'This forwarding configuration is already running.',
+          );
+        }
+        await widget.forwarding.start(spec);
+      }
       if (mounted) {
         setState(() => _busy = false);
         Navigator.of(context).pop();
@@ -286,7 +585,12 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
     } catch (error) {
       if (mounted) {
         setState(
-          () => _error = error is SshPortForwardException ? error.message : 'Could not start forwarding. Check the listener and destination.',
+          () =>
+              _error = error is SshForwardingProfileException || widget.saveOnly
+              ? sshForwardingProfileErrorMessage(error)
+              : error is SshPortForwardException
+              ? error.message
+              : 'Could not start forwarding. Check the listener and destination.',
         );
       }
     } finally {
@@ -302,7 +606,15 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
       builder: (context, _) => AlertDialog(
         scrollable: true,
         insetPadding: const EdgeInsets.all(16),
-        title: Text(context.sshForwardTr('Add forwarding')),
+        title: Text(
+          context.sshForwardTr(
+            widget.saveOnly
+                ? widget.profile == null
+                      ? 'Save forwarding profile'
+                      : 'Edit forwarding profile'
+                : 'Add forwarding',
+          ),
+        ),
         content: SizedBox(
           width: 440,
           child: Form(
@@ -311,6 +623,52 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (widget.saveOnly) ...[
+                  TextFormField(
+                    key: const ValueKey('ssh-forward-profile-name'),
+                    controller: _name,
+                    enabled: !_busy,
+                    maxLength: 80,
+                    decoration: InputDecoration(
+                      labelText: context.sshForwardTr('Profile name'),
+                    ),
+                    validator: (value) =>
+                        SshForwardingProfile.isValidName(value?.trim() ?? '')
+                        ? null
+                        : context.sshForwardTr(
+                            'Enter a profile name of 1 to 80 characters.',
+                          ),
+                  ),
+                  SwitchListTile(
+                    key: const ValueKey('ssh-forward-profile-auto'),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(context.sshForwardTr('Auto-start')),
+                    subtitle: Text(
+                      context.sshForwardTr(
+                        'Start on the next verified connection to this exact route, including reconnects.',
+                      ),
+                    ),
+                    value: _autoStart,
+                    onChanged: _busy
+                        ? null
+                        : (value) => setState(() => _autoStart = value),
+                  ),
+                  Text(
+                    context.sshForwardTr(
+                      'Saving does not start a listener. Use Start when you are ready.',
+                    ),
+                  ),
+                  if (widget.profile != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        context.sshForwardTr(
+                          'Changing the forwarding settings stops this profile’s active listeners.',
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                ],
                 DropdownButtonFormField<SshPortForwardKind>(
                   key: const ValueKey('ssh-forward-kind'),
                   initialValue: _kind,
@@ -427,8 +785,20 @@ class _AddSshPortForwardDialogState extends State<AddSshPortForwardDialog> {
           ),
           FilledButton(
             key: const ValueKey('ssh-forward-start'),
-            onPressed: _busy || widget.forwarding.isClosed ? null : _start,
-            child: Text(context.sshForwardTr(_busy ? 'Starting' : 'Start')),
+            onPressed: _busy || (!widget.saveOnly && widget.forwarding.isClosed)
+                ? null
+                : _start,
+            child: Text(
+              context.sshForwardTr(
+                widget.saveOnly
+                    ? _busy
+                          ? 'Saving'
+                          : 'Save'
+                    : _busy
+                    ? 'Starting'
+                    : 'Start',
+              ),
+            ),
           ),
         ],
       ),
