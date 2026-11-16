@@ -88,8 +88,11 @@ class SmlDataValidation {
     this.formula2 = '',
     this.operator = SmlValidationOperator.between,
     this.allowBlank = true,
+    this.promptTitle = '',
+    this.prompt = '',
     this.errorTitle = '',
     this.error = '',
+    this.errorStyle = 'stop',
   });
 
   /// range API.
@@ -110,11 +113,20 @@ class SmlDataValidation {
   /// allowBlank API.
   bool allowBlank;
 
+  /// Input-message title.
+  String promptTitle;
+
+  /// Input-message text.
+  String prompt;
+
   /// errorTitle API.
   String errorTitle;
 
   /// error API.
   String error;
+
+  /// Excel error style: stop, warning or information.
+  String errorStyle;
 
   /// listItems API.
   List<String> get listItems {

@@ -33,8 +33,11 @@ typedef _OdsValidation = ({
   String formula2,
   List<String> items,
   bool allowBlank,
+  String promptTitle,
+  String prompt,
   String errorTitle,
   String error,
+  String errorStyle,
   SmlRange? sourceRange,
   String? sourceSheet,
 });
@@ -532,8 +535,11 @@ abstract final class OdsSheetReader {
         formula2: '',
         items: items,
         allowBlank: definition.allowBlank,
+        promptTitle: definition.promptTitle,
+        prompt: definition.prompt,
         errorTitle: definition.errorTitle,
         error: definition.error,
+        errorStyle: definition.errorStyle,
         sourceRange: null,
         sourceSheet: null,
       ), budget);
@@ -700,8 +706,11 @@ abstract final class OdsSheetReader {
           formula1: definition.formula1,
           formula2: definition.formula2,
           allowBlank: definition.allowBlank,
+          promptTitle: definition.promptTitle,
+          prompt: definition.prompt,
           errorTitle: definition.errorTitle,
           error: definition.error,
+          errorStyle: definition.errorStyle,
         ),
       );
       index = end + 1;
@@ -731,8 +740,23 @@ abstract final class OdsSheetReader {
       final lowerCondition = condition.toLowerCase();
       final allowBlank =
           _attribute(validation, 'allow-empty-cell', _table) != 'false';
-      final errorTitle = _attribute(validation, 'title', _table) ?? '';
-      final error = _attribute(validation, 'message', _table) ?? '';
+      var promptTitle = '';
+      var prompt = '';
+      var errorTitle = _attribute(validation, 'title', _table) ?? '';
+      var error = _attribute(validation, 'message', _table) ?? '';
+      var errorStyle = 'stop';
+      for (final child in validation.childElements) {
+        final title = _attribute(child, 'title', _table) ?? '';
+        final text = _text(child).trim();
+        if (_is(child, 'help-message', _table)) {
+          promptTitle = title;
+          prompt = text;
+        } else if (_is(child, 'error-message', _table)) {
+          errorTitle = title;
+          error = text;
+          errorStyle = _attribute(child, 'message-type', _table) ?? 'stop';
+        }
+      }
       final listMatch = listCondition.firstMatch(condition);
       if (listMatch != null) {
         final argument = listMatch.group(1)!.trim();
@@ -764,8 +788,11 @@ abstract final class OdsSheetReader {
           formula2: '',
           items: items,
           allowBlank: allowBlank,
+          promptTitle: promptTitle,
+          prompt: prompt,
           errorTitle: errorTitle,
           error: error,
+          errorStyle: errorStyle,
           sourceRange: sourceRange,
           sourceSheet: sourceSheet,
         );
@@ -796,8 +823,11 @@ abstract final class OdsSheetReader {
           formula2: '',
           items: const <String>[],
           allowBlank: allowBlank,
+          promptTitle: promptTitle,
+          prompt: prompt,
           errorTitle: errorTitle,
           error: error,
+          errorStyle: errorStyle,
           sourceRange: null,
           sourceSheet: null,
         );
@@ -837,8 +867,11 @@ abstract final class OdsSheetReader {
         formula2: formula2,
         items: const <String>[],
         allowBlank: allowBlank,
+        promptTitle: promptTitle,
+        prompt: prompt,
         errorTitle: errorTitle,
         error: error,
+        errorStyle: errorStyle,
         sourceRange: null,
         sourceSheet: null,
       );
