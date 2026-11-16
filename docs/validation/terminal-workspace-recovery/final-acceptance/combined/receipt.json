@@ -1,0 +1,291 @@
+{
+  "phase": "combined",
+  "source_head": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "started_utc": "2026-11-16T11:10:25.368021+00:00",
+  "command": [
+    "/workspace/scratch/732a154614f9/toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--dart-define=TERMINAL_RECOVERY_VISUALS=true",
+    "test/terminal_workspace_recovery_test.dart",
+    "test/terminal_workspace_recovery_dialog_test.dart",
+    "test/terminal_workspace_recovery_widget_test.dart",
+    "test/terminal_panel_recovery_idle_test.dart",
+    "test/terminal_arrangements_test.dart",
+    "test/terminal_arrangements_dialog_test.dart",
+    "test/terminal_arrangements_widget_test.dart",
+    "test/terminal_tabs_test.dart",
+    "test/terminal_pane_layout_test.dart",
+    "test/terminal_session_test.dart",
+    "test/terminal_panel_test.dart",
+    "test/terminal_widget_test.dart",
+    "test/terminal_user_input_test.dart",
+    "test/terminal_broadcast_test.dart",
+    "test/terminal_broadcast_dialog_test.dart",
+    "test/terminal_key_bindings_test.dart",
+    "test/terminal_key_bindings_widget_test.dart",
+    "test/terminal_triggers_test.dart",
+    "test/terminal_triggers_widget_test.dart",
+    "test/terminal_trigger_session_test.dart",
+    "test/terminal_shell_integration_test.dart",
+    "test/terminal_shell_directory_labels_test.dart",
+    "test/terminal_search_test.dart",
+    "test/terminal_search_bar_test.dart",
+    "test/terminal_input_budget_test.dart",
+    "test/terminal_connection_sharing_test.dart",
+    "test/ssh_connection_sharing_widget_test.dart",
+    "test/ssh_tmux_panel_lifecycle_test.dart",
+    "test/tmux_control_workspace_test.dart",
+    "test/ssh_native_tmux_persistence_test.dart",
+    "test/ssh_terminal_reconnect_test.dart",
+    "test/terminal_mount_localization_test.dart",
+    "test/tmux_control_client_test.dart",
+    "test/screen_session_command_test.dart",
+    "build/final-incoming-tests/ods_sheet_reader_test.dart",
+    "build/final-incoming-tests/sheet_formula_test.dart",
+    "test/widget/ods_editor_workflow_test.dart",
+    "build/final-incoming-tests/zotero_client_test.dart",
+    "build/final-incoming-tests/zotero_identity_client_test.dart",
+    "build/final-incoming-tests/zotero_metadata_batch_test.dart",
+    "build/final-incoming-tests/word_zotero_scaling_test.dart",
+    "build/final-incoming-tests/word_zotero_citing_test.dart",
+    "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+    "test/terminal_workspace_recovery_visual_test.dart"
+  ],
+  "environment_overrides": {
+    "FLUTTER_NATIVE_ASSETS": "false",
+    "FLUTTER_DART_DATA_ASSETS": "true"
+  },
+  "isolated_feature_environment": {
+    "FLUTTER_NATIVE_ASSETS": "false",
+    "FLUTTER_DART_DATA_ASSETS": "true"
+  },
+  "watched_files": 5673,
+  "frozen_commit_proof": {
+    "accepted_commit": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "tracked_inputs_checked": 5664,
+    "mismatches": [],
+    "reviewed_subtrees": {
+      "lib": {
+        "expected": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94",
+        "actual": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94"
+      },
+      "test": {
+        "expected": "f57fa42a3c99acee60afb1a7007f7cba827edf72",
+        "actual": "f57fa42a3c99acee60afb1a7007f7cba827edf72"
+      },
+      "packages": {
+        "expected": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe",
+        "actual": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe"
+      },
+      "tool": {
+        "expected": "f8879d4ede3e4417c19d3f56df515dc69d5195ef",
+        "actual": "f8879d4ede3e4417c19d3f56df515dc69d5195ef"
+      }
+    }
+  },
+  "github_actions_queried_or_awaited": false,
+  "runner_sha256": "36271c90e9a479f23b901249c6afeafa8764db9b3bb24f6f08cb3acbe9d472bb",
+  "toolchain_wrapper": {
+    "bytes": 495,
+    "sha256": "24ac509df9a1055dfd6667d3ed10b8460e09aeb2c45f1997132259e46558bf86",
+    "mode": "0o755"
+  },
+  "finished_utc": "2026-11-16T11:13:29.645149+00:00",
+  "seconds": 184.27214035399993,
+  "exit_code": 0,
+  "head_at_end": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "source_changes": [],
+  "log_sha256": "b797e405bc0e17ecbd00d92b816e4599e3086e0f70015317e754fb123dee7ee0",
+  "source_inventory_artifacts": {
+    "sources-before.json.gz": {
+      "bytes": 300640,
+      "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+      "mode": "0o644"
+    },
+    "sources-after.json.gz": {
+      "bytes": 300640,
+      "sha256": "95eab5ac65e583d2de18061763079b91307aec27246cf18d500c1c532989beeb",
+      "mode": "0o644"
+    }
+  },
+  "qualification": "Isolated Dart/widget validation with unmodified production graph and supported per-command feature configuration. Native CodeAssets intentionally omitted, DataAssets enabled; not full native/application acceptance.",
+  "test_files": [
+    "test/terminal_workspace_recovery_test.dart",
+    "test/terminal_workspace_recovery_dialog_test.dart",
+    "test/terminal_workspace_recovery_widget_test.dart",
+    "test/terminal_panel_recovery_idle_test.dart",
+    "test/terminal_arrangements_test.dart",
+    "test/terminal_arrangements_dialog_test.dart",
+    "test/terminal_arrangements_widget_test.dart",
+    "test/terminal_tabs_test.dart",
+    "test/terminal_pane_layout_test.dart",
+    "test/terminal_session_test.dart",
+    "test/terminal_panel_test.dart",
+    "test/terminal_widget_test.dart",
+    "test/terminal_user_input_test.dart",
+    "test/terminal_broadcast_test.dart",
+    "test/terminal_broadcast_dialog_test.dart",
+    "test/terminal_key_bindings_test.dart",
+    "test/terminal_key_bindings_widget_test.dart",
+    "test/terminal_triggers_test.dart",
+    "test/terminal_triggers_widget_test.dart",
+    "test/terminal_trigger_session_test.dart",
+    "test/terminal_shell_integration_test.dart",
+    "test/terminal_shell_directory_labels_test.dart",
+    "test/terminal_search_test.dart",
+    "test/terminal_search_bar_test.dart",
+    "test/terminal_input_budget_test.dart",
+    "test/terminal_connection_sharing_test.dart",
+    "test/ssh_connection_sharing_widget_test.dart",
+    "test/ssh_tmux_panel_lifecycle_test.dart",
+    "test/tmux_control_workspace_test.dart",
+    "test/ssh_native_tmux_persistence_test.dart",
+    "test/ssh_terminal_reconnect_test.dart",
+    "test/terminal_mount_localization_test.dart",
+    "test/tmux_control_client_test.dart",
+    "test/screen_session_command_test.dart",
+    "build/final-incoming-tests/ods_sheet_reader_test.dart",
+    "build/final-incoming-tests/sheet_formula_test.dart",
+    "test/widget/ods_editor_workflow_test.dart",
+    "build/final-incoming-tests/zotero_client_test.dart",
+    "build/final-incoming-tests/zotero_identity_client_test.dart",
+    "build/final-incoming-tests/zotero_metadata_batch_test.dart",
+    "build/final-incoming-tests/word_zotero_scaling_test.dart",
+    "build/final-incoming-tests/word_zotero_citing_test.dart",
+    "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+    "test/terminal_workspace_recovery_visual_test.dart"
+  ],
+  "test_file_count": 44,
+  "final_test_line": "02:45 +701 ~1: All tests passed!",
+  "counts": {
+    "passed": 701,
+    "skipped": 1,
+    "failed": 0
+  },
+  "cohorts": {
+    "new_recovery_idle": {
+      "files": [
+        "test/terminal_workspace_recovery_test.dart",
+        "test/terminal_workspace_recovery_dialog_test.dart",
+        "test/terminal_workspace_recovery_widget_test.dart",
+        "test/terminal_panel_recovery_idle_test.dart"
+      ],
+      "counts": {
+        "passed": 76,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "related_terminal": {
+      "files": [
+        "test/terminal_arrangements_test.dart",
+        "test/terminal_arrangements_dialog_test.dart",
+        "test/terminal_arrangements_widget_test.dart",
+        "test/terminal_tabs_test.dart",
+        "test/terminal_pane_layout_test.dart",
+        "test/terminal_session_test.dart",
+        "test/terminal_panel_test.dart",
+        "test/terminal_widget_test.dart",
+        "test/terminal_user_input_test.dart",
+        "test/terminal_broadcast_test.dart",
+        "test/terminal_broadcast_dialog_test.dart",
+        "test/terminal_key_bindings_test.dart",
+        "test/terminal_key_bindings_widget_test.dart",
+        "test/terminal_triggers_test.dart",
+        "test/terminal_triggers_widget_test.dart",
+        "test/terminal_trigger_session_test.dart",
+        "test/terminal_shell_integration_test.dart",
+        "test/terminal_shell_directory_labels_test.dart",
+        "test/terminal_search_test.dart",
+        "test/terminal_search_bar_test.dart",
+        "test/terminal_input_budget_test.dart",
+        "test/terminal_connection_sharing_test.dart",
+        "test/ssh_connection_sharing_widget_test.dart",
+        "test/ssh_tmux_panel_lifecycle_test.dart",
+        "test/tmux_control_workspace_test.dart",
+        "test/ssh_native_tmux_persistence_test.dart",
+        "test/ssh_terminal_reconnect_test.dart",
+        "test/terminal_mount_localization_test.dart",
+        "test/tmux_control_client_test.dart",
+        "test/screen_session_command_test.dart"
+      ],
+      "counts": {
+        "passed": 329,
+        "skipped": 1,
+        "failed": 0
+      }
+    },
+    "incoming_ods": {
+      "files": [
+        "build/final-incoming-tests/ods_sheet_reader_test.dart",
+        "build/final-incoming-tests/sheet_formula_test.dart",
+        "test/widget/ods_editor_workflow_test.dart"
+      ],
+      "counts": {
+        "passed": 119,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "incoming_zotero": {
+      "files": [
+        "build/final-incoming-tests/zotero_client_test.dart",
+        "build/final-incoming-tests/zotero_identity_client_test.dart",
+        "build/final-incoming-tests/zotero_metadata_batch_test.dart",
+        "build/final-incoming-tests/word_zotero_scaling_test.dart",
+        "build/final-incoming-tests/word_zotero_citing_test.dart",
+        "packages/quds_office_editor/test/word_zotero_dialog_test.dart"
+      ],
+      "counts": {
+        "passed": 176,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "final_visual": {
+      "files": [
+        "test/terminal_workspace_recovery_visual_test.dart"
+      ],
+      "counts": {
+        "passed": 1,
+        "skipped": 0,
+        "failed": 0
+      }
+    }
+  },
+  "changed_office_protected_inputs": [],
+  "changed_office_adapters": [],
+  "visual_artifacts": {
+    "recovered-workspace-desktop.png": {
+      "bytes": 44592,
+      "sha256": "b4a704d2ff76c843bec5d166152d803ba3601d89a8bb748a4cd41105f59749ab",
+      "mode": "0o644"
+    },
+    "recovery-settings-compact-bottom.png": {
+      "bytes": 28144,
+      "sha256": "64ec41b3c02399b1aeab88bd5fab1dd8a19e53a6ddf85cd48d426d7b89779d6b",
+      "mode": "0o644"
+    },
+    "recovery-settings-compact-choices.png": {
+      "bytes": 31124,
+      "sha256": "80242003740c6a235d4f11662c44a924513df7ff1ae0b2b44674eb99cf85d05f",
+      "mode": "0o644"
+    },
+    "recovery-settings-compact-top.png": {
+      "bytes": 25848,
+      "sha256": "18f5f4012ef401eb9cdf3fd561ef081f88cc9e9464984671b68510750226e886",
+      "mode": "0o644"
+    },
+    "recovery-settings-desktop.png": {
+      "bytes": 92284,
+      "sha256": "38da385b62b4a1391aaf58fc276fa11a9b9ea515f1e31fc6f2db8df8c0087f9e",
+      "mode": "0o644"
+    }
+  },
+  "accepted": true
+}
