@@ -912,7 +912,7 @@ void imageTests() {
     expect(doc.markdown, contains('after'));
   });
 
-  test('ODT embeds a bounded picture as a data image', () async {
+  test('ODT stores pictures in a bounded image registry', () async {
     const xml =
         '''
 <office:document-content $namespaces>
@@ -928,10 +928,13 @@ void imageTests() {
       'image.odt',
     );
     expect(doc.markdown, contains('Before'));
-    expect(doc.markdown, contains('![Picture 1](data:image/png;base64,'));
+    expect(doc.markdown, contains('![Picture 1](odt-image:1)'));
     expect(doc.markdown, contains('after'));
+    expect(doc.markdown, isNot(contains('data:image')));
     expect(doc.markdown, isNot(contains('*[Image:')));
+    expect(doc.imageRegistry.keys, ['odt-image:1']);
+    expect(doc.imageRegistry['odt-image:1'], _png);
     expect(doc.plainText, contains('[Image]'));
-    expect(doc.plainText, isNot(contains('base64')));
+    expect(doc.plainText, isNot(contains('odt-image:')));
   });
 }

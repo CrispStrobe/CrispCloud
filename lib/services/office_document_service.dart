@@ -91,6 +91,11 @@ class OfficeDocument {
   final List<OfficeGeneratedHeading> textHeadings;
   final List<OfficeGeneratedHeading> csvHeadings;
 
+  /// Bounded binary images referenced from [markdown] by synthetic
+  /// `odt-image:` URIs. Keeping bytes out of the markup avoids inflating
+  /// plain text, search text and the rich-render budget.
+  final Map<String, Uint8List> imageRegistry;
+
   const OfficeDocument({
     required this.kind,
     required this.markdown,
@@ -106,6 +111,7 @@ class OfficeDocument {
     this.markdownHeadings = const [],
     this.textHeadings = const [],
     this.csvHeadings = const [],
+    this.imageRegistry = const {},
   });
 }
 
@@ -1576,29 +1582,36 @@ String? _odfColor(String? raw) {
 // ODT
 // ---------------------------------------------------------------------------
 
-Future<Map<String, String>> _odtPictures(ViewerArchive archive) async {
-  const perImageCap = 2 * 1024 * 1024;
-  const totalCap = 2 * 1024 * 1024;
-  final pictures = <String, String>{};
+class _OdtPictures {
+  const _OdtPictures(this.hrefs, this.registry);
+
+  final Map<String, String> hrefs;
+  final Map<String, Uint8List> registry;
+}
+
+Future<_OdtPictures> _odtPictures(ViewerArchive archive) async {
+  const perImageCap = 8 * 1024 * 1024;
+  const totalCap = 24 * 1024 * 1024;
+  final hrefs = <String, String>{};
+  final registry = <String, Uint8List>{};
   var used = 0;
   for (final member in archive.members) {
     if (!member.isFile || !member.name.startsWith('Pictures/')) continue;
     if (member.size <= 0 || member.size > perImageCap) continue;
     if (used + member.size > totalCap) break;
-    final mime = switch (member.name.split('.').last.toLowerCase()) {
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'webp' => 'image/webp',
-      _ => null,
+    final supported = switch (member.name.split('.').last.toLowerCase()) {
+      'png' || 'jpg' || 'jpeg' || 'gif' || 'webp' => true,
+      _ => false,
     };
-    if (mime == null) continue;
+    if (!supported) continue;
     final bytes = await _readPartBytes(archive, member.name);
     if (bytes == null || bytes.isEmpty) continue;
     used += bytes.length;
-    pictures[member.name] = 'data:$mime;base64,${base64Encode(bytes)}';
+    final key = 'odt-image:${registry.length + 1}';
+    hrefs[member.name] = key;
+    registry[key] = bytes;
   }
-  return pictures;
+  return _OdtPictures(hrefs, registry);
 }
 
 Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
@@ -1731,7 +1744,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
               .findAllElements('draw:image')
               .firstOrNull
               ?.getAttribute('xlink:href');
-          final data = href == null ? null : pictures[href];
+          final data = href == null ? null : pictures.hrefs[href];
           if (data != null) {
             final alt = (name ?? 'Image').replaceAll(RegExp(r'[\[\]]'), '');
             buffer.write('![$alt]($data)');
@@ -1896,6 +1909,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
     markdown: markdown,
     plainText: _stripMarkdown(markdown),
     rawXml: _capRaw(xml, 'content.xml'),
+    imageRegistry: pictures.registry,
   );
 }
 
