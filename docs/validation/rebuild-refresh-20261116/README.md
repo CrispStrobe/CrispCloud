@@ -12,4 +12,4 @@ Local checks:
 - 36 Python sync/distribution/signing/startup utility tests passed.
 These cohorts overlap; their counts must not be added as a unique-test total. The font fixture test was made portable between package and host working directories and rerun successfully. The dependency lock was enforced offline without version upgrades. No GitHub CI checks or jobs were queried or awaited.
 
-The release rebuild preserves the existing App Store/sandbox distribution profile, bundle identifier and Apple Development team. It is a local build for this Intel Mac. The existing installed builds remain intact; the new signed build is staged separately and checked for signature, distribution policy and startup health.
+The release rebuild preserves the existing App Store/sandbox distribution profile, bundle identifier and Apple Development team. It is a local build for this Mac’s native architecture. The existing installed builds remain intact; the new signed build is staged separately and checked for signature, distribution policy and startup health.
