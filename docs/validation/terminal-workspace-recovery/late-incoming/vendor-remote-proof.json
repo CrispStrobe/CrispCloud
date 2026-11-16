@@ -1,0 +1,77 @@
+{
+  "verified_utc": "2026-11-16T10:50:29.180Z",
+  "host_source": "9cce54118756b599da199006e1d7aaab1fb4b181",
+  "canonical_source": "18c76e886623ae3be9a41addd80e7f6837c2d3b0",
+  "managed_entries": 2411,
+  "canonical_entries": 554,
+  "standalone_entries": 1857,
+  "canonical_blob_mode_mismatches": [],
+  "all_canonical_blobs_and_modes_match": true,
+  "legacy_subtree_before": "0ec28cf619259fd0185ed60c45cd7632cae879be",
+  "legacy_subtree_after": "0ec28cf619259fd0185ed60c45cd7632cae879be",
+  "standalone_complete_subtree_unchanged": true,
+  "standalone_manifest_hashes_unchanged": true,
+  "all_prior_managed_paths_retained": true,
+  "new_paths": [
+    "packages/quds_office_engine/test/word_zotero_scaling_test.dart",
+    "packages/quds_office_engine/test/zotero_metadata_batch_test.dart"
+  ],
+  "scope": "Remote exact Git blob and mode verification against complete untruncated package/tool trees. Manifest SHA256 strings were inspected and legacy values compared; this does not claim fresh local hashing of all file bytes.",
+  "canonical_tree": "057fc44e36565a1438802e891b12e8288a6c74ca",
+  "canonical_parents": [
+    "629e0ffbff52e6859d2d99c30dd5b5add52489e6",
+    "91d574acefb45f326a82b9e416719213050068cc"
+  ],
+  "retained_source_ancestry": [
+    {
+      "base": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a",
+      "status": "ahead",
+      "ahead_by": 14,
+      "behind_by": 0,
+      "merge_base": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a"
+    },
+    {
+      "base": "91c725feb5517db3c5f686e80662e2cb4f77f0d4",
+      "status": "ahead",
+      "ahead_by": 5,
+      "behind_by": 0,
+      "merge_base": "91c725feb5517db3c5f686e80662e2cb4f77f0d4"
+    }
+  ],
+  "original_ods_source": {
+    "commit": "375390c3853ce26f43d6ac3f71c592acf3e094dc",
+    "is_direct_ancestor": false,
+    "compare_status": "diverged",
+    "common_ancestor": "14fde4b1bd2539f0c6168be4569ac1adcc5105cd",
+    "main_squash_commit": "91d574acefb45f326a82b9e416719213050068cc",
+    "main_squash_is_direct_parent_of_combined_pin": true,
+    "changed_blob_identities": [
+      {
+        "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+        "original_source_blob": "e5af40e8a3356f11786d7c909010ade1d0be56b9",
+        "combined_source_blob": "e5af40e8a3356f11786d7c909010ade1d0be56b9",
+        "equal": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+        "original_source_blob": "5c7be0aea5a58378255d41eb18b2cba15cc18d6d",
+        "combined_source_blob": "5c7be0aea5a58378255d41eb18b2cba15cc18d6d",
+        "equal": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+        "original_source_blob": "882b80f7a779aba6c752cf532fd3a9865e1e4b0b",
+        "combined_source_blob": "882b80f7a779aba6c752cf532fd3a9865e1e4b0b",
+        "equal": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+        "original_source_blob": "97615dfae9a29b17188640d783f327a881f597d7",
+        "combined_source_blob": "97615dfae9a29b17188640d783f327a881f597d7",
+        "equal": true
+      }
+    ],
+    "scope": "Original ODS branch is represented through its main squash and exact resulting blobs; its full tree is not claimed equal to the newer main tree."
+  },
+  "recommended_local_followup": "Run python3 tool/verify_office_fidelity.py --require-tracked after the reviewed merge; hash all2411 current file bytes and verify committed/index modes. Preserve canonical source18c and the1857-file standalone source boundary."
+}

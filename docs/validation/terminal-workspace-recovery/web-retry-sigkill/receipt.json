@@ -1,0 +1,50 @@
+{
+  "phase": "web",
+  "source_head": "3fb3eed4e976ad2fcb4792703e81c92e880e56fd",
+  "accepted_source": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+  "started_utc": "2026-11-16T10:41:08.104730+00:00",
+  "command": [
+    "/workspace/scratch/732a154614f9/toolchain/run",
+    "python3",
+    "/workspace/scratch/732a154614f9/toolchain/web-resource-runner.py",
+    "--run",
+    "--repo",
+    "/workspace/scratch/732a154614f9/CrispCloud",
+    "--toolchain",
+    "/workspace/scratch/732a154614f9/toolchain",
+    "--evidence",
+    "/workspace/scratch/732a154614f9/toolchain/evidence/recovered-acceptance/web"
+  ],
+  "environment_overrides": {},
+  "watched_files": 5665,
+  "frozen_commit_proof": {
+    "accepted_commit": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+    "tracked_inputs_checked": 5661,
+    "mismatches": []
+  },
+  "github_actions_queried_or_awaited": false,
+  "runner_sha256": "187e5c4234597a35bf8065181d4eac3ec9bb546d556b86fdd10ad08f8093fb64",
+  "finished_utc": "2026-11-16T10:42:59.003501+00:00",
+  "seconds": 110.89861299299992,
+  "exit_code": 1,
+  "head_at_end": "3fb3eed4e976ad2fcb4792703e81c92e880e56fd",
+  "source_changes": [],
+  "log_sha256": "41a02c1e99854dc9c073cf4ff033955974568ceec748444c1686868da3fcd402",
+  "source_inventory_artifacts": {
+    "sources-before.json.gz": {
+      "bytes": 300188,
+      "sha256": "ce198dee14a482651a8017fbe3124ec31911a7f17e63f7580a73cfe8ec8c62f8",
+      "mode": "0o644"
+    },
+    "sources-after.json.gz": {
+      "bytes": 300188,
+      "sha256": "ce198dee14a482651a8017fbe3124ec31911a7f17e63f7580a73cfe8ec8c62f8",
+      "mode": "0o644"
+    }
+  },
+  "qualification": "Normal complete application release web build, standard O4/minification and normal web hooks; no browser/native-platform runtime qualification.",
+  "sdk_restored_exactly": true,
+  "main_dart_js": null,
+  "compiler_heap_mb": 4096,
+  "accepted": false
+}

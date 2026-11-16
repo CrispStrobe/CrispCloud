@@ -1,0 +1,62 @@
+{
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "phase_receipt": "../final-acceptance/combined/receipt.json",
+  "qualification": "Isolated Dart/widget validation with unmodified production graph and supported per-command feature configuration. Native CodeAssets intentionally omitted, DataAssets enabled; not full native/application acceptance.",
+  "test_fixture": "test/terminal_workspace_recovery_visual_test.dart",
+  "fixture_sha256": "8b9de6bdfeb50459a54aaa69e5f79d0f0aa8895a26ecd7d03ed307987710523b",
+  "capture_count": 5,
+  "captures": [
+    {
+      "file": "recovered-workspace-desktop.png",
+      "width": 1180,
+      "height": 700,
+      "platform_override": "linux",
+      "bytes": 44592,
+      "sha256": "b4a704d2ff76c843bec5d166152d803ba3601d89a8bb748a4cd41105f59749ab",
+      "git_blob_sha": "7f8242886c5dcf38482d6e0d40f0eba369ce8504",
+      "mode": "100644"
+    },
+    {
+      "file": "recovery-settings-compact-bottom.png",
+      "width": 320,
+      "height": 320,
+      "platform_override": "android",
+      "bytes": 28144,
+      "sha256": "64ec41b3c02399b1aeab88bd5fab1dd8a19e53a6ddf85cd48d426d7b89779d6b",
+      "git_blob_sha": "331b3d6d12741e554f2976067e902944c8fc2f5b",
+      "mode": "100644"
+    },
+    {
+      "file": "recovery-settings-compact-choices.png",
+      "width": 320,
+      "height": 320,
+      "platform_override": "android",
+      "bytes": 31124,
+      "sha256": "80242003740c6a235d4f11662c44a924513df7ff1ae0b2b44674eb99cf85d05f",
+      "git_blob_sha": "58203e5ffc0a0e0e33e5220261ac57a01292ec2a",
+      "mode": "100644"
+    },
+    {
+      "file": "recovery-settings-compact-top.png",
+      "width": 320,
+      "height": 320,
+      "platform_override": "android",
+      "bytes": 25848,
+      "sha256": "18f5f4012ef401eb9cdf3fd561ef081f88cc9e9464984671b68510750226e886",
+      "git_blob_sha": "97693dd6d600ff04bdc38678f5647c28581cacb6",
+      "mode": "100644"
+    },
+    {
+      "file": "recovery-settings-desktop.png",
+      "width": 1180,
+      "height": 700,
+      "platform_override": "linux",
+      "bytes": 92284,
+      "sha256": "38da385b62b4a1391aaf58fc276fa11a9b9ea515f1e31fc6f2db8df8c0087f9e",
+      "git_blob_sha": "e1bbf0b98887d594835442416aee368733d967f1",
+      "mode": "100644"
+    }
+  ],
+  "actual_physical_device_or_packaged_app": false,
+  "verified_source_drift": []
+}

@@ -1,0 +1,15 @@
+{
+  "independent_verification_after_runner_return": true,
+  "sdk_sha256": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_modes": {
+    "bin/dart": 33261,
+    "bin/dartaotruntime": 33261,
+    "bin/snapshots/dart2js_aot.dart.snapshot": 33188
+  },
+  "matches_pinned_expected_hashes": true,
+  "matches_original_modes": true
+}

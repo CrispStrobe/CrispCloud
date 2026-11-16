@@ -1,0 +1,6 @@
+{
+  "helper_sha256": "f1217de794f928f4c8168e34b9272e19eacbd981b97512cc047d04e8ec6ad685",
+  "note": "The reproduction helper uses the identical committed 164-target list instead of the locally archived historical analysis receipt. All seven adapter substitutions and eleven added semantic targets are the exact operations used for this run.",
+  "prior_target_list_equality_verified": true,
+  "prior_target_count": 164
+}

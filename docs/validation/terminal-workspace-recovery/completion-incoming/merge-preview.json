@@ -1,0 +1,1267 @@
+{
+  "recorded_utc": "2026-11-16T10:51:44.965943+00:00",
+  "anchor": "77409e329dfee38eff7cb70626f54376e040bcf0",
+  "virtual_commit": "161d4c7a125aa2d86d3adb5d8187f25650e2ce9c",
+  "source_parents": [
+    "77409e329dfee38eff7cb70626f54376e040bcf0",
+    "9cce54118756b599da199006e1d7aaab1fb4b181",
+    "71256dbfc446612c5e4f1ea775dae991ca0924a8",
+    "9c2047da22110db1518a6226ee7a35e421fb9d51"
+  ],
+  "main_tip": "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b",
+  "result_tree": "048bfd53abc424715149bf8b35bf253173dbfe62",
+  "changes": [
+    {
+      "path": "docs/terminal-parity.md",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "492e05bdb9a244b7ccd0328fb660fbd3c8e2978d",
+      "sha": "1237c97aab498753593c85a812362d7bc196c004",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/terminal.md",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "97b21abcf2b37301d6343354c76c04d1c3bf551f",
+      "sha": "3d6ad2eff7fe310207f60e724a61dae6de2b9fe9",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/README.md",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "4aba9a600e7cb6d06cd1cae7681437683a71d2d0",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/analysis-source-sha256.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "c1ae0ea80d205a596034f74d0b3153357a79fb3b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/analysis.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "dd806ccf489935e6fff0c4e89355430ebca93693",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/analysis.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "174f68a4e9500a4b28a8ba4347154f8fd2fa14cc",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/first-native/native-source-sha256.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "c1ae0ea80d205a596034f74d0b3153357a79fb3b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/first-native/native.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "d76690a2eb954e6ff70195e3009795919c10c5fd",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/first-native/native.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "1b12ac867baeeef723c567fa02b5b56c5ef404f4",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/incoming-root-graph/incoming-zotero-source-sha256.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "23c8811e9e0c863f49710db6507fe6e78b5523ea",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/incoming-root-graph/incoming-zotero.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "e126d8710e38ddc8ffa073c86f759cdfb9faff8b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/incoming-root-graph/incoming-zotero.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "6a3f4d9d1acac2eed01b446b2b70282fe7be5bb4",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/development/terminal-resize-fix.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "6dc6a91167e4badbf22e58136fed74e276eb1ad5",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/RESTORATION.md",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "a5687a870781c31a51e330f187ec73ece3475b4f",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/bin/flutter",
+      "old_mode": "000000",
+      "mode": "100755",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "c3b545bb0a24c62e3901b247ce5119b49df62178",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/environment-setup.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "dbe0a842ac62b109c86934930d6103974c12080e",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/app-pub-get-offline.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "9095a72279f93d7d77a1b02897aa7a29a18e6016",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/flutter-tools-compile.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "bb26b8a9178c8eaac4d4b3c2a5943891542d59fc",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/flutter-tools-offline.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "4a606c014241ccd0087719e394d654f044d4d6e8",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/flutter-version.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "7b7112de270d1c8b6a31646378eec778621437fa",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/native-installation.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "c35b3d8a63c9205d62534f36a88d7348d3c08e59",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/native-prerequisite.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "01845b3885168e2d64249c5c167267cee83460e0",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/production-manifests-initial.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "f6ff535bde1cecdcf14138c4e081ce5a54ddfb9e",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/pub-installation.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "99de65c85a2529d24686ad889e564d7aad67e0e3",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/socket-probes.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "59681448af681bdc148ccf45ae401ff17f0c0c6a",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/logs/web-precache.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "662c5a4cbbb1349c3c8042799075a887fd7d735d",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/manifest.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "88ede4d341c9994fc9e13f63ea192252cb85a8ba",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/restore_native.py",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "a565f4ad30b1cfb8ac31a3b58e5335de4cdd177a",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/run",
+      "old_mode": "000000",
+      "mode": "100755",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "9bc43230839462f2d4a2eebf8c78905b3cc14609",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/environment/warm_pub.py",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "edf10d8c8ad0323a54e372f8871f18cb52cde024",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/final-integration.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "5972402e683ffc7c8aed2c4b45de1cc123e194bf",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/format-source-sha256.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "c1ae0ea80d205a596034f74d0b3153357a79fb3b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/format.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "bcdb0126295408b319b9aa74044091b8ec96a3f3",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/format.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "1169760b8d56e05563ab143cad3840b17d1c67ab",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine-README.md",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "ca42270b70587c83ec9084f18c2b81db4d13ca12",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine-dependencies.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "ff8c8fd4a8c495e62258d1e1b6565a11194d55f5",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine-pub-get.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "2e751c7fa74f05d56173c63d600d34721fdc49fd",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine-pubspec.lock",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "2169ddbef0ae4ad72752072c2dd03af1ec0d47a1",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine-source-sha256.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "2b63f51381298591e4f6a465869b0f790da92380",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine-tests.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "ade6fc1e1b4a59b6bd9ca4ba6b03193249b32cde",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/incoming-engine.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "d28fec87e4b619139fad54832fb35460ad7c3e6b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/integration-snapshot.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "60facfde4909fc1d588e1690b01b2ed96d38e117",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/live-tmux/live-tmux.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "8615ebfab781d5e5642fd2afc1d8123a710f8c38",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/run-local-acceptance.py",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "b6f7e7b39b1c1a01c5f162e0e961150e0de23e33",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/screen-resolver-regression.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "1d20156afc19fcbc43cc508f922388d7982fe56e",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-close-diagnostic.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-focused.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "432b7487874ec8765e3ae3c68ed01fa2b5843868",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-focused.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "268cea283229e4652dfe7238c2781ca3884833f7",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-investigation.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "77e29f83c78e072e949949ad3a3f1675b8d83f38",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-isolated-progress-zone.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "00ac1afd92ba9a770fd2a1cc65fd5e76854428af",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-isolated-progress.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "bb3580d9bcc8c4fec01d5a7fb3f71e4088cd3c81",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-isolated-progress.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "00ac1afd92ba9a770fd2a1cc65fd5e76854428af",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-progress-diagnostic.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "24901ea9fd9813cc02b30e86d54e9b08c9f44e62",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-deadline-regressions.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "b1ef8527f36d8fde376484f180f01d170a865e1b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-focused.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "0ca0b7141b9d0fe6d7cc6521fd993eaad2abd158",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/tmux-focused.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "7054e2bb1c460df3793ada2695237060e272c654",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/vendor-verification.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "da4147332472576cd78e3d48b1dce9cf8c9ff323",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/web-resource-preflight-invocation.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "219f02d7f64a9754d0be449ae72a1d7d2214bf0f",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/web-resource-preflight-source-sha256.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "c1ae0ea80d205a596034f74d0b3153357a79fb3b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/web-resource-preflight-source-verification.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "ad7049b19cc15dba398e76e7c75e8d1467618be5",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/web-resource-preflight.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "845cb5e8051f9e3cc5fd3359ddf67df50815eb87",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/terminal-session-optimization-20261116/web-resource-preflight.log.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "13c49c318a78c587dc89af2b1bf2f7fb3687016d",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/README.md",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "121511ae6a2a41c7d9996638d341f84376b9c865",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/evidence-files.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "824623f84ceeb445555cd5fe8edc2a40210cca6d",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-analysis.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "8fc4e92e2c9c1b70858c2821faa89ec31fd01fb6",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-dependency-inputs.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "edf305d83d2d5b691d656197d030595ad5335c80",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-format.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "97606392c07ba81ccb390497c1248f312f9bbff2",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-pub-get.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "915ddf8f288c4a659c2167992c5c3b02b09ca000",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-source-after.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "32c3ea599812a2dd76917cec801a09b1bc455404",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-source-before.json.gz",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "32c3ea599812a2dd76917cec801a09b1bc455404",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-tests.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "4178ded0e885d3b8c8579063b37c4c9cea85095b",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-validation-receipt.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "4665e8ba25ee9a232c79ad80868028d2cf611770",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-vendor-verify-tracked.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "3ea6206c4f072a7761b13b879c6d282b3a6cbde5",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-vendor-verify.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "3ea6206c4f072a7761b13b879c6d282b3a6cbde5",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/host-whitespace.log",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/host/standalone-parser-proof.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "ebd130d5861cb8917a0615b579cecc241907ffc5",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/validation/zotero-optimization-20261116/incoming-refs.json",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "eb4874d99ae6d5d5c3a1c9af2805dbee8cdd1cf6",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/zotero-validation.md",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "8b1cca8b59fa49daae254aa4467514a572b5262a",
+      "sha": "35ecbc13ff56243e08a0d5ebdca70838eb2da08c",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "docs/zotero.md",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "7fb4e5e1dd7155294dc5ee3b7a9885d9064f4800",
+      "sha": "28eafc85bd160b94f2ecff3a4919edef675536be",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "lib/models/screen_session_options.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "6e13f79159f14876917a20fb10136ea876c51c73",
+      "sha": "063ae4bde15ab3eb05f3171980bb7e388fd30c65",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "lib/services/terminal_session.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "4cc2bf341d865bcf0539af3496e9db99d9de52ba",
+      "sha": "ab6236f23464892a279ba459b64d59db726ead5d",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "lib/services/tmux_control_client.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "d1a50ce3bd388517c15587579401c2cc6b2028a8",
+      "sha": "3bfc3abee51d514e9b552e3ef0b2700ea7b41959",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "lib/widgets/tmux_control_workspace.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "f29c4d209cb87bb9686cc8e8955d9ca5f0874f75",
+      "sha": "f3d947b7a8b9ecfb2ba6cde2339de5dd71428a79",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "packages/quds_office_editor/lib/src/embed/word_zotero_dialog.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "3f4b370f1e0a8798797d4b21faf1efd2fd39a421",
+      "sha": "5c4cdbef8e81436b4569c5c84cf632e8c8b10742",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "2ca16029252eae3f7584b26607a9443f6e8daca7",
+      "sha": "7a6a8e4965e94b6748a543b1ac9b1f2da2f11514",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/CHANGELOG.md",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "bda6efc9bc505084070f8e10cba478326501f821",
+      "sha": "b7b4514d8c24540045b66c496c0e5e3cc0a9713e",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/legacy/ods_sheet_reader.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "97786827ea155036124ab664c6384a3f968ae566",
+      "sha": "e5af40e8a3356f11786d7c909010ade1d0be56b9",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "9c2047da22110db1518a6226ee7a35e421fb9d51",
+        "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/model/sml_workbook.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "36c2c9e61c5d201e1a840f03ed232fd03cf12dfe",
+      "sha": "5c7be0aea5a58378255d41eb18b2cba15cc18d6d",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "9c2047da22110db1518a6226ee7a35e421fb9d51",
+        "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "736f38bffbca45a6169c3e6b78d3f4c6fb6be4c8",
+      "sha": "882b80f7a779aba6c752cf532fd3a9865e1e4b0b",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "9c2047da22110db1518a6226ee7a35e421fb9d51",
+        "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "3cb8aa64f48934e2ec92a5c7c69332581024fbfb",
+      "sha": "6c1951e088391b620c8c1aacbc2b18b91c673e08",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/lib/src/zotero/zotero_client.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "7c23e3f061f575a88d873328ac5348f508f80441",
+      "sha": "cbadfd7dfc4ce4dc43bd7d9e2794047825d0ad46",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "df52be320b534c5c41775a0627e5e9dd71040efa",
+      "sha": "97615dfae9a29b17188640d783f327a881f597d7",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "9c2047da22110db1518a6226ee7a35e421fb9d51",
+        "b9772e1aa52d9acc45c7ec4113b09d55f0072b2b"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/test/word_zotero_scaling_test.dart",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "00002fbbf6518c2142978c4b0aed86235cefd7a9",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    },
+    {
+      "path": "packages/quds_office_engine/test/zotero_metadata_batch_test.dart",
+      "old_mode": "000000",
+      "mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "sha": "fbea53dd8badea6cf69b136945155f08305f82b1",
+      "status": "A",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "test/screen_session_command_test.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "d9adb836861434a3833980f4a2a3bdb96fe1a2b1",
+      "sha": "869a3010bdc04ad5819e4c046d45594b1eaf8e24",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "test/terminal_session_test.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "715b5b5b7932799e38ae5cc19660a4ad74f2bf36",
+      "sha": "c2ce79e26b9bfe731a5e4f9dabbb27ef793ecb84",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "test/tmux_control_client_test.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "b07d8ca5c9170ab8200cfb02e202b06fe32ca3a3",
+      "sha": "7f324070f5af152c7e704d0279157848ec85cefc",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "test/tmux_control_workspace_test.dart",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "2adc2cdf1fd39aff8c15230df5496575fe554cee",
+      "sha": "7f3ce0a04263de7b38e227dfe6a2ea9b01ec2b54",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ]
+    },
+    {
+      "path": "tool/office_fidelity_manifest.json",
+      "old_mode": "100644",
+      "mode": "100644",
+      "old_blob": "272821b96c67dfc1a624b9a6192f31a00bbe31ea",
+      "sha": "102a4ce127446990ca30963c425a63e413f6a95c",
+      "status": "M",
+      "type": "blob",
+      "existing_parent_matches": [
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ]
+    }
+  ],
+  "diff_stat": " docs/terminal-parity.md                            |   12 +-\n docs/terminal.md                                   |   19 +-\n .../README.md                                      |   70 +\n .../analysis-source-sha256.json.gz                 |  Bin 0 -> 267270 bytes\n .../analysis.json                                  |  346 +++\n .../analysis.log.gz                                |  Bin 0 -> 1120 bytes\n .../first-native/native-source-sha256.json.gz      |  Bin 0 -> 267270 bytes\n .../development/first-native/native.json           |  197 ++\n .../development/first-native/native.log.gz         |  Bin 0 -> 23326 bytes\n .../incoming-zotero-source-sha256.json.gz          |  Bin 0 -> 157699 bytes\n .../incoming-root-graph/incoming-zotero.json       |   30 +\n .../incoming-root-graph/incoming-zotero.log.gz     |  Bin 0 -> 21503 bytes\n .../development/terminal-resize-fix.log.gz         |  Bin 0 -> 866 bytes\n .../environment/RESTORATION.md                     |   21 +\n .../environment/bin/flutter                        |    5 +\n .../environment/environment-setup.json             |  165 ++\n .../environment/logs/app-pub-get-offline.log       |   30 +\n .../environment/logs/flutter-tools-compile.log     |   58 +\n .../environment/logs/flutter-tools-offline.log     |  108 +\n .../environment/logs/flutter-version.json          |   15 +\n .../environment/logs/native-installation.json      |  206 ++\n .../environment/logs/native-prerequisite.log       |   11 +\n .../logs/production-manifests-initial.json         |    5 +\n .../environment/logs/pub-installation.json.gz      |  Bin 0 -> 20505 bytes\n .../environment/logs/socket-probes.json            |    4 +\n .../environment/logs/web-precache.log              |    1 +\n .../environment/manifest.json                      |   66 +\n .../environment/restore_native.py                  |   26 +\n .../environment/run                                |   14 +\n .../environment/warm_pub.py                        |   36 +\n .../final-integration.json                         | 2671 ++++++++++++++++++++\n .../format-source-sha256.json.gz                   |  Bin 0 -> 267270 bytes\n .../format.json                                    |  348 +++\n .../format.log.gz                                  |  Bin 0 -> 69 bytes\n .../incoming-engine-README.md                      |   43 +\n .../incoming-engine-dependencies.json              | 1360 ++++++++++\n .../incoming-engine-pub-get.log.gz                 |  Bin 0 -> 581 bytes\n .../incoming-engine-pubspec.lock                   |  428 ++++\n .../incoming-engine-source-sha256.json.gz          |  Bin 0 -> 267357 bytes\n .../incoming-engine-tests.log.gz                   |  Bin 0 -> 2829 bytes\n .../incoming-engine.json                           |  109 +\n .../integration-snapshot.json                      | 1213 +++++++++\n .../live-tmux/live-tmux.json                       |   26 +\n .../run-local-acceptance.py                        |   68 +\n .../screen-resolver-regression.json                |   92 +\n .../tmux-deadline-close-diagnostic.log.gz          |  Bin 0 -> 20 bytes\n .../tmux-deadline-focused.json                     |    9 +\n .../tmux-deadline-focused.log.gz                   |  Bin 0 -> 2271 bytes\n .../tmux-deadline-investigation.json               |   13 +\n .../tmux-deadline-isolated-progress-zone.log.gz    |  Bin 0 -> 230 bytes\n .../tmux-deadline-isolated-progress.json           |    7 +\n .../tmux-deadline-isolated-progress.log.gz         |  Bin 0 -> 230 bytes\n .../tmux-deadline-progress-diagnostic.log.gz       |  Bin 0 -> 309 bytes\n .../tmux-deadline-regressions.log.gz               |  Bin 0 -> 281 bytes\n .../tmux-focused.json                              |   51 +\n .../tmux-focused.log.gz                            |  Bin 0 -> 2153 bytes\n .../vendor-verification.json                       |   41 +\n .../web-resource-preflight-invocation.log.gz       |  Bin 0 -> 877 bytes\n .../web-resource-preflight-source-sha256.json.gz   |  Bin 0 -> 267270 bytes\n ...web-resource-preflight-source-verification.json |   26 +\n .../web-resource-preflight.json                    |   41 +\n .../web-resource-preflight.log.gz                  |  Bin 0 -> 5234 bytes\n .../zotero-optimization-20261116/README.md         |  100 +\n .../evidence-files.json                            |   18 +\n .../host/host-analysis.log                         |    2 +\n .../host/host-dependency-inputs.json               |   82 +\n .../host/host-format.log                           |    1 +\n .../host/host-pub-get.log                          |   26 +\n .../host/host-source-after.json.gz                 |  Bin 0 -> 77007 bytes\n .../host/host-source-before.json.gz                |  Bin 0 -> 77007 bytes\n .../host/host-tests.log                            |   43 +\n .../host/host-validation-receipt.json              |  227 ++\n .../host/host-vendor-verify-tracked.log            |    2 +\n .../host/host-vendor-verify.log                    |    2 +\n .../host/host-whitespace.log                       |    0\n .../host/standalone-parser-proof.json              |   21 +\n .../incoming-refs.json                             | 1014 ++++++++\n docs/zotero-validation.md                          |   26 +-\n docs/zotero.md                                     |   15 +\n lib/models/screen_session_options.dart             |   39 +-\n lib/services/terminal_session.dart                 |   69 +-\n lib/services/tmux_control_client.dart              |  167 +-\n lib/widgets/tmux_control_workspace.dart            |    9 +-\n .../lib/src/embed/word_zotero_dialog.dart          |   35 +-\n .../test/word_zotero_dialog_test.dart              |  242 +-\n packages/quds_office_engine/CHANGELOG.md           |    5 +-\n .../lib/src/sheet/legacy/ods_sheet_reader.dart     |    3 +\n .../lib/src/sheet/model/sml_workbook.dart          |    4 +\n .../lib/src/sheet/serial/sheet_serial.dart         |   15 +\n .../lib/src/word/model/word_zotero_citing.dart     |  135 +-\n .../lib/src/zotero/zotero_client.dart              |   76 +-\n .../test/ods_sheet_reader_test.dart                |   22 +\n .../test/word_zotero_scaling_test.dart             |  274 ++\n .../test/zotero_metadata_batch_test.dart           |  434 ++++\n test/screen_session_command_test.dart              |   59 +\n test/terminal_session_test.dart                    |  146 +-\n test/tmux_control_client_test.dart                 |  286 ++-\n test/tmux_control_workspace_test.dart              |   26 +\n tool/office_fidelity_manifest.json                 |   24 +-\n 99 files changed, 11485 insertions(+), 155 deletions(-)\n",
+  "head_before": "3fb3eed4e976ad2fcb4792703e81c92e880e56fd",
+  "head_after": "3fb3eed4e976ad2fcb4792703e81c92e880e56fd",
+  "status_before": "",
+  "status_after": "",
+  "previews": [
+    {
+      "name": "root-plus-pr167",
+      "command": [
+        "git",
+        "merge-tree",
+        "--write-tree",
+        "--messages",
+        "77409e329dfee38eff7cb70626f54376e040bcf0",
+        "9cce54118756b599da199006e1d7aaab1fb4b181"
+      ],
+      "exit_code": 0,
+      "stdout": "2ebbd38cff120548c978acc889b63485a21f6064\n\n",
+      "stderr": ""
+    },
+    {
+      "name": "union-plus-pr169",
+      "command": [
+        "git",
+        "merge-tree",
+        "--write-tree",
+        "--messages",
+        "161d4c7a125aa2d86d3adb5d8187f25650e2ce9c",
+        "71256dbfc446612c5e4f1ea775dae991ca0924a8"
+      ],
+      "exit_code": 0,
+      "stdout": "048bfd53abc424715149bf8b35bf253173dbfe62\n\n",
+      "stderr": ""
+    }
+  ],
+  "new_automatic_merge_blobs": []
+}

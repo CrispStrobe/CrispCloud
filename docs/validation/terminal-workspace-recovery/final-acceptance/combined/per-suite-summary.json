@@ -1,0 +1,364 @@
+{
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "file_count": 44,
+  "counts": {
+    "passed": 701,
+    "skipped": 1,
+    "failed": 0
+  },
+  "suites": [
+    {
+      "file": "test/terminal_workspace_recovery_test.dart",
+      "counts": {
+        "passed": 38,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_workspace_recovery_dialog_test.dart",
+      "counts": {
+        "passed": 14,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_workspace_recovery_widget_test.dart",
+      "counts": {
+        "passed": 18,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_panel_recovery_idle_test.dart",
+      "counts": {
+        "passed": 6,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_arrangements_test.dart",
+      "counts": {
+        "passed": 12,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_arrangements_dialog_test.dart",
+      "counts": {
+        "passed": 5,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_arrangements_widget_test.dart",
+      "counts": {
+        "passed": 9,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_tabs_test.dart",
+      "counts": {
+        "passed": 19,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_pane_layout_test.dart",
+      "counts": {
+        "passed": 8,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_session_test.dart",
+      "counts": {
+        "passed": 20,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_panel_test.dart",
+      "counts": {
+        "passed": 2,
+        "skipped": 1,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_widget_test.dart",
+      "counts": {
+        "passed": 9,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_user_input_test.dart",
+      "counts": {
+        "passed": 12,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_broadcast_test.dart",
+      "counts": {
+        "passed": 14,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_broadcast_dialog_test.dart",
+      "counts": {
+        "passed": 3,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_key_bindings_test.dart",
+      "counts": {
+        "passed": 12,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_key_bindings_widget_test.dart",
+      "counts": {
+        "passed": 8,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_triggers_test.dart",
+      "counts": {
+        "passed": 30,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_triggers_widget_test.dart",
+      "counts": {
+        "passed": 5,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_trigger_session_test.dart",
+      "counts": {
+        "passed": 7,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_shell_integration_test.dart",
+      "counts": {
+        "passed": 11,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_shell_directory_labels_test.dart",
+      "counts": {
+        "passed": 2,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_search_test.dart",
+      "counts": {
+        "passed": 13,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_search_bar_test.dart",
+      "counts": {
+        "passed": 8,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_input_budget_test.dart",
+      "counts": {
+        "passed": 3,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_connection_sharing_test.dart",
+      "counts": {
+        "passed": 14,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/ssh_connection_sharing_widget_test.dart",
+      "counts": {
+        "passed": 7,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/ssh_tmux_panel_lifecycle_test.dart",
+      "counts": {
+        "passed": 8,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/tmux_control_workspace_test.dart",
+      "counts": {
+        "passed": 14,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/ssh_native_tmux_persistence_test.dart",
+      "counts": {
+        "passed": 4,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/ssh_terminal_reconnect_test.dart",
+      "counts": {
+        "passed": 12,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_mount_localization_test.dart",
+      "counts": {
+        "passed": 3,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/tmux_control_client_test.dart",
+      "counts": {
+        "passed": 39,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/screen_session_command_test.dart",
+      "counts": {
+        "passed": 16,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/ods_sheet_reader_test.dart",
+      "counts": {
+        "passed": 89,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/sheet_formula_test.dart",
+      "counts": {
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/widget/ods_editor_workflow_test.dart",
+      "counts": {
+        "passed": 4,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/zotero_client_test.dart",
+      "counts": {
+        "passed": 34,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/zotero_identity_client_test.dart",
+      "counts": {
+        "passed": 19,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/zotero_metadata_batch_test.dart",
+      "counts": {
+        "passed": 20,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/word_zotero_scaling_test.dart",
+      "counts": {
+        "passed": 5,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "build/final-incoming-tests/word_zotero_citing_test.dart",
+      "counts": {
+        "passed": 59,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+      "counts": {
+        "passed": 39,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    {
+      "file": "test/terminal_workspace_recovery_visual_test.dart",
+      "counts": {
+        "passed": 1,
+        "skipped": 0,
+        "failed": 0
+      }
+    }
+  ],
+  "skipped_lines": []
+}
