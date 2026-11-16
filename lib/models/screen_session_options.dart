@@ -83,22 +83,53 @@ resolved=$(
       listing_status = marker[2] + 0
       next
     }
-    /^[0-9]+ Sockets? in / { summary = 1 }
+    /^[ \t]*$/ { next }
+    /^(There are screens on:|There is a screen on:)$/ { next }
+    /^Remove dead screens with / { next }
+    /^[0-9]+ Sockets? in .+$/ {
+      summaries++
+      summary_count = $1 + 0
+      next
+    }
     /^[ \t]+[1-9][0-9]*[.]/ {
-      id = $1
+      # A Screen name may contain spaces. Splitting on shell whitespace would
+      # turn "123.work extra" into "123.work" and authorize a prefix attach.
+      # Preserve the entire target, removing only the listing separators and
+      # Screen timestamp that the discovery parser also recognizes.
+      id = $0
+      sub(/^[ \t]+/, "", id)
+      if (!match(id, /[(][^()]*[)][ \t]*$/)) {
+        malformed = 1
+        next
+      }
+      state = substr(id, RSTART)
+      id = substr(id, 1, RSTART - 1)
+      sub(/\t+[ \t]*$/, "", id)
+      sub(/\t+[(][0-9][0-9]\/[0-9][0-9]\/[0-9][0-9]([0-9][0-9])? [0-9][0-9]:[0-9][0-9]:[0-9][0-9][)]$/, "", id)
+      if (id !~ /^[1-9][0-9]*[.].+/ || id in seen) {
+        malformed = 1
+        next
+      }
+      seen[id] = 1
       ids[++sessions] = id
+      if (sessions > 512) {
+        oversized = 1
+        exit
+      }
       name = id
       sub(/^[0-9]+[.]/, "", name)
       matches = full_id ? ("x" id == "x" target) : ("x" name == "x" target)
       if (matches) {
         count++
         chosen = id
-        if ($0 !~ /[(](Attached|Detached|Multi, attached|Multi, detached)[)][ \t\r]*$/) unavailable = 1
+        if (state !~ /^[(](Attached|Detached|Multi, attached|Multi, detached)[)][ \t]*$/) unavailable = 1
       }
+      next
     }
+    { malformed = 1 }
     END {
       if (oversized) exit 75
-      if (statuses != 1 || listing_status != 0 || !summary) exit 48
+      if (statuses != 1 || listing_status != 0 || malformed || summaries != 1 || summary_count != sessions) exit 48
       if (count == 0) exit 44
       if (count != 1) exit 45
       if (unavailable) exit 46

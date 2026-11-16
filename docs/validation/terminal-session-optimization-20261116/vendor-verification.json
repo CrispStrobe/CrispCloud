@@ -1,0 +1,41 @@
+{
+  "recorded_utc": "2026-11-16T10:18:26.127082+00:00",
+  "source_head": "5010751403ea9b037f218e5558c2de2d3d49569d",
+  "github_actions_queried_or_awaited": false,
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "tool/verify_dartssh2_vendor.py"
+      ],
+      "exit_code": 0,
+      "result": "Verified 96 dartssh2 4.1.0 upstream files; 4 reviewed agent-channel patches."
+    },
+    {
+      "command": [
+        "python3",
+        "tool/verify_office_fidelity.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "managed_files": 2409,
+      "quds_source": "be2c3a91b0dd5b4abb1b9a7baa8f5e10769bc87a",
+      "standalone_parser_source": "4895712158127b2fc930d796e17035c3ca0dac62"
+    }
+  ],
+  "note": "Records checks executed in this continuation before acceptance; managed source files and dependency pins are unchanged from the integrated baseline.",
+  "post_integration": {
+    "recorded_utc": "2026-11-16T10:31:25.321664+00:00",
+    "source_head": "94857cf415965826b8ed08eafd3b05dafc29b353",
+    "command": [
+      "python3",
+      "tool/verify_office_fidelity.py",
+      "--require-tracked"
+    ],
+    "exit_code": 0,
+    "managed_files": 2411,
+    "quds_source": "91c725feb5517db3c5f686e80662e2cb4f77f0d4",
+    "standalone_parser_source": "4895712158127b2fc930d796e17035c3ca0dac62",
+    "canonical_changed_blob_and_mode_proof": "final-integration.json"
+  }
+}

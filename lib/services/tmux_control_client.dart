@@ -107,6 +107,9 @@ class TmuxControlClient extends ChangeNotifier {
   static const historyLines = 200;
   static const maximumInputBytes = 64 * 1024;
   static const _maximumPendingCommands = 256;
+  // Seven synchronous commands capture one pane. A group of eight keeps the
+  // command budget bounded while amortizing high-latency SSH round trips.
+  static const _maximumCaptureGroup = 8;
 
   final Duration commandTimeout;
   final Stream<List<int>> _source;
@@ -136,11 +139,12 @@ class TmuxControlClient extends ChangeNotifier {
   Future<void> _writing = Future<void>.value();
   Timer? _refreshTimer;
   Timer? _resizeTimer;
+  bool _resizing = false;
   int _columns = 80;
   int _rows = 24;
   int _layoutRevision = 0;
   (int, int)? _requestedSize;
-  final _resizeWaiters = <Completer<void>>[];
+  Completer<void>? _resizeCompletion;
 
   List<TmuxControlWindow> get windows => _windows;
   Map<String, TmuxControlPane> get panes => _panes;
@@ -224,7 +228,11 @@ class TmuxControlClient extends ChangeNotifier {
         );
       }
       final pending = _pending.removeFirst();
-      pending.timer?.cancel();
+      if (_pending.isEmpty ||
+          !identical(pending.deadline, _pending.first.deadline)) {
+        pending.deadline.timer?.cancel();
+        _startPendingDeadline();
+      }
       if (!event.success) {
         final failure = TmuxControlException(
           _message(event.text, 'tmux rejected the command.'),
@@ -357,27 +365,40 @@ class TmuxControlClient extends ChangeNotifier {
     void Function(TmuxControlBlock)? onSuccess,
   }) => _batch([_Command(command, onSuccess)]).then((blocks) => blocks.single);
 
-  Future<List<TmuxControlBlock>> _batch(List<_Command> commands) {
+  Future<List<TmuxControlBlock>> _batch(
+    List<_Command> commands, {
+    int? deadlineGroupSize,
+  }) {
     _checkOpen();
     if (commands.isEmpty ||
         _pending.length + commands.length > _maximumPendingCommands) {
       throw const TmuxControlException('Too many pending tmux commands.');
     }
-    final pending = <_PendingCommand>[];
-    for (final command in commands) {
-      if (command.text.contains('\n') ||
+    final groupSize = deadlineGroupSize ?? commands.length;
+    if (groupSize < 1 || groupSize > commands.length) {
+      throw ArgumentError('Invalid tmux command deadline group.');
+    }
+    // Validate the whole list before reserving any reply slots. A rejected
+    // later command must not leave earlier slots without a write or timer.
+    if (commands.any(
+      (command) =>
+          command.text.contains('\n') ||
           command.text.contains('\r') ||
-          command.text.length > 16384) {
-        throw ArgumentError('Invalid tmux control command.');
+          command.text.length > 16384,
+    )) {
+      throw ArgumentError('Invalid tmux control command.');
+    }
+    final pending = <_PendingCommand>[];
+    var deadline = _PendingCommandDeadline();
+    for (var index = 0; index < commands.length; index++) {
+      final command = commands[index];
+      if (index != 0 && index % groupSize == 0) {
+        deadline = _PendingCommandDeadline();
       }
-      final item = _PendingCommand(command.onSuccess, commands.length > 1);
-      item.timer = Timer(
-        commandTimeout,
-        () => _fail(
-          const TmuxControlException(
-            'A tmux command timed out. Reconnect to continue.',
-          ),
-        ),
+      final item = _PendingCommand(
+        command.onSuccess,
+        commands.length > 1,
+        deadline,
       );
       // A later command may fail before its caller has awaited earlier replies.
       unawaited(
@@ -386,6 +407,7 @@ class TmuxControlClient extends ChangeNotifier {
       _pending.add(item);
       pending.add(item);
     }
+    _startPendingDeadline();
     final line = '${commands.map((command) => command.text).join(' ; ')}\n';
     _writing = _writing
         .then((_) async {
@@ -396,6 +418,24 @@ class TmuxControlClient extends ChangeNotifier {
           (Object failure, StackTrace stack) => _fail(failure, stack),
         );
     return Future.wait(pending.map((item) => item.completer.future));
+  }
+
+  void _startPendingDeadline() {
+    if (_closed || _pending.isEmpty) return;
+    // Replies are strictly ordered. A queued command must not spend its
+    // timeout behind another valid snapshot. Each ordinary command list, or
+    // each pane inside a grouped capture, retains one hard timeout starting
+    // when it reaches the reply queue head. Partial replies do not reset it.
+    // With eight panes per capture and 256 pending commands, both the active
+    // capture budget and the total queued work remain bounded.
+    _pending.first.deadline.timer ??= Timer(
+      commandTimeout,
+      () => _fail(
+        const TmuxControlException(
+          'A tmux command timed out. Reconnect to continue.',
+        ),
+      ),
+    );
   }
 
   void _scheduleRefresh() {
@@ -604,12 +644,33 @@ class TmuxControlClient extends ChangeNotifier {
           pane.session.terminal.viewHeight != record.height) {
         pane._capturing = true;
       }
-      if (pane._capturing && !await _capture(pane, record, revision)) {
-        return false;
-      }
       _checkOpen();
       if (revision != _layoutRevision) return false;
       nextPanes[record.id] = pane;
+    }
+    final captures = <_PaneCapture>[];
+    for (var index = 0; index < paneRecords.length; index++) {
+      final record = paneRecords[index];
+      final pane = nextPanes[record.id]!;
+      if (pane._capturing) {
+        captures.add(_prepareCapture(pane, record, revision));
+      }
+      if (captures.isNotEmpty &&
+          (captures.length == _maximumCaptureGroup ||
+              index == paneRecords.length - 1)) {
+        // tmux executes this complete command list synchronously. Snapshot
+        // groups therefore share a server event-loop boundary, without
+        // holding 64 independent reply batches or one RTT for every pane.
+        await _batch([
+          for (final capture in captures) ...capture.commands,
+        ], deadlineGroupSize: captures.first.commands.length);
+        _checkOpen();
+        if (revision != _layoutRevision ||
+            captures.any((capture) => !capture.wasInstalled())) {
+          return false;
+        }
+        captures.clear();
+      }
     }
     for (final record in paneRecords) {
       final pane = nextPanes[record.id]!;
@@ -641,11 +702,11 @@ class TmuxControlClient extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> _capture(
+  _PaneCapture _prepareCapture(
     TmuxControlPane pane,
     _PaneRecord record,
     int revision,
-  ) async {
+  ) {
     TmuxControlBlock? screen;
     TmuxControlBlock? savedScreen;
     TmuxControlBlock? parserPending;
@@ -655,7 +716,7 @@ class TmuxControlClient extends ChangeNotifier {
     // client's output first, discard its pre-capture backlog, then re-enable
     // it at the same server event-loop boundary as the snapshot. Capture is
     // applied in the reply callback, before subsequent records in that packet.
-    await _batch([
+    final commands = <_Command>[
       _Command('refresh-client -A ${pane.id}:off'),
       _Command(
         'capture-pane -p -e -C -t ${pane.id} -S -$historyLines',
@@ -713,8 +774,8 @@ class TmuxControlClient extends ChangeNotifier {
         pane._capturing = false;
         installed = true;
       }),
-    ]);
-    return installed;
+    ];
+    return _PaneCapture(commands, () => installed);
   }
 
   void _installCapture(
@@ -889,35 +950,47 @@ class TmuxControlClient extends ChangeNotifier {
     _checkDimensions(columns, rows);
     if (_closed ||
         !_ready ||
-        (columns == _columns && rows == _rows && _requestedSize == null)) {
+        (!_resizing &&
+            columns == _columns &&
+            rows == _rows &&
+            _requestedSize == null)) {
       return Future<void>.value();
     }
     _requestedSize = (columns, rows);
-    final completion = Completer<void>();
-    _resizeWaiters.add(completion);
+    final completion = _resizeCompletion ??= Completer<void>();
+    _scheduleResize();
+    return completion.future;
+  }
+
+  void _scheduleResize() {
+    // Keep at most one resize on the wire and one latest requested size. In
+    // particular, returning to the last completed size while another resize
+    // is in flight must not lose that final viewport geometry.
+    if (_closed || _resizing || _requestedSize == null) return;
     _resizeTimer ??= Timer(const Duration(milliseconds: 80), () async {
       _resizeTimer = null;
+      _resizing = true;
       final size = _requestedSize;
       _requestedSize = null;
-      final waiters = _resizeWaiters.toList();
-      _resizeWaiters.clear();
+      final completion = _resizeCompletion;
+      _resizeCompletion = null;
       try {
-        if (!_closed && size != null) {
+        if (!_closed &&
+            size != null &&
+            (size.$1 != _columns || size.$2 != _rows)) {
           await _command('refresh-client -C ${size.$1}x${size.$2}');
           _columns = size.$1;
           _rows = size.$2;
           await _refresh();
         }
-        for (final waiter in waiters) {
-          if (!waiter.isCompleted) waiter.complete();
-        }
+        completion?.complete();
       } catch (failure, stack) {
-        for (final waiter in waiters) {
-          if (!waiter.isCompleted) waiter.completeError(failure, stack);
-        }
+        completion?.completeError(failure, stack);
+      } finally {
+        _resizing = false;
+        _scheduleResize();
       }
     });
-    return completion.future;
   }
 
   Future<void> detach() async {
@@ -974,15 +1047,13 @@ class TmuxControlClient extends ChangeNotifier {
     if (!_startup.isCompleted) _startup.completeError(failure);
     while (_pending.isNotEmpty) {
       final pending = _pending.removeFirst();
-      pending.timer?.cancel();
+      pending.deadline.timer?.cancel();
       if (!pending.completer.isCompleted) {
         pending.completer.completeError(failure);
       }
     }
-    for (final waiter in _resizeWaiters) {
-      if (!waiter.isCompleted) waiter.complete();
-    }
-    _resizeWaiters.clear();
+    _resizeCompletion?.complete();
+    _resizeCompletion = null;
     for (final pane in _ownedPanes.values) {
       pane._connection.finish();
     }
@@ -1064,11 +1135,21 @@ class _Command {
   final void Function(TmuxControlBlock)? onSuccess;
 }
 
+class _PaneCapture {
+  const _PaneCapture(this.commands, this.wasInstalled);
+  final List<_Command> commands;
+  final bool Function() wasInstalled;
+}
+
 class _PendingCommand {
-  _PendingCommand(this.onSuccess, this.batch);
+  _PendingCommand(this.onSuccess, this.batch, this.deadline);
   final completer = Completer<TmuxControlBlock>();
   final void Function(TmuxControlBlock)? onSuccess;
   final bool batch;
+  final _PendingCommandDeadline deadline;
+}
+
+class _PendingCommandDeadline {
   Timer? timer;
 }
 

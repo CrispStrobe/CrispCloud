@@ -1,0 +1,13 @@
+{
+  "resolved_test_harness_issue": "Dart StreamSubscription.cancel returns root-zone Future._nullFuture when onCancel returns null. The fake-clock test cannot drain that real-zone completion; its explicit close awaited forever. The fixture now returns a fresh current-zone Future<void>.value() when no cancellation gate exists. Both new tests construct local fixtures and explicitly pump start/close, with all temporary prints removed.",
+  "sdk_evidence": [
+    "dart-sdk/lib/async/stream_impl.dart: StreamSubscription.cancel",
+    "dart-sdk/lib/internal/internal.dart: Zone.root nullFuture",
+    "dart-sdk/lib/async/future_impl.dart: completed Future listener scheduling"
+  ],
+  "isolated_regressions_passed": 2,
+  "isolated_regressions_failed": 0,
+  "isolated_log": "tmux-deadline-regressions.log",
+  "initial_compiler_exit_cause": "Not established; its original log is retained separately.",
+  "github_actions_queried_or_awaited": false
+}

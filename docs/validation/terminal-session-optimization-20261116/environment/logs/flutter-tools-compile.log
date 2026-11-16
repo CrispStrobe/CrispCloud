@@ -1,0 +1,58 @@
+[1/1] Engine Information                                            3.4s
+Manage your Flutter app development.
+
+Common commands:
+
+  flutter create <output directory>
+    Create a new Flutter project in the specified directory.
+
+  flutter run [options]
+    Run your Flutter application on an attached device or in an emulator.
+
+Usage: flutter <command> [arguments]
+
+Global options:
+-h, --help                  Print this usage information.
+-v, --verbose               Noisy logging, including all shell commands executed.
+                            If used with "--help", shows hidden options. If used with "flutter doctor", shows additional diagnostic information. (Use "-vv" to force verbose logging in those cases.)
+-d, --device-id             Target device id or name (prefixes allowed).
+    --version               Reports the version of this tool.
+    --enable-analytics      Enable telemetry reporting each time a flutter or dart command runs.
+    --disable-analytics     Disable telemetry reporting each time a flutter or dart command runs, until it is re-enabled.
+    --suppress-analytics    Suppress analytics reporting for the current CLI invocation.
+
+Available commands:
+
+Flutter SDK
+  bash-completion   Output command line shell completion setup scripts.
+  channel           List or switch Flutter channels.
+  config            Configure Flutter settings.
+  doctor            Show information about the installed tooling.
+  downgrade         Downgrade Flutter to the last active version for the current channel.
+  precache          Populate the Flutter tool's cache of binary artifacts.
+  upgrade           Upgrade your copy of Flutter.
+
+Project
+  analyze           Analyze the project's Dart code.
+  build             Build an executable app or install bundle.
+  clean             Delete the build/ and .dart_tool/ directories.
+  create            Create a new Flutter project.
+  drive             Builds and installs the app, and runs a Dart program that connects to the app, often to run externally facing integration tests, such as with package:test and package:flutter_driver.
+  gen-l10n          Generate localizations for the current project.
+  pub               Commands for managing Flutter packages.
+  run               Run your Flutter app on an attached device.
+  test              Run Flutter unit tests for the current project.
+
+Tools & Devices
+  attach            Attach to a running app.
+  custom-devices    List, reset, add and delete custom devices.
+  devices           List all connected devices.
+  emulators         List, launch and create emulators.
+  install           Install a Flutter app on an attached device.
+  logs              Show log output for running Flutter apps.
+  screenshot        Take a screenshot from a connected device.
+  symbolize         Symbolize a stack trace from an AOT-compiled Flutter app.
+  widget-preview    Manage the widget preview environment.
+
+Run "flutter help <command>" for more information about a command.
+Run "flutter help -v" for verbose help output, including less commonly used options.

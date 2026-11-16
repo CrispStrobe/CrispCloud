@@ -1,0 +1,165 @@
+{
+  "recorded_at_utc": "2026-11-16T10:20:44.072524+00:00",
+  "purpose": "Reproducible local environment preparation; separate from final feature acceptance",
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/cb0df5963965/toolchain/flutter"
+  },
+  "sdk_source_diff": [],
+  "bootstrap": "Official Flutter3.47.8 tag, unmodified standard launcher downloaded Dart3.13.7; hosted archives verified from SDK/application lockfiles and prior receipt, official tools resolved offline and compiled with unchanged shared.sh snapshot flags. Workspace runner invokes that tool snapshot directly to avoid per-exec startup-lock PID collision.",
+  "versions": {
+    "dart": {
+      "exit_code": 0,
+      "stdout": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"\n",
+      "stderr": ""
+    },
+    "rustc": {
+      "exit_code": 0,
+      "stdout": "rustc 1.100.0 (0ef1bc386 2026-11-09)\n",
+      "stderr": ""
+    },
+    "cargo": {
+      "exit_code": 0,
+      "stdout": "cargo 1.100.0 (3acc79c0c 2026-11-05)\n",
+      "stderr": ""
+    },
+    "clang": {
+      "exit_code": 0,
+      "stdout": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/cb0df5963965/toolchain/native/usr/lib/llvm-19/bin\n",
+      "stderr": ""
+    },
+    "cmake": {
+      "exit_code": 0,
+      "stdout": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    "ninja": {
+      "exit_code": 0,
+      "stdout": "1.12.1\n",
+      "stderr": ""
+    },
+    "tmux": {
+      "exit_code": 0,
+      "stdout": "tmux 3.5a\n",
+      "stderr": ""
+    }
+  },
+  "active_binaries": {
+    "flutter/bin/cache/dart-sdk/bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "flutter/bin/cache/dart-sdk/bin/dartvm": {
+      "bytes": 42998912,
+      "sha256": "ec532a0620beed626fbf89234f1dcc857c15f4e064fb8e99715345027bfb129d"
+    },
+    "flutter/bin/cache/dart-sdk/bin/dartaotruntime": {
+      "bytes": 5710176,
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72"
+    },
+    "flutter/bin/cache/flutter_tools.snapshot": {
+      "bytes": 47266592,
+      "sha256": "7902c22f47a8752edb2cf001d7267af2a13c169688ea8a1034cdc9df2e18153c"
+    },
+    "rust/bin/rustc": {
+      "bytes": 647568,
+      "sha256": "5073422953727c9427a76b7fce03aa9404da46315e5a1e4965389512a41e8db0"
+    },
+    "rust/bin/cargo": {
+      "bytes": 36100400,
+      "sha256": "84d55d77232a921da96bcf2e1f78532ef5c5221803aae4448d9e220d48ebd808"
+    },
+    "native/usr/bin/cmake": {
+      "bytes": 13275056,
+      "sha256": "9a2692f4d712265eb29c90c3366bfc40df400ea586b0477edabbcf3bae745dc1"
+    },
+    "native/usr/bin/ninja": {
+      "bytes": 294344,
+      "sha256": "e8e646527e23aa7a66d0f04b86b89f1bb2f25edcc1c5e402a0989e5364c8779b"
+    },
+    "native/usr/bin/tmux": {
+      "bytes": 1094216,
+      "sha256": "2967b531cb415b19afbc153bc19eff1c2e461726781a36c27c855a166bb36d4b"
+    },
+    "native/usr/lib/llvm-19/bin/clang": {
+      "bytes": 132352,
+      "sha256": "0a3c55936ac43954fbe4914e6e73b577ca9e35e75d89ef13d3e28c187f41ca1a"
+    }
+  },
+  "hosted_archives": {
+    "verified_count": 322,
+    "full_package_contents_retained": true,
+    "receipt": "logs/pub-installation.json.gz"
+  },
+  "native_artifacts": {
+    "verified_count": 23,
+    "receipt": "logs/native-installation.json"
+  },
+  "production_manifests_initial": {
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+    ".fvmrc": "90bf8f8884c05a407f51d6ef651ba033fef99a656010f8bfcb65951e921f4294"
+  },
+  "production_manifests_current": {
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+    ".fvmrc": "90bf8f8884c05a407f51d6ef651ba033fef99a656010f8bfcb65951e921f4294"
+  },
+  "production_manifests_unchanged": true,
+  "resolution_command": "../toolchain/run flutter pub get --enforce-lockfile --offline",
+  "resolution_passed": true,
+  "cargo_fetch": "All three checked-in catalog/SMB/cloud Cargo.lock graphs fetched with --locked",
+  "socket_probes": {
+    "unix_socket": "PermissionError(1, 'Operation not permitted')",
+    "tcp_loopback": "passed"
+  },
+  "native_prerequisite": {
+    "command": "../toolchain/run flutter test --no-pub --concurrency=1 --reporter=expanded test/terminal_process_test.dart",
+    "status": "passed",
+    "log": "logs/native-prerequisite.log",
+    "exit_code": 0,
+    "passed": 6,
+    "skipped": 1,
+    "skip_reason": "Windows ConPTY requires Windows host",
+    "normal_native_hooks_enabled": true,
+    "exercised": [
+      "Linux PTY allocation and TTY identity",
+      "ANSI and final output through process exit",
+      "Resize observed by actual foreground process",
+      "Split UTF-8 output and Unicode input",
+      "Ctrl+C delivered to terminal foreground process",
+      "Disposal before attachment and repeated disposal"
+    ]
+  },
+  "remaining_platform_limits": [
+    "Unix socket creation denied EPERM; actual tmux server/Unix-agent/Chromium runtime remains unqualified",
+    "Packaged Windows/macOS, physical mobile and external gateways not exercised"
+  ],
+  "ci": "No GitHub Actions queried or awaited.",
+  "source_head_at_receipt": "5010751403ea9b037f218e5558c2de2d3d49569d",
+  "web_sdk_precache": {
+    "command": "../toolchain/run flutter precache --web",
+    "exit_code": 0,
+    "log": "logs/web-precache.log",
+    "qualification": "Compiler assets restored; not a release build or browser execution result"
+  },
+  "native_hooks_completed": [
+    "crisp_catalog",
+    "crisp_storage",
+    "crisp_ebook_conversion",
+    "flutter_pty2",
+    "sqlite3",
+    "objective_c"
+  ]
+}

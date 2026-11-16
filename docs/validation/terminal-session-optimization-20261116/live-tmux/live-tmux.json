@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-11-16T10:16:29.554365+00:00",
+  "github_actions_queried_or_awaited": false,
+  "actual_feature_tests_completed": 0,
+  "binary": "/workspace/scratch/cb0df5963965/toolchain/bin/tmux",
+  "version": "tmux 3.5a",
+  "probe_command": [
+    "/workspace/scratch/cb0df5963965/toolchain/bin/tmux",
+    "-S",
+    "/workspace/scratch/cb0df5963965/toolchain/tmp/tmux-probe-fsrfgtcs/server",
+    "-f",
+    "/dev/null",
+    "new-session",
+    "-d",
+    "-s",
+    "crispcloud-probe"
+  ],
+  "probe_exit_code": 1,
+  "probe_stdout": "",
+  "probe_stderr": "error connecting to /workspace/scratch/cb0df5963965/toolchain/tmp/tmux-probe-fsrfgtcs/server (Operation not permitted)\n",
+  "status": "skipped",
+  "reason": "Host policy prevents an unmodified tmux Unix-socket server.",
+  "cleanup_exit_code": 1,
+  "cleanup_stdout": "",
+  "cleanup_stderr": "error connecting to /workspace/scratch/cb0df5963965/toolchain/tmp/tmux-probe-fsrfgtcs/server (Operation not permitted)\n"
+}

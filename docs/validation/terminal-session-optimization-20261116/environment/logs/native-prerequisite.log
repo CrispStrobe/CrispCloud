@@ -1,0 +1,11 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/cb0df5963965/crispcloud/test/terminal_process_test.dart
+00:00 +0: web cannot start a local shell
+00:00 +1: Local desktop PTY dispose is safe before attaching output and can be repeated
+00:00 +2: Local desktop PTY Windows ConPTY accepts input and reports the shell exit
+00:00 +2 ~1: Local desktop PTY POSIX PTY allocates a TTY and retains ANSI output through process exit
+00:00 +3 ~1: Local desktop PTY POSIX PTY resizing changes the size seen by the running process
+00:00 +4 ~1: Local desktop PTY POSIX PTY streams split UTF-8 output and sends non-ASCII input unchanged
+00:00 +5 ~1: Local desktop PTY POSIX PTY Ctrl+C reaches the terminal foreground process
+00:00 +6 ~1: All tests passed!

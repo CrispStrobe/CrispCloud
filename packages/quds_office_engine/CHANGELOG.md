@@ -46,8 +46,9 @@ All notable changes to `quds_office_engine` are documented here.
   pictures as worksheet drawings, apply nameless document default styles and
   default column/row geometry, preserve hidden rows/columns/sheets, import
   conditional formats (numeric, between, contains-text, begins/ends-with and
-  duplicate) with generated dxf styling, and import literal/range-source list validations
-  with corrected Excel list quoting. Import ODS print areas/titles, named ranges
+  duplicate) with generated dxf styling, and import literal/range-source plus whole/decimal/date/text-length/custom
+  validations with operators, date serials, prompts/error styles and corrected
+  Excel list quoting. Import ODS print areas/titles, named ranges
   and basic database-range autofilters, and add XLSX print-area read/write. Documented limits remain for range-source
   validations, expression/visual conditional rules, ODS metadata and package
   part naming.

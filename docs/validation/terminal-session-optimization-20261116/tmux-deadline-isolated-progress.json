@@ -1,0 +1,7 @@
+{
+  "status": "interrupted_after_test_stalled",
+  "exit_code": 130,
+  "diagnosis": "Fixture created in shared setUp owned futures outside the testWidgets fake-clock zone; retry uses fixtures created inside test callback",
+  "log": "tmux-deadline-isolated-progress.log",
+  "github_actions_queried_or_awaited": false
+}

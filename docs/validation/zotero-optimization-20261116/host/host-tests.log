@@ -1,0 +1,43 @@
+00:00 +0: loading /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart
+00:00 +0: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: saved-search reads stay on direct loopback with the pinned database
+00:00 +1: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: saved-search writes and encoded route injection are refused before sending
+00:00 +2: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing execCommand sends only local UTF-8 JSON without redirects
+00:00 +3: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing respond sends only local UTF-8 JSON without redirects
+00:00 +4: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing rejects other origins and protocol routes before sending
+00:00 +5: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing requires POST and rejects cloud or catalog request bodies
+00:00 +6: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing accepts case-insensitive names but no secrets or extra headers
+00:00 +7: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing request bodies are valid JSON with a UTF-8 byte bound
+00:00 +8: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing redirects return once without forwarding document data
+00:00 +9: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing responses reject declared and streamed excess bytes
+00:00 +10: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: native dialog uses its own longer timeout
+00:00 +11: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: request timeout can shorten but cannot extend host limit
+00:00 +12: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: dispose settles pending citing immediately and ignores late response
+00:00 +13: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: dispose cancels a response body already being read
+00:00 +14: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing network failures never expose document or credential data
+00:00 +15: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_citing_transport_test.dart: citing and catalog limits must be positive before client creation
+00:00 +16: loading /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart
+00:02 +16: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: credential loading target rejects changed documents and selections
+00:02 +17: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop reads use only the explicitly supplied direct client
+00:02 +18: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary cloud requests retain the selected proxy factory with local enabled
+00:02 +19: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop access requires host opt-in before creating any client
+00:02 +20: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop rejects secrets and unexpected headers before client creation
+00:02 +21: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop rejects other hosts, ports, paths and URL credentials
+00:02 +22: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop redirects are returned without another request
+00:02 +23: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary desktop responses retain size and total timeout limits
+00:02 +24: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary disposal closes desktop requests and rejects later desktop reads
+00:02 +25: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary sends API-key header only to Zotero and never follows redirects
+00:02 +26: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary rejects non-Zotero destinations before creating a client
+00:02 +27: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary passes redirect status for the API client to reject
+00:02 +28: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary bounds declared and streamed response sizes
+00:02 +29: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary total request timeout closes the owned client
+00:02 +30: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary HTTP exceptions cannot expose the API key
+00:02 +31: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary timeout cancels a stalled response body subscription
+00:02 +32: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero transport boundary disposal closes active requests and rejects new requests
+00:02 +33: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence writes, reads back and forgets only the Zotero entry
+00:02 +34: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence session-only backend never offers persistent credentials
+00:02 +35: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence failed read-back never reports a successful remember operation
+00:02 +36: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_test.dart: Zotero credential persistence backend failures are sanitized and invalid keys are rejected
+00:02 +37: loading /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_ribbon_test.dart
+00:09 +37: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_ribbon_test.dart: Zotero is reachable from Word Insert menu and ribbon
+00:11 +38: /workspace/scratch/60be9067b9f9/CrispCloud/test/office_zotero_ribbon_test.dart: hosts without Zotero integration keep the entry point hidden
+00:12 +39: All tests passed!

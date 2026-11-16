@@ -670,7 +670,14 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
       (size.width / cell.width).floor().clamp(20, 500),
       (size.height / cell.height).floor().clamp(5, 200),
     );
-    if (next == _lastResize || next == _pendingResize) return;
+    if (next == _lastResize) {
+      // A quick A -> B -> A drag supersedes the pending B resize even though
+      // the final dimensions need no new command. Letting its timer survive
+      // would leave tmux at an obsolete size after the viewport has settled.
+      _cancelResize();
+      return;
+    }
+    if (next == _pendingResize) return;
     _resizeTimer?.cancel();
     _pendingResize = next;
     final client = widget.client;

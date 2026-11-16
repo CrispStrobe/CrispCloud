@@ -85,7 +85,7 @@ class TerminalSession extends ChangeNotifier {
 
   void _bindTerminal() {
     terminal.onOutput = _write;
-    terminal.onResize = (_, __, ___, ____) => _resize();
+    terminal.onResize = (columns, rows, _, __) => _resize(columns, rows);
     shellIntegration = TerminalShellIntegration(terminal)
       ..addListener(_shellChanged);
   }
@@ -225,7 +225,9 @@ class TerminalSession extends ChangeNotifier {
   StreamSubscription<String>? _subscription;
   Future<void> _writes = Future<void>.value();
   int _pendingInputCodeUnits = 0;
-  Future<void> _resizes = Future<void>.value();
+  int? _resizingGeneration;
+  (int, int)? _pendingResize;
+  (int, int)? _lastResize;
   int _generation = 0;
   bool _disposed = false;
   final _failedCleanup = <TerminalCloseable, Object>{};
@@ -336,7 +338,7 @@ class TerminalSession extends ChangeNotifier {
     _subscription = null;
     _writes = Future<void>.value();
     _pendingInputCodeUnits = 0;
-    _resizes = Future<void>.value();
+    _resetResize();
     this.kind = kind;
     this.label = label;
     error = null;
@@ -440,17 +442,59 @@ class TerminalSession extends ChangeNotifier {
     }
   }
 
-  void _resize() {
+  void _resize([int? columns, int? rows]) {
     final connection = _connection;
     final generation = _generation;
     if (!isConnected || connection == null) return;
-    _resizes = _resizes
-        .then((_) async {
-          if (_current(generation) && isConnected) {
-            await connection.resize(columns, rows);
-          }
-        })
-        .catchError((Object error) => _fail(generation, error));
+    // xterm invokes onResize before committing its own viewport dimensions.
+    // Use that callback's new geometry; only connection startup samples the
+    // emulator's already-committed size.
+    _pendingResize = (
+      (columns ?? this.columns).clamp(1, 10000),
+      (rows ?? this.rows).clamp(1, 10000),
+    );
+    if (_resizingGeneration == generation) return;
+    _resizingGeneration = generation;
+    // Layout can notify synchronously; keep transport effects out of layout
+    // and also collapse all geometry updates from the same event turn.
+    unawaited(
+      Future<void>.microtask(() => _flushResize(connection, generation)),
+    );
+  }
+
+  Future<void> _flushResize(
+    TerminalConnection connection,
+    int generation,
+  ) async {
+    try {
+      while (_current(generation) && isConnected) {
+        final size = _pendingResize;
+        _pendingResize = null;
+        if (size == null) break;
+        if (size == _lastResize) continue;
+        // Keep only the newest geometry while a transport resize is pending.
+        // A slow SSH peer must not accumulate one future per layout event, or
+        // receive the same final dimensions repeatedly after a drag finishes.
+        await connection.resize(size.$1, size.$2);
+        if (!_current(generation)) return;
+        _lastResize = size;
+      }
+    } catch (error) {
+      _fail(generation, error);
+    } finally {
+      // A replaced connection owns its own queue. A late completion or error
+      // from this transport must not clear the successor's pending geometry.
+      if (_resizingGeneration == generation) {
+        _resizingGeneration = null;
+        _pendingResize = null;
+      }
+    }
+  }
+
+  void _resetResize() {
+    _resizingGeneration = null;
+    _pendingResize = null;
+    _lastResize = null;
   }
 
   Future<void> _ended(int generation, TerminalConnection connection) async {
@@ -483,6 +527,7 @@ class TerminalSession extends ChangeNotifier {
   void _fail(int generation, Object failure) {
     if (!_current(generation)) return;
     ++_generation;
+    _resetResize();
     for (final pending in _pendingOpenings.toList()) {
       unawaited(_closeConnection(pending));
     }
@@ -501,6 +546,7 @@ class TerminalSession extends ChangeNotifier {
   Future<void> disconnect() async {
     if (_disposed) return;
     final generation = ++_generation;
+    _resetResize();
     for (final pending in _pendingOpenings.toList()) {
       unawaited(_closeConnection(pending));
     }
@@ -595,6 +641,7 @@ class TerminalSession extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     ++_generation;
+    _resetResize();
     for (final pending in _pendingOpenings.toList()) {
       unawaited(_closeConnection(pending));
     }
