@@ -1,0 +1,35 @@
+{
+  "reason": "Preserve byte-identical original licence and manifest inputs, including their existing CRLF/trailing whitespace. No production or executed inputs are rewritten. All other staged changes pass whitespace validation.",
+  "exact_archives": [
+    {
+      "archive": "docs/validation/zotero-fidelity-20261116/full-app-build/inputs/LICENSE.txt",
+      "original": "LICENSE.txt",
+      "sha256": "542a82eb653af1dfb6cf149a8e57e52b35ab8a56bea152e198f5ba53073b98fe",
+      "exact_copy": true
+    },
+    {
+      "archive": "docs/validation/zotero-fidelity-20261116/full-app-build/inputs/pubspec.yaml",
+      "original": "pubspec.yaml",
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "exact_copy": true
+    },
+    {
+      "archive": "docs/validation/zotero-fidelity-20261116/terminal-integration/supplemental/pubspec.yaml",
+      "original": "pubspec.yaml",
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "exact_copy": true
+    }
+  ],
+  "whitespace_command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/validation/zotero-fidelity-20261116/full-app-build/inputs/LICENSE.txt",
+    ":(exclude)docs/validation/zotero-fidelity-20261116/full-app-build/inputs/pubspec.yaml",
+    ":(exclude)docs/validation/zotero-fidelity-20261116/terminal-integration/supplemental/pubspec.yaml"
+  ],
+  "passed": true
+}

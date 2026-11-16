@@ -606,23 +606,34 @@ Hiding the terminal retains the connection. Remote pane identities are not
 added to the cross-tab broadcast group: changing a selected tmux pane must not
 silently change an approved broadcast destination.
 
+After disconnect, retained windows and panes remain available for local
+navigation, scrolling, selection, search and explicit copy. These views send
+no remote commands or input; paste stays disabled. Their buffers remain in
+memory until the terminal session is replaced or disposed.
+
 This first native workspace has explicit limits:
 
 - At most **16 windows and 64 panes** on one control connection, with bounded
   metadata, response sizes, pane buffers and queued input. Oversized or malformed
   protocol data closes the connection and leaves the remote session alone.
-- Initial attachment captures up to **200 history lines** plus the visible
+- Initial attachment and resynchronization after a pane-size change capture up to
+  **200 history lines** plus the visible
   screen for each pane, within its local buffer budget. It restores the active
   screen, saved primary screen when an alternate screen is active, pending
   parser bytes, cursor and common input modes. It does not recreate original
   soft-wrap metadata, custom tab stops or every terminal/SGR state. Some
   full-screen applications may need to redraw after attachment.
+  A real size change can trim previously retained history to this capture
+  budget; focus changes and pane moves without a size change preserve it.
+  On tmux versions without the `bracket_paste_flag` format, already-enabled
+  bracketed paste cannot be inferred on initial attachment. A subsequent live
+  mode change establishes the local paste mode, which survives later captures.
 - Keyboard, IME, paste and custom mappings target the selected remote pane.
   Input goes directly to that pane; tmux's interactive prefix bindings and
   copy-mode interface are not rendered. Use ordinary PTY tmux mode for those
   interfaces, or the native toolbar and pane search/copy controls here.
-  Mouse/focus protocol forwarding and every advanced keyboard protocol are
-  not yet qualified. tmux itself answers application terminal queries; the
+  Mouse and focus reports are suppressed. Advanced keyboard protocol behavior
+  still needs broader qualification. tmux itself answers application queries; the
   second emulator's automatic replies are suppressed.
 - Pane search, copy/paste and output triggers are available in the native
   workspace. The ordinary panel's command-history/status actions and mobile

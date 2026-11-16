@@ -721,6 +721,9 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
     if (action == _TmuxAction.find || action == _TmuxAction.zoom) {
       return view != null;
     }
+    if (action == _TmuxAction.paste && view?.session.isConnected != true) {
+      return false;
+    }
     if (action == _TmuxAction.previousPane || action == _TmuxAction.nextPane) {
       return _windowPaneIds.length > 1 &&
           !_busy &&
@@ -1027,6 +1030,12 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
         window?.paneIds.where((id) => _views.containsKey(id)).toList() ??
         <String>[];
     final view = _activeView;
+    final paneError = view?.session.error;
+    final errorMessage = paneError != null
+        ? context.tmuxControlTr('Pane failed. Reconnect to continue.')
+        : _actionError == null
+        ? null
+        : context.tmuxControlTr(_actionError!);
     final painter = TextPainter(
       text: TextSpan(
         text: 'M',
@@ -1077,32 +1086,42 @@ class _TmuxControlWorkspaceState extends ConsumerState<TmuxControlWorkspace> {
                       onWorkspaceKey: widget.onWorkspaceKey,
                       onClose: _closeSearch,
                     ),
-                  if (_actionError != null && constraints.maxHeight >= 220)
-                    Material(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      child: SizedBox(
-                        height: 32,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                  if (errorMessage != null && constraints.maxHeight >= 130)
+                    Tooltip(
+                      message: paneError == null
+                          ? errorMessage
+                          : '$errorMessage\n$paneError',
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Material(
+                          key: const ValueKey('tmux-error'),
+                          color: Theme.of(context).colorScheme.errorContainer,
+                          child: SizedBox(
+                            height: paneError == null ? 32 : 48,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    child: Text(
+                                      errorMessage,
+                                      maxLines: paneError == null ? 1 : 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ),
-                                child: Text(
-                                  context.tmuxControlTr(_actionError!),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
+                                if (paneError == null)
+                                  IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(Icons.close, size: 18),
+                                    onPressed: () =>
+                                        setState(() => _actionError = null),
+                                  ),
+                              ],
                             ),
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(Icons.close, size: 18),
-                              onPressed: () =>
-                                  setState(() => _actionError = null),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),

@@ -1,0 +1,142 @@
+{
+  "recorded_utc": "2026-11-16T07:44:49.657945+00:00",
+  "root_head": "359e399757e4f0b74ab8b190a3119cef841d3c7d",
+  "incoming": "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da",
+  "merge_bases": [
+    "6e11d2d6fda1486dc6968e01137ba7466356398f",
+    "e980293cc7446899f1404372ee6296bb65710358"
+  ],
+  "prospective_merge_tree": "48a90a486b1f819c7b9d43648752ae57a9ee0970",
+  "comparison": "Root HEAD tree to clean prospective merge tree; accounts for both shared merge bases",
+  "incoming_commits_not_in_root": [
+    "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da Record current host qualification and incoming tmux source audit [skip ci]",
+    "de1259080074ca7918122d4790e9255269944b25 Merge current native tmux work into Zotero continuation [skip ci]",
+    "0b1646f9fe64ac8f88ae24034a672c138647e50e Align saved search host tests with CrispCloud Dart formatting [skip ci]",
+    "769b087c8b8fa78fbdfb9da1faaeb6d28b69ecca Pin hardened Zotero bibliography and Unicode typography to Quds ca4011de [skip ci]"
+  ],
+  "changed_file_count": 58,
+  "changed_files": [
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-dependency-inputs.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-pub-get.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-source-after.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-source-before.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-tests.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-validation-receipt.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-vendor-verify-tracked.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/host-vendor-verify.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-1-prior-host-count/standalone-parser-proof.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-analysis.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-dependency-inputs.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-format.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-pub-get.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-source-after.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-source-before.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-tests.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-validation-receipt.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-vendor-verify-tracked.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/host-vendor-verify.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/attempt-2-host-format/standalone-parser-proof.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/final-integration.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-analysis.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-dependency-inputs.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-format.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-pub-get.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-source-after.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-source-before.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-tests.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-validation-receipt.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-vendor-verify-tracked.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-vendor-verify.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/host-whitespace.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/final/standalone-parser-proof.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/host-validation.py",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-analysis.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-dependency-inputs.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-format.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-pub-get.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-source-after.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-source-before.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-tests.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-validation-receipt.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-vendor-verify-tracked.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-vendor-verify.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/host-whitespace.log",
+    "A\tdocs/validation/zotero-fidelity-20261116/pre-tmux-qualified-host/standalone-parser-proof.json",
+    "A\tdocs/validation/zotero-fidelity-20261116/run-host-checks.py",
+    "M\tdocs/zotero.md",
+    "M\tpackages/quds_office_editor/test/word_small_caps_test.dart",
+    "A\tpackages/quds_office_editor/test/word_zotero_bibliography_controller_test.dart",
+    "M\tpackages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+    "M\tpackages/quds_office_engine/lib/src/word/model/word_small_caps.dart",
+    "A\tpackages/quds_office_engine/lib/src/word/model/word_small_caps_case_data.dart",
+    "M\tpackages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+    "M\tpackages/quds_office_engine/test/word_small_caps_test.dart",
+    "M\tpackages/quds_office_engine/test/word_zotero_bibliography_layout_test.dart",
+    "M\ttest/office_zotero_citing_transport_test.dart",
+    "M\ttool/office_fidelity_manifest.json"
+  ],
+  "dependency_manifest_and_lockfile_changes": [],
+  "office_manifest": {
+    "pin_before": "9b31295bbf705b7aff8a732c16f9d010edbb4e3a",
+    "pin_after": "ca4011de0e17783f12bcff07336e318adc1db99c",
+    "count_before": 2407,
+    "count_after": 2409,
+    "added_entries": [
+      "packages/quds_office_editor/test/word_zotero_bibliography_controller_test.dart",
+      "packages/quds_office_engine/lib/src/word/model/word_small_caps_case_data.dart"
+    ],
+    "removed_entries": [],
+    "changed_entry_count": 6,
+    "standalone_sources_unchanged": true,
+    "hash_checks": [
+      {
+        "path": "packages/quds_office_editor/test/word_zotero_bibliography_controller_test.dart",
+        "expected": "40f8356d305050033c0dff978768cc6e0b64dd3e73b2092023019c1ee3634749",
+        "actual": "40f8356d305050033c0dff978768cc6e0b64dd3e73b2092023019c1ee3634749",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_small_caps_case_data.dart",
+        "expected": "dd05f3ae8bf4366f6609953d54d92952fbf1310c2b2e3a1251f88c198e70e2dc",
+        "actual": "dd05f3ae8bf4366f6609953d54d92952fbf1310c2b2e3a1251f88c198e70e2dc",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_editor/test/word_small_caps_test.dart",
+        "expected": "b3c0c63278163ae391f5712eba74b187592a36aeab4487c97765e1b75a41cc39",
+        "actual": "b3c0c63278163ae391f5712eba74b187592a36aeab4487c97765e1b75a41cc39",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/layout/word_layout.dart",
+        "expected": "1f9b55b38461c708c725880a09e7cf339248da28d6510cad8550e9dee2775794",
+        "actual": "1f9b55b38461c708c725880a09e7cf339248da28d6510cad8550e9dee2775794",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_small_caps.dart",
+        "expected": "4420d1d7cc2aa18f7e897fdb34debc581cf169d3fad04f910a613999609c437a",
+        "actual": "4420d1d7cc2aa18f7e897fdb34debc581cf169d3fad04f910a613999609c437a",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/word/model/word_zotero_citing.dart",
+        "expected": "a18893904d03f1e8a5b02f65653e6a981a87cb18451a6195da00ee82ad73d416",
+        "actual": "a18893904d03f1e8a5b02f65653e6a981a87cb18451a6195da00ee82ad73d416",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_small_caps_test.dart",
+        "expected": "4c24154b60998f358e399565284d72fa0c2270183daa773947ab1938022c629e",
+        "actual": "4c24154b60998f358e399565284d72fa0c2270183daa773947ab1938022c629e",
+        "matches": true
+      },
+      {
+        "path": "packages/quds_office_engine/test/word_zotero_bibliography_layout_test.dart",
+        "expected": "8cbcf6221fcf125324c9f78f2e97063b7467762cd7063ca6138d873f7f9decc3",
+        "actual": "8cbcf6221fcf125324c9f78f2e97063b7467762cd7063ca6138d873f7f9decc3",
+        "matches": true
+      }
+    ]
+  }
+}

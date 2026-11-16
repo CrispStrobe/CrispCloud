@@ -1,0 +1,46 @@
+{
+  "started_utc": "2026-11-16T07:50:16.379276+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/run_terminal_validation.py",
+    "web",
+    "--evidence",
+    "/workspace/scratch/6c8a74f9de7f/CrispCloud/docs/validation/terminal-tmux-control"
+  ],
+  "heap_mb": 3072,
+  "sdk": "/workspace/scratch/6c8a74f9de7f/toolchain/flutter/bin/cache/dart-sdk",
+  "sdk_before": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_modes_before": {
+    "bin/dart": 33261,
+    "bin/dartaotruntime": 33261,
+    "bin/snapshots/dart2js_aot.dart.snapshot": 33188
+  },
+  "launcher_sha256": "c4bae7ba89f9cf3022a18ec364c21b82e3e2a14e9451358c1d731f2a96a4ffbc",
+  "application_or_dependency_changes": false,
+  "compiler_args": "Unchanged Flutter compile-js arguments; SDK implicit arguments preserved.",
+  "process_scope": "Only the launched validation process and visible descendants.",
+  "github_actions_queried_or_awaited": false,
+  "exit_code": 1,
+  "sdk_after": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_modes_after": {
+    "bin/dart": 33261,
+    "bin/dartaotruntime": 33261,
+    "bin/snapshots/dart2js_aot.dart.snapshot": 33188
+  },
+  "sdk_restored_exactly": true,
+  "finished_utc": "2026-11-16T07:52:53.679603+00:00",
+  "seconds": 157.3,
+  "peak_visible_rss_kb": 3327116,
+  "minimum_available_memory_kb": 5436724,
+  "sample_count": 53,
+  "complete_record": "web-resource-observations.json",
+  "complete_record_sha256": "9c99fabcc62a00845fefe196d175966d5906e313114e3bc18ccda9d101a3aa6a"
+}

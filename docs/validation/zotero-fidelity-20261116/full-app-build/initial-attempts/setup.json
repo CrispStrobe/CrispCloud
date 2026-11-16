@@ -1,0 +1,11 @@
+{
+  "source": "/workspace/scratch/4156e4a05f09/CrispCloud",
+  "harness": "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app",
+  "started_at": "2026-11-16T07:21:26.105217+00:00",
+  "manifest_changes": false,
+  "inputs": {
+    "pubspec.yaml": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+    "pubspec.lock": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+    "analysis_options.yaml": "05ce41d1c237b7a8c018c639f416a83226b1c6a7ee26b63e584ebb320791783b"
+  }
+}

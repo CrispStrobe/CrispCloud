@@ -1,0 +1,10 @@
+{
+  "source_receipt": "/workspace/scratch/4156e4a05f09/CrispCloud/docs/validation/zotero-continuation-20261116/terminal-integration/final-loopback/receipt.json",
+  "workspace_rebase_from": "/workspace/scratch/7b8555dd0115",
+  "workspace_rebase_to": "/workspace/scratch/4156e4a05f09",
+  "change": "Use the newly integrated production vendored dartssh2 override instead of the previous hosted dependency. Resolve the resulting isolated lock once; production manifests unchanged.",
+  "controlled_lock_update": "Replaced only dartssh2 lock entry with the exact current production entry; same relative packages path through a symlink to the application packages.",
+  "old_lock_sha256": "055fb334e6ea2cb46bbef7e379945014e0a57b011408169ca23fb7f3b8935b7b",
+  "new_lock_sha256": "b6ad7eb020b84890704278206fc843917dcbaa428734617e95eb1ca7b58e1cab",
+  "copied_dartssh2_entry": "  dartssh2:\n    dependency: \"direct main\"\n    description:\n      path: \"packages/dartssh2\"\n      relative: true\n    source: path\n    version: \"4.1.0\"\n"
+}

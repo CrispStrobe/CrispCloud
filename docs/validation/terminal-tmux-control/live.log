@@ -1,0 +1,77 @@
+Optional real Unix-agent acceptance skipped: Host rejected Unix-socket creation: [Errno 1] Operation not permitted
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_live_test.dart
+00:00 +0: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route verifies both servers and preserves Unicode execution through a jump
+ℹ️ [SshTerminalService] Session ho7ir5rygz0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7ir5rygz0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ir5rygz0
+ℹ️ [SshTerminalService] Session ho7ir5wqz01 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7ir5wqz01)
+ℹ️ [SshTerminalService] Disconnecting session ho7ir5wqz01
+00:00 +1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route rejects a changed target host key without trusting or registering the route
+ℹ️ [SshTerminalService] Session ho7ir6211m0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] Disconnecting session ho7ir6211m0
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:50521. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:nu11nTVnBMMBD1nOQzGeMfbc5FWW0qsDg60cnIDblcE.
+00:01 +2: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_terminal_live_test.dart: real OpenSSH loopback route real PTY receives size changes and preserves final output and exit status
+  Skip: Use --with-pty with an sshd allowed to write login records.
+00:01 +2 ~1: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_port_forwarding_live_test.dart
+00:01 +2 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route local allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7ir6wf5l0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7ir6wf5l0)
+ℹ️ [SshTerminalService] Disconnecting session ho7ir6wf5l0
+00:18 +3 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route remote allocates a listener, drains binary response after half-close, and cancels
+ℹ️ [SshTerminalService] Session ho7irgndm70 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7irgndm70)
+ℹ️ [SshTerminalService] Disconnecting session ho7irgndm70
+00:34 +4 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route SOCKS domain request and pipelined binary payload survive request half-close
+ℹ️ [SshTerminalService] Session ho7irq0t390 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7irq0t390)
+ℹ️ [SshTerminalService] Disconnecting session ho7irq0t390
+00:49 +5 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_port_forwarding_live_test.dart: real OpenSSH forwarding through a verified jump route disconnect closes active client sockets and both local and remote listeners
+ℹ️ [SshTerminalService] Session ho7irzbfk00 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] Disconnecting session ho7irzbfk00
+00:50 +6 ~1: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart
+00:50 +6 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7irzr8lm0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7irzr8lm0)
+ℹ️ [SshTerminalService] Disconnecting session ho7irzr8lm0
+00:50 +7 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture Ed25519 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7is05byz0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7is05byz0)
+ℹ️ [SshTerminalService] Disconnecting session ho7is05byz0
+00:51 +8 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 waits for host approval before direct signing
+ℹ️ [SshTerminalService] Session ho7is09m1a0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7is09m1a0)
+ℹ️ [SshTerminalService] Disconnecting session ho7is09m1a0
+00:51 +9 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture RSA SHA-2 signs independently after each verified jump hop
+ℹ️ [SshTerminalService] Session ho7is0e2vp0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7is0e2vp0)
+ℹ️ [SshTerminalService] Disconnecting session ho7is0e2vp0
+00:51 +10 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture session output drains across a live OpenSSH rekey
+ℹ️ [SshTerminalService] Session ho7is0ibnw0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7is0ibnw0)
+ℹ️ [SshTerminalService] Disconnecting session ho7is0ibnw0
+00:54 +11 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture rejecting a real host key never asks the agent to sign
+❌ [SshTerminalService] SSH connect failed
+  Error: Verify this server’s SSH host key before connecting: SHA256:nu11nTVnBMMBD1nOQzGeMfbc5FWW0qsDg60cnIDblcE
+00:54 +12 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed direct host key fails before any signature
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:50521. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:nu11nTVnBMMBD1nOQzGeMfbc5FWW0qsDg60cnIDblcE.
+00:54 +13 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a changed final key signs only for the independently trusted jump
+❌ [SshTerminalService] SSH connect failed
+  Error: SSH host key changed for 127.0.0.1:50521. Expected SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA; received SHA256:nu11nTVnBMMBD1nOQzGeMfbc5FWW0qsDg60cnIDblcE.
+00:55 +14 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture a refused agent signature has no password or interactive fallback
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+00:55 +15 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture disconnect revokes a pending local-agent signature on a live route
+ℹ️ [SshTerminalService] Session ho7is2impz0 established to 127.0.0.1:50521
+ℹ️ [SshTerminalService] execute(ho7is2impz0)
+ℹ️ [SshTerminalService] Disconnecting session ho7is2impz0
+00:55 +16 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: real OpenSSH with an in-memory local-agent protocol fixture cancelling host approval closes authority before a late approval
+❌ [SshTerminalService] SSH connect failed
+  Error: SSHAuthAbortError(Connection closed before authentication)
+00:55 +17 ~1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/ssh_agent_live_test.dart: actual disposable Unix ssh-agent authenticates and forwards to ssh-add
+  Skip: Host rejected Unix-socket creation: [Errno 1] Operation not permitted
+00:55 +17 ~2: All tests passed!

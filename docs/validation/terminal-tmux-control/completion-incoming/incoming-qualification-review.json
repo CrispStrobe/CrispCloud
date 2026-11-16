@@ -1,0 +1,266 @@
+{
+  "recorded_utc": "2026-11-16T07:57:25.045697+00:00",
+  "incoming_commit": "5efae7732727fc1ae43d6b664922214dd6acfedf",
+  "current_head_observed": "48775630505eceb784301f1ff630b4a58779cc25",
+  "evidence_sources_read_from_incoming_git_objects": true,
+  "qualification": {
+    "office_host": {
+      "receipt": "docs/validation/zotero-fidelity-20261116/final/host-validation-receipt.json",
+      "passed": 39,
+      "tests": [
+        "test/office_zotero_citing_transport_test.dart",
+        "test/office_zotero_test.dart",
+        "test/office_zotero_ribbon_test.dart"
+      ],
+      "dependency_package_count": 96,
+      "source_count": 1611,
+      "status": "passed",
+      "limits": [
+        "Focused genuine host dependency graph, not a full native application build or full production dependency resolution.",
+        "Test clients and credential stores are test doubles; no live Zotero desktop, private account, real OS keychain or native Word refresh acceptance.",
+        "Canonical engine/editor tests are qualified separately and are not counted as host test executions.",
+        "No GitHub Actions queries, waits or reruns."
+      ]
+    },
+    "terminal_core": {
+      "receipt": "docs/validation/zotero-fidelity-20261116/terminal-integration/receipt.json",
+      "qualified": true,
+      "finished_at_utc": "2026-11-16T07:34:30.294212+00:00",
+      "source_commit": "de1259080074ca7918122d4790e9255269944b25",
+      "incoming_terminal_commit": "6e11d2d6fda1486dc6968e01137ba7466356398f",
+      "passed": 402,
+      "failed": 0,
+      "skipped": 0,
+      "suite_count": 29,
+      "resolved_package_count": 130,
+      "excluded_suites": {
+        "ssh_agent_widget_test.dart": "Full filesystem/archive/backend dependency graph; retained initial compilation failure.",
+        "ssh_terminal_transport_test.dart": "Imports full terminal_backends/local filesystem graph absent from focused harness.",
+        "ssh_tmux_panel_lifecycle_test.dart": "Imports full terminal panel/core providers graph absent from focused harness.",
+        "terminal_mount_localization_test.dart": "Full filesystem/archive/backend dependency graph; retained initial compilation failure.",
+        "tmux_control_workspace_test.dart": "Imports terminal_provider/core providers graph absent from focused harness."
+      },
+      "native_tmux_binary_acceptance": "Not run: no system tmux binary installed. Protocol/client/input/persistence are exercised in the unit cohort.",
+      "logs": [
+        {
+          "name": "dartssh2-vendor",
+          "path": "terminal-integration/dartssh2-vendor.log",
+          "expected": "dc9896c46cb02a6a72ae76adb7493f6f8f1c3369a8c4c47637ea4041bac1d014",
+          "actual": "dc9896c46cb02a6a72ae76adb7493f6f8f1c3369a8c4c47637ea4041bac1d014",
+          "matches": true,
+          "reported_exit_code": 0
+        },
+        {
+          "name": "terminal-tests",
+          "path": "terminal-integration/terminal-tests.log",
+          "expected": "e4fcc083872ffe91aa15c3a6057758e99e4ffdc75d95d54db2de2a60ed70d2d6",
+          "actual": "e4fcc083872ffe91aa15c3a6057758e99e4ffdc75d95d54db2de2a60ed70d2d6",
+          "matches": true,
+          "reported_exit_code": 0
+        },
+        {
+          "name": "terminal-shell-smoke",
+          "path": "terminal-integration/terminal-shell-smoke.log",
+          "expected": "c7049b9c75d8bc0d6fe0d0a7a1a4cf03a4360d42c5ee74880fd553bf32b5ec6e",
+          "actual": "c7049b9c75d8bc0d6fe0d0a7a1a4cf03a4360d42c5ee74880fd553bf32b5ec6e",
+          "matches": true,
+          "reported_exit_code": 0
+        }
+      ]
+    },
+    "loopback": {
+      "receipt": "docs/validation/zotero-fidelity-20261116/terminal-integration/loopback/receipt.json",
+      "qualified": true,
+      "finished_at_utc": "2026-11-16T07:38:09.185404+00:00",
+      "passed": 17,
+      "failed": 0,
+      "skipped": 2,
+      "suite_count": 3,
+      "logs": [
+        {
+          "name": "dartssh2-vendor",
+          "path": "terminal-integration/loopback/dartssh2-vendor.log",
+          "expected": "dc9896c46cb02a6a72ae76adb7493f6f8f1c3369a8c4c47637ea4041bac1d014",
+          "actual": "dc9896c46cb02a6a72ae76adb7493f6f8f1c3369a8c4c47637ea4041bac1d014",
+          "matches": true,
+          "reported_exit_code": 0
+        },
+        {
+          "name": "terminal-loopback",
+          "path": "terminal-integration/loopback/terminal-loopback.log",
+          "expected": "f6f1957763a6b48100017880ad2301630346aa096aab2806d70a2674632dc73d",
+          "actual": "f6f1957763a6b48100017880ad2301630346aa096aab2806d70a2674632dc73d",
+          "matches": true,
+          "reported_exit_code": 0
+        }
+      ]
+    },
+    "supplemental": {
+      "status": "blocked_before_test_execution",
+      "selected_suites": [
+        "ssh_agent_widget_test.dart",
+        "terminal_mount_localization_test.dart",
+        "ssh_terminal_transport_test.dart",
+        "ssh_tmux_panel_lifecycle_test.dart",
+        "tmux_control_workspace_test.dart"
+      ],
+      "completed_tests": 0,
+      "reason": "The unchanged crisp_catalog native build hook required cargo, which was unavailable; Flutter failed native-assets preparation before emitting any test-protocol completion.",
+      "log": "terminal-supplemental.log",
+      "log_sha256": "8a9445a9c9b3e96e851020bb97cdad0f0ccd45805ebcc2bfa940299939dbfd71",
+      "receipt": "receipt.json",
+      "receipt_sha256": "fb91c3487d3fa0d29960863042de76bb71861df2c0a928b47e7c94d83b18c971",
+      "native_hooks_enabled": true,
+      "stubs_or_source_modifications": false,
+      "source_unchanged": true,
+      "dependencies_unchanged": true,
+      "canonical_inputs": 6987,
+      "isolated_library_files": 1188,
+      "isolated_library_matches_canonical": true
+    },
+    "full_app_build": {
+      "receipt": "docs/validation/zotero-fidelity-20261116/full-app-build/receipt.json",
+      "finished_utc": "2026-11-16T07:36:07.474350+00:00",
+      "source_commit": "de1259080074ca7918122d4790e9255269944b25",
+      "source_files": 6981,
+      "source_unchanged": true,
+      "bundle_passed": false,
+      "kernel_compilation_status": "passed",
+      "kernel_target": "kernel_snapshot_program",
+      "kernel_artifact_archived": false,
+      "native_assets": {
+        "status": "failed",
+        "package": "crisp_catalog",
+        "missing_executable": "cargo",
+        "command": [
+          "cargo",
+          "build",
+          "--release",
+          "--locked",
+          "--manifest-path",
+          "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/packages/crisp_catalog/native/Cargo.toml",
+          "--target",
+          "x86_64-unknown-linux-gnu"
+        ],
+        "hooks_disabled": false,
+        "production_configuration_modified": false,
+        "native_toolchain_installed": false
+      },
+      "full_native_executable": false,
+      "gui_runtime_acceptance": false,
+      "command": [
+        "dart",
+        "flutter_tools.snapshot",
+        "build",
+        "bundle",
+        "--debug",
+        "--target-platform",
+        "linux-x64",
+        "--no-pub"
+      ]
+    }
+  },
+  "incoming_source_maps_compared_to_current": {
+    "host": {
+      "source_map": "docs/validation/zotero-fidelity-20261116/final/host-source-after.json",
+      "source_map_sha256": "2b8e6a52e381609f167c78f2b4e9f0036e839e5b6b9d5d30f94943c9cc2ad054",
+      "recorded_file_count": 1611,
+      "current_missing": [],
+      "current_differences": [
+        "lib/l10n/tmux_control_strings.dart",
+        "lib/services/ssh_tmux_control_output.dart",
+        "lib/services/tmux_control_client.dart",
+        "lib/widgets/tmux_control_workspace.dart"
+      ]
+    },
+    "core": {
+      "source_map": "docs/validation/zotero-fidelity-20261116/terminal-integration/source-after.json",
+      "source_map_sha256": "ac6aa2ea4df5011cacd210e8a7b7c87bb5d2d24bca2901036d898bccabfd052c",
+      "recorded_file_count": 221,
+      "current_missing": [],
+      "current_differences": [
+        "lib/services/ssh_tmux_control_output.dart",
+        "lib/services/tmux_control_client.dart",
+        "test/tmux_control_client_test.dart"
+      ]
+    },
+    "loopback": {
+      "source_map": "docs/validation/zotero-fidelity-20261116/terminal-integration/loopback/source-after.json",
+      "source_map_sha256": "ac6aa2ea4df5011cacd210e8a7b7c87bb5d2d24bca2901036d898bccabfd052c",
+      "recorded_file_count": 221,
+      "current_missing": [],
+      "current_differences": [
+        "lib/services/ssh_tmux_control_output.dart",
+        "lib/services/tmux_control_client.dart",
+        "test/tmux_control_client_test.dart"
+      ]
+    },
+    "full_app": {
+      "source_map": "docs/validation/zotero-fidelity-20261116/full-app-build/source-after.json",
+      "source_map_sha256": "9f7b2c5b5fa7f61744e0807fd99e0744d534787d3b95b6ed98937ad0e76cc3bd",
+      "recorded_file_count": 6981,
+      "current_missing": [],
+      "current_differences": [
+        "lib/l10n/tmux_control_strings.dart",
+        "lib/services/ssh_tmux_control_output.dart",
+        "lib/services/tmux_control_client.dart",
+        "lib/widgets/tmux_control_workspace.dart",
+        "tool/office_fidelity_manifest.json"
+      ]
+    }
+  },
+  "upstream_canonical_claims": {
+    "source": "docs/validation/zotero-fidelity-20261116/README.md",
+    "claimed_passes": {
+      "engine_catalog_fields_notes": 617,
+      "editor_controller_dialogs": 223,
+      "studio_native_transport": 18,
+      "additional_typography_layout_pdf": 70
+    },
+    "verification_scope": "These companion Quds counts and live-desktop claims are referenced by the incoming README. This audit does not fetch or independently reexecute the separate Quds repository evidence."
+  },
+  "interpretation": "Incoming evidence qualifies earlier terminal sources through 6e11d2d6. It is preserved as upstream history and does not replace this continuation's own frozen-source acceptance. No source changed in the completion merge, so no additional cohort is required for that merge. The local failed optimized web build still requires its own successful retry.",
+  "sdk_used": false,
+  "new_remote_fetch": false,
+  "github_actions_queried_or_awaited": false,
+  "incoming_terminal_delivery_receipt_checks": [
+    {
+      "path": "receipt.json",
+      "expected": "419b48a7b4e7fabc2adbbeb7db8cd11cc5155fcd4c8d3d6928f4d674559b051e",
+      "actual": "419b48a7b4e7fabc2adbbeb7db8cd11cc5155fcd4c8d3d6928f4d674559b051e",
+      "matches": true
+    },
+    {
+      "path": "loopback/receipt.json",
+      "expected": "872f37a72a5df63eba99d8c3664a8b4fe48efc23e5b11a3889e07419bed9414c",
+      "actual": "872f37a72a5df63eba99d8c3664a8b4fe48efc23e5b11a3889e07419bed9414c",
+      "matches": true
+    },
+    {
+      "path": "supplemental/receipt.json",
+      "expected": "fb91c3487d3fa0d29960863042de76bb71861df2c0a928b47e7c94d83b18c971",
+      "actual": "fb91c3487d3fa0d29960863042de76bb71861df2c0a928b47e7c94d83b18c971",
+      "matches": true
+    }
+  ],
+  "incoming_kernel_evidence_hash_checks": [
+    {
+      "path": "full-app-build/compiler/kernel_snapshot_program.stamp",
+      "expected": "4444592b5aa76f32768416ec05af1fdabe024016da666985f6e5d7d907705262",
+      "actual": "4444592b5aa76f32768416ec05af1fdabe024016da666985f6e5d7d907705262",
+      "matches": true
+    },
+    {
+      "path": "full-app-build/compiler/kernel_snapshot_program.d",
+      "expected": "96349cf53d523ab7bbf4926c8a5cdcb05099d53010056712d97ce5e38e657a96",
+      "actual": "96349cf53d523ab7bbf4926c8a5cdcb05099d53010056712d97ce5e38e657a96",
+      "matches": true
+    },
+    {
+      "path": "full-app-build/compiler/input-sha256.json",
+      "expected": "0cc9882cc1c9278ad27dfdebad71d6ce8e624114b5da55e13f2ead8c9ff7c5d2",
+      "actual": "0cc9882cc1c9278ad27dfdebad71d6ce8e624114b5da55e13f2ead8c9ff7c5d2",
+      "matches": true
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - cli/**
+    # Reviewed SSH runtime retains upstream style. Agent/channel behavior is
+    # checked by the application protocol and real OpenSSH regression suites.
+    - packages/dartssh2/**
+    # Third-party source vendored for a macOS sandbox patch. It keeps its own
+    # upstream style; app analysis should not report that package's lint debt.
+    - packages/filen_client/**
+    # Upstream PTY runtime keeps its own analysis and native lifecycle tests.
+    - packages/flutter_pty2/**
+    # Pinned upstream text editor style; host lifecycle regressions run in CI.
+    - packages/re_editor/**
+    # Matching syntax engine retains its upstream style; actual large-source
+    # lexer and editor-paint regressions exercise the local continuation patch.
+    - packages/re_highlight/**
+    # The maintained image editor fork has its own analysis/test workflow.
+    - packages/pro_image_editor/**
+    # Pinned native video engine; host adapters and tests run in media-editor CI.
+    - packages/pro_video_editor/**
+    # Vendored Quds packages keep their upstream tests and dev-only imports.
+    # Those suites run in the quds_office_suite fork, not in the app analysis.
+    - packages/quds_office_engine/test/**
+    - packages/quds_office_editor/test/**
+    - packages/quds_reports/test/**
+    # Standalone parser development roots use their own resolved test packages
+    # and are analyzed and tested separately before the application checks.
+    - packages/legacy_doc_parser/test/**
+    - packages/legacy_doc_parser/tool/**
+    - packages/legacy_doc_parser/doc/**
+    # Vendored PDF packages have their own workflows and package-local tests.
+    - packages/dart_pdf_editor/test/**
+    - packages/dart_pdf_editor_secure_storage/test/**
+    # PDF operations/document packages have their own package-local test setup.
+    - packages/pdf_document/test/**
+    - packages/pdf_operations/test/**
+    - packages/pdf_operations/tool/**
+    - packages/crisp_storage/test/**
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+  errors:
+    missing_return: error
+    dead_code: warning
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    unnecessary_this: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    avoid_empty_else: true
+    avoid_relative_lib_imports: true
+    always_declare_return_types: true
+    sort_child_properties_last: true
+    use_key_in_widget_constructors: true

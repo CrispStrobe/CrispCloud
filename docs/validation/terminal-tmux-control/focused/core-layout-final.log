@@ -1,0 +1,47 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart
+00:00 +0: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: capture escape grammar differs from output for literal backslashes
+00:00 +1: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: fragments every byte without interpreting notification-like command data
+00:00 +2: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: each possible transport split yields identical guards and output
+00:00 +3: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: raw high bytes survive separate output records
+00:00 +4: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: empty response and matching error response are distinct
+00:00 +5: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: unmatched standalone guards and nonprotocol text fail closed
+00:00 +6: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: EOF during a line or command never produces a successful response
+00:00 +7: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: line limit applies across chunks and before allocating a whole line
+00:00 +8: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: response bytes and response line count are independently bounded
+00:00 +9: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: stop discards partial data and revokes future callbacks
+00:00 +10: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_protocol_test.dart: octal decoding preserves every byte and rejects ambiguous escapes
+00:00 +11: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: starts after the unsolicited guard and maps native panes and geometry
+00:00 +12: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: snapshot publishes before output in the same transport chunk
+00:00 +13: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: UTF-8 split between records is independent for every pane
+00:00 +14: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: control-looking captured lines stay screen content
+00:00 +15: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: explicit input is hex encoded while emulator replies are suppressed
+00:00 +16: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: captured cursor and keyboard modes govern the first input
+00:00 +17: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: tmux 3.2 missing paste-mode format uses zero and learns live mode
+00:00 +18: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: attaching in the alternate screen preserves the saved primary screen
+00:00 +19: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: a parser sequence pending at capture is completed by live output
+00:00 +20: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: select, split and create use validated IDs and update server topology
+00:00 +21: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: external topology change reconciles without recreating retained panes
+00:00 +22: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: resize gates redraw bytes before metadata arrives
+00:00 +23: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: typing during a blocked resize capture is retained and delivered
+00:01 +24: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: unchanged layout keeps scrollback and streaming output
+00:01 +25: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: new layout during metadata never publishes stale geometry
+00:01 +26: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: new layout invalidates an in-flight capture before resuming output
+00:01 +27: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: capture dimensions detect a resize after the initial metadata
+00:01 +28: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: superseded replacement panes are pruned without releasing visible panes
+00:02 +29: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: capture retains literal backslashes and restored cell colors
+00:02 +30: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: input queue admission revokes remaining chunks after a stalled reply
+00:02 +31: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: early cleanup errors are observed while source cancellation is pending
+00:02 +32: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: hook guards cannot consume the pending user command response
+00:02 +33: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: resize coalesces rapid changes and uses client size policy
+00:02 +34: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: close revokes queued input and keeps read-only pane buffers
+00:02 +35: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: detach sends only the client detach command and preserves remote panes
+00:02 +36: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: unsupported tmux version and malformed metadata fail before publication
+00:02 +37: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: duplicate IDs, overlapping geometry and excessive sizes fail closed
+00:02 +38: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: startup cancellation owns late protocol events and does not resurrect panes
+00:02 +39: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: a timed out command closes the stream instead of reusing late replies
+00:02 +40: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: unknown unbounded output is not retained before pane discovery
+00:02 +41: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: a failed multi-command capture aborts before any later response is reused
+00:02 +42: /workspace/scratch/6c8a74f9de7f/CrispCloud/test/tmux_control_client_test.dart: natural EOF with a partial guard is a visible protocol failure
+00:02 +43: All tests passed!

@@ -1,0 +1,12 @@
+Running web: 142 files; source 60bc3a41
+{
+  "phase": "web",
+  "head_at_start": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+  "started_utc": "2026-11-16T07:50:16.729376+00:00",
+  "watched_source_count": 5535,
+  "github_actions_queried_or_awaited": false,
+  "finished_utc": "2026-11-16T07:52:53.612748+00:00",
+  "seconds": 156.879,
+  "exit_code": 1,
+  "changed_sources": []
+}

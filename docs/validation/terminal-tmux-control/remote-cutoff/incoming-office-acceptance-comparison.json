@@ -1,0 +1,258 @@
+{
+  "recorded_utc": "2026-11-16T07:48:13.290542+00:00",
+  "verified_head": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+  "incoming_head": "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da",
+  "incoming_receipt": "docs/validation/zotero-fidelity-20261116/final/host-validation-receipt.json",
+  "incoming_result": {
+    "status": "passed",
+    "completed_at_utc": "2026-11-16T07:33:38.561867+00:00",
+    "passed_test_count": 39,
+    "expected_test_count": 39,
+    "tests": [
+      "test/office_zotero_citing_transport_test.dart",
+      "test/office_zotero_test.dart",
+      "test/office_zotero_ribbon_test.dart"
+    ],
+    "analysis_targets": [
+      "lib/services/office_zotero.dart",
+      "lib/services/office_zotero_transport.dart",
+      "lib/l10n/office_zotero_strings.dart",
+      "lib/l10n/office_editor_strings.dart",
+      "lib/widgets/office_editor_ribbon.dart",
+      "test/office_zotero_citing_transport_test.dart",
+      "test/office_zotero_test.dart",
+      "test/office_zotero_ribbon_test.dart"
+    ],
+    "runtime": {
+      "channel": "[user-branch]",
+      "dartSdkVersion": "3.13.7",
+      "devToolsVersion": "2.60.0",
+      "engineBuildDate": "2026-10-23 05:34:48.330",
+      "engineCommitDate": "2026-10-23 02:13:38.000Z",
+      "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+      "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+      "flutterVersion": "3.47.8",
+      "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+      "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "frameworkVersion": "3.47.8",
+      "repositoryUrl": "https://github.com/flutter/flutter.git"
+    },
+    "dependency_package_count": 96,
+    "limitations": [
+      "Focused genuine host dependency graph, not a full native application build or full production dependency resolution.",
+      "Test clients and credential stores are test doubles; no live Zotero desktop, private account, real OS keychain or native Word refresh acceptance.",
+      "Canonical engine/editor tests are qualified separately and are not counted as host test executions.",
+      "No GitHub Actions queries, waits or reruns."
+    ],
+    "error": null
+  },
+  "incoming_receipt_integrity": {
+    "source_inventories_identical": true,
+    "source_count_matches": true,
+    "aggregate_before_matches": true,
+    "aggregate_after_matches": true,
+    "dependency_inputs_hash_matches": true,
+    "qualification_script_hash_matches": true,
+    "step_log_checks": [
+      {
+        "name": "pub-get",
+        "log": "host-pub-get.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "fea3bc6529a7618a490eb99f09fa81d3830aeb9ae70c4f80bca6b239396076ec",
+        "actual_sha256": "fea3bc6529a7618a490eb99f09fa81d3830aeb9ae70c4f80bca6b239396076ec",
+        "matches": true
+      },
+      {
+        "name": "vendor-verify",
+        "log": "host-vendor-verify.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+        "actual_sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+        "matches": true
+      },
+      {
+        "name": "vendor-verify-tracked",
+        "log": "host-vendor-verify-tracked.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+        "actual_sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+        "matches": true
+      },
+      {
+        "name": "tests",
+        "log": "host-tests.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "f06cec225855b6a6e731eac2839c1d4a7158358e6a4afa2f26ccaa7efdff414f",
+        "actual_sha256": "f06cec225855b6a6e731eac2839c1d4a7158358e6a4afa2f26ccaa7efdff414f",
+        "matches": true
+      },
+      {
+        "name": "analysis",
+        "log": "host-analysis.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "31dcfbd76f752f9e58407aed2a681c238ea204794131d2424e73bce7015b6736",
+        "actual_sha256": "31dcfbd76f752f9e58407aed2a681c238ea204794131d2424e73bce7015b6736",
+        "matches": true
+      },
+      {
+        "name": "format",
+        "log": "host-format.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "16174fc45b5589452224bbbd04f36c20e66fa2a0715d363af5f407bb9efd26de",
+        "actual_sha256": "16174fc45b5589452224bbbd04f36c20e66fa2a0715d363af5f407bb9efd26de",
+        "matches": true
+      },
+      {
+        "name": "whitespace",
+        "log": "host-whitespace.log",
+        "reported_exit_code": 0,
+        "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actual_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches": true
+      }
+    ],
+    "imported_evidence_checks": [
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-validation-receipt.json",
+        "sha256": "e53e441d1a699edba5635b7699c394e7d6d8cbd58b6763909f3b9168548b559f",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-source-before.json",
+        "sha256": "2b8e6a52e381609f167c78f2b4e9f0036e839e5b6b9d5d30f94943c9cc2ad054",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-source-after.json",
+        "sha256": "2b8e6a52e381609f167c78f2b4e9f0036e839e5b6b9d5d30f94943c9cc2ad054",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-dependency-inputs.json",
+        "sha256": "8807f2190ebef72a498251626c80177737aad7a5524019b736a4baad74a27497",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-pub-get.log",
+        "sha256": "fea3bc6529a7618a490eb99f09fa81d3830aeb9ae70c4f80bca6b239396076ec",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-vendor-verify.log",
+        "sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-vendor-verify-tracked.log",
+        "sha256": "027d4768557432eb3dfcb223cb8145067e05267b1a76af5e29849e22a93a9691",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-tests.log",
+        "sha256": "f06cec225855b6a6e731eac2839c1d4a7158358e6a4afa2f26ccaa7efdff414f",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-analysis.log",
+        "sha256": "31dcfbd76f752f9e58407aed2a681c238ea204794131d2424e73bce7015b6736",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-format.log",
+        "sha256": "16174fc45b5589452224bbbd04f36c20e66fa2a0715d363af5f407bb9efd26de",
+        "matches_incoming_commit": true
+      },
+      {
+        "path": "docs/validation/zotero-fidelity-20261116/final/host-whitespace.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches_incoming_commit": true
+      }
+    ]
+  },
+  "full_incoming_source_inventory": {
+    "count": 1611,
+    "missing_paths": [],
+    "current_mismatch_paths": [
+      "lib/l10n/tmux_control_strings.dart",
+      "lib/services/ssh_tmux_control_output.dart",
+      "lib/services/tmux_control_client.dart",
+      "lib/widgets/tmux_control_workspace.dart"
+    ],
+    "note": "Four later tmux changes are outside the incoming Office acceptance scope; this is not a claim that all application sources remain unchanged."
+  },
+  "office_package_source_comparison": {
+    "prefixes": [
+      "packages/legacy_doc_parser/",
+      "packages/quds_office_editor/",
+      "packages/quds_office_engine/",
+      "packages/quds_reports/"
+    ],
+    "count": 417,
+    "recorded_aggregate_sha256": "18403df28269a3ad9adf869393b77788b1d27c04bb11b8d7df3960c484e2ffca",
+    "current_aggregate_sha256": "18403df28269a3ad9adf869393b77788b1d27c04bb11b8d7df3960c484e2ffca",
+    "mismatch_paths": []
+  },
+  "office_host_target_comparison": {
+    "lib/services/office_zotero.dart": {
+      "recorded": "a359e56bedeef51383713df1cd5fa66b06712bb9a82f398e6196eddb2845ccf0",
+      "current": "a359e56bedeef51383713df1cd5fa66b06712bb9a82f398e6196eddb2845ccf0",
+      "matches": true
+    },
+    "lib/services/office_zotero_transport.dart": {
+      "recorded": "708a40526c95527b0105ce68f5710803ed6ffabbf8bb1eb1e53769d8de9dd320",
+      "current": "708a40526c95527b0105ce68f5710803ed6ffabbf8bb1eb1e53769d8de9dd320",
+      "matches": true
+    },
+    "lib/l10n/office_zotero_strings.dart": {
+      "recorded": "e7babecbaa7c2709188b0296eb9eaddf2b172f417adf9c6319c57094b93ce68c",
+      "current": "e7babecbaa7c2709188b0296eb9eaddf2b172f417adf9c6319c57094b93ce68c",
+      "matches": true
+    },
+    "lib/l10n/office_editor_strings.dart": {
+      "recorded": "06edc091f31b4692b987746da84e82b1f2259a045c8708f092114287b8d0d0cb",
+      "current": "06edc091f31b4692b987746da84e82b1f2259a045c8708f092114287b8d0d0cb",
+      "matches": true
+    },
+    "lib/widgets/office_editor_ribbon.dart": {
+      "recorded": "d0cf1194724d94bc520ebb7d316b515a6c3f2ea035e1d622fd908c0a09fdc7fc",
+      "current": "d0cf1194724d94bc520ebb7d316b515a6c3f2ea035e1d622fd908c0a09fdc7fc",
+      "matches": true
+    },
+    "test/office_zotero_citing_transport_test.dart": {
+      "recorded": "d10ddc7a48741c4a40e5aa17db2c04011510d8919952f44f4332b244936c25be",
+      "current": "d10ddc7a48741c4a40e5aa17db2c04011510d8919952f44f4332b244936c25be",
+      "matches": true
+    },
+    "test/office_zotero_test.dart": {
+      "recorded": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+      "current": "a8cbd1c2fb2380ec1b0a76196b3f8d1cabd0bdd5e7cd299f9d67160a7b871fab",
+      "matches": true
+    },
+    "test/office_zotero_ribbon_test.dart": {
+      "recorded": "651535c5bf87bf329017bd9a72197e1a2ec9e60dd3bff3c556ba4a5d4276a229",
+      "current": "651535c5bf87bf329017bd9a72197e1a2ec9e60dd3bff3c556ba4a5d4276a229",
+      "matches": true
+    }
+  },
+  "office_manifest_comparison": {
+    "recorded_source_commit": "ca4011de0e17783f12bcff07336e318adc1db99c",
+    "current_source_commit": "ca4011de0e17783f12bcff07336e318adc1db99c",
+    "recorded_count": 2409,
+    "current_count": 2409,
+    "manifest_hash_matches": true,
+    "managed_inventory_hash_matches": true,
+    "standalone_declarations_match": true,
+    "current_file_hash_mismatches": []
+  },
+  "separate_local_prior_run": {
+    "receipt": "../audit-final/office-transport/receipt.json",
+    "completed_utc": "2026-11-16T07:30:21.783433+00:00",
+    "head": "4316f7fc7aca30ecfccfecf318acbdc8e5599ff2",
+    "passed_test_count": 16,
+    "production_dependency_graph_and_normal_native_hooks": true,
+    "note": "Earlier local 16-test transport run on 4316f7fc; separate from the incoming 39-test focused 96-package host harness. Counts overlap and must not be added as unique tests."
+  },
+  "new_sdk_or_test_execution": false,
+  "new_remote_fetch_performed": false,
+  "github_actions_queried_or_awaited": false
+}

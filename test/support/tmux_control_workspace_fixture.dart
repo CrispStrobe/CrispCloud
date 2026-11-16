@@ -8,6 +8,10 @@ import 'package:flutter/foundation.dart';
 /// A view-only fixture. Protocol behavior is covered by the control-client
 /// tests; these real TerminalSessions record the exact input emitted by UI.
 class TmuxWorkspaceFixture extends ChangeNotifier implements TmuxControlClient {
+  TmuxWorkspaceFixture({this.maximumPendingInputCodeUnits});
+
+  final int? maximumPendingInputCodeUnits;
+
   @override
   final windows = <TmuxControlWindow>[
     const TmuxControlWindow(
@@ -55,7 +59,9 @@ class TmuxWorkspaceFixture extends ChangeNotifier implements TmuxControlClient {
       ('%3', '@2', 0, 80),
     ]) {
       final connection = TmuxWorkspaceConnection();
-      final session = TerminalSession();
+      final session = TerminalSession(
+        maximumPendingInputCodeUnits: maximumPendingInputCodeUnits,
+      );
       await session.connect(
         (_, __) async => connection,
         kind: TerminalSessionKind.ssh,

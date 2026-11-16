@@ -1,0 +1,35 @@
+{
+  "started_at_utc": "2026-11-16T07:30:10.697104+00:00",
+  "reason": "Current forwarding dialog imports uuid; the restored prior focused graph lacked it. Use the exact current production 4.5.1 pin without changing production manifests.",
+  "production_manifest_sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+  "production_lock_sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+  "harness_manifest_before": "name: crisp_cloud\npublish_to: none\nenvironment:\n  sdk: '>=3.13.0 <4.0.0'\n  flutter: '>=3.47.0'\ndependencies:\n  xterm2: 5.4.0\n  crisp_storage:\n    path: /workspace/scratch/4156e4a05f09/CrispCloud/packages/crisp_storage\n  dartssh2: ^4.1.0\n  web_socket_channel: ^3.0.0\n  file_picker: 10.3.10\n  flutter_riverpod: 2.6.1\n  flutter_secure_storage: 9.2.4\n  http: 1.6.0\n  image: 4.12.0\n  intl: 0.20.3\n  shared_preferences: 2.5.6\n  flutter:\n    sdk: flutter\n  flutter_localizations:\n    sdk: flutter\n  quds_office_engine:\n    path: /workspace/scratch/4156e4a05f09/zotero-toolchain/crisp-host-harness/packages/quds_office_engine\n  quds_office_editor:\n    path: /workspace/scratch/4156e4a05f09/zotero-toolchain/crisp-host-harness/packages/quds_office_editor\ndev_dependencies:\n  flutter_test:\n    sdk: flutter\n  flutter_lints: 3.0.2\nflutter:\n  uses-material-design: true\n\ndependency_overrides:\n  dartssh2:\n    path: packages/dartssh2\n  pointycastle: ^4.0.0\n",
+  "harness_manifest_after": "name: crisp_cloud\npublish_to: none\nenvironment:\n  sdk: '>=3.13.0 <4.0.0'\n  flutter: '>=3.47.0'\ndependencies:\n  xterm2: 5.4.0\n  uuid: 4.5.1\n  crisp_storage:\n    path: /workspace/scratch/4156e4a05f09/CrispCloud/packages/crisp_storage\n  dartssh2: ^4.1.0\n  web_socket_channel: ^3.0.0\n  file_picker: 10.3.10\n  flutter_riverpod: 2.6.1\n  flutter_secure_storage: 9.2.4\n  http: 1.6.0\n  image: 4.12.0\n  intl: 0.20.3\n  shared_preferences: 2.5.6\n  flutter:\n    sdk: flutter\n  flutter_localizations:\n    sdk: flutter\n  quds_office_engine:\n    path: /workspace/scratch/4156e4a05f09/zotero-toolchain/crisp-host-harness/packages/quds_office_engine\n  quds_office_editor:\n    path: /workspace/scratch/4156e4a05f09/zotero-toolchain/crisp-host-harness/packages/quds_office_editor\ndev_dependencies:\n  flutter_test:\n    sdk: flutter\n  flutter_lints: 3.0.2\nflutter:\n  uses-material-design: true\n\ndependency_overrides:\n  dartssh2:\n    path: packages/dartssh2\n  pointycastle: ^4.0.0\n",
+  "harness_lock_before_sha256": "b6ad7eb020b84890704278206fc843917dcbaa428734617e95eb1ca7b58e1cab",
+  "removed_from_focused_selection": {
+    "ssh_agent_widget_test.dart": "Imports full filesystem/archive/backend graph unavailable in the focused terminal harness; original compilation failure retained in first-pass log.",
+    "terminal_mount_localization_test.dart": "Imports full filesystem/archive/backend graph unavailable in the focused terminal harness; original compilation failure retained in first-pass log."
+  },
+  "first_pass_counts": "330 passed; 4 compilation-loader failures; 0 skips. These overlap final selected tests and are never added to final counts.",
+  "finished_at_utc": "2026-11-16T07:30:27.358777+00:00",
+  "added_packages": [
+    "fixnum",
+    "sprintf",
+    "uuid"
+  ],
+  "changed_existing_packages": [],
+  "removed_packages": [],
+  "new_entries_match_current_production_lock": true,
+  "production_manifests_unchanged": true,
+  "harness_lock_after_sha256": "ce658663b975752675a262eb6b128da2aacc5a09935644fe86eac2b1e452b741",
+  "resolution_command": [
+    "dart",
+    "flutter_tools.snapshot",
+    "pub",
+    "get",
+    "--offline"
+  ],
+  "resolution_exit_code": 0,
+  "log": "harness-pub-get-uuid.log",
+  "log_sha256": "ad80ede52b4bf6484098794648ba724f286029aab4f67c7cfa9e2e55345731a1"
+}

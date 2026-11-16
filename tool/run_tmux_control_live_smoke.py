@@ -40,10 +40,11 @@ def main():
             command = [binary, '-S', socket, '-f', '/dev/null', 'new-session',
                        '-d', '-s', 'crispcloud-probe']
             record['probe_command'] = command
-            probe = subprocess.run(command, capture_output=True, text=True, timeout=10)
-            record.update(probe_exit_code=probe.returncode,
-                          probe_stdout=probe.stdout, probe_stderr=probe.stderr)
+            probe = None
             try:
+                probe = subprocess.run(command, capture_output=True, text=True, timeout=10)
+                record.update(probe_exit_code=probe.returncode,
+                              probe_stdout=probe.stdout, probe_stderr=probe.stderr)
                 if probe.returncode:
                     if 'Operation not permitted' in probe.stderr or 'Permission denied' in probe.stderr:
                         record.update(status='skipped', reason='Host policy prevents an unmodified tmux Unix-socket server.')
@@ -63,10 +64,18 @@ def main():
                     if result_code == 0:
                         record['actual_feature_tests_completed'] = 1
             finally:
-                if probe.returncode == 0:
-                    subprocess.run([binary, '-S', socket, 'kill-server'], capture_output=True, timeout=10)
+                # A timed-out client may already have started the detached
+                # server. Always attempt cleanup on this unique socket.
+                cleanup = subprocess.run([binary, '-S', socket, 'kill-server'],
+                                         capture_output=True, text=True, timeout=10)
+                record.update(cleanup_exit_code=cleanup.returncode,
+                              cleanup_stdout=cleanup.stdout,
+                              cleanup_stderr=cleanup.stderr)
+                if probe is not None and probe.returncode == 0:
+                    cleanup.check_returncode()
     except Exception as error:
         record.update(status='failed', error=str(error))
+        result_code = 1
     (args.evidence / 'live-tmux.json').write_text(json.dumps(record, indent=2) + '\n')
     print(json.dumps(record, indent=2))
     return result_code

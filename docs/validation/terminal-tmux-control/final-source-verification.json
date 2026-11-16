@@ -1,0 +1,68 @@
+{
+  "recorded_utc": "2026-11-16T08:02:14.359431+00:00",
+  "accepted_application_source": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+  "verified_head": "b8adfa780368776ff972f88b50dc8ada33bad792",
+  "watched_source_count": 5535,
+  "all_five_phase_inventories_identical": true,
+  "current_worktree_source_matches": true,
+  "runtime_paths_changed_since_accepted_source": [],
+  "phases": {
+    "native": {
+      "head_at_start": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+      "exit_code": 0,
+      "source_count": 5535,
+      "source_inventory_uncompressed_sha256": "e4be73ad04f475a09007fd184a07d9a0b6ca9054433316b0618f14c19854ea1c",
+      "record_sha256": "0c0b27d4f8f6415eedaea3cb381aefbb2b98f049fa4670a46337cac2efff3a79",
+      "log_uncompressed_sha256": "ffd0f6d6e1f327a0a2497637c57a8cfdb86eec5c8093307e426c422d8c57af06"
+    },
+    "analysis": {
+      "head_at_start": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+      "exit_code": 0,
+      "source_count": 5535,
+      "source_inventory_uncompressed_sha256": "e4be73ad04f475a09007fd184a07d9a0b6ca9054433316b0618f14c19854ea1c",
+      "record_sha256": "42dabbade4d1f702ae46276f1052ea15ca06d451e81322ba0dd85447ea1287f0",
+      "log_uncompressed_sha256": "03165c8f8eaba493ca4185df850d977092b55ada5162d683f1e99aee6c2ac2dd"
+    },
+    "format": {
+      "head_at_start": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+      "exit_code": 0,
+      "source_count": 5535,
+      "source_inventory_uncompressed_sha256": "e4be73ad04f475a09007fd184a07d9a0b6ca9054433316b0618f14c19854ea1c",
+      "record_sha256": "5e1c915d14541915066926a179ebc2a5d47b46d8a56377b057d1e79a64af8508",
+      "log_uncompressed_sha256": "b1b9914679404ae87d4dc4da1dcbe8acd150fadb39ed77aa67c789ff4ef35edf"
+    },
+    "live": {
+      "head_at_start": "60bc3a4155c3c1e1b7107cc087647ac79938b0d6",
+      "exit_code": 0,
+      "source_count": 5535,
+      "source_inventory_uncompressed_sha256": "e4be73ad04f475a09007fd184a07d9a0b6ca9054433316b0618f14c19854ea1c",
+      "record_sha256": "5bf1c92c33ea6c9767357a6dbbfc53c886763c0aaaa075f3564bf8ca2c41f1f7",
+      "log_uncompressed_sha256": "01b4afd27665afe2d845f7b448cf30ca2320d4d580daedfe1eed3663e1c74d6d"
+    },
+    "web": {
+      "head_at_start": "48775630505eceb784301f1ff630b4a58779cc25",
+      "exit_code": 0,
+      "source_count": 5535,
+      "source_inventory_uncompressed_sha256": "e4be73ad04f475a09007fd184a07d9a0b6ca9054433316b0618f14c19854ea1c",
+      "record_sha256": "71a13f3ac1842431fddb54f6a9f8d8f283fe118ede6d4b4b832aee683ff8f8eb",
+      "log_uncompressed_sha256": "4504b125e7fb99c59c8eab877e6524f14c709d902fcde03c31475124a9c7fa82"
+    }
+  },
+  "sdk_sha256": {
+    "bin/dart": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "bin/dartaotruntime": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+    "bin/snapshots/dart2js_aot.dart.snapshot": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6"
+  },
+  "sdk_modes": {
+    "bin/dart": 33261,
+    "bin/dartaotruntime": 33261,
+    "bin/snapshots/dart2js_aot.dart.snapshot": 33188
+  },
+  "sdk_restored_exactly": true,
+  "web_bundle": {
+    "bytes": 29452378,
+    "sha256": "59cffb32c8d2cd49023803b0c75bf825afe6e6d41dc92c0299f11ef995659049"
+  },
+  "visual_source_and_images_match": true,
+  "github_actions_queried_or_awaited": false
+}

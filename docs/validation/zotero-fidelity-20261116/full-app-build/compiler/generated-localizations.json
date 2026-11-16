@@ -1,0 +1,36 @@
+{
+  "inputs": {
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_ar.arb": "8cce5724f65d6b72f269a397740a1edda8443bd98d29eee72c6271ef5d2764af",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_de.arb": "19c828b2130157711c41d155c5178698ca83475c163bca6f158bef6166ce5d5c",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_en.arb": "4f3d0794fc8cfe20cb90f430a8b939ad4a8ef28f930d9995ff1b28b6eab72ec6",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_es.arb": "62b8b77e5f003d92fe2ff96f67d53e12c668a94a8e45993ed3e7120a297c9c2f",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_fr.arb": "38f123c2878b286373fbbb1ef456b486ed27fb2370faa2e55204bdaa6ba50dd5",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_ja.arb": "21444cdb1be6676d77659ea12ba939e465c2de5515cf40845fa47c08429c40e8",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_ko.arb": "b1127cd5f41ff581210982bd4c58b937689b399676ea7d30d5279fe73b3d4234",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_pt.arb": "5af44033c5df815376256b717a40cffce4a9c24426edf766da4dad144c244879",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_zh.arb": "1df4fee4bf20fb0aaf8273ab17bbfce7674a2861b38b67b789fb5f527a5fde1b"
+  },
+  "outputs": {
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_ar.dart": "5a9278bed1a99bd33698977e1af38d1e7af2c25b74abdc0cc956ba0e88c60b34",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_de.dart": "373195a1248b81cecb10083d68528023873c02599c528a0b9ec0b5ff8db3d4d4",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_en.dart": "3c06ecd35cfa11326d74b4414444e569e7aa124851ece52f767568cce246204a",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_es.dart": "d50e0c880164a6c8028b23e93f7aee14cf224bc169f328fb4370723774ac1e30",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_fr.dart": "8e9c576d309d5ae3e6a5a3b74bd64ec54de7a8583b26b5e0db0f6302f30cf848",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_ja.dart": "6872d31f1fc994f041d7677a5187eb27fffdfdde3114673eeda1f4d6bef60429",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_ko.dart": "136b0876bd9a34a58a72e748d3e1ecafd7a233811f722bbbeee9047f3b91c6fb",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_pt.dart": "2a62402f038f0c4e4ecf1fe88102f6ec5d6e03df2fc1996730941a98766ddf2e",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations_zh.dart": "981596e88ca1263dda7d6ce32f308d8152adcabeca58dadd5c116367cb5116f6",
+    "/workspace/scratch/4156e4a05f09/zotero-toolchain/full-crisp-app/lib/l10n/app_localizations.dart": "a9e4b7e90ac1c93ab4c032b27dbf807805a65eaae3c818a711d9160eb1ea46ef"
+  },
+  "canonical_input_hashes": {
+    "lib/l10n/app_ar.arb": "8cce5724f65d6b72f269a397740a1edda8443bd98d29eee72c6271ef5d2764af",
+    "lib/l10n/app_de.arb": "19c828b2130157711c41d155c5178698ca83475c163bca6f158bef6166ce5d5c",
+    "lib/l10n/app_en.arb": "4f3d0794fc8cfe20cb90f430a8b939ad4a8ef28f930d9995ff1b28b6eab72ec6",
+    "lib/l10n/app_es.arb": "62b8b77e5f003d92fe2ff96f67d53e12c668a94a8e45993ed3e7120a297c9c2f",
+    "lib/l10n/app_fr.arb": "38f123c2878b286373fbbb1ef456b486ed27fb2370faa2e55204bdaa6ba50dd5",
+    "lib/l10n/app_ja.arb": "21444cdb1be6676d77659ea12ba939e465c2de5515cf40845fa47c08429c40e8",
+    "lib/l10n/app_ko.arb": "b1127cd5f41ff581210982bd4c58b937689b399676ea7d30d5279fe73b3d4234",
+    "lib/l10n/app_pt.arb": "5af44033c5df815376256b717a40cffce4a9c24426edf766da4dad144c244879",
+    "lib/l10n/app_zh.arb": "1df4fee4bf20fb0aaf8273ab17bbfce7674a2861b38b67b789fb5f527a5fde1b"
+  }
+}
