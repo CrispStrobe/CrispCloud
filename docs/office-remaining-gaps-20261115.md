@@ -144,8 +144,8 @@ arbitrary part names.
 **Status:** Partial\
 **Current:** supported raster pictures are held in a bounded image registry (8 MiB per
 image, 24 MiB total) and referenced by synthetic `odt-image:` keys. The viewer
-renders them with `Image.memory`; payloads stay out of plain text, search and
-the rich-render budget. Larger/unsupported media remains a marker.\
+renders them with `Image.memory` and applies the ODF frame's width/height;
+payloads stay out of plain text, search and the rich-render budget. Larger/unsupported media remains a marker.\
 **Remaining:** image positioning/cropping, captions, linked images and vector
 formats.\
 **Next step:** model the remaining frame geometry and media relationships.\
