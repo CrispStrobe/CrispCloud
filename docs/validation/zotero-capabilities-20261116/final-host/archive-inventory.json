@@ -1,0 +1,208 @@
+{
+  "created_utc": "2026-11-16T13:47:11.323706+00:00",
+  "source_directory": "zotero-toolchain/expanded-host-qualification",
+  "source_commit": "27f001d60777d27f412d9984b62dbdb05019b9eb",
+  "quds_commit": "8e017e8c148517fea61f8d55eaafc7f070b82bba",
+  "original_receipt_sha256": "9fadc14f01ecbb99d6b379f54211108a7d32115175c0088fefbc55e3d8ca3c16",
+  "files": [
+    {
+      "original_path": "README.md",
+      "archived_path": "README.md",
+      "original_size_bytes": 6814,
+      "original_sha256": "f71d00e46b2bcef57b779440b1754a9e6aef521a1db30183e14545d2abd5df43",
+      "archived_size_bytes": 6814,
+      "archived_sha256": "f71d00e46b2bcef57b779440b1754a9e6aef521a1db30183e14545d2abd5df43",
+      "compression": null
+    },
+    {
+      "original_path": "analysis-package-config.json",
+      "archived_path": "analysis-package-config.json",
+      "original_size_bytes": 21983,
+      "original_sha256": "5a79a4eb5f92c8b1d72d07628b59db6e56d53fe4abdd1213bbb3786ab4723dc3",
+      "archived_size_bytes": 21983,
+      "archived_sha256": "5a79a4eb5f92c8b1d72d07628b59db6e56d53fe4abdd1213bbb3786ab4723dc3",
+      "compression": null
+    },
+    {
+      "original_path": "artifact-inventory.json",
+      "archived_path": "artifact-inventory.json",
+      "original_size_bytes": 3568,
+      "original_sha256": "efea13e17d22af3a877e861ccd02b4ca8f189a443cb746fb9b2ecb4ca749b4aa",
+      "archived_size_bytes": 3568,
+      "archived_sha256": "efea13e17d22af3a877e861ccd02b4ca8f189a443cb746fb9b2ecb4ca749b4aa",
+      "compression": null
+    },
+    {
+      "original_path": "dependencies-after.json",
+      "archived_path": "dependencies-after.json.gz",
+      "original_size_bytes": 766495,
+      "original_sha256": "782a286c61d6acab4937cb1e96b2bf8457624f6d3a28a7ab981b302a0f9c1148",
+      "archived_size_bytes": 280981,
+      "archived_sha256": "7d353fb8c303f55573209b5000118de1a8b83b85814efe219a45692822655c94",
+      "compression": "gzip"
+    },
+    {
+      "original_path": "dependencies-before.json",
+      "archived_path": "dependencies-before.json.gz",
+      "original_size_bytes": 766495,
+      "original_sha256": "782a286c61d6acab4937cb1e96b2bf8457624f6d3a28a7ab981b302a0f9c1148",
+      "archived_size_bytes": 280981,
+      "archived_sha256": "7d353fb8c303f55573209b5000118de1a8b83b85814efe219a45692822655c94",
+      "compression": "gzip"
+    },
+    {
+      "original_path": "harness-assets.json",
+      "archived_path": "harness-assets.json",
+      "original_size_bytes": 1250,
+      "original_sha256": "8485f3712597054e82bb086ba1ac354a50fc3f6808ab96754a8ea947b5ca9b08",
+      "archived_size_bytes": 1250,
+      "archived_sha256": "8485f3712597054e82bb086ba1ac354a50fc3f6808ab96754a8ea947b5ca9b08",
+      "compression": null
+    },
+    {
+      "original_path": "host-analysis.log",
+      "archived_path": "host-analysis.log",
+      "original_size_bytes": 273,
+      "original_sha256": "455a7c6aaf0b32ad7bf110903173144dbd1e4f55ddb786914ffc1b9f21eaea38",
+      "archived_size_bytes": 273,
+      "archived_sha256": "455a7c6aaf0b32ad7bf110903173144dbd1e4f55ddb786914ffc1b9f21eaea38",
+      "compression": null
+    },
+    {
+      "original_path": "host-format.log",
+      "archived_path": "host-format.log",
+      "original_size_bytes": 47,
+      "original_sha256": "12b6ed25704189c510964fcb7aace6fa3848150e2d532b7e5c5a08e54ceb1cbc",
+      "archived_size_bytes": 47,
+      "archived_sha256": "12b6ed25704189c510964fcb7aace6fa3848150e2d532b7e5c5a08e54ceb1cbc",
+      "compression": null
+    },
+    {
+      "original_path": "host-tests.log",
+      "archived_path": "host-tests.log",
+      "original_size_bytes": 8286,
+      "original_sha256": "5dbca9bddc41decf16e613c42f3562b0691e96ea1fec510500c1f01631213c4c",
+      "archived_size_bytes": 8286,
+      "archived_sha256": "5dbca9bddc41decf16e613c42f3562b0691e96ea1fec510500c1f01631213c4c",
+      "compression": null
+    },
+    {
+      "original_path": "preparation.json",
+      "archived_path": "preparation.json",
+      "original_size_bytes": 1348,
+      "original_sha256": "8501591c51aae7aadb30684f6cd7f848e3050c65c20712d9123f135a1f02d6e6",
+      "archived_size_bytes": 1348,
+      "archived_sha256": "8501591c51aae7aadb30684f6cd7f848e3050c65c20712d9123f135a1f02d6e6",
+      "compression": null
+    },
+    {
+      "original_path": "python-sync-verifier-tests.log",
+      "archived_path": "python-sync-verifier-tests.log",
+      "original_size_bytes": 4993,
+      "original_sha256": "bcf9df5c8ade0ae4840f2a709b0b59e5a4e7e8f05454e9535203c8c1e1ff3e43",
+      "archived_size_bytes": 4993,
+      "archived_sha256": "bcf9df5c8ade0ae4840f2a709b0b59e5a4e7e8f05454e9535203c8c1e1ff3e43",
+      "compression": null
+    },
+    {
+      "original_path": "receipt.json",
+      "archived_path": "receipt.json",
+      "original_size_bytes": 12247,
+      "original_sha256": "9fadc14f01ecbb99d6b379f54211108a7d32115175c0088fefbc55e3d8ca3c16",
+      "archived_size_bytes": 12247,
+      "archived_sha256": "9fadc14f01ecbb99d6b379f54211108a7d32115175c0088fefbc55e3d8ca3c16",
+      "compression": null
+    },
+    {
+      "original_path": "run-expanded-host.py",
+      "archived_path": "run-expanded-host.py",
+      "original_size_bytes": 15231,
+      "original_sha256": "bfa0636f636c119686cd10f6a5fe8b9e87c0b02d7146a846a1a8d4d0c88de0b9",
+      "archived_size_bytes": 15231,
+      "archived_sha256": "bfa0636f636c119686cd10f6a5fe8b9e87c0b02d7146a846a1a8d4d0c88de0b9",
+      "compression": null
+    },
+    {
+      "original_path": "source-after.json",
+      "archived_path": "source-after.json.gz",
+      "original_size_bytes": 518457,
+      "original_sha256": "8c780136469f98428ffcd89e5371e01e44e99541530695d9d55a9d3660263b55",
+      "archived_size_bytes": 169942,
+      "archived_sha256": "f9bd5d7b6f0c07edbcef588234eaaaefc78110eca85c9ce0cb321c05cd028373",
+      "compression": "gzip"
+    },
+    {
+      "original_path": "source-before.json",
+      "archived_path": "source-before.json.gz",
+      "original_size_bytes": 518457,
+      "original_sha256": "8c780136469f98428ffcd89e5371e01e44e99541530695d9d55a9d3660263b55",
+      "archived_size_bytes": 169942,
+      "archived_sha256": "f9bd5d7b6f0c07edbcef588234eaaaefc78110eca85c9ce0cb321c05cd028373",
+      "compression": "gzip"
+    },
+    {
+      "original_path": "source-provenance.json",
+      "archived_path": "source-provenance.json",
+      "original_size_bytes": 974,
+      "original_sha256": "40ab706280d1f4dc3918b397f5e5b5ff7e1e2fba1d02120572b347da9825cc9f",
+      "archived_size_bytes": 974,
+      "archived_sha256": "40ab706280d1f4dc3918b397f5e5b5ff7e1e2fba1d02120572b347da9825cc9f",
+      "compression": null
+    },
+    {
+      "original_path": "vendor-analysis.log",
+      "archived_path": "vendor-analysis.log",
+      "original_size_bytes": 191,
+      "original_sha256": "4b77a8790c2ef00297086992695b9e4a38c11d3213bd2f2a50597c4eb43e73e9",
+      "archived_size_bytes": 191,
+      "archived_sha256": "4b77a8790c2ef00297086992695b9e4a38c11d3213bd2f2a50597c4eb43e73e9",
+      "compression": null
+    },
+    {
+      "original_path": "vendor-format.log",
+      "archived_path": "vendor-format.log",
+      "original_size_bytes": 47,
+      "original_sha256": "6c1831ee8e6d39346ed5d848ced164c58ae3cc0574c9ff345f4580b771c0b05e",
+      "archived_size_bytes": 47,
+      "archived_sha256": "6c1831ee8e6d39346ed5d848ced164c58ae3cc0574c9ff345f4580b771c0b05e",
+      "compression": null
+    },
+    {
+      "original_path": "vendor-source.log",
+      "archived_path": "vendor-source.log",
+      "original_size_bytes": 203,
+      "original_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "archived_size_bytes": 203,
+      "archived_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "compression": null
+    },
+    {
+      "original_path": "vendor-tracked-final.log",
+      "archived_path": "vendor-tracked-final.log",
+      "original_size_bytes": 203,
+      "original_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "archived_size_bytes": 203,
+      "archived_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "compression": null
+    },
+    {
+      "original_path": "vendor-tracked.log",
+      "archived_path": "vendor-tracked.log",
+      "original_size_bytes": 203,
+      "original_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "archived_size_bytes": 203,
+      "archived_sha256": "172d82625561b1111bbb2cd3d8ad52b2ca65c5dce80f6de0148b3bb1db6704c6",
+      "compression": null
+    },
+    {
+      "original_path": "whitespace.log",
+      "archived_path": "whitespace.log",
+      "original_size_bytes": 0,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archived_size_bytes": 0,
+      "archived_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compression": null
+    }
+  ],
+  "restoration": "Run gzip -dk *.json.gz in this directory to restore exact original JSON names and bytes. The original artifact-inventory.json is copied unchanged; archive-inventory.json maps compressed artifacts to their original hashes."
+}

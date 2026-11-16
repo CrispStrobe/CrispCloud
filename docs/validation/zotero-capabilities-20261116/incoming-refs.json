@@ -1,44 +1,120 @@
 {
-  "schema_version": 1,
-  "recorded_utc": "2026-11-16T13:10:01.497028+00:00",
+  "schema_version": 2,
+  "recorded_utc": "2026-11-16T13:41:21.389360+00:00",
+  "inventory_read_completed_utc": "2026-11-16T13:41:24.451778+00:00",
   "repository": "CrispStrobe/CrispCloud",
   "continuation_branch": "codex/zotero-capabilities-20261116",
-  "integration_source": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
-  "fetched_main": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
+  "integration_source": "c12e7ee7a0045c125cf35fee94ecc2027ffd8848",
+  "integration_source_scope": "Published continuation checkpoint used to re-evaluate ancestry against the unchanged observed-ref inventory. All reproduction steps use this published commit; earlier local checkpoint identities are retained only as local provenance.",
+  "fetched_main": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
   "previous_user_checkpoint": "fb1bcb5f626ff5c0cd763cff5eb98fb46946ae5f",
   "previous_checkpoint_is_ancestor": true,
-  "commits_since_previous_checkpoint": 64,
-  "fetch_head_last_updated_utc": "2026-11-16T13:07:15.339787+00:00",
-  "fetch_scope": "All advertised origin heads and PR heads; Quds additionally includes all advertised upstream heads and PR heads. The time above is the last local FETCH_HEAD update, not a promise of remote immutability.",
+  "commits_since_previous_checkpoint": 71,
+  "initial_inventory": {
+    "recorded_utc": "2026-11-16T13:10:01.497028+00:00",
+    "integration_source": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
+    "total_incoming_refs": 208,
+    "preserved_files": {
+      "initial-incoming-refs.json": {
+        "sha256": "1fca3724897d37038906abb56599e88ea49c7cd24331be39670f09ead87297dd",
+        "bytes": 82923,
+        "source_commit": "c12e7ee7a0045c125cf35fee94ecc2027ffd8848",
+        "source_path": "docs/validation/zotero-capabilities-20261116/incoming-refs.json",
+        "preserved_byte_for_byte": true
+      },
+      "initial-incoming-work.md": {
+        "sha256": "d543b728d732657045dfda1748bbf5429a9f24e06d207eadfc3f0b2e73d77903",
+        "bytes": 3036,
+        "source_commit": "c12e7ee7a0045c125cf35fee94ecc2027ffd8848",
+        "source_path": "docs/validation/zotero-capabilities-20261116/incoming-work.md",
+        "preserved_byte_for_byte": true
+      }
+    }
+  },
+  "delta_from_initial_inventory": {
+    "added": [],
+    "updated": [
+      {
+        "local_ref": "refs/remotes/origin/integrate/current-repos-20261116",
+        "previous_sha": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
+        "sha": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644"
+      },
+      {
+        "local_ref": "refs/remotes/origin/main",
+        "previous_sha": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
+        "sha": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644"
+      }
+    ],
+    "removed": []
+  },
+  "fetch_head_last_updated_utc": "2026-11-16T13:31:51.895708+00:00",
+  "fetch_head_sha256": "af25879fd143d31488158e8784f7593e112265b8f88c060e9c1a50bb3fafa267",
+  "fetch_head_entries": [
+    {
+      "sha": "189ab0b3bdf6816ddb7319ca2d830e2ab69ccea1",
+      "description": "branch 'codex/zotero-capabilities-20261116'"
+    }
+  ],
+  "fetch_head_timestamp_caveat": "FETCH_HEAD now contains only a later verification fetch of the continuation branch. Its mtime is not the cutoff or completion time of the earlier full incoming-ref fetch.",
+  "full_refspec_fetch_reflog_evidence": [
+    {
+      "remote": "origin",
+      "ref": "refs/remotes/origin/main",
+      "sha": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
+      "ref_update_recorded_utc": "2026-11-16T13:28:02+00:00",
+      "reflog_entry": "refs/remotes/origin/main@{2026-11-16T14:28:02+01:00}\tf7353bf5cdbdd1a3e1b5d02615b051eaa0dae644\tfetch origin +refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/*: fast-forward",
+      "interpretation": "A ref update made by a fetch whose command includes heads and PR-head refspecs. This records the observed update, not the finish time of every fetch or a guarantee that unchanged refs were refreshed at this time."
+    }
+  ],
+  "fetch_scope": "Read-only observation of already-fetched local origin/upstream remote-tracking heads and PR heads at recorded_utc. No fetch or remote metadata request was made for this refresh. Exact local refs and SHAs below define this inventory; it does not assert current remote availability or capture work advertised later.",
   "remotes": {
     "origin": "CrispStrobe/CrispCloud"
   },
   "counts": {
     "origin": {
       "branches": 48,
-      "pull_request_heads": 160
+      "pull_request_heads": 160,
+      "ancestors_of_integration_source": 208,
+      "nonancestor_refs_with_explicit_disposition": 0
     }
   },
   "total_incoming_refs": 208,
+  "ancestor_incoming_refs": 208,
+  "nonancestor_incoming_refs": 0,
   "all_incoming_refs_are_ancestors": true,
-  "ref_snapshot_sha256": "6d7458004a3947497217334be099a437a555c7ea209a091f56062ce1a9c61162",
+  "all_incoming_refs_have_recorded_disposition": true,
+  "disposition_counts": {
+    "contained_in_fetched_main": 208
+  },
+  "ref_snapshot_sha256": "6a03980a47af81109729ed115cc8d346549c9cdfc25c8a12da98bf31caa84d9b",
+  "ref_snapshot_encoding": "UTF-8 output of git for-each-ref --sort=refname --format=%(refname)%09%(objectname)%09%(symref), including final newlines and excluded refs.",
+  "raw_ref_snapshot": "refs/remotes/origin/HEAD\tf7353bf5cdbdd1a3e1b5d02615b051eaa0dae644\trefs/remotes/origin/main\nrefs/remotes/origin/codex/ssh-terminal-tmux\t378c036b392ee3ff9112d86aa21e7fdd8e722808\t\nrefs/remotes/origin/codex/terminal-screen-workspace\t2eec6b4edc62693cfc6048581862a7aed87143c9\t\nrefs/remotes/origin/codex/terminal-session-optimization-20261116\t852f009cadb153cfcb0799c527fdd78364a2df8d\t\nrefs/remotes/origin/codex/zotero-capabilities-20261116\t189ab0b3bdf6816ddb7319ca2d830e2ab69ccea1\t\nrefs/remotes/origin/codex/zotero-optimization-20261116\t5e54229821bf7101ee60fb486d0c924ab6e7d5db\t\nrefs/remotes/origin/codex/zotero-support-20261115\te678e17859f8d29e274d1abbf064b93d04a6fa42\t\nrefs/remotes/origin/codex/zotero-support-20261116\t5efae7732727fc1ae43d6b664922214dd6acfedf\t\nrefs/remotes/origin/docs/conditional-affix\t4919c87f0225599b9b2b963285d364d2c2bd1a1e\t\nrefs/remotes/origin/docs/conditional-between\t073713474ea62525d9f5832da918407de333cd03\t\nrefs/remotes/origin/docs/conditional-complete\ta49c3f14f96fed4c5551e45060ebbce3fa6883a1\t\nrefs/remotes/origin/docs/conditional-formats\t2281ad58aed9f97bc1d387d3c98728245a5e4bcf\t\nrefs/remotes/origin/docs/metadata-closed\t343a930ebdbc1b0ee45f16328be868d0f78ba624\t\nrefs/remotes/origin/docs/ods-hidden-state\t1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0\t\nrefs/remotes/origin/docs/ods-pictures\t128f55295107e3ada605b52d160165e03f726cb4\t\nrefs/remotes/origin/docs/ods-validations\tb420b45b6666ca0658ae74f2a682a3cb6b88134d\t\nrefs/remotes/origin/docs/office-pin-20261115\t5ed4f45cb758394dc2346041d826c10257c24dc1\t\nrefs/remotes/origin/docs/remaining-gaps\ta0df68710bbacdcbddf57f7fb7b77238566b65c3\t\nrefs/remotes/origin/docs/remaining-gaps-link\t854d2ff6a20206434c64173ddca1152b079c8277\t\nrefs/remotes/origin/docs/validation-complete\t8197b59177827cfa7b426c55acd0cdca19f9b6eb\t\nrefs/remotes/origin/docs/validation-operators\t11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210\t\nrefs/remotes/origin/feat/hidden-sheets-ui\tdacf219a094e8f309e3f2ea1e27afbdccaa69f3d\t\nrefs/remotes/origin/feat/odt-headers\t38a69f9a60bce92b6c2db60a71427ac47d98819d\t\nrefs/remotes/origin/feat/odt-images\t969c104a09dc2ad0732edb4a11a0300b52f20e2f\t\nrefs/remotes/origin/feat/odt-styles\t048ad97b6d4b1be94821dd29f1ffb1494a329ecb\t\nrefs/remotes/origin/feat/odt-textboxes\tb81105fe579d00b66c0a07b07d8ed36cee23ecfb\t\nrefs/remotes/origin/fix/conditional-affix-vendor\t1dbfa2125cd83d6ec4e0028d1584e612fccfb77c\t\nrefs/remotes/origin/fix/conditional-between-vendor\ta52efabd7d05a50b428eb337944d2b6aeee2400b\t\nrefs/remotes/origin/fix/conditional-dxf-vendor\tb9b7932eca6213973803b5bb227464cccd3051d6\t\nrefs/remotes/origin/fix/conditional-operators-vendor\t24ac26de023313dba726f8cdaabd16179c49da01\t\nrefs/remotes/origin/fix/conditional-text-vendor\t20e5c5b7f63f0b8335665ca131418023f6bc2ca7\t\nrefs/remotes/origin/fix/hidden-state-vendor\tfd69bc3ee8db4ecec4683a7b8161a643b758db6b\t\nrefs/remotes/origin/fix/ods-conditional-vendor\t4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6\t\nrefs/remotes/origin/fix/ods-custom-validation-vendor\t9898961e5cb64cdfc704f85c8f6f5ebedad3c39a\t\nrefs/remotes/origin/fix/ods-default-geometry-vendor\t29a2bb5158a316dcde5da776172e09027e04f78d\t\nrefs/remotes/origin/fix/ods-default-style-vendor\t0ba620fdc34ea7afd278468f3978997c3cc7ba8f\t\nrefs/remotes/origin/fix/ods-images-vendor\td18dc14194bfa4d11e96552b77dc34cbe5a8b417\t\nrefs/remotes/origin/fix/ods-metadata-vendor\t8a62e0864ad4bae96063ec6f8a542db039a306cf\t\nrefs/remotes/origin/fix/ods-named-expressions-vendor\tc80ee46fccbbfc8c2da4b18d67fc220cad23f1fc\t\nrefs/remotes/origin/fix/ods-tab-color-vendor\t9c2047da22110db1518a6226ee7a35e421fb9d51\t\nrefs/remotes/origin/fix/ods-validation-messages-vendor\ta617e188cf69f3d3c14dba614593f953dadf1436\t\nrefs/remotes/origin/fix/ods-validation-vendor2\t2b6ac08219418cf2c2d91968d117437684370c4d\t\nrefs/remotes/origin/fix/ods-validations-vendor\tee74601e71441fcac2b6defebff33ca04f538d12\t\nrefs/remotes/origin/integrate/current-repos-20261116\tf7353bf5cdbdd1a3e1b5d02615b051eaa0dae644\t\nrefs/remotes/origin/integrate/final-corpus-20261115\t59b11b5647a8a07d36c0d2e0d579855f474ef4d2\t\nrefs/remotes/origin/integrate/sdt-section-break-20261115\t012314d440c49bc73b6726796fd9930eee6f1830\t\nrefs/remotes/origin/integrate/utf16-custom-xml-20261115\tabfcf08bd2bfbe87349fdacc3484b824b77fefa3\t\nrefs/remotes/origin/integration/storage-carving-20261115\t5018aebb709b35f1c4d730c06e0f91187727751c\t\nrefs/remotes/origin/integration/storage-carving-local-20261115124645\t10891b06a6da9f2502960cdbfe34b30eed271665\t\nrefs/remotes/origin/main\tf7353bf5cdbdd1a3e1b5d02615b051eaa0dae644\t\nrefs/remotes/origin/pr/10\t3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438\t\nrefs/remotes/origin/pr/100\tc582f2d7a413c54dcf954f6f25f8201e36ba81d2\t\nrefs/remotes/origin/pr/101\t03f37893819ee999a9a660f029306f53ed7f2d0f\t\nrefs/remotes/origin/pr/102\tffdd6a86820b0d58cf8b93b4e626d0439beefab9\t\nrefs/remotes/origin/pr/103\td504409acc779b670de482247f3231a7247dcd92\t\nrefs/remotes/origin/pr/104\t542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a\t\nrefs/remotes/origin/pr/105\t22bd67b887c81a11ea22664defc3474a07eef50a\t\nrefs/remotes/origin/pr/106\t2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6\t\nrefs/remotes/origin/pr/107\t7187d6d0ad636f844f7e9622ed915a880d20d992\t\nrefs/remotes/origin/pr/108\ta77364501d274e0fde2e9fffeefb121258ae9614\t\nrefs/remotes/origin/pr/109\t1b7680583ac69649b17287ab68738288fec10f51\t\nrefs/remotes/origin/pr/11\t7e32fef5ed563c73d617fc4933d07b88d8525a60\t\nrefs/remotes/origin/pr/110\td97705dabbdae5969a67bf4bf74b6c604d934419\t\nrefs/remotes/origin/pr/111\t5018aebb709b35f1c4d730c06e0f91187727751c\t\nrefs/remotes/origin/pr/112\tbb981ec37c40369ba15bacdd9c21c520807a200c\t\nrefs/remotes/origin/pr/113\teab538e7af002ddffa2746b5932fdbbbd3a97334\t\nrefs/remotes/origin/pr/114\teba6c9dcb24108d7277dea2f0042acbb19f8fb72\t\nrefs/remotes/origin/pr/115\t74f97cba657d43f18f6e95553a465d23e21ceb20\t\nrefs/remotes/origin/pr/116\t7dec00fb1ed4fd8552fcf5bf682de02849d3d93a\t\nrefs/remotes/origin/pr/117\ta8e350d94e120c7422ade4e4caa4e92a2c4e461a\t\nrefs/remotes/origin/pr/118\t5530aff56e575a2ecad42c774233e2c0946e24c7\t\nrefs/remotes/origin/pr/119\tf74f1fceb9959b1197fc21218e047240f215ba75\t\nrefs/remotes/origin/pr/12\t3564a5c8b30684f284063bdbbd10c7942e423fdc\t\nrefs/remotes/origin/pr/120\t443db52220f25b6fa982dfa6afd18c17ed09179e\t\nrefs/remotes/origin/pr/121\t2dbc312ff2aaff1495adb95c67afe8aa7d987e7e\t\nrefs/remotes/origin/pr/122\t3ffe089765eecd5a867369392a8e3610d896c0cf\t\nrefs/remotes/origin/pr/123\te19731eb9a2b69b0047b9f9ee6165a1e53ae187e\t\nrefs/remotes/origin/pr/124\td7895df6d55ca588a70575dabf2216ed42055d75\t\nrefs/remotes/origin/pr/125\t5c1714d5abb3f728b924a6a2a515eec02497ae9c\t\nrefs/remotes/origin/pr/126\td18dc14194bfa4d11e96552b77dc34cbe5a8b417\t\nrefs/remotes/origin/pr/127\t128f55295107e3ada605b52d160165e03f726cb4\t\nrefs/remotes/origin/pr/128\t969c104a09dc2ad0732edb4a11a0300b52f20e2f\t\nrefs/remotes/origin/pr/129\tb81105fe579d00b66c0a07b07d8ed36cee23ecfb\t\nrefs/remotes/origin/pr/13\tcb2db48e5e0f623139f260b63f88405b577791ec\t\nrefs/remotes/origin/pr/130\t5ed4f45cb758394dc2346041d826c10257c24dc1\t\nrefs/remotes/origin/pr/131\t048ad97b6d4b1be94821dd29f1ffb1494a329ecb\t\nrefs/remotes/origin/pr/132\t0ba620fdc34ea7afd278468f3978997c3cc7ba8f\t\nrefs/remotes/origin/pr/133\t29a2bb5158a316dcde5da776172e09027e04f78d\t\nrefs/remotes/origin/pr/134\tfd69bc3ee8db4ecec4683a7b8161a643b758db6b\t\nrefs/remotes/origin/pr/135\t38a69f9a60bce92b6c2db60a71427ac47d98819d\t\nrefs/remotes/origin/pr/136\t378c036b392ee3ff9112d86aa21e7fdd8e722808\t\nrefs/remotes/origin/pr/137\tdacf219a094e8f309e3f2ea1e27afbdccaa69f3d\t\nrefs/remotes/origin/pr/138\t1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0\t\nrefs/remotes/origin/pr/139\t4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6\t\nrefs/remotes/origin/pr/14\teff79b3c8ed03020aeaeac4dcd86058fb1e2e181\t\nrefs/remotes/origin/pr/140\t01b3f6090f682c9c8cd909d229aaad50b54ea3fd\t\nrefs/remotes/origin/pr/141\t24ac26de023313dba726f8cdaabd16179c49da01\t\nrefs/remotes/origin/pr/142\t2281ad58aed9f97bc1d387d3c98728245a5e4bcf\t\nrefs/remotes/origin/pr/143\tabfcf08bd2bfbe87349fdacc3484b824b77fefa3\t\nrefs/remotes/origin/pr/144\tb9b7932eca6213973803b5bb227464cccd3051d6\t\nrefs/remotes/origin/pr/145\t20e5c5b7f63f0b8335665ca131418023f6bc2ca7\t\nrefs/remotes/origin/pr/146\ta49c3f14f96fed4c5551e45060ebbce3fa6883a1\t\nrefs/remotes/origin/pr/147\tee74601e71441fcac2b6defebff33ca04f538d12\t\nrefs/remotes/origin/pr/148\tb420b45b6666ca0658ae74f2a682a3cb6b88134d\t\nrefs/remotes/origin/pr/149\te678e17859f8d29e274d1abbf064b93d04a6fa42\t\nrefs/remotes/origin/pr/15\t8755f0dff6ff87528a77aa6613242ce1ef5851f5\t\nrefs/remotes/origin/pr/150\ta52efabd7d05a50b428eb337944d2b6aeee2400b\t\nrefs/remotes/origin/pr/151\t073713474ea62525d9f5832da918407de333cd03\t\nrefs/remotes/origin/pr/152\t012314d440c49bc73b6726796fd9930eee6f1830\t\nrefs/remotes/origin/pr/153\t1dbfa2125cd83d6ec4e0028d1584e612fccfb77c\t\nrefs/remotes/origin/pr/154\t4919c87f0225599b9b2b963285d364d2c2bd1a1e\t\nrefs/remotes/origin/pr/155\ta0df68710bbacdcbddf57f7fb7b77238566b65c3\t\nrefs/remotes/origin/pr/156\t854d2ff6a20206434c64173ddca1152b079c8277\t\nrefs/remotes/origin/pr/157\t59b11b5647a8a07d36c0d2e0d579855f474ef4d2\t\nrefs/remotes/origin/pr/158\t8a62e0864ad4bae96063ec6f8a542db039a306cf\t\nrefs/remotes/origin/pr/159\t343a930ebdbc1b0ee45f16328be868d0f78ba624\t\nrefs/remotes/origin/pr/16\tda52efc43c2043df9a4aa8cde69c25fbc616928d\t\nrefs/remotes/origin/pr/160\t2eec6b4edc62693cfc6048581862a7aed87143c9\t\nrefs/remotes/origin/pr/161\t5efae7732727fc1ae43d6b664922214dd6acfedf\t\nrefs/remotes/origin/pr/162\t2b6ac08219418cf2c2d91968d117437684370c4d\t\nrefs/remotes/origin/pr/163\t11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210\t\nrefs/remotes/origin/pr/164\t9898961e5cb64cdfc704f85c8f6f5ebedad3c39a\t\nrefs/remotes/origin/pr/165\ta617e188cf69f3d3c14dba614593f953dadf1436\t\nrefs/remotes/origin/pr/166\t8197b59177827cfa7b426c55acd0cdca19f9b6eb\t\nrefs/remotes/origin/pr/167\t5e54229821bf7101ee60fb486d0c924ab6e7d5db\t\nrefs/remotes/origin/pr/168\t9c2047da22110db1518a6226ee7a35e421fb9d51\t\nrefs/remotes/origin/pr/169\t852f009cadb153cfcb0799c527fdd78364a2df8d\t\nrefs/remotes/origin/pr/17\t6bda9f2306d36fb4a7ce3f501346b597c2000beb\t\nrefs/remotes/origin/pr/170\tc80ee46fccbbfc8c2da4b18d67fc220cad23f1fc\t\nrefs/remotes/origin/pr/18\td07804b9e0d3869bd4d20f020d7620ce7e352c43\t\nrefs/remotes/origin/pr/19\t261ae0a091cf87639da8feb2bcdf38efec61f106\t\nrefs/remotes/origin/pr/20\t02c92b6cdd2936dd9bd10d35b1d9ad22479997e7\t\nrefs/remotes/origin/pr/21\t4769da0812cb4c7eb19cfd88019f9c059d2b75b2\t\nrefs/remotes/origin/pr/22\tb71da724fc4686e45ac8235c8cf604a184b02ec8\t\nrefs/remotes/origin/pr/23\t8537a7e20d8fa6f36612ee29e725710a643d39f1\t\nrefs/remotes/origin/pr/24\tda7c3e940d022dd585708beac2de2cd5c3d10be2\t\nrefs/remotes/origin/pr/25\tef149b2edd4659205cbfb6efff4cfd6789659bde\t\nrefs/remotes/origin/pr/26\t46976afeaaa7e5cb03203884798c7663d27ebb2b\t\nrefs/remotes/origin/pr/27\tda3ba2dd95ba25e37ea831dc19765d3bd15c6455\t\nrefs/remotes/origin/pr/28\te5858440cfc383aae7c000372f6f223a7041c85c\t\nrefs/remotes/origin/pr/29\tb42e103344f5f4acb18fc4c1f60149481d9906d6\t\nrefs/remotes/origin/pr/30\tb5d204c6d532caff008a42b4dcf000f3a06f4b66\t\nrefs/remotes/origin/pr/31\tab45ac55990233492208549c18f42dfe51e518e4\t\nrefs/remotes/origin/pr/32\tb31b114ed7aa368861056f183b1a61edb436a97c\t\nrefs/remotes/origin/pr/33\tf2eb2911cbf53833f5f385675edc4326b4787496\t\nrefs/remotes/origin/pr/34\teebffef31b7bd96d03dcc939b6b6cdb46aee2c0c\t\nrefs/remotes/origin/pr/35\tdfe7a175148a95cc80738142c85a88e2bd8b9810\t\nrefs/remotes/origin/pr/36\t3d40ffc1a04be27077531b9c0e90520f36b4dc2d\t\nrefs/remotes/origin/pr/37\t429d9edf052dece0db48a6f41fc04b0d95b6c70b\t\nrefs/remotes/origin/pr/38\td95f46c4f12beb037cd64fb2c8910173500a7ca7\t\nrefs/remotes/origin/pr/39\tcec4b8d11f59c0c9ddbe53706ef35fcea909aa8d\t\nrefs/remotes/origin/pr/40\t08c9f8453589c2d1c43f7b2f3a6f79199ad953b3\t\nrefs/remotes/origin/pr/41\t44aadba3b515fbbca0a7b2520be84204ee603007\t\nrefs/remotes/origin/pr/42\tea4446482d7ca513160669fbb48e641397c6514f\t\nrefs/remotes/origin/pr/43\t1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef\t\nrefs/remotes/origin/pr/45\tf39bcd927f32729e63194f35db019c36802d1c67\t\nrefs/remotes/origin/pr/47\tbe318f380fc47f94975a35c0924c89190d46f990\t\nrefs/remotes/origin/pr/49\tb76bbfafda1cb69d7a343b9777af42db8c1b717a\t\nrefs/remotes/origin/pr/5\taf7ef4beb93f97c89697e3780d9fd0a882f3dbaf\t\nrefs/remotes/origin/pr/50\t83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f\t\nrefs/remotes/origin/pr/51\t20aaf76d213ec0cde07c505287f8a2e48d683db2\t\nrefs/remotes/origin/pr/52\tc9c0f58ae1c4c73f64417e807901549e33fd77a8\t\nrefs/remotes/origin/pr/53\tbffdfbb49433859823081f2198f16e33be8369a6\t\nrefs/remotes/origin/pr/54\t28b7b9ce388e08345aa995037256ab50ab0e17b9\t\nrefs/remotes/origin/pr/55\t9a3e07808ed883938d2e6139593a406065a8a75c\t\nrefs/remotes/origin/pr/56\td3d69c1cfa8ab35a3aa54d562a2c63d298ca9476\t\nrefs/remotes/origin/pr/57\t62e438e6836949207b4541b818c1c261bb7104fe\t\nrefs/remotes/origin/pr/58\t9887b53272d5f747cae9f73b363748985937ad05\t\nrefs/remotes/origin/pr/59\t132f70e746aa9815a51a046ab02e83393d084622\t\nrefs/remotes/origin/pr/6\ta0ada3b3cd344bbdacf01313ac2d72749b72d4d0\t\nrefs/remotes/origin/pr/60\tf798f27d823ee846b5e6238e167970e0345612ed\t\nrefs/remotes/origin/pr/61\ta452b7ade6ccdd9cd39804155309a21797f2612a\t\nrefs/remotes/origin/pr/62\tcdeedaf48f9892fe82191f090afccf15529db1a6\t\nrefs/remotes/origin/pr/63\tbaccf470e946fc86fde41c96443423006eac2be7\t\nrefs/remotes/origin/pr/64\tc8f4561343ff0abca6aa3ffffeb45892c2fc7bd1\t\nrefs/remotes/origin/pr/65\t55dd210a2eb6db7cc5c100507d63be411f30b679\t\nrefs/remotes/origin/pr/66\t42ae79ce5dbaec184726b538c7100823a4b1edfe\t\nrefs/remotes/origin/pr/67\t403e942dc99779883210125a01841ef209e19d2e\t\nrefs/remotes/origin/pr/68\t9cd18e7c704937897d037b1051d38341d4928bf5\t\nrefs/remotes/origin/pr/69\tcd1447740f2834ec68af97beb3a3dad47cffd68b\t\nrefs/remotes/origin/pr/7\t1311b04a3e7a9d810b46173dbaa73ea6265fe886\t\nrefs/remotes/origin/pr/70\t5b2f1fabf9ac642a906d2275e753e098c324ddeb\t\nrefs/remotes/origin/pr/71\t50a9547a3a6aca251a46b5140f93fb87c789e848\t\nrefs/remotes/origin/pr/72\t8f117e7f85aba2adffb63bdd6511ca2d112c31a8\t\nrefs/remotes/origin/pr/73\td76fe9bbb743e4194bfd54edc930abe9ad4f4854\t\nrefs/remotes/origin/pr/74\te473083f7439b5d8592f43c6ca2f013cdb50c5a1\t\nrefs/remotes/origin/pr/75\t47b7c57012cfc23f8100bad8c5a7fb4c53171a12\t\nrefs/remotes/origin/pr/76\t2297f8e3f7a261c8cbf80b48ffa70bf25df2998d\t\nrefs/remotes/origin/pr/77\t77af99427e2d7d1b3719a22376a4ebf56508edbd\t\nrefs/remotes/origin/pr/78\t005771bd53f2cd437cb70b23ebe83c224792bd00\t\nrefs/remotes/origin/pr/79\t788e1f005e72371d0cf2182ae0cec81dd4e84adb\t\nrefs/remotes/origin/pr/8\t29580c7ddf6fca7ba74440ff146535fe5da51800\t\nrefs/remotes/origin/pr/80\tfdf8c35014367834570bb89a3902f50fd132e865\t\nrefs/remotes/origin/pr/81\t3bb4874de0785edf0b0fa24d2d0ea05a74c58b71\t\nrefs/remotes/origin/pr/82\t085495527e0ab02f52eeded928d54cb766b79910\t\nrefs/remotes/origin/pr/83\td46b35a23a3d0631bc509e115fa003b1e64ebd67\t\nrefs/remotes/origin/pr/84\t464e4dd3f548302ee5b9f78994fa09caf95437bc\t\nrefs/remotes/origin/pr/85\td8643faed99c03a3d6fdba91bf047c690a50ea5b\t\nrefs/remotes/origin/pr/86\t120f839ab9091bdbedf326621347ee737140e043\t\nrefs/remotes/origin/pr/87\t8b0c01597c231814815bf5456ab0a616102e7307\t\nrefs/remotes/origin/pr/88\tb100cd751688f13609a8829180b487b381588d14\t\nrefs/remotes/origin/pr/89\t84c3a1172759abdbab0c320142ae190e532f7753\t\nrefs/remotes/origin/pr/9\t07df87d7ae616b702de887f3327916aeb3f67ad5\t\nrefs/remotes/origin/pr/90\te103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4\t\nrefs/remotes/origin/pr/91\tb3be1616199a049a6a239a0199a3b5ac890aea21\t\nrefs/remotes/origin/pr/92\t7cb65d768f2b096230f8bd32afc6c954baae7416\t\nrefs/remotes/origin/pr/93\t19bbb8606a87492f991261eb3fb79ed1d9f2c299\t\nrefs/remotes/origin/pr/94\tef88da683a8ad68e57bde5d6d794698add46d2b1\t\nrefs/remotes/origin/pr/95\t02160e56ffb3ec2e11c47447fa2c3203e4268cc3\t\nrefs/remotes/origin/pr/97\tcfae329b3dee73ececc6b689c9936339dd3e6a49\t\n",
   "verification_commands": [
-    "git for-each-ref --format=\"%(refname) %(objectname) %(symref)\" refs/remotes/origin refs/remotes/upstream",
+    "git for-each-ref --sort=refname --format=\"%(refname)%09%(objectname)%09%(symref)\" refs/remotes/origin",
     "git merge-base --is-ancestor <sha> <integration_source>",
-    "git merge-base --is-ancestor <sha> <fetched_main>"
+    "git merge-base --is-ancestor <sha> <fetched_main>",
+    "git reflog show -1 --format=\"%gD%09%H%09%gs\" --date=iso-strict refs/remotes/<remote>/main"
   ],
   "excluded_local_refs": [
     {
       "local_ref": "refs/remotes/origin/HEAD",
-      "reason": "Symbolic alias, not an independent incoming ref.",
-      "target": "refs/remotes/origin/main"
+      "sha": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
+      "target": "refs/remotes/origin/main",
+      "reason": "Symbolic remote HEAD alias, not an independent incoming ref."
+    },
+    {
+      "local_ref": "refs/remotes/origin/codex/zotero-capabilities-20261116",
+      "sha": "189ab0b3bdf6816ddb7319ca2d830e2ab69ccea1",
+      "reason": "Current continuation branch, not incoming work."
     }
   ],
   "excluded_scope": [
-    "Remote HEAD symbolic aliases are not counted as branches.",
-    "Tags and GitHub synthetic refs/pull/*/merge refs are outside this branch/head inventory.",
-    "No GitHub Actions, workflow jobs, commit statuses, or branch checks were queried.",
-    "Other repositories and references appearing after the recorded fetch snapshot are outside this inventory."
+    "Current continuation branches are outgoing work and excluded from incoming counts.",
+    "Remote HEAD symbolic aliases are not independent branches.",
+    "Tags, local-only branches and GitHub synthetic refs/pull/*/merge are outside this inventory.",
+    "PR-head availability alone does not establish PR state, review approval or unique source work.",
+    "No GitHub Actions, workflow jobs, commit statuses or branch checks were queried.",
+    "No remote fetch, merge, ref update, commit or push was performed by this audit refresh."
   ],
   "refs": [
     {
@@ -456,7 +532,7 @@
       "remote_ref": "refs/heads/integrate/current-repos-20261116",
       "local_ref": "refs/remotes/origin/integrate/current-repos-20261116",
       "kind": "branch",
-      "sha": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
+      "sha": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
       "disposition": "contained_in_fetched_main"
@@ -516,7 +592,7 @@
       "remote_ref": "refs/heads/main",
       "local_ref": "refs/remotes/origin/main",
       "kind": "branch",
-      "sha": "dfca0b6b27982250f3fd6f6519c4aa6e96cd289f",
+      "sha": "f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
       "disposition": "contained_in_fetched_main"
@@ -529,8 +605,7 @@
       "sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 10
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -540,8 +615,7 @@
       "sha": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 100
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -551,8 +625,7 @@
       "sha": "03f37893819ee999a9a660f029306f53ed7f2d0f",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 101
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -562,8 +635,7 @@
       "sha": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 102
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -573,8 +645,7 @@
       "sha": "d504409acc779b670de482247f3231a7247dcd92",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 103
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -584,8 +655,7 @@
       "sha": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 104
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -595,8 +665,7 @@
       "sha": "22bd67b887c81a11ea22664defc3474a07eef50a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 105
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -606,8 +675,7 @@
       "sha": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 106
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -617,8 +685,7 @@
       "sha": "7187d6d0ad636f844f7e9622ed915a880d20d992",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 107
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -628,8 +695,7 @@
       "sha": "a77364501d274e0fde2e9fffeefb121258ae9614",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 108
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -639,8 +705,7 @@
       "sha": "1b7680583ac69649b17287ab68738288fec10f51",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 109
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -650,8 +715,7 @@
       "sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 11
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -661,8 +725,7 @@
       "sha": "d97705dabbdae5969a67bf4bf74b6c604d934419",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 110
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -672,8 +735,7 @@
       "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 111
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -683,8 +745,7 @@
       "sha": "bb981ec37c40369ba15bacdd9c21c520807a200c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 112
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -694,8 +755,7 @@
       "sha": "eab538e7af002ddffa2746b5932fdbbbd3a97334",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 113
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -705,8 +765,7 @@
       "sha": "eba6c9dcb24108d7277dea2f0042acbb19f8fb72",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 114
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -716,8 +775,7 @@
       "sha": "74f97cba657d43f18f6e95553a465d23e21ceb20",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 115
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -727,8 +785,7 @@
       "sha": "7dec00fb1ed4fd8552fcf5bf682de02849d3d93a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 116
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -738,8 +795,7 @@
       "sha": "a8e350d94e120c7422ade4e4caa4e92a2c4e461a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 117
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -749,8 +805,7 @@
       "sha": "5530aff56e575a2ecad42c774233e2c0946e24c7",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 118
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -760,8 +815,7 @@
       "sha": "f74f1fceb9959b1197fc21218e047240f215ba75",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 119
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -771,8 +825,7 @@
       "sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 12
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -782,8 +835,7 @@
       "sha": "443db52220f25b6fa982dfa6afd18c17ed09179e",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 120
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -793,8 +845,7 @@
       "sha": "2dbc312ff2aaff1495adb95c67afe8aa7d987e7e",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 121
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -804,8 +855,7 @@
       "sha": "3ffe089765eecd5a867369392a8e3610d896c0cf",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 122
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -815,8 +865,7 @@
       "sha": "e19731eb9a2b69b0047b9f9ee6165a1e53ae187e",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 123
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -826,8 +875,7 @@
       "sha": "d7895df6d55ca588a70575dabf2216ed42055d75",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 124
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -837,8 +885,7 @@
       "sha": "5c1714d5abb3f728b924a6a2a515eec02497ae9c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 125
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -848,8 +895,7 @@
       "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 126
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -859,8 +905,7 @@
       "sha": "128f55295107e3ada605b52d160165e03f726cb4",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 127
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -870,8 +915,7 @@
       "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 128
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -881,8 +925,7 @@
       "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 129
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -892,8 +935,7 @@
       "sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 13
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -903,8 +945,7 @@
       "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 130
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -914,8 +955,7 @@
       "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 131
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -925,8 +965,7 @@
       "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 132
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -936,8 +975,7 @@
       "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 133
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -947,8 +985,7 @@
       "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 134
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -958,8 +995,7 @@
       "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 135
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -969,8 +1005,7 @@
       "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 136
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -980,8 +1015,7 @@
       "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 137
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -991,8 +1025,7 @@
       "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 138
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1002,8 +1035,7 @@
       "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 139
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1013,8 +1045,7 @@
       "sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 14
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1024,8 +1055,7 @@
       "sha": "01b3f6090f682c9c8cd909d229aaad50b54ea3fd",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 140
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1035,8 +1065,7 @@
       "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 141
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1046,8 +1075,7 @@
       "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 142
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1057,8 +1085,7 @@
       "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 143
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1068,8 +1095,7 @@
       "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 144
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1079,8 +1105,7 @@
       "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 145
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1090,8 +1115,7 @@
       "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 146
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1101,8 +1125,7 @@
       "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 147
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1112,8 +1135,7 @@
       "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 148
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1123,8 +1145,7 @@
       "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 149
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1134,8 +1155,7 @@
       "sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 15
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1145,8 +1165,7 @@
       "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 150
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1156,8 +1175,7 @@
       "sha": "073713474ea62525d9f5832da918407de333cd03",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 151
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1167,8 +1185,7 @@
       "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 152
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1178,8 +1195,7 @@
       "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 153
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1189,8 +1205,7 @@
       "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 154
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1200,8 +1215,7 @@
       "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 155
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1211,8 +1225,7 @@
       "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 156
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1222,8 +1235,7 @@
       "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 157
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1233,8 +1245,7 @@
       "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 158
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1244,8 +1255,7 @@
       "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 159
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1255,8 +1265,7 @@
       "sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 16
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1266,8 +1275,7 @@
       "sha": "2eec6b4edc62693cfc6048581862a7aed87143c9",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 160
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1277,8 +1285,7 @@
       "sha": "5efae7732727fc1ae43d6b664922214dd6acfedf",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 161
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1288,8 +1295,7 @@
       "sha": "2b6ac08219418cf2c2d91968d117437684370c4d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 162
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1299,8 +1305,7 @@
       "sha": "11d4fbd9bc0a6e9fb3fa6cdc7604a45aaeae3210",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 163
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1310,8 +1315,7 @@
       "sha": "9898961e5cb64cdfc704f85c8f6f5ebedad3c39a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 164
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1321,8 +1325,7 @@
       "sha": "a617e188cf69f3d3c14dba614593f953dadf1436",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 165
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1332,8 +1335,7 @@
       "sha": "8197b59177827cfa7b426c55acd0cdca19f9b6eb",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 166
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1343,8 +1345,7 @@
       "sha": "5e54229821bf7101ee60fb486d0c924ab6e7d5db",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 167
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1354,8 +1355,7 @@
       "sha": "9c2047da22110db1518a6226ee7a35e421fb9d51",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 168
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1365,8 +1365,7 @@
       "sha": "852f009cadb153cfcb0799c527fdd78364a2df8d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 169
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1376,8 +1375,7 @@
       "sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 17
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1387,8 +1385,7 @@
       "sha": "c80ee46fccbbfc8c2da4b18d67fc220cad23f1fc",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 170
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1398,8 +1395,7 @@
       "sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 18
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1409,8 +1405,7 @@
       "sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 19
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1420,8 +1415,7 @@
       "sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 20
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1431,8 +1425,7 @@
       "sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 21
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1442,8 +1435,7 @@
       "sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 22
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1453,8 +1445,7 @@
       "sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 23
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1464,8 +1455,7 @@
       "sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 24
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1475,8 +1465,7 @@
       "sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 25
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1486,8 +1475,7 @@
       "sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 26
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1497,8 +1485,7 @@
       "sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 27
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1508,8 +1495,7 @@
       "sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 28
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1519,8 +1505,7 @@
       "sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 29
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1530,8 +1515,7 @@
       "sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 30
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1541,8 +1525,7 @@
       "sha": "ab45ac55990233492208549c18f42dfe51e518e4",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 31
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1552,8 +1535,7 @@
       "sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 32
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1563,8 +1545,7 @@
       "sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 33
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1574,8 +1555,7 @@
       "sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 34
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1585,8 +1565,7 @@
       "sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 35
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1596,8 +1575,7 @@
       "sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 36
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1607,8 +1585,7 @@
       "sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 37
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1618,8 +1595,7 @@
       "sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 38
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1629,8 +1605,7 @@
       "sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 39
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1640,8 +1615,7 @@
       "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 40
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1651,8 +1625,7 @@
       "sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 41
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1662,8 +1635,7 @@
       "sha": "ea4446482d7ca513160669fbb48e641397c6514f",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 42
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1673,8 +1645,7 @@
       "sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 43
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1684,8 +1655,7 @@
       "sha": "f39bcd927f32729e63194f35db019c36802d1c67",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 45
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1695,8 +1665,7 @@
       "sha": "be318f380fc47f94975a35c0924c89190d46f990",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 47
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1706,8 +1675,7 @@
       "sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 49
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1717,8 +1685,7 @@
       "sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 5
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1728,8 +1695,7 @@
       "sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 50
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1739,8 +1705,7 @@
       "sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 51
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1750,8 +1715,7 @@
       "sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 52
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1761,8 +1725,7 @@
       "sha": "bffdfbb49433859823081f2198f16e33be8369a6",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 53
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1772,8 +1735,7 @@
       "sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 54
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1783,8 +1745,7 @@
       "sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 55
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1794,8 +1755,7 @@
       "sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 56
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1805,8 +1765,7 @@
       "sha": "62e438e6836949207b4541b818c1c261bb7104fe",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 57
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1816,8 +1775,7 @@
       "sha": "9887b53272d5f747cae9f73b363748985937ad05",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 58
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1827,8 +1785,7 @@
       "sha": "132f70e746aa9815a51a046ab02e83393d084622",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 59
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1838,8 +1795,7 @@
       "sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 6
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1849,8 +1805,7 @@
       "sha": "f798f27d823ee846b5e6238e167970e0345612ed",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 60
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1860,8 +1815,7 @@
       "sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 61
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1871,8 +1825,7 @@
       "sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 62
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1882,8 +1835,7 @@
       "sha": "baccf470e946fc86fde41c96443423006eac2be7",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 63
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1893,8 +1845,7 @@
       "sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 64
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1904,8 +1855,7 @@
       "sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 65
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1915,8 +1865,7 @@
       "sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 66
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1926,8 +1875,7 @@
       "sha": "403e942dc99779883210125a01841ef209e19d2e",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 67
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1937,8 +1885,7 @@
       "sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 68
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1948,8 +1895,7 @@
       "sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 69
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1959,8 +1905,7 @@
       "sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 7
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1970,8 +1915,7 @@
       "sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 70
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1981,8 +1925,7 @@
       "sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 71
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -1992,8 +1935,7 @@
       "sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 72
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2003,8 +1945,7 @@
       "sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 73
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2014,8 +1955,7 @@
       "sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 74
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2025,8 +1965,7 @@
       "sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 75
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2036,8 +1975,7 @@
       "sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 76
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2047,8 +1985,7 @@
       "sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 77
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2058,8 +1995,7 @@
       "sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 78
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2069,8 +2005,7 @@
       "sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 79
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2080,8 +2015,7 @@
       "sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 8
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2091,8 +2025,7 @@
       "sha": "fdf8c35014367834570bb89a3902f50fd132e865",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 80
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2102,8 +2035,7 @@
       "sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 81
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2113,8 +2045,7 @@
       "sha": "085495527e0ab02f52eeded928d54cb766b79910",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 82
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2124,8 +2055,7 @@
       "sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 83
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2135,8 +2065,7 @@
       "sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 84
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2146,8 +2075,7 @@
       "sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 85
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2157,8 +2085,7 @@
       "sha": "120f839ab9091bdbedf326621347ee737140e043",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 86
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2168,8 +2095,7 @@
       "sha": "8b0c01597c231814815bf5456ab0a616102e7307",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 87
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2179,8 +2105,7 @@
       "sha": "b100cd751688f13609a8829180b487b381588d14",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 88
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2190,8 +2115,7 @@
       "sha": "84c3a1172759abdbab0c320142ae190e532f7753",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 89
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2201,8 +2125,7 @@
       "sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 9
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2212,8 +2135,7 @@
       "sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 90
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2223,8 +2145,7 @@
       "sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 91
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2234,8 +2155,7 @@
       "sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 92
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2245,8 +2165,7 @@
       "sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 93
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2256,8 +2175,7 @@
       "sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 94
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2267,8 +2185,7 @@
       "sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 95
+      "disposition": "contained_in_fetched_main"
     },
     {
       "remote": "origin",
@@ -2278,9 +2195,19 @@
       "sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
       "ancestor_of_integration_source": true,
       "ancestor_of_fetched_main": true,
-      "disposition": "contained_in_fetched_main",
-      "pull_request_number": 97
+      "disposition": "contained_in_fetched_main"
     }
   ],
-  "policy": "Read-only graph verification. Original incoming branches and PR heads retained. No force updates, merges, commits, pushes, CI queries, waits or reruns performed by the audit."
+  "ancestry_evaluated_utc": "2026-11-16T13:45:09.118256+00:00",
+  "integration_source_tree": "5ac39493df4091136b9ad478dd538220b06848b9",
+  "integration_source_parents": [
+    "189ab0b3bdf6816ddb7319ca2d830e2ab69ccea1"
+  ],
+  "integration_source_url": "https://github.com/CrispStrobe/CrispCloud/commit/c12e7ee7a0045c125cf35fee94ecc2027ffd8848",
+  "local_provenance": {
+    "original_local_ancestry_anchor": "90cb393475d89f429fc7cf19ff4755bc0b73b513",
+    "original_local_anchor_tree": "5ac39493df4091136b9ad478dd538220b06848b9",
+    "published_checkpoint_has_identical_tree": true,
+    "local_commit_required_for_reproduction": false
+  }
 }

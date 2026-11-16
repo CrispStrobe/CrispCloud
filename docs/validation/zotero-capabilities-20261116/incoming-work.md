@@ -1,56 +1,81 @@
-# Incoming CrispCloud work reconciled before Zotero continuation
+# Refreshed incoming CrispCloud work accounting
 
-Recorded UTC: `2026-11-16T13:10:01.497028+00:00`. The repository's last local `FETCH_HEAD` write was
-at `2026-11-16T13:07:15.339787+00:00`. This inventory is a
-cutoff record; it does not assume that remote branches stop changing.
+Observed UTC: `2026-11-16T13:41:21.389360+00:00`. Ancestry is evaluated against exact
+published continuation commit `c12e7ee7a0045c125cf35fee94ecc2027ffd8848`. This refresh reads only
+already-fetched local `origin` refs; it performs no new fetch.
 
-## Exact baseline
+The observed refs and times above are unchanged. Ancestry was re-evaluated at
+`2026-11-16T13:45:09.118256+00:00` against this published checkpoint, whose tree
+is `5ac39493df4091136b9ad478dd538220b06848b9`. That tree is identical to the local checkpoint originally
+used for this inventory. Any local-only checkpoint hashes in the JSON are
+explicit provenance and are not required to reproduce the graph results or
+recover the preserved initial files.
 
-The continuation branch is `codex/zotero-capabilities-20261116`, starting
-from fetched main `dfca0b6b27982250f3fd6f6519c4aa6e96cd289f`.
-The user-supplied prior checkpoint `fb1bcb5f626ff5c0cd763cff5eb98fb46946ae5f`
-is an ancestor; main contains 64 additional reachable commits.
-All incoming heads are already ancestors of this source, so no additional
-CrispCloud merge was necessary before new Zotero work.
+## Cutoff and original evidence
 
-Main includes the Zotero large-library continuation through `5e542298`,
-terminal optimization through `852f009c`, workspace recovery through
-`2eec6b4e`, ODS tab colours, and ODS named expressions. It preserves the
-corresponding PR heads for #160, #161, #167, #168, #169 and #170. These PRs
-had merged at the metadata check; the previous [draft #167](https://github.com/CrispStrobe/CrispCloud/pull/167) is closed.
+The [machine-readable inventory](incoming-refs.json) records every local ref,
+remote-ref mapping, SHA and ancestry result, plus the exact raw ref snapshot
+and its SHA-256. These observed refs define the cutoff; the inventory does not
+claim that remote branches stopped changing.
 
-The large-library continuation already permits 1,000 distinct linked sources
-in verified batches of at most 50 per library, with one staged undoable update.
-It also deduplicates collection pages, preserves selections on renamed items,
-and rejects late responses after a library change or dialog closure. This
-continuation therefore starts from those capabilities rather than the older
-50-source refresh limit in the user-supplied checkpoint summary. See the
-[prior large-library qualification](../zotero-large-library-20261116/README.md)
-for its implementation scope and earlier validation.
+The initial inventory and narrative remain byte-for-byte copies:
 
-At this baseline the Office manifest pins canonical Quds
-`e5e1e9af6beb0972a010d8208c1690a642809113`. Later source updates and
-vendoring verification belong to subsequent continuation checkpoints.
+| Preserved file | SHA-256 |
+| --- | --- |
+| [initial-incoming-refs.json](initial-incoming-refs.json) | `1fca3724897d37038906abb56599e88ea49c7cd24331be39670f09ead87297dd` |
+| [initial-incoming-work.md](initial-incoming-work.md) | `d543b728d732657045dfda1748bbf5429a9f24e06d207eadfc3f0b2e73d77903` |
 
-## Complete ref accounting
+The incoming count remains 208. `origin/main` and
+`origin/integrate/current-repos-20261116` advanced from `dfca0b6b` to
+`f7353bf5`; no incoming refs were added or removed relative to the initial
+inventory.
 
-| Remote | Branch heads | PR heads | Graph result |
-| --- | ---: | ---: | --- |
-| `CrispStrobe/CrispCloud` | 48 | 160 | Every head is an ancestor of fetched main |
+The origin-main reflog records a heads-plus-PR-heads fetch update at
+`2026-11-16T13:28:02+00:00`. This is an exact ref update observation, not a
+claim about the completion time of every later unchanged-ref fetch. The latest
+local `FETCH_HEAD` write, `2026-11-16T13:31:51.895708+00:00`,
+contains only a subsequent continuation-branch verification fetch at
+`189ab0b3`. It must not be treated as the full incoming-ref cutoff.
 
-All **208 incoming refs** are included.
-[The machine-readable inventory](incoming-refs.json) records each advertised
-ref, local fetch destination, exact SHA, main ancestry, and integration ancestry.
-No patch-equivalence or supersession exception is necessary for this snapshot.
+## Exact integration
+
+Fetched main is `f7353bf5cdbdd1a3e1b5d02615b051eaa0dae644`. Its two commits
+since the initial main add persistent keychain lock controls, direct pane
+favorites menus and their policy/acceptance evidence (`0f87058b` and
+`f7353bf5`). The continuation retains this main as a parent of merge
+`189ab0b3bdf6816ddb7319ca2d830e2ab69ccea1`, alongside the Zotero continuation
+at `501c3a66`.
+
+Every observed incoming head is already an ancestor of fetched main and of
+the recorded continuation source. This is a graph result, not a claim that
+this refresh independently merged every branch or that every branch has a
+distinct new patch. No nonancestor or supersession exception is required for
+this CrispCloud snapshot.
+
+The earlier Zotero large-library, terminal, recovery and ODS baseline remains
+documented in the [preserved initial narrative](initial-incoming-work.md).
+Office vendoring pins and runtime qualification belong to their separate
+source and qualification checkpoints; this audit does not infer a tested
+host pin from ancestry alone.
+
+## Complete observed ref accounting
+
+| Remote | Branch heads | PR heads | Ancestors of fetched main and continuation |
+| --- | ---: | ---: | ---: |
+| `CrispStrobe/CrispCloud` | 48 | 160 | 208 |
+
+All **208 observed incoming refs are accounted for by ancestry**.
+No upstream remote is included in this repository's inventory.
 
 ## Scope and exclusions
 
-The snapshot includes fetched `refs/heads/*` and `refs/pull/*/head` from origin.
-Symbolic `origin/HEAD`, tags, synthetic PR merge refs, the new continuation
-branch itself, and refs advertised after the fetch cutoff are not counted as
-incoming work. PR-head availability does not assert PR state or independent
-review approval. No upstream remote is configured or audited for CrispCloud.
+The current continuation branch `codex/zotero-capabilities-20261116` is excluded
+from incoming counts, including its observed remote-tracking value. Symbolic
+remote `HEAD`, tags, local-only branches and synthetic PR merge refs are also
+excluded. Refs advertised after the recorded observation, or not present in
+the existing local remote-tracking inventory, are outside this snapshot.
+PR heads alone do not establish PR state or review approval.
 
-This audit made no GitHub Actions, workflow-job, commit-status or check queries.
-It changed no git refs and performed no merge, commit, or push. The continuation
-owner handles incremental remote checkpoints with `[skip ci]`.
+This refresh modifies only these audit documents and preserves the initial
+copies. It makes no merge, commit, push, fetch, GitHub Actions, workflow-job,
+commit-status or check query. Runtime qualification is recorded separately.

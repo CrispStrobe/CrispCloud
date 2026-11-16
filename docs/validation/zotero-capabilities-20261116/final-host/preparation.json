@@ -1,0 +1,25 @@
+{
+  "prepared_utc": "2026-11-16T13:42:44.856174+00:00",
+  "status": "prepared; awaiting published combined CrispCloud commit before execution",
+  "expected_quds_commit": "8e017e8c148517fea61f8d55eaafc7f070b82bba",
+  "prior_evidence": "../final-host-qualification",
+  "prior_receipt_sha256": "9c44b1a6580b961dba808df80e29c4d2cdb30fcaa6fac3e2dade4fb1bd84cbdc",
+  "prior_runner_sha256": "17296adcc72e4ff0e0fccb9177d82bb4b6cc65753fe5b2c16f00f97033b025f1",
+  "new_runner_sha256": "bfa0636f636c119686cd10f6a5fe8b9e87c0b02d7146a846a1a8d4d0c88de0b9",
+  "required_identity_arguments": [
+    "--source-commit",
+    "--quds-commit"
+  ],
+  "host_test_count": 41,
+  "python_test_count": 28,
+  "host_analysis_target_count": 8,
+  "vendored_analysis_target_count": 7,
+  "changes": [
+    "Derive the expected tree from the supplied published source commit; validate both full SHA identities.",
+    "Reject an output directory containing an existing qualification receipt or input snapshots.",
+    "Analyze and format the actual vendored caret engine, text painter and hyphenation-caret regression in addition to the original four Zotero sources.",
+    "Enforce the unchanged 28-test Python cohort count.",
+    "Reject staged or unstaged qualification input differences from the published source before execution."
+  ],
+  "no_dependencies_or_source_changes": true
+}
