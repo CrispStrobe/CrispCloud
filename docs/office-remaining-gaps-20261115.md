@@ -28,13 +28,13 @@ identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `4dc90cac`
-- Vendored Quds source checkpoint: `a53a37b0b5c1b55aff20d581f80f1b2027bf3ddb`
+- CrispCloud `main` snapshot: `3760bf9e`
+- Vendored Quds source checkpoint: `777bcb876a9c8cc170586d117fa41f8331ef84ad`
   (`packages/QUDS_FORKS.md`, 2,413 managed files)
 - Quds sheet/ODS cohort: **505 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
-- CrispCloud vendored ODS reader: **101 tests**
+- CrispCloud vendored ODS reader: **102 tests**
 - CrispCloud combined F3/F4/ODF suite: **51 tests**
 - ODT parser/image suite: **37 tests**
 - Live corpus smoke tests: **20 ODF**, **9 XLS**, **1 ODS**
@@ -107,7 +107,7 @@ source ranges, bounds, blank policy and messages.
 **Status:** Partial\
 **Covered:** print areas/titles, global and sheet-local named ranges and modeled
 named expressions, sheet tab colours, cell hyperlinks, row/column outline groups,
-and simple database filter predicates.\
+and database filter predicates with equality, comparison and empty checks.\
 **Remaining:** unmodeled named-expression semantics, filter operators outside
 the modeled equality/not-equality subset, and several page-style properties.\
 **Next step:** add the corresponding model fields or preserve/rebase native
