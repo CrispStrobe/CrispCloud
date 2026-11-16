@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/ods-global-validations-20261116",
-  "source_commit": "9295eca6dc374b0303e18b4d96a908abfb4dd8ea",
+  "source_commit": "9bf7b7aa9559d4d2a318152b9fe4eaa16c97ffd9",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",

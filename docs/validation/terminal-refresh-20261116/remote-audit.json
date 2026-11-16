@@ -1,0 +1,1398 @@
+{
+  "queried_utc": "2026-11-16T07:45:39.268921+00:00",
+  "repositories": {
+    "CrispStrobe/CrispCloud": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-16T07:39:14Z",
+      "latest_default_commit": "45ed126a6d7da0ecd80f3a765155f54008b278f3",
+      "latest_default_message": "Merge remote-tracking branch 'origin/codex/zotero-support-20261115' into integrate/recent-20261115",
+      "branches": [
+        {
+          "name": "codex/ssh-terminal-tmux",
+          "commit": {
+            "sha": "378c036b392ee3ff9112d86aa21e7fdd8e722808",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/378c036b392ee3ff9112d86aa21e7fdd8e722808"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/codex/ssh-terminal-tmux/protection"
+        },
+        {
+          "name": "codex/terminal-screen-workspace",
+          "commit": {
+            "sha": "359e399757e4f0b74ab8b190a3119cef841d3c7d",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/359e399757e4f0b74ab8b190a3119cef841d3c7d"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/codex/terminal-screen-workspace/protection"
+        },
+        {
+          "name": "codex/zotero-support-20261115",
+          "commit": {
+            "sha": "e678e17859f8d29e274d1abbf064b93d04a6fa42",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/e678e17859f8d29e274d1abbf064b93d04a6fa42"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/codex/zotero-support-20261115/protection"
+        },
+        {
+          "name": "codex/zotero-support-20261116",
+          "commit": {
+            "sha": "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/fc09d3f5e0ecb74ca91f3c416b401b0897dc04da"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/codex/zotero-support-20261116/protection"
+        },
+        {
+          "name": "docs/conditional-affix",
+          "commit": {
+            "sha": "4919c87f0225599b9b2b963285d364d2c2bd1a1e",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/4919c87f0225599b9b2b963285d364d2c2bd1a1e"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/conditional-affix/protection"
+        },
+        {
+          "name": "docs/conditional-between",
+          "commit": {
+            "sha": "073713474ea62525d9f5832da918407de333cd03",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/073713474ea62525d9f5832da918407de333cd03"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/conditional-between/protection"
+        },
+        {
+          "name": "docs/conditional-complete",
+          "commit": {
+            "sha": "a49c3f14f96fed4c5551e45060ebbce3fa6883a1",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/a49c3f14f96fed4c5551e45060ebbce3fa6883a1"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/conditional-complete/protection"
+        },
+        {
+          "name": "docs/conditional-formats",
+          "commit": {
+            "sha": "2281ad58aed9f97bc1d387d3c98728245a5e4bcf",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/2281ad58aed9f97bc1d387d3c98728245a5e4bcf"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/conditional-formats/protection"
+        },
+        {
+          "name": "docs/metadata-closed",
+          "commit": {
+            "sha": "343a930ebdbc1b0ee45f16328be868d0f78ba624",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/343a930ebdbc1b0ee45f16328be868d0f78ba624"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/metadata-closed/protection"
+        },
+        {
+          "name": "docs/ods-hidden-state",
+          "commit": {
+            "sha": "1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/1cb0b4a6a01b4aabe58f95d9a9132171bbb11aa0"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/ods-hidden-state/protection"
+        },
+        {
+          "name": "docs/ods-pictures",
+          "commit": {
+            "sha": "128f55295107e3ada605b52d160165e03f726cb4",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/128f55295107e3ada605b52d160165e03f726cb4"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/ods-pictures/protection"
+        },
+        {
+          "name": "docs/ods-validations",
+          "commit": {
+            "sha": "b420b45b6666ca0658ae74f2a682a3cb6b88134d",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/b420b45b6666ca0658ae74f2a682a3cb6b88134d"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/ods-validations/protection"
+        },
+        {
+          "name": "docs/office-pin-20261115",
+          "commit": {
+            "sha": "5ed4f45cb758394dc2346041d826c10257c24dc1",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/5ed4f45cb758394dc2346041d826c10257c24dc1"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/office-pin-20261115/protection"
+        },
+        {
+          "name": "docs/remaining-gaps",
+          "commit": {
+            "sha": "a0df68710bbacdcbddf57f7fb7b77238566b65c3",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/a0df68710bbacdcbddf57f7fb7b77238566b65c3"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/remaining-gaps/protection"
+        },
+        {
+          "name": "docs/remaining-gaps-link",
+          "commit": {
+            "sha": "854d2ff6a20206434c64173ddca1152b079c8277",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/854d2ff6a20206434c64173ddca1152b079c8277"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/docs/remaining-gaps-link/protection"
+        },
+        {
+          "name": "feat/hidden-sheets-ui",
+          "commit": {
+            "sha": "dacf219a094e8f309e3f2ea1e27afbdccaa69f3d",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/dacf219a094e8f309e3f2ea1e27afbdccaa69f3d"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/feat/hidden-sheets-ui/protection"
+        },
+        {
+          "name": "feat/odt-headers",
+          "commit": {
+            "sha": "38a69f9a60bce92b6c2db60a71427ac47d98819d",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/38a69f9a60bce92b6c2db60a71427ac47d98819d"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/feat/odt-headers/protection"
+        },
+        {
+          "name": "feat/odt-images",
+          "commit": {
+            "sha": "969c104a09dc2ad0732edb4a11a0300b52f20e2f",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/969c104a09dc2ad0732edb4a11a0300b52f20e2f"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/feat/odt-images/protection"
+        },
+        {
+          "name": "feat/odt-styles",
+          "commit": {
+            "sha": "048ad97b6d4b1be94821dd29f1ffb1494a329ecb",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/048ad97b6d4b1be94821dd29f1ffb1494a329ecb"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/feat/odt-styles/protection"
+        },
+        {
+          "name": "feat/odt-textboxes",
+          "commit": {
+            "sha": "b81105fe579d00b66c0a07b07d8ed36cee23ecfb",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/b81105fe579d00b66c0a07b07d8ed36cee23ecfb"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/feat/odt-textboxes/protection"
+        },
+        {
+          "name": "fix/conditional-affix-vendor",
+          "commit": {
+            "sha": "1dbfa2125cd83d6ec4e0028d1584e612fccfb77c",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/1dbfa2125cd83d6ec4e0028d1584e612fccfb77c"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/conditional-affix-vendor/protection"
+        },
+        {
+          "name": "fix/conditional-between-vendor",
+          "commit": {
+            "sha": "a52efabd7d05a50b428eb337944d2b6aeee2400b",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/a52efabd7d05a50b428eb337944d2b6aeee2400b"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/conditional-between-vendor/protection"
+        },
+        {
+          "name": "fix/conditional-dxf-vendor",
+          "commit": {
+            "sha": "b9b7932eca6213973803b5bb227464cccd3051d6",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/b9b7932eca6213973803b5bb227464cccd3051d6"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/conditional-dxf-vendor/protection"
+        },
+        {
+          "name": "fix/conditional-operators-vendor",
+          "commit": {
+            "sha": "24ac26de023313dba726f8cdaabd16179c49da01",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/24ac26de023313dba726f8cdaabd16179c49da01"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/conditional-operators-vendor/protection"
+        },
+        {
+          "name": "fix/conditional-text-vendor",
+          "commit": {
+            "sha": "20e5c5b7f63f0b8335665ca131418023f6bc2ca7",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/20e5c5b7f63f0b8335665ca131418023f6bc2ca7"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/conditional-text-vendor/protection"
+        },
+        {
+          "name": "fix/hidden-state-vendor",
+          "commit": {
+            "sha": "fd69bc3ee8db4ecec4683a7b8161a643b758db6b",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/fd69bc3ee8db4ecec4683a7b8161a643b758db6b"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/hidden-state-vendor/protection"
+        },
+        {
+          "name": "fix/ods-conditional-vendor",
+          "commit": {
+            "sha": "4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/4e3e45e619fa2983f1fa8394a9f28cf6c454a9f6"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/ods-conditional-vendor/protection"
+        },
+        {
+          "name": "fix/ods-default-geometry-vendor",
+          "commit": {
+            "sha": "29a2bb5158a316dcde5da776172e09027e04f78d",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/29a2bb5158a316dcde5da776172e09027e04f78d"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/ods-default-geometry-vendor/protection"
+        },
+        {
+          "name": "fix/ods-default-style-vendor",
+          "commit": {
+            "sha": "0ba620fdc34ea7afd278468f3978997c3cc7ba8f",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/0ba620fdc34ea7afd278468f3978997c3cc7ba8f"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/ods-default-style-vendor/protection"
+        },
+        {
+          "name": "fix/ods-images-vendor",
+          "commit": {
+            "sha": "d18dc14194bfa4d11e96552b77dc34cbe5a8b417",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/d18dc14194bfa4d11e96552b77dc34cbe5a8b417"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/ods-images-vendor/protection"
+        },
+        {
+          "name": "fix/ods-metadata-vendor",
+          "commit": {
+            "sha": "8a62e0864ad4bae96063ec6f8a542db039a306cf",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/8a62e0864ad4bae96063ec6f8a542db039a306cf"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/ods-metadata-vendor/protection"
+        },
+        {
+          "name": "fix/ods-validations-vendor",
+          "commit": {
+            "sha": "ee74601e71441fcac2b6defebff33ca04f538d12",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/ee74601e71441fcac2b6defebff33ca04f538d12"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/fix/ods-validations-vendor/protection"
+        },
+        {
+          "name": "integrate/final-corpus-20261115",
+          "commit": {
+            "sha": "59b11b5647a8a07d36c0d2e0d579855f474ef4d2",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/59b11b5647a8a07d36c0d2e0d579855f474ef4d2"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/integrate/final-corpus-20261115/protection"
+        },
+        {
+          "name": "integrate/sdt-section-break-20261115",
+          "commit": {
+            "sha": "012314d440c49bc73b6726796fd9930eee6f1830",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/012314d440c49bc73b6726796fd9930eee6f1830"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/integrate/sdt-section-break-20261115/protection"
+        },
+        {
+          "name": "integrate/utf16-custom-xml-20261115",
+          "commit": {
+            "sha": "abfcf08bd2bfbe87349fdacc3484b824b77fefa3",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/abfcf08bd2bfbe87349fdacc3484b824b77fefa3"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/integrate/utf16-custom-xml-20261115/protection"
+        },
+        {
+          "name": "integration/storage-carving-20261115",
+          "commit": {
+            "sha": "5018aebb709b35f1c4d730c06e0f91187727751c",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/5018aebb709b35f1c4d730c06e0f91187727751c"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/integration/storage-carving-20261115/protection"
+        },
+        {
+          "name": "integration/storage-carving-local-20261115124645",
+          "commit": {
+            "sha": "10891b06a6da9f2502960cdbfe34b30eed271665",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/10891b06a6da9f2502960cdbfe34b30eed271665"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/integration/storage-carving-local-20261115124645/protection"
+        },
+        {
+          "name": "main",
+          "commit": {
+            "sha": "45ed126a6d7da0ecd80f3a765155f54008b278f3",
+            "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/commits/45ed126a6d7da0ecd80f3a765155f54008b278f3"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches/main/protection"
+        }
+      ],
+      "open_prs": [
+        {
+          "number": 161,
+          "title": "Improve Office Zotero workflow and reconcile recent terminal work [skip ci]",
+          "state": "open",
+          "draft": true,
+          "html_url": "https://github.com/CrispStrobe/CrispCloud/pull/161",
+          "head": "fc09d3f5e0ecb74ca91f3c416b401b0897dc04da",
+          "head_branch": "codex/zotero-support-20261116",
+          "base_branch": "main"
+        },
+        {
+          "number": 160,
+          "title": "Extend terminal with SSH agents, saved forwarding, and output triggers",
+          "state": "open",
+          "draft": true,
+          "html_url": "https://github.com/CrispStrobe/CrispCloud/pull/160",
+          "head": "359e399757e4f0b74ab8b190a3119cef841d3c7d",
+          "head_branch": "codex/terminal-screen-workspace",
+          "base_branch": "main"
+        }
+      ]
+    },
+    "CrispStrobe/quds_office_suite": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-16T07:45:21Z",
+      "latest_default_commit": "dc5f93b673e6087cccc6d66b33dfbfd099668f77",
+      "latest_default_message": "Record patch-equivalent ODS metadata branch history",
+      "branches": [
+        {
+          "name": "codex/zotero-support-20261115",
+          "commit": {
+            "sha": "fc37658c907edf6687eccb9564d3046283b49a3a",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/fc37658c907edf6687eccb9564d3046283b49a3a"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/codex/zotero-support-20261115/protection"
+        },
+        {
+          "name": "codex/zotero-support-20261116",
+          "commit": {
+            "sha": "428679a33381f943a8ae63117d4207f01dd15462",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/428679a33381f943a8ae63117d4207f01dd15462"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/codex/zotero-support-20261116/protection"
+        },
+        {
+          "name": "docs/metadata-closed",
+          "commit": {
+            "sha": "a5febc3362d2fccdb979f012a5296af72e465797",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/a5febc3362d2fccdb979f012a5296af72e465797"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/docs/metadata-closed/protection"
+        },
+        {
+          "name": "docs/readme-remaining-gaps",
+          "commit": {
+            "sha": "e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/e6fdd16849aaf7ccbaf50f2593d7a92b6a82e630"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/docs/readme-remaining-gaps/protection"
+        },
+        {
+          "name": "docs/remaining-gaps",
+          "commit": {
+            "sha": "0a26be7f136ad3e57dbe894b0bc4cdb0602addd0",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/0a26be7f136ad3e57dbe894b0bc4cdb0602addd0"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/docs/remaining-gaps/protection"
+        },
+        {
+          "name": "feat/conditional-affix",
+          "commit": {
+            "sha": "20681b8658392212c128f51b4c91f0b638942448",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/20681b8658392212c128f51b4c91f0b638942448"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/conditional-affix/protection"
+        },
+        {
+          "name": "feat/conditional-between",
+          "commit": {
+            "sha": "b69bad50fb235118a5334b325683cd1524b3e3d1",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/b69bad50fb235118a5334b325683cd1524b3e3d1"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/conditional-between/protection"
+        },
+        {
+          "name": "feat/conditional-dxf",
+          "commit": {
+            "sha": "b0efe6c661009ffa463f2bf6d7945216ce1dae4c",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/b0efe6c661009ffa463f2bf6d7945216ce1dae4c"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/conditional-dxf/protection"
+        },
+        {
+          "name": "feat/conditional-operators",
+          "commit": {
+            "sha": "21de3c3963b0334068b87fb1c25c787660cb17cf",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/21de3c3963b0334068b87fb1c25c787660cb17cf"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/conditional-operators/protection"
+        },
+        {
+          "name": "feat/conditional-text",
+          "commit": {
+            "sha": "752a94dfddf69522429f3025f9d25702499cb6da",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/752a94dfddf69522429f3025f9d25702499cb6da"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/conditional-text/protection"
+        },
+        {
+          "name": "feat/ods-conditional",
+          "commit": {
+            "sha": "e59751246a200e7477657d0e4835bf77b153422c",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/e59751246a200e7477657d0e4835bf77b153422c"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/ods-conditional/protection"
+        },
+        {
+          "name": "feat/ods-default-geometry",
+          "commit": {
+            "sha": "912f26f21446ef9bdbf4f542535438dae0ded9a9",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/912f26f21446ef9bdbf4f542535438dae0ded9a9"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/ods-default-geometry/protection"
+        },
+        {
+          "name": "feat/ods-default-style",
+          "commit": {
+            "sha": "49b447324159595c59e64d8425b54a09f79ec736",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/49b447324159595c59e64d8425b54a09f79ec736"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/ods-default-style/protection"
+        },
+        {
+          "name": "feat/ods-images",
+          "commit": {
+            "sha": "7fe296e29e2e1b173580f6854507fc060cb4f080",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/7fe296e29e2e1b173580f6854507fc060cb4f080"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/ods-images/protection"
+        },
+        {
+          "name": "feat/ods-metadata",
+          "commit": {
+            "sha": "d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/d6d6866c0f4ddbbaa196e1a5eb7ff9e31007fdea"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/ods-metadata/protection"
+        },
+        {
+          "name": "feat/ods-validations",
+          "commit": {
+            "sha": "b85501b2810e537e21040d82528d8dbaa6fdcf15",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/b85501b2810e537e21040d82528d8dbaa6fdcf15"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/ods-validations/protection"
+        },
+        {
+          "name": "feat/sheet-hidden-sheets",
+          "commit": {
+            "sha": "4c8036bbf16ac224c3fc102b5c44d8913a512b18",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/4c8036bbf16ac224c3fc102b5c44d8913a512b18"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/sheet-hidden-sheets/protection"
+        },
+        {
+          "name": "feat/sheet-hidden-state",
+          "commit": {
+            "sha": "46850ae47e0241733750decb22417a0150e4b0e4",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/46850ae47e0241733750decb22417a0150e4b0e4"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/feat/sheet-hidden-state/protection"
+        },
+        {
+          "name": "fix/sdt-multi-section-control",
+          "commit": {
+            "sha": "866c14f0b3a876e11732bc544dc25a05d8f10524",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/866c14f0b3a876e11732bc544dc25a05d8f10524"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/fix/sdt-multi-section-control/protection"
+        },
+        {
+          "name": "fix/sdt-trailing-section-break",
+          "commit": {
+            "sha": "8fc3d06be36da5c2176feb107c14245f61650d75",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/8fc3d06be36da5c2176feb107c14245f61650d75"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/fix/sdt-trailing-section-break/protection"
+        },
+        {
+          "name": "fix/utf16-custom-xml",
+          "commit": {
+            "sha": "09a05d7d60d2a2e1d2547487ad4545c50472834b",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/09a05d7d60d2a2e1d2547487ad4545c50472834b"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/fix/utf16-custom-xml/protection"
+        },
+        {
+          "name": "main",
+          "commit": {
+            "sha": "dc5f93b673e6087cccc6d66b33dfbfd099668f77",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/dc5f93b673e6087cccc6d66b33dfbfd099668f77"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/main/protection"
+        },
+        {
+          "name": "vendor/ods-metadata",
+          "commit": {
+            "sha": "18dc693fbf4e39fc6c38e3d655d1e5b35eeef273",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/18dc693fbf4e39fc6c38e3d655d1e5b35eeef273"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/vendor/ods-metadata/protection"
+        },
+        {
+          "name": "vendor/ods-metadata-zotero",
+          "commit": {
+            "sha": "4fbd1687d3c0ada22d460cf5cadb9586c4f62905",
+            "url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/commits/4fbd1687d3c0ada22d460cf5cadb9586c4f62905"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches/vendor/ods-metadata-zotero/protection"
+        }
+      ],
+      "open_prs": [
+        {
+          "number": 50,
+          "title": "Improve Zotero catalog insertion, rich citations and note numbering [skip ci]",
+          "state": "open",
+          "draft": true,
+          "html_url": "https://github.com/CrispStrobe/quds_office_suite/pull/50",
+          "head": "428679a33381f943a8ae63117d4207f01dd15462",
+          "head_branch": "codex/zotero-support-20261116",
+          "base_branch": "main"
+        }
+      ]
+    },
+    "CrispStrobe/legacy-doc-parser": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-15T14:59:44Z",
+      "latest_default_commit": "4895712158127b2fc930d796e17035c3ca0dac62",
+      "latest_default_message": "Integrate current parser qualification and typed recovery follow-up",
+      "branches": [
+        {
+          "name": "main",
+          "commit": {
+            "sha": "4895712158127b2fc930d796e17035c3ca0dac62",
+            "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/commits/4895712158127b2fc930d796e17035c3ca0dac62"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/branches/main/protection"
+        }
+      ],
+      "open_prs": []
+    },
+    "CrispStrobe/crisperbooks": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-14T14:07:54Z",
+      "latest_default_commit": "505d3d7bfb922e5f0d77b7230cd38b0e266d0606",
+      "latest_default_message": "Merge reader selection recovery and canonical reconciliation (#1)",
+      "branches": [
+        {
+          "name": "main",
+          "commit": {
+            "sha": "505d3d7bfb922e5f0d77b7230cd38b0e266d0606",
+            "url": "https://api.github.com/repos/CrispStrobe/crisperbooks/commits/505d3d7bfb922e5f0d77b7230cd38b0e266d0606"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/crisperbooks/branches/main/protection"
+        }
+      ],
+      "open_prs": []
+    },
+    "CrispStrobe/libdbm": {
+      "default_branch": "main",
+      "pushed_at": "2026-07-18T09:08:49Z",
+      "latest_default_commit": "1d2b0a9e25e0890fc113dd6f533309275dc66830",
+      "latest_default_message": "Reject corrupt bucket-table / free-list page pointers",
+      "branches": [
+        {
+          "name": "main",
+          "commit": {
+            "sha": "1d2b0a9e25e0890fc113dd6f533309275dc66830",
+            "url": "https://api.github.com/repos/CrispStrobe/libdbm/commits/1d2b0a9e25e0890fc113dd6f533309275dc66830"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/libdbm/branches/main/protection"
+        }
+      ],
+      "open_prs": []
+    },
+    "CrispStrobe/filen-dart": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-12T07:43:44Z",
+      "latest_default_commit": "5cf040bd7e67ecccf7c959b17bac9004ef497bf9",
+      "latest_default_message": "Merge feature/smb-storage-optimization-2026-11-11: AES-256 key validation, provider conformance, macOS memory probe fix",
+      "branches": [
+        {
+          "name": "feature/smb-storage-optimization-2026-11-11",
+          "commit": {
+            "sha": "4dde62a462ae59a7e5b693413b682da5e297a98a",
+            "url": "https://api.github.com/repos/CrispStrobe/filen-dart/commits/4dde62a462ae59a7e5b693413b682da5e297a98a"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/filen-dart/branches/feature/smb-storage-optimization-2026-11-11/protection"
+        },
+        {
+          "name": "main",
+          "commit": {
+            "sha": "5cf040bd7e67ecccf7c959b17bac9004ef497bf9",
+            "url": "https://api.github.com/repos/CrispStrobe/filen-dart/commits/5cf040bd7e67ecccf7c959b17bac9004ef497bf9"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/filen-dart/branches/main/protection"
+        }
+      ],
+      "open_prs": []
+    },
+    "CrispStrobe/madedit2": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-13T05:48:05Z",
+      "latest_default_commit": "288d35747faccb1cb997c4a30afc40c6cb48b0ae",
+      "latest_default_message": "Bump version to 1.0.2+3.",
+      "branches": [
+        {
+          "name": "feature/crispcloud-hex-package",
+          "commit": {
+            "sha": "50d033cc70d9121819c890fe587f8b3dc4c82311",
+            "url": "https://api.github.com/repos/CrispStrobe/madedit2/commits/50d033cc70d9121819c890fe587f8b3dc4c82311"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/madedit2/branches/feature/crispcloud-hex-package/protection"
+        },
+        {
+          "name": "fix/crispcloud-scrollbar-provenance-20261113",
+          "commit": {
+            "sha": "912b1f7527e5f48793a8e0834cc7c7ab8dbb7f5f",
+            "url": "https://api.github.com/repos/CrispStrobe/madedit2/commits/912b1f7527e5f48793a8e0834cc7c7ab8dbb7f5f"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/madedit2/branches/fix/crispcloud-scrollbar-provenance-20261113/protection"
+        },
+        {
+          "name": "main",
+          "commit": {
+            "sha": "288d35747faccb1cb997c4a30afc40c6cb48b0ae",
+            "url": "https://api.github.com/repos/CrispStrobe/madedit2/commits/288d35747faccb1cb997c4a30afc40c6cb48b0ae"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/madedit2/branches/main/protection"
+        }
+      ],
+      "open_prs": [
+        {
+          "number": 1,
+          "title": "Extract a reusable native Flutter hex editor for CrispCloud",
+          "state": "open",
+          "draft": true,
+          "html_url": "https://github.com/CrispStrobe/madedit2/pull/1",
+          "head": "50d033cc70d9121819c890fe587f8b3dc4c82311",
+          "head_branch": "feature/crispcloud-hex-package",
+          "base_branch": "main"
+        }
+      ]
+    },
+    "CrispStrobe/crisp-docx": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-15T10:51:25Z",
+      "latest_default_commit": "ddf7830d8d92e6b59b10874d144a59f163a256e1",
+      "latest_default_message": "Add app-marketplace additional permission (AGPLv3 \u00a77)",
+      "branches": [
+        {
+          "name": "fix/corpus-audit-20261114",
+          "commit": {
+            "sha": "bd83bc60dd75bf29754efcb65c622826cd792d42",
+            "url": "https://api.github.com/repos/CrispStrobe/crisp-docx/commits/bd83bc60dd75bf29754efcb65c622826cd792d42"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/crisp-docx/branches/fix/corpus-audit-20261114/protection"
+        },
+        {
+          "name": "main",
+          "commit": {
+            "sha": "ddf7830d8d92e6b59b10874d144a59f163a256e1",
+            "url": "https://api.github.com/repos/CrispStrobe/crisp-docx/commits/ddf7830d8d92e6b59b10874d144a59f163a256e1"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/crisp-docx/branches/main/protection"
+        },
+        {
+          "name": "wordsteer-steps",
+          "commit": {
+            "sha": "99a6b147d75dd1f4e793a1fa87acd13203025d69",
+            "url": "https://api.github.com/repos/CrispStrobe/crisp-docx/commits/99a6b147d75dd1f4e793a1fa87acd13203025d69"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/crisp-docx/branches/wordsteer-steps/protection"
+        }
+      ],
+      "open_prs": [
+        {
+          "number": 1,
+          "title": "Text-anchored editing steps + wordsteer audit harness",
+          "state": "open",
+          "draft": false,
+          "html_url": "https://github.com/CrispStrobe/crisp-docx/pull/1",
+          "head": "99a6b147d75dd1f4e793a1fa87acd13203025d69",
+          "head_branch": "wordsteer-steps",
+          "base_branch": "main"
+        }
+      ]
+    },
+    "CrispStrobe/crisp-cloud-rs": {
+      "default_branch": "main",
+      "pushed_at": "2026-11-13T05:01:17Z",
+      "latest_default_commit": "b7a619c7c5a45b443018b85ab3a9c93562f1fa21",
+      "latest_default_message": "Document cross-platform receipt fixture and replay coverage",
+      "branches": [
+        {
+          "name": "main",
+          "commit": {
+            "sha": "b7a619c7c5a45b443018b85ab3a9c93562f1fa21",
+            "url": "https://api.github.com/repos/CrispStrobe/crisp-cloud-rs/commits/b7a619c7c5a45b443018b85ab3a9c93562f1fa21"
+          },
+          "protected": false,
+          "protection": {
+            "enabled": false,
+            "required_status_checks": {
+              "enforcement_level": "off",
+              "contexts": [],
+              "checks": []
+            }
+          },
+          "protection_url": "https://api.github.com/repos/CrispStrobe/crisp-cloud-rs/branches/main/protection"
+        }
+      ],
+      "open_prs": []
+    }
+  }
+}
