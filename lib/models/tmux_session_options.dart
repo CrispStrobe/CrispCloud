@@ -6,10 +6,15 @@ class TmuxSessionOptions {
   const TmuxSessionOptions({
     required this.sessionName,
     this.mode = TmuxSessionMode.createOrAttach,
+    this.controlMode = false,
   });
 
   final String sessionName;
   final TmuxSessionMode mode;
+
+  /// Render remote windows and panes in the application using tmux's control
+  /// protocol. Ordinary PTY attachment remains the default for saved records.
+  final bool controlMode;
 
   /// Keep names unambiguous both to the login shell and tmux's target parser.
   /// In particular, exclude target separators, pattern syntax and leading '-'.
@@ -28,10 +33,11 @@ class TmuxSessionOptions {
         'Invalid tmux name',
       );
     }
+    final executable = controlMode ? 'exec tmux -C' : 'exec tmux';
     return switch (mode) {
       TmuxSessionMode.createOrAttach =>
-        "exec tmux new-session -A -s '$sessionName'",
-      TmuxSessionMode.attach => "exec tmux attach-session -t '=$sessionName'",
+        "$executable new-session -A -s '$sessionName'",
+      TmuxSessionMode.attach => "$executable attach-session -t '=$sessionName'",
     };
   }
 }

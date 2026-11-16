@@ -166,7 +166,9 @@ class TerminalSession extends ChangeNotifier {
   void Function(TerminalUserInput)? onUserInput;
 
   void sendUserInput(TerminalUserInput input, {bool Function()? isCurrent}) {
-    if (!isConnected || _disposed || (isCurrent != null && !isCurrent())) {
+    if (!acceptsDirectInput ||
+        _disposed ||
+        (isCurrent != null && !isCurrent())) {
       return;
     }
     final previous = _inputLease;
@@ -182,6 +184,13 @@ class TerminalSession extends ChangeNotifier {
 
   bool get isConnected =>
       !_disposed && status == TerminalSessionStatus.connected;
+  bool get acceptsDirectInput {
+    final connection = _connection;
+    return isConnected &&
+        (connection is! TerminalWorkspaceConnection ||
+            (connection as TerminalWorkspaceConnection).acceptsDirectInput);
+  }
+
   bool get isSandbox => kind == TerminalSessionKind.sandbox;
   bool get isConnecting =>
       !_disposed && status == TerminalSessionStatus.connecting;

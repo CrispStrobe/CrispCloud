@@ -6,6 +6,7 @@ import '../l10n/screen_terminal_strings.dart';
 import '../l10n/ssh_jump_strings.dart';
 import '../l10n/ssh_agent_strings.dart';
 import '../l10n/terminal_strings.dart';
+import '../l10n/tmux_control_strings.dart';
 import '../models/screen_session_options.dart';
 import '../models/ssh_terminal_config.dart';
 import '../models/tmux_session_options.dart';
@@ -66,6 +67,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
   final _credentialledJumps = <SshJumpHost>{};
   String? _routeError;
   bool _forwardAgent = false;
+  bool _tmuxControlMode = false;
   String? _agentError;
 
   bool get _agentSupported =>
@@ -99,6 +101,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
     final tmux = widget.showSessionOptions ? initial.tmux : null;
     if (tmux != null) {
       _tmuxName.text = tmux.sessionName;
+      _tmuxControlMode = tmux.controlMode;
       _sessionMode = tmux.mode == TmuxSessionMode.attach
           ? _SessionMode.attach
           : _SessionMode.createOrAttach;
@@ -147,6 +150,7 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
               _sessionMode == _SessionMode.createOrAttach
           ? TmuxSessionOptions(
               sessionName: _tmuxName.text.trim(),
+              controlMode: _tmuxControlMode,
               mode: _sessionMode == _SessionMode.attach
                   ? TmuxSessionMode.attach
                   : TmuxSessionMode.createOrAttach,
@@ -692,6 +696,20 @@ class _SshConnectDialogState extends State<SshTerminalConnectDialog> {
                           ),
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    key: const ValueKey('terminal-ssh-tmux-control'),
+                    contentPadding: EdgeInsets.zero,
+                    value: _tmuxControlMode,
+                    onChanged: (value) =>
+                        setState(() => _tmuxControlMode = value == true),
+                    title: Text(context.tmuxControlTr('Native tmux panes')),
+                    subtitle: Text(
+                      context.tmuxControlTr(
+                        'Render tmux windows and panes as native terminals. Requires tmux 3.2 or later.',
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -30,6 +30,13 @@ abstract interface class TerminalConnectionMetadata {
   TerminalBackend get backend;
 }
 
+/// A transport may own a workspace whose individual panes receive input.
+/// The outer connection must not be offered as a broadcast destination: its
+/// active pane can change without replacing the verified SSH connection.
+abstract interface class TerminalWorkspaceConnection {
+  bool get acceptsDirectInput;
+}
+
 extension TerminalConnectionBackend on TerminalConnection {
   TerminalBackend get terminalBackend => this is TerminalConnectionMetadata
       ? (this as TerminalConnectionMetadata).backend

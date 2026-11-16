@@ -17,7 +17,7 @@ class TerminalBroadcastTarget {
   final Object connectionIdentity;
 
   bool get isCurrent =>
-      session.isConnected &&
+      session.acceptsDirectInput &&
       identical(connectionIdentity, session.connectionIdentity);
 }
 
