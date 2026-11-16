@@ -956,7 +956,10 @@ final class WordZoteroCitingSession {
   static bool _hasKnownBibliographyEntries(_CitingField field) {
     final original = field.original;
     return original == null ||
-        field.textWasSet ||
+        field.formatted != null ||
+        // An identical plain-text response preserves the original result runs.
+        // It supplies no new evidence about flattened legacy line breaks.
+        (field.textWasSet && field.text != original.cachedText) ||
         original.paragraphs.length > 1 ||
         !original.cachedText.contains('\n') ||
         (original.paragraph.properties.explicitIndent &&

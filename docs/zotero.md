@@ -41,6 +41,66 @@ Document preferences are stored as native `ZOTERO_PREF_*` custom properties and
 survive save/reopen. **Preview / export style ID** and locale belong to the
 older individual-preview workflow; they do not change the native document style.
 
+### Bibliography paragraphs and spacing
+
+Use **Bibliography in Zotero…** for the bibliography controlled by the
+document's native CSL style. Its entries occupy real Word paragraphs inside
+one linked bibliography field. Structural entry breaks are kept separate from
+soft line breaks within an entry. **Refresh all with Zotero** can add or remove
+entries while retaining the field and neighboring text.
+
+The native layout preserves body/first-line or hanging indents, line spacing,
+spacing after entries and tab stops. These properties survive DOCX save/reopen,
+refreshes without another layout callback, and undo/redo. They come from
+Zotero's [`Document.setBibliographyStyle`](https://www.zotero.org/support/dev/client_coding/http_integration_protocol#documentsetbibliographystyle)
+callback: indent, entry-spacing and tab values use twips; line spacing is
+stored as an automatic line multiplier using the callback value divided by
+240, matching Zotero's [bibliography parameter generator](https://github.com/zotero/zotero/blob/main/chrome/content/zotero/xpcom/cite.js).
+The first-line indent is relative to the body indent, as described in
+Zotero's [wire protocol](https://www.zotero.org/support/dev/client_coding/libreoffice_plugin_wire_protocol#document_setbibliographystyle).
+
+This replacement supports only complete, contiguous bibliography paragraphs
+owned by one field in a single block container. Surrounding prose, interleaved
+blocks, ranges across cells or sections, outside bookmarks, comments,
+hyperlinks, note references, embedded visuals, content-control wrappers and
+locked/nested/opaque fields prevent it. Multi-paragraph citation replacement
+remains unsupported, and a new citation cannot be inserted inside a bibliography
+entry. An otherwise editable inline bibliography may retain the existing
+protected plain-text path after an explicit formatting review; its surrounding
+paragraph is not restyled.
+
+For a bibliography flattened into one paragraph by an older version, use
+**Refresh all with Zotero** or **Bibliography in Zotero…** to retrieve new
+entry boundaries. A style-only callback or unchanged plain-text reply cannot
+reconstruct those boundaries. The editor keeps the old layout, reports the
+limitation and requests the native layout again later. The separate
+**Document → Zotero bibliography** API review still uses one paragraph; choose
+the native controls for entry paragraph layout.
+
+### Small capitals
+
+CSL small capitals now remain native Word formatting through refresh,
+save/reopen and undo/redo, including mixed styles and explicit `normal` resets.
+The source text keeps its authored case. The supported values follow the
+[CSL formatting specification](https://docs.citationstyles.org/en/stable/specification.html#formatting).
+
+The editor, formatted preview and PDF use synthetic capital outlines at
+**0.8 times the run size** for lowercase letters, keeping existing capitals,
+numbers and uncased text at their normal size. They do not select a font's
+designed small-capital glyphs. Layout measures those displayed glyphs before
+wrapping; caret positions stay at the original grapheme boundaries. PDF stores
+the authored text in `/ActualText`, including when a display expands `ß` to
+`SS`. DOCX retains native `w:smallCaps` for other word processors.
+
+The fallback uses default Unicode casing, supplemented by [Unicode 17.0.0's
+unconditional uppercase expansions](https://www.unicode.org/Public/17.0.0/ucd/SpecialCasing.txt),
+without Turkish/Azeri/Lithuanian locale tailoring. A grapheme split across
+separate run-format records keeps its original display. Unsupported variants
+such as `all-small-caps` or `petite-caps` still require review before
+simplification.
+
+### Apply, cancel and note conversion
+
 All changes are staged until the native operation succeeds. A reported desktop
 error discards the staging even if Zotero subsequently sends its completion
 message. The document, revision, caret and selection must still match. Applying
@@ -101,8 +161,24 @@ On Linux, Windows or macOS, choose **Reference library source → Zotero desktop
 (this computer)** in the Library tab. Open Zotero and enable **Settings →
 Advanced → Allow other applications on this computer to communicate with
 Zotero**, then choose **Connect desktop**. Browse the local personal library,
-locally available group libraries, collections and search results. Local
+locally available group libraries, collections, saved searches and search results. Local
 browsing includes unsynced sources and works offline.
+
+Choose **Saved searches** beside **Collections**, then choose a search from
+the **Saved search** menu. **More searches** loads another page of saved-search
+names. **Refresh saved searches** reloads the list after changes in Zotero and
+asks you to choose again. **Search within saved search** adds a
+title/creator/year filter to that search's results; normal pagination remains
+available. Selected references survive view changes and can be inserted with
+**Insert with Zotero…** or the basic citation action.
+
+Zotero evaluates the saved conditions against the local library. Create or
+change those conditions in Zotero; CrispCloud browses the results without
+modifying the search. Notes and attachments are not offered as citation
+sources. A deleted search clears stale results and asks you to refresh.
+Saved-search execution is available only through a desktop version that
+implements the [local `/searches/<searchKey>/items` endpoint](https://www.zotero.org/support/dev/web_api/v3/local_api).
+The online API exposes search metadata but does not evaluate saved searches.
 
 The connection is explicitly chosen and read-only. It goes directly to
 `localhost:23119`, bypasses the selected remote proxy, and never receives your
@@ -172,15 +248,18 @@ Zotero process the document through its own integration service.
 
 Choose **Document → Zotero bibliography** to review a formatted result before
 inserting it. **Keep Zotero formatting** preserves bold, italics, underline,
-strike-through, superscript and subscript as native Word formatting. Numeric
+strike-through, superscript, subscript and small capitals as native Word formatting. Numeric
 labels stay beside their bibliography entries. Turn the option off to edit and
 insert the text explicitly as plain text. Cancelling leaves the document
 unchanged. The reviewed result also refuses insertion if the document or caret
 changed while it was open.
 
-Small caps, hanging indents, paragraph spacing, multi-column margins and
-arbitrary CSS are simplified, with known limitations shown in the review.
-Entry order and line breaks are retained. Links are inert text; external
+Small capitals are preserved with the synthetic-display limits described above.
+This API review still simplifies hanging indents, paragraph spacing,
+multi-column margins and arbitrary paragraph CSS, with known limitations shown
+before insertion. Entry order and line breaks are retained in one paragraph.
+Use native **Bibliography in Zotero…** for the entry-paragraph layout described
+above. Links are inert text; external
 resources and active content are never loaded. Malformed formatted output is
 refused rather than silently replacing a field.
 
@@ -200,8 +279,9 @@ shows the actual field cache even when imported plain-text metadata is stale.
 
 New citations use complex DOCX fields following Zotero field-code conventions
 and embed CSL source snapshots. Imported Zotero field JSON, cached text, and
-native document preferences are preserved on ordinary saves. Locked, nested,
-opaque or multi-paragraph field replacements are refused; explicit unlink retains text.
+native document preferences are preserved on ordinary saves. Locked, nested and
+opaque replacements are refused; multi-paragraph replacement is limited to
+complete native bibliography ranges. Explicit unlink retains text.
 Track-changes mode and unresolved revisions in affected paragraphs also guard
 reference edits. A changed document, caret, story or selection invalidates an
 asynchronous insertion instead of targeting a different place.
@@ -215,17 +295,17 @@ sets can use the basic bibliography or CSL export. Refresh updates Quds basic
 citations for at most 50 distinct linked sources atomically; imported and
 custom-style caches are left alone. Bibliographies with imported nonempty
 `uncited`, `omitted`, or `custom` settings refuse both basic and online updates
-to preserve those choices. Update those choices in Zotero before regenerating
-the bibliography here.
+to preserve those choices. Use Zotero's native bibliography controls to manage
+those choices.
 
 The desktop adapter now delegates complete CSL processing to Zotero, including
 style-dependent numbering, disambiguation and *ibid.*. Native processing marks
 its citations separately so **Refresh basic citations** cannot overwrite them.
 Uniform and mixed inline character formatting, including italic titles, bold
-text and superscript, remain inside one protected citation field. Typing,
+text, superscript and small capitals, remain inside one protected citation field. Typing,
 deleting, copying, pasting and splitting paragraphs preserve the complete linked
-field. Unsupported character styling and bibliography layout are simplified only
-after a review explains the change. Rich bibliography runs retain their
+field. Unsupported character variants and layout outside the native bibliography
+contract are simplified only after a review explains the change. Rich bibliography runs retain their
 supported character formatting.
 
 Document-wide native processing refuses active Track changes, any unresolved
@@ -233,14 +313,23 @@ revision, protected documents, uneditable Zotero fields and citations in
 unsupported stories such as headers, footers, comments and text boxes. This
 keeps Zotero from processing a silently incomplete citation sequence.
 
-ODT active-citation transfer, faithful small caps/bibliography layout and
-page-based note restarts remain implementation boundaries. The actual Quds
-catalog/Studio transport and citing driver/Word adapter passed live desktop
+ODT active-citation transfer, font-designed or locale-tailored small capitals,
+arbitrary bibliography CSS and page-based note restarts remain implementation
+boundaries. In the previous continuation, the Quds catalog/Studio transport and
+citing driver/Word adapter passed live desktop
 Zotero style-selection, refresh, first-use seeded picker acceptance and DOCX
 save/reopen checks with synthetic sources, including German `Ebd.` and page
 locators. Native locator-popup editing remains outside the successful live
 acceptance scope; the seeded locator was accepted and preserved. Protocol, controller and UI
 regressions also use deterministic transports and pinned real CSL fixtures.
+This increment's shared Quds source has separate completed qualification and
+live acceptance: running Zotero 10.0.8 verified saved-search evaluation/query
+scoping and four native refresh transactions across German Chicago and a
+synthetic small-capital/double-line style, including DOCX reopen. The
+[Quds feature overview](https://github.com/CrispStrobe/quds_office_suite/blob/codex/zotero-support-20261116/docs/validation/zotero-fidelity-20261116/README.md)
+links the exact source, protocol receipts and before/after files. This is an
+integration-component exercise through the actual Studio transport; it does
+not claim a compiled CrispCloud application run.
 Full compiled application builds, private-account/keychain acceptance and
 opening the exported DOCX in Microsoft Word or LibreOffice remain separate
 acceptance steps. The native app talks directly to localhost without a
@@ -253,9 +342,9 @@ The implementation is maintained in
 `tool/office_fidelity_manifest.json` records the exact immutable Quds source and
 hashes of managed files. Its standalone legacy DOC parser pin is unchanged.
 
-This continuation starts after the prior Quds #47, CrispCloud #149 and terminal
-#140 work was merged. Before feature edits, all **60 branch heads and 198 PR
-heads** were accounted for. The final incoming-work snapshot at **16 November
+The previous continuation started after Quds #47, CrispCloud #149 and terminal
+#140 work was merged. Before its feature edits, all **60 branch heads and 198 PR
+heads** were accounted for. Its final incoming-work snapshot at **16 November
 2026, 05:17:13 UTC** accounts for **62 branches and 199 PR heads**. It includes
 the new terminal #160 at `49d63f78d0b854ba76289dba69fdb6584f8a1260`, with both
 merge parents retained. All 259 external refs are actual ancestors; the two
@@ -267,7 +356,7 @@ repositories. Every new checkpoint uses `[skip ci]`. No GitHub Actions are
 queried, polled, awaited or rerun.
 
 Local execution uses official Flutter/Dart and genuine locked dependency
-graphs. This increment adds protocol, native preference, document adapter,
-controller, UI and actual host-transport regression coverage. See
+graphs. Recorded evidence covers protocol, native preferences, the document
+adapter, controller, UI and actual host transports. See
 [zotero-validation.md](zotero-validation.md) for exact tested source identities,
 current results, reproducible commands and the remaining native acceptance limits.

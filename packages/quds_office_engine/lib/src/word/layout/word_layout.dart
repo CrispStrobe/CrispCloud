@@ -1329,7 +1329,7 @@ class WordLayoutEngine {
       (run) => run.properties.smallCaps,
     )) {
       for (final segment in WordSmallCaps.segments(text)) {
-        if (segment.scale == 1 ||
+        if (segment.text == text.substring(segment.start, segment.end) ||
             !propsAt(segment.start).smallCaps ||
             inlinePictures.containsKey(segment.start) ||
             displayLabels.containsKey(segment.start)) {
@@ -1370,7 +1370,6 @@ class WordLayoutEngine {
         ? _faceFor(0x20, propsAt(offset))?.glyphIdFor(0x20) ?? 0
         : _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
 
-    final displayOffsets = <ShapedGlyph, int>{};
     List<ShapedGlyph> displayReplacements(List<ShapedGlyph> source) {
       final result = <ShapedGlyph>[];
       var skipUntil = -1;
@@ -1382,7 +1381,6 @@ class WordLayoutEngine {
           continue;
         }
         skipUntil = label.end;
-        var displayOffset = 0;
         for (final cp in label.text.isEmpty ? const [0] : label.text.runes) {
           final replacement = ShapedGlyph(
             codePoint: cp,
@@ -1394,9 +1392,7 @@ class WordLayoutEngine {
                 ? glyph.level + 1
                 : glyph.level,
           );
-          displayOffsets[replacement] = displayOffset;
           result.add(replacement);
-          displayOffset += cp > 0xffff ? 2 : 1;
         }
       }
       return result;
@@ -1678,6 +1674,9 @@ class WordLayoutEngine {
       final bool lineHasPicture = pictureAscent > 0;
       final double baselineAscent = math.max(textAscentOn(line), pictureAscent);
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
+      // Mark attachment can replace a shaped glyph object. Track display
+      // offsets by source ownership rather than that transient identity.
+      final displayOffsets = <int, int>{};
       for (final ShapedGlyph g in line.glyphs) {
         final WmlRunProps props = propsAt(g.logicalIndex);
         final double baseSize = props.fontSizePoints;
@@ -1688,7 +1687,7 @@ class WordLayoutEngine {
           LaidOutGlyph(
             glyph: g,
             displayText: display?.text,
-            displayOffset: displayOffsets[g] ?? 0,
+            displayOffset: displayOffsets[g.logicalIndex] ?? 0,
             sourceEnd: display?.end,
             actualText: display != null && !display.note
                 ? text.substring(g.logicalIndex, display.end)
@@ -1719,6 +1718,11 @@ class WordLayoutEngine {
             paintDy: g.paintDy,
           ),
         );
+        if (display != null) {
+          displayOffsets[g.logicalIndex] =
+              (displayOffsets[g.logicalIndex] ?? 0) +
+              (g.codePoint > 0xffff ? 2 : 1);
+        }
         gx += g.advance;
       }
       final bool paraRtl =
