@@ -1,0 +1,56 @@
+{
+  "accepted_source": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+  "evidence_checkpoint": "0c43c476ff33638306425c1427cf1d04a170a912",
+  "top_level_tree_changes": [
+    {
+      "path": "docs",
+      "before": "fc0907538eea800055bce30105a3d417a498cddc",
+      "after": "73c08533e6197fdd99b62d129205d69bfba888c0"
+    }
+  ],
+  "all_other_subtrees_and_files_identical": true,
+  "verified_remote_utc": "2026-11-16T10:08:57.864Z",
+  "compare": {
+    "status": "ahead",
+    "ahead_by": 1,
+    "behind_by": 0,
+    "merge_base": "3cd501798794dcb74de5dca912b498a4c0a7e39b",
+    "changed_paths": [
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt1-enospc/blocked.json",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt1-enospc/run.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt1-enospc/sources-before.json.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt2-development/receipt.json",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt2-development/run.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt2-development/sources-after.json.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt2-development/sources-before.json.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt3-auth-fixture/receipt.json",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt3-auth-fixture/run.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt3-auth-fixture/sources-after.json.gz",
+      "docs/validation/terminal-workspace-recovery/development/isolated-recovery-attempt3-auth-fixture/sources-before.json.gz",
+      "docs/validation/terminal-workspace-recovery/development/pending-write-regression.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/preservation.json",
+      "docs/validation/terminal-workspace-recovery/development/queue-regression.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/recovery-visual-isolated-retry.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/recovery-visual-isolated.log.gz",
+      "docs/validation/terminal-workspace-recovery/development/relaunch-fixture-regression.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/app-pub-offline.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/chrome-probe.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/environment-current.json",
+      "docs/validation/terminal-workspace-recovery/environment/flutter-version.json",
+      "docs/validation/terminal-workspace-recovery/environment/native-downloads-current.json",
+      "docs/validation/terminal-workspace-recovery/environment/native-prerequisite.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/omitted-sdk-devtools-ui.json",
+      "docs/validation/terminal-workspace-recovery/environment/omitted-sdk-optional-binaries.json",
+      "docs/validation/terminal-workspace-recovery/environment/preservation.json",
+      "docs/validation/terminal-workspace-recovery/environment/pub-downloads-current.json",
+      "docs/validation/terminal-workspace-recovery/environment/pub-omitted-nonruntime-trees.json",
+      "docs/validation/terminal-workspace-recovery/environment/recovery-browser-prerequisite.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/recovery-web-build-reusable.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/recovery-web-build.log.gz",
+      "docs/validation/terminal-workspace-recovery/environment/removed-unused-native-tools.json",
+      "docs/validation/terminal-workspace-recovery/environment/rust-install-inventory.json",
+      "docs/validation/terminal-workspace-recovery/pre-acceptance-integration.json"
+    ]
+  },
+  "scope": "Exact remote Git tree entry SHA and mode equality for every top-level entry except docs; all runtime, test, dependency, tool and workflow sources match the frozen accepted source. This does not replace execution of Dart analysis or a web build."
+}

@@ -33,6 +33,7 @@ final class WordZoteroCitingSession {
     _nativeData = WordZoteroDocumentData.read(document);
     _originalData = _nativeData;
     _body.addAll(_flowParagraphs(document.sections.expand((s) => s.blocks)));
+    _bodyParagraphs.addAll(_body);
     if (_body.length > 100000) {
       throw UnsupportedError(
         'This document is too large for one Zotero transaction.',
@@ -50,6 +51,10 @@ final class WordZoteroCitingSession {
     }
     final seen = <WmlZoteroField>{};
     final seenNotes = <WmlNote>{};
+    // A note ID is unique only within its footnote/endnote bucket. Keep all
+    // matches so duplicate IDs still fail when their body anchor is resolved.
+    final footnotes = _notesById(document.footnotes);
+    final endnotes = _notesById(document.endnotes);
     for (var p = 0; p < _body.length; p++) {
       final paragraph = _body[p];
       final entries = <({int offset, WmlZoteroField? field, WmlNote? note})>[
@@ -61,9 +66,10 @@ final class WordZoteroCitingSession {
         if (inline is! WmlRun) continue;
         if (inline.noteRefId != null) {
           final matches =
-              (inline.noteRefEndnote ? document.endnotes : document.footnotes)
-                  .where((note) => note.id == inline.noteRefId)
-                  .toList();
+              (inline.noteRefEndnote
+                  ? endnotes
+                  : footnotes)[inline.noteRefId] ??
+              const <WmlNote>[];
           if (matches.length != 1 || !seenNotes.add(matches.single)) {
             throw UnsupportedError(
               'A note has a missing or repeated body reference. Resolve it before formatting citations.',
@@ -77,7 +83,7 @@ final class WordZoteroCitingSession {
       for (final entry in entries) {
         if (entry.field != null) {
           seen.add(entry.field!);
-          _fields.add(
+          _addField(
             _CitingField.original(
               id: 'f${_fields.length}',
               original: entry.field!,
@@ -94,7 +100,7 @@ final class WordZoteroCitingSession {
             for (final field
                 in byParagraph[noteParagraph] ?? <WmlZoteroField>[]) {
               seen.add(field);
-              _fields.add(
+              _addField(
                 _CitingField.original(
                   id: 'f${_fields.length}',
                   original: field,
@@ -125,7 +131,8 @@ final class WordZoteroCitingSession {
         'The selected Zotero field changed. Reopen the citation.',
       );
     }
-    if (insertionParagraph != null && _body.contains(insertionParagraph)) {
+    if (insertionParagraph != null &&
+        _bodyParagraphs.contains(insertionParagraph)) {
       if (insertionOffset < 0 ||
           insertionOffset > insertionParagraph!.text.length) {
         throw ArgumentError(
@@ -166,7 +173,10 @@ final class WordZoteroCitingSession {
   final WmlParagraph? insertionParagraph;
   final int insertionOffset;
   final _body = <WmlParagraph>[];
+  final _bodyParagraphs = Set<WmlParagraph>.identity();
   final _fields = <_CitingField>[];
+  final _fieldsById = <String, _CitingField>{};
+  final _originalFieldsPerNote = Map<WmlNote, int>.identity();
   final _notes = <_NoteAnchor>[];
   final _sourceParagraphs = <WmlParagraph>{};
   final _sourceTexts = <WmlParagraph, String>{};
@@ -292,9 +302,14 @@ final class WordZoteroCitingSession {
       case 'Document.getFields':
         _arity(args, 2);
         _httpType(args[1]);
+        // One reading-order pass serves the whole response. Recompute on each
+        // command so inserted, deleted and converted notes cannot leave a
+        // stale cached index behind.
+        final noteIndexes = _noteIndexes();
         return <Map<String, Object>>[
           for (final field in _ordered())
-            if (!field.deleted && !field.unlinked) _json(field),
+            if (!field.deleted && !field.unlinked)
+              _json(field, noteIndexes: noteIndexes),
         ];
       case 'Document.insertField':
         _arity(args, 3);
@@ -447,28 +462,48 @@ final class WordZoteroCitingSession {
         WordZoteroDocumentData.read(document) != _originalData) {
       throw StateError('The Zotero document changed while formatting.');
     }
-    final body = _flowParagraphs(
-      document.sections.expand((s) => s.blocks),
-    ).toList();
+    final body = _flowParagraphs(document.sections.expand((s) => s.blocks))
+        .toList();
     if (body.length != _body.length ||
-        Iterable<int>.generate(
-          body.length,
-        ).any((i) => !identical(body[i], _body[i])) ||
+        Iterable<int>.generate(body.length)
+            .any((i) => !identical(body[i], _body[i])) ||
         _sourceTexts.entries.any((e) => e.key.text != e.value)) {
       throw StateError('The document changed while Zotero was open.');
     }
     final current = WordZotero.fields(document);
     final original = _fields.where((f) => f.original != null).toList();
-    if (current.length != original.length ||
-        original.any(
-          (f) => !current.any(
-            (c) =>
-                _sameField(c, f.original!) &&
-                c.cachedText == f.original!.cachedText &&
-                _canProcessField(c),
-          ),
-        )) {
+    if (current.length != original.length) {
       throw StateError('A Zotero field changed while formatting.');
+    }
+    // Paragraph identity is part of a field's identity: equal text/codes in
+    // another paragraph or story must never satisfy its current-state guard.
+    // Match each occurrence once, including any duplicate-looking fields,
+    // without rescanning the complete document for every original field.
+    final byParagraph =
+        Map<WmlParagraph, Map<(int, int, String, String), int>>.identity();
+    for (final field in current) {
+      if (!_canProcessField(field)) continue;
+      final matches = byParagraph.putIfAbsent(field.paragraph, () => {});
+      matches.update(
+        (field.start, field.end, field.instruction, field.cachedText),
+        (count) => count + 1,
+        ifAbsent: () => 1,
+      );
+    }
+    for (final entry in original) {
+      final field = entry.original!;
+      final matches = byParagraph[field.paragraph];
+      final identity = (
+        field.start,
+        field.end,
+        field.instruction,
+        field.cachedText,
+      );
+      final count = matches?[identity] ?? 0;
+      if (count == 0) {
+        throw StateError('A Zotero field changed while formatting.');
+      }
+      matches![identity] = count - 1;
     }
   }
 
@@ -735,7 +770,7 @@ final class WordZoteroCitingSession {
       anchorOffset: insertionOffset,
       noteType: noteType,
     );
-    _fields.add(result);
+    _addField(result);
     _selected = result;
     return result;
   }
@@ -759,10 +794,7 @@ final class WordZoteroCitingSession {
         original == null ||
         note.blocks.length != 1 ||
         !identical(note.blocks.single, original.paragraph) ||
-        _fields
-                .where((f) => identical(f.note, note) && f.original != null)
-                .length !=
-            1 ||
+        _originalFieldsPerNote[note] != 1 ||
         original.paragraph.contentControlWrappers.isNotEmpty) {
       return false;
     }
@@ -820,16 +852,21 @@ final class WordZoteroCitingSession {
       return value;
     });
 
-  Map<String, Object> _json(_CitingField field) => <String, Object>{
+  Map<String, Object> _json(
+    _CitingField field, {
+    Map<Object, int>? noteIndexes,
+  }) => <String, Object>{
     'id': field.id,
     'code': field.code,
     'text': field.text,
-    'noteIndex': _noteIndex(field),
+    'noteIndex': _noteIndex(field, noteIndexes: noteIndexes),
     'adjacent': false,
   };
 
-  int _noteIndex(_CitingField field) {
-    if (field.noteType == 0) return 0;
+  Map<Object, int> _noteIndexes() {
+    if (!_fields.any((field) => !field.deleted && field.noteType != 0)) {
+      return const <Object, int>{};
+    }
     final removed = <WmlNote>{
       for (final f in _fields)
         if (f.note != null &&
@@ -867,25 +904,53 @@ final class WordZoteroCitingSession {
           // Insertions at an existing note marker go immediately before it.
           return a.priority.compareTo(b.priority);
         });
-    var index = 0;
+    final indexes = Map<Object, int>.identity();
+    final counts = <int, int>{};
+    for (final position in positions) {
+      final index = (counts[position.type] ?? 0) + 1;
+      counts[position.type] = index;
+      indexes[position.identity] = index;
+    }
+    return indexes;
+  }
+
+  int _noteIndex(_CitingField field, {Map<Object, int>? noteIndexes}) {
+    if (field.noteType == 0) return 0;
     final identity =
         field.note != null && field.noteType == field.originalNoteType
         ? field.note!
         : field;
-    for (final position in positions) {
-      if (position.type != field.noteType) continue;
-      index++;
-      if (identical(position.identity, identity)) return index;
-    }
+    final index = (noteIndexes ?? _noteIndexes())[identity];
+    if (index != null) return index;
     throw StateError('The citation note no longer has a body position.');
+  }
+
+  void _addField(_CitingField field) {
+    _fields.add(field);
+    _fieldsById[field.id] = field;
+    if (field.original != null && field.note != null) {
+      _originalFieldsPerNote.update(
+        field.note!,
+        (count) => count + 1,
+        ifAbsent: () => 1,
+      );
+    }
+  }
+
+  static Map<int, List<WmlNote>> _notesById(List<WmlNote> notes) {
+    final result = <int, List<WmlNote>>{};
+    for (final note in notes) {
+      result.putIfAbsent(note.id, () => []).add(note);
+    }
+    return result;
   }
 
   _CitingField _field(Object? id) {
     if (id is! String) {
       throw const FormatException('Zotero returned an invalid field identity.');
     }
-    final field = _fields.where((f) => f.id == id && !f.deleted).firstOrNull;
-    if (field == null) {
+    final field = _fieldsById[id];
+    if (field == null || field.deleted) {
       throw const FormatException('Zotero addressed an unknown field.');
     }
     return field;
@@ -950,7 +1015,7 @@ final class WordZoteroCitingSession {
 
   bool _canProcessField(WmlZoteroField field) =>
       field.canEdit ||
-      (_body.contains(field.paragraph) &&
+      (_bodyParagraphs.contains(field.paragraph) &&
           WordZotero.canReplaceNativeBibliography(document, field));
 
   static bool _hasKnownBibliographyEntries(_CitingField field) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -289,6 +290,238 @@ Future<void> _documentAction(
 }
 
 void main() {
+  testWidgets(
+    'refresh batches 50 sources and duplicate citations into one undo',
+    (tester) async {
+      final keys = [
+        for (var i = 0; i < 50; i++) 'K${i.toString().padLeft(7, '0')}',
+      ];
+      final requests = <ZoteroHttpRequest>[];
+      final controller = await _openDialog(
+        tester,
+        transport: (request) async {
+          requests.add(request);
+          return _json([
+            for (final key in keys.reversed) _apiItem(key, 'Updated $key'),
+          ]);
+        },
+        document: _linkedDocument([
+          for (final key in [...keys, keys.first])
+            ['http://zotero.org/users/42/items/$key'],
+        ]),
+      );
+      await _documentAction(tester, 'Refresh basic citations');
+      expect(requests, hasLength(1));
+      expect(requests.single.uri.path, '/users/42/items');
+      expect(
+        requests.single.uri.queryParameters['itemKey']!.split(','),
+        unorderedEquals(keys),
+      );
+      expect(controller.zoteroFields, hasLength(51));
+      for (final field in controller.zoteroFields) {
+        final item = field.citation!.items.single;
+        final key = Uri.parse(item.uris.single).pathSegments.last;
+        expect(item.itemData!['title'], 'Updated $key');
+        expect(item.locator, '12');
+        expect(item.toJson()['extraItemSetting'], {'keep': true});
+      }
+      await tester.tap(find.byTooltip('Close Zotero'));
+      await tester.pumpAndSettle();
+      controller.undo();
+      expect(controller.canUndo, isFalse);
+      expect(
+        controller.zoteroFields.map((field) => field.cachedText),
+        everyElement('(Original)'),
+      );
+      controller.redo();
+      expect(
+        controller.zoteroFields.map((field) => field.cachedText),
+        everyElement('(see Hassan, 2024, p. 12)'),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final incomplete in [false, true]) {
+    testWidgets(
+      'refresh isolates identical keys across libraries; incomplete=$incomplete',
+      (tester) async {
+        final requests = <ZoteroHttpRequest>[];
+        final controller = await _openDialog(
+          tester,
+          transport: (request) async {
+            requests.add(request);
+            final group = request.uri.path.startsWith('/groups/');
+            if (incomplete && requests.length == 2) return _json(<Object>[]);
+            return _json([
+              {
+                ..._apiItem('ABCD1234', group ? 'Group source' : 'User source'),
+                'library': {'type': group ? 'group' : 'user', 'id': 42},
+              },
+            ]);
+          },
+          document: _linkedDocument([
+            ['http://zotero.org/users/42/items/ABCD1234'],
+            ['http://zotero.org/groups/42/items/ABCD1234'],
+          ]),
+        );
+        final before = controller.zoteroFields
+            .map((field) => field.instruction)
+            .toList();
+        final revision = controller.contentRevision;
+        await _documentAction(tester, 'Refresh basic citations');
+        expect(
+          requests.map((request) => request.uri.path),
+          unorderedEquals(['/users/42/items', '/groups/42/items']),
+        );
+        if (incomplete) {
+          expect(
+            controller.zoteroFields.map((field) => field.instruction),
+            before,
+          );
+          expect(controller.contentRevision, revision);
+          expect(controller.canUndo, isFalse);
+        } else {
+          for (final field in controller.zoteroFields) {
+            final item = field.citation!.items.single;
+            expect(
+              item.itemData!['title'],
+              item.uris.single.contains('/groups/')
+                  ? 'Group source'
+                  : 'User source',
+            );
+          }
+          expect(controller.contentRevision, greaterThan(revision));
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('refresh refuses 51 distinct sources before any request', (
+    tester,
+  ) async {
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) async {
+        requests.add(request);
+        return _json(<Object>[]);
+      },
+      document: _linkedDocument([
+        for (var index = 0; index < 51; index++)
+          ['http://zotero.org/users/42/items/K${index.toString().padLeft(7, '0')}'],
+      ]),
+    );
+    final before = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    final revision = controller.contentRevision;
+
+    await _documentAction(tester, 'Refresh basic citations');
+
+    expect(requests, isEmpty);
+    expect(controller.zoteroFields, hasLength(51));
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
+    expect(find.textContaining('at most 50 linked sources'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('missing CSL in a later library refuses all staged updates', (
+    tester,
+  ) async {
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) async {
+        requests.add(request);
+        final group = request.uri.path.startsWith('/groups/');
+        return _json([
+          {
+            ..._apiItem('ABCD1234', 'Must stay staged'),
+            'library': {'type': group ? 'group' : 'user', 'id': 42},
+            if (requests.length == 2) 'csljson': null,
+          },
+        ]);
+      },
+      document: _linkedDocument([
+        ['http://zotero.org/users/42/items/ABCD1234'],
+        ['http://zotero.org/groups/42/items/ABCD1234'],
+      ]),
+    );
+    final before = controller.zoteroFields
+        .map((field) => field.instruction)
+        .toList();
+    final revision = controller.contentRevision;
+
+    await _documentAction(tester, 'Refresh basic citations');
+
+    expect(
+      requests.map((request) => request.uri.path),
+      unorderedEquals(['/users/42/items', '/groups/42/items']),
+    );
+    expect(controller.zoteroFields.map((field) => field.instruction), before);
+    expect(
+      controller.zoteroFields.map((field) => field.cachedText),
+      everyElement('(Original)'),
+    );
+    expect(controller.contentRevision, revision);
+    expect(controller.canUndo, isFalse);
+    expect(find.textContaining('source has no CSL data'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('changed edit target stops refresh before the next library', (
+    tester,
+  ) async {
+    final pending = Completer<ZoteroHttpResponse>();
+    final requests = <ZoteroHttpRequest>[];
+    final controller = await _openDialog(
+      tester,
+      transport: (request) {
+        requests.add(request);
+        return pending.future;
+      },
+      document: _linkedDocument([
+        ['http://zotero.org/users/42/items/ABCD1234'],
+        ['http://zotero.org/groups/42/items/ABCD1234'],
+      ]),
+    );
+    await tester.tap(find.text('Document'));
+    await tester.pumpAndSettle();
+    final refresh = find.text('Refresh basic citations');
+    await tester.ensureVisible(refresh);
+    await tester.pump();
+    await tester.tap(refresh);
+    await tester.pump();
+    expect(requests, hasLength(1));
+    controller.caret.logicalIndex = 0;
+    controller.caret.collapseSelection();
+    final group = requests.single.uri.path.startsWith('/groups/');
+    pending.complete(
+      _json([
+        {
+          ..._apiItem('ABCD1234', 'Must stay staged'),
+          'library': {'type': group ? 'group' : 'user', 'id': 42},
+        },
+      ]),
+    );
+    await tester.pumpAndSettle();
+    expect(requests, hasLength(1));
+    expect(controller.canUndo, isFalse);
+    expect(
+      controller.zoteroFields.map((field) => field.cachedText),
+      everyElement('(Original)'),
+    );
+    expect(
+      find.textContaining('document or insertion point changed'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('unsynced refresh keeps URI aliases and unknown citation data', (
     tester,
   ) async {
@@ -318,7 +551,8 @@ void main() {
     expect(item.prefix, 'see');
     expect(field.citation!.properties['extraCitationSetting'], 'keep');
     expect(controller.contentRevision, greaterThan(revision));
-    expect(desktop.requests.last.uri.path, '/api/users/0/items/ABCD1234');
+    expect(desktop.requests.last.uri.path, '/api/users/0/items');
+    expect(desktop.requests.last.uri.queryParameters['itemKey'], 'ABCD1234');
     expect(
       desktop.requests.last.uri.queryParameters['include'],
       'data,csljson',
@@ -369,7 +603,7 @@ void main() {
     expect(controller.zoteroFields.single.cachedText, '(Original)');
     expect(controller.contentRevision, revision);
     expect(controller.canUndo, isFalse);
-    expect(desktop.requests.last.uri.path, '/api/users/0/items/ABCD1234');
+    expect(desktop.requests.last.uri.path, '/api/users/0/items');
     expect(tester.takeException(), isNull);
   });
 
@@ -408,7 +642,7 @@ void main() {
         tester,
         transport: (request) async {
           requests.add(request);
-          return _json(_apiItem('ABCD1234', 'Account source'));
+          return _json([_apiItem('ABCD1234', 'Account source')]);
         },
         document: _linkedDocument([
           [_localItemUri, remote],
@@ -416,7 +650,7 @@ void main() {
       );
       await _documentAction(tester, 'Refresh basic citations');
       expect(requests, hasLength(1));
-      expect(requests.single.uri.path, '/users/42/items/ABCD1234');
+      expect(requests.single.uri.path, '/users/42/items');
       expect(controller.zoteroFields.single.citation!.items.single.uris, [
         _localItemUri,
         remote,
