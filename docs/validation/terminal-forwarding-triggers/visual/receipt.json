@@ -1,0 +1,39 @@
+{
+  "recorded_at": "2026-11-16T05:13:25.793071+00:00",
+  "passed": 13,
+  "failed": 0,
+  "skipped": 0,
+  "command": "flutter test --no-pub --concurrency=1 --reporter=expanded --dart-define=SSH_FORWARD_VISUALS=true --dart-define=SSH_FORWARD_VISUAL_DIR=/workspace/scratch/43b2a351bc52/forwarding-visuals test/ssh_port_forwarding_widget_test.dart",
+  "log": "/workspace/scratch/43b2a351bc52/toolchain/logs/ssh-forward-widget-visual-tests.log",
+  "source_hashes_at_recording": {
+    "test/ssh_port_forwarding_widget_test.dart": "ec654302409152627e8866367a35d30ea729a9d46123143023d3367e1a9c0a51",
+    "lib/widgets/ssh_port_forwarding_dialog.dart": "0a9b24bc2708d02baaea97b4a5a4e8be594e92430f695ca86ed084bda68049d2",
+    "lib/services/ssh_port_forwarding.dart": "a9116ef72a4788084aa67cc17b1f8ed803741539a9f4a95d917cc4c645cb324c",
+    "lib/models/ssh_port_forward.dart": "fbf56e6e4d5b60b623247fe6f42a80a790728b63446f365c335849ee0681fc52",
+    "lib/l10n/ssh_port_forwarding_strings.dart": "615a83e3383be9a17f413bb33dec8080d3041602fdba7c4cd421044dbc95665b"
+  },
+  "visuals": [
+    {
+      "path": "/workspace/scratch/43b2a351bc52/forwarding-visuals/forwarding-desktop.png",
+      "sha256": "4cca5a3c00e419a8be130ceaf930d7776378ba056cf0a4980982b7d0b0a6fe42",
+      "size_bytes": 36971
+    },
+    {
+      "path": "/workspace/scratch/43b2a351bc52/forwarding-visuals/forwarding-editor-narrow.png",
+      "sha256": "66f9577567997b747e07c531056676d3b43593e68e1f89b9f6d5b5a02febfe48",
+      "size_bytes": 18038
+    },
+    {
+      "path": "/workspace/scratch/43b2a351bc52/forwarding-visuals/forwarding-error-narrow.png",
+      "sha256": "b5deb89b97b72f7a3dc403e7c01dace80fb0eb03589fcbb89f46aa7dc60dcdf6",
+      "size_bytes": 14878
+    },
+    {
+      "path": "/workspace/scratch/43b2a351bc52/forwarding-visuals/forwarding-narrow.png",
+      "sha256": "9fd74c81e6caa20862a4955a572b2d80b01124d872909f71c0c62aafb322e900",
+      "size_bytes": 21259
+    }
+  ],
+  "inspection": "Inspected all four PNGs: desktop manager and 320x320 manager/editor/validation. Controls remain usable with scrolling; no overflow errors. Synthetic forwarding manager, real production widgets and Roboto font; not SSH/device acceptance.",
+  "initial_attempt": "11 passed, 2 fixture-only finder failures. Scoped ended-message assertions to editor because underlying manager also displays status. Final run passes all 13."
+}
