@@ -47,7 +47,7 @@ void main() {
     (tester) async {
       OfficePageLayoutChoice? result;
       const size = WmlPageSize(width: 595.276, height: 841.89);
-      final margins = WmlPageMargins(
+      const margins = WmlPageMargins(
         top: 72.05,
         bottom: 72.123,
         left: 72.765,
@@ -85,7 +85,7 @@ void main() {
         result = await showOfficePageLayoutDialog(
           context,
           size: const WmlPageSize(width: 612, height: 792),
-          margins: WmlPageMargins(),
+          margins: const WmlPageMargins(),
           unit: OfficeLengthUnit.centimeters,
         );
       },

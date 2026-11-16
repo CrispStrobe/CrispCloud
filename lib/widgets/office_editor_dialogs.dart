@@ -1363,7 +1363,7 @@ Future<bool> showOfficeConfirm(
 void showOfficeShortcuts(BuildContext context, String kind) {
   final List<(String, String)> rows = <(String, String)>[
     ('Ctrl/Cmd + S', 'Save'),
-    ('F12 / Ctrl/Cmd + Shift + S', 'Save a copy'),
+    ('F12 / Ctrl/Cmd + Shift + S', 'Save As'),
     ('Ctrl/Cmd + P', 'Print'),
     ('Ctrl/Cmd + Z', 'Undo'),
     ('Ctrl/Cmd + Y / Shift + Z', 'Redo'),

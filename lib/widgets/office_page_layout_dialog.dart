@@ -218,8 +218,9 @@ class _OfficePageLayoutDialogState extends State<OfficePageLayoutDialog> {
             ],
             onChanged: (value) {
               final size = presets[value];
-              if (size != null)
+              if (size != null) {
                 _paper(_size.isLandscape ? size.landscape : size);
+              }
             },
           ),
           const SizedBox(height: 18),
@@ -241,8 +242,9 @@ class _OfficePageLayoutDialogState extends State<OfficePageLayoutDialog> {
               ),
             ],
             onChanged: (value) {
-              if (value != null)
+              if (value != null) {
                 _paper(value ? _size.landscape : _size.portrait);
+              }
             },
           ),
           _pair('Width', 'Height'),

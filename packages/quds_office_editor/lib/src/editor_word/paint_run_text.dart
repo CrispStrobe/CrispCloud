@@ -331,7 +331,7 @@ abstract final class PaintRunText {
         foreground: Paint()
           ..blendMode = BlendMode.clear
           ..style = style
-          ..strokeWidth = first.fontSize * 0.10,
+          ..strokeWidth = first.fontSize * 0.04,
       )..layout();
       mask.paint(canvas, offset);
       mask.dispose();

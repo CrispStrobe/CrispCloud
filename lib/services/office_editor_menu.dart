@@ -11,6 +11,7 @@ enum OfficeEditorKind { word, sheet, slides, unsupported }
 enum OfficeEditorAction {
   save,
   saveCopy,
+  saveAs,
   close,
   undo,
   redo,

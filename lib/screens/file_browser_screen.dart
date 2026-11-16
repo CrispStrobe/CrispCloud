@@ -1354,8 +1354,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       _editorItem(
         context,
-        'Save a copy',
-        OfficeEditorAction.saveCopy,
+        'Save As',
+        OfficeEditorAction.saveAs,
         editor,
         shortcut: const SingleActivator(
           LogicalKeyboardKey.keyS,
@@ -1363,6 +1363,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           shift: true,
         ),
       ),
+      _editorItem(context, 'Save a copy', OfficeEditorAction.saveCopy, editor),
       _editorItem(
         context,
         'Close Editor',

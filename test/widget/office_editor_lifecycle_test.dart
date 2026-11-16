@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/services/office_device_export.dart';
@@ -91,6 +90,267 @@ Future<void> _choose(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets('standard Word shortcuts align, redo and insert a page break', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final host = await OfficeTestHarness.open(tester);
+      final word = host.controller as WordEditorController;
+      tester
+          .widget<QudsWordEditor>(find.byType(QudsWordEditor))
+          .focusNode!
+          .requestFocus();
+      await tester.pump();
+      Future<void> key(
+        LogicalKeyboardKey key, {
+        bool shift = false,
+        bool meta = false,
+      }) async {
+        final modifier = meta
+            ? LogicalKeyboardKey.metaLeft
+            : LogicalKeyboardKey.controlLeft;
+        await tester.sendKeyDownEvent(modifier);
+        if (shift) await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(key);
+        if (shift) await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pump();
+      }
+
+      for (final meta in [false, true]) {
+        for (final entry in {
+          LogicalKeyboardKey.keyE: WmlJustification.center,
+          LogicalKeyboardKey.keyR: WmlJustification.right,
+          LogicalKeyboardKey.keyJ: WmlJustification.justify,
+          LogicalKeyboardKey.keyL: WmlJustification.left,
+        }.entries) {
+          await key(entry.key, meta: meta);
+          expect(
+            word.document.paragraphs
+                .toList()[word.caret.paragraphIndex]
+                .properties
+                .justification,
+            entry.value,
+          );
+        }
+        final count = word.document.paragraphs.length;
+        await key(LogicalKeyboardKey.enter, meta: meta);
+        expect(
+          word.document.paragraphs.length,
+          count + 1,
+          reason: 'Page break with meta=$meta',
+        );
+        expect(
+          word.document.paragraphs
+              .toList()[word.caret.paragraphIndex]
+              .properties
+              .pageBreakBefore,
+          isTrue,
+        );
+        await key(LogicalKeyboardKey.keyZ, meta: meta);
+        expect(word.document.paragraphs.length, count);
+        await key(LogicalKeyboardKey.keyZ, shift: true, meta: meta);
+        expect(
+          word.document.paragraphs.length,
+          count + 1,
+          reason: 'Redo with meta=$meta',
+        );
+        await key(LogicalKeyboardKey.keyD, meta: meta);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.byType(AlertDialog), findsOneWidget);
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        tester
+            .widget<QudsWordEditor>(find.byType(QudsWordEditor))
+            .focusNode!
+            .requestFocus();
+        await tester.pump();
+      }
+      await host.dispose();
+    });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'Save As adopts its captured revision while newer edits remain dirty',
+    (tester) async {
+      await tester.runAsync(() async {
+        final directory = await Directory.systemTemp.createTemp(
+          'office-save-as-revision-',
+        );
+        addTearDown(() => directory.delete(recursive: true));
+        final destination = '${directory.path}/newer.docx';
+        final picker = Completer<String?>();
+        Uint8List? written;
+        final host = await OfficeTestHarness.open(
+          tester,
+          saveAsExporter: (bytes, name, title, {initialDirectory}) {
+            written = bytes;
+            File(destination).writeAsBytesSync(bytes);
+            return picker.future;
+          },
+        );
+        final word = host.controller as WordEditorController;
+        word.insertText('Captured revision ');
+        host.ribbon.onSaveAs!();
+        await officePumpUntil(tester, () => written != null);
+        word.insertText('Newer revision ');
+        picker.complete(destination);
+        await officePumpUntil(
+          tester,
+          () => host.ribbon.title == 'newer.docx' && !host.ribbon.saving,
+        );
+        expect(word.isDirty, isTrue);
+        expect(
+          _text(File(destination).readAsBytesSync()),
+          isNot(contains('Newer revision ')),
+        );
+        await host.save();
+        expect(word.isDirty, isFalse);
+        expect(
+          _text(File(destination).readAsBytesSync()),
+          contains('Newer revision '),
+        );
+        expect(host.cloud.uploadAttempts, 0);
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final modifier in <LogicalKeyboardKey?>[
+    null,
+    LogicalKeyboardKey.controlLeft,
+    LogicalKeyboardKey.metaLeft,
+  ]) {
+    testWidgets(
+      'Save As ${modifier?.keyLabel ?? 'F12'} adopts filename and subsequent Save writes the new file',
+      (tester) async {
+        await tester.runAsync(() async {
+          final directory = await Directory.systemTemp.createTemp(
+            'office-save-as-',
+          );
+          addTearDown(() => directory.delete(recursive: true));
+          final originalFolder = Directory('${directory.path}/original')
+            ..createSync();
+          final newFolder = Directory('${directory.path}/new')..createSync();
+          final originalPath = '${originalFolder.path}/report.docx';
+          final destination = '${newFolder.path}/renamed.docx';
+          final original = File(
+            'packages/quds_office_engine/test/fixtures/fidelity/word.docx',
+          ).readAsBytesSync();
+          File(originalPath).writeAsBytesSync(original);
+          final target = CapturedFileTarget.local(
+            reference: FileReference(
+              storage: const StorageReference(
+                kind: 'local',
+                provider: 'local',
+                accountKey: 'local',
+              ),
+              path: originalPath,
+            ),
+            service: LocalFileService(),
+            file: FileItem(
+              name: 'report.docx',
+              path: originalPath,
+              isFolder: false,
+            ),
+            isCurrent: () => true,
+          );
+          var copied = false;
+          final host = await OfficeTestHarness.open(
+            tester,
+            bytesOverride: original,
+            targetOverride: target,
+            saveAsExporter: (bytes, name, title, {initialDirectory}) async {
+              expect(initialDirectory, originalFolder.path);
+              expect(title, 'Save As');
+              expect(name, 'report.docx');
+              File(destination).writeAsBytesSync(bytes);
+              return destination;
+            },
+            copyExporter: (bytes, name, title, {initialDirectory}) async {
+              expect(initialDirectory, newFolder.path);
+              expect(name, 'renamed.docx');
+              expect(title, 'Save a copy');
+              copied = true;
+              return OfficeCopyOutcome.savedCopy;
+            },
+          );
+          final word = host.controller as WordEditorController;
+          word.insertText('Save As edit ');
+          tester
+              .widget<QudsWordEditor>(find.byType(QudsWordEditor))
+              .focusNode!
+              .requestFocus();
+          await tester.pump();
+          if (modifier == null) {
+            await tester.sendKeyEvent(LogicalKeyboardKey.f12);
+          } else {
+            await tester.sendKeyDownEvent(modifier);
+            await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+            await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+            await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+            await tester.sendKeyUpEvent(modifier);
+          }
+          await officePumpUntil(
+            tester,
+            () => host.ribbon.title == 'renamed.docx' && !host.ribbon.saving,
+          );
+          expect(word.isDirty, isFalse);
+          expect(
+            _text(File(destination).readAsBytesSync()),
+            contains('Save As edit '),
+          );
+          word.insertText('Later edit ');
+          await host.save();
+          expect(
+            _text(File(destination).readAsBytesSync()),
+            contains('Later edit '),
+          );
+          expect(word.isDirty, isFalse);
+          expect(File(originalPath).readAsBytesSync(), orderedEquals(original));
+          expect(host.cloud.uploadAttempts, 0);
+          await host.copy();
+          expect(copied, isTrue);
+          expect(host.ribbon.title, 'renamed.docx');
+          await host.dispose();
+        });
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+  for (final fail in [false, true]) {
+    testWidgets(
+      'Save As ${fail ? 'failure' : 'cancellation'} retains old target and dirty state',
+      (tester) async {
+        await tester.runAsync(() async {
+          var called = false;
+          final host = await OfficeTestHarness.open(
+            tester,
+            saveAsExporter: (bytes, name, title, {initialDirectory}) async {
+              called = true;
+              if (fail) throw const FileSystemException('test write failure');
+              return null;
+            },
+          );
+          final word = host.controller as WordEditorController;
+          word.insertText('Unsaved original ');
+          host.ribbon.onSaveAs!();
+          await officePumpUntil(tester, () => called && !host.ribbon.saving);
+          expect(host.ribbon.title, 'report.docx');
+          expect(word.isDirty, isTrue);
+          await host.save();
+          expect(host.cloud.uploadAttempts, 1);
+          expect(_text(host.savedBytes), contains('Unsaved original '));
+          await host.dispose();
+        });
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'hyperlink shortcuts focus the URL and modal typing never edits Word',
     (tester) async {
@@ -171,78 +431,56 @@ void main() {
     },
   );
 
-  testWidgets(
-    'F12 and Shift+S copy to captured source folder and preserve edits',
-    (tester) async {
-      await tester.runAsync(() async {
-        final sourceFolder = await Directory.systemTemp.createTemp(
-          'office-copy-source-',
-        );
-        addTearDown(() => sourceFolder.delete(recursive: true));
-        final sourcePath = '${sourceFolder.path}/report.docx';
-        final bytes = File(
-          'packages/quds_office_engine/test/fixtures/fidelity/word.docx',
-        ).readAsBytesSync();
-        File(sourcePath).writeAsBytesSync(bytes);
-        final target = CapturedFileTarget.local(
-          reference: FileReference(
-            storage: const StorageReference(
-              kind: 'local',
-              provider: 'local',
-              accountKey: 'local',
-            ),
-            path: sourcePath,
+  testWidgets('Save a copy uses captured source folder and preserves edits', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final sourceFolder = await Directory.systemTemp.createTemp(
+        'office-copy-source-',
+      );
+      addTearDown(() => sourceFolder.delete(recursive: true));
+      final sourcePath = '${sourceFolder.path}/report.docx';
+      final bytes = File(
+        'packages/quds_office_engine/test/fixtures/fidelity/word.docx',
+      ).readAsBytesSync();
+      File(sourcePath).writeAsBytesSync(bytes);
+      final target = CapturedFileTarget.local(
+        reference: FileReference(
+          storage: const StorageReference(
+            kind: 'local',
+            provider: 'local',
+            accountKey: 'local',
           ),
-          service: LocalFileService(),
-          file: FileItem(
-            name: 'report.docx',
-            path: sourcePath,
-            isFolder: false,
-          ),
-          isCurrent: () => true,
-        );
-        var copies = 0;
-        final host = await OfficeTestHarness.open(
-          tester,
-          bytesOverride: bytes,
-          targetOverride: target,
-          copyExporter: (bytes, name, title, {initialDirectory}) async {
-            expect(initialDirectory, sourceFolder.path);
-            expect(name, 'report.docx');
-            expect(title, 'Save a copy');
-            expect(_text(bytes), contains('Unsaved copy edit '));
-            copies++;
-            return OfficeCopyOutcome.savedCopy;
-          },
-        );
-        final word = host.controller as WordEditorController;
-        word.insertText('Unsaved copy edit ');
-        final editor = tester.widget<QudsWordEditor>(
-          find.byType(QudsWordEditor),
-        );
-        editor.focusNode!.requestFocus();
-        await tester.pump();
-        await tester.sendKeyEvent(LogicalKeyboardKey.f12);
-        await officePumpUntil(tester, () => copies == 1 && !host.ribbon.saving);
-        for (final modifier in [
-          LogicalKeyboardKey.controlLeft,
-          LogicalKeyboardKey.metaLeft,
-        ]) {
-          await tester.sendKeyDownEvent(modifier);
-          await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-          await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
-          await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-          await tester.sendKeyUpEvent(modifier);
-          await officePumpUntil(tester, () => !host.ribbon.saving);
-        }
-        expect(copies, 3);
-        expect(word.isDirty, isTrue);
-        expect(File(sourcePath).readAsBytesSync(), orderedEquals(bytes));
-        await host.dispose();
-      });
-      expect(tester.takeException(), isNull);
-    },
-  );
+          path: sourcePath,
+        ),
+        service: LocalFileService(),
+        file: FileItem(name: 'report.docx', path: sourcePath, isFolder: false),
+        isCurrent: () => true,
+      );
+      var copies = 0;
+      final host = await OfficeTestHarness.open(
+        tester,
+        bytesOverride: bytes,
+        targetOverride: target,
+        copyExporter: (bytes, name, title, {initialDirectory}) async {
+          expect(initialDirectory, sourceFolder.path);
+          expect(name, 'report.docx');
+          expect(title, 'Save a copy');
+          expect(_text(bytes), contains('Unsaved copy edit '));
+          copies++;
+          return OfficeCopyOutcome.savedCopy;
+        },
+      );
+      final word = host.controller as WordEditorController;
+      word.insertText('Unsaved copy edit ');
+      await host.copy();
+      expect(copies, 1);
+      expect(word.isDirty, isTrue);
+      expect(File(sourcePath).readAsBytesSync(), orderedEquals(bytes));
+      await host.dispose();
+    });
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'sorting alone prompts on Back and saves undoable reordered rows',

@@ -54,6 +54,7 @@ class OfficeEditorRibbon extends StatefulWidget {
     required this.config,
     required this.onSave,
     this.onSaveCopy,
+    this.onSaveAs,
     this.onPrint,
     this.onZotero,
     required this.onClose,
@@ -69,6 +70,7 @@ class OfficeEditorRibbon extends StatefulWidget {
   final OfficeSurfaceConfig config;
   final VoidCallback onSave;
   final VoidCallback? onSaveCopy;
+  final VoidCallback? onSaveAs;
   final VoidCallback? onPrint;
   final VoidCallback? onZotero;
   final VoidCallback onClose;
@@ -181,6 +183,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       widget.saving ? null : widget.onSave,
       icon: Icons.save_outlined,
     ),
+    if (widget.onSaveAs != null)
+      _menuItem(
+        'Save As',
+        widget.saving ? null : widget.onSaveAs,
+        icon: Icons.save_as_outlined,
+      ),
     if (widget.onSaveCopy != null)
       _menuItem(
         'Save a copy',
@@ -682,6 +690,15 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             onPressed: widget.saving ? null : widget.onClose,
             icon: const Icon(Icons.close),
           ),
+          if (widget.onSaveAs != null)
+            IconButton(
+              tooltip: context.tr('Save As'),
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+              onPressed: widget.saving ? null : widget.onSaveAs,
+              icon: const Icon(Icons.save_as_outlined),
+            ),
           if (widget.onSaveCopy != null)
             IconButton(
               tooltip: context.tr('Save a copy'),
@@ -689,7 +706,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               visualDensity: VisualDensity.compact,
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
               onPressed: widget.saving ? null : widget.onSaveCopy,
-              icon: const Icon(Icons.save_as_outlined),
+              icon: const Icon(Icons.file_copy_outlined),
             ),
           const SizedBox(width: 2),
         ],
@@ -2503,6 +2520,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     switch (action) {
       case OfficeEditorAction.save:
         widget.onSave();
+      case OfficeEditorAction.saveAs:
+        if (!widget.saving) widget.onSaveAs?.call();
       case OfficeEditorAction.saveCopy:
         if (!widget.saving) widget.onSaveCopy?.call();
       case OfficeEditorAction.close:
@@ -3117,8 +3136,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _insertHyperlink() async {
-    if (_hyperlinkOpen || !_canMutate || widget.kind != OfficeEditorKind.word)
+    if (_hyperlinkOpen || !_canMutate || widget.kind != OfficeEditorKind.word) {
       return;
+    }
     final controller = _word;
     final target = _wordEditTarget(controller);
     _hyperlinkOpen = true;
@@ -3128,8 +3148,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           !mounted ||
           !identical(widget.controller, controller) ||
           !controller.config.allowsMutation ||
-          _wordEditTarget(controller) != target)
+          _wordEditTarget(controller) != target) {
         return;
+      }
       controller.insertHyperlink(
         text: result.text.isEmpty ? result.url : result.text,
         target: result.url,
@@ -3243,10 +3264,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         !mounted ||
         !identical(widget.controller, controller) ||
         _wordEditTarget(controller) != target ||
-        !controller.config.allowsMutation)
+        !controller.config.allowsMutation) {
       return;
-    if (result.unit != widget.config.lengthUnit)
+    }
+    if (result.unit != widget.config.lengthUnit) {
       _setConfig(lengthUnit: result.unit);
+    }
     final sizeChanged =
         oldSize.width != result.size.width ||
         oldSize.height != result.size.height;
@@ -3381,8 +3404,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         !identical(controller.sheet, sheet) ||
         controller.selection.range != range ||
         controller.contentRevision != revision ||
-        !controller.config.allowsMutation)
+        !controller.config.allowsMutation) {
       return;
+    }
     if (row) {
       controller.previewRowHeight(range.minRow, points * 96 / 72);
     } else {

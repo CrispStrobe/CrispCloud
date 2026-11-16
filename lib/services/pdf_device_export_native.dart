@@ -23,6 +23,7 @@ class NativePdfDeviceExport {
     bool? requestMacOSFolderAccess,
     this.dialogTitle = 'Export a PDF copy',
     this.initialDirectory,
+    this.validateDestination,
     this.allowedExtensions = const ['pdf'],
   }) : _picker = picker ?? FilePicker.platform,
        _files = files ?? LocalFileService(),
@@ -36,9 +37,16 @@ class NativePdfDeviceExport {
   final bool _requestMacOSFolderAccess;
   final String dialogTitle;
   final String? initialDirectory;
+  final void Function(String path)? validateDestination;
   final List<String> allowedExtensions;
 
   Future<PdfSaveOutcome?> exportCopy(
+    Uint8List bytes,
+    String suggestedName,
+  ) async => (await exportWithDestination(bytes, suggestedName))?.outcome;
+
+  /// The chosen path is exposed only after a confirmed, completed write.
+  Future<({PdfSaveOutcome outcome, String path})?> exportWithDestination(
     Uint8List bytes,
     String suggestedName,
   ) async {
@@ -52,9 +60,13 @@ class NativePdfDeviceExport {
       lockParentWindow: true,
     );
     if (path == null) return null;
-    if (path.isEmpty)
+    if (path.isEmpty) {
       throw StateError('The save dialog returned no destination.');
-    if (_useNativeDocumentExport) return PdfSaveOutcome.savedCopy;
+    }
+    validateDestination?.call(path);
+    if (_useNativeDocumentExport) {
+      return (outcome: PdfSaveOutcome.savedCopy, path: path);
+    }
 
     // Use exactly the path confirmed by the native save dialog, which owns
     // overwrite confirmation. Appending/changing its extension here could
@@ -85,8 +97,11 @@ class NativePdfDeviceExport {
       }
       result = await write();
     }
-    return result == LocalFileSaveResult.written
-        ? PdfSaveOutcome.savedCopy
-        : PdfSaveOutcome.downloadedCopy;
+    return (
+      outcome: result == LocalFileSaveResult.written
+          ? PdfSaveOutcome.savedCopy
+          : PdfSaveOutcome.downloadedCopy,
+      path: path,
+    );
   }
 }

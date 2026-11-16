@@ -26,3 +26,14 @@ Future<OfficeCopyOutcome?> exportOfficeCopy(
   }
   return OfficeCopyOutcome.downloadedCopy;
 }
+
+Future<String?> saveOfficeAs(
+  Uint8List bytes,
+  String name,
+  String dialogTitle, {
+  String? initialDirectory,
+}) async {
+  throw UnsupportedError(
+    'Save As requires a writable file destination. Use Save a copy to download this document.',
+  );
+}

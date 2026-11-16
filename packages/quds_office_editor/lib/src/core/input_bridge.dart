@@ -137,6 +137,7 @@ class OfficeInputBridge with TextInputClient {
   @override
   /// performSelector API.
   void performSelector(String selectorName) {
+    if (inputAllowed?.call() == false) return;
     onSelector?.call(selectorName);
   }
 

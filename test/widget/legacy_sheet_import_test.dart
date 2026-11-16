@@ -20,6 +20,55 @@ void _edit(SheetEditorController sheet, String text) {
 }
 
 void main() {
+  testWidgets('Save As adopts converted XLS workbook as a writable XLSX', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final directory = await Directory.systemTemp.createTemp(
+        'office-converted-save-as-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final destination = '${directory.path}/legacy.xlsx';
+      final original = _source();
+      var copies = 0;
+      final host = await OfficeTestHarness.open(
+        tester,
+        name: 'legacy.xls',
+        initialBytes: original,
+        saveAsExporter: (bytes, name, title, {initialDirectory}) async {
+          expect(name, 'legacy.xlsx');
+          File(destination).writeAsBytesSync(bytes);
+          return destination;
+        },
+        copyExporter: (bytes, name, title, {initialDirectory}) async {
+          copies++;
+          return null;
+        },
+      );
+      final sheet = host.controller as SheetEditorController;
+      _edit(sheet, 'Save As workbook');
+      host.ribbon.onSaveAs!();
+      await officePumpUntil(
+        tester,
+        () => host.ribbon.title == 'legacy.xlsx' && !host.ribbon.saving,
+      );
+      expect(sheet.isDirty, isFalse);
+      _edit(sheet, 'Later workbook edit');
+      await host.save();
+      expect(sheet.isDirty, isFalse);
+      expect(copies, 0);
+      final reopened = SheetEditorController.fromBytes(
+        File(destination).readAsBytesSync(),
+      );
+      expect(reopened.sheet.cellA1('A1').value, 'Later workbook edit');
+      reopened.dispose();
+      expect(host.savedBytes, orderedEquals(original));
+      expect(host.cloud.uploadAttempts, 0);
+      await host.dispose();
+    });
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'legacy Save emits XLSX, keeps BIFF original, and cleans only saved edits',
     (tester) async {

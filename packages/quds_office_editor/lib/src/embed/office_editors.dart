@@ -217,6 +217,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   late final Ticker _ticker;
   OverlayEntry? _contextMenu;
   ModalRoute<dynamic>? _inputRoute;
+  final _directionKeys = OfficeDirectionKeyChord();
   late final bool Function() _inputGuard = () =>
       mounted &&
       _focus.hasPrimaryFocus &&
@@ -406,6 +407,7 @@ class _QudsWordEditorState extends State<QudsWordEditor>
     if (_inputGuard()) {
       _c.attachInput();
     } else {
+      _directionKeys.reset();
       _c.detachInput();
     }
     if (mounted) {
@@ -414,13 +416,13 @@ class _QudsWordEditorState extends State<QudsWordEditor>
   }
 
   KeyEventResult _onWordKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
-    final bool? directionRtl = officeDirectionFromKeyEvent(event);
+    final directionRtl = _directionKeys.handle(event);
     if (directionRtl != null && _c.config.allowsMutation) {
       _c.setParagraphDirection(rtl: directionRtl);
       return KeyEventResult.handled;
+    }
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
     }
     if (officeHandleDocumentShortcut(_c, event)) {
       return KeyEventResult.handled;
@@ -976,6 +978,7 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
   late final FocusNode _focus;
   late final bool _ownsFocus;
   ModalRoute<dynamic>? _inputRoute;
+  final _directionKeys = OfficeDirectionKeyChord();
   late final bool Function() _inputGuard = () =>
       mounted &&
       _focus.hasPrimaryFocus &&
@@ -1040,6 +1043,7 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
 
   void _onSheetFocus() {
     if (!_inputGuard()) {
+      _directionKeys.reset();
       _stopNavRepeat();
       _c.cellEditor.bridge.detach();
     } else if (_c.cellEditor.editing) {
@@ -1113,6 +1117,11 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    final directionRtl = _directionKeys.handle(event);
+    if (directionRtl != null && _c.config.allowsMutation) {
+      _c.setSheetRightToLeft(directionRtl);
+      return KeyEventResult.handled;
+    }
     if (event is KeyUpEvent) {
       if (_isSheetNavKey(event.logicalKey)) {
         _stopNavRepeat();
@@ -1132,11 +1141,6 @@ class _QudsSheetEditorState extends State<QudsSheetEditor> {
         return KeyEventResult.handled;
       }
       return KeyEventResult.ignored;
-    }
-    final bool? directionRtl = officeDirectionFromKeyEvent(event);
-    if (directionRtl != null && _c.config.allowsMutation) {
-      _c.setSheetRightToLeft(directionRtl);
-      return KeyEventResult.handled;
     }
     if (officeHandleDocumentShortcut(_c, event)) {
       return KeyEventResult.handled;
@@ -1707,6 +1711,7 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
   late final FocusNode _focus;
   late final bool _ownsFocus;
   ModalRoute<dynamic>? _inputRoute;
+  final _directionKeys = OfficeDirectionKeyChord();
   late final bool Function() _inputGuard = () =>
       mounted &&
       _focus.hasPrimaryFocus &&
@@ -1772,6 +1777,7 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
 
   void _onSlideFocus() {
     if (!_inputGuard()) {
+      _directionKeys.reset();
       _c.textEditor.bridge.detach();
     } else if (_c.textEditor.editing) {
       _c.textEditor.bridge.attach(multiline: true);
@@ -2013,6 +2019,13 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
                     autofocus: true,
                     focusNode: _focus,
                     onKeyEvent: (FocusNode node, KeyEvent event) {
+                      final directionRtl = _directionKeys.handle(event);
+                      if (directionRtl != null &&
+                          _c.config.allowsMutation &&
+                          !_c.isPresenting) {
+                        _c.setSelectedTextDirection(rtl: directionRtl);
+                        return KeyEventResult.handled;
+                      }
                       final KeyEventResult show = _onSlideKey(node, event);
                       if (show != KeyEventResult.ignored) {
                         return show;
@@ -2026,13 +2039,6 @@ class _QudsSlideEditorState extends State<QudsSlideEditor>
                         _c.moveSelectedTableCell(
                           forward: !HardwareKeyboard.instance.isShiftPressed,
                         );
-                        return KeyEventResult.handled;
-                      }
-                      final bool? directionRtl = officeDirectionFromKeyEvent(
-                        event,
-                      );
-                      if (directionRtl != null && _c.config.allowsMutation) {
-                        _c.setSelectedTextDirection(rtl: directionRtl);
                         return KeyEventResult.handled;
                       }
                       final bool ctrl =

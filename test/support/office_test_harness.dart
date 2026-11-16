@@ -80,6 +80,7 @@ class OfficeTestHarness {
     CapturedFileTarget? targetOverride,
     bool expectEditor = true,
     OfficeDeviceExporter copyExporter = exportOfficeCopy,
+    OfficeSaveAsExporter saveAsExporter = saveOfficeAs,
     Locale locale = const Locale('en'),
     ThemeData? theme,
   }) async {
@@ -126,6 +127,7 @@ class OfficeTestHarness {
                               ? null
                               : panel.captureFileTarget(file)),
                       copyExporter: copyExporter,
+                      saveAsExporter: saveAsExporter,
                     ),
                   ),
                 ),

@@ -39,6 +39,29 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
+    'Save As rejects a mismatched extension before any destination write',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'office-save-as-type-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final destination = '${directory.path}/wrong.xlsx';
+      final picker = _Picker();
+      FilePicker.platform = picker;
+      final saving = saveOfficeAs(
+        Uint8List.fromList([1, 2, 3]),
+        'report.docx',
+        'Save As',
+        initialDirectory: directory.path,
+      );
+      picker.result.complete(destination);
+      await expectLater(saving, throwsFormatException);
+      expect(File(destination).existsSync(), isFalse);
+      expect(picker.directory, directory.path);
+    },
+  );
+
+  test(
     'native Office copy cancellation preserves extension and localized title',
     () async {
       final picker = _Picker();

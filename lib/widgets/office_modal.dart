@@ -28,11 +28,14 @@ class _OfficeModalFocusState extends State<_OfficeModalFocus> {
       FocusManager.instance.applyFocusChangesIfNeeded();
       final fields = <EditableText>[];
       void collect(Element element) {
-        if (element.widget is Offstage && (element.widget as Offstage).offstage)
+        if (element.widget is Offstage &&
+            (element.widget as Offstage).offstage) {
           return;
+        }
         final widget = element.widget;
-        if (widget is EditableText && widget.focusNode.canRequestFocus)
+        if (widget is EditableText && widget.focusNode.canRequestFocus) {
           fields.add(widget);
+        }
         element.visitChildren(collect);
       }
 

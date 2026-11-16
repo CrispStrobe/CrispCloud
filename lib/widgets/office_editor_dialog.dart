@@ -5,6 +5,7 @@ import 'viewer_escape_scope.dart';
 import 'app_scaffold_messenger.dart' show TransientSnackBar;
 import '../services/document_workspace_session.dart';
 import '../services/document_activity.dart';
+import '../services/document_history.dart';
 // lib/widgets/office_editor_dialog.dart
 //
 // F4 editor for Office Open XML documents (DOCX / XLSX / PPTX) built on the
@@ -21,7 +22,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,9 @@ import 'package:quds_office_engine/quds_office_engine.dart'
         WordPackagePreservation;
 
 import '../models/file_item.dart';
+import '../models/storage_reference.dart';
+import '../services/storage_identity.dart';
+import '../services/panel_source_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/captured_file_target.dart';
@@ -105,6 +109,7 @@ Future<void> showOfficeEditorDialog(
   Uint8List? bytesOverride,
   CapturedFileTarget? targetOverride,
   OfficeDeviceExporter copyExporter = exportOfficeCopy,
+  OfficeSaveAsExporter saveAsExporter = saveOfficeAs,
   String? saveAsName,
 }) {
   return showDialog<void>(
@@ -117,6 +122,7 @@ Future<void> showOfficeEditorDialog(
         bytesOverride: bytesOverride,
         targetOverride: targetOverride,
         copyExporter: copyExporter,
+        saveAsExporter: saveAsExporter,
         saveAsName: saveAsName,
       ),
     ),
@@ -136,6 +142,7 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
 
   /// Independent device-copy export; never changes the original save target.
   final OfficeDeviceExporter copyExporter;
+  final OfficeSaveAsExporter saveAsExporter;
 
   /// Output name when the loaded workbook is a converted legacy `.xls`.
   final String? saveAsName;
@@ -147,6 +154,7 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
     this.bytesOverride,
     this.targetOverride,
     this.copyExporter = exportOfficeCopy,
+    this.saveAsExporter = saveOfficeAs,
     this.saveAsName,
   });
 
@@ -155,6 +163,7 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
 }
 
 class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
+  late FileItem _file = widget.file;
   DocumentWorkspaceSession? _workspace;
   DocumentActivity? _activity;
   OfficeController? _controller;
@@ -256,7 +265,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   }
 
   Future<void> _load() async {
-    _activity ??= captureDocumentActivity(ref, widget.file, widget.side);
+    _activity ??= captureDocumentActivity(ref, _file, widget.side);
     setState(() {
       _loading = true;
       _error = null;
@@ -269,7 +278,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       } else {
         final target = _target ??= ref
             .read(panelProvider(widget.side))
-            .captureFileTarget(widget.file, maxBytes: _kOfficeEditorCap);
+            .captureFileTarget(_file, maxBytes: _kOfficeEditorCap);
         bytes = await target.load();
       }
       if (!mounted) return;
@@ -279,7 +288,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
       // BIFF workbooks are imported into the shared model and opened as XLSX.
       // Saving writes a new .xlsx copy; the original .xls is never rewritten.
-      final sourceExt = widget.file.name.split('.').last.toLowerCase();
+      final sourceExt = _file.name.split('.').last.toLowerCase();
       if (sourceExt == 'xls' || sourceExt == 'xlt' || sourceExt == 'ods') {
         final workbook = sourceExt == 'ods'
             ? OdsSheetReader.readBytes(bytes)
@@ -288,7 +297,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _convertedLegacySheet = true;
       }
 
-      final kind = _kindFor(widget.saveAsName ?? widget.file.name);
+      final kind = _kindFor(widget.saveAsName ?? _file.name);
       if (kind == OfficeEditorKind.unsupported) {
         setState(() {
           _loading = false;
@@ -299,7 +308,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
       _wordPreservation = await WordPackagePreservation.capture(
         bytes,
-        widget.file.name,
+        _file.name,
       );
       if (!mounted) return;
       final controller = switch (kind) {
@@ -367,6 +376,12 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         localizedFileBytesError(context, error);
   }
 
+  void _showNotice(SnackBar notice) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(notice);
+  }
+
   Future<void> _save({bool popAfter = false}) async {
     final controller = _controller;
     if (controller == null || _saving || _exporting) return;
@@ -398,6 +413,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       controller.commitPendingEdits();
       final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
+      if (bytes.length > kOfficeCopyOutputLimitBytes) {
+        throw FileTargetTooLarge(kOfficeCopyOutputLimitBytes);
+      }
       await _wordPreservation?.validateSaved(bytes);
       await _saveSnapshot(bytes, kind: 'recovery');
       if (!mounted) return;
@@ -422,9 +440,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _dirty = controller.isDirty;
       });
       ref.read(panelProvider(widget.side)).refreshFiles();
-      ScaffoldMessenger.of(context).showSnackBar(
+      _showNotice(
         TransientSnackBar(
-          content: Text('${context.tr('Saved')}: ${widget.file.name}'),
+          content: Text('${context.tr('Saved')}: ${_file.name}'),
         ),
       );
       // A notes/formatting dialog can hold a newer draft while the upload runs.
@@ -440,7 +458,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       _log.warn('office editor save failed', e, st);
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      _showNotice(
         SnackBar(
           content: Text(
             '${context.tr('Save failed')}: '
@@ -471,7 +489,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         builder: (dialogContext) => AlertDialog(
           title: Text(context.tr('Unsaved changes')),
           content: Text(
-            '${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}',
+            '${context.tr('Save changes to')} ${_file.name} ${context.tr('before closing?')}',
           ),
           actions: [
             TextButton(
@@ -497,6 +515,84 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
     } finally {
       _closing = false;
+    }
+  }
+
+  Future<void> _saveAs() async {
+    final controller = _controller;
+    if (controller == null || _saving || _exporting) return;
+    setState(() => _exporting = true);
+    try {
+      controller.commitPendingEdits();
+      final revision = controller.contentRevision;
+      final bytes = await controller.saveBytesAsync();
+      if (bytes.length > kOfficeCopyOutputLimitBytes) {
+        throw FileTargetTooLarge(kOfficeCopyOutputLimitBytes);
+      }
+      await _wordPreservation?.validateSaved(bytes);
+      if (!mounted) return;
+      final destination = await widget.saveAsExporter(
+        Uint8List.fromList(bytes).asUnmodifiableView(),
+        _copyOutputName(),
+        context.tr('Save As'),
+        initialDirectory: _copyInitialDirectory,
+      );
+      if (destination == null || !mounted) return;
+      final file = FileItem(
+        name: path.basename(destination),
+        path: destination,
+        isFolder: false,
+        size: bytes.length,
+      );
+      final reference = FileReference(
+        storage: storageReferenceForSource(
+          LocalPanelSource(path.dirname(destination)),
+        ),
+        path: destination,
+      );
+      final target = CapturedFileTarget.local(
+        reference: reference,
+        service: ref.read(localFileServiceProvider),
+        file: file,
+        isCurrent: () => true,
+        maxBytes: kOfficeCopyOutputLimitBytes,
+      );
+      final written = await target.load();
+      if (!listEquals(written, bytes)) {
+        throw const FileTargetConflict(
+          'The new file changed before it could be opened.',
+        );
+      }
+      if (!mounted) return;
+      _target = target;
+      _loadedBytes = Uint8List.fromList(bytes).asUnmodifiableView();
+      _convertedLegacySheet = false;
+      _activity = DocumentActivity(ref.read(documentHistoryProvider), reference)
+        ..edited();
+      if (controller.contentRevision == revision) controller.markClean();
+      setState(() {
+        _file = file;
+        _dirty = controller.isDirty;
+      });
+      ref.read(panelProvider(widget.side)).refreshFiles();
+      _showNotice(
+        TransientSnackBar(
+          content: Text('${context.tr('Saved')}: ${file.name}'),
+        ),
+      );
+    } catch (error, stack) {
+      _log.warn('office Save As failed', error, stack);
+      if (mounted) {
+        _showNotice(
+          SnackBar(
+            content: Text(
+              '${context.tr('Save failed')}: ${_localizedError(error)}',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
     }
   }
 
@@ -543,7 +639,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         controller.markClean();
         setState(() => _dirty = controller.isDirty);
       }
-      ScaffoldMessenger.of(context).showSnackBar(
+      _showNotice(
         TransientSnackBar(
           content: Text(
             context.tr(
@@ -559,7 +655,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     } catch (e, st) {
       _log.warn('office copy export failed', e, st);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      _showNotice(
         SnackBar(
           content: Text(
             '${context.tr('Could not save a copy')}: '
@@ -582,14 +678,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   }
 
   String _copyOutputName({bool original = false}) {
-    if (original) return officeCopyName(widget.file.name);
+    if (original) return officeCopyName(_file.name);
     if (_convertedLegacySheet) {
-      final source = widget.file.name;
+      final source = _file.name;
       final converted =
           '${source.substring(0, source.lastIndexOf('.') + 1)}xlsx';
       return officeCopyName(widget.saveAsName ?? converted);
     }
-    return officeCopyName(widget.file.name);
+    return officeCopyName(_file.name);
   }
 
   Future<void> _saveSnapshot(Uint8List bytes, {required String kind}) async {
@@ -598,10 +694,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       final support = await getApplicationSupportDirectory();
       final dir = Directory('${support.path}/editor_snapshots');
       if (!await dir.exists()) await dir.create(recursive: true);
-      final safeName = widget.file.name.replaceAll(
-        RegExp(r'[^A-Za-z0-9._-]'),
-        '_',
-      );
+      final safeName = _file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
       final name = '${DateTime.now().microsecondsSinceEpoch}_${kind}_$safeName';
       await File('${dir.path}/$name').writeAsBytes(bytes, flush: true);
     } catch (_) {
@@ -678,7 +771,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     controller.commitPendingEdits();
     final bytes = await controller.saveBytesAsync();
     final pdf = await officePrintPdf(bytes);
-    if (mounted) await printPdfSnapshot(context, pdf, widget.file.name);
+    if (mounted) await printPdfSnapshot(context, pdf, _file.name);
   }
 
   @override
@@ -699,7 +792,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
             LogicalKeyboardKey.f12,
             includeRepeats: false,
           ): () =>
-              unawaited(_saveCopy()),
+              unawaited(_saveAs()),
           for (final meta in [false, true]) ...{
             for (final entry in {
               LogicalKeyboardKey.keyL: WmlJustification.left,
@@ -716,7 +809,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
               shift: true,
               includeRepeats: false,
             ): () =>
-                unawaited(_saveCopy()),
+                unawaited(_saveAs()),
             SingleActivator(
               LogicalKeyboardKey.keyZ,
               control: !meta,
@@ -884,6 +977,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           config: _config,
           onSave: () => unawaited(_save()),
           onSaveCopy: () => unawaited(_saveCopy()),
+          onSaveAs: kIsWeb ? null : () => unawaited(_saveAs()),
           onPrint: () => ref.read(documentPrintProvider)?.run(),
           onZotero: _kind == OfficeEditorKind.word
               ? () => unawaited(_showZotero())
@@ -891,7 +985,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
           onClose: () => unawaited(_close()),
           onConfigChanged: _onConfigChanged,
           onFind: _requestFind,
-          title: widget.file.name,
+          title: _file.name,
           dirty: _dirty,
           saving: _saving || _exporting,
         ),
@@ -957,7 +1051,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        _showNotice(
           SnackBar(
             content: Text(
               context.tr('Could not open Zotero. Please try again.'),

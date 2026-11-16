@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-16",
+  "flutter": "3.47.8",
+  "dart": "3.13.7",
+  "combined_host": {
+    "passed": 117,
+    "skipped": 2,
+    "failures": 0,
+    "skip_reason": "Existing Linux/Windows-only native-copy write tests on macOS"
+  },
+  "engine": {
+    "passed": 136,
+    "failures": 0,
+    "suites": [
+      "ods_sheet_reader_test",
+      "variable_line_breaker_test",
+      "word_layout_test"
+    ]
+  },
+  "paragraph_font_layout": {
+    "passed": 31,
+    "failures": 0,
+    "note": "Overlaps targeted unit/rendering cases; do not add these counts as unique tests."
+  },
+  "analysis": {
+    "host_targets": 13,
+    "issues": 0
+  },
+  "io_scope": "Real temporary-file writes and subsequent Save target checks; native picker destinations are injected/mocked in automated tests. No live OS picker interaction or installed app replacement.",
+  "source_repository": "CrispStrobe/quds_office_suite",
+  "source_pin": "3dcf949474b390759c8238e6f1650d040e903cf8",
+  "ci": "Not queried or awaited.",
+  "managed_files": 2420,
+  "final_rendering": {
+    "passed": 2,
+    "failures": 0,
+    "note": "Rechecked after reducing underline ink clearance; no glyph/layout changes."
+  }
+}
