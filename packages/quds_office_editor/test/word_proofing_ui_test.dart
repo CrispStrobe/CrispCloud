@@ -185,6 +185,43 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('large result sets build only visible review cards', (
+    tester,
+  ) async {
+    final controller = _controller(
+      text: List<String>.filled(240, 'Feler').join(' '),
+    );
+    await _dialog(tester, controller);
+    expect(controller.proofing.issues, hasLength(240));
+    expect(find.byType(ActionChip).evaluate().length, lessThan(20));
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+  });
+
+  testWidgets('replacing a dialog controller releases the old session', (
+    tester,
+  ) async {
+    final first = _controller(text: 'Ein Feler.');
+    final second = _controller(text: 'Clean.');
+    await _dialog(tester, first);
+    expect(find.widgetWithText(ActionChip, 'Fehler'), findsOneWidget);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WordProofingDialog(controller: second)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('No findings in checked text.'), findsOneWidget);
+    first.insertText('Changed ');
+    await tester.pump();
+    expect(find.text('No findings in checked text.'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    // Controllers intentionally outlive the detached view, exercising the
+    // binding's timer-leak check instead of hiding a leak with eager dispose.
+    addTearDown(first.dispose);
+    addTearDown(second.dispose);
+  });
+
   testWidgets(
     'standalone editor handles F7 and releases background timers on detach',
     (tester) async {

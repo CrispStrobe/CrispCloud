@@ -3872,8 +3872,9 @@ class WordEditorController extends OfficeController {
           WmlRunEdit.replaceRange(last, 0, to, '');
           WordRevisions.joinParagraphs(document, first, last);
           first.inlines.addAll(
-            _cloneInlinesFrom(last.inlines)
-                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(
+              last.inlines,
+            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(first);
           parent.removeRange(range.startPara + 1, range.endPara + 1);
@@ -4492,8 +4493,9 @@ class WordEditorController extends OfficeController {
             ..addAll(_cloneInlinesFrom(keepInlines));
           WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
-            _cloneInlinesFrom(dropInlines)
-                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(
+              dropInlines,
+            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(keep);
           parent.remove(drop);
@@ -4599,8 +4601,9 @@ class WordEditorController extends OfficeController {
             ..addAll(_cloneInlinesFrom(keepInlines));
           WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
-            _cloneInlinesFrom(dropInlines)
-                .where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
+            _cloneInlinesFrom(
+              dropInlines,
+            ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(keep);
           parent.remove(drop);
@@ -7564,9 +7567,9 @@ class WordEditorController extends OfficeController {
     if (!config.allowsMutation || WordNotes.editableText(note) == text) {
       return;
     }
-    final beforeText = WordNotes.editableParagraphs(note)
-        .map((paragraph) => paragraph.text)
-        .toList();
+    final beforeText = WordNotes.editableParagraphs(
+      note,
+    ).map((paragraph) => paragraph.text).toList();
     final paragraphs = note.allParagraphs.toList();
     final hasInlineControls = paragraphs.any(
       WordContentControls.hasInlineControls,
@@ -7615,9 +7618,9 @@ class WordEditorController extends OfficeController {
     WordNotes.editText(note, text);
     if (listEquals(
       beforeText,
-      WordNotes.editableParagraphs(note)
-          .map((paragraph) => paragraph.text)
-          .toList(),
+      WordNotes.editableParagraphs(
+        note,
+      ).map((paragraph) => paragraph.text).toList(),
     )) {
       return;
     }
@@ -7764,7 +7767,44 @@ class WordEditorController extends OfficeController {
     );
   }
 
-  /// checkSpelling API.
+  /// Checks every modeled story with explicit provider and coverage outcomes.
+  Future<WordProofingSummary> checkDocumentProofing() =>
+      proofing.checkDocument();
+
+  /// Revalidates the finding against the current document before editing.
+  bool canApplyProofingIssue(WordProofingIssue issue) =>
+      proofing.canApply(issue);
+
+  bool applyProofingSuggestion(WordProofingIssue issue, String replacement) =>
+      proofing.applySuggestion(issue, replacement);
+
+  bool revealProofingIssue(WordProofingIssue issue) =>
+      proofing.selectIssue(issue);
+
+  List<WordProofingIssue> get proofingIssuesAtCaret {
+    final List<WmlParagraph> paragraphs;
+    if (isEditingComment) {
+      paragraphs = selectedComment!.paragraphs;
+    } else if (isEditingHeaderFooter) {
+      if (document.sections.isEmpty) return const <WordProofingIssue>[];
+      final section =
+          document.sections[_editingSectionIndex.clamp(
+            0,
+            document.sections.length - 1,
+          )];
+      paragraphs = _editingFooter ? section.footer : section.header;
+    } else {
+      paragraphs = document.paragraphs.toList();
+    }
+    if (paragraphs.isEmpty) return const <WordProofingIssue>[];
+    return proofing.issuesAt(
+      paragraphs[caret.paragraphIndex.clamp(0, paragraphs.length - 1)],
+      caret.logicalIndex,
+    );
+  }
+
+  /// Legacy caller-supplied spelling callback. Use [checkDocumentProofing] for
+  /// a full-document result that distinguishes missing providers from clean text.
   List<OfficeSpellIssue> checkSpelling({OfficeSpellChecker? checker}) {
     return OfficeSpell.check(_activeParagraph.text, checker: checker);
   }

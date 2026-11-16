@@ -499,7 +499,12 @@ class CaretEngine {
       );
       final left = group.map((g) => g.x).reduce(math.min);
       final right = group.map((g) => g.x + g.advance).reduce(math.max);
-      return logicalIndex <= glyph.glyph.logicalIndex ? left : right;
+      // A zero-source presentation (an automatic hyphen) has one insertion
+      // point at its trailing edge; other labels retain both source ends.
+      final after =
+          logicalIndex > glyph.glyph.logicalIndex ||
+          glyph.logicalEnd == glyph.glyph.logicalIndex;
+      return after == glyph.glyph.level.isEven ? right : left;
     }
     for (final LaidOutGlyph glyph in line.glyphs) {
       if (glyph.glyph.logicalIndex != logicalIndex) {
@@ -620,7 +625,8 @@ class CaretEngine {
       final left = group.map((g) => g.x).reduce(math.min);
       final right = group.map((g) => g.x + g.advance).reduce(math.max);
       if (x >= left && x <= right) {
-        return x <= (left + right) / 2
+        final leftHalf = x <= (left + right) / 2;
+        return leftHalf == glyph.glyph.level.isEven
             ? glyph.glyph.logicalIndex
             : glyph.logicalEnd;
       }

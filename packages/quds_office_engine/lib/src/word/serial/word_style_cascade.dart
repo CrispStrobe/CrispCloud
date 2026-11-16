@@ -126,6 +126,18 @@ class _StyleCascade {
       for (final child in layer.childElements) {
         if (child.localName == 'sectPr') continue;
         final old = result.firstChild(child.localName);
+        if (name == 'rPr' && child.localName == 'noProof') {
+          // An omitted on/off value enables noProof. Do not retain a lower
+          // layer's explicit false when the next layer uses <w:noProof/>.
+          final effective = old ?? child.copy();
+          effective.setAttribute(
+            'val',
+            child.getAttribute('val') ?? '1',
+            prefix: 'w',
+          );
+          if (old == null) result.addChild(effective);
+          continue;
+        }
         if (name == 'rPr' &&
             const {
               'b',

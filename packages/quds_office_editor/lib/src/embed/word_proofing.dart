@@ -224,10 +224,6 @@ class WordProofingSession extends ChangeNotifier {
     if (!identical(_observedDocument, controller.document) ||
         _observedRevision != controller.contentRevision ||
         _observedConfiguration != _configurationKey) {
-      if (!identical(_observedDocument, controller.document)) {
-        _cache.clear();
-        _ignoredOnce.clear();
-      }
       invalidate();
     }
   }
@@ -236,6 +232,10 @@ class WordProofingSession extends ChangeNotifier {
   /// Normal controller commands invalidate the session automatically.
   void invalidate() {
     if (_disposed) return;
+    if (!identical(_observedDocument, controller.document)) {
+      _cache.clear();
+      _ignoredOnce.clear();
+    }
     _generation++;
     _observedDocument = controller.document;
     _observedRevision = controller.contentRevision;
@@ -261,6 +261,10 @@ class WordProofingSession extends ChangeNotifier {
     _timer?.cancel();
     final generation = ++_generation;
     final document = controller.document;
+    if (!identical(_observedDocument, document)) {
+      _cache.clear();
+      _ignoredOnce.clear();
+    }
     final config = _configurationKey;
     final revision = controller.contentRevision;
     final collection = _collect();
@@ -438,16 +442,46 @@ class WordProofingSession extends ChangeNotifier {
         f.end > issue.paragraph.text.length) {
       return false;
     }
+    // Providers validate their individual language segments. A segment can
+    // still end inside a grapheme that spans differently tagged source runs.
+    final boundaries = <int>{
+      0,
+      for (final cluster in GraphemeClusters.segment(issue.paragraph.text))
+        cluster.end,
+    };
+    if (!boundaries.contains(f.start) || !boundaries.contains(f.end)) {
+      return false;
+    }
     try {
       final range = WmlRunEdit.normalizeRange(issue.paragraph, f.start, f.end);
       if (range.start != f.start || range.end != f.end) return false;
       WordContentControls.assertCanEdit(issue.paragraph, f.start, f.end);
+      final tracked = controller.document.trackRevisions;
+      if (tracked) {
+        // Tracked replacement inserts at the original end while preserving
+        // the deleted text. Its insertion affinity must not enter a field.
+        WordContentControls.assertCanEdit(issue.paragraph, f.end, f.end);
+        var offset = 0;
+        for (final inline in issue.paragraph.inlines) {
+          if (offset == f.end &&
+              (inline is WmlFieldBoundary ||
+                  inline is WmlRun && inline.isAtomic)) {
+            return false;
+          }
+          if (inline is WmlRun) offset += inline.text.length;
+        }
+      }
       for (final span in WordContentControls.spans(issue.paragraph)) {
         final touchesControl = f.start == f.end
             ? f.start >= span.start &&
                   (f.start < span.end || span.start == span.end)
             : _touches(f.start, f.end, span.start, span.end);
-        if (touchesControl && _contentLocked(span.control)) {
+        final insertionTouchesControl =
+            tracked &&
+            f.end >= span.start &&
+            (f.end < span.end || span.start == span.end);
+        if ((touchesControl || insertionTouchesControl) &&
+            _contentLocked(span.control)) {
           return false;
         }
       }
@@ -457,7 +491,8 @@ class WordProofingSession extends ChangeNotifier {
               WordRevisions.resolveParagraph(controller.document, revision),
               issue.paragraph,
             ) &&
-            _touches(f.start, f.end, revision.start, revision.end)) {
+            (_touches(f.start, f.end, revision.start, revision.end) ||
+                tracked && f.end >= revision.start && f.end < revision.end)) {
           return false;
         }
       }
@@ -471,8 +506,8 @@ class WordProofingSession extends ChangeNotifier {
   /// step. Tracking records deletion before insertion without losing old text.
   bool applySuggestion(WordProofingIssue issue, String replacement) {
     if (!issue.finding.replacements.contains(replacement) ||
-        replacement.contains('\n') ||
-        replacement.contains('\r') ||
+        replacement == issue.finding.originalText ||
+        RegExp(r'[\r\n\u2028\u2029]').hasMatch(replacement) ||
         !canApply(issue)) {
       return false;
     }
@@ -483,6 +518,22 @@ class WordProofingSession extends ChangeNotifier {
     final document = controller.document;
     final activeParagraphs = controller._paragraphs;
     final activeCaret = controller.caret;
+    final activeComment = controller.isEditingComment
+        ? controller.selectedComment
+        : null;
+    final activeHeaderFooter = controller.isEditingHeaderFooter
+        ? activeParagraphs
+        : null;
+    bool sameCaretStory() =>
+        identical(controller.caret, activeCaret) &&
+        (activeComment != null
+            ? controller.isEditingComment &&
+                  identical(controller.selectedComment, activeComment)
+            : activeHeaderFooter != null
+            ? controller.isEditingHeaderFooter &&
+                  identical(controller._paragraphs, activeHeaderFooter)
+            : !controller.isEditingComment &&
+                  !controller.isEditingHeaderFooter);
     final activeAffected =
         activeCaret.paragraphIndex >= 0 &&
         activeCaret.paragraphIndex < activeParagraphs.length &&
@@ -497,7 +548,10 @@ class WordProofingSession extends ChangeNotifier {
     final correctionEnd =
         (document.trackRevisions ? f.end : f.start) + replacement.length;
     void correctedCaret() {
-      if (!activeAffected) return;
+      if (!activeAffected || !sameCaretStory()) {
+        controller._historyRestoredSelection = true;
+        return;
+      }
       activeCaret
         ..paragraphIndex = beforeCaret.paragraph
         ..logicalIndex = correctionEnd
@@ -505,7 +559,12 @@ class WordProofingSession extends ChangeNotifier {
     }
 
     void originalCaret() {
-      if (!activeAffected) return;
+      // Comments and headers/footers share caret objects between stories.
+      // Preserve the current story's selection when undoing a different one.
+      if (!activeAffected || !sameCaretStory()) {
+        controller._historyRestoredSelection = true;
+        return;
+      }
       activeCaret
         ..paragraphIndex = beforeCaret.paragraph
         ..logicalIndex = beforeCaret.offset
@@ -529,7 +588,12 @@ class WordProofingSession extends ChangeNotifier {
 
     // Preflight protects command history against an unsupported atomic edit.
     final preview = WmlClone.paragraph(paragraph);
-    WmlRunEdit.replaceRange(preview, f.start, f.end, replacement);
+    WmlRunEdit.replaceRange(
+      preview,
+      document.trackRevisions ? f.end : f.start,
+      f.end,
+      replacement,
+    );
     controller.commands.commit(
       _CallbackCommand(
         executeFn: () {
@@ -602,8 +666,37 @@ class WordProofingSession extends ChangeNotifier {
   /// Reveals paragraphs supported by the current canvas. Notes and first/even
   /// header variants remain reviewable/correctable in the results dialog.
   bool canSelectIssue(WordProofingIssue issue) =>
+      controller.config.allowsSelection &&
       _publishedCurrent(issue) &&
-      (issue.story == 'Body' || issue.story.startsWith('Comment '));
+      (issue.story == 'Body' ||
+          issue.story.startsWith('Comment ') ||
+          _headerFooterTarget(issue.paragraph) != null);
+
+  ({int page, int paragraph, bool footer})? _headerFooterTarget(
+    WmlParagraph paragraph,
+  ) {
+    for (
+      int sectionIndex = 0;
+      sectionIndex < controller.document.sections.length;
+      sectionIndex++
+    ) {
+      final section = controller.document.sections[sectionIndex];
+      for (final footer in <bool>[false, true]) {
+        final story = footer ? section.footer : section.header;
+        final paragraphIndex = story.indexOf(paragraph);
+        if (paragraphIndex < 0) continue;
+        final pages = controller.documentLaidOut.pages;
+        for (int page = 0; page < pages.length; page++) {
+          final lines = footer ? pages[page].footer : pages[page].header;
+          if (pages[page].sectionIndex == sectionIndex &&
+              lines.any((line) => identical(line.sourceParagraph, paragraph))) {
+            return (page: page, paragraph: paragraphIndex, footer: footer);
+          }
+        }
+      }
+    }
+    return null;
+  }
 
   bool selectIssue(WordProofingIssue issue) {
     if (!canSelectIssue(issue) ||
@@ -625,16 +718,26 @@ class WordProofingSession extends ChangeNotifier {
       final comment = controller.document.comments
           .where((c) => c.paragraphs.contains(issue.paragraph))
           .firstOrNull;
-      if (comment == null) return false;
-      controller.beginCommentEdit(comment.id);
-      caret = controller.commentCaret;
-      paragraphIndex = comment.paragraphs.indexOf(issue.paragraph);
+      if (comment != null) {
+        controller.beginCommentEdit(comment.id);
+        caret = controller.commentCaret;
+        paragraphIndex = comment.paragraphs.indexOf(issue.paragraph);
+      } else {
+        final target = _headerFooterTarget(issue.paragraph);
+        if (target == null) return false;
+        controller.beginHeaderFooterEdit(target.page, footer: target.footer);
+        caret = controller.headerFooterCaret;
+        paragraphIndex = target.paragraph;
+      }
     }
     caret
       ..paragraphIndex = paragraphIndex
       ..selectionAnchorParagraph = paragraphIndex
       ..selectionAnchor = issue.finding.start
       ..logicalIndex = issue.finding.end;
+    // Story navigation can attach the IME before choosing this exact paragraph.
+    // Publish its final text/range before the next keystroke reaches that story.
+    controller._syncImeSelection();
     controller.notifyListeners();
     return true;
   }
@@ -683,6 +786,13 @@ class WordProofingSession extends ChangeNotifier {
     if (_ignoredRules.add(ruleId)) {
       invalidate();
       unawaited(checkDocument());
+    }
+  }
+
+  /// Re-enables an advisory rule suppressed for this proofing session.
+  void restoreRule(String ruleId) {
+    if (_ignoredRules.remove(ruleId)) {
+      invalidate();
     }
   }
 
@@ -778,14 +888,17 @@ class WordProofingSession extends ChangeNotifier {
               block.properties.proofingLanguage,
               document.proofingLanguage,
               block.properties.fieldInstruction,
+              block.properties.pageNumberField,
               for (final control in block.contentControlWrappers) control.xml,
             ];
             final lockedParagraph =
                 locked || block.contentControlWrappers.any(_contentLocked);
+            var hasField = fieldDepth > 0;
             var offset = 0;
             var canJoin = false;
             for (final inline in block.inlines) {
               if (inline is WmlFieldBoundary) {
+                hasField = true;
                 shape.addAll(['field', inline.kind.name, inline.text]);
                 if (inline.kind == WmlFieldBoundaryKind.begin) fieldDepth++;
                 if (inline.kind == WmlFieldBoundaryKind.end && fieldDepth > 0) {
@@ -801,6 +914,7 @@ class WordProofingSession extends ChangeNotifier {
                 final skip =
                     fieldDepth > 0 ||
                     block.properties.fieldInstruction != null ||
+                    block.properties.pageNumberField ||
                     inline.isAtomic ||
                     inline.properties.noProof == true;
                 shape.addAll([
@@ -870,8 +984,13 @@ class WordProofingSession extends ChangeNotifier {
                 }
               }
             }
+            // A closed empty field has depth zero again, but its insertion
+            // point still belongs to generated content, not a blank paragraph.
+            if (text.isEmpty && hasField) result.excluded++;
             if (text.isEmpty &&
+                !hasField &&
                 block.properties.fieldInstruction == null &&
+                !block.properties.pageNumberField &&
                 fieldDepth == 0) {
               segments.add(
                 _WordProofingSegment(

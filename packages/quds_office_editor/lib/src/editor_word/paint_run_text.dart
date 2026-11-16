@@ -572,13 +572,15 @@ abstract final class PaintRunText {
             : first.x;
       }
       final bool lastRun = s == segments.length - 1;
+      final bool emptyDisplay = first.displayText != null && min == max;
       final bool inRun =
           logicalIndex >= min &&
-          (logicalIndex < max || (logicalIndex == max && lastRun));
+          (logicalIndex < max ||
+              (logicalIndex == max && (lastRun || emptyDisplay)));
       if (!inRun) {
         continue;
       }
-      if (logicalIndex == max && !lastRun) {
+      if (logicalIndex == max && !lastRun && !emptyDisplay) {
         continue;
       }
       if (run.length == 1 && first.glyph.isSpace) {
@@ -597,7 +599,7 @@ abstract final class PaintRunText {
       )..layout();
       final int base = _runTextBase(paragraph, run, text);
       final int offset = first.displayText != null
-          ? (logicalIndex <= min ? 0 : text.length)
+          ? (logicalIndex <= min && !emptyDisplay ? 0 : text.length)
           : (logicalIndex - base).clamp(0, text.length);
       final double origin = runPaintOrigin(run, painter, text, paragraph);
       return origin + caretDx(painter, offset);
@@ -658,9 +660,7 @@ abstract final class PaintRunText {
           return _hyphenHit(first, x <= left + painter.width / 2);
         }
         if (first.displayText != null) {
-          return x <= left + painter.width / 2
-              ? first.glyph.logicalIndex
-              : first.logicalEnd;
+          return _displayHit(first, x <= left + painter.width / 2);
         }
         final int local = hitIndex(painter, Offset(x - left, 0), text.length);
         final int base = _runTextBase(paragraph, run, text);
@@ -685,9 +685,7 @@ abstract final class PaintRunText {
       return _hyphenHit(first, x <= bestOrigin + bestPainter.width / 2);
     }
     if (first.displayText != null) {
-      return x <= bestOrigin + bestPainter.width / 2
-          ? first.glyph.logicalIndex
-          : first.logicalEnd;
+      return _displayHit(first, x <= bestOrigin + bestPainter.width / 2);
     }
     final double localX = (x - bestOrigin).clamp(0.0, bestPainter.width);
     final int local = hitIndex(bestPainter, Offset(localX, 0), bestText.length);
@@ -714,6 +712,11 @@ abstract final class PaintRunText {
     }
     return (min: min, max: max);
   }
+
+  static int _displayHit(LaidOutGlyph glyph, bool leftHalf) =>
+      leftHalf == glyph.glyph.level.isEven
+      ? glyph.glyph.logicalIndex
+      : glyph.logicalEnd;
 
   /// plain API.
   static TextPainter plain({

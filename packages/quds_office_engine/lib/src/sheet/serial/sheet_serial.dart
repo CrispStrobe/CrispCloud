@@ -603,6 +603,13 @@ class SheetDeserializer {
             r < SmlWorksheet.excelRowCount) {
           sheet.hiddenRows.add(r);
         }
+        final outline = int.tryParse(reader.getAttribute('outlineLevel') ?? '');
+        if (outline != null &&
+            outline > 0 &&
+            r >= 0 &&
+            r < SmlWorksheet.excelRowCount) {
+          sheet.rowOutlineLevels[r] = outline;
+        }
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'c') {
@@ -1348,6 +1355,7 @@ class SheetSerializer {
       ...sheet.rows.keys,
       ...sheet.rowHeights.keys,
       ...sheet.hiddenRows,
+      ...sheet.rowOutlineLevels.keys,
     };
     final List<int> rowIdx = rowKeys.toList()..sort();
     for (final int r in rowIdx) {
@@ -1355,6 +1363,10 @@ class SheetSerializer {
       w.writeStartElement('row');
       w.writeAttribute('r', '${r + 1}');
       if (sheet.hiddenRows.contains(r)) w.writeAttribute('hidden', '1');
+      final outline = sheet.rowOutlineLevels[r];
+      if (outline != null && outline > 0) {
+        w.writeAttribute('outlineLevel', '$outline');
+      }
       final double? ht = sheet.rowHeights[r];
       if (ht != null) {
         w.writeAttribute('ht', '${SmlWorksheet.rowHeightToExcel(ht)}');
@@ -1414,13 +1426,38 @@ class SheetSerializer {
     }
     w.writeEndElement();
     if (sheet.autoFilter != null) {
-      w.writeEmptyElement(
-        'autoFilter',
-        attributes: <String, String>{
-          'ref':
-              '${sheet.autoFilter!.range.start.a1}:${sheet.autoFilter!.range.end.a1}',
-        },
-      );
+      final filter = sheet.autoFilter!;
+      final ref = '${filter.range.start.a1}:${filter.range.end.a1}';
+      if (filter.hiddenValues.values.every((values) => values.isEmpty)) {
+        w.writeEmptyElement('autoFilter', attributes: {'ref': ref});
+      } else {
+        w.writeStartElement('autoFilter');
+        w.writeAttribute('ref', ref);
+        for (final entry in filter.hiddenValues.entries) {
+          if (entry.value.isEmpty) continue;
+          final column = filter.range.minCol + entry.key;
+          final values = <String>{};
+          for (
+            var row = filter.range.minRow + 1;
+            row <= filter.range.maxRow;
+            row++
+          ) {
+            final value = sheet.cell(SmlCellRef(column, row)).asString;
+            if (value.isNotEmpty) values.add(value);
+          }
+          final visible = values.difference(entry.value).toList()..sort();
+          if (visible.isEmpty) continue;
+          w.writeStartElement('filterColumn');
+          w.writeAttribute('colId', '${entry.key}');
+          w.writeStartElement('filters');
+          for (final value in visible) {
+            w.writeEmptyElement('filter', attributes: {'val': value});
+          }
+          w.writeEndElement();
+          w.writeEndElement();
+        }
+        w.writeEndElement();
+      }
     }
     if (sheet.protection != null && sheet.protection!.enabled) {
       w.writeEmptyElement(

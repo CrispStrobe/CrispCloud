@@ -545,7 +545,7 @@ void main() {
             [_localSource('ABCD1234'), _localSource('EFGH5678')],
             headers: {
               'Zotero-Server-ID': 'original-database',
-              if (version != null) 'Last-Modified-Version': version,
+              'Last-Modified-Version': ?version,
             },
           );
         },

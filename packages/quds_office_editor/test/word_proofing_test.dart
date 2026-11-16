@@ -16,11 +16,13 @@ class _Provider extends OfficeProofingProvider {
     this.status = OfficeProofingStatus.success,
     this.gate,
     this.replacements = const ['Fehler'],
+    this.emptyInsertion = false,
   });
   final Set<String>? languages;
   final OfficeProofingStatus status;
   final Completer<void>? gate;
   final List<String> replacements;
+  final bool emptyInsertion;
   final started = Completer<void>();
   final requests = <OfficeProofingRequest>[];
   bool disposed = false;
@@ -46,6 +48,17 @@ class _Provider extends OfficeProofingProvider {
               request.ignoredRuleIds.contains('test.spelling')
           ? []
           : [
+              if (emptyInsertion && request.text.isEmpty)
+                OfficeProofingFinding.forRequest(
+                  request,
+                  providerId: id,
+                  start: 0,
+                  end: 0,
+                  ruleId: 'test.spelling',
+                  message: 'Insert punctuation',
+                  category: OfficeProofingCategory.grammar,
+                  replacements: const ['.'],
+                ),
               for (final match in RegExp('Feler').allMatches(request.text))
                 OfficeProofingFinding.forRequest(
                   request,
@@ -94,6 +107,53 @@ WmlContentControlData _control(String lock) => WmlContentControlData(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('caret issue lookup keeps an empty read-only story unchanged', () {
+    final doc = _document([]);
+    final c = _controller(doc);
+    c.setMode(OfficeInteractionMode.viewing);
+    expect(doc.paragraphs, isEmpty);
+    expect(doc.sections.single.blocks, isEmpty);
+    expect(c.proofingIssuesAtCaret, isEmpty);
+    expect(doc.paragraphs, isEmpty);
+    expect(doc.sections.single.blocks, isEmpty);
+    expect(c.canUndo, isFalse);
+  });
+
+  test(
+    'standard header and footer findings navigate to the exact rendered story',
+    () async {
+      final doc = _document([_paragraph('Body')]);
+      final header = _paragraph('Feler header');
+      final footer = _paragraph('Feler footer');
+      final firstHeader = _paragraph('Feler alternate');
+      doc.sections.single.header.addAll([_paragraph('Header context'), header]);
+      doc.sections.single.footer.addAll([_paragraph('Footer context'), footer]);
+      doc.sections.single.firstHeader.add(firstHeader);
+      final c = _controller(doc);
+      await c.checkDocumentProofing();
+      for (final (paragraph, isFooter) in [(header, false), (footer, true)]) {
+        final issue = c.proofing.issuesForParagraph(paragraph).single;
+        expect(c.proofing.canSelectIssue(issue), isTrue);
+        expect(c.revealProofingIssue(issue), isTrue);
+        expect(c.isEditingHeaderFooter, isTrue);
+        expect(c.isEditingFooter, isFooter);
+        expect(c.headerFooterParagraphs[1], same(paragraph));
+        expect(c.headerFooterCaret.paragraphIndex, 1);
+        expect(c.headerFooterCaret.selectionAnchor, 0);
+        expect(c.headerFooterCaret.logicalIndex, 5);
+        expect(c.input.value.text, paragraph.text);
+        expect(
+          c.input.value.selection,
+          const TextSelection(baseOffset: 0, extentOffset: 5),
+        );
+      }
+      final alternate = c.proofing.issuesForParagraph(firstHeader).single;
+      expect(c.proofing.canSelectIssue(alternate), isFalse);
+      expect(c.revealProofingIssue(alternate), isFalse);
+      expect(c.headerFooterParagraphs[1], same(footer));
+    },
+  );
 
   test(
     'imported body and comment style languages/noProof have effective inherited semantics',
@@ -451,6 +511,204 @@ void main() {
     expect(c.document.paragraphs.single.text, 'Feler');
   });
 
+  for (final invalidateFirst in [false, true]) {
+    test(
+      'direct document replacement resets cached reports and ignore-once ${invalidateFirst ? 'after invalidate' : 'on check'}',
+      () async {
+        final paragraph = _paragraph('Feler');
+        final provider = _Provider();
+        final c = _controller(_document([paragraph]), provider: provider);
+        final original = (await c.proofing.checkDocument()).issues.single;
+        c.proofing.ignoreOnce(original);
+        expect((await c.proofing.checkDocument()).issues, isEmpty);
+        expect(provider.requests, hasLength(1));
+
+        // Hosts can replace the public document directly and reuse a model
+        // paragraph; neither operation necessarily notifies the controller.
+        c.document = _document([paragraph]);
+        if (invalidateFirst) c.proofing.invalidate();
+        final report = await c.proofing.checkDocument();
+        expect(provider.requests, hasLength(2));
+        final issue = report.issues.single;
+        expect(issue.paragraph, same(paragraph));
+        expect(issue.finding.documentId, isNot(original.finding.documentId));
+        expect(issue.finding.documentId, provider.requests.last.documentId);
+        expect(c.proofing.isCurrent(original), isFalse);
+        expect(c.proofing.isCurrent(issue), isTrue);
+        expect(c.canUndo, isFalse);
+      },
+    );
+  }
+
+  for (final kind in [
+    'simple field',
+    'empty complex field',
+    'locked control',
+  ]) {
+    test('tracked correction cannot insert into an adjacent $kind', () async {
+      final control = _control('contentLocked');
+      final paragraph = WmlParagraph(
+        inlines: [
+          WmlRun(text: 'Feler'),
+          if (kind == 'simple field')
+            WmlRun(text: 'Cached')..fieldInstruction = ' REF target ',
+          if (kind == 'empty complex field') ...[
+            WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+            WmlFieldBoundary(
+              kind: WmlFieldBoundaryKind.instruction,
+              text: ' REF target ',
+            ),
+            WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+            WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+          ],
+          if (kind == 'locked control') ...[
+            WmlContentControlBoundary(control: control, start: true),
+            WmlRun(text: 'Locked'),
+            WmlContentControlBoundary(control: control, start: false),
+          ],
+        ],
+      );
+      final document = _document([paragraph])..trackRevisions = true;
+      final c = _controller(document);
+      final original = paragraph.text;
+      final issue = (await c.proofing.checkDocument()).issues.single;
+      expect(c.proofing.canApply(issue), isFalse);
+      expect(c.proofing.applySuggestion(issue, 'Fehler'), isFalse);
+      expect(paragraph.text, original);
+      expect(document.revisions, isEmpty);
+      expect(c.canUndo, isFalse);
+    });
+  }
+
+  test('correction cannot split a grapheme across language runs', () async {
+    final paragraph = WmlParagraph(
+      inlines: [
+        WmlRun(
+          text: 'Feler',
+          properties: WmlRunProps(proofingLanguage: 'de-DE'),
+        ),
+        WmlRun(
+          text: '\u0301',
+          properties: WmlRunProps(proofingLanguage: 'en-US'),
+        ),
+      ],
+    );
+    final c = _controller(_document([paragraph]));
+    final issue = (await c.proofing.checkDocument()).issues.single;
+    expect(issue.finding.end, 5);
+    expect(c.proofing.canApply(issue), isFalse);
+    expect(c.proofing.applySuggestion(issue, 'Fehler'), isFalse);
+    expect(paragraph.text, 'Feler\u0301');
+    expect(c.canUndo, isFalse);
+  });
+
+  test('empty complex fields cannot produce an applicable insertion', () async {
+    for (final spanning in [false, true]) {
+      final first = WmlParagraph(
+        inlines: [
+          WmlFieldBoundary(kind: WmlFieldBoundaryKind.begin),
+          WmlFieldBoundary(
+            kind: WmlFieldBoundaryKind.instruction,
+            text: ' REF target ',
+          ),
+          WmlFieldBoundary(kind: WmlFieldBoundaryKind.separate),
+          if (!spanning) WmlFieldBoundary(kind: WmlFieldBoundaryKind.end),
+        ],
+      );
+      final last = WmlParagraph(
+        inlines: [WmlFieldBoundary(kind: WmlFieldBoundaryKind.end)],
+      );
+      final provider = _Provider(emptyInsertion: true);
+      final c = _controller(
+        _document([first, if (spanning) last]),
+        provider: provider,
+      );
+      final report = await c.proofing.checkDocument();
+      for (final issue in report.issues) {
+        expect(c.proofing.applySuggestion(issue, '.'), isFalse);
+      }
+      expect(report.issues, isEmpty);
+      expect(provider.requests, isEmpty);
+      expect(report.excludedSpanCount, greaterThan(0));
+      expect(report.complete, isFalse);
+      expect(c.document.paragraphs.map((p) => p.text), everyElement(isEmpty));
+      expect(c.canUndo, isFalse);
+    }
+    // An ordinary blank paragraph still supports a real insertion finding.
+    final plain = _paragraph('');
+    final c = _controller(
+      _document([plain]),
+      provider: _Provider(emptyInsertion: true),
+    );
+    final issue = (await c.proofing.checkDocument()).issues.single;
+    expect(c.proofing.applySuggestion(issue, '.'), isTrue);
+    expect(plain.text, '.');
+    c.undo();
+    expect(plain.text, '');
+  });
+
+  for (final comment in [true, false]) {
+    test(
+      'correction history preserves selection after switching ${comment ? 'comments' : 'header and footer'}',
+      () async {
+        final corrected = _paragraph('Prefix Feler suffix');
+        final other = _paragraph('OK');
+        final document = _document([_paragraph('Body')]);
+        if (comment) {
+          document.comments.addAll([
+            WmlComment(id: 1, paragraphs: [corrected]),
+            WmlComment(id: 2, paragraphs: [other]),
+          ]);
+        } else {
+          document.sections.single.header.add(corrected);
+          document.sections.single.footer.add(other);
+        }
+        final c = _controller(document);
+        void selectStory(bool first) {
+          if (comment) {
+            c.beginCommentEdit(first ? 1 : 2);
+          } else {
+            c.beginHeaderFooterEdit(0, footer: !first);
+          }
+        }
+
+        selectStory(true);
+        c.caret
+          ..logicalIndex = 12
+          ..selectionAnchor = 7;
+        final issue = (await c.proofing.checkDocument()).issues.single;
+        expect(c.proofing.applySuggestion(issue, 'Fehler'), isTrue);
+        selectStory(false);
+        c.caret
+          ..logicalIndex = 2
+          ..selectionAnchor = 1;
+        void expectOtherSelection() {
+          expect(c.caret.paragraphIndex, 0);
+          expect(c.caret.logicalIndex, 2);
+          expect(c.caret.selectionAnchorParagraph, 0);
+          expect(c.caret.selectionAnchor, 1);
+          expect(other.text, 'OK');
+          if (comment) {
+            expect(c.selectedCommentId, 2);
+          } else {
+            expect(c.isEditingFooter, isTrue);
+          }
+        }
+
+        c.undo();
+        expect(corrected.text, 'Prefix Feler suffix');
+        expectOtherSelection();
+        c.redo();
+        expect(corrected.text, 'Prefix Fehler suffix');
+        expectOtherSelection();
+        selectStory(true);
+        c.undo();
+        expect(c.caret.logicalIndex, 12);
+        expect(c.caret.selectionAnchor, 7);
+      },
+    );
+  }
+
   test(
     'stale same-text language and generated-field changes block corrections',
     () async {
@@ -462,6 +720,25 @@ void main() {
       expect(c.proofing.canApply(issue), isFalse);
       expect(c.proofing.applySuggestion(issue, 'Fehler'), isFalse);
       expect(c.canUndo, isFalse);
+    },
+  );
+
+  test(
+    'page-number field metadata invalidates stale suggestions and excludes its cache',
+    () async {
+      final header = _paragraph('Feler');
+      final doc = _document([_paragraph('Gut.')]);
+      doc.sections.single.header.add(header);
+      final c = _controller(doc);
+      await c.proofing.checkDocument();
+      final issue = c.proofing.issues.single;
+      header.properties.pageNumberField = true;
+      expect(c.proofing.canApply(issue), isFalse);
+      expect(c.proofing.applySuggestion(issue, 'Fehler'), isFalse);
+      final report = await c.proofing.checkDocument();
+      expect(report.issues, isEmpty);
+      expect(report.excludedSpanCount, 1);
+      expect(header.text, 'Feler');
     },
   );
 

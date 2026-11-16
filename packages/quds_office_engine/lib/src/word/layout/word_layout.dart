@@ -213,7 +213,7 @@ class LaidOutLine {
         (LaidOutGlyph a, LaidOutGlyph b) =>
             a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex),
       );
-    final String? source = sourceText;
+    final String? source = sourceText ?? sourceParagraph?.text;
     if (logical.any((glyph) => glyph.displayText != null)) {
       logical.sort((a, b) {
         final bySource = a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex);
@@ -759,8 +759,11 @@ const double kDefaultTabWidth = 36;
 /// Hosts that paint with their own text stack (for example Flutter's
 /// `TextPainter`) pass this to [WordLayoutEngine.measure] so line breaks use
 /// the same widths the painter will use.
-typedef WordGlyphMeasure =
-    double Function(int codePoint, double sizePoints, WmlRunProps props);
+typedef WordGlyphMeasure = double Function(
+  int codePoint,
+  double sizePoints,
+  WmlRunProps props,
+);
 
 /// Flowable pagination: Knuth-Plass lines accumulated into physical pages.
 class WordLayoutEngine {
