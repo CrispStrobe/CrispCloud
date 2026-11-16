@@ -1,0 +1,1458 @@
+{
+  "started_utc": "2026-11-16T07:32:22.772080+00:00",
+  "lock_sha256_before": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+  "method": "Official dart pub cache add at exact locked versions",
+  "hosted_count": 238,
+  "missing_at_start": 76,
+  "deadline_seconds": 210,
+  "workers": 10,
+  "results": [
+    {
+      "name": "charcode",
+      "version": "1.4.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "charcode",
+        "--version",
+        "1.4.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/charcode-1.4.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.052,
+      "cached_after": true
+    },
+    {
+      "name": "build_config",
+      "version": "1.3.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "build_config",
+        "--version",
+        "1.3.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/build_config-1.3.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.077,
+      "cached_after": true
+    },
+    {
+      "name": "build",
+      "version": "4.0.6",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "build",
+        "--version",
+        "4.0.6"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/build-4.0.6.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.101,
+      "cached_after": true
+    },
+    {
+      "name": "asn1lib",
+      "version": "1.6.5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "asn1lib",
+        "--version",
+        "1.6.5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/asn1lib-1.6.5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.105,
+      "cached_after": true
+    },
+    {
+      "name": "cli_util",
+      "version": "0.4.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "cli_util",
+        "--version",
+        "0.4.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/cli_util-0.4.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.101,
+      "cached_after": true
+    },
+    {
+      "name": "build_daemon",
+      "version": "4.1.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "build_daemon",
+        "--version",
+        "4.1.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/build_daemon-4.1.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.115,
+      "cached_after": true
+    },
+    {
+      "name": "bidi",
+      "version": "2.0.13",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "bidi",
+        "--version",
+        "2.0.13"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/bidi-2.0.13.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.155,
+      "cached_after": true
+    },
+    {
+      "name": "cupertino_icons",
+      "version": "2.0.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "cupertino_icons",
+        "--version",
+        "2.0.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/cupertino_icons-2.0.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.252,
+      "cached_after": true
+    },
+    {
+      "name": "_fe_analyzer_shared",
+      "version": "93.0.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "_fe_analyzer_shared",
+        "--version",
+        "93.0.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/_fe_analyzer_shared-93.0.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.306,
+      "cached_after": true
+    },
+    {
+      "name": "analyzer",
+      "version": "10.0.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "analyzer",
+        "--version",
+        "10.0.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/analyzer-10.0.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 14.821,
+      "cached_after": true
+    },
+    {
+      "name": "file_selector_web",
+      "version": "0.9.5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "file_selector_web",
+        "--version",
+        "0.9.5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/file_selector_web-0.9.5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.182,
+      "cached_after": true
+    },
+    {
+      "name": "file_selector_ios",
+      "version": "0.5.3+5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "file_selector_ios",
+        "--version",
+        "0.5.3+5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/file_selector_ios-0.5.3+5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.89,
+      "cached_after": true
+    },
+    {
+      "name": "file_selector_platform_interface",
+      "version": "2.7.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "file_selector_platform_interface",
+        "--version",
+        "2.7.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/file_selector_platform_interface-2.7.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.746,
+      "cached_after": true
+    },
+    {
+      "name": "file_selector_android",
+      "version": "0.5.2+6",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "file_selector_android",
+        "--version",
+        "0.5.2+6"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/file_selector_android-0.5.2+6.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.937,
+      "cached_after": true
+    },
+    {
+      "name": "file_selector_linux",
+      "version": "0.9.4",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "file_selector_linux",
+        "--version",
+        "0.9.4"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/file_selector_linux-0.9.4.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.801,
+      "cached_after": true
+    },
+    {
+      "name": "desktop_drop",
+      "version": "0.7.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "desktop_drop",
+        "--version",
+        "0.7.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/desktop_drop-0.7.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.993,
+      "cached_after": true
+    },
+    {
+      "name": "extension",
+      "version": "0.6.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "extension",
+        "--version",
+        "0.6.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/extension-0.6.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.998,
+      "cached_after": true
+    },
+    {
+      "name": "dio_web_adapter",
+      "version": "2.2.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "dio_web_adapter",
+        "--version",
+        "2.2.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/dio_web_adapter-2.2.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.003,
+      "cached_after": true
+    },
+    {
+      "name": "cupertino_ui",
+      "version": "1.1.6",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "cupertino_ui",
+        "--version",
+        "1.1.6"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/cupertino_ui-1.1.6.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.196,
+      "cached_after": true
+    },
+    {
+      "name": "dart_pdf_editor_assets",
+      "version": "14.0.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "dart_pdf_editor_assets",
+        "--version",
+        "14.0.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/dart_pdf_editor_assets-14.0.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.326,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_internal_annotations",
+      "version": "1.3.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_internal_annotations",
+        "--version",
+        "1.3.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_internal_annotations-1.3.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.342,
+      "cached_after": true
+    },
+    {
+      "name": "file_selector_windows",
+      "version": "0.9.3+5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "file_selector_windows",
+        "--version",
+        "0.9.3+5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/file_selector_windows-0.9.3+5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.444,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_local_notifications_linux",
+      "version": "4.0.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_local_notifications_linux",
+        "--version",
+        "4.0.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_local_notifications_linux-4.0.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.043,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_web",
+      "version": "1.1.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_web",
+        "--version",
+        "1.1.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_web-1.1.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.344,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_ios",
+      "version": "1.1.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_ios",
+        "--version",
+        "1.1.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_ios-1.1.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.49,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_macos",
+      "version": "1.1.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_macos",
+        "--version",
+        "1.1.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_macos-1.1.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.453,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_windows",
+      "version": "0.6.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_windows",
+        "--version",
+        "0.6.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_windows-0.6.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.299,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_platform_interface",
+      "version": "1.3.0+1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_platform_interface",
+        "--version",
+        "1.3.0+1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_platform_interface-1.3.0+1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.595,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview_android",
+      "version": "1.1.3",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview_android",
+        "--version",
+        "1.1.3"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview_android-1.1.3.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.652,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_inappwebview",
+      "version": "6.1.5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_inappwebview",
+        "--version",
+        "6.1.5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_inappwebview-6.1.5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.853,
+      "cached_after": true
+    },
+    {
+      "name": "flutter_local_notifications_platform_interface",
+      "version": "7.2.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "flutter_local_notifications_platform_interface",
+        "--version",
+        "7.2.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/flutter_local_notifications_platform_interface-7.2.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.019,
+      "cached_after": true
+    },
+    {
+      "name": "koni_rar",
+      "version": "0.9.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "koni_rar",
+        "--version",
+        "0.9.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/koni_rar-0.9.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.919,
+      "cached_after": true
+    },
+    {
+      "name": "koni_archive_core",
+      "version": "0.9.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "koni_archive_core",
+        "--version",
+        "0.9.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/koni_archive_core-0.9.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.97,
+      "cached_after": true
+    },
+    {
+      "name": "koni_gzip",
+      "version": "0.9.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "koni_gzip",
+        "--version",
+        "0.9.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/koni_gzip-0.9.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.97,
+      "cached_after": true
+    },
+    {
+      "name": "koni_tar",
+      "version": "0.9.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "koni_tar",
+        "--version",
+        "0.9.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/koni_tar-0.9.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.818,
+      "cached_after": true
+    },
+    {
+      "name": "highlight",
+      "version": "0.7.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "highlight",
+        "--version",
+        "0.7.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/highlight-0.7.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.072,
+      "cached_after": true
+    },
+    {
+      "name": "koni_zip",
+      "version": "0.9.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "koni_zip",
+        "--version",
+        "0.9.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/koni_zip-0.9.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.622,
+      "cached_after": true
+    },
+    {
+      "name": "koni_sevenz",
+      "version": "0.9.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "koni_sevenz",
+        "--version",
+        "0.9.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/koni_sevenz-0.9.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.823,
+      "cached_after": true
+    },
+    {
+      "name": "isolate_manager",
+      "version": "4.1.5+1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "isolate_manager",
+        "--version",
+        "4.1.5+1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/isolate_manager-4.1.5+1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.119,
+      "cached_after": true
+    },
+    {
+      "name": "isolate_contactor",
+      "version": "4.1.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "isolate_contactor",
+        "--version",
+        "4.1.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/isolate_contactor-4.1.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.171,
+      "cached_after": true
+    },
+    {
+      "name": "package_info_plus_platform_interface",
+      "version": "3.2.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "package_info_plus_platform_interface",
+        "--version",
+        "3.2.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/package_info_plus_platform_interface-3.2.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.809,
+      "cached_after": true
+    },
+    {
+      "name": "nested",
+      "version": "1.0.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "nested",
+        "--version",
+        "1.0.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/nested-1.0.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.9,
+      "cached_after": true
+    },
+    {
+      "name": "local_auth_platform_interface",
+      "version": "1.1.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "local_auth_platform_interface",
+        "--version",
+        "1.1.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/local_auth_platform_interface-1.1.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.913,
+      "cached_after": true
+    },
+    {
+      "name": "path_parsing",
+      "version": "1.1.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "path_parsing",
+        "--version",
+        "1.1.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/path_parsing-1.1.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.811,
+      "cached_after": true
+    },
+    {
+      "name": "logging_appenders",
+      "version": "1.4.0+1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "logging_appenders",
+        "--version",
+        "1.4.0+1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/logging_appenders-1.4.0+1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.913,
+      "cached_after": true
+    },
+    {
+      "name": "local_auth_darwin",
+      "version": "1.6.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "local_auth_darwin",
+        "--version",
+        "1.6.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/local_auth_darwin-1.6.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.008,
+      "cached_after": true
+    },
+    {
+      "name": "native_toolchain_c",
+      "version": "0.19.5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "native_toolchain_c",
+        "--version",
+        "0.19.5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/native_toolchain_c-0.19.5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.954,
+      "cached_after": true
+    },
+    {
+      "name": "local_auth_android",
+      "version": "1.0.56",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "local_auth_android",
+        "--version",
+        "1.0.56"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/local_auth_android-1.0.56.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.063,
+      "cached_after": true
+    },
+    {
+      "name": "local_auth_windows",
+      "version": "1.0.11",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "local_auth_windows",
+        "--version",
+        "1.0.11"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/local_auth_windows-1.0.11.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.962,
+      "cached_after": true
+    },
+    {
+      "name": "material_ui",
+      "version": "1.10.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "material_ui",
+        "--version",
+        "1.10.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/material_ui-1.10.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.35,
+      "cached_after": true
+    },
+    {
+      "name": "share_plus_platform_interface",
+      "version": "5.0.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "share_plus_platform_interface",
+        "--version",
+        "5.0.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/share_plus_platform_interface-5.0.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.831,
+      "cached_after": true
+    },
+    {
+      "name": "recase",
+      "version": "4.1.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "recase",
+        "--version",
+        "4.1.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/recase-4.1.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.92,
+      "cached_after": true
+    },
+    {
+      "name": "sha3",
+      "version": "0.2.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "sha3",
+        "--version",
+        "0.2.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/sha3-0.2.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.88,
+      "cached_after": true
+    },
+    {
+      "name": "sqlite3",
+      "version": "3.3.3",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "sqlite3",
+        "--version",
+        "3.3.3"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/sqlite3-3.3.3.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.877,
+      "cached_after": true
+    },
+    {
+      "name": "source_gen",
+      "version": "4.2.3",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "source_gen",
+        "--version",
+        "4.2.3"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/source_gen-4.2.3.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.928,
+      "cached_after": true
+    },
+    {
+      "name": "sqlparser",
+      "version": "0.44.5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "sqlparser",
+        "--version",
+        "0.44.5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/sqlparser-0.44.5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.587,
+      "cached_after": true
+    },
+    {
+      "name": "pdf_graphics",
+      "version": "14.0.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "pdf_graphics",
+        "--version",
+        "14.0.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/pdf_graphics-14.0.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.128,
+      "cached_after": true
+    },
+    {
+      "name": "provider",
+      "version": "6.1.5+1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "provider",
+        "--version",
+        "6.1.5+1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/provider-6.1.5+1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.524,
+      "cached_after": true
+    },
+    {
+      "name": "photo_view",
+      "version": "0.15.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "photo_view",
+        "--version",
+        "0.15.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/photo_view-0.15.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.784,
+      "cached_after": true
+    },
+    {
+      "name": "pdfx",
+      "version": "2.9.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "pdfx",
+        "--version",
+        "2.9.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/pdfx-2.9.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 10.581,
+      "cached_after": true
+    },
+    {
+      "name": "universal_platform",
+      "version": "1.1.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "universal_platform",
+        "--version",
+        "1.1.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/universal_platform-1.1.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.87,
+      "cached_after": true
+    },
+    {
+      "name": "vector_graphics",
+      "version": "1.2.2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "vector_graphics",
+        "--version",
+        "1.2.2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/vector_graphics-1.2.2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.423,
+      "cached_after": true
+    },
+    {
+      "name": "universal_io",
+      "version": "2.3.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "universal_io",
+        "--version",
+        "2.3.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/universal_io-2.3.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.974,
+      "cached_after": true
+    },
+    {
+      "name": "unorm_dart",
+      "version": "0.3.3",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "unorm_dart",
+        "--version",
+        "0.3.3"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/unorm_dart-0.3.3.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.875,
+      "cached_after": true
+    },
+    {
+      "name": "synchronized",
+      "version": "3.4.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "synchronized",
+        "--version",
+        "3.4.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/synchronized-3.4.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.028,
+      "cached_after": true
+    },
+    {
+      "name": "stream_transform",
+      "version": "2.1.1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "stream_transform",
+        "--version",
+        "2.1.1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/stream_transform-2.1.1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.074,
+      "cached_after": true
+    },
+    {
+      "name": "vector_graphics_codec",
+      "version": "1.1.13",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "vector_graphics_codec",
+        "--version",
+        "1.1.13"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/vector_graphics_codec-1.1.13.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 8.169,
+      "cached_after": true
+    },
+    {
+      "name": "vector_graphics_compiler",
+      "version": "1.2.6",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "vector_graphics_compiler",
+        "--version",
+        "1.2.6"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/vector_graphics_compiler-1.2.6.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 7.421,
+      "cached_after": true
+    },
+    {
+      "name": "universal_html",
+      "version": "2.3.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "universal_html",
+        "--version",
+        "2.3.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/universal_html-2.3.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.073,
+      "cached_after": true
+    },
+    {
+      "name": "timezone",
+      "version": "0.9.4",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "timezone",
+        "--version",
+        "0.9.4"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/timezone-0.9.4.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.096,
+      "cached_after": true
+    },
+    {
+      "name": "workmanager_platform_interface",
+      "version": "0.9.1+1",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "workmanager_platform_interface",
+        "--version",
+        "0.9.1+1"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/workmanager_platform_interface-0.9.1+1.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.075,
+      "cached_after": true
+    },
+    {
+      "name": "workmanager_apple",
+      "version": "0.9.1+2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "workmanager_apple",
+        "--version",
+        "0.9.1+2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/workmanager_apple-0.9.1+2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.078,
+      "cached_after": true
+    },
+    {
+      "name": "workmanager_android",
+      "version": "0.9.0+2",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "workmanager_android",
+        "--version",
+        "0.9.0+2"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/workmanager_android-0.9.0+2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.084,
+      "cached_after": true
+    },
+    {
+      "name": "video_player_web",
+      "version": "2.4.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "video_player_web",
+        "--version",
+        "2.4.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/video_player_web-2.4.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.136,
+      "cached_after": true
+    },
+    {
+      "name": "video_player_android",
+      "version": "2.9.5",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "video_player_android",
+        "--version",
+        "2.9.5"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/video_player_android-2.9.5.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.242,
+      "cached_after": true
+    },
+    {
+      "name": "video_player_avfoundation",
+      "version": "2.10.0",
+      "command": [
+        "/workspace/scratch/4156e4a05f09/zotero-toolchain/flutter-sdk/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "cache",
+        "add",
+        "video_player_avfoundation",
+        "--version",
+        "2.10.0"
+      ],
+      "exit_code": 0,
+      "status": "passed",
+      "log": "full-crisp-cache-logs/video_player_avfoundation-2.10.0.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 9.236,
+      "cached_after": true
+    }
+  ],
+  "finished_utc": "2026-11-16T07:33:40.404774+00:00",
+  "lock_sha256_after": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+  "remaining_missing": []
+}

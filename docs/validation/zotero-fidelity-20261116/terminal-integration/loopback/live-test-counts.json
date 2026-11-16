@@ -1,0 +1,17 @@
+{
+  "ssh_agent_live_test.dart": {
+    "failed": 0,
+    "passed": 11,
+    "skipped": 1
+  },
+  "ssh_port_forwarding_live_test.dart": {
+    "failed": 0,
+    "passed": 4,
+    "skipped": 0
+  },
+  "ssh_terminal_live_test.dart": {
+    "failed": 0,
+    "passed": 2,
+    "skipped": 1
+  }
+}
