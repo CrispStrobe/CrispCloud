@@ -422,6 +422,8 @@ class SheetDeserializer {
         <String, ({String formula, SmlCellRef anchor})>{};
     SmlPageSetup? pageSetup;
     SmlPageSetup ensurePageSetup() => pageSetup ??= SmlPageSetup();
+    SmlRange? conditionalRange;
+    SmlConditionalRule? conditionalRule;
     while (reader.next()) {
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sheetView') {
@@ -509,20 +511,77 @@ class SheetDeserializer {
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'formula' &&
-          sheet.conditionalFormats.isNotEmpty) {
-        sheet.conditionalFormats.last.formula = _readText(reader);
+          conditionalRule != null) {
+        final text = _readText(reader);
+        if (conditionalRule.formula.isEmpty) {
+          conditionalRule.formula = text;
+        } else if (conditionalRule.formula2.isEmpty) {
+          conditionalRule.formula2 = text;
+        }
+      }
+      if (reader.eventType == XmlEventType.endElement &&
+          reader.localName == 'cfRule') {
+        conditionalRule = null;
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'conditionalFormatting') {
         final String? sqref = reader.getAttribute('sqref');
-        if (sqref != null && sqref.isNotEmpty) {
-          sheet.conditionalFormats.add(
-            SmlConditionalRule(
-              range: SmlRange.parse(sqref.split(' ').first),
-              kind: SmlConditionalKind.greaterThan,
-            ),
-          );
+        conditionalRange = sqref == null || sqref.isEmpty
+            ? null
+            : SmlRange.parse(sqref.split(' ').first);
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'cfRule' &&
+          conditionalRange != null) {
+        final type = reader.getAttribute('type') ?? '';
+        final operator = reader.getAttribute('operator') ?? '';
+        SmlConditionalKind? kind;
+        final text = reader.getAttribute('text') ?? '';
+        switch (type) {
+          case 'cellIs':
+            kind = switch (operator) {
+              'greaterThan' => SmlConditionalKind.greaterThan,
+              'greaterThanOrEqual' => SmlConditionalKind.greaterOrEqual,
+              'lessThan' => SmlConditionalKind.lessThan,
+              'lessThanOrEqual' => SmlConditionalKind.lessOrEqual,
+              'equal' => SmlConditionalKind.equal,
+              'notEqual' => SmlConditionalKind.notEqual,
+              'between' => SmlConditionalKind.between,
+              'notBetween' => SmlConditionalKind.notBetween,
+              _ => null,
+            };
+          case 'containsText':
+            kind = SmlConditionalKind.contains;
+          case 'beginsWith':
+            kind = SmlConditionalKind.beginsWith;
+          case 'endsWith':
+            kind = SmlConditionalKind.endsWith;
+          case 'duplicateValues':
+            kind = SmlConditionalKind.duplicate;
+          case 'top10':
+            final bottom = reader.getAttribute('bottom') == '1';
+            final percent = reader.getAttribute('percent') == '1';
+            kind = bottom
+                ? (percent
+                      ? SmlConditionalKind.bottomPercent
+                      : SmlConditionalKind.bottom)
+                : (percent
+                      ? SmlConditionalKind.topPercent
+                      : SmlConditionalKind.top);
+          case 'aboveAverage':
+            kind = reader.getAttribute('aboveAverage') == '0'
+                ? SmlConditionalKind.belowAverage
+                : SmlConditionalKind.aboveAverage;
         }
+        if (kind == null) continue;
+        conditionalRule = SmlConditionalRule(
+          range: conditionalRange,
+          kind: kind,
+          formula: text,
+          rank: int.tryParse(reader.getAttribute('rank') ?? '') ?? 10,
+          dxfId: int.tryParse(reader.getAttribute('dxfId') ?? ''),
+        );
+        sheet.conditionalFormats.add(conditionalRule);
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'pane') {
@@ -1620,6 +1679,26 @@ class SheetSerializer {
             w.writeAttribute('text', rule.formula);
           case SmlConditionalKind.duplicate:
             w.writeAttribute('type', 'duplicateValues');
+          case SmlConditionalKind.top:
+          case SmlConditionalKind.topPercent:
+            w.writeAttribute('type', 'top10');
+            w.writeAttribute('rank', '${rule.rank}');
+            if (rule.kind == SmlConditionalKind.topPercent) {
+              w.writeAttribute('percent', '1');
+            }
+          case SmlConditionalKind.bottom:
+          case SmlConditionalKind.bottomPercent:
+            w.writeAttribute('type', 'top10');
+            w.writeAttribute('bottom', '1');
+            w.writeAttribute('rank', '${rule.rank}');
+            if (rule.kind == SmlConditionalKind.bottomPercent) {
+              w.writeAttribute('percent', '1');
+            }
+          case SmlConditionalKind.aboveAverage:
+            w.writeAttribute('type', 'aboveAverage');
+          case SmlConditionalKind.belowAverage:
+            w.writeAttribute('type', 'aboveAverage');
+            w.writeAttribute('aboveAverage', '0');
           default:
             w.writeAttribute('type', 'cellIs');
             w.writeAttribute('operator', switch (rule.kind) {
@@ -1634,7 +1713,15 @@ class SheetSerializer {
               SmlConditionalKind.contains ||
               SmlConditionalKind.beginsWith ||
               SmlConditionalKind.endsWith ||
-              SmlConditionalKind.duplicate => throw StateError('handled above'),
+              SmlConditionalKind.duplicate ||
+              SmlConditionalKind.top ||
+              SmlConditionalKind.bottom ||
+              SmlConditionalKind.topPercent ||
+              SmlConditionalKind.bottomPercent ||
+              SmlConditionalKind.aboveAverage ||
+              SmlConditionalKind.belowAverage => throw StateError(
+                'handled above',
+              ),
             });
         }
         if (rule.dxfId case final dxfId?) {
@@ -1643,7 +1730,13 @@ class SheetSerializer {
         if (rule.kind != SmlConditionalKind.contains &&
             rule.kind != SmlConditionalKind.beginsWith &&
             rule.kind != SmlConditionalKind.endsWith &&
-            rule.kind != SmlConditionalKind.duplicate) {
+            rule.kind != SmlConditionalKind.duplicate &&
+            rule.kind != SmlConditionalKind.top &&
+            rule.kind != SmlConditionalKind.bottom &&
+            rule.kind != SmlConditionalKind.topPercent &&
+            rule.kind != SmlConditionalKind.bottomPercent &&
+            rule.kind != SmlConditionalKind.aboveAverage &&
+            rule.kind != SmlConditionalKind.belowAverage) {
           if (rule.formula.isNotEmpty) {
             w.writeStartElement('formula');
             w.writeText(rule.formula);

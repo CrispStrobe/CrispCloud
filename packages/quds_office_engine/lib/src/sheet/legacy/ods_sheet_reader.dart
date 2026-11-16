@@ -1182,6 +1182,7 @@ abstract final class OdsSheetReader {
         final SmlConditionalKind kind;
         String formula;
         var formula2 = '';
+        var rank = 10;
         if (value.startsWith('<>') || value.startsWith('!=')) {
           kind = SmlConditionalKind.notEqual;
           formula = value.substring(2).trim();
@@ -1237,10 +1238,40 @@ abstract final class OdsSheetReader {
         } else if (value == 'duplicate') {
           kind = SmlConditionalKind.duplicate;
           formula = '';
+        } else if (RegExp(
+              r'^(top|bottom)-(elements|percent)\(([0-9]+)\)$',
+            ).firstMatch(value)
+            case final ranked?) {
+          final direction = ranked.group(1)!;
+          final isPercent = ranked.group(2) == 'percent';
+          kind = switch ((direction, isPercent)) {
+            ('top', false) => SmlConditionalKind.top,
+            ('bottom', false) => SmlConditionalKind.bottom,
+            ('top', true) => SmlConditionalKind.topPercent,
+            _ => SmlConditionalKind.bottomPercent,
+          };
+          formula = '';
+          rank = int.tryParse(ranked.group(3) ?? '') ?? 10;
+        } else if (value == 'above-average') {
+          kind = SmlConditionalKind.aboveAverage;
+          formula = '';
+        } else if (value == 'below-average') {
+          kind = SmlConditionalKind.belowAverage;
+          formula = '';
         } else {
           continue;
         }
-        if (formula.isEmpty && kind != SmlConditionalKind.duplicate) continue;
+        final needsFormula = switch (kind) {
+          SmlConditionalKind.duplicate ||
+          SmlConditionalKind.top ||
+          SmlConditionalKind.bottom ||
+          SmlConditionalKind.topPercent ||
+          SmlConditionalKind.bottomPercent ||
+          SmlConditionalKind.aboveAverage ||
+          SmlConditionalKind.belowAverage => false,
+          _ => true,
+        };
+        if (needsFormula && formula.isEmpty) continue;
         final style = _styleChain(styles, 'table-cell', styleName);
         final fill = _hex(
           _property(style, 'table-cell-properties', 'background-color', _fo),
@@ -1253,6 +1284,7 @@ abstract final class OdsSheetReader {
             kind: kind,
             formula: formula,
             formula2: formula2,
+            rank: rank,
             fillRgb: fill ?? 'FFF2CC',
             fontRgb: font ?? '',
           ),
