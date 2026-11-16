@@ -1,0 +1,326 @@
+{
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "created_utc": "2026-11-16T11:07:19.417119+00:00",
+  "qualification": "Immutable host test adapters only: package:test -> flutter_test and explicit fixture prefixes. Application, production graph, original assertions and vendor source are unchanged. Lexical counts are not runtime pass counts.",
+  "adapters": [
+    {
+      "original_path": "packages/quds_office_engine/test/ods_sheet_reader_test.dart",
+      "adapted_path": "build/final-incoming-tests/ods_sheet_reader_test.dart",
+      "original": {
+        "bytes": 76095,
+        "sha256": "ac1cfe69397f65112701df2748a46fe0f9a35145745e926e235dd9610e714f99",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 76167,
+        "sha256": "de9a731cf58de2693b6133badc056216722fceef190edb77459ab3a075bb394e",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ],
+        [
+          "'test/fixtures/fidelity/legacy-sheet.ods'",
+          "'packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods'"
+        ],
+        [
+          "'test/fixtures/fidelity/legacy-sheet-edge.ods'",
+          "'packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods'"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 68,
+        "testWidgets": 0,
+        "expect": 306,
+        "expectLater": 0
+      },
+      "diff": "--- packages/quds_office_engine/test/ods_sheet_reader_test.dart\n+++ build/final-incoming-tests/ods_sheet_reader_test.dart\n@@ -4,7 +4,7 @@\n \n import 'package:archive/archive.dart';\n import 'package:quds_office_engine/quds_office_engine.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n const _office = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0';\n const _table = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0';\n@@ -407,7 +407,7 @@\n   );\n \n   final bytes = File(\n-    'test/fixtures/fidelity/legacy-sheet.ods',\n+    'packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods',\n   ).readAsBytesSync();\n \n   test('reads ODS values, formulas, styles and merges', () {\n@@ -1259,7 +1259,7 @@\n \n void edgeTests() {\n   final edge = File(\n-    'test/fixtures/fidelity/legacy-sheet-edge.ods',\n+    'packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods',\n   ).readAsBytesSync();\n \n   test('ODS keeps dates, times, booleans, formats and sheet references', () {\n"
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/sheet_formula_test.dart",
+      "adapted_path": "build/final-incoming-tests/sheet_formula_test.dart",
+      "original": {
+        "bytes": 24601,
+        "sha256": "93f6c6942dedbfee64b1954185efdd714ab6822b9fb19a47d67c4b4f85e181a6",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 24617,
+        "sha256": "01cd457cf694124bbc2561bc3b5c6a09e424b4e6125df1ae9e011924e9aa8828",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 26,
+        "testWidgets": 0,
+        "expect": 203,
+        "expectLater": 0
+      },
+      "diff": "--- packages/quds_office_engine/test/sheet_formula_test.dart\n+++ build/final-incoming-tests/sheet_formula_test.dart\n@@ -1,5 +1,5 @@\n import 'package:quds_office_engine/quds_office_engine.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n void main() {\n   test('evaluates arithmetic, logic, lookup, and text functions', () {\n"
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/zotero_client_test.dart",
+      "adapted_path": "build/final-incoming-tests/zotero_client_test.dart",
+      "original": {
+        "bytes": 34065,
+        "sha256": "8502e4921897cfa3f9c89170f64dd6e60e97e7eecba886935bf6db64fb76ad68",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 34081,
+        "sha256": "293e82ed21de29552e45bded3bcad63101a1ae762f1f0ae2caeab677193772ad",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 34,
+        "testWidgets": 0,
+        "expect": 113,
+        "expectLater": 39
+      },
+      "diff": "--- packages/quds_office_engine/test/zotero_client_test.dart\n+++ build/final-incoming-tests/zotero_client_test.dart\n@@ -2,7 +2,7 @@\n import 'dart:convert';\n \n import 'package:quds_office_engine/src/zotero/zotero_client.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n Map<String, dynamic> _item(\n   String key, {\n"
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/zotero_identity_client_test.dart",
+      "adapted_path": "build/final-incoming-tests/zotero_identity_client_test.dart",
+      "original": {
+        "bytes": 20093,
+        "sha256": "3b34bceac0d57dd4ba616eefc26f3a8168936435828db2568a840a0ad8285010",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 20109,
+        "sha256": "d028f5c423777b0f335bc6202535e2a44ae1d5abfc54eb4a21a91c6cd973d3b5",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 19,
+        "testWidgets": 0,
+        "expect": 46,
+        "expectLater": 18
+      },
+      "diff": "--- packages/quds_office_engine/test/zotero_identity_client_test.dart\n+++ build/final-incoming-tests/zotero_identity_client_test.dart\n@@ -1,7 +1,7 @@\n import 'dart:convert';\n \n import 'package:quds_office_engine/src/zotero/zotero_client.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n const _databaseHeaders = {\n   'Zotero-Server-ID': 'original-database',\n"
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/zotero_metadata_batch_test.dart",
+      "adapted_path": "build/final-incoming-tests/zotero_metadata_batch_test.dart",
+      "original": {
+        "bytes": 12818,
+        "sha256": "71810ac6333e81c6090650322a12f791eae645bb2b785fb165db4593b7923e37",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 12834,
+        "sha256": "007d0995193d1025f0c6c9416e5f2677895713298aa2c61f903fc7107fef597a",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 14,
+        "testWidgets": 0,
+        "expect": 33,
+        "expectLater": 9
+      },
+      "diff": "--- packages/quds_office_engine/test/zotero_metadata_batch_test.dart\n+++ build/final-incoming-tests/zotero_metadata_batch_test.dart\n@@ -2,7 +2,7 @@\n import 'dart:convert';\n \n import 'package:quds_office_engine/src/zotero/zotero_client.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n Map<String, Object?> _source(\n   String key, {\n"
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/word_zotero_scaling_test.dart",
+      "adapted_path": "build/final-incoming-tests/word_zotero_scaling_test.dart",
+      "original": {
+        "bytes": 9346,
+        "sha256": "1e7d7729f93690a170bd502a5e29e48671d437c7f3cac8478432bf5058cc163f",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 9362,
+        "sha256": "b852b7d188b6060753a4788953b00079c9c94f38e4d0a8593a62b96e9c36de9a",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 5,
+        "testWidgets": 0,
+        "expect": 23,
+        "expectLater": 0
+      },
+      "diff": "--- packages/quds_office_engine/test/word_zotero_scaling_test.dart\n+++ build/final-incoming-tests/word_zotero_scaling_test.dart\n@@ -1,7 +1,7 @@\n import 'dart:convert';\n \n import 'package:quds_office_engine/quds_office_engine.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n const _documentId = 'zotero-scaling-test';\n \n"
+    },
+    {
+      "original_path": "packages/quds_office_engine/test/word_zotero_citing_test.dart",
+      "adapted_path": "build/final-incoming-tests/word_zotero_citing_test.dart",
+      "original": {
+        "bytes": 49484,
+        "sha256": "2a1acefee3367fb88048762151ae6dfb9252a06c8319ae46a09cb0bfafa90cfd",
+        "mode": "0o644"
+      },
+      "adapted": {
+        "bytes": 49528,
+        "sha256": "9e7637a7166c49a3acae2309c345471c715123aec862934f752e9c99959ec06f",
+        "mode": "0o644"
+      },
+      "substitutions": [
+        [
+          "import 'package:test/test.dart';",
+          "import 'package:flutter_test/flutter_test.dart';"
+        ],
+        [
+          "'test/fixtures/zotero/citing/processor-output.json'",
+          "'packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json'"
+        ]
+      ],
+      "reverse_recovers_every_original_byte": true,
+      "lexical_callsite_counts_unchanged": {
+        "test": 36,
+        "testWidgets": 0,
+        "expect": 181,
+        "expectLater": 0
+      },
+      "diff": "--- packages/quds_office_engine/test/word_zotero_citing_test.dart\n+++ build/final-incoming-tests/word_zotero_citing_test.dart\n@@ -2,7 +2,7 @@\n import 'dart:io';\n \n import 'package:quds_office_engine/quds_office_engine.dart';\n-import 'package:test/test.dart';\n+import 'package:flutter_test/flutter_test.dart';\n \n const _documentId = 'quds-test-document';\n \n@@ -147,7 +147,7 @@\n   final fixture =\n       jsonDecode(\n             File(\n-              'test/fixtures/zotero/citing/processor-output.json',\n+              'packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json',\n             ).readAsStringSync(),\n           )\n           as Map<String, dynamic>;\n"
+    }
+  ],
+  "editor_suite_original_unchanged": {
+    "path": "packages/quds_office_editor/test/word_zotero_dialog_test.dart",
+    "identity": {
+      "bytes": 61506,
+      "sha256": "ce114b89982d76e34b48f4b00db325d20161d0a56b9096e91f4bff1ba419dc64",
+      "mode": "0o644"
+    },
+    "lexical_callsites": {
+      "test": 0,
+      "testWidgets": 33,
+      "expect": 262,
+      "expectLater": 0
+    }
+  },
+  "fixtures": [
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods",
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods",
+    "packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json"
+  ],
+  "protected_inputs_before": {
+    "packages/quds_office_engine/test/ods_sheet_reader_test.dart": {
+      "bytes": 76095,
+      "sha256": "ac1cfe69397f65112701df2748a46fe0f9a35145745e926e235dd9610e714f99",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/sheet_formula_test.dart": {
+      "bytes": 24601,
+      "sha256": "93f6c6942dedbfee64b1954185efdd714ab6822b9fb19a47d67c4b4f85e181a6",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/zotero_client_test.dart": {
+      "bytes": 34065,
+      "sha256": "8502e4921897cfa3f9c89170f64dd6e60e97e7eecba886935bf6db64fb76ad68",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/zotero_identity_client_test.dart": {
+      "bytes": 20093,
+      "sha256": "3b34bceac0d57dd4ba616eefc26f3a8168936435828db2568a840a0ad8285010",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/zotero_metadata_batch_test.dart": {
+      "bytes": 12818,
+      "sha256": "71810ac6333e81c6090650322a12f791eae645bb2b785fb165db4593b7923e37",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/word_zotero_scaling_test.dart": {
+      "bytes": 9346,
+      "sha256": "1e7d7729f93690a170bd502a5e29e48671d437c7f3cac8478432bf5058cc163f",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/word_zotero_citing_test.dart": {
+      "bytes": 49484,
+      "sha256": "2a1acefee3367fb88048762151ae6dfb9252a06c8319ae46a09cb0bfafa90cfd",
+      "mode": "0o644"
+    },
+    "packages/quds_office_editor/test/word_zotero_dialog_test.dart": {
+      "bytes": 61506,
+      "sha256": "ce114b89982d76e34b48f4b00db325d20161d0a56b9096e91f4bff1ba419dc64",
+      "mode": "0o644"
+    },
+    "test/widget/ods_editor_workflow_test.dart": {
+      "bytes": 5715,
+      "sha256": "a969f0c5b8e8d5668916f5fefdee445252953f873a35231d069958e30ece17cd",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet.ods": {
+      "bytes": 13562,
+      "sha256": "6c1d5b72fc828d33124e60cd0bf93a860302dfdc30fc13f76b74aaa306c428cc",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/fidelity/legacy-sheet-edge.ods": {
+      "bytes": 12197,
+      "sha256": "49c6fd906a7e1892731dc7f7b32a9823e165751a8068632488faf1cde8ea40d9",
+      "mode": "0o644"
+    },
+    "packages/quds_office_engine/test/fixtures/zotero/citing/processor-output.json": {
+      "bytes": 36858,
+      "sha256": "2359916b80f5703a6dfb453e867e2e76c511887cec235ffc694c1a984fcdbd1a",
+      "mode": "0o644"
+    },
+    "pubspec.yaml": {
+      "bytes": 11941,
+      "sha256": "d82a1bb2d1a015e37d5a7283cf8041039c3eb01f6dbf1d3feb139b1b837ea998",
+      "mode": "0o644"
+    },
+    "pubspec.lock": {
+      "bytes": 63296,
+      "sha256": "58560e3fdba68d18b767f4c934b913283df5297468141defbeb816dbb55a0326",
+      "mode": "0o644"
+    },
+    ".fvmrc": {
+      "bytes": 26,
+      "sha256": "90bf8f8884c05a407f51d6ef651ba033fef99a656010f8bfcb65951e921f4294",
+      "mode": "0o644"
+    },
+    ".dart_tool/package_config.json": {
+      "bytes": 59168,
+      "sha256": "d18259545642f394b4b645742a231613366044117f919527297ffdb33de979e4",
+      "mode": "0o644"
+    },
+    ".dart_tool/package_graph.json": {
+      "bytes": 52374,
+      "sha256": "f3cee280dd65b0e39dec10fbc7cd2d7dbe2a442dd3973a4e352b5d989ffe78f9",
+      "mode": "0o644"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "bytes": 379388,
+      "sha256": "1741a1ac386556cafd6636ce7d143e451e8b48a616a6eef978d3f9813a1b86ff",
+      "mode": "0o644"
+    }
+  }
+}
