@@ -420,6 +420,8 @@ class SheetDeserializer {
     // `t="shared"` masters by `si`: formula text and the cell it is written for.
     final Map<String, ({String formula, SmlCellRef anchor})> shared =
         <String, ({String formula, SmlCellRef anchor})>{};
+    SmlPageSetup? pageSetup;
+    SmlPageSetup ensurePageSetup() => pageSetup ??= SmlPageSetup();
     while (reader.next()) {
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sheetView') {
@@ -546,6 +548,62 @@ class SheetDeserializer {
           sheet.freezeCols = x.clamp(0, SmlWorksheet.excelColumnCount - 1);
           sheet.freezeRows = y.clamp(0, SmlWorksheet.excelRowCount - 1);
         }
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'printOptions') {
+        final setup = ensurePageSetup();
+        setup.printHeadings = reader.getAttribute('headings') == '1';
+        setup.printGridlines = reader.getAttribute('gridLines') == '1';
+        setup.centerHorizontally =
+            reader.getAttribute('horizontalCentered') == '1';
+        setup.centerVertically = reader.getAttribute('verticalCentered') == '1';
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'pageMargins') {
+        final setup = ensurePageSetup();
+        setup.marginLeftIn =
+            double.tryParse(reader.getAttribute('left') ?? '') ??
+            setup.marginLeftIn;
+        setup.marginRightIn =
+            double.tryParse(reader.getAttribute('right') ?? '') ??
+            setup.marginRightIn;
+        setup.marginTopIn =
+            double.tryParse(reader.getAttribute('top') ?? '') ??
+            setup.marginTopIn;
+        setup.marginBottomIn =
+            double.tryParse(reader.getAttribute('bottom') ?? '') ??
+            setup.marginBottomIn;
+        setup.headerMarginIn =
+            double.tryParse(reader.getAttribute('header') ?? '') ??
+            setup.headerMarginIn;
+        setup.footerMarginIn =
+            double.tryParse(reader.getAttribute('footer') ?? '') ??
+            setup.footerMarginIn;
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'pageSetup') {
+        final setup = ensurePageSetup();
+        setup.orientation = reader.getAttribute('orientation') == 'landscape'
+            ? SmlPageOrientation.landscape
+            : SmlPageOrientation.portrait;
+        setup.paperSize =
+            int.tryParse(reader.getAttribute('paperSize') ?? '') ??
+            setup.paperSize;
+        setup.scale =
+            int.tryParse(reader.getAttribute('scale') ?? '') ?? setup.scale;
+        setup.fitToWidth =
+            int.tryParse(reader.getAttribute('fitToWidth') ?? '') ??
+            setup.fitToWidth;
+        setup.fitToHeight =
+            int.tryParse(reader.getAttribute('fitToHeight') ?? '') ??
+            setup.fitToHeight;
+        setup.blackAndWhite = reader.getAttribute('blackAndWhite') == '1';
+        setup.draft = reader.getAttribute('draft') == '1';
+        setup.useFirstPageNumber =
+            reader.getAttribute('useFirstPageNumber') == '1';
+        setup.firstPageNumber = int.tryParse(
+          reader.getAttribute('firstPageNumber') ?? '',
+        );
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sheetFormatPr') {
@@ -707,6 +765,10 @@ class SheetDeserializer {
           sheet.merges.add(SmlMerge.parse(ref));
         }
       }
+    }
+    if (pageSetup != null) {
+      SheetSerializer._applyPaperSize(pageSetup!);
+      sheet.pageSetup = pageSetup;
     }
     SheetDrawingIo.readSheet(sheet, package, sheetUri);
     _readSheetExtras(sheet, package, sheetUri);
@@ -1609,6 +1671,7 @@ class SheetSerializer {
       w.writeEndElement();
     }
     _writeHyperlinks(w, sheet, package, sheetUri);
+    _writePageSetup(w, sheet);
     final SmlHeaderFooter? hf = sheet.headerFooter;
     if (hf != null && !hf.isEmpty) {
       w.writeStartElement('headerFooter');
@@ -1656,9 +1719,97 @@ class SheetSerializer {
       if (!preserveConditional) 'conditionalFormatting',
       if (!preserveValidations) 'dataValidations',
       'mergeCells',
+      if (sheet.pageSetup != null) 'printOptions',
+      if (sheet.pageSetup != null) 'pageMargins',
+      if (sheet.pageSetup != null) 'pageSetup',
       'headerFooter',
       'drawing',
     }, _worksheetOrder);
+  }
+
+  static void _applyPaperSize(SmlPageSetup setup) {
+    switch (setup.paperSize) {
+      case 1:
+        setup
+          ..paperWidthIn = 8.5
+          ..paperHeightIn = 11;
+      case 3:
+        setup
+          ..paperWidthIn = 11
+          ..paperHeightIn = 17;
+      case 5:
+        setup
+          ..paperWidthIn = 8.5
+          ..paperHeightIn = 14;
+      case 8:
+        setup
+          ..paperWidthIn = 11.69
+          ..paperHeightIn = 16.54;
+      case 9:
+        setup
+          ..paperWidthIn = 8.2677
+          ..paperHeightIn = 11.6929;
+      case 11:
+        setup
+          ..paperWidthIn = 5.83
+          ..paperHeightIn = 8.27;
+      case 12:
+        setup
+          ..paperWidthIn = 9.84
+          ..paperHeightIn = 13.9;
+      case 13:
+        setup
+          ..paperWidthIn = 6.93
+          ..paperHeightIn = 9.84;
+    }
+  }
+
+  static void _writePageSetup(XmlWriter w, SmlWorksheet sheet) {
+    final setup = sheet.pageSetup;
+    if (setup == null) return;
+    if (setup.printGridlines ||
+        setup.printHeadings ||
+        setup.centerHorizontally ||
+        setup.centerVertically) {
+      w.writeEmptyElement(
+        'printOptions',
+        attributes: <String, String>{
+          if (setup.printGridlines) 'gridLines': '1',
+          if (setup.printHeadings) 'headings': '1',
+          if (setup.centerHorizontally) 'horizontalCentered': '1',
+          if (setup.centerVertically) 'verticalCentered': '1',
+        },
+      );
+    }
+    w.writeEmptyElement(
+      'pageMargins',
+      attributes: <String, String>{
+        'left': '${setup.marginLeftIn}',
+        'right': '${setup.marginRightIn}',
+        'top': '${setup.marginTopIn}',
+        'bottom': '${setup.marginBottomIn}',
+        'header': '${setup.headerMarginIn}',
+        'footer': '${setup.footerMarginIn}',
+      },
+    );
+    w.writeEmptyElement(
+      'pageSetup',
+      attributes: <String, String>{
+        'paperSize': '${setup.paperSize}',
+        'orientation': setup.orientation == SmlPageOrientation.landscape
+            ? 'landscape'
+            : 'portrait',
+        'scale': '${setup.scale}',
+        'fitToWidth': '${setup.fitToWidth}',
+        'fitToHeight': '${setup.fitToHeight}',
+        if (setup.useFirstPageNumber && setup.firstPageNumber != null)
+          'useFirstPageNumber': '1',
+        if (setup.useFirstPageNumber && setup.firstPageNumber != null)
+          'firstPageNumber': '${setup.firstPageNumber}',
+        if (setup.blackAndWhite) 'blackAndWhite': '1',
+        if (setup.draft) 'draft': '1',
+      },
+    );
   }
 
   static void _writeHyperlinks(

@@ -4,9 +4,7 @@ import 'package:test/test.dart';
 void main() {
   test('a no-edit save keeps native formula caches', () async {
     final book = SmlWorkbook(
-      sheets: [
-        SmlWorksheet(name: 'Sheet1', sheetId: 1),
-      ],
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
     );
     final sheet = book.firstSheet;
     sheet.cellA1('A1').value = '8.880,00 EUR';
@@ -41,18 +39,16 @@ void main() {
 
   test('a frozen pane is anchored by topLeftCell, not xSplit', () async {
     final book = SmlWorkbook(
-      sheets: [
-        SmlWorksheet(name: 'Sheet1', sheetId: 1),
-      ],
+      sheets: [SmlWorksheet(name: 'Sheet1', sheetId: 1)],
     );
     book.firstSheet
       ..freezeCols = 36
       ..freezeRows = 1
       ..cellA1('AK2').value = 'anchor';
     final saved = await OfficeIsolateSave.workbook(book);
-    final xml = OpcPackage.openBytes(saved)
-        .getPart('/xl/worksheets/sheet1.xml')!
-        .readText();
+    final xml = OpcPackage.openBytes(
+      saved,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
     expect(xml, contains('topLeftCell="AK2"'));
 
     // Excel writes xSplit="1" beside topLeftCell="AK2" when many narrow
@@ -68,9 +64,63 @@ void main() {
     expect(reopened.firstSheet.freezeRows, 1);
 
     final again = await OfficeIsolateSave.workbook(reopened);
-    final reparsed = OpcPackage.openBytes(again)
-        .getPart('/xl/worksheets/sheet1.xml')!
-        .readText();
+    final reparsed = OpcPackage.openBytes(
+      again,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
     expect(reparsed, contains('topLeftCell="AK2"'));
+  });
+
+  test('page setup and print options round-trip', () async {
+    final book = SmlWorkbook(
+      sheets: [
+        SmlWorksheet(name: 'Sheet1', sheetId: 1)
+          ..pageSetup = SmlPageSetup(
+            orientation: SmlPageOrientation.landscape,
+            marginLeftIn: 0.5,
+            marginRightIn: 0.6,
+            marginTopIn: 0.7,
+            marginBottomIn: 0.8,
+            headerMarginIn: 0.2,
+            footerMarginIn: 0.25,
+            scale: 85,
+            fitToWidth: 2,
+            fitToHeight: 0,
+            printGridlines: true,
+            printHeadings: true,
+            centerHorizontally: true,
+            firstPageNumber: 3,
+            useFirstPageNumber: true,
+            blackAndWhite: true,
+            draft: true,
+          ),
+      ],
+    );
+    final saved = await OfficeIsolateSave.workbook(book);
+    final xml = OpcPackage.openBytes(
+      saved,
+    ).getPart('/xl/worksheets/sheet1.xml')!.readText();
+    expect(xml, contains('<pageMargins'));
+    expect(xml, contains('<pageSetup'));
+    expect(xml, contains('orientation="landscape"'));
+    expect(xml, contains('fitToWidth="2"'));
+    expect(xml, contains('fitToHeight="0"'));
+    final reopened = SheetDeserializer().readBytes(saved).firstSheet.pageSetup!;
+    expect(reopened.orientation, SmlPageOrientation.landscape);
+    expect(reopened.marginLeftIn, closeTo(0.5, 0.0001));
+    expect(reopened.marginRightIn, closeTo(0.6, 0.0001));
+    expect(reopened.marginTopIn, closeTo(0.7, 0.0001));
+    expect(reopened.marginBottomIn, closeTo(0.8, 0.0001));
+    expect(reopened.headerMarginIn, closeTo(0.2, 0.0001));
+    expect(reopened.footerMarginIn, closeTo(0.25, 0.0001));
+    expect(reopened.scale, 85);
+    expect(reopened.fitToWidth, 2);
+    expect(reopened.fitToHeight, 0);
+    expect(reopened.printGridlines, isTrue);
+    expect(reopened.printHeadings, isTrue);
+    expect(reopened.centerHorizontally, isTrue);
+    expect(reopened.firstPageNumber, 3);
+    expect(reopened.useFirstPageNumber, isTrue);
+    expect(reopened.blackAndWhite, isTrue);
+    expect(reopened.draft, isTrue);
   });
 }

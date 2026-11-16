@@ -80,6 +80,65 @@ void main() {
     expect(reopened.formulaNames.single.name, 'Total');
   });
 
+  test('writes header and footer sections', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1)
+      ..headerFooter = SmlHeaderFooter(
+        headerLeft: 'Left',
+        headerCenter: 'Page &P of &N',
+        headerRight: '&A',
+        footerLeft: '&D',
+        footerCenter: '&F',
+        footerRight: '&T',
+      );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final headerFooter = reopened.sheets.first.headerFooter!;
+    expect(headerFooter.headerLeft, 'Left');
+    expect(headerFooter.headerCenter, 'Page &P of &N');
+    expect(headerFooter.headerRight, '&A');
+    expect(headerFooter.footerLeft, '&D');
+    expect(headerFooter.footerCenter, '&F');
+    expect(headerFooter.footerRight, '&T');
+  });
+
+  test('writes authored page setup', () {
+    final sheet = SmlWorksheet(name: 'Data', sheetId: 1)
+      ..pageSetup = SmlPageSetup(
+        orientation: SmlPageOrientation.landscape,
+        paperWidthIn: 11.6929,
+        paperHeightIn: 8.2677,
+        marginLeftIn: 0.5,
+        marginRightIn: 0.6,
+        marginTopIn: 0.7,
+        marginBottomIn: 0.8,
+        scale: 85,
+        fitToWidth: 2,
+        fitToHeight: 0,
+        printGridlines: true,
+        printHeadings: true,
+        firstPageNumber: 3,
+        useFirstPageNumber: true,
+      );
+    final reopened = OdsSheetReader.readBytes(
+      OdsSheetWriter.writeBytes(SmlWorkbook(sheets: [sheet])),
+    );
+    final setup = reopened.sheets.first.pageSetup!;
+    expect(setup.orientation, SmlPageOrientation.landscape);
+    expect(setup.paperWidthIn, closeTo(11.6929, 0.01));
+    expect(setup.paperHeightIn, closeTo(8.2677, 0.01));
+    expect(setup.marginLeftIn, closeTo(0.5, 0.01));
+    expect(setup.marginRightIn, closeTo(0.6, 0.01));
+    expect(setup.marginTopIn, closeTo(0.7, 0.01));
+    expect(setup.marginBottomIn, closeTo(0.8, 0.01));
+    expect(setup.scale, 85);
+    expect(setup.fitToWidth, 2);
+    expect(setup.printGridlines, isTrue);
+    expect(setup.printHeadings, isTrue);
+    expect(setup.firstPageNumber, 3);
+    expect(setup.useFirstPageNumber, isTrue);
+  });
+
   test('writes row outline groups and geometry outside the cell extent', () {
     final sheet = SmlWorksheet(name: 'Data', sheetId: 1);
     sheet.cellA1('A1').value = 'Header';

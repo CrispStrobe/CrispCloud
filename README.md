@@ -35,7 +35,7 @@ The Office stack is broader than the upstream Quds “OOXML only” summary:
 | Excel OOXML | `.xlsx`, `.xlsm`, `.xltx` | Rich Quds sheet editor; macros/templates are preserved as opaque package data and never executed |
 | Excel legacy | `.xls`, `.xlt` (BIFF8) | Import into the sheet editor, then save a new `.xlsx` copy; the original is never rewritten |
 | Excel binary | `.xlsb` | Preview grid with supported formatting and stored formula results; Source/Hex only, no BIFF12 writer |
-| OpenDocument sheet | `.ods` | Typed Quds grid with formulas, formats, pictures, hidden state, conditional formats, validations and metadata; ordinary Save writes a new `.xlsx`, while **Export as ODS** writes a new modeled `.ods` package |
+| OpenDocument sheet | `.ods` | Typed Quds grid with formulas, formats, pictures, hidden state, conditional formats, validations, page setup, header/footer sections and metadata; ordinary Save writes a new `.xlsx`, while **Export as ODS** writes a new modeled `.ods` package |
 | Slides OOXML | `.pptx` | Rich Quds slide editor |
 | Slides legacy/ODF | `.ppt`, `.pps`, `.pot`, `.odp` | Positioned read-only previews (legacy PowerPoint also has a text fallback); no binary PowerPoint or ODP writer |
 | OpenDocument text | `.odt` | Formatted read-only view: headings, lists, tables, footnotes, inline pictures, text boxes and headers/footers; no ODT writer |
