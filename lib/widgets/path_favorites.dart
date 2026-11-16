@@ -14,7 +14,7 @@ import '../providers/panel_provider.dart';
 import 'bookmark_actions.dart';
 import 'rename_text_dialog.dart';
 
-enum _FavoriteAction { add, manage }
+enum _FavoriteAction { add, manage, search }
 
 Bookmark? _currentFavorite(PanelNotifier panel) {
   // Archive paths are virtual, and search results need the collection-saving
@@ -51,6 +51,19 @@ bool _available(WidgetRef ref, PanelNotifier panel, Bookmark bookmark) {
       panel.resolveStorageReference(storage, bookmark.path) != null;
 }
 
+bool _availableFromContainer(
+  ProviderContainer container,
+  PanelNotifier panel,
+  Bookmark bookmark,
+) {
+  if (bookmark.collectionId case final id?) {
+    return container.read(fileCollectionStoreProvider).get(id) != null;
+  }
+  final storage = bookmark.storage;
+  return storage != null &&
+      panel.resolveStorageReference(storage, bookmark.path) != null;
+}
+
 bool _matches(
   BuildContext context,
   PanelNotifier panel,
@@ -78,7 +91,11 @@ List<Object> _grouped(List<Bookmark> favorites) {
 
 /// Open the searchable favorites picker for the requested pane. Both buttons
 /// and configurable shortcuts use the same captured-session safety check.
-Future<void> showPathFavoritesMenu(BuildContext context, PanelSide side) async {
+Future<void> showPathFavoritesMenu(
+  BuildContext context,
+  PanelSide side, {
+  bool directList = false,
+}) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final panel = container.read(panelProvider(side));
   final isCurrent = panel.captureOperationSession();
@@ -86,10 +103,110 @@ Future<void> showPathFavoritesMenu(BuildContext context, PanelSide side) async {
   final sourceLabel = captured == null
       ? null
       : _sourceLabel(context, panel, captured);
-  final selected = await showDialog<Object>(
-    context: context,
-    builder: (_) => _PathFavoritesPicker(side: side, canAdd: captured != null),
-  );
+  Object? selected;
+  if (directList) {
+    final store = container.read(bookmarksProvider);
+    final overlay =
+        Overlay.of(context).context.findRenderObject()! as RenderBox;
+    await store.ready;
+    if (!context.mounted || !overlay.attached || !isCurrent()) return;
+    final strings = PathFavoritesStrings(context);
+    final button = context.findRenderObject()! as RenderBox;
+    final origin = button.localToGlobal(
+      Offset(0, button.size.height),
+      ancestor: overlay,
+    );
+    final width = (overlay.size.width - 24).clamp(0.0, 400.0);
+    selected = await showMenu<Object>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(origin.dx, origin.dy, button.size.width, 0),
+        Offset.zero & overlay.size,
+      ),
+      constraints: BoxConstraints(maxWidth: width),
+      items: [
+        for (final row in _grouped(store.bookmarks))
+          if (row is String && row.isNotEmpty)
+            PopupMenuItem<Object>(
+              enabled: false,
+              height: 32,
+              child: Text(row, style: Theme.of(context).textTheme.labelLarge),
+            )
+          else if (row is Bookmark)
+            PopupMenuItem<Object>(
+              key: ValueKey('path-favorite-menu-${row.identity}'),
+              value: row,
+              enabled: _availableFromContainer(container, panel, row),
+              child: SizedBox(
+                width: width,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  enabled: _availableFromContainer(container, panel, row),
+                  leading: const Icon(Icons.folder_outlined),
+                  title: Text(
+                    row.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _sourceLabel(context, panel, row),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        row.path,
+                        textDirection: TextDirection.ltr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (!_availableFromContainer(container, panel, row) &&
+                          row.isBound)
+                        Text(
+                          strings.text(
+                            row.collectionId != null
+                                ? 'missingCollection'
+                                : 'unavailable',
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        if (store.bookmarks.isEmpty)
+          PopupMenuItem<Object>(
+            enabled: false,
+            child: Text(strings.text('empty')),
+          ),
+        const PopupMenuDivider(),
+        PopupMenuItem<Object>(
+          value: _FavoriteAction.add,
+          enabled: captured != null,
+          child: Text(strings.text('add')),
+        ),
+        PopupMenuItem<Object>(
+          value: _FavoriteAction.manage,
+          child: Text(strings.text('manage')),
+        ),
+        PopupMenuItem<Object>(
+          value: _FavoriteAction.search,
+          child: Text(strings.text('filter')),
+        ),
+      ],
+    );
+  }
+  if (!directList || selected == _FavoriteAction.search) {
+    if (!context.mounted || !isCurrent()) return;
+    selected = await showDialog<Object>(
+      context: context,
+      builder: (_) =>
+          _PathFavoritesPicker(side: side, canAdd: captured != null),
+    );
+  }
   if (!context.mounted || !isCurrent()) return;
   container.read(activePanelProvider.notifier).state = side;
   if (selected == _FavoriteAction.manage) {
@@ -132,12 +249,15 @@ class PathFavoritesButton extends StatelessWidget {
       child: SizedBox(
         width: touch ? 48 : 38,
         height: touch ? 48 : 34,
-        child: IconButton(
-          key: ValueKey('path-favorites-${side.name}'),
-          tooltip: PathFavoritesStrings(context).text('title'),
-          padding: EdgeInsets.zero,
-          onPressed: () => showPathFavoritesMenu(context, side),
-          icon: Text('*', style: theme.textTheme.titleLarge),
+        child: Builder(
+          builder: (buttonContext) => IconButton(
+            key: ValueKey('path-favorites-${side.name}'),
+            tooltip: PathFavoritesStrings(context).text('title'),
+            padding: EdgeInsets.zero,
+            onPressed: () =>
+                showPathFavoritesMenu(buttonContext, side, directList: true),
+            icon: Text('*', style: theme.textTheme.titleLarge),
+          ),
         ),
       ),
     );

@@ -580,6 +580,12 @@ connections were not exercised in these checks.
 
 ## Path favorites and archive parent navigation
 
+The pane's `*` button now opens the saved paths directly in an anchored menu.
+Choose a favorite to navigate its owning pane; add/edit actions appear below the
+list. **Filter favorites** opens the searchable grouped picker when needed.
+Unavailable accounts remain disabled and favorites retain their original source.
+The active pane is indicated by its border; redundant header circles are removed.
+
 Each pane has a literal `*` button at the far right of its tab header. The menu
 shows saved names, original storage sources and paths. Selecting a favorite
 opens it in the pane whose button was clicked, including when the other pane
