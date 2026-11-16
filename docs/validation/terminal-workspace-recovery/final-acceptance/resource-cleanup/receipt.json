@@ -1,0 +1,1643 @@
+{
+  "accepted_source": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+  "started_utc": "2026-11-16T11:17:24.025384+00:00",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "sparse-checkout",
+        "set",
+        "--no-cone",
+        "--stdin"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "for-each-ref",
+        "--format=%(objectname)"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "3fb3eed4e976ad2fcb4792703e81c92e880e56fd\n3fb3eed4e976ad2fcb4792703e81c92e880e56fd\n5d3a020d4d3c5e1a89c0209378df0fce3f78efe3\na5103bb5bfd044540f68bfb786761222abccd98f\ne392d53f15c714c53c02ce08fc30df5093dec5ef\ne8b36e59c111facb1113b776c4e0ac866a82470a\n2b1017e0fbdcaffab77bc25a7f29265408cc1a6e\nd32191c3af8d74c9ec59be20d3183e323dea532f\nee50e55fd1ab9b3dd7d56cf692af2e1f24450479\n259085c2381271c48e6c6353afeb00777675479d\nc3ef2129bcf1d5b0620434785e1973ae7a913888\n5f9838426d3e07b61d5b3f005dbabbf0fee166f7\nfaef68b08e053f709c130d465746deaadac44b80\nf5f12886db8f9119f2e2976363ab8566ebb3777e\n472064914ec00f5da289de94e166fa6c6d82b87a\n70d43862fdbd04317e001c8788cb1ca4d63da2ee\n9701ceadf0ea0d519e9553bbd41ea4e0a2710712\nb092db8126058f33879d526243d67aec8273fa09\n9dafecef85fd1263b9b9ff2d2cf5e04f950643e4\ncbaf25847c106a115eb45469ba7c4edea02fada5\n355371e3332184dbb780eb3e78a90d90baeab6dc\nea85caeeb1414f586508d45acc6a48409513398c\nec4fdf19aa9cfa667d6a6013c2ff9778d41ae862\nefb77b43a3003215c4bcf32bee881968681f5ca6\n231c435557c4d9b11f24cb9011b2311cd5ef3983\nf01b2162b473ab965fc888244dc202278faf1ef1\nbde3399242c647ef13e27dfad1cfeee24061a3e1\nafd157257c53d33b305c8ee921042bf18006fc0a\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "--bare",
+        "--no-single-branch",
+        "https://github.com/CrispStrobe/CrispCloud",
+        "/workspace/scratch/732a154614f9/toolchain/final-filtered.git"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "Cloning into bare repository '/workspace/scratch/732a154614f9/toolchain/final-filtered.git'...\n"
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "231c435557c4d9b11f24cb9011b2311cd5ef3983^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "231c435557c4d9b11f24cb9011b2311cd5ef3983^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "259085c2381271c48e6c6353afeb00777675479d^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "259085c2381271c48e6c6353afeb00777675479d^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "355371e3332184dbb780eb3e78a90d90baeab6dc^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "355371e3332184dbb780eb3e78a90d90baeab6dc^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "3fb3eed4e976ad2fcb4792703e81c92e880e56fd^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "3fb3eed4e976ad2fcb4792703e81c92e880e56fd^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "472064914ec00f5da289de94e166fa6c6d82b87a^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "472064914ec00f5da289de94e166fa6c6d82b87a^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "5f9838426d3e07b61d5b3f005dbabbf0fee166f7^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "5f9838426d3e07b61d5b3f005dbabbf0fee166f7^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "70d43862fdbd04317e001c8788cb1ca4d63da2ee^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "70d43862fdbd04317e001c8788cb1ca4d63da2ee^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "9701ceadf0ea0d519e9553bbd41ea4e0a2710712^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "9701ceadf0ea0d519e9553bbd41ea4e0a2710712^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "a5103bb5bfd044540f68bfb786761222abccd98f^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "a5103bb5bfd044540f68bfb786761222abccd98f^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "afd157257c53d33b305c8ee921042bf18006fc0a^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "afd157257c53d33b305c8ee921042bf18006fc0a^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "b092db8126058f33879d526243d67aec8273fa09^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "b092db8126058f33879d526243d67aec8273fa09^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "bde3399242c647ef13e27dfad1cfeee24061a3e1^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "bde3399242c647ef13e27dfad1cfeee24061a3e1^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "c3ef2129bcf1d5b0620434785e1973ae7a913888^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "c3ef2129bcf1d5b0620434785e1973ae7a913888^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "cbaf25847c106a115eb45469ba7c4edea02fada5^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "cbaf25847c106a115eb45469ba7c4edea02fada5^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "d32191c3af8d74c9ec59be20d3183e323dea532f^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "d32191c3af8d74c9ec59be20d3183e323dea532f^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "e392d53f15c714c53c02ce08fc30df5093dec5ef^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "e392d53f15c714c53c02ce08fc30df5093dec5ef^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "e8b36e59c111facb1113b776c4e0ac866a82470a^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "e8b36e59c111facb1113b776c4e0ac866a82470a^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "ea85caeeb1414f586508d45acc6a48409513398c^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "ea85caeeb1414f586508d45acc6a48409513398c^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "ee50e55fd1ab9b3dd7d56cf692af2e1f24450479^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "ee50e55fd1ab9b3dd7d56cf692af2e1f24450479^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "efb77b43a3003215c4bcf32bee881968681f5ca6^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "efb77b43a3003215c4bcf32bee881968681f5ca6^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "f01b2162b473ab965fc888244dc202278faf1ef1^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "f01b2162b473ab965fc888244dc202278faf1ef1^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "f5f12886db8f9119f2e2976363ab8566ebb3777e^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "f5f12886db8f9119f2e2976363ab8566ebb3777e^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "faef68b08e053f709c130d465746deaadac44b80^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "faef68b08e053f709c130d465746deaadac44b80^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir=/workspace/scratch/732a154614f9/toolchain/final-filtered.git",
+        "cat-file",
+        "-e",
+        "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/toolchain",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "231c435557c4d9b11f24cb9011b2311cd5ef3983^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "231c435557c4d9b11f24cb9011b2311cd5ef3983^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "259085c2381271c48e6c6353afeb00777675479d^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "259085c2381271c48e6c6353afeb00777675479d^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "355371e3332184dbb780eb3e78a90d90baeab6dc^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "355371e3332184dbb780eb3e78a90d90baeab6dc^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "3fb3eed4e976ad2fcb4792703e81c92e880e56fd^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "3fb3eed4e976ad2fcb4792703e81c92e880e56fd^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "472064914ec00f5da289de94e166fa6c6d82b87a^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "472064914ec00f5da289de94e166fa6c6d82b87a^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "5f9838426d3e07b61d5b3f005dbabbf0fee166f7^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "5f9838426d3e07b61d5b3f005dbabbf0fee166f7^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "70d43862fdbd04317e001c8788cb1ca4d63da2ee^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "70d43862fdbd04317e001c8788cb1ca4d63da2ee^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "9701ceadf0ea0d519e9553bbd41ea4e0a2710712^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "9701ceadf0ea0d519e9553bbd41ea4e0a2710712^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "a5103bb5bfd044540f68bfb786761222abccd98f^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "a5103bb5bfd044540f68bfb786761222abccd98f^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "afd157257c53d33b305c8ee921042bf18006fc0a^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "afd157257c53d33b305c8ee921042bf18006fc0a^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "b092db8126058f33879d526243d67aec8273fa09^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "b092db8126058f33879d526243d67aec8273fa09^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "bde3399242c647ef13e27dfad1cfeee24061a3e1^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "bde3399242c647ef13e27dfad1cfeee24061a3e1^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "c3ef2129bcf1d5b0620434785e1973ae7a913888^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "c3ef2129bcf1d5b0620434785e1973ae7a913888^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "cbaf25847c106a115eb45469ba7c4edea02fada5^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "cbaf25847c106a115eb45469ba7c4edea02fada5^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "d32191c3af8d74c9ec59be20d3183e323dea532f^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "d32191c3af8d74c9ec59be20d3183e323dea532f^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "e392d53f15c714c53c02ce08fc30df5093dec5ef^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "e392d53f15c714c53c02ce08fc30df5093dec5ef^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "e8b36e59c111facb1113b776c4e0ac866a82470a^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "e8b36e59c111facb1113b776c4e0ac866a82470a^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "ea85caeeb1414f586508d45acc6a48409513398c^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "ea85caeeb1414f586508d45acc6a48409513398c^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "ee50e55fd1ab9b3dd7d56cf692af2e1f24450479^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "ee50e55fd1ab9b3dd7d56cf692af2e1f24450479^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "efb77b43a3003215c4bcf32bee881968681f5ca6^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "efb77b43a3003215c4bcf32bee881968681f5ca6^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "f01b2162b473ab965fc888244dc202278faf1ef1^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "f01b2162b473ab965fc888244dc202278faf1ef1^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "f5f12886db8f9119f2e2976363ab8566ebb3777e^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "f5f12886db8f9119f2e2976363ab8566ebb3777e^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "faef68b08e053f709c130d465746deaadac44b80^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "faef68b08e053f709c130d465746deaadac44b80^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f^{commit}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "cat-file",
+        "-e",
+        "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f^{tree}"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "cwd": "/workspace/scratch/732a154614f9/CrispCloud",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "before_resources": {
+    "disk": {
+      "total": 5225713664,
+      "used": 2570543104,
+      "free": 2655170560
+    },
+    "memory": {
+      "MemTotal": 10451427328,
+      "MemAvailable": 6724677632,
+      "Cached": 3754991616,
+      "SwapTotal": 0,
+      "SwapFree": 0,
+      "Shmem": 2570608640
+    }
+  },
+  "removed_generated_caches": [
+    {
+      "path": "/workspace/scratch/732a154614f9/CrispCloud/build/test_cache",
+      "bytes": 185090936,
+      "reason": "Completed test/generated web output; reproducible from unchanged accepted source and exact graph."
+    },
+    {
+      "path": "/workspace/scratch/732a154614f9/CrispCloud/build/unit_test_assets",
+      "bytes": 45686210,
+      "reason": "Completed test/generated web output; reproducible from unchanged accepted source and exact graph."
+    },
+    {
+      "path": "/workspace/scratch/732a154614f9/CrispCloud/.dart_tool/flutter_build",
+      "bytes": 130333966,
+      "reason": "Completed test/generated web output; reproducible from unchanged accepted source and exact graph."
+    },
+    {
+      "path": "/workspace/scratch/732a154614f9/CrispCloud/build/web",
+      "bytes": 37879017,
+      "reason": "Completed test/generated web output; reproducible from unchanged accepted source and exact graph."
+    }
+  ],
+  "sdk_binaries_modified": false,
+  "source_or_optimization_changed": false,
+  "active_sdk_before": {
+    "bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "mode": "0o755"
+    },
+    "bin/dartaotruntime": {
+      "bytes": 5710176,
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+      "mode": "0o755"
+    },
+    "bin/snapshots/dart2js_aot.dart.snapshot": {
+      "bytes": 20827888,
+      "sha256": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6",
+      "mode": "0o644"
+    }
+  },
+  "sparse_materialization": {
+    "patterns": [
+      "/*",
+      "!/docs/**/*.png",
+      "!/docs/**/*.gz"
+    ],
+    "tracked_count": 773,
+    "tracked_bytes": 113459457,
+    "identity_source_commit": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "history_preserved": true
+  },
+  "git_object_cache": {
+    "old_bytes": 272501799,
+    "new_bytes": 3503717,
+    "retained_ref_targets_verified": [
+      "231c435557c4d9b11f24cb9011b2311cd5ef3983",
+      "259085c2381271c48e6c6353afeb00777675479d",
+      "2b1017e0fbdcaffab77bc25a7f29265408cc1a6e",
+      "355371e3332184dbb780eb3e78a90d90baeab6dc",
+      "3fb3eed4e976ad2fcb4792703e81c92e880e56fd",
+      "472064914ec00f5da289de94e166fa6c6d82b87a",
+      "5d3a020d4d3c5e1a89c0209378df0fce3f78efe3",
+      "5f9838426d3e07b61d5b3f005dbabbf0fee166f7",
+      "70d43862fdbd04317e001c8788cb1ca4d63da2ee",
+      "9701ceadf0ea0d519e9553bbd41ea4e0a2710712",
+      "9dafecef85fd1263b9b9ff2d2cf5e04f950643e4",
+      "a5103bb5bfd044540f68bfb786761222abccd98f",
+      "afd157257c53d33b305c8ee921042bf18006fc0a",
+      "b092db8126058f33879d526243d67aec8273fa09",
+      "bde3399242c647ef13e27dfad1cfeee24061a3e1",
+      "c3ef2129bcf1d5b0620434785e1973ae7a913888",
+      "cbaf25847c106a115eb45469ba7c4edea02fada5",
+      "d32191c3af8d74c9ec59be20d3183e323dea532f",
+      "e392d53f15c714c53c02ce08fc30df5093dec5ef",
+      "e8b36e59c111facb1113b776c4e0ac866a82470a",
+      "ea85caeeb1414f586508d45acc6a48409513398c",
+      "ec4fdf19aa9cfa667d6a6013c2ff9778d41ae862",
+      "ee50e55fd1ab9b3dd7d56cf692af2e1f24450479",
+      "efb77b43a3003215c4bcf32bee881968681f5ca6",
+      "f01b2162b473ab965fc888244dc202278faf1ef1",
+      "f5f12886db8f9119f2e2976363ab8566ebb3777e",
+      "faef68b08e053f709c130d465746deaadac44b80",
+      "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f"
+    ],
+    "full_commit_and_tree_objects_verified": true,
+    "missing_blob_resolution": "Existing origin promisor configuration fetches missing remote blobs on demand.",
+    "source_worktree_unchanged": true
+  },
+  "active_sdk_after": {
+    "bin/dart": {
+      "bytes": 4835712,
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+      "mode": "0o755"
+    },
+    "bin/dartaotruntime": {
+      "bytes": 5710176,
+      "sha256": "3599c987228070f342c80d29353f496c8efc72c620c75fc4d59e5671666b2f72",
+      "mode": "0o755"
+    },
+    "bin/snapshots/dart2js_aot.dart.snapshot": {
+      "bytes": 20827888,
+      "sha256": "29314b1f8e994436c5639a59df0243692cd83625fc587619a9c99e9a3804b1d6",
+      "mode": "0o644"
+    }
+  },
+  "source_changes": [],
+  "watched_files": 5673,
+  "frozen_commit_proof": {
+    "accepted_commit": "fdc262e112aa29dd1e60a76cff9a2dfb5f2d7b4f",
+    "tracked_inputs_checked": 5664,
+    "mismatches": [],
+    "reviewed_subtrees": {
+      "lib": {
+        "expected": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94",
+        "actual": "8efc7ea40f30399c9a65ea1e9c82056b413d3c94"
+      },
+      "test": {
+        "expected": "f57fa42a3c99acee60afb1a7007f7cba827edf72",
+        "actual": "f57fa42a3c99acee60afb1a7007f7cba827edf72"
+      },
+      "packages": {
+        "expected": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe",
+        "actual": "cd2bbbd7d574f7c3f16184c75206ff6ea47a55fe"
+      },
+      "tool": {
+        "expected": "f8879d4ede3e4417c19d3f56df515dc69d5195ef",
+        "actual": "f8879d4ede3e4417c19d3f56df515dc69d5195ef"
+      }
+    }
+  },
+  "git_status": "",
+  "accepted": true,
+  "finished_utc": "2026-11-16T11:17:33.742981+00:00",
+  "after_resources": {
+    "disk": {
+      "total": 5225713664,
+      "used": 1787179008,
+      "free": 3438534656
+    },
+    "memory": {
+      "MemTotal": 10451427328,
+      "MemAvailable": 5859930112,
+      "Cached": 3360194560,
+      "SwapTotal": 0,
+      "SwapFree": 0,
+      "Shmem": 1787355136
+    }
+  },
+  "runner_sha256": "09a1ac072ab33fead68368829270fa4505bdeea0e9db57bd6e2591f2f29fb1b6"
+}
