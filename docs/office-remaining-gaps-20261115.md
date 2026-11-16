@@ -15,23 +15,26 @@ source cutoff, branch ancestry and fresh local validation. Earlier qualification
 counts and live-corpus results below retain their original source identities.
 
 Shared spreadsheet-level ODS definitions and validation rules on blank input
-cells are now imported. Whole-number, decimal, date and text-length validation
-operators are integrated alongside list rules. Dynamic list links, custom and
-formula-driven validation, and full native prompt/error metadata remain open.
+cells are imported. List/range-source, whole-number, decimal, date, text-length
+and custom-formula rules now carry comparison/between operators, blank policy,
+prompts, error titles/messages/styles and XLSX round-trips. Dynamic source-range
+links and ODF condition grammar outside the shared model still decline instead
+of being approximated. The sheet editor also has an explicit **Export as ODS**
+action; ordinary Save still writes a new `.xlsx` copy.
 Current qualification is recorded in `validation/terminal-ods-refresh-20261116/`.
 The final local follow-up passed 507 spreadsheet/ODS engine tests, 53 host
 viewer/editor workflow tests, and the local ODS import check (one workbook,
 no unsupported-profile refusal). These results qualify the supported import
-profile and XLSX-copy workflows; they do not establish complete ODF fidelity.
-See `validation/terminal-ods-refresh-20261116/summary.json` for exact source
-identities, commands and the separately qualified terminal results.
+profile, XLSX-copy and new-ODS-export workflows; they do not establish complete
+ODF fidelity. See `validation/terminal-ods-refresh-20261116/summary.json` for
+exact source identities, commands and the separately qualified terminal results.
 
 ## Earlier verified state
 
-- CrispCloud `main` snapshot: `7bfdc577`
-- Vendored Quds source checkpoint: `546368fe3aad7ccb65c72f897b6585513b0199f1`
-  (`packages/QUDS_FORKS.md`, 2,413 managed files)
-- Quds sheet/ODS cohort: **505 tests**; the last clean full engine run was
+- CrispCloud `main` snapshot: `3c986352`
+- Vendored Quds source checkpoint: `2aee95e6aa7021869a198cf19ebbb43a44d7910f`
+  (`packages/QUDS_FORKS.md`, 2,422 managed files)
+- Quds sheet/ODS cohort: **507 tests**; the last clean full engine run was
   **2,205 tests** (two unrelated CLI bookmark/content-control tests currently
   fail on main)
 - CrispCloud vendored ODS reader+writer: **110 tests**
@@ -65,7 +68,9 @@ identities, commands and the separately qualified terminal results.
 - `OdsSheetWriter` exports a new ODS package from the shared model: values,
   formulas, styles, number formats, merges, geometry, hidden state, comments,
   hyperlinks, names, print metadata, autofilter ranges, pictures, conditional
-  formats and validations.
+  formats and validations, plus a defined default A4 page layout.
+- F4 sheet **Export as ODS** action; it writes a new package and leaves the
+  ordinary XLSX save target and original file unchanged.
 - ODT named styles from `styles.xml`, inline pictures, text boxes, header/footer
   text, tables, lists and footnotes.
 - Exact host goldens for the reviewed Word pages.
